@@ -18,6 +18,22 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
+- Recent request issue:
+  - the MFA path used a deployment demo code instead of per-user strong-factor verification.
+- Implementation Summary:
+  - replaced demo-code login checks with per-user TOTP verification,
+  - added one-time recovery-code generation, hashed persistence, and consumption flow,
+  - added authenticated MFA enrollment endpoints (`setup`, `enable`, and recovery-code regeneration),
+  - added user-level MFA persistence fields and migration support.
+- Validation Summary:
+  - targeted unit suite passed for MFA profile/risk and TOTP/recovery challenge behavior (`7/7`),
+  - targeted integration suite passed for login and force-change-password compatibility (`4/4`).
+- Behavior impact:
+  - MFA is now user-enrolled and TOTP-backed rather than static deployment-code based,
+  - recovery codes are one-time use and auditable,
+  - existing login/refresh/force-change flows remain compatible.
+
 ### 2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
 - Recent request issue:
   - the DeepScan remediation roadmap required waitlist handling for full course offerings so students could be queued and promoted on seat release.

@@ -137,11 +137,22 @@ For **every completed phase**:
 ### Stage 39.3 - MFA Hardening (TOTP + Recovery Codes)
 **Issue Source:** DeepScan Task 4.1 (Security partial)
 
-- [ ] Replace demo-code MFA path with TOTP-based verification.
-- [ ] Add recovery-code generation, storage, and one-time consumption flow.
-- [ ] Add MFA enrollment and challenge endpoints with audit logging.
-- [ ] Ensure forced-password-change and refresh-token flows remain compatible.
-- [ ] Add unit/integration tests for MFA success/failure/recovery scenarios.
+- [x] Replace demo-code MFA path with TOTP-based verification.
+- [x] Add recovery-code generation, storage, and one-time consumption flow.
+- [x] Add MFA enrollment and challenge endpoints with audit logging.
+- [x] Ensure forced-password-change and refresh-token flows remain compatible.
+- [x] Add unit/integration tests for MFA success/failure/recovery scenarios.
+
+**Implementation Summary:**
+- replaced configuration-level demo-code MFA checks with per-user TOTP secret verification,
+- added hashed one-time recovery-code generation and consumption with audit events,
+- added authenticated MFA setup/enable/recovery-code regeneration endpoints,
+- introduced user persistence fields and migration support for MFA secret/recovery storage.
+
+**Validation Summary:**
+- `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter AuthSecurityUxTests` passed (`7/7`),
+- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`4/4`),
+- verified login enforces TOTP/recovery checks when MFA is required and preserves force-change-password and refresh compatibility.
 
 **Primary Targets**
 - `src/Tabsan.EduSphere.Application/Auth/AuthService.cs`

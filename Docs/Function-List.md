@@ -36,6 +36,15 @@
 | `IEnrollmentRepository.GetWaitlistedByOfferingAsync` | Returns waitlisted enrollments in queue order so promotion can be deterministic. | `src/Tabsan.EduSphere.Domain/Interfaces/IEnrollmentRepository.cs`, `src/Tabsan.EduSphere.Infrastructure/Repositories/AcademicSupportRepositories.cs` |
 | `EnrollmentController waitlist queue endpoint` | Exposes the ordered waitlist queue to faculty and admins for course-offering review. | `src/Tabsan.EduSphere.API/Controllers/EnrollmentController.cs` |
 
+## 2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `AuthService TOTP login challenge` | Replaces static demo-code MFA with per-user TOTP verification and one-time recovery-code fallback during login. | `src/Tabsan.EduSphere.Application/Auth/AuthService.cs` |
+| `AuthController MFA enrollment endpoints` | Provides authenticated endpoints for MFA setup, enablement verification, and recovery-code regeneration. | `src/Tabsan.EduSphere.API/Controllers/AuthController.cs` |
+| `TotpService RFC 6238 implementation` | Generates Base32 secrets, provisioning URIs, and validates TOTP codes with configurable drift windows. | `src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs`, `src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs` |
+| `User MFA persistence fields` | Persists per-user MFA enablement, TOTP secret, and hashed recovery-code set. | `src/Tabsan.EduSphere.Domain/Identity/User.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260518091500_Phase39_MfaTotpRecoveryCodes.cs` |
+
 ## Phase 36 - Deployment Readiness (2026-05-15)
 
 | Function Name | Purpose | Location |

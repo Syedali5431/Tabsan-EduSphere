@@ -1,5 +1,6 @@
 using Tabsan.EduSphere.Domain.Common;
 using Tabsan.EduSphere.Domain.Enums;
+using System.Text.Json;
 
 namespace Tabsan.EduSphere.Domain.Identity;
 
@@ -64,6 +65,15 @@ public class User : AuditableEntity
     /// Set to true on CSV import (P4-S2-02); cleared after a successful forced password change.
     /// </summary>
     public bool MustChangePassword { get; private set; } = false;
+
+    /// <summary>When true, this user has completed MFA enrollment and must pass MFA checks when policy requires it.</summary>
+    public bool MfaIsEnabled { get; private set; } = false;
+
+    /// <summary>Base32-encoded TOTP secret used for RFC 6238 verification.</summary>
+    public string? MfaTotpSecret { get; private set; }
+
+    /// <summary>JSON serialized SHA-256 hashes of one-time recovery codes.</summary>
+    public string? MfaRecoveryCodesHashJson { get; private set; }
 
     private User() { }
 
@@ -180,5 +190,60 @@ public class User : AuditableEntity
     {
         MustChangePassword = false;
         Touch();
+    }
+
+    /// <summary>Stores a fresh MFA secret and recovery-code hash set and marks MFA as pending enablement.</summary>
+    public void SetMfaEnrollment(string totpSecret, string recoveryCodesHashJson)
+    {
+        MfaTotpSecret = totpSecret;
+        MfaRecoveryCodesHashJson = recoveryCodesHashJson;
+        MfaIsEnabled = false;
+        Touch();
+    }
+
+    /// <summary>Marks MFA as enabled after a successful TOTP verification.</summary>
+    public void EnableMfa()
+    {
+        if (string.IsNullOrWhiteSpace(MfaTotpSecret))
+            throw new InvalidOperationException("MFA secret must be configured before enabling MFA.");
+
+        MfaIsEnabled = true;
+        Touch();
+    }
+
+    /// <summary>Replaces the recovery-code hash set while keeping MFA enabled.</summary>
+    public void ReplaceRecoveryCodeHashes(string recoveryCodesHashJson)
+    {
+        MfaRecoveryCodesHashJson = recoveryCodesHashJson;
+        Touch();
+    }
+
+    /// <summary>Consumes a matching recovery-code hash once and persists the reduced set.</summary>
+    public bool TryConsumeRecoveryCodeHash(string recoveryCodeHash)
+    {
+        if (string.IsNullOrWhiteSpace(MfaRecoveryCodesHashJson))
+            return false;
+
+        List<string>? hashes;
+        try
+        {
+            hashes = JsonSerializer.Deserialize<List<string>>(MfaRecoveryCodesHashJson);
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (hashes is null || hashes.Count == 0)
+            return false;
+
+        var index = hashes.FindIndex(h => string.Equals(h, recoveryCodeHash, StringComparison.Ordinal));
+        if (index < 0)
+            return false;
+
+        hashes.RemoveAt(index);
+        MfaRecoveryCodesHashJson = JsonSerializer.Serialize(hashes);
+        Touch();
+        return true;
     }
 }

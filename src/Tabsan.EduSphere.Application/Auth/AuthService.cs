@@ -4,6 +4,9 @@ using Tabsan.EduSphere.Domain.Auditing;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace Tabsan.EduSphere.Application.Auth;
 
@@ -20,6 +23,7 @@ public class AuthService : IAuthService
     private readonly IAuditService _audit;
     private readonly IPasswordHistoryRepository _passwordHistory;
     private readonly ILicenseRepository _licenseRepo;
+    private readonly ITotpService _totp;
     private readonly AuthSecurityOptions _security;
 
     public AuthService(
@@ -30,6 +34,7 @@ public class AuthService : IAuthService
         IAuditService audit,
         IPasswordHistoryRepository passwordHistory,
         ILicenseRepository licenseRepo,
+        ITotpService totp,
         IOptions<AuthSecurityOptions> security)
     {
         _userRepo        = userRepo;
@@ -39,6 +44,7 @@ public class AuthService : IAuthService
         _audit           = audit;
         _passwordHistory = passwordHistory;
         _licenseRepo     = licenseRepo;
+        _totp            = totp;
         _security        = security.Value;
     }
 
@@ -120,10 +126,9 @@ public class AuthService : IAuthService
         if (mfaRequiredForThisLogin)
         {
             var provided = request.MfaCode?.Trim();
-            var expected = _security.Mfa.DemoCode?.Trim();
             if (string.IsNullOrWhiteSpace(provided)
-                || string.IsNullOrWhiteSpace(expected)
-                || !string.Equals(provided, expected, StringComparison.Ordinal))
+                || !user.MfaIsEnabled
+                || string.IsNullOrWhiteSpace(user.MfaTotpSecret))
             {
                 await _audit.LogAsync(new AuditLog(
                     "MfaChallengeFailed",
@@ -132,6 +137,42 @@ public class AuthService : IAuthService
                     actorUserId: user.Id,
                     ipAddress: ipAddress), ct);
                 return LoginResult.Fail(LoginFailureReason.MfaRequired);
+            }
+
+            var validTotp = _totp.ValidateCode(
+                user.MfaTotpSecret,
+                provided,
+                DateTime.UtcNow,
+                _security.Mfa.TotpDigits,
+                _security.Mfa.TotpStepSeconds,
+                _security.Mfa.TotpAllowedDriftWindows);
+
+            if (!validTotp)
+            {
+                var recoveryHash = HashRecoveryCode(provided);
+                var usedRecovery = user.TryConsumeRecoveryCodeHash(recoveryHash);
+                if (usedRecovery)
+                {
+                    _userRepo.Update(user);
+                    await _userRepo.SaveChangesAsync(ct);
+
+                    await _audit.LogAsync(new AuditLog(
+                        "MfaRecoveryCodeUsed",
+                        "User",
+                        entityId: user.Id.ToString(),
+                        actorUserId: user.Id,
+                        ipAddress: ipAddress), ct);
+                }
+                else
+                {
+                    await _audit.LogAsync(new AuditLog(
+                        "MfaChallengeFailed",
+                        "User",
+                        entityId: user.Id.ToString(),
+                        actorUserId: user.Id,
+                        ipAddress: ipAddress), ct);
+                    return LoginResult.Fail(LoginFailureReason.MfaRequired);
+                }
             }
         }
 
@@ -313,6 +354,79 @@ public class AuthService : IAuthService
         return true;
     }
 
+    public async Task<MfaSetupResponse?> BeginMfaSetupAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId, ct);
+        if (user is null || !user.IsActive)
+            return null;
+
+        var secret = _totp.GenerateSecret();
+        var recoveryCodes = GenerateRecoveryCodes(_security.Mfa.RecoveryCodeCount);
+        var recoveryHashesJson = JsonSerializer.Serialize(recoveryCodes.Select(HashRecoveryCode).ToList());
+
+        user.SetMfaEnrollment(secret, recoveryHashesJson);
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync(ct);
+
+        var accountName = string.IsNullOrWhiteSpace(user.Email) ? user.Username : user.Email;
+        var provisioningUri = _totp.BuildProvisioningUri(
+            _security.Mfa.TotpIssuer,
+            accountName,
+            secret,
+            _security.Mfa.TotpDigits,
+            _security.Mfa.TotpStepSeconds);
+
+        await _audit.LogAsync(new AuditLog("MfaSetupStarted", "User", user.Id.ToString(), actorUserId: user.Id), ct);
+
+        return new MfaSetupResponse(
+            Enabled: user.MfaIsEnabled,
+            Secret: secret,
+            ProvisioningUri: provisioningUri,
+            RecoveryCodes: recoveryCodes);
+    }
+
+    public async Task<bool> EnableMfaAsync(Guid userId, EnableMfaRequest request, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId, ct);
+        if (user is null || !user.IsActive || string.IsNullOrWhiteSpace(user.MfaTotpSecret))
+            return false;
+
+        var valid = _totp.ValidateCode(
+            user.MfaTotpSecret,
+            request.Code,
+            DateTime.UtcNow,
+            _security.Mfa.TotpDigits,
+            _security.Mfa.TotpStepSeconds,
+            _security.Mfa.TotpAllowedDriftWindows);
+
+        if (!valid)
+            return false;
+
+        user.EnableMfa();
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync(ct);
+
+        await _audit.LogAsync(new AuditLog("MfaEnabled", "User", user.Id.ToString(), actorUserId: user.Id), ct);
+        return true;
+    }
+
+    public async Task<MfaRecoveryCodesResponse?> RegenerateRecoveryCodesAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId, ct);
+        if (user is null || !user.IsActive || !user.MfaIsEnabled)
+            return null;
+
+        var recoveryCodes = GenerateRecoveryCodes(_security.Mfa.RecoveryCodeCount);
+        var recoveryHashesJson = JsonSerializer.Serialize(recoveryCodes.Select(HashRecoveryCode).ToList());
+        user.ReplaceRecoveryCodeHashes(recoveryHashesJson);
+
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync(ct);
+
+        await _audit.LogAsync(new AuditLog("MfaRecoveryCodesRegenerated", "User", user.Id.ToString(), actorUserId: user.Id), ct);
+        return new MfaRecoveryCodesResponse(recoveryCodes);
+    }
+
     // ── Force Change Password (P4-S2-02) ──────────────────────────────────────
 
     /// <summary>
@@ -361,5 +475,24 @@ public class AuthService : IAuthService
 
         return _security.Mfa.PrivilegedRoles.Any(r =>
             string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static List<string> GenerateRecoveryCodes(int count)
+    {
+        var result = new List<string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var raw = Convert.ToHexString(RandomNumberGenerator.GetBytes(5));
+            result.Add($"{raw[..5]}-{raw[5..]}".ToLowerInvariant());
+        }
+
+        return result;
+    }
+
+    private static string HashRecoveryCode(string code)
+    {
+        var normalized = code.Replace("-", string.Empty, StringComparison.Ordinal).Trim().ToUpperInvariant();
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(bytes);
     }
 }

@@ -58,6 +58,23 @@ public sealed record ForceChangePasswordRequest(
     [property: StringLength(256, MinimumLength = 8)]
     string NewPassword);
 
+/// <summary>Request body for completing MFA enrollment by proving current authenticator ownership.</summary>
+public sealed record EnableMfaRequest(
+    [property: Required]
+    [property: StringLength(16, MinimumLength = 6)]
+    string Code);
+
+/// <summary>Response for MFA setup bootstrap, including secret and one-time recovery codes.</summary>
+public sealed record MfaSetupResponse(
+    bool Enabled,
+    string Secret,
+    string ProvisioningUri,
+    IReadOnlyList<string> RecoveryCodes);
+
+/// <summary>Response payload containing newly generated recovery codes.</summary>
+public sealed record MfaRecoveryCodesResponse(
+    IReadOnlyList<string> RecoveryCodes);
+
 // ── P2-S1-01: Login result with failure reason for concurrency enforcement ──
 
 /// <summary>

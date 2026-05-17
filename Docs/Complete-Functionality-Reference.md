@@ -75,6 +75,24 @@ After each completed stage, this document must be updated to reflect any net fun
     - seat release now advances the waitlist automatically for the oldest queued student,
     - faculty/admin users can inspect the current queue through the roster companion endpoint.
 
+## 2026-05-18 Update - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
+
+- Recent request issue:
+    - MFA login enforcement relied on a static deployment demo code instead of per-user strong-factor verification.
+- Implementation Summary:
+    - replaced demo-code validation with per-user TOTP verification in the auth login flow,
+    - added one-time recovery-code generation/storage/consumption with audit events,
+    - added authenticated MFA enrollment endpoints (setup, enable, recovery-code regeneration),
+    - persisted user MFA state/secret/recovery hashes through schema-backed fields.
+- Validation Summary:
+    - targeted auth security unit suite passed (`7/7`),
+    - targeted login/force-change integration suite passed (`4/4`),
+    - verified force-change-password and refresh-compatible login behavior remained functional.
+- Behavior impact:
+    - MFA is now user-specific TOTP-based rather than deployment-code based,
+    - recovery codes are one-time and automatically invalidated after use,
+    - auth flows remain compatible while enforcing stronger factor controls.
+
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 
 - Completed execute-mode closure for final separation phases.

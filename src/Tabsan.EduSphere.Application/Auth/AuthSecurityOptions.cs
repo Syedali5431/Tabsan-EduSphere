@@ -16,7 +16,11 @@ public sealed class MfaSettings
     public bool RequireForPasswordLogin { get; init; }
     public bool RequireForPrivilegedRolesOnly { get; init; } = true;
     public string[] PrivilegedRoles { get; init; } = ["SuperAdmin", "Admin"];
-    public string DemoCode { get; init; } = "000000";
+    public string TotpIssuer { get; init; } = "Tabsan EduSphere";
+    public int TotpDigits { get; init; } = 6;
+    public int TotpStepSeconds { get; init; } = 30;
+    public int TotpAllowedDriftWindows { get; init; } = 1;
+    public int RecoveryCodeCount { get; init; } = 8;
 }
 
 public sealed class SsoSettings

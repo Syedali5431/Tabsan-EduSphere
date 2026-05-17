@@ -75,6 +75,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .IsRequired()
                .HasDefaultValue(false);
 
+        // Phase 39.3: per-user MFA enrollment state and secrets.
+        builder.Property(u => u.MfaIsEnabled)
+               .IsRequired()
+               .HasDefaultValue(false);
+
+        builder.Property(u => u.MfaTotpSecret)
+               .HasMaxLength(128)
+               .IsRequired(false);
+
+        builder.Property(u => u.MfaRecoveryCodesHashJson)
+               .HasMaxLength(4000)
+               .IsRequired(false);
+
         // Phase 5: optional per-user institution assignment for manual/CSV provisioning flows.
         builder.Property(u => u.InstitutionType)
                .HasConversion<int?>()

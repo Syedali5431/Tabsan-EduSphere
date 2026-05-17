@@ -19,6 +19,19 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
+- Completed the MFA hardening remediation stage.
+- Implementation Summary:
+  - replaced demo-code MFA checks with per-user TOTP verification in auth service flow,
+  - added recovery-code generation, hashed persistence, and one-time consumption,
+  - added authenticated MFA enrollment endpoints and migration-backed user MFA persistence fields.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter AuthSecurityUxTests` passed (`7/7`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`4/4`),
+  - verified login/refresh/force-change-password compatibility remained intact.
+- Stage status: Stage 39.3 completed.
+- Phase status: DeepScan remediation roadmap advanced by one completed stage.
+
 ### 2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
 - Completed the enrollment waitlist remediation stage.
 - Implementation Summary:

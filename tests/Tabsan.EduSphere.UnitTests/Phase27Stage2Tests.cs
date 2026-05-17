@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
+using System.Text;
 using System.Reflection;
 using Tabsan.EduSphere.Application.Auth;
 using Tabsan.EduSphere.Application.DTOs.Auth;
@@ -21,7 +23,7 @@ public class AuthSecurityUxTests
     {
         var sut = CreateSut(new AuthSecurityOptions
         {
-            Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, DemoCode = "654321" },
+            Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, TotpIssuer = "Tabsan EduSphere" },
             Sso = new SsoSettings { Enabled = true, Provider = "AzureAD", LoginUrl = "https://sso.contoso.edu/login" },
             SessionRisk = new SessionRiskSettings { Enabled = true, BlockHighRiskLogin = true }
         });
@@ -42,11 +44,13 @@ public class AuthSecurityUxTests
     public async Task LoginAsync_WhenMfaIsRequiredAndMissing_ReturnsMfaRequired()
     {
         var user = new User("student1", "HASH", roleId: 1);
+        user.SetMfaEnrollment("KNOWNSECRET", "[]");
+        user.EnableMfa();
 
         var sut = CreateSut(
             new AuthSecurityOptions
             {
-                Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, RequireForPrivilegedRolesOnly = false, DemoCode = "123456" },
+                Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, RequireForPrivilegedRolesOnly = false },
                 SessionRisk = new SessionRiskSettings { Enabled = false }
             },
             user: user);
@@ -71,8 +75,7 @@ public class AuthSecurityUxTests
                     Enabled = true,
                     RequireForPasswordLogin = true,
                     RequireForPrivilegedRolesOnly = true,
-                    PrivilegedRoles = ["SuperAdmin", "Admin"],
-                    DemoCode = "123456"
+                    PrivilegedRoles = ["SuperAdmin", "Admin"]
                 },
                 SessionRisk = new SessionRiskSettings { Enabled = false }
             },
@@ -90,6 +93,8 @@ public class AuthSecurityUxTests
     {
         var user = new User("admin1", "HASH", roleId: 2);
         SetRole(user, "Admin");
+        user.SetMfaEnrollment("KNOWNSECRET", "[]");
+        user.EnableMfa();
 
         var sut = CreateSut(
             new AuthSecurityOptions
@@ -99,8 +104,7 @@ public class AuthSecurityUxTests
                     Enabled = true,
                     RequireForPasswordLogin = true,
                     RequireForPrivilegedRolesOnly = true,
-                    PrivilegedRoles = ["SuperAdmin", "Admin"],
-                    DemoCode = "123456"
+                    PrivilegedRoles = ["SuperAdmin", "Admin"]
                 },
                 SessionRisk = new SessionRiskSettings { Enabled = false }
             },
@@ -137,13 +141,67 @@ public class AuthSecurityUxTests
         result.FailureReason.Should().Be(LoginFailureReason.SessionRiskBlocked);
     }
 
+    [Fact]
+    public async Task LoginAsync_WhenMfaIsRequiredAndTotpIsValid_ReturnsSuccess()
+    {
+        var user = new User("student1", "HASH", roleId: 1);
+        user.SetMfaEnrollment("KNOWNSECRET", "[]");
+        user.EnableMfa();
+
+        var sut = CreateSut(
+            new AuthSecurityOptions
+            {
+                Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, RequireForPrivilegedRolesOnly = false },
+                SessionRisk = new SessionRiskSettings { Enabled = false }
+            },
+            user: user,
+            totpService: new StubTotpService(validCodes: ["111111"]));
+
+        var result = await sut.LoginAsync(new LoginRequest("student1", "pass", MfaCode: "111111"), "10.0.0.5");
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LoginAsync_WhenTotpInvalidAndRecoveryCodeValid_ConsumesRecoveryCodeAndReturnsSuccess()
+    {
+        var validRecoveryCode = "abcde-12345";
+        var validRecoveryHash = HashRecoveryCode(validRecoveryCode);
+        var user = new User("student1", "HASH", roleId: 1);
+        user.SetMfaEnrollment("KNOWNSECRET", $"[\"{validRecoveryHash}\"]");
+        user.EnableMfa();
+
+        var sut = CreateSut(
+            new AuthSecurityOptions
+            {
+                Mfa = new MfaSettings { Enabled = true, RequireForPasswordLogin = true, RequireForPrivilegedRolesOnly = false },
+                SessionRisk = new SessionRiskSettings { Enabled = false }
+            },
+            user: user,
+            totpService: new StubTotpService(validCodes: []));
+
+        var result = await sut.LoginAsync(new LoginRequest("student1", "pass", MfaCode: validRecoveryCode), "10.0.0.5");
+
+        result.IsSuccess.Should().BeTrue();
+        user.MfaRecoveryCodesHashJson.Should().Be("[]");
+    }
+
+    private static string HashRecoveryCode(string code)
+    {
+        var normalized = code.Replace("-", string.Empty, StringComparison.Ordinal).Trim().ToUpperInvariant();
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(bytes);
+    }
+
     private static AuthService CreateSut(
         AuthSecurityOptions options,
         User? user = null,
-        IUserSessionRepository? sessionRepo = null)
+        IUserSessionRepository? sessionRepo = null,
+        ITotpService? totpService = null)
     {
         user ??= new User("student1", "HASH", roleId: 1);
         sessionRepo ??= new StubSessionRepository();
+        totpService ??= new StubTotpService(validCodes: []);
 
         return new AuthService(
             new StubUserRepository(user),
@@ -153,6 +211,7 @@ public class AuthSecurityUxTests
             new StubAuditService(),
             new StubPasswordHistoryRepository(),
             new StubLicenseRepository(),
+            totpService,
             Options.Create(options));
     }
 
@@ -305,4 +364,22 @@ file sealed class StubLicenseRepository : ILicenseRepository
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => Task.FromResult(1);
+}
+
+file sealed class StubTotpService : ITotpService
+{
+    private readonly HashSet<string> _validCodes;
+
+    public StubTotpService(IEnumerable<string> validCodes)
+    {
+        _validCodes = validCodes.ToHashSet(StringComparer.Ordinal);
+    }
+
+    public string GenerateSecret() => "KNOWNSECRET";
+
+    public string BuildProvisioningUri(string issuer, string accountName, string secret, int digits, int stepSeconds)
+        => $"otpauth://totp/{issuer}:{accountName}?secret={secret}&issuer={issuer}&digits={digits}&period={stepSeconds}";
+
+    public bool ValidateCode(string secret, string code, DateTime utcNow, int digits, int stepSeconds, int allowedDriftWindows)
+        => _validCodes.Contains(code);
 }

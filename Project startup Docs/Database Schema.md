@@ -66,6 +66,23 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-18 Update - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
+
+- Recent request issue:
+	- MFA enforcement required replacement of deployment demo-code checks with per-user TOTP and recovery-code persistence.
+- Implementation Summary:
+	- updated auth flow and API to support per-user TOTP enrollment and recovery-code lifecycle,
+	- added migration-backed user MFA persistence fields.
+- Validation Summary:
+	- targeted auth unit suite passed (`7/7`),
+	- targeted login/force-change integration suite passed (`4/4`).
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- added migration `20260518091500_Phase39_MfaTotpRecoveryCodes`.
+	- added `users.MfaIsEnabled` (`bit`, default `0`).
+	- added `users.MfaTotpSecret` (`nvarchar(128)`, nullable).
+	- added `users.MfaRecoveryCodesHashJson` (`nvarchar(4000)`, nullable).
+
 ## 2026-05-13 Update - Institute Parity Stage 0.1 (Execution Snapshot)
 
 - Stage 0.1 completed as a schema/dependency audit baseline.

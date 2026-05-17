@@ -48,4 +48,19 @@ public interface IAuthService
     /// Returns false when the user is not found or the new password is invalid.
     /// </summary>
     Task<bool> ForceChangePasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
+
+    /// <summary>
+    /// Starts or rotates MFA enrollment for the user and returns bootstrap secret and one-time recovery codes.
+    /// </summary>
+    Task<MfaSetupResponse?> BeginMfaSetupAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Enables MFA after validating a TOTP verification code against the enrolled secret.
+    /// </summary>
+    Task<bool> EnableMfaAsync(Guid userId, EnableMfaRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Generates a fresh set of one-time MFA recovery codes for an already enabled MFA enrollment.
+    /// </summary>
+    Task<MfaRecoveryCodesResponse?> RegenerateRecoveryCodesAsync(Guid userId, CancellationToken ct = default);
 }

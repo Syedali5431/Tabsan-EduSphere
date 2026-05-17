@@ -256,12 +256,9 @@ if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("
 {
     if (authSecuritySettings.Mfa.Enabled)
     {
-        var demoCode = authSecuritySettings.Mfa.DemoCode?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(demoCode)
-            || string.Equals(demoCode, "000000", StringComparison.Ordinal)
-            || string.Equals(demoCode, "REPLACE_OR_SET_VIA_ENV_VAR", StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(authSecuritySettings.Mfa.TotpIssuer))
         {
-            throw new InvalidOperationException("AuthSecurity:Mfa is enabled but AuthSecurity:Mfa:DemoCode is still using an unsafe placeholder. Set a secure code via environment configuration before startup.");
+            throw new InvalidOperationException("AuthSecurity:Mfa is enabled but AuthSecurity:Mfa:TotpIssuer is not configured.");
         }
 
         if (authSecuritySettings.Mfa.RequireForPrivilegedRolesOnly
@@ -331,6 +328,7 @@ builder.Services.AddScoped<ITenantScopeResolver, HttpTenantScopeResolver>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<TokenService>(); // also registered directly for AuthController resolving
 builder.Services.AddScoped<IPasswordHasher, Argon2idPasswordHasher>();
+builder.Services.AddScoped<ITotpService, TotpService>();
 builder.Services.AddScoped<LicenseValidationService>();
 
 // ── Module entitlement ──────────────────────────────────────────────────────────

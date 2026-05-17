@@ -65,6 +65,22 @@ Do not end a completed task with local-only changes.
   - governance docs synchronized,
   - repository sync required after this checkpoint.
 
+### Stage Completion Checkpoint (2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes))
+- Completed the Stage 39.3 MFA hardening remediation with per-user TOTP and recovery-code support.
+- Implementation Summary:
+  - replaced demo-code MFA login checks with per-user TOTP verification,
+  - added one-time recovery-code generation, hashed persistence, and consumption path,
+  - added authenticated MFA setup/enable/recovery-code regeneration endpoints,
+  - added user MFA persistence fields with migration support.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter AuthSecurityUxTests` passed (`7/7`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`4/4`),
+  - verified force-change-password compatibility after MFA hardening.
+- Status of Checks Done:
+  - code change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
 ## Institution License Validation Workflow (2026-05-12)
 - Plan file: `Docs/Institution-License-Validation-Phases.md`
 - For each completed validation phase, mandatory outputs are:

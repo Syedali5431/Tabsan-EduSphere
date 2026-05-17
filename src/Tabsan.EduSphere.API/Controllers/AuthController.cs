@@ -152,4 +152,70 @@ public class AuthController : ControllerBase
 
         return NoContent();
     }
+
+    // ── POST /api/v1/auth/mfa/setup ──────────────────────────────────────────
+
+    /// <summary>
+    /// Starts MFA enrollment by issuing a TOTP secret and one-time recovery codes for the current user.
+    /// </summary>
+    [HttpPost("mfa/setup")]
+    [Authorize]
+    public async Task<IActionResult> BeginMfaSetup(CancellationToken ct)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                     ?? User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Forbid();
+
+        var result = await _auth.BeginMfaSetupAsync(userId, ct);
+        if (result is null)
+            return NotFound(new { message = "User not found or inactive." });
+
+        return Ok(result);
+    }
+
+    // ── POST /api/v1/auth/mfa/enable ─────────────────────────────────────────
+
+    /// <summary>
+    /// Completes MFA enrollment by validating a TOTP code from the authenticator app.
+    /// </summary>
+    [HttpPost("mfa/enable")]
+    [Authorize]
+    public async Task<IActionResult> EnableMfa([FromBody] EnableMfaRequest request, CancellationToken ct)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                     ?? User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Forbid();
+
+        var ok = await _auth.EnableMfaAsync(userId, request, ct);
+        if (!ok)
+            return BadRequest(new { message = "Invalid MFA setup state or verification code." });
+
+        return NoContent();
+    }
+
+    // ── POST /api/v1/auth/mfa/recovery-codes/regenerate ──────────────────────
+
+    /// <summary>
+    /// Regenerates one-time MFA recovery codes for the current user.
+    /// </summary>
+    [HttpPost("mfa/recovery-codes/regenerate")]
+    [Authorize]
+    public async Task<IActionResult> RegenerateMfaRecoveryCodes(CancellationToken ct)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                     ?? User.FindFirst("sub")?.Value;
+
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Forbid();
+
+        var response = await _auth.RegenerateRecoveryCodesAsync(userId, ct);
+        if (response is null)
+            return BadRequest(new { message = "MFA must be enabled before regenerating recovery codes." });
+
+        return Ok(response);
+    }
 }

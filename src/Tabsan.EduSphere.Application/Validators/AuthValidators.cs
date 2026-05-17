@@ -21,9 +21,9 @@ public sealed class LoginRequestValidator : AbstractValidator<LoginRequest>
 
         RuleFor(x => x.MfaCode)
             .MaximumLength(16).WithMessage("MFA code must not exceed 16 characters.")
-            .Matches("^[0-9]*$")
+            .Matches("^[A-Za-z0-9-]*$")
             .When(x => !string.IsNullOrWhiteSpace(x.MfaCode))
-            .WithMessage("MFA code can contain digits only.");
+            .WithMessage("MFA code can contain letters, digits, and dashes only.");
     }
 }
 
