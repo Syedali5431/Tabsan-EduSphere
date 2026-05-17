@@ -6,6 +6,7 @@ using Tabsan.EduSphere.Web.Services;
 
 namespace Tabsan.EduSphere.Web.Controllers;
 
+[Route("Portal/Login")]
 public class LoginController : Controller
 {
     private readonly IEduApiClient _api;
@@ -23,7 +24,7 @@ public class LoginController : Controller
             .TrimEnd('/');
     }
 
-    // GET /Login
+    // GET /Portal/Login
     [HttpGet]
     public async Task<IActionResult> Index(string? returnUrl = null, CancellationToken ct = default)
     {
@@ -37,7 +38,7 @@ public class LoginController : Controller
         return View();
     }
 
-    // POST /Login
+    // POST /Portal/Login
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(string username, string password, string? mfaCode = null, string? returnUrl = null, CancellationToken ct = default)
@@ -108,6 +109,7 @@ public class LoginController : Controller
             {
                 ApiBaseUrl  = apiBase,
                 AccessToken = result.AccessToken,
+                RefreshToken = result.RefreshToken,
                 DefaultDepartmentId = existingConnection.DefaultDepartmentId
             });
 
@@ -128,8 +130,9 @@ public class LoginController : Controller
         }
     }
 
-    // POST /Login/Logout
+    // POST /Portal/Login/Logout
     [HttpPost]
+    [Route("Logout")]
     [ValidateAntiForgeryToken]
     public IActionResult Logout()
     {

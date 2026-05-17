@@ -21,7 +21,7 @@
     // Connected but no roles resolved yet: show all links (dev/integration convenience).
     var isConnected = EduApi.IsConnected();
     var noRoles     = isConnected && sessionId is null;
-    var showAdminLinks      = isAdmin      || noRoles;
+    var showAdminLinks      = isAdmin      || isSuperAdmin || noRoles;
     var showFacultyLinks    = isFaculty    || noRoles;
     var showStudentLinks    = isStudent    || noRoles;
     var showSuperAdminLinks = isSuperAdmin || noRoles;
@@ -79,7 +79,17 @@
     var hasAiChatMenu = visibleMenus.Any(m =>
         string.Equals(m.Key, "ai_chat", StringComparison.OrdinalIgnoreCase)
         || m.SubMenus.Any(s => string.Equals(s.Key, "ai_chat", StringComparison.OrdinalIgnoreCase)));
-    var showAiChatLauncher = isConnected && (!useDynamicMenus || hasAiChatMenu);
+    var hasAdminLikeDynamicMenu = visibleMenus.Any(m =>
+        string.Equals(m.Key, "students", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(m.Key, "user_import", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(m.Key, "programs", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(m.Key, "departments", StringComparison.OrdinalIgnoreCase)
+        || m.SubMenus.Any(s =>
+            string.Equals(s.Key, "students", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(s.Key, "user_import", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(s.Key, "programs", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(s.Key, "departments", StringComparison.OrdinalIgnoreCase)));
+    var showAiChatLauncher = isConnected && (!useDynamicMenus || hasAiChatMenu || showAdminLinks || hasAdminLikeDynamicMenu);
 
     // Load portal branding (university name, initials, subtitle, footer)
     const string BrandingCacheKey = "PortalBrandingCache";
@@ -360,12 +370,63 @@
                         }
                     }
 
+                    var hasStudentsLink = groupedLinks.Any(l =>
+                        l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase)
+                        && l.Action.Equals("Students", StringComparison.OrdinalIgnoreCase));
+
                     var hasProgramsLink = groupedLinks.Any(l =>
                         l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase)
                         && l.Action.Equals("Programs", StringComparison.OrdinalIgnoreCase));
-                    if (showAdminLinks && !hasProgramsLink)
+                    if ((showAdminLinks || hasStudentsLink) && !hasProgramsLink)
                     {
                         groupedLinks.Add(("Faculty Related", 2, 2500, "Programs", "Portal", "Programs"));
+                    }
+
+                    var hasUserImportLink = groupedLinks.Any(l =>
+                        l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase)
+                        && l.Action.Equals("UserImport", StringComparison.OrdinalIgnoreCase));
+                    if ((showAdminLinks || hasStudentsLink) && !hasUserImportLink)
+                    {
+                        groupedLinks.Add(("Faculty Related", 2, 2510, "User Import", "Portal", "UserImport"));
+                    }
+
+                    if (isSuperAdmin)
+                    {
+                        var superAdminFallbackLinks = new[]
+                        {
+                            ("Faculty Related", 2, 2600, "Report Center", "Portal", "ReportCenter"),
+                            ("Faculty Related", 2, 2610, "Analytics", "Portal", "Analytics"),
+                            ("Academic Related", 2, 2620, "Degree Audit", "Portal", "DegreeAudit"),
+                            ("Academic Related", 2, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"),
+                            ("Academic Related", 2, 2640, "Degree Rules", "Portal", "DegreeRules"),
+                            ("Academic Related", 2, 2650, "Graduation Apply", "Portal", "GraduationApply"),
+                            ("Academic Related", 2, 2660, "Graduation Applications", "Portal", "GraduationApplications"),
+                            ("Academic Related", 2, 2670, "Grading Config", "Portal", "GradingConfig"),
+                            ("Academic Related", 2, 2680, "LMS Manage", "Portal", "LmsManage"),
+                            ("Academic Related", 2, 2690, "Discussion", "Portal", "Discussion"),
+                            ("Academic Related", 2, 2700, "Announcements", "Portal", "Announcements"),
+                            ("Student Related", 3, 2710, "Study Plan", "Portal", "StudyPlan"),
+                            ("Settings", 5, 2720, "Report Settings", "Portal", "ReportSettings"),
+                            ("Settings", 5, 2730, "Sidebar Settings", "Portal", "SidebarSettings"),
+                            ("Settings", 5, 2740, "Theme Settings", "Portal", "ThemeSettings"),
+                            ("Settings", 5, 2750, "License Update", "Portal", "LicenseUpdate"),
+                            ("Settings", 5, 2760, "Dashboard Settings", "Portal", "DashboardSettings"),
+                            ("Settings", 5, 2770, "Institution Policy", "Portal", "InstitutionPolicy"),
+                            ("Settings", 5, 2780, "Module Composition", "Portal", "ModuleComposition"),
+                            ("Settings", 5, 2790, "Library Config", "Portal", "LibraryConfig"),
+                            ("Settings", 5, 2800, "Accreditation", "Portal", "AccreditationTemplates")
+                        };
+
+                        foreach (var link in superAdminFallbackLinks)
+                        {
+                            var exists = groupedLinks.Any(l =>
+                                l.Controller.Equals(link.Item5, StringComparison.OrdinalIgnoreCase)
+                                && l.Action.Equals(link.Item6, StringComparison.OrdinalIgnoreCase));
+                            if (!exists)
+                            {
+                                groupedLinks.Add(link);
+                            }
+                        }
                     }
 
                     foreach (var group in groupedLinks

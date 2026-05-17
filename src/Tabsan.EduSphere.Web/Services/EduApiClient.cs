@@ -384,8 +384,10 @@ public interface IEduApiClient
 
 public class EduApiClient : IEduApiClient
 {
+    private const string ConnectionItemKey = "Tabsan.EduSphere.CurrentConnection";
     private const string ApiUrlKey    = "Tabsan.EduSphere.ApiBaseUrl";
     private const string ApiTokenKey  = "Tabsan.EduSphere.ApiAccessToken";
+    private const string ApiRefreshTokenKey = "Tabsan.EduSphere.ApiRefreshToken";
     private const string DepartmentKey = "Tabsan.EduSphere.DefaultDepartmentId";
     private const string IdentityKey  = "Tabsan.EduSphere.SessionIdentity";
     private const string ForcePasswordChangeKey = "Tabsan.EduSphere.ForcePasswordChangeRequired";
@@ -394,6 +396,7 @@ public class EduApiClient : IEduApiClient
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IDataProtector _protector;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     public EduApiClient(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider)
     {
@@ -427,33 +430,60 @@ public class EduApiClient : IEduApiClient
 
     public ApiConnectionModel GetConnection()
     {
+        var context = _httpContextAccessor.HttpContext;
+        if (context?.Items.TryGetValue(ConnectionItemKey, out var scopedConnection) == true
+            && scopedConnection is ApiConnectionModel cached)
+        {
+            return cached;
+        }
+
         var baseUrl = ReadCookie(ApiUrlKey) ?? string.Empty;
         var token   = ReadCookie(ApiTokenKey) ?? string.Empty;
+        var refreshToken = ReadCookie(ApiRefreshTokenKey) ?? string.Empty;
         var rawDept = ReadCookie(DepartmentKey);
         Guid? dept = Guid.TryParse(rawDept, out var parsed) ? parsed : null;
 
-        return new ApiConnectionModel
+        var connection = new ApiConnectionModel
         {
             ApiBaseUrl = baseUrl,
             AccessToken = token,
+            RefreshToken = refreshToken,
             DefaultDepartmentId = dept
         };
+
+        if (context is not null)
+            context.Items[ConnectionItemKey] = connection;
+
+        return connection;
     }
 
     public void SaveConnection(ApiConnectionModel model)
     {
+        var context = _httpContextAccessor.HttpContext;
+
         if (string.IsNullOrWhiteSpace(model.ApiBaseUrl) || string.IsNullOrWhiteSpace(model.AccessToken))
         {
             DeleteCookie(ApiUrlKey);
             DeleteCookie(ApiTokenKey);
+            DeleteCookie(ApiRefreshTokenKey);
             DeleteCookie(DepartmentKey);
             DeleteCookie(IdentityKey);
             DeleteCookie(ForcePasswordChangeKey);
+            if (context is not null)
+                context.Items[ConnectionItemKey] = new ApiConnectionModel();
             return;
         }
 
         WriteCookie(ApiUrlKey, model.ApiBaseUrl.TrimEnd('/'));
         WriteCookie(ApiTokenKey, model.AccessToken.Trim());
+        var refreshTokenToStore = !string.IsNullOrWhiteSpace(model.RefreshToken)
+            ? model.RefreshToken.Trim()
+            : (ReadCookie(ApiRefreshTokenKey) ?? string.Empty);
+
+        if (!string.IsNullOrWhiteSpace(refreshTokenToStore))
+            WriteCookie(ApiRefreshTokenKey, refreshTokenToStore);
+        else
+            DeleteCookie(ApiRefreshTokenKey);
 
         if (model.DefaultDepartmentId.HasValue)
             WriteCookie(DepartmentKey, model.DefaultDepartmentId.Value.ToString());
@@ -465,6 +495,17 @@ public class EduApiClient : IEduApiClient
         var json = JsonSerializer.Serialize(identity, _jsonOptions);
         WriteCookie(IdentityKey, json);
         DeleteCookie(ForcePasswordChangeKey);
+
+        if (context is not null)
+        {
+            context.Items[ConnectionItemKey] = new ApiConnectionModel
+            {
+                ApiBaseUrl = model.ApiBaseUrl.TrimEnd('/'),
+                AccessToken = model.AccessToken.Trim(),
+                RefreshToken = refreshTokenToStore,
+                DefaultDepartmentId = model.DefaultDepartmentId
+            };
+        }
     }
 
     public SessionIdentity? GetSessionIdentity()
@@ -765,8 +806,7 @@ public class EduApiClient : IEduApiClient
     }
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
     {
-        using var request  = CreateRequest(HttpMethod.Get, path);
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() => CreateRequest(HttpMethod.Get, path), ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
         return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<T>(body, _jsonOptions);
@@ -775,9 +815,12 @@ public class EduApiClient : IEduApiClient
     private async Task<TResponse?> PostAsync<TRequest, TResponse>(string path, TRequest payload, CancellationToken ct)
     {
         var json = JsonSerializer.Serialize(payload, _jsonOptions);
-        using var request = CreateRequest(HttpMethod.Post, path);
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, path);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return request;
+        }, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
         return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<TResponse>(body, _jsonOptions);
@@ -786,9 +829,12 @@ public class EduApiClient : IEduApiClient
     private async Task<TResponse?> PutAsync<TRequest, TResponse>(string path, TRequest payload, CancellationToken ct)
     {
         var json = JsonSerializer.Serialize(payload, _jsonOptions);
-        using var request = CreateRequest(HttpMethod.Put, path);
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Put, path);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return request;
+        }, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
         return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<TResponse>(body, _jsonOptions);
@@ -796,8 +842,7 @@ public class EduApiClient : IEduApiClient
 
     private async Task DeleteAsync(string path, CancellationToken ct)
     {
-        using var request  = CreateRequest(HttpMethod.Delete, path);
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() => CreateRequest(HttpMethod.Delete, path), ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
     }
@@ -805,9 +850,12 @@ public class EduApiClient : IEduApiClient
     private async Task DeleteWithBodyAsync(string path, object payload, CancellationToken ct)
     {
         var json = JsonSerializer.Serialize(payload, _jsonOptions);
-        using var request = CreateRequest(HttpMethod.Delete, path);
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Delete, path);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return request;
+        }, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
     }
@@ -817,14 +865,91 @@ public class EduApiClient : IEduApiClient
     // and attempts to deserialize it, which corrupts binary xlsx content.
     private async Task<byte[]> GetBytesAsync(string path, CancellationToken ct)
     {
-        using var request  = CreateRequest(HttpMethod.Get, path);
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() => CreateRequest(HttpMethod.Get, path), ct);
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(ct);
             throw BuildException(response.StatusCode, body);
         }
         return await response.Content.ReadAsByteArrayAsync(ct);
+    }
+
+    private async Task<HttpResponseMessage> SendWithAutoRefreshAsync(Func<HttpRequestMessage> requestFactory, CancellationToken ct)
+    {
+        var client = CreateClient();
+
+        using var firstRequest = requestFactory();
+        var firstResponse = await client.SendAsync(firstRequest, ct);
+        if (firstResponse.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            return firstResponse;
+
+        firstResponse.Dispose();
+
+        if (!await TryRefreshAccessTokenAsync(ct))
+        {
+            using var retryWithoutRefresh = requestFactory();
+            return await client.SendAsync(retryWithoutRefresh, ct);
+        }
+
+        using var retryRequest = requestFactory();
+        return await client.SendAsync(retryRequest, ct);
+    }
+
+    private async Task<bool> TryRefreshAccessTokenAsync(CancellationToken ct)
+    {
+        var connection = GetConnection();
+        if (string.IsNullOrWhiteSpace(connection.ApiBaseUrl) || string.IsNullOrWhiteSpace(connection.RefreshToken))
+            return false;
+
+        await _refreshLock.WaitAsync(ct);
+        try
+        {
+            var latest = GetConnection();
+            if (string.IsNullOrWhiteSpace(latest.ApiBaseUrl) || string.IsNullOrWhiteSpace(latest.RefreshToken))
+                return false;
+
+            var refreshUri = new Uri(new Uri(latest.ApiBaseUrl.TrimEnd('/') + "/"), "api/v1/auth/refresh");
+            var payload = JsonSerializer.Serialize(new { refreshToken = latest.RefreshToken }, _jsonOptions);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, refreshUri)
+            {
+                Content = new StringContent(payload, Encoding.UTF8, "application/json")
+            };
+
+            using var response = await _httpClientFactory.CreateClient().SendAsync(request, ct);
+            var body = await response.Content.ReadAsStringAsync(ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    SaveConnection(new ApiConnectionModel());
+                    SetForcePasswordChangeRequired(false);
+                }
+                return false;
+            }
+
+            var refreshed = string.IsNullOrWhiteSpace(body)
+                ? null
+                : JsonSerializer.Deserialize<RefreshLoginApiResponse>(body, _jsonOptions);
+
+            if (refreshed is null || string.IsNullOrWhiteSpace(refreshed.AccessToken))
+                return false;
+
+            SaveConnection(new ApiConnectionModel
+            {
+                ApiBaseUrl = latest.ApiBaseUrl,
+                AccessToken = refreshed.AccessToken,
+                RefreshToken = string.IsNullOrWhiteSpace(refreshed.RefreshToken) ? latest.RefreshToken : refreshed.RefreshToken,
+                DefaultDepartmentId = latest.DefaultDepartmentId
+            });
+            SetForcePasswordChangeRequired(refreshed.MustChangePassword);
+            return true;
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
     }
 
     private HttpClient CreateClient() => _httpClientFactory.CreateClient("EduApi");
@@ -849,6 +974,19 @@ public class EduApiClient : IEduApiClient
         return new InvalidOperationException(message);
     }
 
+    private sealed record RefreshLoginApiResponse(
+        string AccessToken,
+        string RefreshToken,
+        DateTime AccessTokenExpiry,
+        string Role,
+        Guid UserId,
+        string Username,
+        bool MustChangePassword,
+        bool MfaEnabled,
+        bool SsoEnabled,
+        string? SsoProvider,
+        string SessionRiskLevel);
+
     private string? ReadCookie(string key)
     {
         var value = _httpContextAccessor.HttpContext?.Request.Cookies[key];
@@ -869,25 +1007,27 @@ public class EduApiClient : IEduApiClient
     {
         var response = _httpContextAccessor.HttpContext?.Response
             ?? throw new InvalidOperationException("No active HTTP response found.");
+        var isHttpsRequest = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
 
         response.Cookies.Append(key, _protector.Protect(value), new CookieOptions
         {
             HttpOnly = true,
             IsEssential = true,
             SameSite = SameSiteMode.Strict,
-            Secure = true,
+            Secure = isHttpsRequest,
             Expires = DateTimeOffset.UtcNow.AddHours(8)
         });
     }
 
     private void DeleteCookie(string key)
     {
+        var isHttpsRequest = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
         _httpContextAccessor.HttpContext?.Response.Cookies.Delete(key, new CookieOptions
         {
             HttpOnly = true,
             IsEssential = true,
             SameSite = SameSiteMode.Strict,
-            Secure = true
+            Secure = isHttpsRequest
         });
     }
 
@@ -1125,12 +1265,18 @@ public class EduApiClient : IEduApiClient
 
     public async Task<string> UploadLicenseAsync(Stream fileStream, string fileName, CancellationToken ct)
     {
-        var req = CreateRequest(HttpMethod.Post, "api/v1/license/upload");
-        var content = new MultipartFormDataContent();
-        content.Add(new StreamContent(fileStream), "file", fileName);
-        req.Content = content;
-        using var client = CreateClient();
-        using var resp   = await client.SendAsync(req, ct);
+        using var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        var fileBytes = buffer.ToArray();
+
+        using var resp = await SendWithAutoRefreshAsync(() =>
+        {
+            var req = CreateRequest(HttpMethod.Post, "api/v1/license/upload");
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(fileBytes), "file", fileName);
+            req.Content = content;
+            return req;
+        }, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         return resp.IsSuccessStatusCode ? "License uploaded successfully." : $"Upload failed: {body}";
     }
@@ -1398,13 +1544,18 @@ public class EduApiClient : IEduApiClient
 
     public async Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, CancellationToken ct)
     {
-        using var content = new MultipartFormDataContent();
-        content.Add(new StreamContent(fileStream), "file", fileName);
+        using var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        var fileBytes = buffer.ToArray();
 
-        using var request = CreateRequest(HttpMethod.Post, "api/v1/user-import/csv");
-        request.Content = content;
-
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, "api/v1/user-import/csv");
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(fileBytes), "file", fileName);
+            request.Content = content;
+            return request;
+        }, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
 

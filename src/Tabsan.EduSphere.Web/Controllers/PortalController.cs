@@ -79,7 +79,19 @@ public class PortalController : Controller
         if (ShouldEnforceSidebarGuard(action) && !CanBypassSidebarGuard())
         {
             var requiredMenuKey = ActionMenuKeyMap[action!];
-            var visibleMenuKeys = await GetVisibleMenuKeysAsync(context.HttpContext.RequestAborted);
+            HashSet<string> visibleMenuKeys;
+            try
+            {
+                visibleMenuKeys = await GetVisibleMenuKeysAsync(context.HttpContext.RequestAborted);
+            }
+            catch (InvalidOperationException ex) when (IsUnauthorizedApiException(ex))
+            {
+                _api.SaveConnection(new ApiConnectionModel());
+                _api.SetForcePasswordChangeRequired(false);
+                context.Result = RedirectToAction("Index", "Login", new { returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString });
+                return;
+            }
+
             if (!visibleMenuKeys.Contains(requiredMenuKey))
             {
                 TempData["PortalMessage"] = "Access denied for this section based on your current role and menu permissions.";
@@ -117,6 +129,10 @@ public class PortalController : Controller
 
         return keys;
     }
+
+    private static bool IsUnauthorizedApiException(InvalidOperationException ex)
+        => ex.Message.Contains("status 401", StringComparison.OrdinalIgnoreCase)
+           || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase);
 
     [HttpGet]
     public IActionResult ForceChangePassword()
@@ -1556,28 +1572,35 @@ public class PortalController : Controller
         var model = new GradingConfigPageModel { IsConnected = _api.IsConnected() };
         if (model.IsConnected)
         {
-            var session = _api.GetSessionIdentity();
-            model.CanManageInstitutionSections = session?.IsSuperAdmin == true;
-
-            if (model.CanManageInstitutionSections)
+            try
             {
-                var profiles = await _api.GetInstitutionGradingProfilesAsync(ct);
-                model.InstitutionSections = BuildInstitutionGradingSections(profiles);
-            }
+                var session = _api.GetSessionIdentity();
+                model.CanManageInstitutionSections = session?.IsSuperAdmin == true;
 
-            var courses = await _api.GetCourseDetailsAsync(null, ct);
-            model.Courses = courses;
-            model.SelectedCourseId = courseId;
-            if (courseId.HasValue)
-            {
-                var config = await _api.GetCourseGradingConfigAsync(courseId.Value, ct);
-                if (config != null)
+                if (model.CanManageInstitutionSections)
                 {
-                    model.PassThreshold = config.PassThreshold;
-                    model.GradingType   = config.GradingType ?? "GPA";
-                    if (!string.IsNullOrWhiteSpace(config.GradeRangesJson))
-                        model.GradeRanges = System.Text.Json.JsonSerializer.Deserialize<List<GradeRangeItem>>(config.GradeRangesJson) ?? new();
+                    var profiles = await _api.GetInstitutionGradingProfilesAsync(ct);
+                    model.InstitutionSections = BuildInstitutionGradingSections(profiles);
                 }
+
+                var courses = await _api.GetCourseDetailsAsync(null, ct);
+                model.Courses = courses;
+                model.SelectedCourseId = courseId;
+                if (courseId.HasValue)
+                {
+                    var config = await _api.GetCourseGradingConfigAsync(courseId.Value, ct);
+                    if (config != null)
+                    {
+                        model.PassThreshold = config.PassThreshold;
+                        model.GradingType   = config.GradingType ?? "GPA";
+                        if (!string.IsNullOrWhiteSpace(config.GradeRangesJson))
+                            model.GradeRanges = System.Text.Json.JsonSerializer.Deserialize<List<GradeRangeItem>>(config.GradeRangesJson) ?? new();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                model.ErrorMessage = ex.Message;
             }
         }
         model.SuccessMessage = TempData["PortalMessage"] as string;

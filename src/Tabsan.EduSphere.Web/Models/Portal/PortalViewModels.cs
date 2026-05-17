@@ -6,6 +6,7 @@ public class ApiConnectionModel
 {
     public string ApiBaseUrl { get; set; } = string.Empty;
     public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
     public Guid? DefaultDepartmentId { get; set; }
 }
 

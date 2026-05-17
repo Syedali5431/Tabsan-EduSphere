@@ -74,8 +74,8 @@ public class SidebarMenuController : ControllerBase
         if (User.IsInRole("SuperAdmin"))
         {
             var allMenus = await _service.GetTopLevelMenusAsync(ct);
-            var moduleFiltered = await FilterByModuleActivationAsync(allMenus, ct);
-            return Ok(moduleFiltered.OrderBy(m => m.DisplayOrder));
+            // SuperAdmin must always see the full sidebar regardless of module toggles.
+            return Ok(allMenus.OrderBy(m => m.DisplayOrder));
         }
 
         var effectiveRoles = User.Claims

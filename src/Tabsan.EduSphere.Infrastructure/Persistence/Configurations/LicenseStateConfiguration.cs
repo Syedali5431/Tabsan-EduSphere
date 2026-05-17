@@ -19,7 +19,9 @@ public class LicenseStateConfiguration : IEntityTypeConfiguration<LicenseState>
 
         // Store enum values as strings for readability in the database.
         builder.Property(l => l.LicenseType)
-               .HasConversion<string>();
+                     .HasConversion(
+                            v => v.ToString(),
+                            v => ParseLicenseType(v));
 
         builder.Property(l => l.Status)
                .HasConversion<string>();
@@ -33,4 +35,17 @@ public class LicenseStateConfiguration : IEntityTypeConfiguration<LicenseState>
                .HasMaxLength(253) // max valid DNS name length
                .IsRequired(false);
     }
+
+       private static LicenseType ParseLicenseType(string? raw)
+       {
+              // Backward compatibility: older rows may use legacy text values.
+              if (string.Equals(raw, "Education", StringComparison.OrdinalIgnoreCase))
+              {
+                     return LicenseType.Yearly;
+              }
+
+              return Enum.TryParse<LicenseType>(raw, ignoreCase: true, out var parsed)
+                     ? parsed
+                     : LicenseType.Yearly;
+       }
 }
