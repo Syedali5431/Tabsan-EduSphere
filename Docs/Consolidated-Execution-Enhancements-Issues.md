@@ -59,6 +59,140 @@ For **every completed phase**:
 
 ---
 
+## 2026-05-18 - DeepScan Gap Phase/Stage Synchronization Request (Execution Snapshot)
+**Status:** Complete
+
+### Completion Mark
+- [x] Captured DeepScan gap issue in the consolidated execution tracker.
+- [x] Added executable remediation phases/stages for all identified missing/partial areas.
+- [x] Synchronized this request closure across mandatory planning and execution trackers.
+- [x] Confirmed no runtime/schema mutation in this documentation synchronization step.
+
+### Implementation Summary
+- Added Phase 39 and Phase 40 planned stage blocks to track remediation and closure for DeepScan findings.
+- Mapped each identified gap to explicit stages: waitlist workflow, transactional import strict mode, MFA hardening, and EF warning cleanup.
+- Added synchronized request snapshot entries across PRD, Function List, Functionality Reference, Development Plan, and Database Schema docs.
+
+### Validation Summary
+- Verified the consolidated tracker now contains phase/stage-level remediation entries for all DeepScan gaps.
+- Verified all six requested governance docs include this dated issue + implementation + validation snapshot.
+- Verified no runtime code, migrations, or deployment scripts were changed in this request-closeout step.
+
+---
+
+## Phase 39 - DeepScan Gap Remediation Program (Planned 2026-05-18)
+**Status:** Planned
+
+### Completion Mark
+- [ ] Close DeepScan high/medium gaps with code-level implementation.
+- [ ] Add targeted automated tests for each remediation stage.
+- [ ] Re-run build + targeted integration/unit suites after each stage.
+- [ ] Update PRD, Function List, and Functionality Reference after each completed stage.
+
+### Stage 39.1 - Enrollment Waitlist and Seat-Promotion Workflow
+**Issue Source:** DeepScan Task 4.6 (Enrollment partially implemented)
+
+- [ ] Add waitlist state model and persistence for over-capacity enrollments.
+- [ ] Extend enrollment service flow to place students into waitlist when seats are full.
+- [ ] Add promotion-on-seat-release workflow when enrolled students drop/withdraw.
+- [ ] Add admin/faculty API endpoints for viewing and managing waitlist queues.
+- [ ] Add integration tests for queue ordering, promotion correctness, and duplicate guards.
+
+**Primary Targets**
+- `src/Tabsan.EduSphere.Application/Academic/EnrollmentService.cs`
+- `src/Tabsan.EduSphere.API/Controllers/EnrollmentController.cs`
+- Enrollment domain/repository and EF configuration files.
+
+**Validation Gate**
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passes.
+- Enrollment integration suite validates seat-full -> waitlist -> auto-promote flow.
+
+### Stage 39.2 - Transactional CSV Import Strict Mode
+**Issue Source:** DeepScan Task 4.4 (User import partially implemented)
+
+- [ ] Add strict import mode (`all-or-nothing`) for CSV user import.
+- [ ] Wrap strict mode in transaction scope with deterministic rollback behavior.
+- [ ] Preserve existing permissive mode for backward compatibility.
+- [ ] Extend import result payload to indicate strict/permissive execution path.
+- [ ] Add tests for rollback correctness and mixed-validity CSV rows.
+
+**Primary Targets**
+- `src/Tabsan.EduSphere.Application/Services/UserImportService.cs`
+- Import API DTO/controller files.
+
+**Validation Gate**
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passes.
+- Integration tests confirm strict mode rolls back fully on failure.
+
+### Stage 39.3 - MFA Hardening (TOTP + Recovery Codes)
+**Issue Source:** DeepScan Task 4.1 (Security partial)
+
+- [ ] Replace demo-code MFA path with TOTP-based verification.
+- [ ] Add recovery-code generation, storage, and one-time consumption flow.
+- [ ] Add MFA enrollment and challenge endpoints with audit logging.
+- [ ] Ensure forced-password-change and refresh-token flows remain compatible.
+- [ ] Add unit/integration tests for MFA success/failure/recovery scenarios.
+
+**Primary Targets**
+- `src/Tabsan.EduSphere.Application/Auth/AuthService.cs`
+- `src/Tabsan.EduSphere.API/Controllers/AuthController.cs`
+- Auth DTO/options/configuration and persistence files.
+
+**Validation Gate**
+- Security integration tests confirm hardened MFA challenge flow.
+- Login/refresh/logout baseline tests remain green.
+
+### Stage 39.4 - EF Relationship and Query-Filter Warning Cleanup
+**Issue Source:** DeepScan performance/watchlist findings
+
+- [ ] Resolve required-relationship + global-filter mismatch warnings.
+- [ ] Remove shadow FK conflict (`QuizQuestion.QuizId1`) using explicit mapping.
+- [ ] Review nullable/required constraints to align with filter semantics.
+- [ ] Add regression tests around affected queries and entity graphs.
+
+**Primary Targets**
+- `src/Tabsan.EduSphere.Infrastructure/Persistence/ApplicationDbContext.cs`
+- `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/*`
+
+**Validation Gate**
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passes.
+- Startup/runtime warning set no longer includes known EF mapping/filter warnings.
+
+### Implementation Summary (Planned)
+- Phase 39 converts DeepScan findings into four executable remediation stages with code targets and test gates.
+- Each stage is independently deliverable and can be validated before moving to the next stage.
+
+### Validation Summary (Planned)
+- Stage completion requires build success and targeted automated test confirmation.
+- Final phase close requires consolidated DeepScan rerun and updated issue severity snapshot.
+
+---
+
+## Phase 40 - DeepScan Closure and Production Readiness Revalidation (Planned)
+**Status:** Planned
+
+### Completion Mark
+- [ ] Re-run DeepScan checklist tasks 4.1 through 4.20 after Phase 39 completion.
+- [ ] Reclassify severity list (Critical/High/Medium/Low) with updated evidence.
+- [ ] Confirm previously missing/partial items are fully implemented.
+- [ ] Publish final go/no-go validation statement.
+
+### Stage 40.1 - DeepScan Re-Execution and Evidence Pack
+- [ ] Re-run build and targeted integration/unit suites used in initial DeepScan.
+- [ ] Append updated task-by-task outputs to `Docs/DeepScan.md`.
+- [ ] Update this consolidated document with final completion snapshot.
+
+### Stage 40.2 - Documentation and Tracker Synchronization
+- [ ] Update `Project startup Docs/PRD.md` with closure summary.
+- [ ] Update `Docs/Function-List.md` with delivered remediation functions.
+- [ ] Update `Docs/Complete-Functionality-Reference.md` with final coverage state.
+- [ ] Confirm no unresolved high-severity functional gap remains.
+
+### Validation Summary (Planned)
+- Final closure is accepted only when DeepScan reports no missing core functional path.
+
+---
+
 ## Phase 28 â€” Scalability Architecture (Stage 28.1)
 **Status:** âœ… Stage 28.1 Complete (2026-05-09)
 
