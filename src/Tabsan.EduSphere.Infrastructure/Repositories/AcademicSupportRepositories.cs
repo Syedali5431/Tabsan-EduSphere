@@ -28,6 +28,14 @@ public class EnrollmentRepository : IEnrollmentRepository
                     .Where(e => e.CourseOfferingId == courseOfferingId && e.Status == EnrollmentStatus.Active)
                     .ToListAsync(ct);
 
+    /// <summary>Returns all waitlisted enrollments in a course offering, in queue order.</summary>
+    public async Task<IReadOnlyList<Enrollment>> GetWaitlistedByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+        => await _db.Enrollments
+                    .Include(e => e.StudentProfile).ThenInclude(sp => sp.Program)
+                    .Where(e => e.CourseOfferingId == courseOfferingId && e.Status == EnrollmentStatus.Waitlisted)
+                    .OrderBy(e => e.EnrolledAt)
+                    .ToListAsync(ct);
+
     // Final-Touches Phase 8 Stage 8.2 — look up enrollment by its own ID for admin drop
     /// <summary>Returns the enrollment with the given ID, or null.</summary>
     public Task<Enrollment?> GetByIdAsync(Guid id, CancellationToken ct = default)

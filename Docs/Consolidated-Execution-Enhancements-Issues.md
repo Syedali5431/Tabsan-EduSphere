@@ -92,11 +92,21 @@ For **every completed phase**:
 ### Stage 39.1 - Enrollment Waitlist and Seat-Promotion Workflow
 **Issue Source:** DeepScan Task 4.6 (Enrollment partially implemented)
 
-- [ ] Add waitlist state model and persistence for over-capacity enrollments.
-- [ ] Extend enrollment service flow to place students into waitlist when seats are full.
-- [ ] Add promotion-on-seat-release workflow when enrolled students drop/withdraw.
+- [x] Add waitlist state model and persistence for over-capacity enrollments.
+- [x] Extend enrollment service flow to place students into waitlist when seats are full.
+- [x] Add promotion-on-seat-release workflow when enrolled students drop/withdraw.
 - [ ] Add admin/faculty API endpoints for viewing and managing waitlist queues.
-- [ ] Add integration tests for queue ordering, promotion correctness, and duplicate guards.
+- [x] Add integration tests for queue ordering, promotion correctness, and duplicate guards.
+
+**Implementation Summary:**
+- added `Waitlisted` enrollment state plus promotion helpers in the enrollment aggregate,
+- updated enrollment service flow to create waitlisted records when the offering is full and to promote the oldest waitlisted student after a drop,
+- added repository support for ordered waitlist retrieval and regression coverage for waitlist creation/promotion.
+
+**Validation Summary:**
+- ran `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter EnrollmentServiceWaitlistTests` successfully (`2/2`),
+- verified full-offering enrollment now waitlists instead of hard-failing,
+- verified dropping an active enrollment promotes the oldest waitlisted student.
 
 **Primary Targets**
 - `src/Tabsan.EduSphere.Application/Academic/EnrollmentService.cs`

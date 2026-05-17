@@ -19,6 +19,19 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
+- Completed the enrollment waitlist remediation stage.
+- Implementation Summary:
+  - added a waitlisted enrollment state plus promotion helpers in the domain model,
+  - updated enrollment service behavior to queue students when the offering is full and promote the oldest waitlisted student on drop,
+  - added ordered waitlist retrieval in the repository layer.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter EnrollmentServiceWaitlistTests` passed (`2/2`),
+  - verified queue-on-full behavior and deterministic promotion on seat release,
+  - confirmed the change is isolated to enrollment workflow behavior and does not require schema migration.
+- Stage status: Stage 39.1 completed.
+- Phase status: DeepScan remediation roadmap advanced by one completed stage.
+
 ### 2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
 - Completed the user CSV import strict-mode remediation stage.
 - Implementation Summary:

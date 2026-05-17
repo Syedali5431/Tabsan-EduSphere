@@ -18,6 +18,21 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
+- Recent request issue:
+  - the DeepScan remediation roadmap required waitlist handling for full course offerings so students could be queued and promoted on seat release.
+- Implementation Summary:
+  - added a `Waitlisted` enrollment state and promotion helpers in the enrollment aggregate,
+  - updated enrollment service flow to create waitlisted records when an offering is full and auto-promote the oldest waitlisted student after a drop,
+  - added ordered waitlist retrieval in the repository contract and implementation.
+- Validation Summary:
+  - targeted unit suite passed for waitlist creation and promotion (`2/2`),
+  - verified full-offering enrollment now creates a waitlisted record instead of failing outright,
+  - verified dropping an active enrollment promotes the oldest queued waitlisted student.
+- Behavior impact:
+  - enrollment now supports queueing instead of hard rejection when a section is full,
+  - waitlist promotion is deterministic and based on queue order.
+
 ### 2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
 - Recent request issue:
   - the DeepScan remediation roadmap called for an all-or-nothing import mode for user CSV imports so invalid files do not partially persist accounts.

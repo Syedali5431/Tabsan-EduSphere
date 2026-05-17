@@ -53,6 +53,19 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-18 Update - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
+
+- Recent request issue:
+	- waitlist handling for full course offerings needed to be added to the enrollment workflow.
+- Implementation Summary:
+	- updated the enrollment aggregate, repository contract, and service flow to support waitlisted records and deterministic promotion,
+	- added repository retrieval for ordered waitlisted enrollments.
+- Validation Summary:
+	- targeted unit suite passed for waitlist creation and promotion (`2/2`),
+	- verified no tables, columns, indexes, constraints, or migrations were required for this behavior update.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-13 Update - Institute Parity Stage 0.1 (Execution Snapshot)
 
 - Stage 0.1 completed as a schema/dependency audit baseline.

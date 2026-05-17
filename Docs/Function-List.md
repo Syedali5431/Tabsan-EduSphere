@@ -27,6 +27,14 @@
 | `UserImportController strictMode query option` | Exposes strict/permissive import behavior through a query parameter while preserving backward-compatible default behavior. | `src/Tabsan.EduSphere.API/Controllers/UserImportController.cs` |
 | `UserImportResult strict-mode flag` | Signals whether the import response was generated from strict or permissive execution. | `src/Tabsan.EduSphere.Application/DTOs/CsvImportDtos.cs` |
 
+## 2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `EnrollmentStatus.Waitlisted` | Represents an over-capacity enrollment that is queued for promotion when a seat becomes available. | `src/Tabsan.EduSphere.Domain/Academic/Enrollment.cs` |
+| `EnrollmentService waitlist promotion flow` | Creates waitlisted enrollments when a course offering is full and promotes the oldest waitlisted enrollment after a drop. | `src/Tabsan.EduSphere.Application/Academic/EnrollmentService.cs` |
+| `IEnrollmentRepository.GetWaitlistedByOfferingAsync` | Returns waitlisted enrollments in queue order so promotion can be deterministic. | `src/Tabsan.EduSphere.Domain/Interfaces/IEnrollmentRepository.cs`, `src/Tabsan.EduSphere.Infrastructure/Repositories/AcademicSupportRepositories.cs` |
+
 ## Phase 36 - Deployment Readiness (2026-05-15)
 
 | Function Name | Purpose | Location |

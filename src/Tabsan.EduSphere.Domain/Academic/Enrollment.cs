@@ -10,11 +10,14 @@ public enum EnrollmentStatus
     /// <summary>Student is actively enrolled in this course offering.</summary>
     Active = 1,
 
+    /// <summary>Student is queued for the offering because it is currently full.</summary>
+    Waitlisted = 2,
+
     /// <summary>Student dropped the course before the withdrawal deadline.</summary>
-    Dropped = 2,
+    Dropped = 3,
 
     /// <summary>The course offering was cancelled after enrollment — student was not charged.</summary>
-    Cancelled = 3
+    Cancelled = 4
 }
 
 /// <summary>
@@ -64,6 +67,30 @@ public class Enrollment : BaseEntity
 
         Status = EnrollmentStatus.Dropped;
         DroppedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks the enrollment as waitlisted because the offering is full.
+    /// Throws InvalidOperationException when the enrollment is not currently Active.
+    /// </summary>
+    public void Waitlist()
+    {
+        if (Status != EnrollmentStatus.Active)
+            throw new InvalidOperationException("Only active enrollments can be waitlisted.");
+
+        Status = EnrollmentStatus.Waitlisted;
+    }
+
+    /// <summary>
+    /// Promotes a waitlisted enrollment to active when a seat becomes available.
+    /// Throws InvalidOperationException when the enrollment is not currently waitlisted.
+    /// </summary>
+    public void PromoteFromWaitlist()
+    {
+        if (Status != EnrollmentStatus.Waitlisted)
+            throw new InvalidOperationException("Only waitlisted enrollments can be promoted.");
+
+        Status = EnrollmentStatus.Active;
     }
 
     /// <summary>

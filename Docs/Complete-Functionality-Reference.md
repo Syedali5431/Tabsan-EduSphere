@@ -57,6 +57,22 @@ After each completed stage, this document must be updated to reflect any net fun
     - strict-mode user import now behaves atomically from the caller’s perspective,
     - permissive user import behavior remains unchanged for existing clients.
 
+## 2026-05-18 Update - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
+
+- Recent request issue:
+    - enrollment handling needed a waitlist and seat-promotion path when course offerings are full.
+- Implementation Summary:
+    - added a waitlisted enrollment state and promotion helpers to the enrollment aggregate,
+    - updated enrollment service logic to queue students when an offering is full and promote the oldest waitlisted student after a drop,
+    - added ordered waitlist retrieval in the enrollment repository layer and covered the flow with focused unit tests.
+- Validation Summary:
+    - targeted unit suite passed for waitlist creation and promotion (`2/2`),
+    - verified full offering enrollment now records a waitlisted state,
+    - verified seat release promotes the oldest waitlisted enrollment deterministically.
+- Behavior impact:
+    - enrollment no longer hard-fails when a full offering still accepts a waitlist,
+    - seat release now advances the waitlist automatically for the oldest queued student.
+
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 
 - Completed execute-mode closure for final separation phases.

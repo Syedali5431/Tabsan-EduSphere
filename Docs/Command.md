@@ -50,6 +50,21 @@ Do not end a completed task with local-only changes.
   - governance docs synchronized,
   - repository sync required after this checkpoint.
 
+### Stage Completion Checkpoint (2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow)
+- Completed the Stage 39.1 enrollment waitlist and promotion remediation with validated queue-on-full behavior.
+- Implementation Summary:
+  - added a waitlisted enrollment state and ordered repository access for queued students,
+  - updated enrollment service behavior to waitlist students when full and promote the oldest queued student after a drop,
+  - added focused unit coverage for waitlist creation and seat-release promotion.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter EnrollmentServiceWaitlistTests` passed (`2/2`),
+  - verified full-offering enrollments now queue instead of rejecting,
+  - verified seat release advances the waitlist in queue order.
+- Status of Checks Done:
+  - code change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
 ## Institution License Validation Workflow (2026-05-12)
 - Plan file: `Docs/Institution-License-Validation-Phases.md`
 - For each completed validation phase, mandatory outputs are:

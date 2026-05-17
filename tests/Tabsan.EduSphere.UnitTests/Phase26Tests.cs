@@ -961,6 +961,9 @@ file sealed class StubEnrollmentRepository : IEnrollmentRepository
     public Task<IReadOnlyList<Enrollment>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<Enrollment>>(_enrollments.Where(e => e.CourseOfferingId == courseOfferingId).ToList());
 
+    public Task<IReadOnlyList<Enrollment>> GetWaitlistedByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyList<Enrollment>>(_enrollments.Where(e => e.CourseOfferingId == courseOfferingId && e.Status == EnrollmentStatus.Waitlisted).OrderBy(e => e.EnrolledAt).ToList());
+
     public Task<Enrollment?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => Task.FromResult(_enrollments.FirstOrDefault(e => e.Id == id));
 

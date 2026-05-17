@@ -12,8 +12,8 @@ namespace Tabsan.EduSphere.Application.Academic;
 /// Enforces all business rules:
 ///   - The course offering must be open.
 ///   - The parent semester must not be closed.
-///   - The offering must have available seats.
-///   - A student cannot enrol twice in the same offering.
+    ///   - The offering must have available seats or the student is waitlisted.
+    ///   - A student cannot hold more than one enrollment record in the same offering.
 /// Enrollment rows are never deleted — drops change status to Dropped.
 /// </summary>
 public class EnrollmentService : IEnrollmentService
@@ -63,15 +63,19 @@ public class EnrollmentService : IEnrollmentService
         // Guard: offering must still be accepting enrollments.
         if (!offering.IsOpen) return null;
 
-        // Guard: prevent duplicate active enrollments.
-        if (await _enrollmentRepo.IsEnrolledAsync(studentProfileId, request.CourseOfferingId, ct))
+        // Guard: prevent duplicate open enrollment records (active or waitlisted).
+        var existingEnrollment = await _enrollmentRepo.GetAsync(studentProfileId, request.CourseOfferingId, ct);
+        if (existingEnrollment is not null && existingEnrollment.Status != EnrollmentStatus.Dropped && existingEnrollment.Status != EnrollmentStatus.Cancelled)
             return null;
 
-        // Guard: check seat availability.
+        // Guard: check seat availability; if full, enqueue the student instead of rejecting outright.
         var currentCount = await _courseRepo.GetEnrollmentCountAsync(request.CourseOfferingId, ct);
-        if (currentCount >= offering.MaxEnrollment) return null;
+        var isWaitlisted = currentCount >= offering.MaxEnrollment;
 
         var enrollment = new Enrollment(studentProfileId, request.CourseOfferingId);
+        if (isWaitlisted)
+            enrollment.Waitlist();
+
         await _enrollmentRepo.AddAsync(enrollment, ct);
         await _enrollmentRepo.SaveChangesAsync(ct);
 
@@ -103,6 +107,8 @@ public class EnrollmentService : IEnrollmentService
         _enrollmentRepo.Update(enrollment);
         await _enrollmentRepo.SaveChangesAsync(ct);
 
+        await PromoteNextWaitlistedEnrollmentAsync(courseOfferingId, studentProfileId, ct);
+
         await _audit.LogAsync(new AuditLog(
             "Drop", "Enrollment", enrollment.Id.ToString(),
             actorUserId: studentProfileId), ct);
@@ -129,6 +135,8 @@ public class EnrollmentService : IEnrollmentService
         enrollment.Drop();
         _enrollmentRepo.Update(enrollment);
         await _enrollmentRepo.SaveChangesAsync(ct);
+
+        await PromoteNextWaitlistedEnrollmentAsync(enrollment.CourseOfferingId, enrollment.StudentProfileId, ct);
         return true;
     }
 
@@ -158,13 +166,13 @@ public class EnrollmentService : IEnrollmentService
             return new EnrollmentAttemptResult(false, RejectionReason: "Enrollment is closed for this offering.");
 
         // 4. Duplicate enrollment guard.
-        if (await _enrollmentRepo.IsEnrolledAsync(studentProfileId, courseOfferingId, ct))
+        var existingEnrollment = await _enrollmentRepo.GetAsync(studentProfileId, courseOfferingId, ct);
+        if (existingEnrollment is not null && existingEnrollment.Status != EnrollmentStatus.Dropped && existingEnrollment.Status != EnrollmentStatus.Cancelled)
             return new EnrollmentAttemptResult(false, RejectionReason: "Already enrolled in this offering.");
 
-        // 5. Seat availability guard.
+        // 5. Seat availability guard — if full, queue the student instead of failing.
         var currentCount = await _courseRepo.GetEnrollmentCountAsync(courseOfferingId, ct);
-        if (currentCount >= offering.MaxEnrollment)
-            return new EnrollmentAttemptResult(false, RejectionReason: "Offering is full.");
+        var isWaitlisted = currentCount >= offering.MaxEnrollment;
 
         // 6. Prerequisite check (Stage 15.1).
         var prerequisites = await _prerequisiteRepo.GetByCourseIdAsync(offering.CourseId, ct);
@@ -239,6 +247,9 @@ public class EnrollmentService : IEnrollmentService
 
         // 8. All checks passed — create enrollment.
         var enrollment = new Enrollment(studentProfileId, courseOfferingId);
+        if (isWaitlisted)
+            enrollment.Waitlist();
+
         await _enrollmentRepo.AddAsync(enrollment, ct);
         await _enrollmentRepo.SaveChangesAsync(ct);
 
@@ -262,6 +273,27 @@ public class EnrollmentService : IEnrollmentService
             SemesterName:     offering.Semester.Name,
             Status:           enrollment.Status.ToString(),
             EnrolledAt:       enrollment.EnrolledAt));
+    }
+
+    private async Task PromoteNextWaitlistedEnrollmentAsync(Guid courseOfferingId, Guid actorStudentProfileId, CancellationToken ct)
+    {
+        var offering = await _courseRepo.GetOfferingByIdAsync(courseOfferingId, ct);
+        if (offering is null || offering.Semester.IsClosed || !offering.IsOpen)
+            return;
+
+        var waitlisted = await _enrollmentRepo.GetWaitlistedByOfferingAsync(courseOfferingId, ct);
+        var next = waitlisted.FirstOrDefault();
+        if (next is null)
+            return;
+
+        next.PromoteFromWaitlist();
+        _enrollmentRepo.Update(next);
+        await _enrollmentRepo.SaveChangesAsync(ct);
+
+        await _audit.LogAsync(new AuditLog(
+            "PromoteWaitlistedEnrollment", "Enrollment", next.Id.ToString(),
+            actorUserId: actorStudentProfileId,
+            newValuesJson: $"{{\"waitlistedStudentProfileId\":\"{next.StudentProfileId:D}\",\"courseOfferingId\":\"{courseOfferingId:D}\"}}"), ct);
     }
 
     private async Task<decimal> ResolvePrerequisitePassThresholdPercentageAsync(Guid studentProfileId, CancellationToken ct)
