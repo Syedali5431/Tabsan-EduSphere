@@ -124,6 +124,10 @@ public class EnrollmentService : IEnrollmentService
     public Task<IReadOnlyList<Enrollment>> GetForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
         => _enrollmentRepo.GetByOfferingAsync(courseOfferingId, ct);
 
+    /// <summary>Returns the waitlisted enrollments in queue order for the given course offering.</summary>
+    public Task<IReadOnlyList<Enrollment>> GetWaitlistedForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+        => _enrollmentRepo.GetWaitlistedByOfferingAsync(courseOfferingId, ct);
+
     // Final-Touches Phase 8 Stage 8.2 — admin drop any enrollment by its ID
     /// <summary>Drops any active enrollment identified by enrollment ID. Returns false when not found or not active.</summary>
     public async Task<bool> AdminDropByIdAsync(Guid enrollmentId, CancellationToken ct = default)

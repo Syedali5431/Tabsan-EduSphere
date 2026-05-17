@@ -119,6 +119,27 @@ public class EnrollmentController : ControllerBase
         }));
     }
 
+    // ── GET /api/v1/enrollment/waitlist/{offeringId} ─────────────────────────
+
+    /// <summary>Returns the current waitlist queue for a course offering.</summary>
+    [HttpGet("waitlist/{offeringId:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> GetWaitlist(Guid offeringId, CancellationToken ct)
+    {
+        var waitlist = await _enrollmentService.GetWaitlistedForOfferingAsync(offeringId, ct);
+        return Ok(waitlist.Select((e, index) => new
+        {
+            QueuePosition      = index + 1,
+            Id                 = e.Id,
+            StudentName        = e.StudentProfile.RegistrationNumber,
+            RegistrationNumber = e.StudentProfile.RegistrationNumber,
+            ProgramName        = e.StudentProfile.Program?.Name ?? string.Empty,
+            SemesterNumber     = e.StudentProfile.CurrentSemesterNumber,
+            e.Status,
+            e.EnrolledAt
+        }));
+    }
+
     // ── POST /api/v1/enrollment/admin ──────────────────────────────────────────
 
     // Final-Touches Phase 8 Stage 8.2 — admin enrolls any student into any offering
