@@ -19,6 +19,14 @@
 | `DeepScan remediation phase/stage planning insertion` | Adds executable staged remediation plan entries for waitlist, transactional import strict mode, MFA hardening, and EF warning cleanup. | `Docs/Consolidated-Execution-Enhancements-Issues.md` |
 | `DeepScan request snapshot cross-doc synchronization` | Synchronizes issue, implementation summary, and validation summary entries across six mandatory planning/execution documents. | `Project startup Docs/PRD.md`, `Docs/Consolidated-Execution-Enhancements-Issues.md`, `Docs/Function-List.md`, `Docs/Complete-Functionality-Reference.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md` |
 
+## 2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `UserImportService strict-mode rollback` | Prevents partial persistence by rolling back CSV user imports when any validation issue or duplicate row is detected in strict mode. | `src/Tabsan.EduSphere.Application/Services/UserImportService.cs` |
+| `UserImportController strictMode query option` | Exposes strict/permissive import behavior through a query parameter while preserving backward-compatible default behavior. | `src/Tabsan.EduSphere.API/Controllers/UserImportController.cs` |
+| `UserImportResult strict-mode flag` | Signals whether the import response was generated from strict or permissive execution. | `src/Tabsan.EduSphere.Application/DTOs/CsvImportDtos.cs` |
+
 ## Phase 36 - Deployment Readiness (2026-05-15)
 
 | Function Name | Purpose | Location |

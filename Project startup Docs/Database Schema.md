@@ -39,6 +39,20 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-18 Update - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
+
+- Recent request issue:
+	- the user import flow needed an atomic strict mode to avoid partial persistence when a CSV contains mixed-validity rows.
+- Implementation Summary:
+	- updated the application/service/controller import path to support optional strict-mode rollback behavior,
+	- added a strict-mode indicator to the import response payload.
+- Validation Summary:
+	- targeted integration suite passed for user import and force-change-password flows (`4/4`),
+	- verified strict mode produces no persisted rows when mixed-validity input is supplied,
+	- verified permissive import remains unchanged.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-13 Update - Institute Parity Stage 0.1 (Execution Snapshot)
 
 - Stage 0.1 completed as a schema/dependency audit baseline.

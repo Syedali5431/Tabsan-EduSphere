@@ -18,6 +18,21 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
+- Recent request issue:
+  - the DeepScan remediation roadmap called for an all-or-nothing import mode for user CSV imports so invalid files do not partially persist accounts.
+- Implementation Summary:
+  - added optional `strictMode` support to the user import service and controller,
+  - made the import result payload report the executed path,
+  - preserved permissive import behavior as the default for backward compatibility.
+- Validation Summary:
+  - targeted integration suite passed for user import and force-change flows (`4/4`),
+  - verified strict-mode import aborts persistence when a mixed-validity CSV is submitted,
+  - verified permissive import still works end-to-end.
+- Behavior impact:
+  - strict-mode CSV imports are now deterministic and atomic from the caller’s perspective,
+  - existing permissive CSV imports remain unchanged.
+
 ### 2026-05-18 - DeepScan Gap Phase/Stage Synchronization Request (Execution Snapshot)
 - Recent request issue:
   - DeepScan-identified missing/partial items were not yet represented as executable phase/stage entries across mandatory governance trackers.

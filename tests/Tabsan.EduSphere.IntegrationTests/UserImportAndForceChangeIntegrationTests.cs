@@ -129,6 +129,45 @@ public class UserImportAndForceChangeIntegrationTests
     }
 
     [Fact]
+    public async Task UserImportCsv_StrictMode_WithInvalidRow_RollsBackAllRows()
+    {
+        using var adminClient = CreateClient("Admin");
+        using var superAdminClient = CreateClient("SuperAdmin");
+        await SetInstitutionPolicyAsync(superAdminClient, university: true, school: false, college: false);
+
+        var validUsername = $"import_strict_valid_{Guid.NewGuid():N}";
+        var invalidUsername = $"import_strict_invalid_{Guid.NewGuid():N}";
+        var csv = string.Join('\n',
+        [
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType",
+            $"{validUsername},{validUsername}@tabsan.local,Strict Valid,Admin,,University",
+            $"{invalidUsername},{invalidUsername}@tabsan.local,Strict Invalid,Admin,,School"
+        ]);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(csv)), "file", "strict-import-users.csv");
+
+        var response = await adminClient.PostAsync("api/v1/user-import/csv?strictMode=true", content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(0, ReadInt(body.RootElement, "imported"));
+        Assert.True(ReadInt(body.RootElement, "errors") >= 1);
+        Assert.True(ReadBool(body.RootElement, "strictMode"));
+
+        var errorDetails = body.RootElement.GetProperty("errorDetails").EnumerateArray().Select(x => x.GetString() ?? string.Empty).ToList();
+        Assert.Contains(errorDetails, detail => detail.Contains("Strict mode rollback", StringComparison.OrdinalIgnoreCase));
+
+        var loginResponse = await _factory.CreateClient().PostAsJsonAsync("api/v1/auth/login", new
+        {
+            username = validUsername,
+            password = validUsername
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task UserImportCsv_WithDisabledInstitutionType_ReturnsValidationError()
     {
         using var adminClient = CreateClient("Admin");

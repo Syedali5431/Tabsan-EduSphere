@@ -188,6 +188,25 @@ For **every completed phase**:
 - [x] Update `Docs/Complete-Functionality-Reference.md` with final coverage state.
 - [ ] Confirm no unresolved high-severity functional gap remains.
 
+### Stage 39.2 - Transactional CSV Import Strict Mode
+**Status:** Complete (2026-05-18)
+
+### Completion Mark
+- [x] Added optional strict-mode rollback behavior to CSV user import.
+- [x] Preserved permissive import flow as the default backward-compatible path.
+- [x] Extended import result payload to indicate strict/permissive execution path.
+- [x] Added integration coverage for strict-mode rollback behavior.
+
+### Implementation Summary
+- `UserImportService` now accepts an optional `strictMode` flag and aborts persistence when any validation issue or duplicate row is detected in strict mode.
+- `UserImportController` now exposes `strictMode` as a query parameter while keeping existing imports permissive by default.
+- `UserImportResult` now carries a `StrictMode` flag so the API response reflects the executed path.
+
+### Validation Summary
+- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+- Verified strict-mode import returns `imported = 0` and does not persist any rows when a mixed-validity CSV is submitted.
+- Verified permissive import and force-change-password flow still work end-to-end.
+
 ### Validation Summary (Planned)
 - Final closure is accepted only when DeepScan reports no missing core functional path.
 

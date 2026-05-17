@@ -19,6 +19,19 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
+- Completed the user CSV import strict-mode remediation stage.
+- Implementation Summary:
+  - added optional strict-mode rollback behavior to the user import service and API controller,
+  - extended the import result payload with strict/permissive execution-path visibility,
+  - preserved permissive import behavior for backward compatibility.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`),
+  - verified strict-mode import rolls back all rows when a mixed-validity CSV is submitted,
+  - verified the existing permissive import and forced-password-change flow still passes.
+- Stage status: Stage 39.2 completed.
+- Phase status: DeepScan remediation roadmap advanced by one completed stage.
+
 ### 2026-05-18 - DeepScan Gap Phase/Stage Synchronization Request (Execution Snapshot)
 - Completed synchronized planning update for DeepScan-identified missing/partial areas.
 - Implementation Summary:

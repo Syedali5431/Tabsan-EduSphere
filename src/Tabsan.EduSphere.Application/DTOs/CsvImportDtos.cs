@@ -31,5 +31,6 @@ public record UserImportResult(
     int Imported,
     int Duplicates,
     int Errors,
+    bool StrictMode,
     IList<string> ErrorDetails
 );

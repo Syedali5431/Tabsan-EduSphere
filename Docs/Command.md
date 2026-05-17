@@ -35,6 +35,21 @@ Do not end a completed task with local-only changes.
   - repository sync completed after the documentation update sequence,
   - no unresolved file or migration change was required for this checkpoint.
 
+### Stage Completion Checkpoint (2026-05-18 - DeepScan Stage 39.2 Transactional CSV Import Strict Mode)
+- Completed the Stage 39.2 user-import strict-mode remediation with validated rollback behavior.
+- Implementation Summary:
+  - added optional strict-mode rollback behavior to the user import service and controller,
+  - extended the import result payload to report strict/permissive execution mode,
+  - preserved permissive import behavior as the default backward-compatible path.
+- Validation Summary:
+  - targeted user-import integration suite passed (`4/4`),
+  - verified strict-mode import rolls back all rows for mixed-validity CSV input,
+  - verified existing permissive import and forced-password-change flow remain green.
+- Status of Checks Done:
+  - code change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
 ## Institution License Validation Workflow (2026-05-12)
 - Plan file: `Docs/Institution-License-Validation-Phases.md`
 - For each completed validation phase, mandatory outputs are:

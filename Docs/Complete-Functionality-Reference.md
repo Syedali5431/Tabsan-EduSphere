@@ -41,6 +41,22 @@ After each completed stage, this document must be updated to reflect any net fun
     - no runtime functionality change,
     - functionality governance now explicitly tracks the DeepScan remediation roadmap.
 
+## 2026-05-18 Update - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
+
+- Recent request issue:
+    - user CSV imports needed an atomic strict mode so partially valid files would not persist a mixed result set.
+- Implementation Summary:
+    - added optional strict-mode rollback support to the user import service and API controller,
+    - added a response flag to show whether the import used strict or permissive behavior,
+    - preserved existing permissive import behavior as the default path.
+- Validation Summary:
+    - targeted integration suite passed for user import and force-change-password flows (`4/4`),
+    - verified strict mode returns zero imported rows when a mixed-validity CSV is submitted,
+    - verified permissive import continues to work with the existing end-to-end login and forced-password-change flow.
+- Behavior impact:
+    - strict-mode user import now behaves atomically from the caller’s perspective,
+    - permissive user import behavior remains unchanged for existing clients.
+
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 
 - Completed execute-mode closure for final separation phases.

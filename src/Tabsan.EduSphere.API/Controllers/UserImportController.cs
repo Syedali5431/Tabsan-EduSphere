@@ -29,7 +29,7 @@ public class UserImportController : ControllerBase
     /// Returns a summary: total rows, imported, duplicates, errors.
     /// </summary>
     [HttpPost("csv")]
-    public async Task<IActionResult> ImportCsv(IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> ImportCsv(IFormFile file, [FromQuery] bool strictMode = false, CancellationToken ct = default)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No CSV file provided." });
@@ -39,7 +39,7 @@ public class UserImportController : ControllerBase
             return BadRequest(new { message = "Only .csv files are accepted." });
 
         await using var stream = file.OpenReadStream();
-        var result = await _importService.ImportFromCsvAsync(stream, ct);
+        var result = await _importService.ImportFromCsvAsync(stream, strictMode, ct);
         return Ok(result);
     }
 }

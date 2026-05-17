@@ -39,7 +39,7 @@ public class UserImportService : IUserImportService
         _institutionPolicyService = institutionPolicyService;
     }
 
-    public async Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, CancellationToken ct = default)
+    public async Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, bool strictMode = false, CancellationToken ct = default)
     {
         var errors = new List<string>();
         var toImport = new List<User>();
@@ -54,7 +54,7 @@ public class UserImportService : IUserImportService
         // Skip header line
         var header = await reader.ReadLineAsync(ct);
         if (header is null)
-            return new UserImportResult(0, 0, 0, 0, new List<string>());
+            return new UserImportResult(0, 0, 0, 0, strictMode, new List<string>());
 
         var headerParts = header.Split(',').Select(h => h.Trim()).ToArray();
         var headerMap = BuildHeaderMap(headerParts);
@@ -63,7 +63,7 @@ public class UserImportService : IUserImportService
             !headerMap.TryGetValue("role", out var roleIndex))
         {
             errors.Add("Invalid CSV format: header must include Username, Email, and Role columns.");
-            return new UserImportResult(0, 0, 0, 1, errors);
+            return new UserImportResult(0, 0, 0, 1, strictMode, errors);
         }
 
         headerMap.TryGetValue("departmentid", out var departmentIdIndex);
@@ -196,10 +196,24 @@ public class UserImportService : IUserImportService
             toImport.Add(user);
         }
 
-        if (toImport.Count > 0)
+        var shouldRollback = strictMode && (errors.Count > 0 || duplicates > 0);
+
+        if (!shouldRollback && toImport.Count > 0)
         {
             await _userRepo.AddRangeAsync(toImport, ct);
             await _userRepo.SaveChangesAsync(ct);
+        }
+
+        if (shouldRollback)
+        {
+            errors.Insert(0, $"Strict mode rollback: no users were imported because {errors.Count} validation issue(s) and {duplicates} duplicate row(s) were detected.");
+            return new UserImportResult(
+                TotalRows: totalRows,
+                Imported: 0,
+                Duplicates: duplicates,
+                Errors: errors.Count,
+                StrictMode: true,
+                ErrorDetails: errors);
         }
 
         return new UserImportResult(
@@ -207,6 +221,7 @@ public class UserImportService : IUserImportService
             Imported: toImport.Count,
             Duplicates: duplicates,
             Errors: errors.Count,
+            StrictMode: strictMode,
             ErrorDetails: errors
         );
     }

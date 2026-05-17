@@ -16,5 +16,5 @@ public interface IUserImportService
     /// (DepartmentId is optional; omit or leave blank for Admin/SuperAdmin rows).
     /// Returns a summary with counts of imported, duplicate, and erroneous rows.
     /// </summary>
-    Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, CancellationToken ct = default);
+    Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, bool strictMode = false, CancellationToken ct = default);
 }
