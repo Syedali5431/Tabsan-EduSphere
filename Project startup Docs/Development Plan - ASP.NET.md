@@ -19,6 +19,19 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-18 - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
+- Completed EF mapping/filter warning remediation stage.
+- Implementation Summary:
+  - aligned dependent query filters with filtered required principals across the affected EF mappings,
+  - fixed quiz question relationship mapping to explicit parent navigation to remove shadow-FK behavior,
+  - removed `CourseType` DB default configuration that triggered enum sentinel warning behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+  - verified targeted EF warning set is no longer emitted during startup in the focused integration path.
+- Stage status: Stage 39.4 completed.
+- Phase status: DeepScan Phase 39 remediation stage completed for EF warning cleanup.
+
 ### 2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
 - Completed the MFA hardening remediation stage.
 - Implementation Summary:

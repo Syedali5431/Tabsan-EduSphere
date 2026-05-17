@@ -166,10 +166,20 @@ For **every completed phase**:
 ### Stage 39.4 - EF Relationship and Query-Filter Warning Cleanup
 **Issue Source:** DeepScan performance/watchlist findings
 
-- [ ] Resolve required-relationship + global-filter mismatch warnings.
-- [ ] Remove shadow FK conflict (`QuizQuestion.QuizId1`) using explicit mapping.
-- [ ] Review nullable/required constraints to align with filter semantics.
-- [ ] Add regression tests around affected queries and entity graphs.
+- [x] Resolve required-relationship + global-filter mismatch warnings.
+- [x] Remove shadow FK conflict (`QuizQuestion.QuizId1`) using explicit mapping.
+- [x] Review nullable/required constraints to align with filter semantics.
+- [x] Add regression tests around affected queries and entity graphs.
+
+**Implementation Summary:**
+- aligned dependent query filters to their filtered required principals across academic, quiz, assignment, lifecycle, study-plan, and timetable/report role-assignment mappings,
+- fixed quiz mapping ambiguity by explicitly wiring `QuizQuestion -> Quiz.Questions`, removing the shadow foreign-key path,
+- removed `Course.CourseType` database default to avoid enum sentinel/default-value warning behavior.
+
+**Validation Summary:**
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+- verified startup/runtime output no longer includes the targeted EF warning set (required relationship/filter mismatches, `QuizQuestion.QuizId1`, `CourseType` sentinel warning).
 
 **Primary Targets**
 - `src/Tabsan.EduSphere.Infrastructure/Persistence/ApplicationDbContext.cs`

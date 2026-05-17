@@ -54,5 +54,8 @@ public class StudyPlanCourseConfiguration : IEntityTypeConfiguration<StudyPlanCo
                .WithMany()
                .HasForeignKey(c => c.CourseId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        // Match principal Course soft-delete filter to avoid required-relationship filter warnings.
+        builder.HasQueryFilter(c => !c.Course.IsDeleted);
     }
 }

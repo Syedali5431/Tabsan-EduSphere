@@ -40,9 +40,12 @@ internal sealed class QuizQuestionConfiguration : IEntityTypeConfiguration<QuizQ
         builder.Property(q => q.Marks).HasColumnType("decimal(8,2)");
 
         builder.HasOne(q => q.Quiz)
-               .WithMany()
+             .WithMany(q => q.Questions)
                .HasForeignKey(q => q.QuizId)
                .OnDelete(DeleteBehavior.Cascade);
+
+         // Match principal Quiz active filter to avoid required-relationship filter warnings.
+         builder.HasQueryFilter(q => q.Quiz.IsActive);
 
         builder.HasIndex(q => new { q.QuizId, q.OrderIndex });
     }
@@ -64,6 +67,9 @@ internal sealed class QuizOptionConfiguration : IEntityTypeConfiguration<QuizOpt
                .WithMany(q => q.Options)
                .HasForeignKey(o => o.QuizQuestionId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        // Match principal QuizQuestion filter to avoid required-relationship filter warnings.
+        builder.HasQueryFilter(o => o.Question.Quiz.IsActive);
 
         builder.HasIndex(o => new { o.QuizQuestionId, o.OrderIndex });
     }
@@ -97,6 +103,9 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
 
          builder.HasIndex(a => new { a.QuizId, a.StudentProfileId, a.StartedAt })
              .HasDatabaseName("IX_quiz_attempts_quiz_student_started_at");
+
+        // Match principal Quiz active filter to avoid required-relationship filter warnings.
+        builder.HasQueryFilter(a => a.Quiz.IsActive);
     }
 }
 
@@ -122,6 +131,9 @@ internal sealed class QuizAnswerConfiguration : IEntityTypeConfiguration<QuizAns
                .WithMany()
                .HasForeignKey(a => a.QuizQuestionId)
                .OnDelete(DeleteBehavior.Restrict);
+
+         // Match principal filters (QuizAttempt + QuizQuestion) to avoid required-relationship filter warnings.
+         builder.HasQueryFilter(a => a.Attempt.Quiz.IsActive && a.Question.Quiz.IsActive);
 
         // One answer per question per attempt
         builder.HasIndex(a => new { a.QuizAttemptId, a.QuizQuestionId }).IsUnique();

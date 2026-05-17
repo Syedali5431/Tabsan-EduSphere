@@ -50,6 +50,21 @@ Do not end a completed task with local-only changes.
   - governance docs synchronized,
   - repository sync required after this checkpoint.
 
+### Stage Completion Checkpoint (2026-05-18 - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup)
+- Completed Stage 39.4 EF mapping/filter cleanup to remove known startup warning set.
+- Implementation Summary:
+  - aligned dependent query filters with filtered required principals across affected EF configurations,
+  - fixed quiz question explicit relationship mapping to remove shadow FK (`QuizId1`) behavior,
+  - removed course enum DB default that triggered sentinel/default warning behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+  - verified targeted EF warning set is no longer emitted in focused startup validation output.
+- Status of Checks Done:
+  - code change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
 ### Stage Completion Checkpoint (2026-05-18 - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow)
 - Completed the Stage 39.1 enrollment waitlist and promotion remediation with validated queue-on-full behavior.
 - Implementation Summary:

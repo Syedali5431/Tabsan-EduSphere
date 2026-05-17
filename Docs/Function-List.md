@@ -5,6 +5,14 @@
 
 ## 2026-05-18 - Documentation Synchronization Request (Execution Snapshot)
 
+## 2026-05-18 - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `EF dependent/principal filter alignment` | Aligns dependent entity query filters with filtered required principals to eliminate required-relationship/global-filter warning patterns. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AcademicConfigurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/StudentAcademicConfigurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AssignmentConfigurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/Phase9Configurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/PaymentReceiptConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/QuizConfigurations.cs` |
+| `QuizQuestion explicit parent-navigation mapping` | Uses explicit `Quiz.Questions` mapping to remove shadow foreign-key ambiguity (`QuizId1`) in quiz model configuration. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/QuizConfigurations.cs` |
+| `CourseType sentinel-warning removal` | Removes DB default-value configuration for `CourseType` to prevent EF enum sentinel/default warning behavior. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AcademicConfigurations.cs` |
+
 | Function Name | Purpose | Location |
 |---|---|---|
 | `Recent request documentation-sync issue capture` | Records the issue that mandatory execution/planning trackers required synchronized update closure for the latest request cycle. | `Project startup Docs/PRD.md`, `Docs/Consolidated-Execution-Enhancements-Issues.md` |

@@ -140,6 +140,9 @@ public class TimetableEntryConfiguration : IEntityTypeConfiguration<TimetableEnt
         // Index for teacher-filtered dashboard query
         builder.HasIndex(e => e.FacultyUserId)
                .HasDatabaseName("IX_timetable_entries_faculty_user");
+
+              // Match principal Timetable soft-delete filter to avoid required-relationship filter warnings.
+              builder.HasQueryFilter(e => !e.Timetable.IsDeleted);
     }
 }
 
@@ -207,6 +210,9 @@ public class ReportRoleAssignmentConfiguration : IEntityTypeConfiguration<Report
                .WithMany(r => r.RoleAssignments)
                .HasForeignKey(a => a.ReportDefinitionId)
                .OnDelete(DeleteBehavior.Cascade);
+
+              // Match principal ReportDefinition soft-delete filter to avoid required-relationship filter warnings.
+              builder.HasQueryFilter(a => !a.ReportDefinition.IsDeleted);
     }
 }
 

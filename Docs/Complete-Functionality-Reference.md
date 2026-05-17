@@ -13,6 +13,22 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-18 Update - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
+
+- Recent request issue:
+    - startup/runtime EF logs contained mapping warnings for required-relationship plus global-filter mismatches, a quiz shadow FK path, and course enum default sentinel behavior.
+- Implementation Summary:
+    - aligned dependent query filters with filtered required principals across affected configurations,
+    - fixed quiz question mapping to explicit parent navigation to remove shadow FK ambiguity,
+    - removed course enum DB default configuration that triggered sentinel warning behavior.
+- Validation Summary:
+    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+    - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+    - verified targeted EF warning set is no longer emitted in the focused startup/runtime path.
+- Behavior impact:
+    - no business-flow or API-contract behavior change,
+    - entity graph loading now follows filter-consistent mapping semantics without the prior warning noise.
+
 ## 2026-05-18 Update - Documentation Synchronization Request (Execution Snapshot)
 
 - Recent request issue:

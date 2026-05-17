@@ -52,6 +52,9 @@ public class AssignmentSubmissionConfiguration : IEntityTypeConfiguration<Assign
                .HasForeignKey(s => s.AssignmentId)
                .OnDelete(DeleteBehavior.Restrict);
 
+        // Match principal Assignment soft-delete filter to avoid required-relationship filter warnings.
+        builder.HasQueryFilter(s => !s.Assignment.IsDeleted);
+
         // No soft-delete filter — submissions are permanent academic evidence.
     }
 }

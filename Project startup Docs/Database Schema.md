@@ -26,6 +26,21 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-18 Update - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
+
+- Recent request issue:
+	- EF startup/runtime emitted warning set for required-relationship and query-filter mismatches, quiz shadow FK mapping conflict, and course enum default sentinel behavior.
+- Implementation Summary:
+	- updated EF configurations to align dependent filters with filtered required principals,
+	- fixed quiz question relationship mapping to remove shadow foreign-key path,
+	- removed course enum DB default configuration that caused sentinel warning behavior.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+	- verified targeted EF warning set no longer appears in focused startup/runtime validation output.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-18 Update - DeepScan Gap Phase/Stage Synchronization Request (Execution Snapshot)
 
 - Recent request issue:

@@ -58,5 +58,8 @@ public class PaymentReceiptConfiguration : IEntityTypeConfiguration<PaymentRecei
         builder.HasIndex(x => new { x.StudentProfileId, x.CreatedAt }).HasDatabaseName("ix_pr_student_created_at");
         builder.HasIndex(x => new { x.Status, x.DueDate }).HasDatabaseName("ix_pr_status_due_date");
         builder.HasIndex(x => x.DueDate).HasDatabaseName("ix_pr_due_date");
+
+        // Match principal StudentProfile soft-delete filter to avoid required-relationship filter warnings.
+        builder.HasQueryFilter(x => !x.StudentProfile.IsDeleted);
     }
 }

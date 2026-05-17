@@ -78,8 +78,7 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         // Final-Touches Phase 17 Stage 17.3 — core/elective classification column
         builder.Property(c => c.CourseType)
                .IsRequired()
-               .HasConversion<int>()
-               .HasDefaultValue(Domain.Academic.CourseType.Core);
+               .HasConversion<int>();
 
         // Final-Touches Phase 19 Stage 19.1 — semester-based flag
         builder.Property(c => c.HasSemesters)
@@ -159,6 +158,9 @@ public class CoursePrerequisiteConfiguration : IEntityTypeConfiguration<CoursePr
                .WithMany()
                .HasForeignKey(p => p.PrerequisiteCourseId)
                .OnDelete(DeleteBehavior.Restrict);
+
+       // Match principal Course soft-delete filter to avoid required-relationship filter warnings.
+       builder.HasQueryFilter(p => !p.Course.IsDeleted && !p.PrerequisiteCourse.IsDeleted);
     }
 }
 
@@ -210,6 +212,9 @@ public class DegreeRuleRequiredCourseConfiguration : IEntityTypeConfiguration<De
                .WithMany()
                .HasForeignKey(rc => rc.CourseId)
                .OnDelete(DeleteBehavior.Restrict);
+
+       // Match principal Course soft-delete filter to avoid required-relationship filter warnings.
+       builder.HasQueryFilter(rc => !rc.Course.IsDeleted);
     }
 }
 
@@ -289,5 +294,8 @@ public class CourseGradingConfigConfiguration : IEntityTypeConfiguration<CourseG
         builder.HasIndex(c => c.CourseId)
                .IsUnique()
                .HasDatabaseName("IX_course_grading_configs_courseId");
+
+              // Match principal Course soft-delete filter to avoid required-relationship filter warnings.
+              builder.HasQueryFilter(c => !c.Course.IsDeleted);
     }
 }

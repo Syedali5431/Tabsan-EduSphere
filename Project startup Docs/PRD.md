@@ -18,6 +18,22 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-18 - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
+- Recent request issue:
+  - EF Core startup warnings indicated required-relationship plus global-filter mismatches, a quiz shadow foreign key mapping conflict, and a course enum default sentinel warning.
+- Implementation Summary:
+  - aligned dependent query filters with filtered required principals in affected configurations,
+  - fixed quiz question relationship mapping to explicit `Quiz.Questions` navigation to remove shadow FK behavior,
+  - removed `CourseType` DB default configuration that triggered sentinel warning behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+  - verified targeted EF warnings were no longer present in startup/runtime output.
+- Behavior impact:
+  - runtime entity loading behavior is now deterministic with filter-consistent required relationships,
+  - noisy EF startup warnings for the Stage 39.4 target set are removed,
+  - no API contract or business-flow behavior changed.
+
 ### 2026-05-18 - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
 - Recent request issue:
   - the MFA path used a deployment demo code instead of per-user strong-factor verification.

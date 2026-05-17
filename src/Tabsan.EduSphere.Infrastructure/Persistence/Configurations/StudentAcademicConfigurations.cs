@@ -81,6 +81,9 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
                .HasForeignKey(e => e.CourseOfferingId)
                .OnDelete(DeleteBehavior.Restrict);
 
+       // Match principal CourseOffering soft-delete filter to avoid required-relationship filter warnings.
+       builder.HasQueryFilter(e => !e.CourseOffering.IsDeleted);
+
         // No query filter here — enrollment history is never filtered out.
     }
 }
@@ -122,6 +125,9 @@ public class FacultyDepartmentAssignmentConfiguration : IEntityTypeConfiguration
                .WithMany()
                .HasForeignKey(a => a.DepartmentId)
                .OnDelete(DeleteBehavior.Restrict);
+
+       // Match principal Department soft-delete filter to avoid required-relationship filter warnings.
+       builder.HasQueryFilter(a => !a.Department.IsDeleted);
     }
 }
 
@@ -144,5 +150,8 @@ public class AdminDepartmentAssignmentConfiguration : IEntityTypeConfiguration<A
                         .WithMany()
                         .HasForeignKey(a => a.DepartmentId)
                         .OnDelete(DeleteBehavior.Restrict);
+
+              // Match principal Department soft-delete filter to avoid required-relationship filter warnings.
+              builder.HasQueryFilter(a => !a.Department.IsDeleted);
        }
 }
