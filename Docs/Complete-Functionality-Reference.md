@@ -64,14 +64,16 @@ After each completed stage, this document must be updated to reflect any net fun
 - Implementation Summary:
     - added a waitlisted enrollment state and promotion helpers to the enrollment aggregate,
     - updated enrollment service logic to queue students when an offering is full and promote the oldest waitlisted student after a drop,
-    - added ordered waitlist retrieval in the enrollment repository layer and covered the flow with focused unit tests.
+    - added ordered waitlist retrieval in the enrollment repository layer, exposed the waitlist queue through the API, and covered the flow with focused unit tests.
 - Validation Summary:
     - targeted unit suite passed for waitlist creation and promotion (`2/2`),
+    - verified the waitlist queue endpoint is exposed for faculty/admin review,
     - verified full offering enrollment now records a waitlisted state,
     - verified seat release promotes the oldest waitlisted enrollment deterministically.
 - Behavior impact:
     - enrollment no longer hard-fails when a full offering still accepts a waitlist,
-    - seat release now advances the waitlist automatically for the oldest queued student.
+    - seat release now advances the waitlist automatically for the oldest queued student,
+    - faculty/admin users can inspect the current queue through the roster companion endpoint.
 
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 

@@ -34,6 +34,7 @@
 | `EnrollmentStatus.Waitlisted` | Represents an over-capacity enrollment that is queued for promotion when a seat becomes available. | `src/Tabsan.EduSphere.Domain/Academic/Enrollment.cs` |
 | `EnrollmentService waitlist promotion flow` | Creates waitlisted enrollments when a course offering is full and promotes the oldest waitlisted enrollment after a drop. | `src/Tabsan.EduSphere.Application/Academic/EnrollmentService.cs` |
 | `IEnrollmentRepository.GetWaitlistedByOfferingAsync` | Returns waitlisted enrollments in queue order so promotion can be deterministic. | `src/Tabsan.EduSphere.Domain/Interfaces/IEnrollmentRepository.cs`, `src/Tabsan.EduSphere.Infrastructure/Repositories/AcademicSupportRepositories.cs` |
+| `EnrollmentController waitlist queue endpoint` | Exposes the ordered waitlist queue to faculty and admins for course-offering review. | `src/Tabsan.EduSphere.API/Controllers/EnrollmentController.cs` |
 
 ## Phase 36 - Deployment Readiness (2026-05-15)
 

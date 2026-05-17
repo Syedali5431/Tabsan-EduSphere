@@ -95,7 +95,7 @@ For **every completed phase**:
 - [x] Add waitlist state model and persistence for over-capacity enrollments.
 - [x] Extend enrollment service flow to place students into waitlist when seats are full.
 - [x] Add promotion-on-seat-release workflow when enrolled students drop/withdraw.
-- [ ] Add admin/faculty API endpoints for viewing and managing waitlist queues.
+- [x] Add admin/faculty API endpoints for viewing and managing waitlist queues.
 - [x] Add integration tests for queue ordering, promotion correctness, and duplicate guards.
 
 **Implementation Summary:**
