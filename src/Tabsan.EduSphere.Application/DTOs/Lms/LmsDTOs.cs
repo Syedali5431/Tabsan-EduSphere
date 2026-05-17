@@ -47,16 +47,27 @@ public sealed class ContentVideoDto
 }
 
 // ── Stage 20.3 — Discussion Threads & Replies ────────────────────────────────
+// Phase 31 Stage 31.3 — Extended with type, sub-type, ticket system, and visibility
 
 public sealed record CreateThreadRequest(
     Guid   OfferingId,
     Guid   AuthorId,
-    string Title);
+    string Title,
+    string ThreadType = "Issue",
+    string? IssueSubType = null);
 
 public sealed record AddReplyRequest(
     Guid   ThreadId,
     Guid   AuthorId,
     string Body);
+
+public sealed record MarkThreadSolvedRequest(
+    Guid ThreadId,
+    Guid ResolvedByUserId);
+
+public sealed record MarkThreadVisibleRequest(
+    Guid ThreadId,
+    bool IsVisible);
 
 public sealed class DiscussionThreadDto
 {
@@ -69,6 +80,17 @@ public sealed class DiscussionThreadDto
     public bool     IsClosed   { get; set; }
     public int      ReplyCount { get; set; }
     public DateTime CreatedAt  { get; set; }
+    
+    // Phase 31 Stage 31.3 — New Fields
+    public string   ThreadType { get; set; } = "Issue";
+    public string?  IssueSubType { get; set; }
+    public bool     IsSolved   { get; set; }
+    public Guid?    ResolvedBy { get; set; }
+    public string?  ResolvedByName { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string   TicketNumber { get; set; } = "";
+    public bool     IsVisibleToAll { get; set; }
+    
     public List<DiscussionReplyDto> Replies { get; set; } = new();
 }
 

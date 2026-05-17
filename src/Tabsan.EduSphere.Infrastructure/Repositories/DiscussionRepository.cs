@@ -6,6 +6,7 @@ using Tabsan.EduSphere.Infrastructure.Persistence;
 namespace Tabsan.EduSphere.Infrastructure.Repositories;
 
 // Final-Touches Phase 20 Stage 20.3 — discussion repository
+// Phase 31 Stage 31.3 — Extended with ticket generation support
 
 /// <summary>EF Core implementation of IDiscussionRepository.</summary>
 public sealed class DiscussionRepository : IDiscussionRepository
@@ -25,6 +26,16 @@ public sealed class DiscussionRepository : IDiscussionRepository
         => await _db.DiscussionThreads
                     .Include(t => t.Replies)
                     .FirstOrDefaultAsync(t => t.Id == threadId, ct);
+
+    /// <summary>Counts all threads created by a user (identified by username) for ticket number generation.</summary>
+    public async Task<int> CountThreadsByAuthorUsernameAsync(string authorUsername, CancellationToken ct = default)
+        => await _db.DiscussionThreads
+                    .Join(_db.Users,
+                        t => t.AuthorId,
+                        u => u.Id,
+                        (t, u) => new { t, u })
+                    .Where(x => x.u.Username == authorUsername && !x.t.IsDeleted)
+                    .CountAsync(ct);
 
     public async Task AddThreadAsync(DiscussionThread thread, CancellationToken ct = default)
         => await _db.DiscussionThreads.AddAsync(thread, ct);

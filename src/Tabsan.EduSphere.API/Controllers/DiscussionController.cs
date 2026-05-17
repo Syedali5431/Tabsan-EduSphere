@@ -7,11 +7,12 @@ using Tabsan.EduSphere.Application.Interfaces;
 namespace Tabsan.EduSphere.API.Controllers;
 
 // Final-Touches Phase 20 Stage 20.3 — discussion forum REST API
+// Phase 31 Stage 31.3 — Extended with resolution tracking and visibility management
 
 /// <summary>
-/// REST API for course discussion threads and replies (Phase 20).
+/// REST API for course discussion threads and replies (Phase 20/31).
 /// All authenticated users can read and create threads/replies.
-/// Faculty/Admin/SuperAdmin have additional moderation capabilities.
+/// Faculty/Admin/SuperAdmin have additional moderation capabilities including marking solved and visible.
 /// </summary>
 [ApiController]
 [Route("api/v1/discussion")]
@@ -46,8 +47,15 @@ public class DiscussionController : ControllerBase
         var callerId = ExtractCallerId();
         if (callerId == Guid.Empty) return Unauthorized();
         var actualRequest = request with { AuthorId = callerId };
-        var thread = await _discussion.CreateThreadAsync(actualRequest, ct);
-        return CreatedAtAction(nameof(GetThread), new { threadId = thread.Id }, thread);
+        try
+        {
+            var thread = await _discussion.CreateThreadAsync(actualRequest, ct);
+            return CreatedAtAction(nameof(GetThread), new { threadId = thread.Id }, thread);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>Pins or unpins a thread. Faculty/Admin/SuperAdmin only.</summary>
@@ -77,6 +85,44 @@ public class DiscussionController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Marks a discussion as solved, preventing further student replies. Faculty/Admin/SuperAdmin only.</summary>
+    [HttpPost("thread/{threadId:guid}/mark-solved")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
+    public async Task<IActionResult> MarkSolved(Guid threadId, CancellationToken ct = default)
+    {
+        var facultyAdminId = ExtractCallerId();
+        if (facultyAdminId == Guid.Empty) return Unauthorized();
+        await _discussion.MarkSolvedAsync(threadId, facultyAdminId, ct);
+        return NoContent();
+    }
+
+    /// <summary>Marks a solved discussion as unresolved, allowing replies again. Faculty/Admin/SuperAdmin only.</summary>
+    [HttpPost("thread/{threadId:guid}/mark-unresolved")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
+    public async Task<IActionResult> MarkUnresolved(Guid threadId, CancellationToken ct = default)
+    {
+        await _discussion.MarkUnresolvedAsync(threadId, ct);
+        return NoContent();
+    }
+
+    /// <summary>Marks a discussion as visible to all department users (for FAQ or shared solutions). Faculty/Admin/SuperAdmin only.</summary>
+    [HttpPost("thread/{threadId:guid}/mark-visible")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
+    public async Task<IActionResult> MarkVisibleToAll(Guid threadId, CancellationToken ct = default)
+    {
+        await _discussion.MarkVisibleToAllAsync(threadId, ct);
+        return NoContent();
+    }
+
+    /// <summary>Marks a discussion as private (visible only to involved parties). Faculty/Admin/SuperAdmin only.</summary>
+    [HttpPost("thread/{threadId:guid}/mark-private")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
+    public async Task<IActionResult> MarkPrivate(Guid threadId, CancellationToken ct = default)
+    {
+        await _discussion.MarkPrivateAsync(threadId, ct);
+        return NoContent();
+    }
+
     /// <summary>Soft-deletes a thread. Faculty/Admin/SuperAdmin only.</summary>
     [HttpDelete("thread/{threadId:guid}")]
     [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
@@ -88,15 +134,22 @@ public class DiscussionController : ControllerBase
 
     // ── Replies ────────────────────────────────────────────────────────────────
 
-    /// <summary>Posts a reply. Any authenticated user can reply.</summary>
+    /// <summary>Posts a reply. Any authenticated user can reply (unless thread is marked solved).</summary>
     [HttpPost("reply")]
     public async Task<IActionResult> AddReply([FromBody] AddReplyRequest request, CancellationToken ct = default)
     {
         var callerId = ExtractCallerId();
         if (callerId == Guid.Empty) return Unauthorized();
         var actualRequest = request with { AuthorId = callerId };
-        var reply = await _discussion.AddReplyAsync(actualRequest, ct);
-        return Ok(reply);
+        try
+        {
+            var reply = await _discussion.AddReplyAsync(actualRequest, ct);
+            return Ok(reply);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>Soft-deletes a reply. The author or Faculty/Admin/SuperAdmin can delete.</summary>

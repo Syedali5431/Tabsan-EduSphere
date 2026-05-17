@@ -6,8 +6,10 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Application.Modules;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Licensing;
+using Tabsan.EduSphere.Infrastructure.Modules;
 
 namespace Tabsan.EduSphere.Infrastructure.Licensing;
 
@@ -31,6 +33,8 @@ namespace Tabsan.EduSphere.Infrastructure.Licensing;
 public class LicenseValidationService
 {
     private readonly ILicenseRepository _licenseRepo;
+    private readonly IModuleRepository _moduleRepo;
+    private readonly ModuleEntitlementResolver _moduleEntitlementResolver;
     private readonly IInstitutionPolicyService _institutionPolicy;
     private readonly ILogger<LicenseValidationService> _logger;
 
@@ -44,10 +48,14 @@ public class LicenseValidationService
 
     public LicenseValidationService(
         ILicenseRepository licenseRepo,
+        IModuleRepository moduleRepo,
+        ModuleEntitlementResolver moduleEntitlementResolver,
         IInstitutionPolicyService institutionPolicy,
         ILogger<LicenseValidationService> logger)
     {
         _licenseRepo      = licenseRepo;
+        _moduleRepo       = moduleRepo;
+        _moduleEntitlementResolver = moduleEntitlementResolver;
         _institutionPolicy = institutionPolicy;
         _logger           = logger;
     }
@@ -200,6 +208,13 @@ public class LicenseValidationService
                 payload.IncludeCollege,
                 payload.IncludeUniversity), ct);
 
+            // Keep module statuses aligned with what the activated license allows.
+            // Optional modules are seeded inactive and must be explicitly activated by license scope.
+            await SyncModuleStatusesForPolicyAsync(new InstitutionPolicySnapshot(
+                payload.IncludeSchool,
+                payload.IncludeCollege,
+                payload.IncludeUniversity), ct);
+
             _logger.LogInformation(
                 "License activated. Type={Type}, ExpiresAt={Expiry}, MaxUsers={MaxUsers}, Domain={Domain}",
                 licenseType, payload.ExpiresAt?.ToString("O") ?? "never", payload.MaxUsers, activatedDomain ?? "any");
@@ -230,8 +245,48 @@ public class LicenseValidationService
         _licenseRepo.Update(state);
         await _licenseRepo.SaveChangesAsync(ct);
 
+        if (state.Status == LicenseStatus.Active)
+        {
+            var policy = await _institutionPolicy.GetPolicyAsync(ct);
+            await SyncModuleStatusesForPolicyAsync(policy, ct);
+        }
+
         _logger.LogInformation("License validation complete. Status={Status}", state.Status);
         return state.Status;
+    }
+
+    private async Task SyncModuleStatusesForPolicyAsync(InstitutionPolicySnapshot policy, CancellationToken ct)
+    {
+        var changed = false;
+
+        foreach (var descriptor in ModuleRegistry.All())
+        {
+            var status = await _moduleRepo.GetStatusByKeyAsync(descriptor.Key, ct);
+            if (status is null)
+            {
+                continue;
+            }
+
+            var isAllowedForAnyLicensedType = descriptor.AllowedTypes is null || descriptor.AllowedTypes.Any(policy.IsEnabled);
+            var shouldBeActive = status.Module.IsMandatory || isAllowedForAnyLicensedType;
+
+            if (!shouldBeActive || status.IsActive)
+            {
+                continue;
+            }
+
+            status.Activate(Guid.Empty, source: "license");
+            _moduleRepo.UpdateStatus(status);
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+
+        await _moduleRepo.SaveChangesAsync(ct);
+        _moduleEntitlementResolver.InvalidateAll();
     }
 
     /// <summary>

@@ -6,20 +6,24 @@ using Tabsan.EduSphere.Domain.Lms;
 namespace Tabsan.EduSphere.Application.Lms;
 
 // Final-Touches Phase 20 Stage 20.3 — discussion forum service implementation
+// Phase 31 Stage 31.3 — Extended with type, ticket generation, solved tracking, and visibility
 
 /// <summary>
-/// Application service for Phase 20 — discussion threads and replies.
+/// Application service for Phase 20/31 — discussion threads and replies with advanced features.
 /// Author names are resolved via IUserRepository using the AuthorId stored on each entity.
+/// Phase 31: Supports thread types (Issue, FAQ), issue sub-classification, resolution tracking, ticket generation, and visibility controls.
 /// </summary>
 public sealed class DiscussionService : IDiscussionService
 {
     private readonly IDiscussionRepository _repo;
     private readonly IUserRepository       _users;
+    private readonly ICourseRepository     _courses;
 
-    public DiscussionService(IDiscussionRepository repo, IUserRepository users)
+    public DiscussionService(IDiscussionRepository repo, IUserRepository users, ICourseRepository courses)
     {
-        _repo  = repo;
-        _users = users;
+        _repo    = repo;
+        _users   = users;
+        _courses = courses;
     }
 
     public async Task<List<DiscussionThreadDto>> GetThreadsAsync(
@@ -30,7 +34,8 @@ public sealed class DiscussionService : IDiscussionService
         foreach (var t in threads)
         {
             var author = await _users.GetByIdAsync(t.AuthorId, ct);
-            dtos.Add(MapThread(t, author?.Username ?? "Unknown", []));
+            var resolvedByName = t.ResolvedBy.HasValue ? (await _users.GetByIdAsync(t.ResolvedBy.Value, ct))?.Username ?? "Unknown" : null;
+            dtos.Add(MapThread(t, author?.Username ?? "Unknown", [], resolvedByName));
         }
         return dtos;
     }
@@ -41,23 +46,43 @@ public sealed class DiscussionService : IDiscussionService
         if (thread is null) return null;
 
         var author  = await _users.GetByIdAsync(thread.AuthorId, ct);
+        var resolvedByName = thread.ResolvedBy.HasValue ? (await _users.GetByIdAsync(thread.ResolvedBy.Value, ct))?.Username ?? "Unknown" : null;
         var replies = new List<DiscussionReplyDto>(thread.Replies.Count);
         foreach (var r in thread.Replies.Where(r => !r.IsDeleted))
         {
             var replyAuthor = await _users.GetByIdAsync(r.AuthorId, ct);
             replies.Add(MapReply(r, replyAuthor?.Username ?? "Unknown"));
         }
-        return MapThread(thread, author?.Username ?? "Unknown", replies);
+        return MapThread(thread, author?.Username ?? "Unknown", replies, resolvedByName);
     }
 
     public async Task<DiscussionThreadDto> CreateThreadAsync(
         CreateThreadRequest request, CancellationToken ct = default)
     {
-        var thread = new DiscussionThread(request.OfferingId, request.AuthorId, request.Title);
+        // Validate offering exists
+        var offering = await _courses.GetOfferingByIdAsync(request.OfferingId, ct);
+        if (offering is null)
+            throw new InvalidOperationException($"Course offering {request.OfferingId} not found.");
+
+        // Get author username for ticket generation
+        var author = await _users.GetByIdAsync(request.AuthorId, ct);
+        var authorUsername = author?.Username ?? "unknown";
+
+        // Generate unique ticket number
+        var ticketNumber = await GenerateTicketNumberAsync(authorUsername, ct);
+
+        var thread = new DiscussionThread(
+            request.OfferingId, 
+            request.AuthorId, 
+            request.Title, 
+            request.ThreadType,
+            request.IssueSubType,
+            ticketNumber);
+            
         await _repo.AddThreadAsync(thread, ct);
         await _repo.SaveChangesAsync(ct);
-        var author = await _users.GetByIdAsync(thread.AuthorId, ct);
-        return MapThread(thread, author?.Username ?? "Unknown", []);
+        
+        return MapThread(thread, authorUsername, [], null);
     }
 
     public async Task SetPinnedAsync(Guid threadId, bool pinned, CancellationToken ct = default)
@@ -87,6 +112,46 @@ public sealed class DiscussionService : IDiscussionService
         await _repo.SaveChangesAsync(ct);
     }
 
+    /// <summary>Faculty/Admin marks this discussion as solved, preventing further student replies.</summary>
+    public async Task MarkSolvedAsync(Guid threadId, Guid facultyAdminUserId, CancellationToken ct = default)
+    {
+        var thread = await _repo.GetThreadByIdAsync(threadId, ct)
+            ?? throw new InvalidOperationException($"Thread {threadId} not found.");
+        thread.MarkSolved(facultyAdminUserId);
+        _repo.UpdateThread(thread);
+        await _repo.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Faculty/Admin marks a solved discussion as unresolved, allowing replies again.</summary>
+    public async Task MarkUnresolvedAsync(Guid threadId, CancellationToken ct = default)
+    {
+        var thread = await _repo.GetThreadByIdAsync(threadId, ct)
+            ?? throw new InvalidOperationException($"Thread {threadId} not found.");
+        thread.MarkUnresolved();
+        _repo.UpdateThread(thread);
+        await _repo.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Faculty/Admin marks this discussion as visible to all department users (for FAQ or shared solutions).</summary>
+    public async Task MarkVisibleToAllAsync(Guid threadId, CancellationToken ct = default)
+    {
+        var thread = await _repo.GetThreadByIdAsync(threadId, ct)
+            ?? throw new InvalidOperationException($"Thread {threadId} not found.");
+        thread.MarkVisibleToAll();
+        _repo.UpdateThread(thread);
+        await _repo.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Faculty/Admin marks this discussion as private (visible only to involved parties).</summary>
+    public async Task MarkPrivateAsync(Guid threadId, CancellationToken ct = default)
+    {
+        var thread = await _repo.GetThreadByIdAsync(threadId, ct)
+            ?? throw new InvalidOperationException($"Thread {threadId} not found.");
+        thread.MarkPrivate();
+        _repo.UpdateThread(thread);
+        await _repo.SaveChangesAsync(ct);
+    }
+
     public async Task DeleteThreadAsync(Guid threadId, CancellationToken ct = default)
     {
         var thread = await _repo.GetThreadByIdAsync(threadId, ct)
@@ -98,6 +163,14 @@ public sealed class DiscussionService : IDiscussionService
 
     public async Task<DiscussionReplyDto> AddReplyAsync(AddReplyRequest request, CancellationToken ct = default)
     {
+        var thread = await _repo.GetThreadByIdAsync(request.ThreadId, ct);
+        if (thread is null)
+            throw new InvalidOperationException($"Discussion thread {request.ThreadId} not found.");
+        
+        // Check if thread is solved/closed - only allow replies from faculty/admin/original author
+        if (thread.IsSolved && request.AuthorId != thread.AuthorId)
+            throw new InvalidOperationException("This discussion has been marked as solved. No further replies are allowed.");
+
         var reply = new DiscussionReply(request.ThreadId, request.AuthorId, request.Body);
         await _repo.AddReplyAsync(reply, ct);
         await _repo.SaveChangesAsync(ct);
@@ -117,21 +190,39 @@ public sealed class DiscussionService : IDiscussionService
         await _repo.SaveChangesAsync(ct);
     }
 
+    // ── Utility Methods ────────────────────────────────────────────────────────
+
+    /// <summary>Generates a unique ticket number with format: DISCUSS-{username}-{sequential}.</summary>
+    private async Task<string> GenerateTicketNumberAsync(string username, CancellationToken ct = default)
+    {
+        // Get count of discussions for this user to create sequential number
+        var existingCount = await _repo.CountThreadsByAuthorUsernameAsync(username, ct);
+        return $"DISCUSS-{username}-{existingCount + 1:D3}";
+    }
+
     // ── Mappers ────────────────────────────────────────────────────────────────
 
     private static DiscussionThreadDto MapThread(
-        DiscussionThread t, string authorName, List<DiscussionReplyDto> replies) => new()
+        DiscussionThread t, string authorName, List<DiscussionReplyDto> replies, string? resolvedByName = null) => new()
     {
-        Id         = t.Id,
-        OfferingId = t.OfferingId,
-        Title      = t.Title,
-        AuthorId   = t.AuthorId,
-        AuthorName = authorName,
-        IsPinned   = t.IsPinned,
-        IsClosed   = t.IsClosed,
-        CreatedAt  = t.CreatedAt,
-        ReplyCount = t.Replies.Count(r => !r.IsDeleted),
-        Replies    = replies
+        Id            = t.Id,
+        OfferingId    = t.OfferingId,
+        Title         = t.Title,
+        AuthorId      = t.AuthorId,
+        AuthorName    = authorName,
+        IsPinned      = t.IsPinned,
+        IsClosed      = t.IsClosed,
+        CreatedAt     = t.CreatedAt,
+        ReplyCount    = t.Replies.Count(r => !r.IsDeleted),
+        ThreadType    = t.ThreadType,
+        IssueSubType  = t.IssueSubType,
+        IsSolved      = t.IsSolved,
+        ResolvedBy    = t.ResolvedBy,
+        ResolvedByName = resolvedByName,
+        ResolvedAt    = t.ResolvedAt,
+        TicketNumber  = t.TicketNumber,
+        IsVisibleToAll = t.IsVisibleToAll,
+        Replies       = replies
     };
 
     private static DiscussionReplyDto MapReply(DiscussionReply r, string authorName) => new()
