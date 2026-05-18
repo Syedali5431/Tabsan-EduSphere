@@ -16,271 +16,271 @@ After each completed stage, this document must be updated to reflect any net fun
 ## 2026-05-19 Update - UI/UX Redesign Phase 9 (Final UI Polish)
 
 - Recent request issue:
-    - proceed with the final redesign phase and ensure documentation plus repository synchronization are completed.
+  - proceed with the final redesign phase and ensure documentation plus repository synchronization are completed.
 - Implementation Summary:
-    - applied final polish to shared UI surfaces with smoother card elevation, cleaner section spacing, and improved dashboard presentation detail,
-    - preserved all existing routes, API contracts, and backend behavior.
+  - applied final polish to shared UI surfaces with smoother card elevation, cleaner section spacing, and improved dashboard presentation detail,
+  - preserved all existing routes, API contracts, and backend behavior.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - workspace diagnostics reported no errors in the touched final-polish stylesheet.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - workspace diagnostics reported no errors in the touched final-polish stylesheet.
 - Behavior impact:
-    - no backend/API/schema changes,
-    - the portal presentation is now more cohesive and visually finished.
+  - no backend/API/schema changes,
+  - the portal presentation is now more cohesive and visually finished.
 
 ## 2026-05-18 Update - UI/UX Redesign Phase 8 (Responsive Hardening)
 
 - Recent request issue:
-    - proceed with the responsive-design phase and keep documentation plus repository synchronization mandatory.
+  - proceed with the responsive-design phase and keep documentation plus repository synchronization mandatory.
 - Implementation Summary:
-    - strengthened responsive behavior across the shared shell and major portal views,
-    - improved mobile stacking for action groups, filter controls, profile menu, pagination, and overflow-sensitive table/modal regions.
+  - strengthened responsive behavior across the shared shell and major portal views,
+  - improved mobile stacking for action groups, filter controls, profile menu, pagination, and overflow-sensitive table/modal regions.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - workspace diagnostics reported no errors in touched responsive frontend files.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - workspace diagnostics reported no errors in touched responsive frontend files.
 - Behavior impact:
-    - no backend/API/schema changes,
-    - mobile and tablet usability is more resilient for common management workflows.
+  - no backend/API/schema changes,
+  - mobile and tablet usability is more resilient for common management workflows.
 
 ## 2026-05-18 Update - UI/UX Redesign Phase 7 (AI Chatbot UI)
 
 - Recent request issue:
-    - proceed with the next redesign phase and keep full documentation plus repository synchronization.
+  - proceed with the next redesign phase and keep full documentation plus repository synchronization.
 - Implementation Summary:
-    - improved AI chatbot visual design for launcher, panel, assistant identity header, and message motion,
-    - added quick suggestion chips with frontend-only interaction wiring that reuse the existing chat send/state endpoints.
+  - improved AI chatbot visual design for launcher, panel, assistant identity header, and message motion,
+  - added quick suggestion chips with frontend-only interaction wiring that reuse the existing chat send/state endpoints.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - workspace diagnostics reported no errors in touched chatbot frontend files.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - workspace diagnostics reported no errors in touched chatbot frontend files.
 - Behavior impact:
-    - no backend/API/schema changes,
-    - chatbot experience is more discoverable, polished, and easier to start with quick prompts.
+  - no backend/API/schema changes,
+  - chatbot experience is more discoverable, polished, and easier to start with quick prompts.
 
 ## 2026-05-18 Update - UI/UX Redesign Phase 6 (Branding Pass)
 
 - Recent request issue:
-    - proceed with next redesign phase and ensure docs plus repository synchronization after completion.
+  - proceed with next redesign phase and ensure docs plus repository synchronization after completion.
 - Implementation Summary:
-    - enhanced institution branding presentation in the shared shell,
-    - improved top-header composition,
-    - upgraded notification icon/chip visuals,
-    - introduced a richer profile dropdown interface while preserving existing route and auth behavior.
+  - enhanced institution branding presentation in the shared shell,
+  - improved top-header composition,
+  - upgraded notification icon/chip visuals,
+  - introduced a richer profile dropdown interface while preserving existing route and auth behavior.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - workspace diagnostics reported no errors in `Views/Shared/_Layout.cshtml` and `wwwroot/css/site.css`.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - workspace diagnostics reported no errors in `Views/Shared/_Layout.cshtml` and `wwwroot/css/site.css`.
 - Behavior impact:
-    - no business logic/API/schema behavior changes,
-    - improved brand clarity and account/notification UX in the global shell.
+  - no business logic/API/schema behavior changes,
+  - improved brand clarity and account/notification UX in the global shell.
 
 ## 2026-05-18 Update - UI/UX Redesign Continuation (Enrollments/Results/Payments + Phase-Level Summary Formatting)
 
 - Recent request issue:
-    - continuation requested the next page-level UI polish wave and required implementation/validation summaries to appear at the end of each completed redesign phase.
+  - continuation requested the next page-level UI polish wave and required implementation/validation summaries to appear at the end of each completed redesign phase.
 - Implementation Summary:
-    - applied UI continuity updates to Enrollments, Results, and Payments pages using existing global design helpers,
-    - reformatted `Docs/Improved UI and look.md` so completion details are captured at each completed phase with lint-clean heading/list structure.
+  - applied UI continuity updates to Enrollments, Results, and Payments pages using existing global design helpers,
+  - reformatted `Docs/Improved UI and look.md` so completion details are captured at each completed phase with lint-clean heading/list structure.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - workspace diagnostics reported no errors in the touched Razor views and redesign document.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - workspace diagnostics reported no errors in the touched Razor views and redesign document.
 - Behavior impact:
-    - no runtime/API/business-logic changes,
-    - improved visual continuity across additional operational pages and clearer per-phase execution traceability in redesign planning docs.
+  - no runtime/API/business-logic changes,
+  - improved visual continuity across additional operational pages and clearer per-phase execution traceability in redesign planning docs.
 
 ## 2026-05-18 Update - UI/UX Redesign Continuation (Students/Courses/Admin Users Polish)
 
 - Recent request issue:
-    - continuation was requested to extend the new premium UI system to additional core management pages after the initial redesign.
+  - continuation was requested to extend the new premium UI system to additional core management pages after the initial redesign.
 - Implementation Summary:
-    - applied the refreshed design language to Students, Courses, and Admin Users pages,
-    - introduced reusable section-level helper styles for consistent layout and empty-state treatment.
+  - applied the refreshed design language to Students, Courses, and Admin Users pages,
+  - introduced reusable section-level helper styles for consistent layout and empty-state treatment.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-    - update remained frontend-only with no API, business-rule, or schema changes.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - update remained frontend-only with no API, business-rule, or schema changes.
 - Behavior impact:
-    - no runtime behavior changes,
-    - improved consistency and readability across additional admin-facing workflows.
+  - no runtime behavior changes,
+  - improved consistency and readability across additional admin-facing workflows.
 
 ## 2026-05-18 Update - UI/UX Redesign Request (Execution Snapshot)
 
 - Recent request issue:
-    - the portal required a complete frontend-only SaaS-style visual redesign so the product looks premium and modern for school, college, and university clients without affecting existing functionality.
+  - the portal required a complete frontend-only SaaS-style visual redesign so the product looks premium and modern for school, college, and university clients without affecting existing functionality.
 - Implementation Summary:
-    - redesigned the shared application shell, header, navigation, chatbot chrome, and responsive menu behavior in the Razor layout,
-    - replaced the portal stylesheet with a cohesive academic design system for typography, palette, spacing, cards, forms, tables, modals, loaders, toasts, and responsive polish,
-    - upgraded the dashboard page into a hero-and-card presentation while preserving the existing API connection flow and model binding,
-    - added frontend-only JS for loader fade-out, alert-to-toast presentation, and mobile sidebar interaction.
+  - redesigned the shared application shell, header, navigation, chatbot chrome, and responsive menu behavior in the Razor layout,
+  - replaced the portal stylesheet with a cohesive academic design system for typography, palette, spacing, cards, forms, tables, modals, loaders, toasts, and responsive polish,
+  - upgraded the dashboard page into a hero-and-card presentation while preserving the existing API connection flow and model binding,
+  - added frontend-only JS for loader fade-out, alert-to-toast presentation, and mobile sidebar interaction.
 - Validation Summary:
-    - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed after the redesign changes,
-    - workspace diagnostics reported no errors in the touched layout, dashboard, CSS, or JS files,
-    - no backend/API/controller/database files were changed.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed after the redesign changes,
+  - workspace diagnostics reported no errors in the touched layout, dashboard, CSS, or JS files,
+  - no backend/API/controller/database files were changed.
 - Behavior impact:
-    - runtime business behavior is unchanged,
-    - portal presentation is now cleaner, more premium, and more responsive across desktop, tablet, and mobile views.
+  - runtime business behavior is unchanged,
+  - portal presentation is now cleaner, more premium, and more responsive across desktop, tablet, and mobile views.
 
 ## 2026-05-18 Update - Documentation Synchronization Follow-up (Execution Snapshot)
 
 - Recent request issue:
-    - a follow-up request required synchronized updates across PRD, Function List, Complete Functionality Reference, Development Plan, and Database Schema.
+  - a follow-up request required synchronized updates across PRD, Function List, Complete Functionality Reference, Development Plan, and Database Schema.
 - Implementation Summary:
-    - added a dated follow-up execution snapshot to each requested document using consistent issue/implementation/validation structure,
-    - aligned wording to preserve cross-document audit traceability after the most recent TODO closure cycle.
+  - added a dated follow-up execution snapshot to each requested document using consistent issue/implementation/validation structure,
+  - aligned wording to preserve cross-document audit traceability after the most recent TODO closure cycle.
 - Validation Summary:
-    - verified all five requested documents include this follow-up snapshot,
-    - verified this pass is documentation-only and does not change application behavior, API contracts, or schema/runtime state.
+  - verified all five requested documents include this follow-up snapshot,
+  - verified this pass is documentation-only and does not change application behavior, API contracts, or schema/runtime state.
 - Behavior impact:
-    - no runtime functionality change,
-    - governance documentation remains synchronized for this follow-up request.
+  - no runtime functionality change,
+  - governance documentation remains synchronized for this follow-up request.
 
 ## 2026-05-18 Update - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
 
 - Recent request issue:
-    - notification SMS fan-out depended on active user phone numbers, but user profiles lacked persisted phone support.
+  - notification SMS fan-out depended on active user phone numbers, but user profiles lacked persisted phone support.
 - Implementation Summary:
-    - added optional `PhoneNumber` persistence on user accounts and schema migration support,
-    - implemented notification repository active-phone lookup for SMS recipient resolution,
-    - wired optional phone capture through admin user management, CSV import, and student self-registration flows.
+  - added optional `PhoneNumber` persistence on user accounts and schema migration support,
+  - implemented notification repository active-phone lookup for SMS recipient resolution,
+  - wired optional phone capture through admin user management, CSV import, and student self-registration flows.
 - Validation Summary:
-    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
-    - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
 - Behavior impact:
-    - SMS dispatch can now resolve recipients from persisted active user phone numbers,
-    - admin/import/self-registration entry points can store optional phone numbers without breaking existing clients.
+  - SMS dispatch can now resolve recipients from persisted active user phone numbers,
+  - admin/import/self-registration entry points can store optional phone numbers without breaking existing clients.
 
 ## 2026-05-18 Update - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 
 - Recent request issue:
-    - StudentLifecycle notification TODOs were completed in the prior remediation step for lifecycle transitions and request-review outcomes.
+  - StudentLifecycle notification TODOs were completed in the prior remediation step for lifecycle transitions and request-review outcomes.
 - Implementation Summary:
-    - implemented notification dispatch for graduation, promotion, deactivation, and reactivation actions,
-    - implemented notification dispatch for change/modification request creation and approval/rejection outcomes.
+  - implemented notification dispatch for graduation, promotion, deactivation, and reactivation actions,
+  - implemented notification dispatch for change/modification request creation and approval/rejection outcomes.
 - Validation Summary:
-    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
-    - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~StudentLifecycleIntegrationTests -v minimal` passed (`7/7`).
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~StudentLifecycleIntegrationTests -v minimal` passed (`7/7`).
 - Behavior impact:
-    - lifecycle participants and reviewers now receive consistent in-app notification events for key StudentLifecycle workflows,
-    - no schema or API-contract changes were introduced.
+  - lifecycle participants and reviewers now receive consistent in-app notification events for key StudentLifecycle workflows,
+  - no schema or API-contract changes were introduced.
 
 ## 2026-05-18 Update - DeepScan Phase 40 Closure and Production Readiness Revalidation (Execution Snapshot)
 
 - Recent request issue:
-    - final DeepScan closure evidence was required after completing Phase 39 remediation to confirm no unresolved production-blocking functional gap remained.
+  - final DeepScan closure evidence was required after completing Phase 39 remediation to confirm no unresolved production-blocking functional gap remained.
 - Implementation Summary:
-    - executed post-remediation validation bundle for prior DeepScan gaps (MFA hardening, strict import rollback mode, waitlist workflow, EF warning cleanup),
-    - appended re-execution task-by-task outputs and updated final validation rule in `Docs/DeepScan.md`.
+  - executed post-remediation validation bundle for prior DeepScan gaps (MFA hardening, strict import rollback mode, waitlist workflow, EF warning cleanup),
+  - appended re-execution task-by-task outputs and updated final validation rule in `Docs/DeepScan.md`.
 - Validation Summary:
-    - build and targeted unit/integration suites passed for all previously open areas,
-    - DeepScan re-execution now reports all tasks `4.1` through `4.20` implemented with no unresolved critical/high issue.
+  - build and targeted unit/integration suites passed for all previously open areas,
+  - DeepScan re-execution now reports all tasks `4.1` through `4.20` implemented with no unresolved critical/high issue.
 - Behavior impact:
-    - no new business-functionality added in Phase 40 itself,
-    - production-readiness closure is now evidenced and traceable after remediation.
+  - no new business-functionality added in Phase 40 itself,
+  - production-readiness closure is now evidenced and traceable after remediation.
 
 ## 2026-05-18 Update - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
 
 - Recent request issue:
-    - startup/runtime EF logs contained mapping warnings for required-relationship plus global-filter mismatches, a quiz shadow FK path, and course enum default sentinel behavior.
+  - startup/runtime EF logs contained mapping warnings for required-relationship plus global-filter mismatches, a quiz shadow FK path, and course enum default sentinel behavior.
 - Implementation Summary:
-    - aligned dependent query filters with filtered required principals across affected configurations,
-    - fixed quiz question mapping to explicit parent navigation to remove shadow FK ambiguity,
-    - removed course enum DB default configuration that triggered sentinel warning behavior.
+  - aligned dependent query filters with filtered required principals across affected configurations,
+  - fixed quiz question mapping to explicit parent navigation to remove shadow FK ambiguity,
+  - removed course enum DB default configuration that triggered sentinel warning behavior.
 - Validation Summary:
-    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
-    - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
-    - verified targeted EF warning set is no longer emitted in the focused startup/runtime path.
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests -v minimal` passed (`4/4`),
+  - verified targeted EF warning set is no longer emitted in the focused startup/runtime path.
 - Behavior impact:
-    - no business-flow or API-contract behavior change,
-    - entity graph loading now follows filter-consistent mapping semantics without the prior warning noise.
+  - no business-flow or API-contract behavior change,
+  - entity graph loading now follows filter-consistent mapping semantics without the prior warning noise.
 
 ## 2026-05-18 Update - Documentation Synchronization Request (Execution Snapshot)
 
 - Recent request issue:
-    - mandatory execution/planning tracker updates for the latest request were pending synchronized closure across six governance documents.
+  - mandatory execution/planning tracker updates for the latest request were pending synchronized closure across six governance documents.
 - Implementation Summary:
-    - added synchronized 2026-05-18 execution snapshot coverage in PRD, consolidated issues, function list, functionality reference, development plan, and database schema documentation,
-    - aligned issue wording and closure language so all trackers carry the same implementation and validation intent.
+  - added synchronized 2026-05-18 execution snapshot coverage in PRD, consolidated issues, function list, functionality reference, development plan, and database schema documentation,
+  - aligned issue wording and closure language so all trackers carry the same implementation and validation intent.
 - Validation Summary:
-    - verified each updated tracker contains a dated closure entry with both implementation and validation blocks,
-    - verified the update is documentation-only and does not change runtime functionality, API contracts, or deployment behavior.
+  - verified each updated tracker contains a dated closure entry with both implementation and validation blocks,
+  - verified the update is documentation-only and does not change runtime functionality, API contracts, or deployment behavior.
 - Behavior impact:
-    - no runtime functionality change,
-    - documentation traceability for this request is complete and audit-consistent.
+  - no runtime functionality change,
+  - documentation traceability for this request is complete and audit-consistent.
 
 ## 2026-05-18 Update - DeepScan Gap Phase/Stage Synchronization Request (Execution Snapshot)
 
 - Recent request issue:
-    - DeepScan findings identified missing/partial capability areas that were not yet captured as executable phase/stage entries in governance trackers.
+  - DeepScan findings identified missing/partial capability areas that were not yet captured as executable phase/stage entries in governance trackers.
 - Implementation Summary:
-    - added consolidated staged remediation planning (Phase 39/40) for waitlist, transactional import strict mode, MFA hardening, and EF warning cleanup,
-    - synchronized this request closure snapshot across PRD, consolidated tracker, function list, development plan, and database schema docs.
+  - added consolidated staged remediation planning (Phase 39/40) for waitlist, transactional import strict mode, MFA hardening, and EF warning cleanup,
+  - synchronized this request closure snapshot across PRD, consolidated tracker, function list, development plan, and database schema docs.
 - Validation Summary:
-    - verified all six mandatory docs contain matching 2026-05-18 DeepScan-gap synchronization entries,
-    - verified this request is documentation-only and does not alter runtime functionality, API contracts, or deployment behavior.
+  - verified all six mandatory docs contain matching 2026-05-18 DeepScan-gap synchronization entries,
+  - verified this request is documentation-only and does not alter runtime functionality, API contracts, or deployment behavior.
 - Behavior impact:
-    - no runtime functionality change,
-    - functionality governance now explicitly tracks the DeepScan remediation roadmap.
+  - no runtime functionality change,
+  - functionality governance now explicitly tracks the DeepScan remediation roadmap.
 
 ## 2026-05-18 Update - DeepScan Stage 39.2 Transactional CSV Import Strict Mode (Execution Snapshot)
 
 - Recent request issue:
-    - user CSV imports needed an atomic strict mode so partially valid files would not persist a mixed result set.
+  - user CSV imports needed an atomic strict mode so partially valid files would not persist a mixed result set.
 - Implementation Summary:
-    - added optional strict-mode rollback support to the user import service and API controller,
-    - added a response flag to show whether the import used strict or permissive behavior,
-    - preserved existing permissive import behavior as the default path.
+  - added optional strict-mode rollback support to the user import service and API controller,
+  - added a response flag to show whether the import used strict or permissive behavior,
+  - preserved existing permissive import behavior as the default path.
 - Validation Summary:
-    - targeted integration suite passed for user import and force-change-password flows (`4/4`),
-    - verified strict mode returns zero imported rows when a mixed-validity CSV is submitted,
-    - verified permissive import continues to work with the existing end-to-end login and forced-password-change flow.
+  - targeted integration suite passed for user import and force-change-password flows (`4/4`),
+  - verified strict mode returns zero imported rows when a mixed-validity CSV is submitted,
+  - verified permissive import continues to work with the existing end-to-end login and forced-password-change flow.
 - Behavior impact:
-    - strict-mode user import now behaves atomically from the caller’s perspective,
-    - permissive user import behavior remains unchanged for existing clients.
+  - strict-mode user import now behaves atomically from the caller’s perspective,
+  - permissive user import behavior remains unchanged for existing clients.
 
 ## 2026-05-18 Update - DeepScan Stage 39.1 Enrollment Waitlist and Seat-Promotion Workflow (Execution Snapshot)
 
 - Recent request issue:
-    - enrollment handling needed a waitlist and seat-promotion path when course offerings are full.
+  - enrollment handling needed a waitlist and seat-promotion path when course offerings are full.
 - Implementation Summary:
-    - added a waitlisted enrollment state and promotion helpers to the enrollment aggregate,
-    - updated enrollment service logic to queue students when an offering is full and promote the oldest waitlisted student after a drop,
-    - added ordered waitlist retrieval in the enrollment repository layer, exposed the waitlist queue through the API, and covered the flow with focused unit tests.
+  - added a waitlisted enrollment state and promotion helpers to the enrollment aggregate,
+  - updated enrollment service logic to queue students when an offering is full and promote the oldest waitlisted student after a drop,
+  - added ordered waitlist retrieval in the enrollment repository layer, exposed the waitlist queue through the API, and covered the flow with focused unit tests.
 - Validation Summary:
-    - targeted unit suite passed for waitlist creation and promotion (`2/2`),
-    - verified the waitlist queue endpoint is exposed for faculty/admin review,
-    - verified full offering enrollment now records a waitlisted state,
-    - verified seat release promotes the oldest waitlisted enrollment deterministically.
+  - targeted unit suite passed for waitlist creation and promotion (`2/2`),
+  - verified the waitlist queue endpoint is exposed for faculty/admin review,
+  - verified full offering enrollment now records a waitlisted state,
+  - verified seat release promotes the oldest waitlisted enrollment deterministically.
 - Behavior impact:
-    - enrollment no longer hard-fails when a full offering still accepts a waitlist,
-    - seat release now advances the waitlist automatically for the oldest queued student,
-    - faculty/admin users can inspect the current queue through the roster companion endpoint.
+  - enrollment no longer hard-fails when a full offering still accepts a waitlist,
+  - seat release now advances the waitlist automatically for the oldest queued student,
+  - faculty/admin users can inspect the current queue through the roster companion endpoint.
 
 ## 2026-05-18 Update - DeepScan Stage 39.3 MFA Hardening (TOTP + Recovery Codes) (Execution Snapshot)
 
 - Recent request issue:
-    - MFA login enforcement relied on a static deployment demo code instead of per-user strong-factor verification.
+  - MFA login enforcement relied on a static deployment demo code instead of per-user strong-factor verification.
 - Implementation Summary:
-    - replaced demo-code validation with per-user TOTP verification in the auth login flow,
-    - added one-time recovery-code generation/storage/consumption with audit events,
-    - added authenticated MFA enrollment endpoints (setup, enable, recovery-code regeneration),
-    - persisted user MFA state/secret/recovery hashes through schema-backed fields.
+  - replaced demo-code validation with per-user TOTP verification in the auth login flow,
+  - added one-time recovery-code generation/storage/consumption with audit events,
+  - added authenticated MFA enrollment endpoints (setup, enable, recovery-code regeneration),
+  - persisted user MFA state/secret/recovery hashes through schema-backed fields.
 - Validation Summary:
-    - targeted auth security unit suite passed (`7/7`),
-    - targeted login/force-change integration suite passed (`4/4`),
-    - verified force-change-password and refresh-compatible login behavior remained functional.
+  - targeted auth security unit suite passed (`7/7`),
+  - targeted login/force-change integration suite passed (`4/4`),
+  - verified force-change-password and refresh-compatible login behavior remained functional.
 - Behavior impact:
-    - MFA is now user-specific TOTP-based rather than deployment-code based,
-    - recovery codes are one-time and automatically invalidated after use,
-    - auth flows remain compatible while enforcing stronger factor controls.
+  - MFA is now user-specific TOTP-based rather than deployment-code based,
+  - recovery codes are one-time and automatically invalidated after use,
+  - auth flows remain compatible while enforcing stronger factor controls.
 
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 
 - Completed execute-mode closure for final separation phases.
 - Functional behavior confirmed:
-    - runtime app publish output is separated from license app publish output,
-    - non-runtime assets (docs/guides/scripts/training/import templates) are packaged independently from runtime app artifacts.
+  - runtime app publish output is separated from license app publish output,
+  - non-runtime assets (docs/guides/scripts/training/import templates) are packaged independently from runtime app artifacts.
 - Validation evidence:
-    - `Artifacts/Phase37/Publish-Separation-20260515.md` shows execute mode `True` and phase status `PASS` (`4/4`),
-    - `Artifacts/Phase38/NonRuntime-Asset-Separation-20260515.md` shows execute mode `True` and phase status `PASS` (`7/7`).
+  - `Artifacts/Phase37/Publish-Separation-20260515.md` shows execute mode `True` and phase status `PASS` (`4/4`),
+  - `Artifacts/Phase38/NonRuntime-Asset-Separation-20260515.md` shows execute mode `True` and phase status `PASS` (`7/7`).
 - Behavior impact:
-    - production app packaging no longer bundles license tooling,
-    - operational/documentation assets are distributed through dedicated non-runtime packaging workflow.
+  - production app packaging no longer bundles license tooling,
+  - operational/documentation assets are distributed through dedicated non-runtime packaging workflow.
 
 ## 2026-05-13 Update - Institute Parity Stage 0.1 Audit Snapshot
 
@@ -293,53 +293,53 @@ After each completed stage, this document must be updated to reflect any net fun
 
 - Completed dynamic academic vocabulary parity validation for School/College/University policy modes.
 - Functional behavior confirmed:
-    - `GET /api/v1/labels` returns policy-based vocabulary for current tenant configuration,
-    - University-enabled policy resolves University vocabulary,
-    - School-only policy resolves School vocabulary,
-    - College-only policy resolves College vocabulary,
-    - School+College policy resolves School vocabulary,
-    - mixed policy including University resolves University vocabulary.
+  - `GET /api/v1/labels` returns policy-based vocabulary for current tenant configuration,
+  - University-enabled policy resolves University vocabulary,
+  - School-only policy resolves School vocabulary,
+  - College-only policy resolves College vocabulary,
+  - School+College policy resolves School vocabulary,
+  - mixed policy including University resolves University vocabulary.
 - Web behavior confirmed:
-    - portal API client consumes vocabulary contract via `GetVocabularyAsync`,
-    - module composition surface renders returned label set for context-aware wording without screen duplication.
+  - portal API client consumes vocabulary contract via `GetVocabularyAsync`,
+  - module composition surface renders returned label set for context-aware wording without screen duplication.
 - Validation evidence:
-    - focused integration suite passed (`8/8`) for `DynamicLabelIntegrationTests`,
-    - unit label-service suite remains green (`4/4`) in `Phase24Tests` label tests.
+  - focused integration suite passed (`8/8`) for `DynamicLabelIntegrationTests`,
+  - unit label-service suite remains green (`4/4`) in `Phase24Tests` label tests.
 - Behavior impact:
-    - tenant-wide label terminology is now explicitly validated end-to-end for API and portal consumption,
-    - no schema/migration change introduced in Stage 23.2.
+  - tenant-wide label terminology is now explicitly validated end-to-end for API and portal consumption,
+  - no schema/migration change introduced in Stage 23.2.
 
 ## 2026-05-13 Update - Institute Parity Stage 0.2 Access Matrix Snapshot
 
 - Completed role/institute access matrix baseline across core modules and operations (view/create/edit/deactivate/export).
 - Confirmed effective enforcement pattern is currently mixed:
-    - explicit institution policy flags at platform level,
-    - operational scoping mainly through department assignment, course-offering ownership, and student self-ownership.
+  - explicit institution policy flags at platform level,
+  - operational scoping mainly through department assignment, course-offering ownership, and student self-ownership.
 - Identified parity risk areas:
-    - institute-specific checks not explicit on all mutation paths,
-    - School/College filter coverage still incomplete on selected analytics/report surfaces.
+  - institute-specific checks not explicit on all mutation paths,
+  - School/College filter coverage still incomplete on selected analytics/report surfaces.
 - No runtime behavior changes were introduced in Stage 0.2; this is baseline authorization/scope mapping evidence for upcoming remediation stages.
 
 ## 2026-05-13 Update - Institute Parity Stage 0.3 Report Failure Snapshot
 
 - Completed baseline inventory of report failures and report-adjacent operational failure modes.
 - Confirmed previously observed critical failures are resolved:
-    - Result Summary runtime exception,
-    - Report Center visibility gaps for privileged roles.
+  - Result Summary runtime exception,
+  - Report Center visibility gaps for privileged roles.
 - Classified remaining report parity risks:
-    - incomplete explicit School/College/University filter propagation,
-    - expected scope-guard failures that require UX/API clarity,
-    - sparse dummy data causing empty outputs in some report scenarios.
+  - incomplete explicit School/College/University filter propagation,
+  - expected scope-guard failures that require UX/API clarity,
+  - sparse dummy data causing empty outputs in some report scenarios.
 - This stage introduced no runtime code change; it establishes a tagged failure backlog for Phase 4 and Phase 5 execution.
 
 ## 2026-05-13 Update - Institute Parity Stage 0.4 Exit Snapshot
 
 - Completed Phase 0 sign-off by consolidating module audit, role/institute matrix, and report failure inventory into a prioritized execution backlog.
 - Confirmed functional reference readiness for parity implementation phases:
-    - authorization and scope hardening (Phase 2),
-    - module workflow parity (Phase 3),
-    - report/analytics parity fixes (Phase 4),
-    - data-completeness hardening (Phase 5).
+  - authorization and scope hardening (Phase 2),
+  - module workflow parity (Phase 3),
+  - report/analytics parity fixes (Phase 4),
+  - data-completeness hardening (Phase 5).
 - No runtime functionality changed in Stage 0.4; this is governance and execution-readiness closure for Phase 0.
 
 ## 2026-05-13 Update - Institute Parity Stage 1.1 Normalization Snapshot
@@ -353,9 +353,9 @@ After each completed stage, this document must be updated to reflect any net fun
 ## 2026-05-13 Update - Institute Parity Stage 1.2 Referential Integrity + Indexing Snapshot
 
 - Added referential guards on academic write paths:
-    - course create now requires valid department,
-    - offering create now requires valid course/semester and faculty-department assignment when faculty is provided,
-    - student profile creation now enforces program-department alignment.
+  - course create now requires valid department,
+  - offering create now requires valid course/semester and faculty-department assignment when faculty is provided,
+  - student profile creation now enforces program-department alignment.
 - Normalized academic program uniqueness to department scope (`Code + DepartmentId`) for parity-safe multi-department operation.
 - Added institute/report-heavy index coverage on programs, courses, offerings, student profiles, enrollments, and role-assignment lookup paths to reduce filter/join overhead.
 - Updated enrollment status storage to bounded string length for SQL index support on active-status query paths.
@@ -373,11 +373,11 @@ After each completed stage, this document must be updated to reflect any net fun
 
 - Completed Phase 1 exit verification enablement for institute parity schema/data integrity checks.
 - Post-deployment verification now explicitly reports:
-    - department institution-type validity and representation coverage,
-    - orphan counts across institute-linked academic relations and assignment links.
+  - department institution-type validity and representation coverage,
+  - orphan counts across institute-linked academic relations and assignment links.
 - Runtime behavior impact:
-    - no API contract or user-flow mutation in Stage 1.4,
-    - improved operational confidence by making Phase 1 exit criteria auditable with deterministic SQL check outputs.
+  - no API contract or user-flow mutation in Stage 1.4,
+  - improved operational confidence by making Phase 1 exit criteria auditable with deterministic SQL check outputs.
 
 ## 2026-05-13 Update - Institute Parity Stage 2.1 SuperAdmin Capability Snapshot
 
@@ -385,9 +385,9 @@ After each completed stage, this document must be updated to reflect any net fun
 - Strengthened institute-scope correctness for assignment operations by enforcing institution-type compatibility between users and target departments when explicit user institution type is set.
 - Added assignment-management response visibility for user institution type in SuperAdmin user candidate listings.
 - Behavior impact:
-    - SuperAdmin assignment flows now cover both Admin and Faculty department assignment operations,
-    - cross-institute assignment mismatches now fail early with explicit validation responses,
-    - existing Admin-user create/update/assignment behavior remains backward-compatible.
+  - SuperAdmin assignment flows now cover both Admin and Faculty department assignment operations,
+  - cross-institute assignment mismatches now fail early with explicit validation responses,
+  - existing Admin-user create/update/assignment behavior remains backward-compatible.
 
 ## 2026-05-13 Update - Institute Parity Stage 2.2 Role-Scoped Institute Enforcement Snapshot
 
@@ -395,9 +395,9 @@ After each completed stage, this document must be updated to reflect any net fun
 - Extended report endpoint authorization flow for Admin/Faculty to enforce institute compatibility in addition to existing role/department/offering scope checks.
 - Added integration proof that an Admin with valid department assignment is still denied when institution scope mismatches target department.
 - Behavior impact:
-    - Admin/Faculty report access is now constrained by both role scope and institute scope where explicit institution assignment exists,
-    - SuperAdmin behavior remains global and unchanged,
-    - existing report export contracts and metadata remain stable.
+  - Admin/Faculty report access is now constrained by both role scope and institute scope where explicit institution assignment exists,
+  - SuperAdmin behavior remains global and unchanged,
+  - existing report export contracts and metadata remain stable.
 
 ## 2026-05-13 Update - Institute Parity Stage 2.3 Menu/Action Guard Consistency Snapshot
 
@@ -406,296 +406,296 @@ After each completed stage, this document must be updated to reflect any net fun
 - Preserved SuperAdmin unrestricted behavior while applying deterministic redirect-on-deny behavior for hidden sections.
 - Added integration proof that hidden menu state and endpoint authorization remain consistent (`Admin` hidden settings path -> forbidden, `SuperAdmin` visible settings path -> allowed).
 - Behavior impact:
-    - hidden menu sections can no longer be accessed by direct URL path in the portal flow,
-    - visible menu sections retain expected accessibility for authorized roles,
-    - existing role matrix behavior remains backward-compatible.
+  - hidden menu sections can no longer be accessed by direct URL path in the portal flow,
+  - visible menu sections retain expected accessibility for authorized roles,
+  - existing role matrix behavior remains backward-compatible.
 
 ## 2026-05-13 Update - Institute Parity Stage 2.4 Exit Criteria Snapshot
 
 - Completed Phase 2 authorization and permission correction closeout.
 - Confirmed role + institute access matrix pass state across integrated Stage 2 behavior surfaces:
-    - SuperAdmin assignment management with institute-compatibility enforcement,
-    - Admin/Faculty report scope checks including institution mismatch denial,
-    - sidebar visibility and direct-route guard consistency for non-SuperAdmin users.
+  - SuperAdmin assignment management with institute-compatibility enforcement,
+  - Admin/Faculty report scope checks including institution mismatch denial,
+  - sidebar visibility and direct-route guard consistency for non-SuperAdmin users.
 - Validation evidence executed as a combined integration matrix (`AdminUserManagementIntegrationTests`, `ReportExportsIntegrationTests`, `SidebarMenuIntegrationTests`) with all tests passing.
 - Behavior impact:
-    - no new runtime behavior introduced in Stage 2.4 itself,
-    - Phase 2 authorization outcomes are now formally validated and documented as complete,
-    - subsequent parity work can proceed to Phase 3 CRUD/workflow parity scope.
+  - no new runtime behavior introduced in Stage 2.4 itself,
+  - Phase 2 authorization outcomes are now formally validated and documented as complete,
+  - subsequent parity work can proceed to Phase 3 CRUD/workflow parity scope.
 
 ## 2026-05-13 Update - Institute Parity Stage 3.1 Core Academic/Admin Modules Snapshot
 
 - Completed first Phase 3 module parity hardening slice focused on department and course operational parity across institution types.
 - Portal department management behavior was aligned for School/College/University:
-    - department list now shows institution type,
-    - create/edit forms now include institution-type selection,
-    - edit flow preloads institution-type value for deterministic updates.
+  - department list now shows institution type,
+  - create/edit forms now include institution-type selection,
+  - edit flow preloads institution-type value for deterministic updates.
 - Web API client and portal controller contract behavior was corrected to avoid silent University-default writes:
-    - department create now requires explicit institution type,
-    - department update now supports explicit institution-type mutation.
+  - department create now requires explicit institution type,
+  - department update now supports explicit institution-type mutation.
 - Added cross-institution integration validation:
-    - temporarily enables all institution policy flags,
-    - verifies department/course CRUD operations across School/College/University,
-    - restores original institution policy state after test execution.
+  - temporarily enables all institution policy flags,
+  - verifies department/course CRUD operations across School/College/University,
+  - restores original institution policy state after test execution.
 - Hardened legacy admin assignment round-trip integration path to choose/create institution-compatible departments in mixed datasets.
 - Behavior impact:
-    - School/College/University department CRUD paths are now parity-safe from portal create/edit surfaces,
-    - mixed-institution datasets no longer cause false assignment-path regressions in integration coverage,
-    - no database schema or migration mutation was required for Stage 3.1.
+  - School/College/University department CRUD paths are now parity-safe from portal create/edit surfaces,
+  - mixed-institution datasets no longer cause false assignment-path regressions in integration coverage,
+  - no database schema or migration mutation was required for Stage 3.1.
 
 ## 2026-05-13 Update - Institute Parity Stage 3.2 Student Lifecycle Snapshot
 
 - Completed lifecycle institute-parity hardening for student lifecycle workflows currently implemented in platform scope (graduation candidates, promote, graduate, deactivate, reactivate).
 - API lifecycle access behavior now enforces:
-    - Admin department-assignment scope checks,
-    - institution-type claim compatibility with target department/student department,
-    - SuperAdmin bypass for expected global governance behavior.
+  - Admin department-assignment scope checks,
+  - institution-type claim compatibility with target department/student department,
+  - SuperAdmin bypass for expected global governance behavior.
 - Portal lifecycle behavior now enforces institute-aware filtering:
-    - session JWT identity includes optional `institutionType`,
-    - lifecycle department selector is constrained by institute type for non-SuperAdmin sessions,
-    - out-of-scope department selections are blocked before lifecycle calls.
+  - session JWT identity includes optional `institutionType`,
+  - lifecycle department selector is constrained by institute type for non-SuperAdmin sessions,
+  - out-of-scope department selections are blocked before lifecycle calls.
 - Lifecycle UI operation consistency improved:
-    - per-row graduation now posts correctly,
-    - promote/graduate actions preserve selected department and semester filter context.
+  - per-row graduation now posts correctly,
+  - promote/graduate actions preserve selected department and semester filter context.
 - Added focused integration validation proving Admin institute-mismatch deny behavior on lifecycle read/mutation paths while keeping Stage 2 report/menu/assignment parity suites green.
 - Behavior impact:
-    - student lifecycle operations now follow the same institute-boundary enforcement model already adopted by report authorization paths,
-    - lifecycle transitions cannot be invoked by Admin users outside assigned department + institution scope,
-    - no schema/model migration changes were required for Stage 3.2.
+  - student lifecycle operations now follow the same institute-boundary enforcement model already adopted by report authorization paths,
+  - lifecycle transitions cannot be invoked by Admin users outside assigned department + institution scope,
+  - no schema/model migration changes were required for Stage 3.2.
 
 ## 2026-05-13 Update - Institute Parity Stage 3.3 Student Submenu Snapshot
 
 - Completed student submenu parity hardening on core student-data read surface used by Students/Enrollments/Payments submenu workflows.
 - Student list endpoint behavior now enforces:
-    - Admin assignment-constrained department scope,
-    - institution-claim compatibility for explicit department filter requests,
-    - institute-compatible result shaping for unfiltered student list queries.
+  - Admin assignment-constrained department scope,
+  - institution-claim compatibility for explicit department filter requests,
+  - institute-compatible result shaping for unfiltered student list queries.
 - Preserved existing SuperAdmin full-scope behavior and faculty scoped behavior while extending institute parity consistency.
 - Updated student submenu table terminology to institute-neutral `Level` wording on student/enrollment list surfaces to reduce University-only language assumptions.
 - Added dedicated integration evidence covering:
-    - forbidden response on institute-mismatched student list department request,
-    - institute-compatible list output enforcement for admin callers.
+  - forbidden response on institute-mismatched student list department request,
+  - institute-compatible list output enforcement for admin callers.
 - Behavior impact:
-    - student submenu backing data now follows parity boundaries consistently with Phase 2/Stage 3.2 institute guard model,
-    - mixed-assignment/mixed-institute datasets no longer risk cross-institute student list leakage in Admin submenu reads,
-    - no schema or migration update required for Stage 3.3.
+  - student submenu backing data now follows parity boundaries consistently with Phase 2/Stage 3.2 institute guard model,
+  - mixed-assignment/mixed-institute datasets no longer risk cross-institute student list leakage in Admin submenu reads,
+  - no schema or migration update required for Stage 3.3.
 
 ## 2026-05-13 Update - Institute Parity Stage 3.4 Exit Snapshot
 
 - Completed Phase 3 exit-criteria validation and closure for module CRUD/workflow parity.
 - Consolidated verified behavior from Stage 3.1-3.3:
-    - core department/course parity across School/College/University,
-    - lifecycle institute-scope enforcement,
-    - student submenu institute-scope enforcement and institute-neutral terminology.
+  - core department/course parity across School/College/University,
+  - lifecycle institute-scope enforcement,
+  - student submenu institute-scope enforcement and institute-neutral terminology.
 - Added web contract alignment fix by extending shared portal `LookupItem` with optional `InstitutionType` required by institute-aware department filtering paths.
 - Validation evidence:
-    - solution build pass,
-    - full integration suite pass (`115/115`) with no failures.
+  - solution build pass,
+  - full integration suite pass (`115/115`) with no failures.
 - Behavior impact:
-    - Phase 3 module parity exit criteria met for implemented scope,
-    - no schema/model migration change required for Stage 3.4,
-    - next execution focus moves to Phase 4 analytics/report parity and reliability stages.
+  - Phase 3 module parity exit criteria met for implemented scope,
+  - no schema/model migration change required for Stage 3.4,
+  - next execution focus moves to Phase 4 analytics/report parity and reliability stages.
 
 ## 2026-05-13 Update - Institute Parity Stage 4.1 Analytics Filter Expansion Snapshot
 
 - Completed analytics filter expansion across API queries and portal analytics dashboard controls.
 - Analytics API behavior now enforces:
-    - optional institute filter support across analytics read/export surfaces,
-    - role-aware institute defaults for constrained roles via JWT `institutionType` claim,
-    - forbidden responses on explicit institute mismatch requests,
-    - department + institute compatibility checks before analytics query execution.
+  - optional institute filter support across analytics read/export surfaces,
+  - role-aware institute defaults for constrained roles via JWT `institutionType` claim,
+  - forbidden responses on explicit institute mismatch requests,
+  - department + institute compatibility checks before analytics query execution.
 - Analytics service behavior now supports institution-aware filtering for:
-    - performance analytics,
-    - attendance analytics,
-    - assignment analytics,
-    - quiz analytics,
+  - performance analytics,
+  - attendance analytics,
+  - assignment analytics,
+  - quiz analytics,
     while preserving distributed cache behavior with scope-aware cache keys.
 - Portal analytics behavior now includes:
-    - institution + department filter controls,
-    - claim-driven default institute filtering for constrained roles,
-    - safe clearing of out-of-scope department selections.
+  - institution + department filter controls,
+  - claim-driven default institute filtering for constrained roles,
+  - safe clearing of out-of-scope department selections.
 - Validation evidence:
-    - solution build pass,
-    - focused parity integration suites pass (`41/41`) including new analytics institute parity tests.
+  - solution build pass,
+  - focused parity integration suites pass (`41/41`) including new analytics institute parity tests.
 - Behavior impact:
-    - analytics dashboards and analytics API queries are now institute-aware for School/College/University contexts,
-    - constrained-role analytics requests are auto-scoped and protected against cross-institute filter drift,
-    - no schema or migration update required for Stage 4.1.
+  - analytics dashboards and analytics API queries are now institute-aware for School/College/University contexts,
+  - constrained-role analytics requests are auto-scoped and protected against cross-institute filter drift,
+  - no schema or migration update required for Stage 4.1.
 
 ## 2026-05-13 Update - Institute Parity Stage 4.2 Reports Filter Expansion Snapshot
 
 - Completed report filter expansion across report APIs, report exports, and report portal controls.
 - Report API behavior now enforces:
-    - optional `institutionType` filter support across report generation and export endpoints,
-    - role-aware default institution scope for constrained roles using JWT `institutionType`,
-    - forbidden responses on explicit report institution mismatch requests,
-    - report request scope propagation to queued result-summary export jobs.
+  - optional `institutionType` filter support across report generation and export endpoints,
+  - role-aware default institution scope for constrained roles using JWT `institutionType`,
+  - forbidden responses on explicit report institution mismatch requests,
+  - report request scope propagation to queued result-summary export jobs.
 - Report query behavior now supports institution-aware filtering for:
-    - attendance summary,
-    - result summary,
-    - assignment summary,
-    - quiz summary,
-    - GPA,
-    - enrollment summary,
-    - semester results,
-    - low attendance warning,
-    - FYP status report.
+  - attendance summary,
+  - result summary,
+  - assignment summary,
+  - quiz summary,
+  - GPA,
+  - enrollment summary,
+  - semester results,
+  - low attendance warning,
+  - FYP status report.
 - Portal report behavior now includes:
-    - institution filter controls on report forms,
-    - institution-aware department dropdown narrowing,
-    - report export links that preserve institution filter state.
+  - institution filter controls on report forms,
+  - institution-aware department dropdown narrowing,
+  - report export links that preserve institution filter state.
 - Validation evidence:
-    - solution build pass,
-    - focused parity integration suites pass (`43/43`) including expanded report institute parity tests.
+  - solution build pass,
+  - focused parity integration suites pass (`43/43`) including expanded report institute parity tests.
 - Behavior impact:
-    - report dashboards and report API queries/exports are institute-aware for School/College/University contexts,
-    - constrained-role report requests are auto-scoped and protected against cross-institute filter drift,
-    - no schema or migration update required for Stage 4.2.
+  - report dashboards and report API queries/exports are institute-aware for School/College/University contexts,
+  - constrained-role report requests are auto-scoped and protected against cross-institute filter drift,
+  - no schema or migration update required for Stage 4.2.
 
 ## 2026-05-13 Update - Institute Parity Stage 4.3 Broken Report Fixes Snapshot
 
 - Completed report reliability fixes for faculty report scope guardrails.
 - Report API behavior now enforces:
-    - faculty department-scoped reports require explicit department (or department/offering where applicable),
-    - faculty requests against unassigned departments are denied consistently,
-    - faculty offering-scoped report checks validate department assignment scope instead of strict offering owner match.
+  - faculty department-scoped reports require explicit department (or department/offering where applicable),
+  - faculty requests against unassigned departments are denied consistently,
+  - faculty offering-scoped report checks validate department assignment scope instead of strict offering owner match.
 - Reliability and deterministic validation additions:
-    - added integration checks proving `400` responses for missing required faculty filters,
-    - added integration checks proving `403` responses for faculty unassigned department filters,
-    - included repaired report endpoints in focused parity regression run.
+  - added integration checks proving `400` responses for missing required faculty filters,
+  - added integration checks proving `403` responses for faculty unassigned department filters,
+  - included repaired report endpoints in focused parity regression run.
 - Validation evidence:
-    - solution build pass,
-    - focused parity integration suites pass (`42/42`) including expanded report reliability tests.
+  - solution build pass,
+  - focused parity integration suites pass (`42/42`) including expanded report reliability tests.
 - Behavior impact:
-    - broken faculty report access behavior is corrected without changing report UI contracts,
-    - report endpoints now apply role + institute + department scope consistently for repaired routes,
-    - no schema or migration update required for Stage 4.3.
+  - broken faculty report access behavior is corrected without changing report UI contracts,
+  - report endpoints now apply role + institute + department scope consistently for repaired routes,
+  - no schema or migration update required for Stage 4.3.
 
 ## 2026-05-13 Update - Institute Parity Stage 4.4 Exit Criteria Snapshot
 
 - Completed Phase 4 exit gate after the report and analytics reliability fixes.
 - Exit validation now confirms:
-    - full integration-suite regression stability across report, analytics, role, and institute guard paths,
-    - no remaining Phase 4 functional regressions in School/College/University parity flows,
-    - no schema or migration update required for the phase-exit checkpoint.
+  - full integration-suite regression stability across report, analytics, role, and institute guard paths,
+  - no remaining Phase 4 functional regressions in School/College/University parity flows,
+  - no schema or migration update required for the phase-exit checkpoint.
 - Validation evidence:
-    - solution build pass,
-    - full integration suite pass (`124/124`).
+  - solution build pass,
+  - full integration suite pass (`124/124`).
 - Behavior impact:
-    - Phase 4 is closed with error-free report and analytics parity behavior,
-    - the execution pointer advances to Phase 5 without additional code changes.
+  - Phase 4 is closed with error-free report and analytics parity behavior,
+  - the execution pointer advances to Phase 5 without additional code changes.
 
 ## 2026-05-13 Update - Institute Parity Stage 5.1 Core Seed Coverage Snapshot
 
 - Completed core seed coverage hardening for institute-aware foundational data.
 - Core script behavior now enforces:
-    - default institution policy flags in `portal_settings` for School/College/University enablement,
-    - deterministic baseline departments mapped to all three institution types,
-    - normalized legacy report keys to current canonical report-key format,
-    - parity-aligned report role assignment defaults (operational reports for SuperAdmin/Admin/Faculty, transcript also for Student),
-    - explicit SuperAdmin baseline sidebar role-access seed rows.
+  - default institution policy flags in `portal_settings` for School/College/University enablement,
+  - deterministic baseline departments mapped to all three institution types,
+  - normalized legacy report keys to current canonical report-key format,
+  - parity-aligned report role assignment defaults (operational reports for SuperAdmin/Admin/Faculty, transcript also for Student),
+  - explicit SuperAdmin baseline sidebar role-access seed rows.
 - Validation evidence:
-    - user-import institution-assignment regression suite passed (`3/3`),
-    - script content verification confirms policy keys, institution-typed baseline departments, and updated report key matrix are present.
+  - user-import institution-assignment regression suite passed (`3/3`),
+  - script content verification confirms policy keys, institution-typed baseline departments, and updated report key matrix are present.
 - Behavior impact:
-    - fresh and replayed core seed runs now produce institute-aware foundational policy and access baselines required for Phase 5 data completion,
-    - no schema/migration mutation introduced in this stage.
+  - fresh and replayed core seed runs now produce institute-aware foundational policy and access baselines required for Phase 5 data completion,
+  - no schema/migration mutation introduced in this stage.
 
 ## 2026-05-13 Update - Institute Parity Stage 5.2 Full Dummy Coverage Snapshot
 
 - Completed full dummy parity dataset expansion for School/College/University representative execution paths.
 - Full dummy script behavior now enforces:
-    - explicit institution-type assignment for parity users and deterministic department institution mapping,
-    - assignment-junction coverage for Admin and Faculty department scopes,
-    - buildings/rooms/timetable/timetable-entry parity data across representative institute departments,
-    - payment receipt and transcript export artifact coverage,
-    - lifecycle/report artifacts including bulk promotions, graduation approvals, school stream assignment, and student report cards.
+  - explicit institution-type assignment for parity users and deterministic department institution mapping,
+  - assignment-junction coverage for Admin and Faculty department scopes,
+  - buildings/rooms/timetable/timetable-entry parity data across representative institute departments,
+  - payment receipt and transcript export artifact coverage,
+  - lifecycle/report artifacts including bulk promotions, graduation approvals, school stream assignment, and student report cards.
 - Validation evidence:
-    - targeted user-import institution-assignment regression suite passed (`3/3`),
-    - script verification confirms new parity entity blocks and institution-type alignment rows are present.
+  - targeted user-import institution-assignment regression suite passed (`3/3`),
+  - script verification confirms new parity entity blocks and institution-type alignment rows are present.
 - Behavior impact:
-    - one-run full dummy seeding now provides broader parity validation data for reports, lifecycle, timetable, payments, and role/institute scope checks,
-    - no schema/migration mutation introduced in this stage.
+  - one-run full dummy seeding now provides broader parity validation data for reports, lifecycle, timetable, payments, and role/institute scope checks,
+  - no schema/migration mutation introduced in this stage.
 
 ## 2026-05-13 Update - Institute Parity Stage 5.3 Data Quality and Replay Safety Snapshot
 
 - Completed full dummy replay-safety hardening and post-deployment data-quality verification expansion.
 - Script behavior now enforces:
-    - deterministic replay alignment for seeded user/department identity and institution mapping fields,
-    - institute-level parity aggregate checks for School/College/University datasets,
-    - critical workflow coverage checks for timetable, payments, report artifacts, and lifecycle entities,
-    - duplicate and dataset-version integrity checks for replay safety.
+  - deterministic replay alignment for seeded user/department identity and institution mapping fields,
+  - institute-level parity aggregate checks for School/College/University datasets,
+  - critical workflow coverage checks for timetable, payments, report artifacts, and lifecycle entities,
+  - duplicate and dataset-version integrity checks for replay safety.
 - Validation evidence:
-    - targeted user-import institution-assignment regression suite passed (`3/3`),
-    - script verification confirms institute-level and replay-safety check outputs are present in post-deployment script.
+  - targeted user-import institution-assignment regression suite passed (`3/3`),
+  - script verification confirms institute-level and replay-safety check outputs are present in post-deployment script.
 - Behavior impact:
-    - replayed full dummy seeding now preserves deterministic parity shape more strictly,
-    - post-deployment verification now provides direct parity-count and duplicate-safety signals for Stage 5 quality gates.
+  - replayed full dummy seeding now preserves deterministic parity shape more strictly,
+  - post-deployment verification now provides direct parity-count and duplicate-safety signals for Stage 5 quality gates.
 
 ## 2026-05-13 Update - Institute Parity Stage 5.4 Exit Criteria Snapshot
 
 - Completed Phase 5 exit-criteria validation for script-chain readiness.
 - Exit validation behavior now confirms:
-    - full script deployment order (`01` -> `02` -> `03` -> `05`) succeeds in one run,
-    - dummy seed replay avoids superadmin duplicate-email collisions by reusing preexisting superadmin identity when available,
-    - post-deployment checks emit non-zero institute-distributed parity coverage and zero duplicate key-identifier signals.
+  - full script deployment order (`01` -> `02` -> `03` -> `05`) succeeds in one run,
+  - dummy seed replay avoids superadmin duplicate-email collisions by reusing preexisting superadmin identity when available,
+  - post-deployment checks emit non-zero institute-distributed parity coverage and zero duplicate key-identifier signals.
 - Validation evidence:
-    - targeted user-import institution-assignment regression suite passed (`3/3`),
-    - one-run SQL execution reported successful full dummy completion and post-check parity metrics across School/College/University.
+  - targeted user-import institution-assignment regression suite passed (`3/3`),
+  - one-run SQL execution reported successful full dummy completion and post-check parity metrics across School/College/University.
 - Behavior impact:
-    - Phase 5 database script parity scope is now closed with executable one-run readiness evidence,
-    - execution can proceed to Phase 6 QA/UAT/regression protection expansion.
+  - Phase 5 database script parity scope is now closed with executable one-run readiness evidence,
+  - execution can proceed to Phase 6 QA/UAT/regression protection expansion.
 
 ## 2026-05-13 Update - Institute Parity Stage 6.1 Automated Test Expansion Snapshot
 
 - Completed automated parity regression expansion for institute-scope lifecycle, student submenu, and report access paths.
 - Added integration coverage for matched-scope success paths that complement existing mismatch-deny checks:
-    - lifecycle graduation-candidates access now has explicit Admin matched-institute allow-path evidence,
-    - student submenu explicit department filter now has institute-compatible scope-shaping allow-path evidence,
-    - enrollment-summary report now has Admin matched-institution query allow-path evidence.
+  - lifecycle graduation-candidates access now has explicit Admin matched-institute allow-path evidence,
+  - student submenu explicit department filter now has institute-compatible scope-shaping allow-path evidence,
+  - enrollment-summary report now has Admin matched-institution query allow-path evidence.
 - Validation evidence:
-    - focused Stage 6.1 parity integration run passed (`28/28`) across `StudentLifecycleIntegrationTests`, `StudentSubmenuParityIntegrationTests`, and `ReportExportsIntegrationTests`.
+  - focused Stage 6.1 parity integration run passed (`28/28`) across `StudentLifecycleIntegrationTests`, `StudentSubmenuParityIntegrationTests`, and `ReportExportsIntegrationTests`.
 - Behavior impact:
-    - institute parity guard model now has both deny-path and allow-path automated coverage on key Phase 5-expanded surfaces,
-    - no runtime feature contract changes or schema mutations introduced by Stage 6.1.
+  - institute parity guard model now has both deny-path and allow-path automated coverage on key Phase 5-expanded surfaces,
+  - no runtime feature contract changes or schema mutations introduced by Stage 6.1.
 
 ## 2026-05-13 Update - Institute Parity Stage 6.2 Cross-Role UAT Matrix Snapshot
 
 - Completed cross-role UAT matrix automation across School/College/University institution contexts.
 - Added matrix validation coverage for SuperAdmin/Admin/Faculty/Student on stable parity-sensitive endpoints:
-    - report catalog role visibility,
-    - account-security locked-account access boundaries,
-    - attendance-by-offering authorization boundaries.
+  - report catalog role visibility,
+  - account-security locked-account access boundaries,
+  - attendance-by-offering authorization boundaries.
 - Validation evidence:
-    - focused Stage 6.2 UAT integration run passed (`100/100`) across `CrossRoleUatMatrixIntegrationTests`, `ReportCatalogIntegrationTests`, `AccountSecurityIntegrationTests`, and `AuthorizationRegressionTests`.
+  - focused Stage 6.2 UAT integration run passed (`100/100`) across `CrossRoleUatMatrixIntegrationTests`, `ReportCatalogIntegrationTests`, `AccountSecurityIntegrationTests`, and `AuthorizationRegressionTests`.
 - Behavior impact:
-    - role-boundary expectations are now explicitly regression-protected across all three institution claim contexts,
-    - no runtime feature contract changes or schema mutations introduced by Stage 6.2.
+  - role-boundary expectations are now explicitly regression-protected across all three institution claim contexts,
+  - no runtime feature contract changes or schema mutations introduced by Stage 6.2.
 
 ## 2026-05-13 Update - Institute Parity Stage 6.3 Performance and Query Validation Snapshot
 
 - Completed performance and query validation for parity-sensitive institute-filtered report/dashboard paths.
 - Added Stage 6.3 validation coverage for:
-    - parity index read-usage confirmation on institute-filtered query patterns (`academic_programs`, `courses`, `course_offerings`),
-    - no-major-regression latency budgets on common Admin dashboard/report paths.
+  - parity index read-usage confirmation on institute-filtered query patterns (`academic_programs`, `courses`, `course_offerings`),
+  - no-major-regression latency budgets on common Admin dashboard/report paths.
 - Validation evidence:
-    - focused Stage 6.3 integration run passed (`2/2`) across `PerformanceQueryValidationIntegrationTests`.
+  - focused Stage 6.3 integration run passed (`2/2`) across `PerformanceQueryValidationIntegrationTests`.
 - Behavior impact:
-    - index-backed institute-filtered query paths now have explicit automated validation evidence,
-    - no runtime feature contract changes or schema mutations introduced by Stage 6.3.
+  - index-backed institute-filtered query paths now have explicit automated validation evidence,
+  - no runtime feature contract changes or schema mutations introduced by Stage 6.3.
 
 ## 2026-05-13 Update - Institute Parity Stage 6.4 Exit Criteria Snapshot
 
 - Completed Phase 6 exit-criteria consolidation for institute parity.
 - Executed consolidated parity certification run across Stage 6 suites covering:
-    - lifecycle and student submenu parity success + scope checks,
-    - cross-role UAT matrix and authorization/report boundary checks,
-    - performance/query validation checks for parity-sensitive paths.
+  - lifecycle and student submenu parity success + scope checks,
+  - cross-role UAT matrix and authorization/report boundary checks,
+  - performance/query validation checks for parity-sensitive paths.
 - Validation evidence:
-    - consolidated Stage 6 phase-exit run passed (`132/132`) with zero failures.
+  - consolidated Stage 6 phase-exit run passed (`132/132`) with zero failures.
 - Behavior impact:
-    - Phase 6 parity scenarios are fully regression-certified with no critical/blocker defects,
-    - no runtime feature contract changes or schema mutations introduced by Stage 6.4.
+  - Phase 6 parity scenarios are fully regression-certified with no critical/blocker defects,
+  - no runtime feature contract changes or schema mutations introduced by Stage 6.4.
 
 ## 2026-05-13 Update - Institute Parity Stage 7.1 Deployment Runbook Snapshot
 
@@ -703,25 +703,25 @@ After each completed stage, this document must be updated to reflect any net fun
 - Added explicit rollout guidance for SQL execution order (`01 -> 02 -> 03 -> 04 -> 05`) and environment prerequisites.
 - Added rollback + verification checklist covering backup, fail-fast verification via post-deployment checks, cleanup fallback, and evidence archiving.
 - Validation evidence:
-    - required deployment scripts existence verified,
-    - schema/create-context and post-check fail-fast guards verified from script content.
+  - required deployment scripts existence verified,
+  - schema/create-context and post-check fail-fast guards verified from script content.
 - Behavior impact:
-    - no runtime feature contract changes or schema mutations introduced by Stage 7.1,
-    - operational deployment guidance is now explicit and reproducible for Phase 7 rollout.
+  - no runtime feature contract changes or schema mutations introduced by Stage 7.1,
+  - operational deployment guidance is now explicit and reproducible for Phase 7 rollout.
 
 ## 2026-05-13 Update - Institute Parity Stage 7.2 Functional Documentation Snapshot
 
 - Completed functional documentation alignment for institute parity behavior across shared functionality and user-facing role guides.
 - Added explicit role/institute scope guidance for:
-    - Admin department/institute scope boundaries,
-    - Faculty assignment + institute scoped access,
-    - Student safe-surface access and restricted operational endpoints.
+  - Admin department/institute scope boundaries,
+  - Faculty assignment + institute scoped access,
+  - Student safe-surface access and restricted operational endpoints.
 - Validation evidence:
-    - Stage 7.2 documentation updates synchronized across required tracking docs and user guides,
-    - command execution pointer advanced to Stage 7.3.
+  - Stage 7.2 documentation updates synchronized across required tracking docs and user guides,
+  - command execution pointer advanced to Stage 7.3.
 - Behavior impact:
-    - no runtime feature contract changes or schema mutations introduced by Stage 7.2,
-    - institute parity behavior is now explicitly documented for operational users.
+  - no runtime feature contract changes or schema mutations introduced by Stage 7.2,
+  - institute parity behavior is now explicitly documented for operational users.
 
 ## 2026-05-13 Update - Institute Parity Stage 7.3 Monitoring and Support Handover Snapshot
 
@@ -729,42 +729,42 @@ After each completed stage, this document must be updated to reflect any net fun
 - Added monitoring guidance for report/analytics failure signals, expected authorization-denial triage, and institute-filtered analytics health checks.
 - Added support handover checklist for SuperAdmin parity incidents covering role, institution type, department/offering scope, menu visibility, and correlation evidence.
 - Validation evidence:
-    - Stage 7.3 monitoring/support guidance synchronized across required docs,
-    - support handover checklist explicitly references the report/analytics and role/institute scenarios most likely to generate parity incidents.
+  - Stage 7.3 monitoring/support guidance synchronized across required docs,
+  - support handover checklist explicitly references the report/analytics and role/institute scenarios most likely to generate parity incidents.
 - Behavior impact:
-    - no runtime feature contract changes or schema mutations introduced by Stage 7.3,
-    - operational support handling is now explicit for parity-scope defects.
+  - no runtime feature contract changes or schema mutations introduced by Stage 7.3,
+  - operational support handling is now explicit for parity-scope defects.
 
 ## 2026-05-13 Update - Institute Parity Stage 7.4 Release Exit Criteria Snapshot
 
 - Completed Phase 7 release exit criteria for institute parity readiness.
 - Validation evidence:
-    - Stage 7.4 completion evidence is recorded in the phase tracker and mandatory handoff docs,
-    - command execution pointer is advanced beyond the institute parity closeout.
+  - Stage 7.4 completion evidence is recorded in the phase tracker and mandatory handoff docs,
+  - command execution pointer is advanced beyond the institute parity closeout.
 - Behavior impact:
-    - no runtime feature contract changes or schema mutations introduced by Stage 7.4,
-    - Phase 7 parity work is fully closed and ready for the next roadmap stage.
+  - no runtime feature contract changes or schema mutations introduced by Stage 7.4,
+  - Phase 7 parity work is fully closed and ready for the next roadmap stage.
 
 ---
 
 ## Table of Contents
 
-1. [Executive Summary](#executive-summary)
-2. [Core System Architecture](#core-system-architecture)
-3. [Complete Functionality Index](#complete-functionality-index)
-4. [Authentication & Authorization](#authentication--authorization)
-5. [User & Access Management](#user--access-management)
-6. [Academic Management](#academic-management)
-7. [Assessment & Grading](#assessment--grading)
-8. [Learning Management System](#learning-management-system)
-9. [Communication & Notifications](#communication--notifications)
-10. [Administration & Configuration](#administration--configuration)
-11. [Advanced Features](#advanced-features)
-12. [Integration & Support](#integration--support)
-13. [Service & Controller Matrix](#service--controller-matrix)
-14. [Architecture & Design Patterns](#architecture--design-patterns)
-15. [API Patterns & Data Flows](#api-patterns--data-flows)
-16. [Performance Considerations](#performance-considerations)
+- [Executive Summary](#executive-summary)
+- [Core System Architecture](#core-system-architecture)
+- [Complete Functionality Index](#complete-functionality-index)
+- [Authentication & Authorization](#authentication--authorization)
+- [User & Access Management](#user--access-management)
+- [Academic Management](#academic-management)
+- [Assessment & Grading](#assessment--grading)
+- [Learning Management System](#learning-management-system)
+- [Communication & Notifications](#communication--notifications)
+- [Administration & Configuration](#administration--configuration)
+- [Advanced Features](#advanced-features)
+- [Integration & Support](#integration--support)
+- [Service & Controller Matrix](#service--controller-matrix)
+- [Architecture & Design Patterns](#architecture--design-patterns)
+- [API Patterns & Data Flows](#api-patterns--data-flows)
+- [Performance Considerations](#performance-considerations)
 
 ---
 
@@ -857,71 +857,71 @@ After each completed stage, this document must be updated to reflect any net fun
 ## Complete Functionality Index
 
 ### Core System (5 features)
-1. Authentication & Authorization
-2. User & Role Management
-3. Department & Institution Management
-4. License & Module Management
-5. Account Security & Settings
+- Authentication & Authorization
+- User & Role Management
+- Department & Institution Management
+- License & Module Management
+- Account Security & Settings
 
 ### Academic (12 features)
-6. Program & Course Management
-7. Enrollment Management
-8. Semester & Academic Calendar
-9. Student Registration & Whitelist
-10. Student Profiles & Lifecycle
-11. Results & Grading
-12. Degree Audit & Progression
-13. Parent Portal
-14. Timetable Management
-15. Bulk Promotion
-16. Course Prerequisites
-17. Student Status Tracking
+- Program & Course Management
+- Enrollment Management
+- Semester & Academic Calendar
+- Student Registration & Whitelist
+- Student Profiles & Lifecycle
+- Results & Grading
+- Degree Audit & Progression
+- Parent Portal
+- Timetable Management
+- Bulk Promotion
+- Course Prerequisites
+- Student Status Tracking
 
 ### Assessment & Grading (5 features)
-18. Assignments & Submissions
-19. Quizzes & Assessments
-20. Gradebook & Assessment Grid
-21. Report Card Generation
-22. Rubric-Based Evaluation
+- Assignments & Submissions
+- Quizzes & Assessments
+- Gradebook & Assessment Grid
+- Report Card Generation
+- Rubric-Based Evaluation
 
 ### Learning Management (5 features)
-23. Learning Management System (LMS)
-24. Study Planner
-25. AI Chat Assistant
-26. Attendance Management
-27. Course Content Organization
+- Learning Management System (LMS)
+- Study Planner
+- AI Chat Assistant
+- Attendance Management
+- Course Content Organization
 
 ### Communication & Notifications (4 features)
-28. Notifications System
-29. Announcements
-30. Discussions & Forums
-31. Communication Integrations
+- Notifications System
+- Announcements
+- Discussions & Forums
+- Communication Integrations
 
 ### Administration (8 features)
-32. Portal Settings & Configuration
-33. Theme & Personalization
-34. Sidebar Menu & Navigation
-35. Dashboard & Portal Composition
-36. Reporting & Analytics
-37. Audit & Logging
-38. User Import & Bulk Operations
-39. Building & Room Management
+- Portal Settings & Configuration
+- Theme & Personalization
+- Sidebar Menu & Navigation
+- Dashboard & Portal Composition
+- Reporting & Analytics
+- Audit & Logging
+- User Import & Bulk Operations
+- Building & Room Management
 
 ### Advanced Features (7 features)
-40. Final Year Project (FYP)
-41. Helpdesk & Support
-42. Search & Discovery
-43. Library Management
-44. Labels & Tagging
-45. Accreditation & Compliance
-46. Feature Flags & Rollback
+- Final Year Project (FYP)
+- Helpdesk & Support
+- Search & Discovery
+- Library Management
+- Labels & Tagging
+- Accreditation & Compliance
+- Feature Flags & Rollback
 
 ### Integration & Support (5 features)
-47. Campus Infrastructure Integration
-48. Portal Capabilities Matrix
-49. Schema Streaming & Exports
-50. External System Integration
-51. Media & Storage Management
+- Campus Infrastructure Integration
+- Portal Capabilities Matrix
+- Schema Streaming & Exports
+- External System Integration
+- Media & Storage Management
 
 **Total: 51 Major Functionalities**
 
@@ -2465,11 +2465,11 @@ var students = _repository.GetAll()
 
 ### Common Performance Hotspots
 
-1. **Gradebook Grid Loading** - Use pagination/lazy loading
-2. **Full-Text Search** - Implement indexed search
-3. **Attendance Bulk Mark** - Use batch insert operations
-4. **Report Generation** - Run asynchronously with queuing
-5. **Notification Dispatch** - Use fan-out queue for large audiences
+- **Gradebook Grid Loading** - Use pagination/lazy loading
+- **Full-Text Search** - Implement indexed search
+- **Attendance Bulk Mark** - Use batch insert operations
+- **Report Generation** - Run asynchronously with queuing
+- **Notification Dispatch** - Use fan-out queue for large audiences
 
 ---
 
@@ -2610,60 +2610,60 @@ var students = _repository.GetAll()
 
 ### Student Enrollment Flow
 ```
-1. View available courses
-2. Check prerequisites
-3. Check timetable for clashes
-4. Enroll (with admin override capability)
-5. Confirmation notification
-6. Access to course materials
-7. Enrollment audit log created
+- View available courses
+- Check prerequisites
+- Check timetable for clashes
+- Enroll (with admin override capability)
+- Confirmation notification
+- Access to course materials
+- Enrollment audit log created
 ```
 
 ### Assignment Submission Flow
 ```
-1. Faculty publishes assignment
-2. Student views assignment
-3. Student submits work (file or text)
-4. Duplicate submission check
-5. Faculty grades submission
-6. Student receives feedback
-7. Grade published to gradebook
-8. Automatic notification to student
+- Faculty publishes assignment
+- Student views assignment
+- Student submits work (file or text)
+- Duplicate submission check
+- Faculty grades submission
+- Student receives feedback
+- Grade published to gradebook
+- Automatic notification to student
 ```
 
 ### Grade Entry Flow
 ```
-1. Faculty views gradebook grid
-2. Inline edit marks for each component
-3. Or bulk import via CSV
-4. System calculates weighted totals
-5. Faculty reviews calculations
-6. Publish all grades
-7. Automatic student notification
-8. Audit log entry created
+- Faculty views gradebook grid
+- Inline edit marks for each component
+- Or bulk import via CSV
+- System calculates weighted totals
+- Faculty reviews calculations
+- Publish all grades
+- Automatic student notification
+- Audit log entry created
 ```
 
 ### Attendance Flow
 ```
-1. Faculty marks attendance (single or bulk)
-2. System checks for duplicates
-3. Attendance recorded with timestamp
-4. Automated low attendance check
-5. Notifications sent to at-risk students
-6. Attendance history maintained
-7. Reports generated automatically
+- Faculty marks attendance (single or bulk)
+- System checks for duplicates
+- Attendance recorded with timestamp
+- Automated low attendance check
+- Notifications sent to at-risk students
+- Attendance history maintained
+- Reports generated automatically
 ```
 
 ### FYP Workflow
 ```
-1. Student submits FYP proposal
-2. Supervisor assignment
-3. Panel member selection
-4. Meeting scheduling
-5. Progress tracking
-6. Final submission
-7. Defense evaluation
-8. Graduation recommendation
+- Student submits FYP proposal
+- Supervisor assignment
+- Panel member selection
+- Meeting scheduling
+- Progress tracking
+- Final submission
+- Defense evaluation
+- Graduation recommendation
 ```
 
 ---
@@ -2725,4 +2725,5 @@ For more detailed information, see:
 **Last Updated:** May 11, 2026  
 **Status:** Phase 33 - Security Hardening Active  
 **Next Phase:** Phase 34 - Performance Optimization & Scaling
+
 

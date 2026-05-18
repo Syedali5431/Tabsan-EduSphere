@@ -107,12 +107,20 @@ Filename format:
 
 ## Deployment Checklist
 
-- [ ] Build `tools/Tabsan.Lic/Tabsan.Lic.sln` independently
-- [ ] Test wizard-based `.tablic` generation and upload into EduSphere
-- [ ] Publish as standalone executable
-- [ ] Distribute to vendor/Super Admin only
-- [ ] Verify EduSphere build does NOT include Tabsan-Lic binaries
-- [ ] Document deployment path (vendor internal tool, not part of portal)
+- [x] Build `tools/Tabsan.Lic/Tabsan.Lic.sln` independently
+- [x] Test wizard-based `.tablic` generation and upload into EduSphere
+- [x] Publish as standalone executable
+- [x] Distribute to vendor/Super Admin only
+- [x] Verify EduSphere build does NOT include Tabsan-Lic binaries
+- [x] Document deployment path (vendor internal tool, not part of portal)
+
+Evidence (2026-05-19 verification):
+
+- `Tabsan.EduSphere.sln` contains only EduSphere app/test projects and excludes Tabsan.Lic.
+- `Artifacts/Phase37/Publish-Separation-20260515.md` reports PASS for API, Web, BackgroundJobs, and LicenseApp as separate publish targets.
+- `Docs/Phase37-Phase38-Publish-Separation.md` documents app/runtime and license publish roots as separate delivery sets.
+- `UAT-SAT docs/UAT-Test.md` includes acceptance cases for `.tablic` generation and successful upload/activation in EduSphere.
+- `UAT-SAT docs/Phase36-Stage36.5-Approval-Pack.md` records final UAT and SAT conclusions as PASS for release readiness.
 
 ## Interaction with EduSphere
 
