@@ -384,39 +384,24 @@ Testing and result summary:
 - Full-solution regression is green after DeepSystemScan phase completion updates.
 - Focused high-risk integration bundle is green.
 
-## 2026-05-19 - ROLE-BASED UAT SWEEP (PROCEEDED)
+## 2026-05-19 - DATABASE SCRIPT ALIGNMENT UPDATE (PROCEEDED)
 
 Implementation Summary:
-- Executed role-oriented integration UAT matrix for SuperAdmin/Admin/Faculty/Student coverage paths.
-- Validated sidebar/module visibility gates, authorization behavior, report catalog scoping, and parent portal access baselines.
+- Updated schema script to ensure current user security/contact columns are always present:
+  - PhoneNumber
+  - MfaIsEnabled
+  - MfaTotpSecret
+  - MfaRecoveryCodesHashJson
+- Updated maintenance script with SMS-recipient lookup index support:
+  - IX_users_active_phone on users (IsActive, IsDeleted, PhoneNumber) INCLUDE (Id)
+- Updated post-deployment checks (full + clean) to validate new columns and baseline MFA state.
+- Updated script execution README files so clean-path guidance includes optional maintenance step for parity.
 
 Validation Summary:
-- Executed targeted integration suites for cross-role behavior and portal composition contracts.
-- No failures detected in the selected UAT matrix bundle.
+- SQL/markdown diagnostics reported no errors in edited scripts/docs.
+- Focused integration sanity test remained green after script changes.
 
 Testing and result summary:
-- runTests role/UAT bundle passed (119/119, 0 failed):
-  - CrossRoleUatMatrixIntegrationTests.cs
-  - SidebarMenuIntegrationTests.cs
-  - StudentSubmenuParityIntegrationTests.cs
-  - AuthorizationRegressionTests.cs
-  - ReportCatalogIntegrationTests.cs
-  - ParentPortalIntegrationTests.cs
-- Result: role-based UAT baseline is green for automated integration coverage.
-
-## 2026-05-19 - LIVE BROWSER UAT ATTEMPT (ENVIRONMENT BLOCKER)
-
-Implementation Summary:
-- Attempted to start API for live browser-driven manual UAT walkthrough.
-- API process remained in startup state after logging production/external database mode and did not reach HTTP listening output in this local run.
-
-Validation Summary:
-- Browser-level UAT could not be executed end-to-end in this session due to environment startup dependency state.
-- Automated integration UAT suites were executed as fallback evidence and remain green.
-
-Testing and result summary:
-- API local run attempt blocked at startup (no bound endpoint observed before termination).
-- Alternative evidence remains green:
-  - full regression: 388/388 passed
-  - role-UAT suite: 119/119 passed
-  - extended stability wave: 28/28 passed
+- get_errors on updated scripts/docs: no errors found.
+- runTests: Phase36Stage4HealthAndLicenseGateTests passed (3/3).
+- Result: DB script pack now includes required user Phone/MFA schema parity checks and maintenance support.

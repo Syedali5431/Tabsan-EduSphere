@@ -14,7 +14,8 @@ Run scripts in this exact order.
 
 1. 01-Schema-Current.sql
 2. Seed-Core-Clean.sql
-3. 05-PostDeployment-Checks-Clean.sql
+3. 04-Maintenance-Indexes-And-Views.sql (optional but recommended for index/view parity)
+4. 05-PostDeployment-Checks-Clean.sql
 
 ## Notes
 

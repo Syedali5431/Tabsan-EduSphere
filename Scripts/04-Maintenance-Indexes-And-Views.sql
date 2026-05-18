@@ -208,6 +208,16 @@ END
     ON parent_student_links (ParentUserId, IsActive);
   END
 
+  IF COL_LENGTH('users', 'IsActive') IS NOT NULL
+  AND COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+  AND COL_LENGTH('users', 'IsDeleted') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_active_phone' AND object_id = OBJECT_ID('users'))
+  BEGIN
+    CREATE INDEX IX_users_active_phone
+    ON users (IsActive, IsDeleted, PhoneNumber)
+    INCLUDE (Id);
+  END
+
   IF COL_LENGTH('registration_whitelist', 'IdentifierType') IS NOT NULL
   AND COL_LENGTH('registration_whitelist', 'IdentifierValue') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_registration_whitelist_value_department_program' AND object_id = OBJECT_ID('registration_whitelist'))

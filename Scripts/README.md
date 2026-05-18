@@ -5,7 +5,7 @@ This folder is intentionally kept DB-focused and now contains only database setu
 ## Script Set
 
 | Order | File | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | 00 | 00-Cleanup-Master-Mistake.sql | One-time cleanup if legacy app tables were accidentally created in master. |
 | 01 | 01-Schema-Current.sql | Creates/updates current database schema. |
 | 02 | 02-Seed-Core.sql | Seeds core roles, modules, departments, baseline users, and access matrices. |
@@ -18,11 +18,13 @@ This folder is intentionally kept DB-focused and now contains only database setu
 ## Default Seeded Credentials
 
 For scripts that seed users (`02-Seed-Core.sql`, `Seed-Core-Clean.sql`, `03-FullDummyData.sql`):
+
 - Password: EduSphere147
 
 ## Recommended Execution
 
 Demo/full path:
+
 ```powershell
 sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema-Current.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\02-Seed-Core.sql"
@@ -32,8 +34,12 @@ sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Che
 ```
 
 Clean baseline path:
+
 ```powershell
 sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema-Current.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\Seed-Core-Clean.sql"
+sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks-Clean.sql"
 ```
+
+The maintenance step is optional for strict clean-seed validation, but recommended to keep index/view state aligned with production deployments.

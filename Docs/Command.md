@@ -20,6 +20,24 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Database Script Alignment Checkpoint (2026-05-19)
+- Proceed continuation executed to ensure DB script parity with latest implemented user security/contact model.
+- Implementation Summary:
+  - updated schema script to add missing users columns when absent (PhoneNumber, MfaIsEnabled, MfaTotpSecret, MfaRecoveryCodesHashJson),
+  - added maintenance index IX_users_active_phone for active SMS-recipient lookups,
+  - extended full/clean post-deployment checks with users phone/MFA column verification,
+  - aligned script README execution guidance for clean path with optional maintenance step.
+- Validation Summary:
+  - script/docs diagnostics returned no errors,
+  - focused health/license integration sanity remained green.
+- Testing and result summary:
+  - get_errors on changed script/docs files: clean,
+  - runTests Phase36Stage4HealthAndLicenseGateTests: passed (3/3).
+- Status of Checks Done:
+  - DB scripts updated,
+  - audit docs updated,
+  - repository synchronization required.
+
 ### UAT Stability Wave Checkpoint (2026-05-19)
 - Proceed continuation executed after role-based UAT sweep.
 - Implementation Summary:
@@ -584,51 +602,6 @@ Do not end a completed task with local-only changes.
   - `Docs/Command.md`
 - Next stage: Stage 1.4 (Exit Criteria).
 
-### Institute Parity Checkpoint (2026-05-13 - Stage 7.4)
-- Completed Stage 7.4 release exit criteria in `Docs/Institute-Parity-Issue-Fix-Phases.md` with required Implementation Summary and Validation Summary.
-- Finalized Phase 7 release-readiness evidence and confirmed no runtime or schema changes were introduced by the closeout.
-- Synchronized required tracking docs for stage closeout:
-  - `Docs/Institute-Parity-Issue-Fix-Phases.md`
-  - `Docs/Function-List.md`
-  - `Docs/Complete-Functionality-Reference.md`
-  - `Project startup Docs/Database Schema.md`
-  - `Project startup Docs/Development Plan - ASP.NET.md`
-  - `Project startup Docs/PRD.md`
-  - `Docs/Command.md`
-- Next stage: Phase 8 (Infrastructure Tuning), starting with Stage 8.1 Auto-Scaling Policy Baseline.
-
-### Advance Enhancements Checkpoint (2026-05-13 - Phase 23 Stage 23.1)
-- Completed Stage 23.1 institution-type foundation confirmation in `Docs/Advance-Enhancements.md`.
-- Verified global School/College/University mode support, mode-flag persistence, and backward-compatible University default behavior.
-- Synchronized required planning trackers for closeout:
-  - `Docs/Advance-Enhancements.md`
-  - `Docs/Function-List.md`
-  - `Project startup Docs/Database Schema.md`
-  - `Project startup Docs/Development Plan - ASP.NET.md`
-  - `Project startup Docs/PRD.md`
-  - `Docs/Command.md`
-- Next stage: Phase 23 Stage 23.2 (Dynamic Academic Labels and Context).
-
-### Advance Enhancements Checkpoint (2026-05-14 - Phase 23 Stage 23.2)
-- Completed Stage 23.2 dynamic academic labels and context in `Docs/Advance-Enhancements.md`.
-- Verified policy-based vocabulary behavior and integration coverage:
-  - University/School/College vocabulary mapping,
-  - mixed-mode precedence behavior,
-  - authenticated endpoint contract and unauthenticated guard behavior,
-  - portal vocabulary consumption path.
-- Validation evidence:
-  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~DynamicLabelIntegrationTests" -v minimal` -> passed (`8/8`).
-- Synchronized required planning trackers for closeout:
-  - `Docs/Advance-Enhancements.md`
-  - `Docs/Function-List.md`
-  - `Docs/Functionality.md`
-  - `Docs/Complete-Functionality-Reference.md`
-  - `Project startup Docs/Database Schema.md`
-  - `Project startup Docs/Development Plan - ASP.NET.md`
-  - `Project startup Docs/PRD.md`
-  - `Docs/Command.md`
-- Next stage: Phase 23 Stage 23.3 (Dashboard Context Switching).
-
 ### Institute Parity Checkpoint (2026-05-13 - Stage 1.4)
 - Completed Stage 1.4 exit criteria in `Docs/Institute-Parity-Issue-Fix-Phases.md` with required Implementation Summary and Validation Summary.
 - Added explicit post-deployment checks for institute-type coverage/validity and orphan-count validation across institute-linked entities.
@@ -1035,7 +1008,7 @@ For every completed stage entry in `Docs/High-Load-Optimization-Phases-And-Stage
 - `Implementation Summary`
 - `Validation Summary`
 
-Also update this file with:
+Also
 - completed work
 - validation summary
 - next steps
@@ -1809,8 +1782,9 @@ When a phase is completed, update:
 - Stage 1.1: Added role-aware behavior in `CourseController.GetMyOfferings()` so SuperAdmin/Admin can always access all offerings.
 - Stage 1.3: Fixed Report Center visibility for SuperAdmin by returning all active reports regardless of role assignment rows.
 - Stage 1.4: Removed `module_settings` from dynamic sidebar route/group mapping.
-- Stage 1.4: Removed hyperlink behavior from sidebar branding header (TE / Tabsan EduSphere / Campus Portal).
-- Stage 1.5: Fixed promote-flow identity mapping by honoring `StudentProfileId` in lifecycle semester-student payload.
+- Stage 1.4: Removed `module_settings` from seed scripts `1-MinimalSeed.sql` and `2-FullDummyData.sql`.
+- Stage 1.4: Added legacy cleanup logic to disable role access and soft-delete existing `module_settings` records.
+- Stage 1.4: Updated `SidebarMenuIntegrationTests` expected SuperAdmin key count after removal.
 
 **Validation:**
 - File diagnostics for modified files show no code errors.
@@ -2085,12 +2059,12 @@ When Phase 2 is complete, update: Observed-Issues.md, Command.md, PRD.md, Docs/F
 - Full solution build: 0 errors
 
 **Next:**
-- Apply migration to DB: `dotnet ef database update`
-- Begin Phase 4: CSV User Import (P4-S1-01, P4-S2-01, P4-S2-02, P4-S3-01)
+- Apply migration to DB: `dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure`
+- Proceed to next phase as defined in Observed-Issues.md
 
 ---
 
-## Entry 018 — Phase 4: CSV User Import (2026-05-06)
+### Entry 018 — Phase 4: CSV User Import (2026-05-06)
 
 **Items completed:**
 - P4-S1-01: CSV user import via `POST /api/v1/user-import/csv` (SuperAdmin/Admin only)
@@ -2137,7 +2111,7 @@ dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startu
 ```
 
 **Git Commit:**
-```
+```powershell
 git add -A
 git commit -m "Phase 19 — Advanced Course Creation & Result Configuration"
 git pull --rebase origin main
@@ -2176,7 +2150,7 @@ git push origin main
 | 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
 | 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
 | 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
-| Cross-cutting | DTOs, DI, DbContext, EduApiClient, PortalController, PortalViewModels, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Models/Portal/PortalViewModels.cs`, `Views/Shared/_Layout.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
 
 ---
 
@@ -2282,3 +2256,1990 @@ git push origin main
 | 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
 | 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
 | Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage, Course↔Subject) | `Application/Interfaces/ILabelService.cs`, `Application/Services/LabelService.cs`, `API/Controllers/LabelController.cs` |
+| 24.3 | Dashboard Composition — ordered widget list by role + institution type, fed to web layer | `Application/Interfaces/IDashboardCompositionService.cs`, `Application/Services/DashboardCompositionService.cs`, `API/Controllers/DashboardCompositionController.cs`, `Web/Views/Portal/ModuleComposition.cshtml` |
+
+---
+
+## Phase 23 — Core Policy Foundation
+
+**EF Migration:** Not required (uses existing `portal_settings` table)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 23 — Core Policy Foundation (License Policy Kernel + Institution Context Resolution + Role-Rights Hardening)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 27/27 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 23.1 | Policy Kernel — domain enum + application interface + cached service + API controller | `Domain/Enums/InstitutionType.cs`, `Application/Interfaces/IInstitutionPolicyService.cs`, `Application/Services/InstitutionPolicyService.cs`, `API/Controllers/InstitutionPolicyController.cs` |
+| 23.2 | Institution Context Middleware — per-request snapshot resolution | `API/Middleware/InstitutionContextMiddleware.cs`, `API/Program.cs` |
+| 23.3 | Role-Rights Hardening — unit tests (13 new) + web layer (EduApiClient, PortalController, view, sidebar seed) | `tests/.../InstitutionPolicyTests.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/InstitutionPolicy.cshtml`, `Web/Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 22 — External Integrations
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase22_ExternalIntegrations --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 22 — External Integrations (Library System Integration + Accreditation Reporting)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 22.1 | Library System Integration — config + loan proxy | `Domain/`, `Application/DTOs/External/LibraryDTOs.cs`, `Application/Interfaces/ILibraryService.cs`, `Application/Services/LibraryService.cs`, `API/Controllers/LibraryController.cs` |
+| 22.2 | Accreditation Reporting — template CRUD + report generation (CSV/TXT) | `Domain/Settings/AccreditationTemplate.cs`, `Domain/Interfaces/IAccreditationRepository.cs`, `Infrastructure/Repositories/AccreditationRepository.cs`, `Infrastructure/Persistence/Configurations/AccreditationTemplateConfiguration.cs`, `Application/DTOs/External/AccreditationDTOs.cs`, `Application/Interfaces/IAccreditationService.cs`, `Application/Services/AccreditationService.cs`, `API/Controllers/AccreditationController.cs` |
+| Cross-cutting | DI, DbContext DbSet, EduApiClient, PortalController, views, sidebar, seed SQL | `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/LibraryConfig.cshtml`, `Web/Views/Portal/AccreditationTemplates.cshtml`, `Views/Shared/_Layout.cshtml`, `Scripts/1-MinimalSeed.sql` |
+
+---
+
+## Phase 20 — Learning Management System (LMS)
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase20_LMS --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 20 — Learning Management System (LMS)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean; pre-existing nullability warnings only)
+**Commit:** `ecf4d91` pushed to main — 2026-05-08
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 20.1 | Course Content Modules domain + service + API + web | `Domain/Lms/CourseContentModule.cs`, `Domain/Lms/ContentVideo.cs`, `Domain/Interfaces/ILmsRepository.cs`, `Application/Interfaces/ILmsService.cs`, `Application/Lms/LmsService.cs`, `API/Controllers/LmsController.cs`, `Web/Views/Portal/CourseLms.cshtml`, `Web/Views/Portal/LmsManage.cshtml` |
+| 20.2 | EF configurations for LMS entities | `Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `Infrastructure/Repositories/LmsRepository.cs` |
+| 20.3 | Discussion threads + replies | `Domain/Lms/DiscussionThread.cs`, `Domain/Lms/DiscussionReply.cs`, `Domain/Interfaces/IDiscussionRepository.cs`, `Application/Interfaces/IDiscussionService.cs`, `Application/Lms/DiscussionService.cs`, `Infrastructure/Repositories/DiscussionRepository.cs`, `API/Controllers/DiscussionController.cs`, `Web/Views/Portal/Discussion.cshtml`, `Web/Views/Portal/DiscussionThread.cshtml` |
+| 20.4 | Course announcements with notification fan-out | `Domain/Lms/CourseAnnouncement.cs`, `Domain/Interfaces/IAnnouncementRepository.cs`, `Application/Interfaces/IAnnouncementService.cs`, `Application/Lms/AnnouncementService.cs`, `Infrastructure/Repositories/AnnouncementRepository.cs`, `API/Controllers/AnnouncementController.cs`, `Web/Views/Portal/Announcements.cshtml` |
+| Cross-cutting | DTOs, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `Application/DTOs/Lms/LmsDTOs.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 21 — Study Planner
+
+**EF Migration:**
+```powershell
+dotnet ef migrations add Phase21_StudyPlanner --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+dotnet ef database update --project src/Tabsan.EduSphere.Infrastructure --startup-project src/Tabsan.EduSphere.API -- --environment Development
+```
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 21 — Study Planner (Semester Planning Tool + Recommendation Engine)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 7/7 unit tests passed (build clean)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 21.1 | StudyPlan + StudyPlanCourse domain entities, MaxCreditLoadPerSemester on AcademicProgram | `Domain/StudyPlanner/StudyPlan.cs`, `Domain/StudyPlanner/StudyPlanCourse.cs`, `Domain/Interfaces/IStudyPlanRepository.cs` |
+| 21.1 | DTOs, service interface + implementation, EF configs, repository | `Application/DTOs/StudyPlanner/StudyPlannerDTOs.cs`, `Application/Interfaces/IStudyPlanService.cs`, `Application/StudyPlanner/StudyPlanService.cs`, `Infrastructure/Persistence/Configurations/StudyPlanConfigurations.cs`, `Infrastructure/Repositories/StudyPlanRepository.cs` |
+| 21.2 | Recommendation engine (degree audit gaps + electives + prerequisite gating) | Part of `StudyPlanService.GetRecommendationsAsync` |
+| Cross-cutting | Controller, DI, DbContext DbSets, EduApiClient, PortalController, views, sidebar | `API/Controllers/StudyPlanController.cs`, `API/Program.cs`, `Infrastructure/Persistence/ApplicationDbContext.cs`, `Web/Services/EduApiClient.cs`, `Web/Controllers/PortalController.cs`, `Web/Views/Portal/StudyPlan.cshtml`, `Web/Views/Portal/StudyPlanDetail.cshtml`, `Web/Views/Portal/StudyPlanRecommendations.cshtml`, `Views/Shared/_Layout.cshtml` |
+
+---
+
+## Phase 24 — Dynamic Module and UI Composition
+
+**EF Migration:** Not required (no new tables)
+
+**Git Commit:**
+```powershell
+git add -A
+git commit -m "Phase 24 — Dynamic Module and UI Composition (Module Registry + Dynamic Labels + Dashboard Composition)"
+git pull --rebase origin main
+git push origin main
+```
+
+**Test Run:** 44/44 unit tests passed (build clean, 0 errors)
+**Status:** ✅ Complete
+
+### Stages Completed
+| Stage | Description | Files |
+|-------|-------------|-------|
+| 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
+| 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage

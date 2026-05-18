@@ -345,6 +345,37 @@ GO
 BEGIN TRANSACTION;
 GO
 
+/* Phase 39.3 / 40.1 alignment: ensure MFA + phone columns exist on users */
+IF COL_LENGTH('users', 'MfaIsEnabled') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaIsEnabled] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+GO
+
+IF COL_LENGTH('users', 'MfaTotpSecret') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaTotpSecret] nvarchar(128) NULL;
+END;
+GO
+
+IF COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaRecoveryCodesHashJson] nvarchar(4000) NULL;
+END;
+GO
+
+IF COL_LENGTH('users', 'PhoneNumber') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [PhoneNumber] nvarchar(32) NULL;
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260513121000_Phase1Stage11DepartmentInstitutionType'

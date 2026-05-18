@@ -251,7 +251,52 @@ BEGIN
     END;
 END;
 
-/* 9) Clean means no dummy-domain rows */
+/* 9) User profile security/SMS columns exist in schema baseline */
+IF OBJECT_ID(N'[users]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.PhoneNumber',
+        CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.MfaIsEnabled',
+        CASE WHEN COL_LENGTH('users', 'MfaIsEnabled') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'MfaIsEnabled') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.MfaTotpSecret',
+        CASE WHEN COL_LENGTH('users', 'MfaTotpSecret') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'MfaTotpSecret') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.MfaRecoveryCodesHashJson',
+        CASE WHEN COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    IF COL_LENGTH('users', 'MfaIsEnabled') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'Users.CleanBaseline.MfaEnabledCount',
+            CASE WHEN COUNT(1) = 0 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'0'
+        FROM [users]
+        WHERE [IsDeleted] = 0
+          AND [MfaIsEnabled] = 1;
+    END;
+END;
+
+/* 10) Clean means no dummy-domain rows */
 IF OBJECT_ID(N'[academic_programs]') IS NOT NULL
 BEGIN
     INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])

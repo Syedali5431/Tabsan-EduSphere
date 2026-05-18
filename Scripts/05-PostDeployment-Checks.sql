@@ -102,6 +102,26 @@ SELECT
 	'UsersInstitutionTypeColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('users', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
 
+SELECT
+	'UsersPhoneNumberColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
+	'UsersMfaIsEnabledColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'MfaIsEnabled') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
+	'UsersMfaTotpSecretColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'MfaTotpSecret') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
+	'UsersMfaRecoveryCodesHashJsonColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
+	'UsersPhoneNumberMaxLength' AS [CheckName],
+	ISNULL(COL_LENGTH('users', 'PhoneNumber'), 0) AS [Value];
+
 SELECT 'UsersInstitutionTypeAssignedCount' AS [CheckName], COUNT(1) AS [Value]
 FROM users
 WHERE InstitutionType IS NOT NULL;
@@ -125,6 +145,9 @@ SELECT 'IndexExists_IX_enrollments_offering_status' AS [CheckName],
 
 SELECT 'IndexExists_IX_enrollments_student_status' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_enrollments_student_status' AND object_id = OBJECT_ID('enrollments')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_users_active_phone' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_active_phone' AND object_id = OBJECT_ID('users')) THEN 1 ELSE 0 END AS [Value];
 
 SELECT 'MigrationExists_Stage11_DepartmentInstitutionType' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId = '20260513121000_Phase1Stage11DepartmentInstitutionType') THEN 1 ELSE 0 END AS [Value];
