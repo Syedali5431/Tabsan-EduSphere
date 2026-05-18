@@ -12,6 +12,7 @@ namespace Tabsan.EduSphere.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/ai")]
+[Route("api/v1/ai")]
 [Authorize]
 public sealed class AiChatController : ControllerBase
 {

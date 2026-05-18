@@ -3,6 +3,29 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Deep System Audit + Validation + AI Chatbot Modernization (Phase 1-7)
+
+- Recent request issue:
+  - complete full-system phase audit/validation and deliver modular floating chatbot replacement while preserving backend contracts.
+- Implementation Summary:
+  - added AI chat API v1 compatibility route and aligned client route usage,
+  - modularized chatbot widget into dedicated floating-button and panel components.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted unit/integration validations passed (`13/13`).
+- Testing and result summary:
+  - phase-by-phase checks completed and documented in governance artifacts.
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `AiChatController route dual-mapping` | Supports both legacy and versioned AI chat API route prefixes for compatibility and `/api/v1` consistency. | `src/Tabsan.EduSphere.API/Controllers/AiChatController.cs` |
+| `AI module enforcement for /api/v1/ai` | Ensures license/module enforcement applies to versioned AI endpoints as well as legacy endpoints. | `src/Tabsan.EduSphere.API/Middleware/ModuleLicenseEnforcementMiddleware.cs` |
+| `Versioned AI chat web client routes` | Uses canonical `/api/v1/ai` chat endpoints from the web API client. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `FloatingChatButton component` | Provides reusable floating chat launcher UI in the shared layout. | `src/Tabsan.EduSphere.Web/Views/Shared/FloatingChatButton.cshtml` |
+| `ChatPanel component` | Provides reusable chat panel UI with header, history list, messages, and composer. | `src/Tabsan.EduSphere.Web/Views/Shared/ChatPanel.cshtml` |
+| `Modular chatbot layout composition` | Replaces inline chatbot markup with component composition in shared layout. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml` |
+| `Button-safe floating chat styling` | Ensures consistent cross-browser rendering for button-based floating launcher. | `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+
 ## 2026-05-19 - UI/UX Redesign Phase 9 (Final UI Polish)
 
 - Recent request issue:

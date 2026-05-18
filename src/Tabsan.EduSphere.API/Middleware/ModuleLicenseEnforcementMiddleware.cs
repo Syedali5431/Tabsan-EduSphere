@@ -68,6 +68,7 @@ public sealed class ModuleLicenseEnforcementMiddleware
         ("/api/v1/discussion", "notifications"),
         ("/api/v1/audit", "advanced_audit"),
         ("/api/v1/fyp", "fyp"),
+        ("/api/v1/ai", "ai_chat"),
         ("/api/ai", "ai_chat"),
         ("/api/v1/theme", "themes")
     ];

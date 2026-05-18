@@ -2468,7 +2468,7 @@ public class EduApiClient : IEduApiClient
 
     public async Task<List<AiChatConversationItem>> GetChatConversationsAsync(CancellationToken ct)
     {
-        var raw = await GetAsync<List<ConversationApiDto>>("api/ai/conversations", ct) ?? new();
+        var raw = await GetAsync<List<ConversationApiDto>>("api/v1/ai/conversations", ct) ?? new();
         return raw.Select(c => new AiChatConversationItem
         {
             Id            = c.Id,
@@ -2480,7 +2480,7 @@ public class EduApiClient : IEduApiClient
 
     public async Task<List<AiChatMessageItem>> GetChatMessagesAsync(Guid conversationId, CancellationToken ct)
     {
-        var raw = await GetAsync<ConversationDetailApiDto>($"api/ai/conversations/{conversationId}", ct);
+        var raw = await GetAsync<ConversationDetailApiDto>($"api/v1/ai/conversations/{conversationId}", ct);
         return (raw?.Messages ?? new List<MessageApiDto>()).Select(m => new AiChatMessageItem
         {
             Id        = m.Id,
@@ -2493,7 +2493,7 @@ public class EduApiClient : IEduApiClient
     public async Task<AiChatSendResultItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct)
     {
         var payload = new { conversationId, message };
-        var raw = await PostAsync<object, SendMessageApiDto>("api/ai/message", payload, ct);
+        var raw = await PostAsync<object, SendMessageApiDto>("api/v1/ai/message", payload, ct);
         if (raw is null) return null;
         return new AiChatSendResultItem
         {

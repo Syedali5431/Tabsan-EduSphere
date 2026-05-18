@@ -1,0 +1,61 @@
+<section class="ai-chat-panel" id="ai-chat-panel" aria-label="AI assistant" aria-live="polite">
+    <header class="ai-chat-panel-header">
+        <div class="ai-chat-panel-identity">
+            <div class="ai-chat-assistant-avatar" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="12" rx="4" fill="currentColor" opacity="0.18"/><circle cx="9" cy="11" r="1.6" fill="currentColor"/><circle cx="15" cy="11" r="1.6" fill="currentColor"/><path d="M9 15.2C9.9 16.1 10.9 16.5 12 16.5C13.1 16.5 14.1 16.1 15 15.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+                <p class="ai-chat-panel-eyebrow">Tabsan assistant</p>
+                <h2 class="ai-chat-panel-title">AI Assistant</h2>
+                <p class="ai-chat-panel-subtitle">Ask about courses, schedules, results, or portal workflows.</p>
+            </div>
+        </div>
+        <div class="ai-chat-panel-actions">
+            <button type="button" class="ai-chat-panel-action" data-ai-chat-reset>New</button>
+            <button type="button" class="ai-chat-panel-close" data-ai-chat-close aria-label="Close AI assistant">&times;</button>
+        </div>
+    </header>
+
+    <div class="ai-chat-panel-status" data-ai-chat-status hidden></div>
+
+    <div class="ai-chat-panel-body">
+        <aside class="ai-chat-conversations">
+            <div class="ai-chat-conversations-header">
+                <span class="ai-chat-conversations-label">Recent</span>
+                <span class="ai-chat-conversations-count" data-ai-chat-conversation-count>0</span>
+            </div>
+            <div class="ai-chat-conversation-list" data-ai-chat-conversations></div>
+        </aside>
+
+        <div class="ai-chat-thread">
+            <div class="ai-chat-thread-header">
+                <span class="ai-chat-thread-badge">Live assistant</span>
+                <span class="ai-chat-thread-context" data-ai-chat-thread-context>Ready for a new conversation</span>
+            </div>
+            <div class="ai-chat-suggestions" aria-label="Suggested prompts">
+                <button type="button" class="ai-chat-suggestion" data-ai-chat-suggestion="Show my course schedule for this week.">Weekly schedule</button>
+                <button type="button" class="ai-chat-suggestion" data-ai-chat-suggestion="Summarize my latest results and pending tasks.">Results summary</button>
+                <button type="button" class="ai-chat-suggestion" data-ai-chat-suggestion="Where can I find enrollment and payment actions in this portal?">Portal guide</button>
+            </div>
+            <div class="ai-chat-messages" data-ai-chat-messages></div>
+        </div>
+    </div>
+
+    <form class="ai-chat-composer" data-ai-chat-form>
+        @Html.AntiForgeryToken()
+        <label class="visually-hidden" for="aiChatMessageInput">Message</label>
+        <input id="aiChatMessageInput"
+               name="message"
+               class="ai-chat-composer-input"
+               data-ai-chat-input
+               type="text"
+               maxlength="4000"
+               autocomplete="off"
+               placeholder="Message the assistant" />
+        <button type="submit" class="ai-chat-composer-send" data-ai-chat-submit aria-label="Send message">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 11.5L19 4L13 20L10.75 13.75L4 11.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+            </svg>
+        </button>
+    </form>
+</section>
