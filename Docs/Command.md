@@ -20,6 +20,18 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Cleanup Checkpoint (2026-05-18 - Residual TODO/Test Stub Cleanup)
+- Completed remaining actionable TODO cleanup after Stage 40.1.
+- Implementation Summary:
+  - replaced `NotImplementedException` placeholders in unit-test `ISettingsRepository` stubs with safe empty/no-op implementations,
+  - updated the Stage 32.3 SMS follow-up note to reflect that `PhoneNumber` persistence is complete and only operational rollout tasks remain.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -v minimal --filter "FullyQualifiedName~Phase30Stage2Tests|FullyQualifiedName~Phase30Stage3Tests|FullyQualifiedName~Phase31Stage1RegressionMatrixTests"` passed (`32/32`),
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- Status of Checks Done:
+  - code/doc cleanup validated,
+  - repository sync required after this checkpoint.
+
 ### Stage Completion Checkpoint (2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion)
 - Completed Stage 40.1 phone-backed SMS recipient dependency implementation.
 - Implementation Summary:

@@ -3826,7 +3826,7 @@ Use this table to schedule work without revisiting phase design decisions.
 - Updated `SendAsync()` and `SendSystemAsync()` dispatch paths to include SMS delivery alongside in-app and email channels.
 - No database migration or schema change was required for Stage 32.3 (phone number field is deferred).
 - Validation: `dotnet build Tabsan.EduSphere.sln` passed with pre-existing warnings; Phase 28 Stage 2 notification tests passed (`2/2`); DI and configuration binding validated.
-- Post-implementation TODO: add `PhoneNumber` field to User entity, provision Twilio account, enable `NotificationSms:Enabled` in production, and populate user phone numbers.
+- Post-implementation operational follow-up: `PhoneNumber` persistence and recipient resolution are complete; remaining non-code rollout work is to provision a Twilio account, enable `NotificationSms:Enabled` in production, and populate user phone numbers in deployment environments.
 
 ## New Phase: AI Chatbot UI Improvement
 

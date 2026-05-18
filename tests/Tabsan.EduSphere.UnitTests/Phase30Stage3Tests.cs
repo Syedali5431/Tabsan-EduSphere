@@ -69,27 +69,27 @@ file sealed class FeatureFlagRepoStub : ISettingsRepository
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(1);
 
-    public Task<IList<ReportDefinition>> GetAllReportsAsync(CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<ReportDefinition?> GetReportByKeyAsync(string key, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<ReportDefinition?> GetReportByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task AddReportAsync(ReportDefinition report, CancellationToken ct = default) => throw new NotImplementedException();
-    public void UpdateReport(ReportDefinition report) => throw new NotImplementedException();
-    public Task AddReportRoleAsync(ReportRoleAssignment assignment, CancellationToken ct = default) => throw new NotImplementedException();
-    public void RemoveReportRole(ReportRoleAssignment assignment) => throw new NotImplementedException();
-    public Task<ReportRoleAssignment?> GetReportRoleAsync(Guid reportId, string roleName, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<IList<ModuleRoleAssignment>> GetModuleRolesAsync(Guid moduleId, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<IList<ModuleRoleAssignment>> GetAllModuleRolesAsync(CancellationToken ct = default) => throw new NotImplementedException();
-    public Task AddModuleRoleAsync(ModuleRoleAssignment assignment, CancellationToken ct = default) => throw new NotImplementedException();
-    public void RemoveModuleRole(ModuleRoleAssignment assignment) => throw new NotImplementedException();
-    public Task<ModuleRoleAssignment?> GetModuleRoleAsync(Guid moduleId, string roleName, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<IList<SidebarMenuItem>> GetTopLevelMenusAsync(CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<IList<SidebarMenuItem>> GetSubMenusAsync(Guid parentId, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<SidebarMenuItem?> GetMenuByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<SidebarMenuItem?> GetMenuByKeyAsync(string key, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task<IList<SidebarMenuItem>> GetVisibleMenusForRoleAsync(string roleName, CancellationToken ct = default) => throw new NotImplementedException();
-    public Task AddMenuAsync(SidebarMenuItem item, CancellationToken ct = default) => throw new NotImplementedException();
-    public void UpdateMenu(SidebarMenuItem item) => throw new NotImplementedException();
-    public Task AddMenuRoleAccessAsync(SidebarMenuRoleAccess access, CancellationToken ct = default) => throw new NotImplementedException();
-    public void RemoveMenuRoleAccess(SidebarMenuRoleAccess access) => throw new NotImplementedException();
-    public Task<SidebarMenuRoleAccess?> GetMenuRoleAccessAsync(Guid menuItemId, string roleName, CancellationToken ct = default) => throw new NotImplementedException();
+    public Task<IList<ReportDefinition>> GetAllReportsAsync(CancellationToken ct = default) => Task.FromResult<IList<ReportDefinition>>(Array.Empty<ReportDefinition>());
+    public Task<ReportDefinition?> GetReportByKeyAsync(string key, CancellationToken ct = default) => Task.FromResult<ReportDefinition?>(null);
+    public Task<ReportDefinition?> GetReportByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<ReportDefinition?>(null);
+    public Task AddReportAsync(ReportDefinition report, CancellationToken ct = default) => Task.CompletedTask;
+    public void UpdateReport(ReportDefinition report) { }
+    public Task AddReportRoleAsync(ReportRoleAssignment assignment, CancellationToken ct = default) => Task.CompletedTask;
+    public void RemoveReportRole(ReportRoleAssignment assignment) { }
+    public Task<ReportRoleAssignment?> GetReportRoleAsync(Guid reportId, string roleName, CancellationToken ct = default) => Task.FromResult<ReportRoleAssignment?>(null);
+    public Task<IList<ModuleRoleAssignment>> GetModuleRolesAsync(Guid moduleId, CancellationToken ct = default) => Task.FromResult<IList<ModuleRoleAssignment>>(Array.Empty<ModuleRoleAssignment>());
+    public Task<IList<ModuleRoleAssignment>> GetAllModuleRolesAsync(CancellationToken ct = default) => Task.FromResult<IList<ModuleRoleAssignment>>(Array.Empty<ModuleRoleAssignment>());
+    public Task AddModuleRoleAsync(ModuleRoleAssignment assignment, CancellationToken ct = default) => Task.CompletedTask;
+    public void RemoveModuleRole(ModuleRoleAssignment assignment) { }
+    public Task<ModuleRoleAssignment?> GetModuleRoleAsync(Guid moduleId, string roleName, CancellationToken ct = default) => Task.FromResult<ModuleRoleAssignment?>(null);
+    public Task<IList<SidebarMenuItem>> GetTopLevelMenusAsync(CancellationToken ct = default) => Task.FromResult<IList<SidebarMenuItem>>(Array.Empty<SidebarMenuItem>());
+    public Task<IList<SidebarMenuItem>> GetSubMenusAsync(Guid parentId, CancellationToken ct = default) => Task.FromResult<IList<SidebarMenuItem>>(Array.Empty<SidebarMenuItem>());
+    public Task<SidebarMenuItem?> GetMenuByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<SidebarMenuItem?>(null);
+    public Task<SidebarMenuItem?> GetMenuByKeyAsync(string key, CancellationToken ct = default) => Task.FromResult<SidebarMenuItem?>(null);
+    public Task<IList<SidebarMenuItem>> GetVisibleMenusForRoleAsync(string roleName, CancellationToken ct = default) => Task.FromResult<IList<SidebarMenuItem>>(Array.Empty<SidebarMenuItem>());
+    public Task AddMenuAsync(SidebarMenuItem item, CancellationToken ct = default) => Task.CompletedTask;
+    public void UpdateMenu(SidebarMenuItem item) { }
+    public Task AddMenuRoleAccessAsync(SidebarMenuRoleAccess access, CancellationToken ct = default) => Task.CompletedTask;
+    public void RemoveMenuRoleAccess(SidebarMenuRoleAccess access) { }
+    public Task<SidebarMenuRoleAccess?> GetMenuRoleAccessAsync(Guid menuItemId, string roleName, CancellationToken ct = default) => Task.FromResult<SidebarMenuRoleAccess?>(null);
 }
