@@ -93,6 +93,22 @@ Summary: Continuous innovation ensures institutions stay competitive and digital
 
 ---
 
+## New Functionalities
+Summary: Tabsan EduSphere continues to evolve with cutting-edge features.
+- AI-powered chatbot for student and faculty support.
+- Enhanced SMS notification system.
+- Advanced analytics for institutional decision-making.
+
+---
+
+## Future Implementations
+Summary: Upcoming features to further enhance the platform.
+- Integration with third-party learning management systems.
+- Blockchain-based credential verification.
+- Predictive analytics for student performance.
+
+---
+
 ## Pricing
 Summary: Advanced package for institutions requiring broader automation, analytics, and parent transparency.
 - Plan: Advanced
