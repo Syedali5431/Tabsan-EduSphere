@@ -32,9 +32,9 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - SMS notification delivery now has persisted phone-backed recipient resolution,
   - existing email/notification flows remain backward compatible while optional phone capture is available at key user-provisioning entry points.
 
-### 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
+### 2026-05-18 - StudentLifecycle Notification Completion (Execution Snapshot)
 - Recent request issue:
-  - multiple StudentLifecycle workflow TODOs for notification dispatch were left unimplemented after state transitions and request-review actions.
+  - multiple StudentLifecycle workflow notification backlog items were left unimplemented after state transitions and request-review actions.
 - Implementation Summary:
   - implemented system-notification dispatch for graduation, semester promotion, student deactivate/reactivate actions,
   - implemented admin-review notifications on change/modification request creation,

@@ -31,8 +31,8 @@ Validation summaries must include at minimum:
 - Stage status: Stage 40.1 completed.
 - Phase status: SMS delivery dependency closure complete for user phone-backed recipient resolution.
 
-### 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
-- Completed StudentLifecycle notification TODO implementation.
+### 2026-05-18 - StudentLifecycle Notification Completion (Execution Snapshot)
+- Completed StudentLifecycle notification implementation.
 - Implementation Summary:
   - added notification dispatch for graduation, promotion, deactivation, and reactivation actions,
   - added admin notification fan-out when profile-change and teacher-modification requests are created,
@@ -40,7 +40,7 @@ Validation summaries must include at minimum:
 - Validation Summary:
   - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
   - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~StudentLifecycleIntegrationTests -v minimal` passed (`7/7`).
-- Stage status: lifecycle notification TODOs completed.
+- Stage status: lifecycle notification tasks completed.
 - Phase status: Student lifecycle workflow completeness improved without schema change.
 
 ### 2026-05-18 - DeepScan Phase 40 Closure and Production Readiness Revalidation (Execution Snapshot)
