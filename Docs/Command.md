@@ -20,6 +20,22 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Validation and Rollout Checkpoint (2026-05-18 - Full Regression, SMS Rollout Checklist, Repo Cleanup Scan)
+- Completed the requested follow-up bundle after TODO cleanup.
+- Implementation Summary:
+  - ran full solution regression and confirmed end-to-end green baseline,
+  - added `Docs/Phase40-Sms-Production-Rollout-Checklist.md` to document production SMS enablement prerequisites, rollout steps, smoke test, monitoring, and rollback,
+  - scanned for broader repo cleanup opportunities and corrected stale SMS documentation that still described phone-number resolution as a placeholder/stub.
+- Validation Summary:
+  - `dotnet test Tabsan.EduSphere.sln -v minimal` passed (`388/388`),
+  - stale SMS placeholder references were removed from the current documentation set,
+  - new rollout checklist doc passed workspace validation checks.
+- Status of Checks Done:
+  - regression complete,
+  - rollout checklist prepared,
+  - broader cleanup scan completed with actionable stale-doc items addressed,
+  - repository sync required after this checkpoint.
+
 ### Cleanup Checkpoint (2026-05-18 - Residual TODO/Test Stub Cleanup)
 - Completed remaining actionable TODO cleanup after Stage 40.1.
 - Implementation Summary:
