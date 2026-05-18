@@ -495,3 +495,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local transient test artifacts
+test-log.txt
+tests/load/results/
