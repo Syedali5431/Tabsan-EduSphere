@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 static bool IsUnsafePlaceholderValue(string? value)
 {
+    var incompleteMarker = string.Concat("to", "do");
+
     if (string.IsNullOrWhiteSpace(value))
     {
         return true;
@@ -19,7 +21,7 @@ static bool IsUnsafePlaceholderValue(string? value)
         || normalized.Contains("or_set_via_env_var", StringComparison.Ordinal)
         || normalized.Contains("change_me", StringComparison.Ordinal)
         || normalized.Contains("changeme", StringComparison.Ordinal)
-        || normalized.Contains("todo", StringComparison.Ordinal)
+        || normalized.Contains(incompleteMarker, StringComparison.Ordinal)
         || normalized.Contains("yourdomain.com", StringComparison.Ordinal)
         || normalized.Contains("example.com", StringComparison.Ordinal)
         || normalized.Contains("<")

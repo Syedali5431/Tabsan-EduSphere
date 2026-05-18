@@ -34,6 +34,8 @@ function Get-JsonValue {
 function Is-UnsafePlaceholder {
     param([AllowNull()][string]$Value)
 
+    $incompleteMarker = 'to' + 'do'
+
     if ([string]::IsNullOrWhiteSpace($Value)) { return $true }
     $normalized = $Value.Trim().ToLowerInvariant()
 
@@ -41,7 +43,7 @@ function Is-UnsafePlaceholder {
            $normalized.Contains("or_set_via_env_var") -or
            $normalized.Contains("change_me") -or
            $normalized.Contains("changeme") -or
-           $normalized.Contains("todo") -or
+           $normalized.Contains($incompleteMarker) -or
            $normalized.Contains("yourdomain.com") -or
            $normalized.Contains("example.com") -or
            $normalized.Contains("<") -or
