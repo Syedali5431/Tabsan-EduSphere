@@ -71,7 +71,53 @@
 			'</button>';
 	}
 
+	function createToastMarkup(message, type) {
+		var variant = type || 'info';
+		return '' +
+			'<div class="ui-toast is-' + escapeHtml(variant) + '">' +
+				'<div class="ui-toast-accent"></div>' +
+				'<div class="ui-toast-body">' + escapeHtml(message) + '</div>' +
+			'</div>';
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
+		var loader = document.querySelector('[data-page-loader]');
+		if (loader) {
+			window.requestAnimationFrame(function () {
+				loader.classList.add('is-hidden');
+			});
+		}
+
+		var toastStack = document.querySelector('[data-toast-stack]');
+		if (toastStack) {
+			document.querySelectorAll('.alert, .validation-summary-errors, .field-validation-error').forEach(function (node) {
+				var text = (node.textContent || '').trim();
+				if (!text) {
+					return;
+				}
+
+				var type = 'info';
+				if (node.classList.contains('alert-danger') || node.classList.contains('validation-summary-errors') || node.classList.contains('field-validation-error')) {
+					type = 'danger';
+				} else if (node.classList.contains('alert-success')) {
+					type = 'success';
+				} else if (node.classList.contains('alert-warning')) {
+					type = 'warning';
+				}
+
+				toastStack.insertAdjacentHTML('beforeend', createToastMarkup(text, type));
+				if (!node.classList.contains('ui-toast-source')) {
+					node.classList.add('visually-hidden');
+				}
+			});
+
+			window.setTimeout(function () {
+				toastStack.querySelectorAll('.ui-toast').forEach(function (toast) {
+					toast.classList.add('is-visible');
+				});
+			}, 50);
+		}
+
 		var widget = document.querySelector('[data-ai-chat-widget]');
 		if (!widget) {
 			return;

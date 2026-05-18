@@ -1,6 +1,7 @@
 ﻿@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     var skipAuthCheck = currentController.Equals("Login", StringComparison.OrdinalIgnoreCase)
                      || currentController.Equals("Home", StringComparison.OrdinalIgnoreCase);
 
@@ -42,6 +43,7 @@
 
     // Display name for header
     var displayName = sessionId?.UserName ?? (aspNetAuth ? principal!.Identity!.Name : null) ?? "Guest";
+    var displayInitial = string.IsNullOrWhiteSpace(displayName) ? "G" : displayName[..1].ToUpperInvariant();
 
     const string SidebarCacheKey = "VisibleSidebarMenusCache";
 
@@ -178,6 +180,26 @@
         _                    => null
     };
 
+    static string ResolveMenuIcon(string action) => action.ToLowerInvariant() switch
+    {
+        "dashboard" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z\" fill=\"currentColor\"/></svg>",
+        "timetableadmin" or "timetablestudent" or "timetableteacher" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M7 2v2H5a2 2 0 0 0-2 2v13a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm12 7H5v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9Z\" fill=\"currentColor\"/></svg>",
+        "students" or "userimport" or "adminusers" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M16 11a4 4 0 1 0-3.999-4A4 4 0 0 0 16 11ZM8 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 14c-.29 0-.62.02-.97.05C4.64 14.3 0 15.47 0 18v2h6v-2c0-1.51.8-2.82 2.29-3.8A8.7 8.7 0 0 0 8 14Z\" fill=\"currentColor\"/></svg>",
+        "departments" or "programs" or "courses" or "prerequisites" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3 1 9l11 6 9-4.91V17h2V9L12 3Zm0 14L5.5 13.45V17L12 21l6.5-4v-3.55L12 17Z\" fill=\"currentColor\"/></svg>",
+        "assignments" or "quizzes" or "results" or "gradebook" or "gradingconfig" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-2h2Zm0-4H7v-2h2Zm0-4H7V7h2Zm8 8h-6v-2h6Zm0-4h-6v-2h6Zm0-4h-6V7h6Z\" fill=\"currentColor\"/></svg>",
+        "attendance" or "analytics" or "reportcenter" or "reportsettings" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 9.2h3V19H5V9.2Zm5.5-4.7h3V19h-3V4.5ZM16 12h3v7h-3v-7Z\" fill=\"currentColor\"/></svg>",
+        "payments" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 4H3V7h18Zm-6 6H5v-2h10Z\" fill=\"currentColor\"/></svg>",
+        "notifications" or "announcements" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z\" fill=\"currentColor\"/></svg>",
+        "helpdesk" or "discussion" or "aichat" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2Z\" fill=\"currentColor\"/></svg>",
+        "licenseupdate" or "themesettings" or "sidebarsettings" or "dashboardsettings" or "institutionpolicy" or "modulecomposition" or "libraryconfig" or "accreditationtemplates" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.48 7.48 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.49-.4h-4.02a.5.5 0 0 0-.49.4l-.36 2.58c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.2 8.6a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94L2.32 14.28a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.58a.5.5 0 0 0 .49.4h4.02a.5.5 0 0 0 .49-.4l.36-2.58c.58-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z\" fill=\"currentColor\"/></svg>",
+        _ => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\"/></svg>"
+    };
+
+    var currentPath = Context.Request.Path.Value ?? string.Empty;
+    bool IsActiveLink(string controller, string action) =>
+        currentController.Equals(controller, StringComparison.OrdinalIgnoreCase)
+        && currentAction.Equals(action, StringComparison.OrdinalIgnoreCase);
+
     static (string Group, int SortOrder) ResolveGroup(string key) => key switch
     {
         "dashboard" => ("Overview", 1),
@@ -278,6 +300,9 @@
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
     <title>@ViewData["Title"] - Tabsan EduSphere</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Tabsan.EduSphere.Web.styles.css" asp-append-version="true" />
@@ -305,8 +330,17 @@
     }
 
     <a href="#main-content" class="skip-to-main visually-hidden-focusable">Skip to main content</a>
+    <div class="page-loader" data-page-loader aria-hidden="true">
+        <div class="page-loader-spinner"></div>
+        <div class="page-loader-copy">Loading workspace</div>
+    </div>
     <div class="app-shell">
-        <aside class="app-sidebar" role="complementary" aria-label="Application sidebar">
+        <aside class="app-sidebar" role="complementary" aria-label="Application sidebar" data-app-sidebar>
+            <div class="app-sidebar-topbar d-lg-none">
+                <button type="button" class="sidebar-toggle sidebar-toggle-inline" data-sidebar-close aria-label="Close navigation">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
             <div class="brand-link" role="group" aria-label="@branding.UniversityName branding">
                 @if (!string.IsNullOrEmpty(branding.LogoImage))
                 {
@@ -437,121 +471,134 @@
                         <div class="menu-label">@group.Key</div>
                         foreach (var link in group)
                         {
-                            <a class="menu-link" asp-controller="@link.Controller" asp-action="@link.Action">@link.Name</a>
+                            var isActive = IsActiveLink(link.Controller, link.Action);
+                            <a class="menu-link @(isActive ? "is-active" : "")" asp-controller="@link.Controller" asp-action="@link.Action" aria-current="@(isActive ? "page" : null)">
+                                <span class="menu-link-icon">@Html.Raw(ResolveMenuIcon(link.Action))</span>
+                                <span class="menu-link-text">@link.Name</span>
+                            </a>
                         }
                     }
                 }
                 else
                 {
                     <div class="menu-label">Overview</div>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Dashboard">Dashboard</a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Dashboard") ? "is-active" : "")" asp-controller="Portal" asp-action="Dashboard" aria-current="@(IsActiveLink("Portal", "Dashboard") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">Dashboard</span></a>
 
                     <div class="menu-label">Timetable</div>
                     @if (showAdminLinks)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="TimetableAdmin">Manage Timetables</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableAdmin") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableAdmin" aria-current="@(IsActiveLink("Portal", "TimetableAdmin") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableAdmin"))</span><span class="menu-link-text">Manage Timetables</span></a>
                     }
 
                     @if (showStudentLinks)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="TimetableStudent">Student Timetable</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableStudent") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableStudent" aria-current="@(IsActiveLink("Portal", "TimetableStudent") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableStudent"))</span><span class="menu-link-text">Student Timetable</span></a>
                     }
 
                     @if (showFacultyLinks)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="TimetableTeacher">Teacher Timetable</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableTeacher") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableTeacher" aria-current="@(IsActiveLink("Portal", "TimetableTeacher") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableTeacher"))</span><span class="menu-link-text">Teacher Timetable</span></a>
                     }
 
                     @if (showAdminLinks)
                     {
                         <div class="menu-label">Lookups</div>
-                        <a class="menu-link" asp-controller="Portal" asp-action="Buildings">Buildings</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="Rooms">Rooms</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Buildings") ? "is-active" : "")" asp-controller="Portal" asp-action="Buildings" aria-current="@(IsActiveLink("Portal", "Buildings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Buildings"))</span><span class="menu-link-text">Buildings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Rooms") ? "is-active" : "")" asp-controller="Portal" asp-action="Rooms" aria-current="@(IsActiveLink("Portal", "Rooms") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Rooms"))</span><span class="menu-link-text">Rooms</span></a>
                     }
 
                     <div class="menu-label">Notifications</div>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Notifications">Inbox</a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Notifications") ? "is-active" : "")" asp-controller="Portal" asp-action="Notifications" aria-current="@(IsActiveLink("Portal", "Notifications") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Notifications"))</span><span class="menu-link-text">Inbox</span></a>
 
                     @if (showAdminLinks || showFacultyLinks)
                     {
                         <div class="menu-label">Academic Management</div>
                         @if (showAdminLinks)
                         {
-                            <a class="menu-link" asp-controller="Portal" asp-action="Students">Students</a>
-                            <a class="menu-link" asp-controller="Portal" asp-action="UserImport">User Import</a>
-                            <a class="menu-link" asp-controller="Portal" asp-action="Departments">Departments</a>
-                            <a class="menu-link" asp-controller="Portal" asp-action="Programs">Programs</a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Students") ? "is-active" : "")" asp-controller="Portal" asp-action="Students" aria-current="@(IsActiveLink("Portal", "Students") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Students"))</span><span class="menu-link-text">Students</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">User Import</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Departments") ? "is-active" : "")" asp-controller="Portal" asp-action="Departments" aria-current="@(IsActiveLink("Portal", "Departments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Departments"))</span><span class="menu-link-text">Departments</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Programs") ? "is-active" : "")" asp-controller="Portal" asp-action="Programs" aria-current="@(IsActiveLink("Portal", "Programs") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Programs"))</span><span class="menu-link-text">Programs</span></a>
                         }
-                        <a class="menu-link" asp-controller="Portal" asp-action="Courses">Courses</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="Enrollments">Enrollments</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Courses") ? "is-active" : "")" asp-controller="Portal" asp-action="Courses" aria-current="@(IsActiveLink("Portal", "Courses") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Courses"))</span><span class="menu-link-text">Courses</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Enrollments") ? "is-active" : "")" asp-controller="Portal" asp-action="Enrollments" aria-current="@(IsActiveLink("Portal", "Enrollments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Enrollments"))</span><span class="menu-link-text">Enrollments</span></a>
                     }
 
                     <div class="menu-label">Learning</div>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Assignments">Assignments</a>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Attendance">Attendance</a>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Results">Results</a>
-                    <a class="menu-link" asp-controller="Portal" asp-action="Quizzes">Quizzes</a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Assignments") ? "is-active" : "")" asp-controller="Portal" asp-action="Assignments" aria-current="@(IsActiveLink("Portal", "Assignments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Assignments"))</span><span class="menu-link-text">Assignments</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Attendance") ? "is-active" : "")" asp-controller="Portal" asp-action="Attendance" aria-current="@(IsActiveLink("Portal", "Attendance") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Attendance"))</span><span class="menu-link-text">Attendance</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Results") ? "is-active" : "")" asp-controller="Portal" asp-action="Results" aria-current="@(IsActiveLink("Portal", "Results") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Results"))</span><span class="menu-link-text">Results</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Quizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="Quizzes" aria-current="@(IsActiveLink("Portal", "Quizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Quizzes"))</span><span class="menu-link-text">Quizzes</span></a>
                     @if (canStudentSeeFyp)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="Fyp">FYP</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Fyp") ? "is-active" : "")" asp-controller="Portal" asp-action="Fyp" aria-current="@(IsActiveLink("Portal", "Fyp") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Fyp"))</span><span class="menu-link-text">FYP</span></a>
                     }
-                    <a class="menu-link" asp-controller="Portal" asp-action="Helpdesk">Helpdesk</a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Helpdesk") ? "is-active" : "")" asp-controller="Portal" asp-action="Helpdesk" aria-current="@(IsActiveLink("Portal", "Helpdesk") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Helpdesk"))</span><span class="menu-link-text">Helpdesk</span></a>
 
                     @if (showAdminLinks)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="Prerequisites">Prerequisites</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Prerequisites") ? "is-active" : "")" asp-controller="Portal" asp-action="Prerequisites" aria-current="@(IsActiveLink("Portal", "Prerequisites") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Prerequisites"))</span><span class="menu-link-text">Prerequisites</span></a>
                     }
 
                     @* Final-Touches Phase 16 Stage 16.1 — Gradebook sidebar link (Faculty/Admin) *@
                     @if (showFacultyLinks || showAdminLinks)
                     {
-                        <a class="menu-link" asp-controller="Portal" asp-action="Gradebook">Gradebook</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="RubricManage">Rubric Management</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Gradebook") ? "is-active" : "")" asp-controller="Portal" asp-action="Gradebook" aria-current="@(IsActiveLink("Portal", "Gradebook") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Gradebook"))</span><span class="menu-link-text">Gradebook</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "RubricManage") ? "is-active" : "")" asp-controller="Portal" asp-action="RubricManage" aria-current="@(IsActiveLink("Portal", "RubricManage") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("RubricManage"))</span><span class="menu-link-text">Rubric Management</span></a>
                     }
 
                     @if (showAdminLinks || showFacultyLinks)
                     {
                         <div class="menu-label">Admin Tools</div>
-                        <a class="menu-link" asp-controller="Portal" asp-action="Analytics">Analytics</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="ReportCenter">Report Center</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Analytics") ? "is-active" : "")" asp-controller="Portal" asp-action="Analytics" aria-current="@(IsActiveLink("Portal", "Analytics") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Analytics"))</span><span class="menu-link-text">Analytics</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ReportCenter") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportCenter" aria-current="@(IsActiveLink("Portal", "ReportCenter") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportCenter"))</span><span class="menu-link-text">Report Center</span></a>
                         @if (showAdminLinks)
                         {
-                            <a class="menu-link" asp-controller="Portal" asp-action="ResultCalculation">Result Calculation</a>
-                            <a class="menu-link" asp-controller="Portal" asp-action="StudentLifecycle">Student Lifecycle</a>
-                            <a class="menu-link" asp-controller="Portal" asp-action="Payments">Payments</a>
+                            <a class="menu-link @(IsActiveLink("Portal", "ResultCalculation") ? "is-active" : "")" asp-controller="Portal" asp-action="ResultCalculation" aria-current="@(IsActiveLink("Portal", "ResultCalculation") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ResultCalculation"))</span><span class="menu-link-text">Result Calculation</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "StudentLifecycle") ? "is-active" : "")" asp-controller="Portal" asp-action="StudentLifecycle" aria-current="@(IsActiveLink("Portal", "StudentLifecycle") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("StudentLifecycle"))</span><span class="menu-link-text">Student Lifecycle</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Payments") ? "is-active" : "")" asp-controller="Portal" asp-action="Payments" aria-current="@(IsActiveLink("Portal", "Payments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Payments"))</span><span class="menu-link-text">Payments</span></a>
                         }
                     }
 
                     @if (showSuperAdminLinks)
                     {
                         <div class="menu-label">System Settings</div>
-                        <a class="menu-link" asp-controller="Portal" asp-action="ReportSettings">Report Settings</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="SidebarSettings">Sidebar Settings</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="LicenseUpdate">License Update</a>
-                        <a class="menu-link" asp-controller="Portal" asp-action="ThemeSettings">Theme Settings</a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ReportSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportSettings" aria-current="@(IsActiveLink("Portal", "ReportSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportSettings"))</span><span class="menu-link-text">Report Settings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "SidebarSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SidebarSettings" aria-current="@(IsActiveLink("Portal", "SidebarSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SidebarSettings"))</span><span class="menu-link-text">Sidebar Settings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "LicenseUpdate") ? "is-active" : "")" asp-controller="Portal" asp-action="LicenseUpdate" aria-current="@(IsActiveLink("Portal", "LicenseUpdate") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LicenseUpdate"))</span><span class="menu-link-text">License Update</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
                     }
                 }
 
                 <div class="menu-label">General</div>
-                <a class="menu-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <a class="menu-link @(IsActiveLink("Home", "Privacy") ? "is-active" : "")" asp-controller="Home" asp-action="Privacy" aria-current="@(IsActiveLink("Home", "Privacy") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Privacy"))</span><span class="menu-link-text">Privacy</span></a>
             </nav>
         </aside>
 
         <section class="app-main">
             <header class="app-header" role="banner">
-                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="app-header-primary">
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Open navigation">
+                        <span></span><span></span><span></span>
+                    </button>
+                    <div>
+                        <p class="page-eyebrow">Academic operations workspace</p>
+                        <h1 class="page-title">@ViewData["Title"]</h1>
+                    </div>
+                </div>
 
                 @* Phase 13 — Global Search bar (visible only when connected) *@
                 @if (isConnected)
                 {
-                    <div class="global-search-wrapper position-relative me-3" style="min-width:260px;">
+                    <div class="global-search-wrapper position-relative me-3">
                         <form asp-controller="Portal" asp-action="Search" method="get" autocomplete="off" class="d-flex" role="search">
-                            <div class="input-group input-group-sm">
+                            <div class="input-group input-group-sm search-pill">
+                                <span class="input-group-text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 1 0 3.874 10.582l4.272 4.272 1.414-1.414-4.272-4.272A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" fill="currentColor"/></svg></span>
                                 <input id="globalSearchInput" name="q" type="search"
                                        class="form-control" placeholder="Search…"
                                        aria-label="Global search" minlength="2" />
                                 <button class="btn btn-outline-secondary" type="submit" aria-label="Search">
-                                    <i class="bi bi-search"></i>
+                                    Go
                                 </button>
                             </div>
                         </form>
@@ -562,14 +609,25 @@
                     </div>
                 }
 
-                <div class="auth-chip d-flex align-items-center gap-2">
-                    <span>
-                        @displayName
-                        @if (sessionId?.Roles.Count > 0)
-                        {
-                            <span class="badge bg-secondary ms-1">@string.Join(", ", sessionId.Roles)</span>
-                        }
-                    </span>
+                <div class="header-meta">
+                    <div class="header-chip header-chip-notification">
+                        <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
+                        <span class="header-chip-copy">Live portal</span>
+                    </div>
+                    <div class="auth-chip">
+                        <div class="auth-avatar">@displayInitial</div>
+                        <div class="auth-chip-copy">
+                            <span class="auth-name">@displayName</span>
+                            @if (sessionId?.Roles.Count > 0)
+                            {
+                                <span class="auth-role">@string.Join(" / ", sessionId.Roles)</span>
+                            }
+                            else
+                            {
+                                <span class="auth-role">Guest session</span>
+                            }
+                        </div>
+                    </div>
                     @if (isConnected)
                     {
                         <form method="post" asp-controller="Login" asp-action="Logout" class="m-0">
@@ -585,6 +643,7 @@
             </header>
 
             <main class="app-content" id="main-content" tabindex="-1">
+                <div class="toast-stack" data-toast-stack aria-live="polite" aria-atomic="true"></div>
                 @RenderBody()
             </main>
 
@@ -618,7 +677,7 @@
                         </div>
                         <div class="ai-chat-panel-actions">
                             <button type="button" class="ai-chat-panel-action" data-ai-chat-reset>New</button>
-                            <button type="button" class="ai-chat-panel-close" data-ai-chat-close aria-label="Close AI assistant">x</button>
+                            <button type="button" class="ai-chat-panel-close" data-ai-chat-close aria-label="Close AI assistant">&times;</button>
                         </div>
                     </header>
 
@@ -669,6 +728,7 @@
                    aria-controls="ai-chat-panel"
                    aria-label="Open AI assistant"
                    title="Open AI assistant">
+                    <span class="ai-chat-fab-label">AI Assistant</span>
                     <svg class="ai-chat-fab-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
                         <rect x="12" y="12" width="40" height="40" rx="14" fill="#0f172a" />
                         <path d="M24 34C24 27.925 28.925 23 35 23H40V29H35C32.239 29 30 31.239 30 34V40H24V34Z" fill="#58d5ff" />
@@ -689,6 +749,28 @@
     <script>
     (function () {
         document.addEventListener('DOMContentLoaded', function () {
+            var sidebar = document.querySelector('[data-app-sidebar]');
+            var sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+            var sidebarClose = document.querySelector('[data-sidebar-close]');
+
+            function setSidebar(open) {
+                document.body.classList.toggle('sidebar-open', open);
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () { setSidebar(true); });
+            }
+
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', function () { setSidebar(false); });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (!document.body.classList.contains('sidebar-open')) return;
+                if (!sidebar || sidebar.contains(e.target) || (sidebarToggle && sidebarToggle.contains(e.target))) return;
+                setSidebar(false);
+            });
+
             var input     = document.getElementById('globalSearchInput');
             var dropdown  = document.getElementById('searchTypeahead');
             if (!input || !dropdown) return;

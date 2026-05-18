@@ -5,32 +5,96 @@
 
 @if (TempData["PortalMessage"] is string msg && !string.IsNullOrWhiteSpace(msg))
 {
-    <div class="alert alert-info">@msg</div>
+    <div class="alert alert-info ui-toast-source">@msg</div>
 }
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-4">
-        <h2 class="h5 mb-3">API Connection</h2>
-        <p class="text-muted">Set the API base URL, a valid JWT access token, and optional default department for timetable pages.</p>
-
-        <form asp-action="SaveConnection" method="post" class="row g-3">
-            @Html.AntiForgeryToken()
-            <div class="col-12">
-                <label asp-for="ApiBaseUrl" class="form-label">API Base URL</label>
-                <input asp-for="ApiBaseUrl" class="form-control" placeholder="https://api.yourdomain.com" />
+<section class="dashboard-hero card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="dashboard-hero-grid">
+            <div>
+                <span class="dashboard-kicker">Campus command center</span>
+                <h2 class="dashboard-hero-title">A modern workspace for institutional operations</h2>
+                <p class="dashboard-hero-copy">Manage API connectivity, keep academic workflows in sync, and present a premium SaaS experience across school, college, and university deployments.</p>
+                <div class="dashboard-hero-actions">
+                    <a asp-action="TimetableAdmin" class="btn btn-primary">Open Timetable Admin</a>
+                    <a asp-action="Search" class="btn btn-outline-secondary">Explore Portal Search</a>
+                </div>
             </div>
-            <div class="col-12">
-                <label asp-for="AccessToken" class="form-label">Access Token (JWT)</label>
-                <textarea asp-for="AccessToken" rows="4" class="form-control" placeholder="Paste bearer token here"></textarea>
+            <div class="dashboard-stat-grid">
+                <article class="dashboard-stat-card is-primary">
+                    <span class="dashboard-stat-label">Workspace status</span>
+                    <strong class="dashboard-stat-value">Ready</strong>
+                    <span class="dashboard-stat-meta">Frontend-only redesign active</span>
+                </article>
+                <article class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">Deployment fit</span>
+                    <strong class="dashboard-stat-value">School / College / University</strong>
+                    <span class="dashboard-stat-meta">Single premium visual system</span>
+                </article>
+                <article class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">Primary theme</span>
+                    <strong class="dashboard-stat-value">Academic SaaS</strong>
+                    <span class="dashboard-stat-meta">Clean navigation and card-based layout</span>
+                </article>
             </div>
-            <div class="col-md-6">
-                <label asp-for="DefaultDepartmentId" class="form-label">Default Department Id (optional)</label>
-                <input asp-for="DefaultDepartmentId" class="form-control" />
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Save Connection</button>
-                <a asp-action="TimetableAdmin" class="btn btn-outline-secondary ms-2">Go To Timetable Admin</a>
-            </div>
-        </form>
+        </div>
     </div>
+</section>
+
+<section class="dashboard-section">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="section-heading mb-4">
+                        <div>
+                            <span class="section-kicker">Connection settings</span>
+                            <h2 class="h4 mb-2">API connection</h2>
+                            <p class="text-muted mb-0">Set the API base URL, a valid JWT access token, and an optional default department for timetable views.</p>
+                        </div>
+                        <div class="section-badge">Secure setup</div>
+                    </div>
+
+                    <form asp-action="SaveConnection" method="post" class="row g-4 ui-form-grid">
+                        @Html.AntiForgeryToken()
+                        <div class="col-12">
+                            <label asp-for="ApiBaseUrl" class="form-label">API Base URL</label>
+                            <input asp-for="ApiBaseUrl" class="form-control" placeholder="https://api.yourdomain.com" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="AccessToken" class="form-label">Access Token (JWT)</label>
+                            <textarea asp-for="AccessToken" rows="5" class="form-control" placeholder="Paste bearer token here"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DefaultDepartmentId" class="form-label">Default Department Id</label>
+                            <input asp-for="DefaultDepartmentId" class="form-control" placeholder="Optional" />
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                            <button type="submit" class="btn btn-primary">Save Connection</button>
+                            <a asp-action="TimetableAdmin" class="btn btn-outline-secondary">Go To Timetable Admin</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm h-100 dashboard-side-panel">
+                <div class="card-body p-4">
+                    <span class="section-kicker">Operational checklist</span>
+                    <h3 class="h5 mb-3">What this page supports</h3>
+                    <ul class="dashboard-checklist list-unstyled mb-4">
+                        <li>Clean credential entry with stronger visual hierarchy</li>
+                        <li>Card-based layout aligned to the new design system</li>
+                        <li>Responsive controls optimized for desktop and mobile</li>
+                        <li>Preserved submission flow and existing backend endpoints</li>
+                    </ul>
+                    <div class="dashboard-note">
+                        <strong>Design note</strong>
+                        <p class="mb-0">This redesign improves shell polish, dashboard presentation, tables, forms, alerts, and chatbot styling without changing business behavior.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 </div>

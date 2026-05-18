@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Request (Execution Snapshot)
+
+- Recent request issue:
+	- the portal required a frontend-only premium SaaS redesign covering shell, dashboard, navigation, forms, tables, chatbot, responsiveness, and overall visual polish without any backend or business-logic changes.
+- Implementation Summary:
+	- delivered a global visual system refresh through shared layout, global CSS, dashboard markup, and frontend-only UI behavior enhancements,
+	- preserved routes, form actions, controller behavior, API usage, and database interactions.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed after the frontend redesign,
+	- verified touched frontend files report no workspace diagnostics.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `Portal shell visual redesign` | Provides upgraded branding, header, responsive sidebar, menu icons, active-state styling, and polished AI launcher framing without changing navigation logic. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml` |
+| `Academic SaaS design system` | Defines the refreshed typography, palette, spacing, cards, forms, tables, modals, loaders, toasts, responsive layout, and chatbot visual treatment used across the portal. | `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `Dashboard hero and stats presentation` | Reframes the dashboard into a premium hero/card layout while preserving the existing API connection model and form submission flow. | `src/Tabsan.EduSphere.Web/Views/Portal/Dashboard.cshtml` |
+| `Frontend toast/loader/sidebar enhancements` | Adds non-invasive UI-only behavior for page-loader fade-out, toast rendering from existing alerts, and mobile sidebar interactions. | `src/Tabsan.EduSphere.Web/wwwroot/js/site.js` |
+
 ## 2026-05-18 - Documentation Synchronization Follow-up (Execution Snapshot)
 
 - Recent request issue:
