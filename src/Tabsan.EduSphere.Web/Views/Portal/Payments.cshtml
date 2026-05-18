@@ -17,7 +17,7 @@ else
     @* ── Admin: Create Receipt Form ──────────────────────────────────── *@
     @if (Model.Students.Count > 0)
     {
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="page-section-card card border-0 shadow-sm mb-4">
             <div class="card-header bg-transparent fw-semibold">Create Fee Receipt</div>
             <div class="card-body">
                 <form method="post" asp-action="CreatePayment">
@@ -58,9 +58,9 @@ else
     @* ── Filter by Student (Admin) ───────────────────────────────────── *@
     @if (Model.Students.Count > 0)
     {
-        <div class="card border-0 shadow-sm mb-3">
+        <div class="page-section-card card border-0 shadow-sm mb-3">
             <div class="card-body py-2">
-                <form method="get" asp-action="Payments" class="row g-2 align-items-end">
+                <form method="get" asp-action="Payments" class="row g-2 align-items-end filter-toolbar">
                     <div class="col-md-5">
                         <label class="form-label mb-1">Filter by Student</label>
                         <select name="studentId" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -85,16 +85,25 @@ else
     }
 
     @* ── Receipts Table ──────────────────────────────────────────────── *@
-    <div class="card border-0 shadow-sm">
+    <div class="page-section-card card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">
-                @(Model.Students.Count > 0 ? "All Receipts" : "My Receipts")
-                <span class="badge bg-secondary ms-1">@Model.Payments.Count</span>
-            </h2>
+            <div class="section-head mb-3">
+                <div>
+                    <span class="section-kicker">Finance receipts</span>
+                    <h2 class="h5 mb-1">
+                        @(Model.Students.Count > 0 ? "All Receipts" : "My Receipts")
+                        <span class="badge bg-secondary ms-1">@Model.Payments.Count</span>
+                    </h2>
+                    <p class="text-muted mb-0">Track payment status, confirmations, and proof submissions.</p>
+                </div>
+            </div>
 
             @if (Model.Payments.Count == 0)
             {
-                <p class="text-muted">No payment receipts found.</p>
+                <div class="empty-state-card">
+                    <h3>No payment receipts found</h3>
+                    <p class="text-muted mb-0">Receipts will appear here once payment requests are created.</p>
+                </div>
             }
             else
             {
@@ -139,7 +148,7 @@ else
                                     </td>
                                     <td class="fw-semibold">@r.Amount.ToString("N2")</td>
                                     <td>@r.DueDate.ToString("dd MMM yyyy")</td>
-                                    <td><span class="badge @badgeCls">@r.Status</span></td>
+                                    <td><span class="badge stat-pill @badgeCls">@r.Status</span></td>
                                     <td>@(r.PaidDate?.ToString("dd MMM yyyy") ?? "–")</td>
                                     <td>
                                         @* Admin actions: Confirm (Pending/Submitted) or Cancel (not Paid/Cancelled) *@

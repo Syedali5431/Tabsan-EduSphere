@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Continuation (Enrollments/Results/Payments + Phase-Level Summary Formatting)
+
+- Recent request issue:
+	- continuation requested the next page-polish wave plus phase-level implementation/validation summaries in the redesign specification.
+- Implementation Summary:
+	- upgraded `Enrollments`, `Results`, and `Payments` pages to match the shared premium visual system,
+	- normalized `Docs/Improved UI and look.md` so each completed phase carries its own completion summary block with markdown-lint-safe formatting.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- workspace diagnostics reported no errors in the touched Razor views and redesign document.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `Enrollments page sectioned visual harmonization` | Aligns enroll/drop and roster areas to the shared section-card, toolbar, status-pill, and empty-state conventions without changing enrollment workflows. | `src/Tabsan.EduSphere.Web/Views/Portal/Enrollments.cshtml` |
+| `Results workflow visual continuity pass` | Harmonizes result filters, entry/publish/correct sections, and listing visuals with existing global UX tokens while preserving result operations. | `src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml` |
+| `Payments page visual continuity pass` | Harmonizes receipt creation/filter/listing surfaces with the shared section-card and state-display patterns while preserving payment actions. | `src/Tabsan.EduSphere.Web/Views/Portal/Payments.cshtml` |
+| `Phase-level completion summary formatting` | Enforces per-phase implementation/validation completion blocks and lint-clean markdown structure in the redesign specification document. | `Docs/Improved UI and look.md` |
+
 ## 2026-05-18 - UI/UX Redesign Continuation (Students/Courses/Admin Users Polish)
 
 - Recent request issue:

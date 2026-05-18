@@ -13,6 +13,19 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 	- `No schema mutation` or
 	- `Schema updated` with table/column/index/migration details.
 
+## 2026-05-18 Update - UI/UX Redesign Continuation (Enrollments/Results/Payments + Phase-Level Summary Formatting)
+
+- Recent request issue:
+	- continuation requested the next portal-page visual pass and required implementation/validation summaries at each completed redesign phase.
+- Implementation Summary:
+	- updated `Enrollments`, `Results`, and `Payments` Razor views for visual continuity with the global design system,
+	- reformatted `Docs/Improved UI and look.md` so phase completion summaries are phase-local and markdown-lint clean.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- workspace diagnostics reported no errors in touched continuation views and redesign document.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-18 Update - UI/UX Redesign Continuation (Students/Courses/Admin Users Polish)
 
 - Recent request issue:
