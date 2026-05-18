@@ -118,6 +118,14 @@
             branding = System.Text.Json.JsonSerializer.Deserialize<Tabsan.EduSphere.Web.Models.Portal.PortalBrandingWebModel>(cachedBranding) ?? branding;
     }
 
+    var brandSource = string.IsNullOrWhiteSpace(branding.UniversityName) ? "Tabsan EduSphere" : branding.UniversityName;
+    var brandInitialChars = brandSource
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Select(part => char.ToUpperInvariant(part[0]))
+        .Take(2)
+        .ToArray();
+    var brandInitials = brandInitialChars.Length == 0 ? "TE" : new string(brandInitialChars);
+
     static (string Controller, string Action)? ResolveRoute(string key) => key switch
     {
         "dashboard"         => ("Portal", "Dashboard"),
@@ -344,15 +352,16 @@
             <div class="brand-link" role="group" aria-label="@branding.UniversityName branding">
                 @if (!string.IsNullOrEmpty(branding.LogoImage))
                 {
-                    <img src="@branding.LogoImage" alt="@branding.UniversityName logo" class="brand-logo" style="height:40px;width:40px;object-fit:contain;border-radius:6px;" />
+                    <img src="@branding.LogoImage" alt="@branding.UniversityName logo" class="brand-logo" />
                 }
                 else
                 {
-                    <span class="brand-mark"><i class="bi bi-image"></i></span>
+                    <span class="brand-mark" aria-hidden="true">@brandInitials</span>
                 }
-                <div>
+                <div class="brand-meta">
                     <div class="brand-name">@branding.UniversityName</div>
                     <div class="brand-subtitle">@branding.PortalSubtitle</div>
+                    <span class="brand-tag">Institution Hub</span>
                 </div>
             </div>
 
@@ -610,30 +619,54 @@
                 }
 
                 <div class="header-meta">
-                    <div class="header-chip header-chip-notification">
-                        <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
-                        <span class="header-chip-copy">Live portal</span>
-                    </div>
-                    <div class="auth-chip">
-                        <div class="auth-avatar">@displayInitial</div>
-                        <div class="auth-chip-copy">
-                            <span class="auth-name">@displayName</span>
-                            @if (sessionId?.Roles.Count > 0)
-                            {
-                                <span class="auth-role">@string.Join(" / ", sessionId.Roles)</span>
-                            }
-                            else
-                            {
-                                <span class="auth-role">Guest session</span>
-                            }
-                        </div>
-                    </div>
                     @if (isConnected)
                     {
-                        <form method="post" asp-controller="Login" asp-action="Logout" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">Sign Out</button>
-                        </form>
+                        <a class="header-chip header-chip-notification" asp-controller="Portal" asp-action="Notifications" aria-label="Open notifications">
+                            <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
+                            <span class="header-chip-copy">Notifications</span>
+                            <span class="header-chip-dot" aria-hidden="true"></span>
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="header-chip header-chip-notification">
+                            <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
+                            <span class="header-chip-copy">Live portal</span>
+                        </div>
+                    }
+
+                    @if (isConnected)
+                    {
+                        <details class="profile-menu">
+                            <summary class="auth-chip" aria-label="Open profile menu">
+                                <div class="auth-avatar">@displayInitial</div>
+                                <div class="auth-chip-copy">
+                                    <span class="auth-name">@displayName</span>
+                                    @if (sessionId?.Roles.Count > 0)
+                                    {
+                                        <span class="auth-role">@string.Join(" / ", sessionId.Roles)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="auth-role">Guest session</span>
+                                    }
+                                </div>
+                                <span class="auth-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            </summary>
+                            <div class="profile-menu-panel">
+                                <div class="profile-menu-role">@((sessionId?.Roles.Count > 0) ? string.Join(" / ", sessionId.Roles) : "Connected user")</div>
+                                <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">Open Dashboard</a>
+                                <a asp-controller="Portal" asp-action="Notifications" class="profile-menu-link">View Notifications</a>
+                                @if (isSuperAdmin)
+                                {
+                                    <a asp-controller="Portal" asp-action="ThemeSettings" class="profile-menu-link">Theme Settings</a>
+                                }
+                                <form method="post" asp-controller="Login" asp-action="Logout" class="profile-menu-signout">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Sign Out</button>
+                                </form>
+                            </div>
+                        </details>
                     }
                     else
                     {

@@ -3,6 +3,23 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Phase 6 (Branding Pass)
+
+- Recent request issue:
+	- proceed with next redesign step and ensure full docs plus repository synchronization.
+- Implementation Summary:
+	- refined shared brand block, header composition, notification chip, and profile dropdown visuals,
+	- preserved all existing navigation/auth routes and backend behavior.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- workspace diagnostics reported no errors in touched frontend files.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `Shared brand block refinement` | Improves institution logo/name/subtitle presentation and introduces a cleaner branded identity treatment in the sidebar shell. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `Header notification chip upgrade` | Enhances notification icon affordance with a stronger visual cue and direct route to notifications while keeping the existing endpoint flow unchanged. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `Profile dropdown UI enhancement` | Replaces basic profile/signout presentation with a richer dropdown panel for identity context and quick actions without changing authentication logic. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+
 ## 2026-05-18 - UI/UX Redesign Continuation (Enrollments/Results/Payments + Phase-Level Summary Formatting)
 
 - Recent request issue:
