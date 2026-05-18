@@ -3,6 +3,14 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `StudentLifecycle milestone notifications` | Sends system notifications to students on graduation, semester promotion, profile deactivation, and profile reactivation actions. | `src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs` |
+| `StudentLifecycle admin-review request alerts` | Sends pending-review alerts to Admin/SuperAdmin users when profile-change and teacher-modification requests are created. | `src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs` |
+| `StudentLifecycle request outcome notifications` | Sends approval/rejection outcomes to requestor/teacher for admin change requests and teacher modification requests. | `src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs` |
+
 ## 2026-05-18 - DeepScan Phase 40 Closure and Production Readiness Revalidation (Execution Snapshot)
 
 | Function Name | Purpose | Location |

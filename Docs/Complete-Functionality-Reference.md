@@ -13,6 +13,20 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-18 Update - StudentLifecycle Notification TODO Completion (Execution Snapshot)
+
+- Recent request issue:
+    - StudentLifecycle service still contained pending TODO notification markers for lifecycle transitions and request-review outcomes.
+- Implementation Summary:
+    - implemented notification dispatch for graduation, promotion, deactivation, and reactivation actions,
+    - implemented notification dispatch for change/modification request creation and approval/rejection outcomes.
+- Validation Summary:
+    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+    - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~StudentLifecycleIntegrationTests -v minimal` passed (`7/7`).
+- Behavior impact:
+    - lifecycle participants and reviewers now receive consistent in-app notification events for key StudentLifecycle workflows,
+    - no schema or API-contract changes were introduced.
+
 ## 2026-05-18 Update - DeepScan Phase 40 Closure and Production Readiness Revalidation (Execution Snapshot)
 
 - Recent request issue:

@@ -80,14 +80,36 @@ For **every completed phase**:
 
 ---
 
-## Phase 39 - DeepScan Gap Remediation Program (Planned 2026-05-18)
-**Status:** Planned
+## 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
+**Status:** Complete
 
 ### Completion Mark
-- [ ] Close DeepScan high/medium gaps with code-level implementation.
-- [ ] Add targeted automated tests for each remediation stage.
-- [ ] Re-run build + targeted integration/unit suites after each stage.
-- [ ] Update PRD, Function List, and Functionality Reference after each completed stage.
+- [x] Implement StudentLifecycle notification TODOs for lifecycle status transitions.
+- [x] Implement admin-review pending notifications for change/modification requests.
+- [x] Implement approval/rejection outcome notifications for requestors/teachers.
+- [x] Validate lifecycle integration test coverage after implementation.
+
+### Implementation Summary
+- implemented notification dispatch in `StudentLifecycleService` for graduation, promotion, deactivation, and reactivation actions,
+- implemented admin reviewer notifications for newly created profile-change and teacher-modification requests,
+- implemented approval/rejection outcome notifications for requestors and teachers,
+- removed corresponding TODO stubs from those workflow methods.
+
+### Validation Summary
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~StudentLifecycleIntegrationTests -v minimal` passed (`7/7`),
+- no schema/migration changes required.
+
+---
+
+## Phase 39 - DeepScan Gap Remediation Program (Planned 2026-05-18)
+**Status:** Complete (2026-05-18)
+
+### Completion Mark
+- [x] Close DeepScan high/medium gaps with code-level implementation.
+- [x] Add targeted automated tests for each remediation stage.
+- [x] Re-run build + targeted integration/unit suites after each stage.
+- [x] Update PRD, Function List, and Functionality Reference after each completed stage.
 
 ### Stage 39.1 - Enrollment Waitlist and Seat-Promotion Workflow
 **Issue Source:** DeepScan Task 4.6 (Enrollment partially implemented)
@@ -120,11 +142,11 @@ For **every completed phase**:
 ### Stage 39.2 - Transactional CSV Import Strict Mode
 **Issue Source:** DeepScan Task 4.4 (User import partially implemented)
 
-- [ ] Add strict import mode (`all-or-nothing`) for CSV user import.
-- [ ] Wrap strict mode in transaction scope with deterministic rollback behavior.
-- [ ] Preserve existing permissive mode for backward compatibility.
-- [ ] Extend import result payload to indicate strict/permissive execution path.
-- [ ] Add tests for rollback correctness and mixed-validity CSV rows.
+- [x] Add strict import mode (`all-or-nothing`) for CSV user import.
+- [x] Wrap strict mode in transaction scope with deterministic rollback behavior.
+- [x] Preserve existing permissive mode for backward compatibility.
+- [x] Extend import result payload to indicate strict/permissive execution path.
+- [x] Add tests for rollback correctness and mixed-validity CSV rows.
 
 **Primary Targets**
 - `src/Tabsan.EduSphere.Application/Services/UserImportService.cs`

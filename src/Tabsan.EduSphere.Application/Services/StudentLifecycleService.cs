@@ -60,7 +60,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         student.Graduate();
         await _repository.UpdateAsync(student, ct);
 
-        // TODO: Send graduation notification to student
+        await _notifications.SendSystemAsync(
+            title:            "Graduation Approved",
+            body:             "Congratulations! Your graduation has been processed successfully.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { student.UserId },
+            ct:               ct);
     }
 
     public async Task GraduateStudentsBatchAsync(
@@ -146,7 +151,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         student.AdvanceSemester();
         await _repository.UpdateAsync(student, ct);
 
-        // TODO: Send semester promotion notification to student
+        await _notifications.SendSystemAsync(
+            title:            "Academic Progress Updated",
+            body:             "Your academic level has been advanced to the next semester.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { student.UserId },
+            ct:               ct);
     }
 
     public async Task<PromotionBatchResultDto> PromoteStudentsBatchAsync(
@@ -186,7 +196,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         student.Deactivate();
         await _repository.UpdateAsync(student, ct);
 
-        // TODO: Send deactivation notification to student
+        await _notifications.SendSystemAsync(
+            title:            "Account Status Updated",
+            body:             "Your student profile has been deactivated. Please contact administration for details.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { student.UserId },
+            ct:               ct);
     }
 
     public async Task ReactivateStudentAsync(Guid studentProfileId, CancellationToken ct = default)
@@ -198,7 +213,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         student.Reactivate();
         await _repository.UpdateAsync(student, ct);
 
-        // TODO: Send reactivation notification to student
+        await _notifications.SendSystemAsync(
+            title:            "Account Reactivated",
+            body:             "Your student profile has been reactivated and is now active.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { student.UserId },
+            ct:               ct);
     }
 
     // ── Admin Change Requests ──────────────────────────────────────────────
@@ -216,7 +236,11 @@ public class StudentLifecycleService : IStudentLifecycleService
 
         await _repository.AddChangeRequestAsync(request, ct);
 
-        // TODO: Send change request notification to admins
+        await NotifyAdminsAsync(
+            title: "Profile Change Request Pending",
+            body:  "A new profile change request has been submitted and requires admin review.",
+            ct:    ct);
+
         return MapChangeRequest(request);
     }
 
@@ -254,7 +278,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         request.Approve(adminUserId, notes);
         await _repository.UpdateChangeRequestAsync(request, ct);
 
-        // TODO: Send approval notification to requestor
+        await _notifications.SendSystemAsync(
+            title:            "Change Request Approved",
+            body:             "Your profile change request has been approved.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { request.RequestorUserId },
+            ct:               ct);
     }
 
     public async Task RejectChangeRequestAsync(
@@ -270,7 +299,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         request.Reject(adminUserId, notes);
         await _repository.UpdateChangeRequestAsync(request, ct);
 
-        // TODO: Send rejection notification to requestor
+        await _notifications.SendSystemAsync(
+            title:            "Change Request Rejected",
+            body:             $"Your profile change request was rejected. {BuildNotesSuffix(notes)}",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { request.RequestorUserId },
+            ct:               ct);
     }
 
     // ── Teacher Modification Requests ──────────────────────────────────────
@@ -292,7 +326,11 @@ public class StudentLifecycleService : IStudentLifecycleService
 
         await _repository.AddModificationRequestAsync(request, ct);
 
-        // TODO: Send modification request notification to admins
+        await NotifyAdminsAsync(
+            title: "Modification Request Pending",
+            body:  "A teacher modification request has been submitted and requires admin review.",
+            ct:    ct);
+
         return MapModificationRequest(request);
     }
 
@@ -332,7 +370,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         request.Approve(adminUserId, notes);
         await _repository.UpdateModificationRequestAsync(request, ct);
 
-        // TODO: Send approval notification to teacher
+        await _notifications.SendSystemAsync(
+            title:            "Modification Request Approved",
+            body:             "Your modification request has been approved.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { request.TeacherUserId },
+            ct:               ct);
     }
 
     public async Task RejectModificationRequestAsync(
@@ -348,7 +391,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         request.Reject(adminUserId, notes);
         await _repository.UpdateModificationRequestAsync(request, ct);
 
-        // TODO: Send rejection notification to teacher
+        await _notifications.SendSystemAsync(
+            title:            "Modification Request Rejected",
+            body:             $"Your modification request was rejected. {BuildNotesSuffix(notes)}",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { request.TeacherUserId },
+            ct:               ct);
     }
 
     // ── Payment Receipts ───────────────────────────────────────────────────
@@ -580,4 +628,23 @@ public class StudentLifecycleService : IStudentLifecycleService
             receipt.CreatedAt
         );
     }
+
+    private async Task NotifyAdminsAsync(string title, string body, CancellationToken ct)
+    {
+        var adminUsers = await _users.GetActiveUsersByRolesAsync(new[] { "Admin", "SuperAdmin" }, ct);
+        var adminIds = adminUsers.Select(u => u.Id).Distinct().ToList();
+
+        if (adminIds.Count == 0)
+            return;
+
+        await _notifications.SendSystemAsync(
+            title:            title,
+            body:             body,
+            type:             NotificationType.System,
+            recipientUserIds: adminIds,
+            ct:               ct);
+    }
+
+    private static string BuildNotesSuffix(string? notes)
+        => string.IsNullOrWhiteSpace(notes) ? "Please contact administration for more details." : $"Notes: {notes}";
 }
