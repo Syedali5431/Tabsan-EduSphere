@@ -35,6 +35,7 @@ public class AdminUserController : ControllerBase
             u.Id,
             u.Username,
             u.Email,
+            u.PhoneNumber,
             u.IsActive,
             u.InstitutionType,
             Role = u.Role.Name
@@ -49,6 +50,7 @@ public class AdminUserController : ControllerBase
 
         var username = request.Username.Trim();
         var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        var phoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
 
         if (await _users.UsernameExistsAsync(username, ct))
             return Conflict("Username already exists.");
@@ -79,11 +81,12 @@ public class AdminUserController : ControllerBase
             email,
             departmentId: null,
             mustChangePassword: false,
-            institutionType: request.InstitutionType);
+            institutionType: request.InstitutionType,
+            phoneNumber: phoneNumber);
         await _users.AddAsync(user, ct);
         await _users.SaveChangesAsync(ct);
 
-        return Ok(new { user.Id, user.Username, user.Email, user.IsActive, user.InstitutionType, Role = "Admin" });
+        return Ok(new { user.Id, user.Username, user.Email, user.PhoneNumber, user.IsActive, user.InstitutionType, Role = "Admin" });
     }
 
     [HttpPut("{id:guid}")]
@@ -100,6 +103,7 @@ public class AdminUserController : ControllerBase
             return BadRequest("Only Admin users can be updated from this endpoint.");
 
         var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        var phoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
         if (!string.IsNullOrWhiteSpace(email))
         {
             var existingByEmail = await _users.GetByEmailAsync(email, ct);
@@ -108,6 +112,7 @@ public class AdminUserController : ControllerBase
         }
 
         user.UpdateEmail(email);
+        user.UpdatePhoneNumber(phoneNumber);
 
         if (request.IsActive)
             user.Activate();

@@ -2424,6 +2424,10 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 

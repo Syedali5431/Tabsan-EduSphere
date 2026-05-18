@@ -20,6 +20,21 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Stage Completion Checkpoint (2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion)
+- Completed Stage 40.1 phone-backed SMS recipient dependency implementation.
+- Implementation Summary:
+  - added optional user `PhoneNumber` persistence and EF mapping,
+  - added migration `20260518104000_Phase40_AddUserPhoneNumber` for schema update,
+  - implemented active-user phone lookup in notification repository,
+  - wired optional phone capture through admin user create/update/list, CSV import, and student self-registration flows.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Status of Checks Done:
+  - code and migration change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
 ### Feature Completion Checkpoint (2026-05-18 - StudentLifecycle Notification TODO Completion)
 - Completed implementation of pending StudentLifecycle notification TODOs.
 - Implementation Summary:

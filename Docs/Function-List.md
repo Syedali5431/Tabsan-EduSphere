@@ -3,6 +3,16 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `User.PhoneNumber persistence` | Stores optional per-user SMS recipient number for notification delivery channels. | `src/Tabsan.EduSphere.Domain/Identity/User.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260518104000_Phase40_AddUserPhoneNumber.cs` |
+| `NotificationRepository.GetActiveUserPhoneNumbersAsync` | Resolves distinct active recipient phone numbers by user IDs for SMS dispatch. | `src/Tabsan.EduSphere.Infrastructure/Repositories/NotificationAttendanceRepositories.cs` |
+| `Admin user phone management contract` | Enables super-admin create/update/list admin-user flows to capture and return optional phone numbers. | `src/Tabsan.EduSphere.Application/DTOs/Auth/AdminUserManagementDtos.cs`, `src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs` |
+| `User import optional PhoneNumber ingestion` | Supports optional `PhoneNumber` CSV header/value ingestion with validation while preserving backward compatibility for existing CSV files. | `src/Tabsan.EduSphere.Application/Services/UserImportService.cs`, `src/Tabsan.EduSphere.Application/Interfaces/IUserImportService.cs` |
+| `Student self-registration phone capture` | Accepts optional phone number during self-registration and persists it on the created user account. | `src/Tabsan.EduSphere.Application/DTOs/Academic/AcademicDtos.cs`, `src/Tabsan.EduSphere.Application/Academic/StudentRegistrationService.cs` |
+
 ## 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 
 | Function Name | Purpose | Location |

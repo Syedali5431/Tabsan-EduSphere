@@ -15,6 +15,22 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 ## 2026-05-18 Update - Documentation Synchronization Request (Execution Snapshot)
 
+## 2026-05-18 Update - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+
+- Recent request issue:
+	- notification SMS dispatch depended on persisted recipient phone numbers, but user profiles did not yet store phone values.
+- Implementation Summary:
+	- added optional `PhoneNumber` to user domain/EF mapping,
+	- wired phone population paths through admin create/update, CSV import optional column handling, and student self-registration,
+	- implemented active-user phone lookup in notification repository for SMS recipient resolution.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- added migration `20260518104000_Phase40_AddUserPhoneNumber`.
+	- added `users.PhoneNumber` (`nvarchar(32)`, nullable).
+
 - Recent request issue:
 	- mandatory planning/execution documents required synchronized closeout updates for the latest request cycle.
 - Implementation Summary:

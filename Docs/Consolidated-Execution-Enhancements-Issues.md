@@ -18,6 +18,28 @@ This document is a merge of the following files in order:
 
 # Final Touches Plan
 
+## 2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+**Status:** Complete
+
+### Completion Mark
+- [x] Added optional `PhoneNumber` to user domain model and EF user configuration.
+- [x] Implemented notification recipient phone resolution for active users.
+- [x] Wired phone capture through admin create/update, CSV import (optional column), and student self-registration.
+- [x] Added EF migration for `users.PhoneNumber` and validated focused regressions.
+
+### Implementation Summary
+- Added `User.PhoneNumber` plus update behavior and mapped it with max length 32 in EF user configuration.
+- Replaced `NotificationRepository.GetActiveUserPhoneNumbersAsync` placeholder with active-user lookup over persisted phone numbers.
+- Extended admin user DTO/controller create/update/list flows to support `PhoneNumber`.
+- Extended user-import pipeline with optional `PhoneNumber` CSV header handling and validation, while keeping backward-compatible imports.
+- Extended student self-registration DTO/service to accept/store optional `PhoneNumber`.
+- Added migration `20260518104000_Phase40_AddUserPhoneNumber` for schema update.
+
+### Validation Summary
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Confirmed SMS recipient resolution dependency is now implemented end-to-end for users with active accounts and phone numbers.
+
 **Date:** 2026-05-03  
 **Owner:** Engineering  
 **Status:** In Progress

@@ -13,6 +13,21 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-18 Update - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+
+- Recent request issue:
+    - notification SMS fan-out depended on active user phone numbers, but user profiles lacked persisted phone support.
+- Implementation Summary:
+    - added optional `PhoneNumber` persistence on user accounts and schema migration support,
+    - implemented notification repository active-phone lookup for SMS recipient resolution,
+    - wired optional phone capture through admin user management, CSV import, and student self-registration flows.
+- Validation Summary:
+    - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+    - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Behavior impact:
+    - SMS dispatch can now resolve recipients from persisted active user phone numbers,
+    - admin/import/self-registration entry points can store optional phone numbers without breaking existing clients.
+
 ## 2026-05-18 Update - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 
 - Recent request issue:

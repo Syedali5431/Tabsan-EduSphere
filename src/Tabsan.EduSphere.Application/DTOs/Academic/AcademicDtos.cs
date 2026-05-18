@@ -79,7 +79,8 @@ public sealed record StudentSelfRegisterRequest(
     string Username,
     string Password,
     string RegistrationNumberOrEmail,
-    string? Email = null);
+    string? Email = null,
+    string? PhoneNumber = null);
 
 // ── Faculty Assignment DTOs ───────────────────────────────────────────────────
 

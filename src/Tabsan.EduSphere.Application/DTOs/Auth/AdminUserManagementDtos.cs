@@ -18,7 +18,11 @@ public sealed record CreateAdminUserRequest(
 	[property: StringLength(256, MinimumLength = 8)]
 	string Password,
 
-	InstitutionType? InstitutionType);
+	InstitutionType? InstitutionType,
+
+	[property: Phone]
+	[property: StringLength(32)]
+	string? PhoneNumber = null);
 
 /// <summary>Request body for updating an Admin user account.</summary>
 public sealed record UpdateAdminUserRequest(
@@ -29,4 +33,8 @@ public sealed record UpdateAdminUserRequest(
 	bool IsActive,
 
 	[property: StringLength(256, MinimumLength = 8)]
-	string? NewPassword);
+	string? NewPassword,
+
+	[property: Phone]
+	[property: StringLength(32)]
+	string? PhoneNumber = null);

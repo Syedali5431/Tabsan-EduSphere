@@ -68,7 +68,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         var passwordHash = _passwordHasher.Hash(request.Password);
 
         var user = new User(request.Username, passwordHash, studentRoleId,
-                            email: request.Email, departmentId: entry.DepartmentId);
+                            email: request.Email, departmentId: entry.DepartmentId, phoneNumber: request.PhoneNumber);
         await _userRepo.AddAsync(user, ct);
         await _userRepo.SaveChangesAsync(ct);
 

@@ -18,6 +18,9 @@ public class User : AuditableEntity
     /// <summary>Optional email address. Unique when provided (filtered index).</summary>
     public string? Email { get; private set; }
 
+    /// <summary>Optional recipient phone number used for SMS notification delivery.</summary>
+    public string? PhoneNumber { get; private set; }
+
     /// <summary>BCrypt / ASP.NET Identity hashed password. Never stored in plain text.</summary>
     public string PasswordHash { get; private set; } = default!;
 
@@ -79,12 +82,13 @@ public class User : AuditableEntity
 
     /// <summary>Creates a new user. Password must already be hashed by the caller.</summary>
     public User(string username, string passwordHash, int roleId, string? email = null, Guid? departmentId = null,
-                bool mustChangePassword = false, InstitutionType? institutionType = null)
+                bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null)
     {
         Username = username;
         PasswordHash = passwordHash;
         RoleId = roleId;
         Email = email;
+        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
         DepartmentId = departmentId;
         MustChangePassword = mustChangePassword;
         InstitutionType = institutionType;
@@ -166,6 +170,13 @@ public class User : AuditableEntity
     public void UpdateEmail(string? email)
     {
         Email = email;
+        Touch();
+    }
+
+    /// <summary>Updates the user's phone number. Pass null to clear it.</summary>
+    public void UpdatePhoneNumber(string? phoneNumber)
+    {
+        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
         Touch();
     }
 

@@ -19,6 +19,18 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+- Completed phone persistence and SMS recipient dependency implementation.
+- Implementation Summary:
+  - added optional `PhoneNumber` on users with EF mapping and migration support,
+  - implemented notification repository lookup for active user phone numbers,
+  - wired optional phone support through admin user create/update/list, user CSV import, and student self-registration paths.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Stage status: Stage 40.1 completed.
+- Phase status: SMS delivery dependency closure complete for user phone-backed recipient resolution.
+
 ### 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 - Completed StudentLifecycle notification TODO implementation.
 - Implementation Summary:

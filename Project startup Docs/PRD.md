@@ -18,6 +18,20 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-18 - Stage 40.1 PhoneNumber/SMS Recipient Dependency Completion (Execution Snapshot)
+- Recent request issue:
+  - notification SMS dispatch required active recipient phone numbers but user accounts did not persist a dedicated phone field.
+- Implementation Summary:
+  - added optional `PhoneNumber` support in user domain + EF mapping and applied schema migration,
+  - implemented active-user phone resolution in notification repository for SMS delivery fan-out,
+  - extended admin-user management, user CSV import, and student self-registration flows to accept/store optional phone values.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - `dotnet test Tabsan.EduSphere.sln -v minimal --filter "FullyQualifiedName~Phase28Stage2Tests|FullyQualifiedName~UserImportAndForceChangeIntegrationTests|FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~StudentRegistration"` passed (`13/13`).
+- Behavior impact:
+  - SMS notification delivery now has persisted phone-backed recipient resolution,
+  - existing email/notification flows remain backward compatible while optional phone capture is available at key user-provisioning entry points.
+
 ### 2026-05-18 - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 - Recent request issue:
   - multiple StudentLifecycle workflow TODOs for notification dispatch were left unimplemented after state transitions and request-review actions.

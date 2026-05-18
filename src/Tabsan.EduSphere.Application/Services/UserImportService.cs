@@ -9,7 +9,7 @@ namespace Tabsan.EduSphere.Application.Services;
 /// <summary>
 /// Parses a CSV stream and bulk-creates user accounts (P4-S1-01).
 /// Rules:
-///   - CSV header row required: Username,Email,Role (FullName/DepartmentId/InstitutionType optional)
+///   - CSV header row required: Username,Email,Role (FullName/DepartmentId/InstitutionType/PhoneNumber optional)
 ///   - Initial password = Username (P4-S2-01)
 ///   - MustChangePassword is set to true so the user is forced to change on first login (P4-S2-02)
 ///   - Rows with duplicate usernames (in batch or existing in DB) are counted as duplicates
@@ -66,8 +66,9 @@ public class UserImportService : IUserImportService
             return new UserImportResult(0, 0, 0, 1, strictMode, errors);
         }
 
-        headerMap.TryGetValue("departmentid", out var departmentIdIndex);
-        headerMap.TryGetValue("institutiontype", out var institutionTypeIndex);
+        var departmentIdIndex = headerMap.TryGetValue("departmentid", out var depIdx) ? depIdx : -1;
+        var institutionTypeIndex = headerMap.TryGetValue("institutiontype", out var instIdx) ? instIdx : -1;
+        var phoneNumberIndex = headerMap.TryGetValue("phonenumber", out var phoneIdx) ? phoneIdx : -1;
 
         var policy = await _institutionPolicyService.GetPolicyAsync(ct);
 
@@ -96,6 +97,7 @@ public class UserImportService : IUserImportService
             var roleName = GetValue(parts, roleIndex);
             var deptIdStr = departmentIdIndex >= 0 ? GetValue(parts, departmentIdIndex) : string.Empty;
             var institutionTypeStr = institutionTypeIndex >= 0 ? GetValue(parts, institutionTypeIndex) : string.Empty;
+            var phoneNumberRaw = phoneNumberIndex >= 0 ? GetValue(parts, phoneNumberIndex) : string.Empty;
 
             // ── Validate username ─────────────────────────────────────────────
             if (string.IsNullOrWhiteSpace(username))
@@ -153,6 +155,18 @@ public class UserImportService : IUserImportService
                 institutionType = parsedInstitutionType;
             }
 
+            string? phoneNumber = null;
+            if (!string.IsNullOrWhiteSpace(phoneNumberRaw))
+            {
+                if (phoneNumberRaw.Length > 32)
+                {
+                    errors.Add($"Line {lineNumber}: PhoneNumber exceeds max length of 32 characters.");
+                    continue;
+                }
+
+                phoneNumber = phoneNumberRaw;
+            }
+
             // ── Check intra-batch duplicate ────────────────────────────────────
             if (batchUsernames.Contains(username))
             {
@@ -189,7 +203,8 @@ public class UserImportService : IUserImportService
                 email: emailValue,
                 departmentId: departmentId,
                 mustChangePassword: true,   // P4-S2-02: force change on first login
-                institutionType: institutionType
+                institutionType: institutionType,
+                phoneNumber: phoneNumber
             );
 
             batchUsernames.Add(username);
