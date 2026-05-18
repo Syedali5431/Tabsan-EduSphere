@@ -59,6 +59,7 @@ BEGIN
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DECLARE @DefaultPasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 /* 1) System roles */
 MERGE INTO [roles] AS tgt
@@ -137,6 +138,61 @@ INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], 
 SELECT d.[Id], d.[Name], d.[Code], d.[InstitutionType], 1, @Now, NULL, 0, NULL
 FROM @CoreDepartments d
 WHERE NOT EXISTS (SELECT 1 FROM [departments] x WHERE x.[Id] = d.[Id]);
+
+/* 4.1) Baseline users (default password: EduSphere147) */
+DECLARE @RoleSuperAdminId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
+DECLARE @RoleAdminId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin');
+DECLARE @RoleFacultyId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Faculty');
+DECLARE @RoleStudentId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Student');
+
+DECLARE @CoreUsers TABLE
+(
+    [Id] UNIQUEIDENTIFIER,
+    [Username] NVARCHAR(100),
+    [Email] NVARCHAR(256),
+    [RoleId] INT,
+    [DepartmentId] UNIQUEIDENTIFIER NULL,
+    [InstitutionType] INT NULL
+);
+
+INSERT INTO @CoreUsers ([Id], [Username], [Email], [RoleId], [DepartmentId], [InstitutionType])
+VALUES
+    (CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), N'superadmin', N'superadmin@tabsan.local', @RoleSuperAdminId, NULL, NULL),
+    (CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), N'admin',      N'admin@tabsan.local',      @RoleAdminId,      CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2),
+    (CAST('66666666-6666-6666-6666-666666666603' AS UNIQUEIDENTIFIER), N'faculty',    N'faculty@tabsan.local',    @RoleFacultyId,    CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2),
+    (CAST('66666666-6666-6666-6666-666666666604' AS UNIQUEIDENTIFIER), N'student',    N'student@tabsan.local',    @RoleStudentId,    CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2);
+
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT u.[Id], u.[Username], u.[Email], @DefaultPasswordHash, u.[RoleId], u.[DepartmentId], u.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
+FROM @CoreUsers u
+WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.[Id]);
+
+UPDATE u
+SET u.[Username] = src.[Username],
+    u.[Email] = src.[Email],
+    u.[PasswordHash] = @DefaultPasswordHash,
+    u.[RoleId] = src.[RoleId],
+    u.[DepartmentId] = src.[DepartmentId],
+    u.[InstitutionType] = src.[InstitutionType],
+    u.[IsActive] = 1,
+    u.[IsDeleted] = 0,
+    u.[DeletedAt] = NULL,
+    u.[UpdatedAt] = @Now
+FROM [users] u
+INNER JOIN @CoreUsers src ON src.[Id] = u.[Id];
+
+IF OBJECT_ID(N'[password_history]') IS NOT NULL
+BEGIN
+    INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])
+    SELECT NEWID(), u.[Id], @DefaultPasswordHash, @Now
+    FROM @CoreUsers u
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM [password_history] ph
+        WHERE ph.[UserId] = u.[Id]
+          AND ph.[PasswordHash] = @DefaultPasswordHash
+    );
+END
 
 /* 5) Baseline report definitions + role assignments */
 -- Normalize legacy report keys from older seed scripts to current underscore keys.

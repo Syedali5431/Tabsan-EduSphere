@@ -18,7 +18,7 @@ GO
 
   SuperAdmin login:
   - Username: superadmin
-  - Password: Admin123!
+    - Password: EduSphere147
 */
 
 IF DB_ID(N'Tabsan-EduSphere') IS NULL
@@ -50,7 +50,7 @@ BEGIN
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
-DECLARE @SuperAdminPasswordHash NVARCHAR(512) = N'argon2id:hPpFAANf3LhPR280BVryKjJrO+Nl1DGpU9HKtLz9Ay4=:/IjqweULI9FmHZDbLlCxf/firTiPAvEcHUpeDbJ3tEY=';
+DECLARE @SuperAdminPasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 /* 1) Roles (all baseline roles used by the platform) */
 MERGE INTO [roles] AS tgt

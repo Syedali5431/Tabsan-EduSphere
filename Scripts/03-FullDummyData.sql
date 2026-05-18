@@ -36,8 +36,8 @@ SET XACT_ABORT ON;
   4. 04-Maintenance-Indexes-And-Views.sql - Creates indexes and views
   5. 05-PostDeployment-Checks.sql         - Validates data integrity
 
-  NOTE:
-  - Replace @PwdHash with a valid hash produced by your app hasher.
+    NOTE:
+    - Seeded user password is EduSphere147 (stored as Argon2id hash in @PwdHash).
   - This script is idempotent (NOT EXISTS checks + stable GUID keys).
   - Requires database [Tabsan-EduSphere] to exist and schema to be created.
   - Requires core seed data (roles, institutions, etc.) to be inserted first.
@@ -62,7 +62,7 @@ BEGIN
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
-DECLARE @PwdHash NVARCHAR(512) = N'REPLACE_WITH_VALID_HASH';
+DECLARE @PwdHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 DECLARE @RoleSuperAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
 DECLARE @RoleAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin');
@@ -271,6 +271,7 @@ WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.Id);
 UPDATE u
 SET u.[Username] = src.[Username],
     u.[Email] = src.[Email],
+    u.[PasswordHash] = @PwdHash,
     u.[RoleId] = src.[RoleId],
     u.[DepartmentId] = src.[DepartmentId],
     u.[InstitutionType] = src.[InstitutionType],
@@ -363,6 +364,131 @@ INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId
 SELECT sp.Id, sp.UserId, sp.RegistrationNumber, sp.ProgramId, sp.DepartmentId, '2026-01-15', 3.20, sp.CurrentSemesterNumber, @Now, NULL, 0, NULL
 FROM @StudentProfiles sp
 WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] x WHERE x.[Id] = sp.Id);
+
+/* 5.1) High-volume multi-institute dummy expansion */
+DECLARE @BulkTarget TABLE
+(
+    InstitutionCode NVARCHAR(10),
+    InstitutionType INT,
+    DepartmentId UNIQUEIDENTIFIER,
+    ProgramId UNIQUEIDENTIFIER,
+    StudentCount INT,
+    FacultyCount INT,
+    AdminCount INT
+);
+
+INSERT INTO @BulkTarget (InstitutionCode, InstitutionType, DepartmentId, ProgramId, StudentCount, FacultyCount, AdminCount)
+VALUES
+    (N'UNI', 2, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER), 180, 24, 8),
+    (N'COL', 1, CAST('12222222-2222-2222-2222-222222222221' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222321' AS UNIQUEIDENTIFIER), 140, 18, 6),
+    (N'SCH', 0, CAST('13333333-3333-3333-3333-333333333332' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222432' AS UNIQUEIDENTIFIER), 120, 14, 6);
+
+;WITH N AS
+(
+    SELECT TOP (220) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects a
+    CROSS JOIN sys.all_objects b
+)
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT NEWID(),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4), N'@demo.local'),
+       @PwdHash,
+       @RoleStudent,
+       t.DepartmentId,
+       t.InstitutionType,
+       1,
+       NULL,
+       @Now,
+       NULL,
+       0,
+       NULL
+FROM @BulkTarget t
+INNER JOIN N ON N.n <= t.StudentCount
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] x
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4))
+);
+
+;WITH N AS
+(
+    SELECT TOP (60) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects a
+)
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT NEWID(),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3), N'@demo.local'),
+       @PwdHash,
+       @RoleFaculty,
+       t.DepartmentId,
+       t.InstitutionType,
+       1,
+       NULL,
+       @Now,
+       NULL,
+       0,
+       NULL
+FROM @BulkTarget t
+INNER JOIN N ON N.n <= t.FacultyCount
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] x
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3))
+);
+
+;WITH N AS
+(
+    SELECT TOP (20) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT NEWID(),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2), N'@demo.local'),
+       @PwdHash,
+       @RoleAdmin,
+       t.DepartmentId,
+       t.InstitutionType,
+       1,
+       NULL,
+       @Now,
+       NULL,
+       0,
+       NULL
+FROM @BulkTarget t
+INNER JOIN N ON N.n <= t.AdminCount
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] x
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2))
+);
+
+INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT NEWID(),
+       u.[Id],
+       CONCAT(N'BULK-', t.InstitutionCode, N'-', RIGHT(N'0000' + CAST(ROW_NUMBER() OVER (PARTITION BY t.InstitutionCode ORDER BY u.[Username]) AS NVARCHAR(10)), 4)),
+       t.ProgramId,
+       t.DepartmentId,
+       DATEADD(day, -ABS(CHECKSUM(u.[Id])) % 540, @Now),
+       CAST(2.50 + (ABS(CHECKSUM(u.[Id])) % 150) / 100.0 AS DECIMAL(4,2)),
+       CASE
+            WHEN t.InstitutionType = 2 THEN ((ABS(CHECKSUM(u.[Id])) % 8) + 1)
+            WHEN t.InstitutionType = 1 THEN ((ABS(CHECKSUM(u.[Id])) % 6) + 1)
+            ELSE ((ABS(CHECKSUM(u.[Id])) % 2) + 1)
+       END,
+       @Now,
+       NULL,
+       0,
+       NULL
+FROM [users] u
+INNER JOIN @BulkTarget t ON t.DepartmentId = u.[DepartmentId]
+WHERE u.[Username] LIKE N'bulk.%.student.%'
+  AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[UserId] = u.[Id]);
 
 /* 6) Courses - Massive expansion (50+ courses) */
 DECLARE @Courses TABLE (Id UNIQUEIDENTIFIER, DepartmentId UNIQUEIDENTIFIER, Title NVARCHAR(200), Code NVARCHAR(20), CreditHours INT);
@@ -1581,19 +1707,13 @@ END
 IF OBJECT_ID(N'[password_history]') IS NOT NULL
 BEGIN
     INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])
-    SELECT NEWID(), u.[Id], CONCAT(N'seed-hash-v1-', CONVERT(NVARCHAR(36), u.[Id])), DATEADD(day, -90, @Now)
+    SELECT NEWID(), u.[Id], @PwdHash, DATEADD(day, -90, @Now)
     FROM [users] u
     WHERE NOT EXISTS (
-        SELECT 1 FROM [password_history] x
-        WHERE x.[UserId] = u.[Id] AND x.[PasswordHash] = CONCAT(N'seed-hash-v1-', CONVERT(NVARCHAR(36), u.[Id]))
-    );
-
-    INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])
-    SELECT NEWID(), u.[Id], CONCAT(N'seed-hash-v2-', CONVERT(NVARCHAR(36), u.[Id])), DATEADD(day, -30, @Now)
-    FROM [users] u
-    WHERE NOT EXISTS (
-        SELECT 1 FROM [password_history] x
-        WHERE x.[UserId] = u.[Id] AND x.[PasswordHash] = CONCAT(N'seed-hash-v2-', CONVERT(NVARCHAR(36), u.[Id]))
+        SELECT 1
+        FROM [password_history] x
+        WHERE x.[UserId] = u.[Id]
+          AND x.[PasswordHash] = @PwdHash
     );
 END
 
