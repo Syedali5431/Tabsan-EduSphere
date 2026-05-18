@@ -3,6 +3,14 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - DeepScan Phase 40 Closure and Production Readiness Revalidation (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `DeepScan re-execution evidence bundle` | Re-runs the post-remediation validation command bundle for previously open DeepScan gap areas and records pass outcomes for closure evidence. | `Docs/DeepScan.md`, `Docs/Consolidated-Execution-Enhancements-Issues.md` |
+| `DeepScan task-by-task closure update` | Updates task statuses for checklist `4.1` through `4.20` after remediation validation rerun. | `Docs/DeepScan.md` |
+| `DeepScan final readiness classification update` | Reclassifies issue severity and publishes final production-readiness go/no-go statement after closure validation. | `Docs/DeepScan.md`, `Project startup Docs/PRD.md`, `Docs/Consolidated-Execution-Enhancements-Issues.md` |
+
 ## 2026-05-18 - DeepScan Stage 39.4 EF Relationship and Query-Filter Warning Cleanup (Execution Snapshot)
 
 | Function Name | Purpose | Location |
