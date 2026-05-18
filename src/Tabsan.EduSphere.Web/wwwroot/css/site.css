@@ -93,21 +93,40 @@ html {
 
 [data-theme] a {
   color: var(--link-color);
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
 }
 
 [data-theme] .btn-primary {
+.page-section-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.page-section-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(36, 111, 190, 0.14);
+  box-shadow: var(--shadow-md);
+}
   background: var(--btn-primary-bg);
   border-color: transparent;
   color: var(--btn-primary-text);
 }
 
 [data-theme] .form-control,
+.section-heading p,
+.section-head p {
+  max-width: 68ch;
+}
 [data-theme] .form-select,
 [data-theme] textarea {
   background: var(--input-bg);
   color: var(--input-text);
 }
 
+.filter-toolbar .form-select,
+.filter-toolbar .form-control {
+  min-width: 0;
+}
 [data-theme] .table-striped > tbody > tr:nth-of-type(odd) > * {
   background-color: var(--table-stripe);
 }
@@ -116,17 +135,38 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-family-sans);
+.dashboard-hero .card-body {
+  position: relative;
+}
+.dashboard-hero .card-body::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -18% auto;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 66%);
+  pointer-events: none;
+}
   color: var(--body-text);
   background: var(--body-bg);
   background-attachment: fixed;
 }
 
 body::before {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   content: "";
+.dashboard-stat-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: 0 16px 30px rgba(12, 23, 38, 0.14);
   position: fixed;
   inset: 0;
   background:
     radial-gradient(circle at top left, rgba(61, 135, 208, 0.16), transparent 28%),
+.responsive-pagination span {
+  font-weight: 600;
+}
     radial-gradient(circle at bottom right, rgba(22, 167, 184, 0.12), transparent 32%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0));
   pointer-events: none;
