@@ -3,6 +3,23 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Phase 8 (Responsive Hardening)
+
+- Recent request issue:
+	- proceed with responsive-design phase and complete mandatory docs and repository sync.
+- Implementation Summary:
+	- added shared responsive shell/page utilities for stacked actions, filter controls, modal width, profile-menu behavior, and overflow handling,
+	- applied targeted responsive hooks to results and payments views.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- workspace diagnostics reported no errors in touched responsive frontend files.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `Shared mobile action and filter hardening` | Ensures action clusters, filter toolbars, card spacing, table containers, and modal widths adapt more cleanly on tablet/mobile screens. | `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `Responsive result action stacking` | Makes result management action controls wrap and stack cleanly on smaller screens while preserving existing publish/create flows. | `src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `Responsive payments pagination layout` | Improves small-screen pagination readability and tap targets for the payment receipts page. | `src/Tabsan.EduSphere.Web/Views/Portal/Payments.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+
 ## 2026-05-18 - UI/UX Redesign Phase 7 (AI Chatbot UI)
 
 - Recent request issue:

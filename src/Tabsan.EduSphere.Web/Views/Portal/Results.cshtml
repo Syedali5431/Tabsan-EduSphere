@@ -82,7 +82,7 @@ else
                 <h2 class="h5 mb-0">Results <span class="badge bg-secondary ms-1">@Model.Results.Count</span></h2>
                 @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
-                    <div class="d-flex gap-2">
+                    <div class="responsive-action-group">
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal">
                             + Enter Result
                         </button>

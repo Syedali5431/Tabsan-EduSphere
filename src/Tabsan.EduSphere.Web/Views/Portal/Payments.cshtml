@@ -211,7 +211,7 @@ else
 
             @if (Model.TotalPages > 1)
             {
-                <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex justify-content-between align-items-center mt-3 responsive-pagination">
                     <a class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : null)"
                        href="@Url.Action("Payments", "Portal", new { studentId = Model.SelectedStudentId, page = Model.Page - 1 })">
                         Previous
