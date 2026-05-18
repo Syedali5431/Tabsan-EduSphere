@@ -906,6 +906,56 @@ textarea:focus,
   color: var(--color-slate-700);
 }
 
+.page-section-card {
+  border-radius: 1.4rem;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-toolbar {
+  padding: 0.75rem 0.95rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.stat-pill {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border-radius: 999px;
+  padding: 0.42rem 0.6rem;
+}
+
+.empty-state-card {
+  border: 1px dashed rgba(18, 32, 51, 0.2);
+  border-radius: 1.1rem;
+  padding: 1.2rem;
+  background: rgba(248, 251, 255, 0.95);
+}
+
+.empty-state-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-slate-900);
+}
+
+.option-grid-card {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(18, 32, 51, 0.12) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.option-grid-card:hover {
+  border-color: rgba(36, 111, 190, 0.35) !important;
+  box-shadow: 0 10px 24px rgba(18, 32, 51, 0.08);
+}
+
 .toast-stack {
   position: fixed;
   top: 5.5rem;
@@ -1433,6 +1483,11 @@ textarea:focus,
 
   .section-heading {
     flex-direction: column;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .dashboard-hero-title {

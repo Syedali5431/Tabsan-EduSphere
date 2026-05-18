@@ -16,9 +16,16 @@
 }
 else
 {
-    <div class="card border-0 shadow-sm mb-3">
+    <section class="page-section-card card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form method="get" asp-action="Courses" class="row g-2 align-items-end">
+            <div class="section-head mb-3">
+                <div>
+                    <span class="section-kicker">Course operations</span>
+                    <h2 class="h5 mb-1">Courses and active offerings</h2>
+                    <p class="text-muted mb-0">Manage curriculum inventory and semester offerings with department-scoped filtering.</p>
+                </div>
+            </div>
+            <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
                 <div class="col-md-4">
                     <label class="form-label">Filter by Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -31,28 +38,32 @@ else
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 
     <div class="row g-3">
         <div class="col-12 col-xl-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="page-section-card card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Courses <span class="badge bg-secondary ms-1">@Model.Courses.Count</span>
+                    <div class="section-head mb-3">
+                        <h2 class="h5 mb-0">Courses <span class="badge bg-secondary ms-1">@Model.Courses.Count</span></h2>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
-                            <button type="button" class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#createCourseModal">
-                                <i class="fas fa-plus"></i> Add Course
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+                                Add Course
                             </button>
                         }
-                    </h2>
+                    </div>
                     @if (Model.Courses.Count == 0)
                     {
-                        <p class="text-muted">No courses found.</p>
+                        <div class="empty-state-card">
+                            <h3>No courses found</h3>
+                            <p class="text-muted mb-0">Create your first course to begin publishing semester offerings.</p>
+                        </div>
                     }
                     else
                     {
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
+                            <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Code</th><th>Title</th><th>Dept</th><th>Cr.</th><th>Type</th>
@@ -70,11 +81,11 @@ else
                                             <td class="text-center">
                                                 @if (c.HasSemesters)
                                                 {
-                                                    <span class="badge bg-info text-dark">Semester (@c.TotalSemesters)</span>
+                                                    <span class="badge stat-pill bg-info text-dark">Semester (@c.TotalSemesters)</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary">@(c.DurationValue) @(c.DurationUnit)</span>
+                                                    <span class="badge stat-pill bg-secondary">@(c.DurationValue) @(c.DurationUnit)</span>
                                                 }
                                             </td>
                                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
@@ -99,24 +110,28 @@ else
             </div>
         </div>
         <div class="col-12 col-xl-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="page-section-card card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Active Offerings <span class="badge bg-secondary ms-1">@Model.Offerings.Count</span>
+                    <div class="section-head mb-3">
+                        <h2 class="h5 mb-0">Active Offerings <span class="badge bg-secondary ms-1">@Model.Offerings.Count</span></h2>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
-                            <button type="button" class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#createOfferingModal">
-                                <i class="fas fa-plus"></i> Add Offering
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createOfferingModal">
+                                Add Offering
                             </button>
                         }
-                    </h2>
+                    </div>
                     @if (Model.Offerings.Count == 0)
                     {
-                        <p class="text-muted">No offerings found.</p>
+                        <div class="empty-state-card">
+                            <h3>No offerings found</h3>
+                            <p class="text-muted mb-0">Offerings appear here once a course is assigned to faculty and semester.</p>
+                        </div>
                     }
                     else
                     {
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
+                            <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Course</th><th>Faculty</th><th>Semester</th><th>Active</th>
@@ -131,7 +146,7 @@ else
                                             <td>@o.FacultyName</td>
                                             <td>@o.SemesterName</td>
                                             <td class="text-center">
-                                                <span class="badge @(o.IsActive ? "bg-success" : "bg-secondary")">
+                                                <span class="badge stat-pill @(o.IsActive ? "bg-success" : "bg-secondary")">
                                                     @(o.IsActive ? "Yes" : "No")
                                                 </span>
                                             </td>

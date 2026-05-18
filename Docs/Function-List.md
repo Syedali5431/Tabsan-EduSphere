@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Continuation (Students/Courses/Admin Users Polish)
+
+- Recent request issue:
+	- requested continuation required applying the new SaaS visual language to more portal management pages for consistent UX.
+- Implementation Summary:
+	- upgraded page composition and visual hierarchy for Students, Courses, and Admin Users,
+	- added shared helper styles to support consistent empty states, section headers, stat badges, and option cards.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- change scope remained frontend-only.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `Students page visual harmonization` | Aligns Students page filters, list section, empty state, and action affordances to the premium design system. | `src/Tabsan.EduSphere.Web/Views/Portal/Students.cshtml` |
+| `Courses page dual-panel polish` | Aligns Courses and Offerings panels with consistent section headers, badges, and empty-state treatment. | `src/Tabsan.EduSphere.Web/Views/Portal/Courses.cshtml` |
+| `Admin users management page polish` | Improves Admin Users create/update layout consistency and department assignment card readability. | `src/Tabsan.EduSphere.Web/Views/Portal/AdminUsers.cshtml` |
+| `Portal section helper style tokens` | Provides reusable section, toolbar, stat pill, and option-card classes used by continued page redesign work. | `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+
 ## 2026-05-18 - UI/UX Redesign Request (Execution Snapshot)
 
 - Recent request issue:
