@@ -403,3 +403,20 @@ Testing and result summary:
   - ReportCatalogIntegrationTests.cs
   - ParentPortalIntegrationTests.cs
 - Result: role-based UAT baseline is green for automated integration coverage.
+
+## 2026-05-19 - LIVE BROWSER UAT ATTEMPT (ENVIRONMENT BLOCKER)
+
+Implementation Summary:
+- Attempted to start API for live browser-driven manual UAT walkthrough.
+- API process remained in startup state after logging production/external database mode and did not reach HTTP listening output in this local run.
+
+Validation Summary:
+- Browser-level UAT could not be executed end-to-end in this session due to environment startup dependency state.
+- Automated integration UAT suites were executed as fallback evidence and remain green.
+
+Testing and result summary:
+- API local run attempt blocked at startup (no bound endpoint observed before termination).
+- Alternative evidence remains green:
+  - full regression: 388/388 passed
+  - role-UAT suite: 119/119 passed
+  - extended stability wave: 28/28 passed
