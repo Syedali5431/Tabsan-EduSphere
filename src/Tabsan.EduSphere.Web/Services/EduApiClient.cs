@@ -236,7 +236,7 @@ public interface IEduApiClient
     // AI Chat
     Task<List<AiChatConversationItem>> GetChatConversationsAsync(CancellationToken ct);
     Task<List<AiChatMessageItem>> GetChatMessagesAsync(Guid conversationId, CancellationToken ct);
-    Task<AiChatMessageItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct);
+    Task<AiChatSendResultItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct);
 
     // Student Lifecycle
     Task<List<GraduationCandidateItem>> GetGraduationCandidatesAsync(Guid departmentId, CancellationToken ct);
@@ -2472,44 +2472,68 @@ public class EduApiClient : IEduApiClient
         return raw.Select(c => new AiChatConversationItem
         {
             Id            = c.Id,
-            Title         = c.Title ?? "Conversation",
-            CreatedAt     = c.CreatedAt,
+            Title         = BuildConversationTitle(c.UserRole, c.StartedAt),
+            CreatedAt     = c.StartedAt,
             LastMessageAt = c.LastMessageAt
         }).ToList();
     }
 
     public async Task<List<AiChatMessageItem>> GetChatMessagesAsync(Guid conversationId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<MessageApiDto>>($"api/ai/conversations/{conversationId}", ct) ?? new();
-        return raw.Select(m => new AiChatMessageItem
+        var raw = await GetAsync<ConversationDetailApiDto>($"api/ai/conversations/{conversationId}", ct);
+        return (raw?.Messages ?? new List<MessageApiDto>()).Select(m => new AiChatMessageItem
         {
             Id        = m.Id,
             Role      = m.Role ?? "user",
             Content   = m.Content ?? "",
-            CreatedAt = m.CreatedAt
+            CreatedAt = m.SentAt
         }).ToList();
     }
 
-    public async Task<AiChatMessageItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct)
+    public async Task<AiChatSendResultItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct)
     {
         var payload = new { conversationId, message };
-        var raw = await PostAsync<object, MessageApiDto>("api/ai/message", payload, ct);
+        var raw = await PostAsync<object, SendMessageApiDto>("api/ai/message", payload, ct);
         if (raw is null) return null;
-        return new AiChatMessageItem
+        return new AiChatSendResultItem
         {
-            Id        = raw.Id,
-            Role      = raw.Role ?? "assistant",
-            Content   = raw.Content ?? "",
-            CreatedAt = raw.CreatedAt
+            ConversationId = raw.ConversationId,
+            AssistantMessage = new AiChatMessageItem
+            {
+                Id        = raw.AssistantMessage?.Id ?? Guid.Empty,
+                Role      = raw.AssistantMessage?.Role ?? "assistant",
+                Content   = raw.AssistantMessage?.Content ?? string.Empty,
+                CreatedAt = raw.AssistantMessage?.SentAt ?? DateTime.UtcNow
+            }
         };
+    }
+
+    private static string BuildConversationTitle(string? userRole, DateTime startedAt)
+    {
+        var roleLabel = string.IsNullOrWhiteSpace(userRole) ? "AI Chat" : $"{userRole} assistant";
+        return $"{roleLabel} · {startedAt:dd MMM}";
+    }
+
+    private sealed class SendMessageApiDto
+    {
+        public Guid ConversationId { get; set; }
+        public MessageApiDto? AssistantMessage { get; set; }
     }
 
     private sealed class ConversationApiDto
     {
         public Guid      Id            { get; set; }
-        public string?   Title         { get; set; }
-        public DateTime  CreatedAt     { get; set; }
+        public string?   UserRole      { get; set; }
+        public DateTime  StartedAt     { get; set; }
         public DateTime? LastMessageAt { get; set; }
+    }
+
+    private sealed class ConversationDetailApiDto
+    {
+        public Guid Id { get; set; }
+        public string? UserRole { get; set; }
+        public DateTime StartedAt { get; set; }
+        public List<MessageApiDto> Messages { get; set; } = new();
     }
 
     private sealed class MessageApiDto
@@ -2517,7 +2541,7 @@ public class EduApiClient : IEduApiClient
         public Guid     Id        { get; set; }
         public string?  Role      { get; set; }
         public string?  Content   { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime SentAt    { get; set; }
     }
 
     // ── Student Lifecycle ─────────────────────────────────────────────────────

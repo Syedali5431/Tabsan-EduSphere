@@ -2512,10 +2512,88 @@ public class PortalController : Controller
         try
         {
             var reply = await _api.SendChatMessageAsync(conversationId, message, ct);
-            // The API returns the assistant reply; reload the conversation
+            conversationId = reply?.ConversationId ?? conversationId;
         }
         catch { /* errors handled gracefully — just reload */ }
         return RedirectToAction(nameof(AiChat), new { conversationId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AiChatWidgetState(Guid? conversationId, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+        {
+            return Json(new
+            {
+                isConnected = false,
+                activeConversationId = (Guid?)null,
+                messages = Array.Empty<AiChatMessageItem>(),
+                message = "Not connected."
+            });
+        }
+
+        try
+        {
+            var conversations = await _api.GetChatConversationsAsync(ct);
+            var messages = conversationId.HasValue
+                ? await _api.GetChatMessagesAsync(conversationId.Value, ct)
+                : new List<AiChatMessageItem>();
+
+            return Json(new
+            {
+                isConnected = true,
+                activeConversationId = conversationId,
+                messages,
+                conversations = conversations
+                    .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Title,
+                        c.CreatedAt,
+                        c.LastMessageAt
+                    })
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                isConnected = true,
+                activeConversationId = (Guid?)null,
+                messages = Array.Empty<AiChatMessageItem>(),
+                conversations = Array.Empty<object>(),
+                message = ex.Message
+            });
+        }
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AiChatWidgetSend(Guid? conversationId, string message, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return Json(new { success = false, error = "Not connected." });
+
+        if (string.IsNullOrWhiteSpace(message))
+            return Json(new { success = false, error = "Message is required." });
+
+        try
+        {
+            var reply = await _api.SendChatMessageAsync(conversationId, message.Trim(), ct);
+            if (reply is null)
+                return Json(new { success = false, error = "AI assistant is currently unavailable." });
+
+            return Json(new
+            {
+                success = true,
+                conversationId = reply.ConversationId,
+                assistantMessage = reply.AssistantMessage
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
+        }
     }
 
     // ── Student Lifecycle ──────────────────────────────────────────────────

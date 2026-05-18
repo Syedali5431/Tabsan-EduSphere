@@ -603,14 +603,80 @@
 
         @if (showAiChatLauncher)
         {
-            <a class="ai-chat-launcher"
-               asp-controller="Portal"
-               asp-action="AiChat"
-               aria-label="Open AI chat"
-               title="Open AI chat">
-                <span class="ai-chat-launcher-dot" aria-hidden="true">AI</span>
-                <span class="ai-chat-launcher-text">Chat</span>
-            </a>
+            <div class="ai-chat-widget"
+                 data-ai-chat-widget
+                 data-load-url="@Url.Action("AiChatWidgetState", "Portal")"
+                 data-send-url="@Url.Action("AiChatWidgetSend", "Portal")">
+                <button type="button" class="ai-chat-backdrop" data-ai-chat-backdrop aria-label="Close AI assistant"></button>
+
+                <section class="ai-chat-panel" id="ai-chat-panel" aria-label="AI assistant" aria-live="polite">
+                    <header class="ai-chat-panel-header">
+                        <div>
+                            <p class="ai-chat-panel-eyebrow">Tabsan assistant</p>
+                            <h2 class="ai-chat-panel-title">AI Chatbot</h2>
+                            <p class="ai-chat-panel-subtitle">Ask about courses, schedules, results, or portal workflows.</p>
+                        </div>
+                        <div class="ai-chat-panel-actions">
+                            <button type="button" class="ai-chat-panel-action" data-ai-chat-reset>New</button>
+                            <button type="button" class="ai-chat-panel-close" data-ai-chat-close aria-label="Close AI assistant">x</button>
+                        </div>
+                    </header>
+
+                    <div class="ai-chat-panel-status" data-ai-chat-status hidden></div>
+
+                    <div class="ai-chat-panel-body">
+                        <aside class="ai-chat-conversations">
+                            <div class="ai-chat-conversations-header">
+                                <span class="ai-chat-conversations-label">Recent</span>
+                                <span class="ai-chat-conversations-count" data-ai-chat-conversation-count>0</span>
+                            </div>
+                            <div class="ai-chat-conversation-list" data-ai-chat-conversations></div>
+                        </aside>
+
+                        <div class="ai-chat-thread">
+                            <div class="ai-chat-thread-header">
+                                <span class="ai-chat-thread-badge">Live assistant</span>
+                                <span class="ai-chat-thread-context" data-ai-chat-thread-context>Ready for a new conversation</span>
+                            </div>
+                            <div class="ai-chat-messages" data-ai-chat-messages></div>
+                        </div>
+                    </div>
+
+                    <form class="ai-chat-composer" data-ai-chat-form>
+                        @Html.AntiForgeryToken()
+                        <label class="visually-hidden" for="aiChatMessageInput">Message</label>
+                        <input id="aiChatMessageInput"
+                               name="message"
+                               class="ai-chat-composer-input"
+                               data-ai-chat-input
+                               type="text"
+                               maxlength="4000"
+                               autocomplete="off"
+                               placeholder="Message the assistant" />
+                        <button type="submit" class="ai-chat-composer-send" data-ai-chat-submit aria-label="Send message">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M4 11.5L19 4L13 20L10.75 13.75L4 11.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </form>
+                </section>
+
+                <a class="ai-chat-fab"
+                   asp-controller="Portal"
+                   asp-action="AiChat"
+                   data-ai-chat-toggle
+                   aria-expanded="false"
+                   aria-controls="ai-chat-panel"
+                   aria-label="Open AI assistant"
+                   title="Open AI assistant">
+                    <svg class="ai-chat-fab-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                        <rect x="12" y="12" width="40" height="40" rx="14" fill="#0f172a" />
+                        <path d="M24 34C24 27.925 28.925 23 35 23H40V29H35C32.239 29 30 31.239 30 34V40H24V34Z" fill="#58d5ff" />
+                        <path d="M40 24C40 20.686 42.686 18 46 18H48V24H46V30H40V24Z" fill="#8b5cf6" />
+                        <circle cx="24" cy="24" r="5" fill="#f97316" />
+                    </svg>
+                </a>
+            </div>
         }
     </div>
 

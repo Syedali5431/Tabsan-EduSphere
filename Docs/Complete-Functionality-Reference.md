@@ -31,7 +31,7 @@ After each completed stage, this document must be updated to reflect any net fun
 ## 2026-05-18 Update - StudentLifecycle Notification TODO Completion (Execution Snapshot)
 
 - Recent request issue:
-    - StudentLifecycle service still contained pending TODO notification markers for lifecycle transitions and request-review outcomes.
+    - StudentLifecycle notification TODOs were completed in the prior remediation step for lifecycle transitions and request-review outcomes.
 - Implementation Summary:
     - implemented notification dispatch for graduation, promotion, deactivation, and reactivation actions,
     - implemented notification dispatch for change/modification request creation and approval/rejection outcomes.

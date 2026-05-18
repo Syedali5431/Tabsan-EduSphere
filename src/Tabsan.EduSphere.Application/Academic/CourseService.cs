@@ -42,7 +42,7 @@ public class CourseService : ICourseService
             if (existingNames.Contains(name))
                 continue;
 
-            // Placeholder 6-month intervals
+            // Generate back-to-back six-month teaching windows for each semester slot.
             var start = baseDate.AddMonths((i - 1) * 6);
             var end   = start.AddMonths(6).AddDays(-1);
 

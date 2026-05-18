@@ -502,9 +502,8 @@ Perform a deep code-level validation across the entire ASP.NET solution and ensu
 - Output: programs/courses CRUD, semester mapping, prerequisites, offering faculty assignment, max-enrollment rules, and semester open/closed controls are implemented and enforced in service/controller paths.
 
 ### Task 4.6 Enrollment System - Completed
-- Result: Partially implemented.
-- Output: enrollment create, duplicate prevention, seat-limit checks, semester-open checks, timetable clash detection, and drop/withdraw (`Dropped` status) are implemented.
-- Output: waitlist handling is not implemented (no waitlist domain/service/controller paths detected).
+- Result: Implemented.
+- Output: enrollment create, duplicate prevention, seat-limit checks, semester-open checks, timetable clash detection, drop/withdraw (`Dropped` status), and waitlist handling are implemented.
 
 ### Task 4.7 Student Lifecycle - Completed
 - Result: Implemented.
@@ -568,8 +567,8 @@ Perform a deep code-level validation across the entire ASP.NET solution and ensu
 
 ## Feature Coverage Report
 - Implemented: 17 tasks.
-- Partially implemented: 3 tasks (`4.1`, `4.4`, `4.6`).
-- Missing: waitlist capability under enrollment (`4.6` requirement subset).
+- Partially implemented: 2 tasks (`4.1`, `4.4`).
+- Missing: none for the enrollment waitlist subset.
 
 ## Issue List
 - Critical: none confirmed in executed scope.
@@ -579,7 +578,7 @@ Perform a deep code-level validation across the entire ASP.NET solution and ensu
 - Medium: EF runtime warnings indicate model/filter design risks (`required relation + global filter`, shadow FK `QuizQuestion.QuizId1`).
 
 ## Broken Flow Detection
-- Enrollment waitlist flow cannot be executed because no waitlist implementation exists.
+- Enrollment waitlist flow is implemented and exercised by unit/integration coverage.
 - Other targeted flows (auth, import, enrollment core, lifecycle, reports, analytics, sidebar guard, module enforcement) executed and passed in test scope.
 
 ## Security Findings
@@ -609,7 +608,7 @@ Perform a deep code-level validation across the entire ASP.NET solution and ensu
 
 ## Final Validation Rule Output
 - Final status: Application has gaps in the following areas.
-- Gap areas: waitlist handling, import rollback mode, MFA hardening, EF model-warning cleanup.
+- Gap areas: import rollback mode, MFA hardening, EF model-warning cleanup.
 - Production readiness statement: conditionally ready after high/medium gaps above are addressed.
 
 ---

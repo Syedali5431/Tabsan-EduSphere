@@ -45,7 +45,6 @@ export const options = {
         { duration: '20m', target: SHARD_TARGET_RPS },
         { duration: '4m', target: 0 },
       ],
-      gracefulRampDown: '30s',
     },
   },
   thresholds: {

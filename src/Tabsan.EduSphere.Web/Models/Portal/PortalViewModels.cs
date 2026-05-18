@@ -844,6 +844,12 @@ public class AiChatMessageItem
     public DateTime CreatedAt { get; set; }
 }
 
+public class AiChatSendResultItem
+{
+    public Guid ConversationId { get; set; }
+    public AiChatMessageItem AssistantMessage { get; set; } = new();
+}
+
 public class AiChatConversationItem
 {
     public Guid      Id            { get; set; }
