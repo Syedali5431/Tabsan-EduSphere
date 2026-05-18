@@ -3,6 +3,23 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-18 - UI/UX Redesign Phase 7 (AI Chatbot UI)
+
+- Recent request issue:
+	- proceed with AI chatbot UI phase and complete mandatory docs and repository sync.
+- Implementation Summary:
+	- enhanced chatbot launcher, header identity, panel aesthetics, message motion, and quick-prompt UX,
+	- preserved existing backend route/contract usage for chat state and send actions.
+- Validation Summary:
+	- `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+	- workspace diagnostics reported no errors in touched frontend files.
+
+| Function Name | Purpose | Location |
+|---|---|---|
+| `AI chatbot panel identity refresh` | Adds stronger assistant identity framing and cleaner visual hierarchy in the chatbot header while preserving current assistant behavior. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `AI quick-prompt suggestion chips` | Adds frontend-only prompt shortcuts that trigger existing send flow without introducing backend/API changes. | `src/Tabsan.EduSphere.Web/Views/Shared/_Layout.cshtml`, `src/Tabsan.EduSphere.Web/wwwroot/js/site.js`, `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+| `AI launcher and thread motion polish` | Improves launcher presence, panel background depth, and message-entry animation for a more premium chat UX. | `src/Tabsan.EduSphere.Web/wwwroot/css/site.css` |
+
 ## 2026-05-18 - UI/UX Redesign Phase 6 (Branding Pass)
 
 - Recent request issue:

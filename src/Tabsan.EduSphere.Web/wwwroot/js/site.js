@@ -136,6 +136,7 @@
 		var conversations = widget.querySelector('[data-ai-chat-conversations]');
 		var conversationCount = widget.querySelector('[data-ai-chat-conversation-count]');
 		var threadContext = widget.querySelector('[data-ai-chat-thread-context]');
+		var suggestionButtons = widget.querySelectorAll('[data-ai-chat-suggestion]');
 		var token = form.querySelector('input[name="__RequestVerificationToken"]');
 		var state = {
 			activeConversationId: sessionStorage.getItem(storageKey) || '',
@@ -224,6 +225,7 @@
 		function setOpen(open) {
 			state.isOpen = open;
 			widget.classList.toggle('is-open', open);
+			document.body.classList.toggle('ai-chat-open', open);
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 
 			if (open) {
@@ -447,6 +449,26 @@
 
 			input.value = '';
 			sendMessage(messageText);
+		});
+
+		suggestionButtons.forEach(function (button) {
+			button.addEventListener('click', function () {
+				if (state.isSending) {
+					return;
+				}
+
+				var prompt = (button.getAttribute('data-ai-chat-suggestion') || '').trim();
+				if (!prompt) {
+					return;
+				}
+
+				if (!state.isOpen) {
+					setOpen(true);
+				}
+
+				input.value = '';
+				sendMessage(prompt);
+			});
 		});
 
 		document.addEventListener('keydown', function (event) {
