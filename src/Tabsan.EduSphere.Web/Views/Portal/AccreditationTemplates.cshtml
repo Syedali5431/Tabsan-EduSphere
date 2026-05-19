@@ -84,10 +84,12 @@ else
                                             <td class="text-end">
                                                 <div class="btn-group btn-group-sm">
                                                     <a asp-action="DownloadAccreditationReport" asp-route-id="@t.Id"
-                                                       class="btn btn-outline-success" title="Download Report">
-                                                        <i class="bi bi-download"></i>
+                                                       class="btn btn-success btn-sm d-flex align-items-center mb-1"
+                                                       title="Download Accreditation Report"
+                                                       style="min-width: 120px; justify-content: center;">
+                                                        <i class="bi bi-download me-1"></i> Download
                                                     </a>
-                                                    <button class="btn btn-outline-primary edit-btn"
+                                                    <button class="btn btn-primary btn-sm edit-btn d-flex align-items-center mb-1"
                                                             data-id="@t.Id"
                                                             data-name="@t.Name"
                                                             data-description="@t.Description"
@@ -95,14 +97,18 @@ else
                                                             data-mappings="@t.FieldMappingsJson"
                                                             data-active="@t.IsActive.ToString().ToLower()"
                                                             data-bs-toggle="modal" data-bs-target="#editModal"
-                                                            title="Edit">
-                                                        <i class="bi bi-pencil"></i>
+                                                            title="Edit Accreditation Template"
+                                                            style="min-width: 100px; justify-content: center;">
+                                                        <i class="bi bi-pencil me-1"></i> Edit
                                                     </button>
                                                     <form asp-action="DeleteAccreditationTemplate" method="post"
+                                                          class="d-inline-block mb-1"
                                                           onsubmit="return confirm('Delete this template?')">
                                                         <input type="hidden" name="id" value="@t.Id" />
-                                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                                            <i class="bi bi-trash"></i>
+                                                        <button type="submit" class="btn btn-danger btn-sm d-flex align-items-center"
+                                                                title="Delete Accreditation Template"
+                                                                style="min-width: 100px; justify-content: center;">
+                                                            <i class="bi bi-trash me-1"></i> Delete
                                                         </button>
                                                     </form>
                                                 </div>
@@ -129,7 +135,7 @@ else
                     <ul class="small text-muted mb-0">
                         <li><strong>Format:</strong> CSV for spreadsheet submission; TXT for plain-text regulatory forms.</li>
                         <li><strong>Field Mappings:</strong> JSON array of section keys to include, e.g. <code>["enrollment","results","faculty"]</code>.</li>
-                        <li><strong>Download:</strong> Click the <i class="bi bi-download"></i> icon to generate and download the report instantly.</li>
+                        <li><strong>Download:</strong> Click the <span class="badge bg-success"><i class="bi bi-download"></i> Download</span> button to generate and download the report instantly. If the download fails, you will see an error message.</li>
                     </ul>
                 </div>
             </div>
