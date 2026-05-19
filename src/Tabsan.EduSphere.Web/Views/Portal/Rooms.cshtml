@@ -16,139 +16,141 @@
 }
 else
 {
-    <!-- Building selector -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex align-items-center gap-3 flex-wrap">
-            <strong class="text-muted">Building:</strong>
-            @foreach (var b in Model.Buildings)
-            {
-                <a asp-action="Rooms" asp-route-buildingId="@b.Id"
-                   class="btn btn-sm @(Model.SelectedBuildingId == b.Id ? "btn-primary" : "btn-outline-secondary")">
-                    @b.Name
-                </a>
-            }
-            <a asp-action="Buildings" class="btn btn-sm btn-outline-secondary ms-auto">Manage Buildings</a>
-        </div>
-    </div>
-
-    <div class="row g-3">
-        <!-- Left: room list for selected building -->
-        <div class="col-12 col-xl-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h2 class="h5">Rooms</h2>
-                    @if (Model.Rooms.Count == 0)
-                    {
-                        <p class="text-muted">No rooms found. Select a building or add one below.</p>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Number</th>
-                                        <th>Capacity</th>
-                                        <th>Active</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var r in Model.Rooms)
-                                    {
-                                        <tr class="@(Model.SelectedRoom?.Id == r.Id ? "table-primary" : "")">
-                                            <td><a asp-action="Rooms" asp-route-buildingId="@r.BuildingId" asp-route-selectedId="@r.Id">@r.Number</a></td>
-                                            <td>@(r.Capacity.HasValue ? r.Capacity.Value.ToString() : "-")</td>
-                                            <td>
-                                                @if (r.IsActive)
-                                                {
-                                                    <span class="badge bg-success">Yes</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">No</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
+    <div class="container-fluid px-0">
+        <!-- Building selector -->
+        <div class="card border-0 shadow-sm page-section-card mb-3">
+            <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+                <strong class="text-muted">Building:</strong>
+                @foreach (var b in Model.Buildings)
+                {
+                    <a asp-action="Rooms" asp-route-buildingId="@b.Id"
+                       class="btn btn-sm @(Model.SelectedBuildingId == b.Id ? "btn-primary" : "btn-outline-secondary")">
+                        @b.Name
+                    </a>
+                }
+                <a asp-action="Buildings" class="btn btn-sm btn-outline-secondary ms-auto">Manage Buildings</a>
             </div>
         </div>
 
-        <!-- Right: create / edit forms -->
-        <div class="col-12 col-xl-7">
-            <!-- Create Room -->
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-                    <h2 class="h5">Add Room</h2>
-                    <form asp-action="CreateRoom" method="post" class="row g-2">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="form.BuildingId" value="@Model.SelectedBuildingId" />
-                        <div class="col-md-5">
-                            <label class="form-label">Room Number</label>
-                            <input name="form.Number" class="form-control" placeholder="e.g. 101" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Capacity</label>
-                            <input name="form.Capacity" class="form-control" type="number" min="1" placeholder="optional" />
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-primary" type="submit"
-                                    @(Model.SelectedBuildingId.HasValue ? "" : "disabled")>
-                                Create
-                            </button>
-                            @if (!Model.SelectedBuildingId.HasValue)
-                            {
-                                <span class="text-muted ms-2 small">Select a building first.</span>
-                            }
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Edit selected room -->
-            @if (Model.SelectedRoom is not null)
-            {
-                <div class="card border-0 shadow-sm">
+        <div class="row g-4 mt-1">
+            <!-- Left: room list for selected building -->
+            <div class="col-12 col-xl-5">
+                <div class="card border-0 shadow-sm h-100 page-section-card">
                     <div class="card-body">
-                        <h2 class="h5">Edit Room: @Model.SelectedRoom.Number (@Model.SelectedRoom.BuildingName)</h2>
-                        <form asp-action="UpdateRoom" method="post" class="row g-2 mb-3">
+                        <h2 class="h5 mb-3">Rooms</h2>
+                        @if (Model.Rooms.Count == 0)
+                        {
+                            <p class="text-muted mb-0">No rooms found. Select a building or add one below.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Number</th>
+                                            <th>Capacity</th>
+                                            <th>Active</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var r in Model.Rooms)
+                                        {
+                                            <tr class="@(Model.SelectedRoom?.Id == r.Id ? "table-primary" : "")">
+                                                <td><a asp-action="Rooms" asp-route-buildingId="@r.BuildingId" asp-route-selectedId="@r.Id">@r.Number</a></td>
+                                                <td>@(r.Capacity.HasValue ? r.Capacity.Value.ToString() : "-")</td>
+                                                <td>
+                                                    @if (r.IsActive)
+                                                    {
+                                                        <span class="badge bg-success">Yes</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">No</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: create / edit forms -->
+            <div class="col-12 col-xl-7 pe-xl-4">
+                <!-- Create Room -->
+                <div class="card border-0 shadow-sm page-section-card mb-3">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Add Room</h2>
+                        <form asp-action="CreateRoom" method="post" class="row g-3">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.SelectedRoom.Id" />
-                            <input type="hidden" name="buildingId" value="@Model.SelectedRoom.BuildingId" />
+                            <input type="hidden" name="form.BuildingId" value="@Model.SelectedBuildingId" />
                             <div class="col-md-5">
                                 <label class="form-label">Room Number</label>
-                                <input name="form.Number" class="form-control" value="@Model.EditForm.Number" required />
+                                <input name="form.Number" class="form-control" placeholder="e.g. 101" required />
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Capacity</label>
-                                <input name="form.Capacity" class="form-control" type="number" min="1" value="@Model.EditForm.Capacity" />
+                                <input name="form.Capacity" class="form-control" type="number" min="1" placeholder="optional" />
                             </div>
-                            <div class="col-12">
-                                <button class="btn btn-primary" type="submit">Save Changes</button>
+                            <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
+                                <button class="btn btn-primary" type="submit"
+                                        @(Model.SelectedBuildingId.HasValue ? "" : "disabled")>
+                                    Create
+                                </button>
+                                @if (!Model.SelectedBuildingId.HasValue)
+                                {
+                                    <span class="text-muted small">Select a building first.</span>
+                                }
                             </div>
-                        </form>
-
-                        <form asp-action="SetRoomActive" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.SelectedRoom.Id" />
-                            <input type="hidden" name="buildingId" value="@Model.SelectedRoom.BuildingId" />
-                            <input type="hidden" name="activate" value="@(!Model.SelectedRoom.IsActive)" />
-                            @if (Model.SelectedRoom.IsActive)
-                            {
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
-                            }
                         </form>
                     </div>
                 </div>
-            }
+
+                <!-- Edit selected room -->
+                @if (Model.SelectedRoom is not null)
+                {
+                    <div class="card border-0 shadow-sm page-section-card">
+                        <div class="card-body">
+                            <h2 class="h5 mb-3">Edit Room: @Model.SelectedRoom.Number (@Model.SelectedRoom.BuildingName)</h2>
+                            <form asp-action="UpdateRoom" method="post" class="row g-3 mb-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.SelectedRoom.Id" />
+                                <input type="hidden" name="buildingId" value="@Model.SelectedRoom.BuildingId" />
+                                <div class="col-md-5">
+                                    <label class="form-label">Room Number</label>
+                                    <input name="form.Number" class="form-control" value="@Model.EditForm.Number" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Capacity</label>
+                                    <input name="form.Capacity" class="form-control" type="number" min="1" value="@Model.EditForm.Capacity" />
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary" type="submit">Save Changes</button>
+                                </div>
+                            </form>
+
+                            <form asp-action="SetRoomActive" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.SelectedRoom.Id" />
+                                <input type="hidden" name="buildingId" value="@Model.SelectedRoom.BuildingId" />
+                                <input type="hidden" name="activate" value="@(!Model.SelectedRoom.IsActive)" />
+                                @if (Model.SelectedRoom.IsActive)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 }
