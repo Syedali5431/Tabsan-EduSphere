@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
+
+- Recent request issue:
+  - start Plan C Phase 7 Stage 7.1 validation.
+- Implementation Summary:
+  - executed full data safety/access control/UI validation for Course Material.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`241/241`),
+  - contract tests passed (`1/1`),
+  - total automated validations passed (`393/393`).
+
+No new functions were added in this stage.
+
 ## 2026-05-20 - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:

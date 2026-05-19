@@ -112,6 +112,18 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 7.1:** Validate data safety, access control, and UI
 - **Stage 7.2:** Final review for stability and scalability
 
+#### Phase 7 Stage 7.1 Implementation Summary (2026-05-20)
+- Executed full end-to-end validation sweep for Course Material data safety, role-based access behavior, and portal/API UI integration stability.
+- Verified Stage 5/6 capabilities remain intact after upload/download hardening and scoped index tuning changes.
+- Confirmed no additional code or schema mutation was required during this validation stage.
+
+#### Phase 7 Stage 7.1 Validation Summary (2026-05-20)
+- `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed (with one non-blocking existing warning).
+- unit tests passed (`151/151`).
+- integration tests passed (`241/241`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`393/393`).
+
 ---
 
 ## Key Rules
