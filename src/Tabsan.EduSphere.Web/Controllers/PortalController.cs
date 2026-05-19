@@ -27,6 +27,8 @@ public class PortalController : Controller
         [nameof(Students)] = "students",
         [nameof(UserImport)] = "user_import",
         [nameof(Departments)] = "departments",
+        [nameof(TenantManagement)] = "tenant_management",
+        [nameof(CampusManagement)] = "campus_management",
         [nameof(AdminUsers)] = "admin_users",
         [nameof(Courses)] = "courses",
         [nameof(Assignments)] = "assignments",
@@ -1279,6 +1281,116 @@ public class PortalController : Controller
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
         return RedirectToAction(nameof(Departments));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TenantManagement(CancellationToken ct)
+    {
+        ViewData["Title"] = "Tenant Management";
+        var model = new TenantManagementPageModel { IsConnected = _api.IsConnected() };
+        if (!model.IsConnected) return View(model);
+
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Only SuperAdmin can manage tenants.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        try { model.Tenants = await _api.GetTenantsAsync(ct); }
+        catch (Exception ex) { model.Message = ex.Message; }
+        model.Message ??= TempData["PortalMessage"]?.ToString();
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateTenant(string code, string name, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.CreateTenantAsync(code, name, ct); TempData["PortalMessage"] = "Tenant created."; }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(TenantManagement));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateTenant(Guid id, string newName, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.UpdateTenantAsync(id, newName, ct); TempData["PortalMessage"] = "Tenant updated."; }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(TenantManagement));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleTenant(Guid id, bool activate, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.SetTenantActiveAsync(id, activate, ct); }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(TenantManagement));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CampusManagement(Guid? tenantId, CancellationToken ct)
+    {
+        ViewData["Title"] = "Campus Management";
+        var model = new CampusManagementPageModel { IsConnected = _api.IsConnected(), SelectedTenantId = tenantId };
+        if (!model.IsConnected) return View(model);
+
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Only SuperAdmin can manage campuses.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        try
+        {
+            model.Tenants = await _api.GetTenantsAsync(ct);
+            model.Campuses = await _api.GetCampusesAsync(tenantId, ct);
+        }
+        catch (Exception ex) { model.Message = ex.Message; }
+        model.Message ??= TempData["PortalMessage"]?.ToString();
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateCampus(Guid tenantId, string code, string name, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.CreateCampusAsync(tenantId, code, name, ct); TempData["PortalMessage"] = "Campus created."; }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(CampusManagement), new { tenantId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateCampus(Guid id, Guid tenantId, string newName, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.UpdateCampusAsync(id, newName, ct); TempData["PortalMessage"] = "Campus updated."; }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(CampusManagement), new { tenantId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleCampus(Guid id, Guid tenantId, bool activate, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try { await _api.SetCampusActiveAsync(id, activate, ct); }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(CampusManagement), new { tenantId });
     }
 
     [HttpGet]

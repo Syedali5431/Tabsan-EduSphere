@@ -185,6 +185,9 @@
         "institution_policy" => ("Portal", "InstitutionPolicy"),
         // Phase 24 — Module Composition
         "module_composition" => ("Portal", "ModuleComposition"),
+        // Plan A Phase 5 — Tenant/Campus Management
+        "tenant_management" => ("Portal", "TenantManagement"),
+        "campus_management" => ("Portal", "CampusManagement"),
         _                    => null
     };
 
@@ -225,6 +228,8 @@
         "analytics" => ("Faculty Related", 2),
         "report_center" => ("Faculty Related", 2),
         "enrollments" => ("Faculty Related", 2),
+        "tenant_management" => ("Settings", 5),
+        "campus_management" => ("Settings", 5),
 
         "timetable_student" => ("Student Related", 3),
         "students" => ("Student Related", 3),
@@ -457,7 +462,9 @@
                             ("Settings", 5, 2770, "Institution Policy", "Portal", "InstitutionPolicy"),
                             ("Settings", 5, 2780, "Module Composition", "Portal", "ModuleComposition"),
                             ("Settings", 5, 2790, "Library Config", "Portal", "LibraryConfig"),
-                            ("Settings", 5, 2800, "Accreditation", "Portal", "AccreditationTemplates")
+                            ("Settings", 5, 2800, "Accreditation", "Portal", "AccreditationTemplates"),
+                            ("Settings", 5, 2810, "Tenant Management", "Portal", "TenantManagement"),
+                            ("Settings", 5, 2820, "Campus Management", "Portal", "CampusManagement")
                         };
 
                         foreach (var link in superAdminFallbackLinks)
@@ -576,6 +583,8 @@
                         <a class="menu-link @(IsActiveLink("Portal", "SidebarSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SidebarSettings" aria-current="@(IsActiveLink("Portal", "SidebarSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SidebarSettings"))</span><span class="menu-link-text">Sidebar Settings</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "LicenseUpdate") ? "is-active" : "")" asp-controller="Portal" asp-action="LicenseUpdate" aria-current="@(IsActiveLink("Portal", "LicenseUpdate") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LicenseUpdate"))</span><span class="menu-link-text">License Update</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TenantManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="TenantManagement" aria-current="@(IsActiveLink("Portal", "TenantManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TenantManagement"))</span><span class="menu-link-text">Tenant Management</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "CampusManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="CampusManagement" aria-current="@(IsActiveLink("Portal", "CampusManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("CampusManagement"))</span><span class="menu-link-text">Campus Management</span></a>
                     }
                 }
 

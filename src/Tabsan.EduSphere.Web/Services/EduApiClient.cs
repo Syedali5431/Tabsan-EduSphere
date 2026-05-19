@@ -135,6 +135,17 @@ public interface IEduApiClient
     Task AssignAdminToDepartmentAsync(Guid adminUserId, Guid departmentId, CancellationToken ct);
     Task RemoveAdminFromDepartmentAsync(Guid adminUserId, Guid departmentId, CancellationToken ct);
 
+    // Tenant and Campus Management (Phase 5)
+    Task<List<TenantItem>> GetTenantsAsync(CancellationToken ct);
+    Task CreateTenantAsync(string code, string name, CancellationToken ct);
+    Task UpdateTenantAsync(Guid id, string newName, CancellationToken ct);
+    Task SetTenantActiveAsync(Guid id, bool activate, CancellationToken ct);
+
+    Task<List<CampusItem>> GetCampusesAsync(Guid? tenantId, CancellationToken ct);
+    Task CreateCampusAsync(Guid tenantId, string code, string name, CancellationToken ct);
+    Task UpdateCampusAsync(Guid id, string newName, CancellationToken ct);
+    Task SetCampusActiveAsync(Guid id, bool activate, CancellationToken ct);
+
     // Courses / Offerings
     Task<List<CourseItem>> GetCourseDetailsAsync(Guid? departmentId, CancellationToken ct);
     // Final-Touches Phase 19 Stage 19.3 — filtered by hasSemesters
@@ -1481,6 +1492,53 @@ public class EduApiClient : IEduApiClient
         }).ToList();
     }
 
+    public async Task<List<TenantItem>> GetTenantsAsync(CancellationToken ct)
+    {
+        var raw = await GetAsync<List<TenantApiDto>>("api/v1/tenant", ct) ?? new();
+        return raw.Select(t => new TenantItem
+        {
+            Id = t.Id,
+            Code = t.Code ?? string.Empty,
+            Name = t.Name ?? string.Empty,
+            IsActive = t.IsActive
+        }).ToList();
+    }
+
+    public Task CreateTenantAsync(string code, string name, CancellationToken ct)
+        => PostAsync<object, object>("api/v1/tenant", new { code, name }, ct);
+
+    public Task UpdateTenantAsync(Guid id, string newName, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/tenant/{id}", new { newName }, ct);
+
+    public Task SetTenantActiveAsync(Guid id, bool activate, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/tenant/{id}/{(activate ? "activate" : "deactivate")}", new { }, ct);
+
+    public async Task<List<CampusItem>> GetCampusesAsync(Guid? tenantId, CancellationToken ct)
+    {
+        var path = tenantId.HasValue
+            ? $"api/v1/campus?tenantId={tenantId.Value}"
+            : "api/v1/campus";
+
+        var raw = await GetAsync<List<CampusApiDto>>(path, ct) ?? new();
+        return raw.Select(c => new CampusItem
+        {
+            Id = c.Id,
+            TenantId = c.TenantId,
+            Code = c.Code ?? string.Empty,
+            Name = c.Name ?? string.Empty,
+            IsActive = c.IsActive
+        }).ToList();
+    }
+
+    public Task CreateCampusAsync(Guid tenantId, string code, string name, CancellationToken ct)
+        => PostAsync<object, object>("api/v1/campus", new { tenantId, code, name }, ct);
+
+    public Task UpdateCampusAsync(Guid id, string newName, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/campus/{id}", new { newName }, ct);
+
+    public Task SetCampusActiveAsync(Guid id, bool activate, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/campus/{id}/{(activate ? "activate" : "deactivate")}", new { }, ct);
+
     private sealed class DeptDetailDto
     {
         public Guid    Id       { get; set; }
@@ -1488,6 +1546,23 @@ public class EduApiClient : IEduApiClient
         public string? Code     { get; set; }
         public bool    IsActive { get; set; }
         public int     InstitutionType { get; set; }
+    }
+
+    private sealed class TenantApiDto
+    {
+        public Guid Id { get; set; }
+        public string? Code { get; set; }
+        public string? Name { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    private sealed class CampusApiDto
+    {
+        public Guid Id { get; set; }
+        public Guid TenantId { get; set; }
+        public string? Code { get; set; }
+        public string? Name { get; set; }
+        public bool IsActive { get; set; }
     }
 
     private sealed class ProgramDetailDto

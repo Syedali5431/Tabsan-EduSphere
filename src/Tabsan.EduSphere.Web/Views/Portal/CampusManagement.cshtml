@@ -1,0 +1,130 @@
+@model Tabsan.EduSphere.Web.Models.Portal.CampusManagementPageModel
+@{ ViewData["Title"] = "Campus Management"; }
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    var alertCls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-info";
+    <div class="alert @alertCls alert-dismissible fade show" role="alert">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Campus Filter</h2>
+            <form asp-action="CampusManagement" method="get" class="row g-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="form-label">Tenant</label>
+                    <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Tenants</option>
+                        @foreach (var tenant in Model.Tenants)
+                        {
+                            <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Code - @tenant.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="TenantManagement" class="btn btn-outline-secondary w-100">Manage Tenants</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Create Campus</h2>
+            <form asp-action="CreateCampus" method="post" class="row g-2 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label class="form-label">Tenant</label>
+                    <select name="tenantId" class="form-select" required>
+                        <option value="">Select tenant</option>
+                        @foreach (var tenant in Model.Tenants)
+                        {
+                            <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Code - @tenant.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Code</label>
+                    <input name="code" class="form-control" required maxlength="64" placeholder="MAIN" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Name</label>
+                    <input name="name" class="form-control" required maxlength="200" placeholder="Main Campus" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Campuses</h2>
+            @if (Model.Campuses.Count == 0)
+            {
+                <p class="text-muted mb-0">No campuses found for current filter.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tenant</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var campus in Model.Campuses)
+                        {
+                            var tenant = Model.Tenants.FirstOrDefault(t => t.Id == campus.TenantId);
+                            <tr>
+                                <td>@(tenant is null ? campus.TenantId.ToString() : $"{tenant.Code} - {tenant.Name}")</td>
+                                <td><code>@campus.Code</code></td>
+                                <td>
+                                    <form asp-action="UpdateCampus" method="post" class="d-flex gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@campus.Id" />
+                                        <input type="hidden" name="tenantId" value="@campus.TenantId" />
+                                        <input type="text" name="newName" class="form-control form-control-sm" value="@campus.Name" maxlength="200" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <span class="badge @(campus.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(campus.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="ToggleCampus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@campus.Id" />
+                                        <input type="hidden" name="tenantId" value="@campus.TenantId" />
+                                        <input type="hidden" name="activate" value="@(!campus.IsActive)" />
+                                        <button type="submit" class="btn btn-sm @(campus.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                            @(campus.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}

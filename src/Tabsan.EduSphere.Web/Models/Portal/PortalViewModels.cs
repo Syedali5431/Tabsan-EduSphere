@@ -552,6 +552,39 @@ public class AdminUsersPageModel
     public List<Guid> AssignedDepartmentIds { get; set; } = new();
 }
 
+public class TenantItem
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; }
+}
+
+public class CampusItem
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; }
+}
+
+public class TenantManagementPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+}
+
+public class CampusManagementPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+}
+
 public class UserImportResultItem
 {
     public int TotalRows { get; set; }
