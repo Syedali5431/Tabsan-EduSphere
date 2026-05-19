@@ -54,6 +54,7 @@ public class PortalController : Controller
         [nameof(GraduationApplications)] = "graduation_applications",
         [nameof(GradingConfig)] = "grading_config",
         [nameof(LmsManage)] = "lms_manage",
+        [nameof(CourseMaterial)] = "course_material",
         [nameof(Discussion)] = "discussion",
         [nameof(Announcements)] = "announcements",
         [nameof(StudyPlan)] = "study_plan",
@@ -4488,6 +4489,293 @@ public class PortalController : Controller
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
         return RedirectToAction(nameof(LmsManage), new { offeringId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CourseMaterial(
+        Guid? departmentId,
+        Guid? academicProgramId,
+        Guid? semesterId,
+        Guid? courseId,
+        bool activeOnly = true,
+        CancellationToken ct = default)
+    {
+        ViewData["Title"] = "Course Materials";
+
+        var session = _api.GetSessionIdentity();
+        var canManage = session?.IsAdmin == true || session?.IsSuperAdmin == true || session?.IsFaculty == true;
+        if (!canManage)
+        {
+            return RedirectToAction(nameof(CourseMaterialStudent), new { departmentId, academicProgramId, semesterId, courseId });
+        }
+
+        var model = new CourseMaterialManagePageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedDepartmentId = departmentId,
+            SelectedAcademicProgramId = academicProgramId,
+            SelectedSemesterId = semesterId,
+            SelectedCourseId = courseId,
+            ActiveOnly = activeOnly,
+            CanManage = canManage
+        };
+
+        if (!model.IsConnected) return View(model);
+
+        try
+        {
+            model.Departments = await _api.GetDepartmentsAsync(ct);
+            model.Semesters = await _api.GetSemestersAsync(ct);
+
+            if (departmentId.HasValue)
+            {
+                model.Programs = await _api.GetProgramsAsync(departmentId, ct);
+                model.Courses = await _api.GetCoursesAsync(departmentId, ct);
+            }
+
+            var materials = await _api.GetCourseMaterialsAsync(
+                departmentId,
+                academicProgramId,
+                semesterId,
+                courseId,
+                activeOnly,
+                ct);
+
+            model.Materials = materials.Select(m => new CourseMaterialItem
+            {
+                Id = m.Id,
+                DepartmentId = m.DepartmentId,
+                AcademicProgramId = m.AcademicProgramId,
+                SemesterId = m.SemesterId,
+                CourseId = m.CourseId,
+                MaterialType = m.MaterialType,
+                Title = m.Title,
+                Description = m.Description,
+                ExternalUrl = m.ExternalUrl,
+                BlobPath = m.BlobPath,
+                FileName = m.FileName,
+                FileSizeBytes = m.FileSizeBytes,
+                IsActive = m.IsActive,
+                CreatedAt = m.CreatedAt,
+                UpdatedAt = m.UpdatedAt
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        model.Message ??= TempData["PortalMessage"]?.ToString();
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CourseMaterialStudent(
+        Guid? departmentId,
+        Guid? academicProgramId,
+        Guid? semesterId,
+        Guid? courseId,
+        CancellationToken ct = default)
+    {
+        ViewData["Title"] = "Course Materials";
+        var model = new CourseMaterialStudentPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedDepartmentId = departmentId,
+            SelectedAcademicProgramId = academicProgramId,
+            SelectedSemesterId = semesterId,
+            SelectedCourseId = courseId
+        };
+
+        if (!model.IsConnected) return View(model);
+
+        try
+        {
+            model.Departments = await _api.GetDepartmentsAsync(ct);
+            model.Semesters = await _api.GetSemestersAsync(ct);
+
+            if (departmentId.HasValue)
+            {
+                model.Programs = await _api.GetProgramsAsync(departmentId, ct);
+                model.Courses = await _api.GetCoursesAsync(departmentId, ct);
+            }
+
+            var materials = await _api.GetCourseMaterialsAsync(
+                departmentId,
+                academicProgramId,
+                semesterId,
+                courseId,
+                true,
+                ct);
+
+            model.Materials = materials.Select(m => new CourseMaterialItem
+            {
+                Id = m.Id,
+                DepartmentId = m.DepartmentId,
+                AcademicProgramId = m.AcademicProgramId,
+                SemesterId = m.SemesterId,
+                CourseId = m.CourseId,
+                MaterialType = m.MaterialType,
+                Title = m.Title,
+                Description = m.Description,
+                ExternalUrl = m.ExternalUrl,
+                BlobPath = m.BlobPath,
+                FileName = m.FileName,
+                FileSizeBytes = m.FileSizeBytes,
+                IsActive = m.IsActive,
+                CreatedAt = m.CreatedAt,
+                UpdatedAt = m.UpdatedAt
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        model.Message ??= TempData["PortalMessage"]?.ToString();
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateCourseMaterial(
+        Guid departmentId,
+        Guid academicProgramId,
+        Guid semesterId,
+        Guid courseId,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        Guid? selectedDepartmentId,
+        Guid? selectedAcademicProgramId,
+        Guid? selectedSemesterId,
+        Guid? selectedCourseId,
+        bool activeOnly,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.CreateCourseMaterialAsync(
+                    departmentId,
+                    academicProgramId,
+                    semesterId,
+                    courseId,
+                    materialType,
+                    title,
+                    description,
+                    externalUrl,
+                    blobPath,
+                    fileName,
+                    fileSizeBytes,
+                    isActive,
+                    ct);
+                TempData["PortalMessage"] = "Course material created.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(CourseMaterial), new
+        {
+            departmentId = selectedDepartmentId,
+            academicProgramId = selectedAcademicProgramId,
+            semesterId = selectedSemesterId,
+            courseId = selectedCourseId,
+            activeOnly
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateCourseMaterial(
+        Guid id,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        Guid? selectedDepartmentId,
+        Guid? selectedAcademicProgramId,
+        Guid? selectedSemesterId,
+        Guid? selectedCourseId,
+        bool activeOnly,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.UpdateCourseMaterialAsync(
+                    id,
+                    materialType,
+                    title,
+                    description,
+                    externalUrl,
+                    blobPath,
+                    fileName,
+                    fileSizeBytes,
+                    isActive,
+                    ct);
+                TempData["PortalMessage"] = "Course material updated.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(CourseMaterial), new
+        {
+            departmentId = selectedDepartmentId,
+            academicProgramId = selectedAcademicProgramId,
+            semesterId = selectedSemesterId,
+            courseId = selectedCourseId,
+            activeOnly
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetCourseMaterialActive(
+        Guid id,
+        bool isActive,
+        Guid? selectedDepartmentId,
+        Guid? selectedAcademicProgramId,
+        Guid? selectedSemesterId,
+        Guid? selectedCourseId,
+        bool activeOnly,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.SetCourseMaterialActiveAsync(id, isActive, ct);
+                TempData["PortalMessage"] = isActive ? "Course material activated." : "Course material deactivated.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(CourseMaterial), new
+        {
+            departmentId = selectedDepartmentId,
+            academicProgramId = selectedAcademicProgramId,
+            semesterId = selectedSemesterId,
+            courseId = selectedCourseId,
+            activeOnly
+        });
     }
 
     // Final-Touches Phase 20 Stage 20.3 — discussion forum

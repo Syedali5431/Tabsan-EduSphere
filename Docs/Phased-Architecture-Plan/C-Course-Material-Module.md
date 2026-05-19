@@ -62,6 +62,18 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 4.3:** Create View Materials page (Students)
 - **Stage 4.4:** Implement dependent dropdowns for selection (Dept → Course → Semester → Subject)
 
+#### Phase 4 Implementation Summary (2026-05-19)
+- Added `PortalController` course-material actions for manage and student read-only workflows with filter-state preserving redirects.
+- Added `Views/Portal/CourseMaterial.cshtml` for Admin/Faculty material management and `Views/Portal/CourseMaterialStudent.cshtml` for student read-only browsing.
+- Added sidebar integration for `course_material` in web layout menu mapping and API sidebar module-key mapping to preserve entitlement filtering.
+
+#### Phase 4 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -c Debug` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 5: File & Link Handling
 - **Stage 5.1:** Support file uploads and/or links
 - **Stage 5.2:** Store files in persistent storage

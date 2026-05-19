@@ -2100,6 +2100,57 @@ public class AnnouncementsPageModel
     public bool    IsConnected    { get; set; }
 }
 
+public class CourseMaterialItem
+{
+    public Guid     Id                { get; set; }
+    public Guid     DepartmentId      { get; set; }
+    public Guid     AcademicProgramId { get; set; }
+    public Guid     SemesterId        { get; set; }
+    public Guid     CourseId          { get; set; }
+    public string   MaterialType      { get; set; } = string.Empty;
+    public string   Title             { get; set; } = string.Empty;
+    public string?  Description       { get; set; }
+    public string?  ExternalUrl       { get; set; }
+    public string?  BlobPath          { get; set; }
+    public string?  FileName          { get; set; }
+    public long?    FileSizeBytes     { get; set; }
+    public bool     IsActive          { get; set; }
+    public DateTime CreatedAt         { get; set; }
+    public DateTime UpdatedAt         { get; set; }
+}
+
+public class CourseMaterialManagePageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Programs { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedAcademicProgramId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public bool ActiveOnly { get; set; } = true;
+    public bool CanManage { get; set; }
+}
+
+public class CourseMaterialStudentPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Programs { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedAcademicProgramId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+}
+
 // ── Phase 21: Study Planner ─────────────────────────────────────────────────
 
 public class StudyPlanCourseItem

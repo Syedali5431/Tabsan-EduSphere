@@ -1,0 +1,324 @@
+@model Tabsan.EduSphere.Web.Models.Portal.CourseMaterialManagePageModel
+@{
+    ViewData["Title"] = "Course Materials";
+    ViewData["PageTitle"] = "Course Materials";
+    ViewData["ActivePage"] = "course_material";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    var cls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-success";
+    <div class="alert @cls alert-dismissible fade show" role="alert">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+}
+else
+{
+    <section class="page-section-card card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="section-head mb-3">
+                <div>
+                    <span class="section-kicker">Course content</span>
+                    <h2 class="h5 mb-1">Manage Course Materials</h2>
+                    <p class="text-muted mb-0">Filter by scope and publish learning resources for students.</p>
+                </div>
+                @if (Model.CanManage)
+                {
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createMaterialModal">
+                        Add Material
+                    </button>
+                }
+            </div>
+
+            <form method="get" asp-action="CourseMaterial" class="row g-2 align-items-end filter-toolbar">
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        @foreach (var d in Model.Departments)
+                        {
+                            <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Program</label>
+                    <select name="academicProgramId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Programs</option>
+                        @foreach (var p in Model.Programs)
+                        {
+                            <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Semester</label>
+                    <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Semesters</option>
+                        @foreach (var s in Model.Semesters)
+                        {
+                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Subject/Course</label>
+                    <select name="courseId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Subjects</option>
+                        @foreach (var c in Model.Courses)
+                        {
+                            <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="activeOnly" name="activeOnly" value="true" checked="@Model.ActiveOnly" onchange="this.form.submit()" />
+                        <label class="form-check-label" for="activeOnly">Active only</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="page-section-card card border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Materials <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
+
+            @if (Model.Materials.Count == 0)
+            {
+                <div class="empty-state-card">
+                    <h3>No materials found</h3>
+                    <p class="text-muted mb-0">Add a material or relax your filters to view existing content.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Link/File</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model.Materials)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@m.Title</div>
+                                        @if (!string.IsNullOrWhiteSpace(m.Description))
+                                        {
+                                            <div class="small text-muted">@m.Description</div>
+                                        }
+                                    </td>
+                                    <td><span class="badge bg-info text-dark">@m.MaterialType</span></td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(m.ExternalUrl))
+                                        {
+                                            <a href="@m.ExternalUrl" target="_blank" rel="noopener">Open link</a>
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(m.BlobPath))
+                                        {
+                                            <span class="text-muted">@m.BlobPath</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge stat-pill @(m.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(m.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">@m.UpdatedAt.ToString("dd MMM yyyy")</td>
+                                    <td class="text-nowrap">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editMaterialModal-@m.Id">
+                                            Edit
+                                        </button>
+                                        <form method="post" asp-action="SetCourseMaterialActive" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@m.Id" />
+                                            <input type="hidden" name="isActive" value="@(!m.IsActive)" />
+                                            <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
+                                            <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
+                                            <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />
+                                            <input type="hidden" name="selectedCourseId" value="@Model.SelectedCourseId" />
+                                            <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                @(m.IsActive ? "Deactivate" : "Activate")
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+
+                                <div class="modal fade" id="editMaterialModal-@m.Id" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <form method="post" asp-action="UpdateCourseMaterial">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@m.Id" />
+                                            <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
+                                            <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
+                                            <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />
+                                            <input type="hidden" name="selectedCourseId" value="@Model.SelectedCourseId" />
+                                            <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit Material</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Title</label>
+                                                        <input type="text" name="title" class="form-control" value="@m.Title" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Type</label>
+                                                        <select name="materialType" class="form-select">
+                                                            <option value="File" selected="@(m.MaterialType == "File" ? "selected" : null)">File</option>
+                                                            <option value="Link" selected="@(m.MaterialType == "Link" ? "selected" : null)">Link</option>
+                                                            <option value="FileAndLink" selected="@(m.MaterialType == "FileAndLink" ? "selected" : null)">File and Link</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Description</label>
+                                                        <textarea name="description" class="form-control" rows="3">@m.Description</textarea>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">External URL</label>
+                                                        <input type="url" name="externalUrl" class="form-control" value="@m.ExternalUrl" />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">File Path</label>
+                                                        <input type="text" name="blobPath" class="form-control" value="@m.BlobPath" />
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@m.IsActive" id="isActive-@m.Id">
+                                                        <label class="form-check-label" for="isActive-@m.Id">Active</label>
+                                                    </div>
+                                                    <input type="hidden" name="fileName" value="@m.FileName" />
+                                                    <input type="hidden" name="fileSizeBytes" value="@m.FileSizeBytes" />
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="createMaterialModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-action="CreateCourseMaterial">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
+            <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />
+            <input type="hidden" name="selectedCourseId" value="@Model.SelectedCourseId" />
+            <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Course Material</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="departmentId" class="form-select" required>
+                            <option value="">Select department...</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Program</label>
+                        <select name="academicProgramId" class="form-select" required>
+                            <option value="">Select program...</option>
+                            @foreach (var p in Model.Programs)
+                            {
+                                <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Semester</label>
+                        <select name="semesterId" class="form-select" required>
+                            <option value="">Select semester...</option>
+                            @foreach (var s in Model.Semesters)
+                            {
+                                <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject/Course</label>
+                        <select name="courseId" class="form-select" required>
+                            <option value="">Select subject...</option>
+                            @foreach (var c in Model.Courses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select name="materialType" class="form-select" required>
+                            <option value="File">File</option>
+                            <option value="Link">Link</option>
+                            <option value="FileAndLink">File and Link</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">External URL</label>
+                        <input type="url" name="externalUrl" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">File Path</label>
+                        <input type="text" name="blobPath" class="form-control" />
+                    </div>
+                    <input type="hidden" name="fileName" value="" />
+                    <input type="hidden" name="fileSizeBytes" value="" />
+                    <input type="hidden" name="isActive" value="true" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

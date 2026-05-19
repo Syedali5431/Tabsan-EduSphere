@@ -32,6 +32,7 @@ public class SidebarMenuController : ControllerBase
             ["grading_config"] = "courses",
             ["study_plan"] = "courses",
             ["lms_manage"] = "courses",
+            ["course_material"] = "courses",
             ["discussion"] = "courses",
             ["announcements"] = "courses",
             ["students"] = "sis",

@@ -3,6 +3,25 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan C Phase 4 Implementation (UI & UX)
+
+- Recent request issue:
+  - proceed to Plan C Phase 4 UI and UX implementation.
+- Implementation Summary:
+  - added portal UI flows for course material management and student view mode with scoped filtering.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `PortalController.CourseMaterial` | Renders Admin/Faculty manage page with scoped filter options and material list retrieval. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.CourseMaterialStudent` | Renders Student read-only page with active scoped materials. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.CreateCourseMaterial` | Creates a course material from the portal manage page while preserving current filter state. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.UpdateCourseMaterial` | Updates course material metadata/location from the portal manage page. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.SetCourseMaterialActive` | Toggles material active state from the portal manage page. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `IEduApiClient.GetCourseMaterialsAsync` | Fetches scoped course materials for portal pages with optional active-only filtering. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `SidebarMenuController.MenuModuleKeyMap["course_material"]` | Maps the `course_material` menu key to the `courses` module for entitlement-based menu visibility. | `src/Tabsan.EduSphere.API/Controllers/SidebarMenuController.cs` |
+
 ## 2026-05-19 - Plan C Phase 3 Implementation (Access Control & Security)
 
 - Recent request issue:

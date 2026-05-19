@@ -190,6 +190,42 @@ public interface IEduApiClient
     Task<AnnouncementApiModel?> CreateAnnouncementAsync(Guid? offeringId, Guid authorId, string title, string body, CancellationToken ct);
     Task DeleteAnnouncementAsync(Guid announcementId, CancellationToken ct);
 
+    // Plan C Phase 4 — course materials UI API bindings
+    Task<List<CourseMaterialApiModel>> GetCourseMaterialsAsync(
+        Guid? departmentId,
+        Guid? academicProgramId,
+        Guid? semesterId,
+        Guid? courseId,
+        bool activeOnly,
+        CancellationToken ct);
+    Task<CourseMaterialApiModel?> GetCourseMaterialByIdAsync(Guid id, CancellationToken ct);
+    Task<CourseMaterialApiModel?> CreateCourseMaterialAsync(
+        Guid departmentId,
+        Guid academicProgramId,
+        Guid semesterId,
+        Guid courseId,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        CancellationToken ct);
+    Task<CourseMaterialApiModel?> UpdateCourseMaterialAsync(
+        Guid id,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        CancellationToken ct);
+    Task SetCourseMaterialActiveAsync(Guid id, bool isActive, CancellationToken ct);
+
     // Assignments
     Task<List<AssignmentItem>> GetMyAssignmentsAsync(CancellationToken ct);
     Task<List<MyAssignmentSubmissionItem>> GetMyAssignmentSubmissionsAsync(CancellationToken ct);
@@ -1830,6 +1866,95 @@ public class EduApiClient : IEduApiClient
 
     public Task DeleteAnnouncementAsync(Guid announcementId, CancellationToken ct)
         => DeleteAsync($"api/v1/announcement/{announcementId}", ct);
+
+    // ── Plan C: Course Materials ──────────────────────────────────────────────
+
+    public async Task<List<CourseMaterialApiModel>> GetCourseMaterialsAsync(
+        Guid? departmentId,
+        Guid? academicProgramId,
+        Guid? semesterId,
+        Guid? courseId,
+        bool activeOnly,
+        CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (academicProgramId.HasValue) query.Add($"academicProgramId={academicProgramId.Value}");
+        if (semesterId.HasValue) query.Add($"semesterId={semesterId.Value}");
+        if (courseId.HasValue) query.Add($"courseId={courseId.Value}");
+        query.Add($"activeOnly={activeOnly.ToString().ToLowerInvariant()}");
+
+        var path = query.Count == 0
+            ? "api/v1/course-materials"
+            : $"api/v1/course-materials?{string.Join("&", query)}";
+
+        return await GetAsync<List<CourseMaterialApiModel>>(path, ct) ?? new();
+    }
+
+    public Task<CourseMaterialApiModel?> GetCourseMaterialByIdAsync(Guid id, CancellationToken ct)
+        => GetAsync<CourseMaterialApiModel>($"api/v1/course-materials/{id}", ct);
+
+    public Task<CourseMaterialApiModel?> CreateCourseMaterialAsync(
+        Guid departmentId,
+        Guid academicProgramId,
+        Guid semesterId,
+        Guid courseId,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        CancellationToken ct)
+        => PostAsync<object, CourseMaterialApiModel>(
+            "api/v1/course-materials",
+            new
+            {
+                departmentId,
+                academicProgramId,
+                semesterId,
+                courseId,
+                materialType,
+                title,
+                description,
+                externalUrl,
+                blobPath,
+                fileName,
+                fileSizeBytes,
+                isActive
+            },
+            ct);
+
+    public Task<CourseMaterialApiModel?> UpdateCourseMaterialAsync(
+        Guid id,
+        string materialType,
+        string title,
+        string? description,
+        string? externalUrl,
+        string? blobPath,
+        string? fileName,
+        long? fileSizeBytes,
+        bool isActive,
+        CancellationToken ct)
+        => PutAsync<object, CourseMaterialApiModel>(
+            $"api/v1/course-materials/{id}",
+            new
+            {
+                materialType,
+                title,
+                description,
+                externalUrl,
+                blobPath,
+                fileName,
+                fileSizeBytes,
+                isActive
+            },
+            ct);
+
+    public Task SetCourseMaterialActiveAsync(Guid id, bool isActive, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/course-materials/{id}/active?isActive={isActive.ToString().ToLowerInvariant()}", new { }, ct);
 
     // ── Phase 21: Study Planner ─────────────────────────────────────────────────
 
@@ -4294,6 +4419,27 @@ public sealed class AnnouncementApiModel
     public string   Title      { get; set; } = string.Empty;
     public string   Body       { get; set; } = string.Empty;
     public DateTime PostedAt   { get; set; }
+}
+
+public sealed class CourseMaterialApiModel
+{
+    public Guid     Id                { get; set; }
+    public Guid     TenantId          { get; set; }
+    public Guid     CampusId          { get; set; }
+    public Guid     DepartmentId      { get; set; }
+    public Guid     AcademicProgramId { get; set; }
+    public Guid     SemesterId        { get; set; }
+    public Guid     CourseId          { get; set; }
+    public string   MaterialType      { get; set; } = string.Empty;
+    public string   Title             { get; set; } = string.Empty;
+    public string?  Description       { get; set; }
+    public string?  ExternalUrl       { get; set; }
+    public string?  BlobPath          { get; set; }
+    public string?  FileName          { get; set; }
+    public long?    FileSizeBytes     { get; set; }
+    public bool     IsActive          { get; set; }
+    public DateTime CreatedAt         { get; set; }
+    public DateTime UpdatedAt         { get; set; }
 }
 
 // ── Phase 21: Study Planner API models ──────────────────────────────────────

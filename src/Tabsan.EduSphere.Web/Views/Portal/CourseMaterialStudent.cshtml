@@ -1,0 +1,130 @@
+@model Tabsan.EduSphere.Web.Models.Portal.CourseMaterialStudentPageModel
+@{
+    ViewData["Title"] = "Course Materials";
+    ViewData["PageTitle"] = "Course Materials";
+    ViewData["ActivePage"] = "course_material";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    var cls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-info";
+    <div class="alert @cls alert-dismissible fade show" role="alert">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+}
+else
+{
+    <section class="page-section-card card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="section-head mb-3">
+                <div>
+                    <span class="section-kicker">Learning resources</span>
+                    <h2 class="h5 mb-1">Browse Course Materials</h2>
+                    <p class="text-muted mb-0">Find active files and links published by your faculty.</p>
+                </div>
+            </div>
+
+            <form method="get" asp-action="CourseMaterialStudent" class="row g-2 align-items-end filter-toolbar">
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        @foreach (var d in Model.Departments)
+                        {
+                            <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Program</label>
+                    <select name="academicProgramId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Programs</option>
+                        @foreach (var p in Model.Programs)
+                        {
+                            <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Semester</label>
+                    <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Semesters</option>
+                        @foreach (var s in Model.Semesters)
+                        {
+                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Subject/Course</label>
+                    <select name="courseId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Subjects</option>
+                        @foreach (var c in Model.Courses)
+                        {
+                            <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="page-section-card card border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Available Materials <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
+
+            @if (Model.Materials.Count == 0)
+            {
+                <div class="empty-state-card">
+                    <h3>No materials available</h3>
+                    <p class="text-muted mb-0">Try selecting a different course filter.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var m in Model.Materials)
+                    {
+                        <div class="col-lg-6">
+                            <article class="card h-100 border-0 shadow-sm">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h3 class="h6 mb-0">@m.Title</h3>
+                                        <span class="badge bg-info text-dark">@m.MaterialType</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(m.Description))
+                                    {
+                                        <p class="small text-muted flex-grow-1">@m.Description</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="small text-muted flex-grow-1">No description provided.</p>
+                                    }
+
+                                    <div class="d-flex gap-2 align-items-center mt-2">
+                                        @if (!string.IsNullOrWhiteSpace(m.ExternalUrl))
+                                        {
+                                            <a class="btn btn-sm btn-outline-primary" href="@m.ExternalUrl" target="_blank" rel="noopener">Open Link</a>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(m.BlobPath))
+                                        {
+                                            <span class="small text-muted">@m.BlobPath</span>
+                                        }
+                                    </div>
+
+                                    <div class="small text-muted mt-3">Updated @m.UpdatedAt.ToString("dd MMM yyyy")</div>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
