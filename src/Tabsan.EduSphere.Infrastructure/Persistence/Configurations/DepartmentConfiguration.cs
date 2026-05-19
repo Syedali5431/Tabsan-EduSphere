@@ -13,6 +13,10 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
     {
         builder.ToTable("departments");
 
+              builder.ToTable(t => t.HasCheckConstraint(
+                     "CK_departments_tenant_campus_pair",
+                     "([TenantId] IS NULL AND [CampusId] IS NULL) OR ([TenantId] IS NOT NULL AND [CampusId] IS NOT NULL)"));
+
         builder.HasKey(d => d.Id);
 
         builder.Property(d => d.Name)
@@ -57,7 +61,8 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 
         builder.HasOne<Campus>()
                .WithMany()
-               .HasForeignKey(d => d.CampusId)
+               .HasForeignKey(d => new { d.CampusId, d.TenantId })
+               .HasPrincipalKey(c => new { c.Id, c.TenantId })
                .OnDelete(DeleteBehavior.Restrict);
 
         // Soft-delete filter — normal queries never see deleted departments.

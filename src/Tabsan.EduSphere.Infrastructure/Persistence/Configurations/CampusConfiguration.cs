@@ -12,6 +12,8 @@ public class CampusConfiguration : IEntityTypeConfiguration<Campus>
 
         builder.HasKey(c => c.Id);
 
+       builder.HasAlternateKey(c => new { c.Id, c.TenantId });
+
         builder.Property(c => c.TenantId)
                .IsRequired();
 

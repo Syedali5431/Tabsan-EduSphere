@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan A Phase 3 Implementation (Tenant/Campus Compatibility and Safety)
+
+- Recent request issue:
+  - proceed to Plan A Phase 3 and harden tenant/campus compatibility constraints while preserving current InstitutionType logic.
+- Implementation Summary:
+  - added domain and schema safeguards to prevent invalid tenant/campus combinations.
+- Validation Summary:
+  - focused unit and integration validations passed (`61/61`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `User.ValidateTenantCampusPair` | Prevents invalid user state by requiring TenantId and CampusId to be set/cleared together. | `src/Tabsan.EduSphere.Domain/Identity/User.cs` |
+| `Department.SetTenantCampus pair guard` | Prevents invalid department state by rejecting partial tenant/campus assignment. | `src/Tabsan.EduSphere.Domain/Academic/Department.cs` |
+| `Campus alternate key (Id,TenantId)` | Enables tenant-bound composite references so campus assignment is validated within tenant scope. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/CampusConfiguration.cs` |
+| `CK_users_tenant_campus_pair` | Enforces database-level tenant/campus pair validity for users. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519034517_Phase43_TenantCampusCompatibilitySafety.cs` |
+| `CK_departments_tenant_campus_pair` | Enforces database-level tenant/campus pair validity for departments. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/DepartmentConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519034517_Phase43_TenantCampusCompatibilitySafety.cs` |
+| `Tenant-bound campus composite FK enforcement` | Ensures selected campus belongs to selected tenant for users/departments. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/DepartmentConfiguration.cs` |
+
 ## 2026-05-19 - Plan A Phase 2 Implementation (Default Tenant/Campus Data Integration)
 
 - Recent request issue:

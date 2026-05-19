@@ -91,6 +91,8 @@ public class User : AuditableEntity
                 bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null,
                 Guid? tenantId = null, Guid? campusId = null)
     {
+        ValidateTenantCampusPair(tenantId, campusId);
+
         Username = username;
         PasswordHash = passwordHash;
         RoleId = roleId;
@@ -199,9 +201,18 @@ public class User : AuditableEntity
     /// <summary>Assigns or clears tenant/campus ownership for this user.</summary>
     public void SetTenantCampus(Guid? tenantId, Guid? campusId)
     {
+        ValidateTenantCampusPair(tenantId, campusId);
         TenantId = tenantId;
         CampusId = campusId;
         Touch();
+    }
+
+    private static void ValidateTenantCampusPair(Guid? tenantId, Guid? campusId)
+    {
+        var hasTenant = tenantId.HasValue;
+        var hasCampus = campusId.HasValue;
+        if (hasTenant != hasCampus)
+            throw new InvalidOperationException("TenantId and CampusId must be provided together.");
     }
 
     /// <summary>Sets the user's preferred UI theme key. Pass null to revert to the system default.</summary>

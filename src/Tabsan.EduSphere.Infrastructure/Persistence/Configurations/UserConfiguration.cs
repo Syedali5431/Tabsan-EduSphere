@@ -16,6 +16,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("users");
 
+              builder.ToTable(t => t.HasCheckConstraint(
+                     "CK_users_tenant_campus_pair",
+                     "([TenantId] IS NULL AND [CampusId] IS NULL) OR ([TenantId] IS NOT NULL AND [CampusId] IS NOT NULL)"));
+
         builder.HasKey(u => u.Id);
 
         builder.Property(u => u.Username)
@@ -89,7 +93,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasOne<Campus>()
                .WithMany()
-               .HasForeignKey(u => u.CampusId)
+               .HasForeignKey(u => new { u.CampusId, u.TenantId })
+               .HasPrincipalKey(c => new { c.Id, c.TenantId })
                .OnDelete(DeleteBehavior.Restrict);
 
         // Phase 9: per-user theme preference — nullable, max 50 chars.

@@ -74,6 +74,11 @@ public class Department : AuditableEntity
     /// <summary>Assigns or clears tenant/campus ownership for this department.</summary>
     public void SetTenantCampus(Guid? tenantId, Guid? campusId)
     {
+        var hasTenant = tenantId.HasValue;
+        var hasCampus = campusId.HasValue;
+        if (hasTenant != hasCampus)
+            throw new InvalidOperationException("TenantId and CampusId must be provided together.");
+
         TenantId = tenantId;
         CampusId = campusId;
         Touch();
