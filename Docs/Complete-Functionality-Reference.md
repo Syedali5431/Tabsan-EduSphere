@@ -75,6 +75,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - filter flow is now deterministic and dependency-aware,
   - no API security boundary or schema behavior changed.
 
+## 2026-05-20 Update - Plan D Phase 2 Stage 2.3 (Instant Charts Update)
+
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.3 and make chart updates instant.
+
+### Phase 2 Stage 2.3 - Instant Analytics Refresh (Implemented)
+- Implementation Summary:
+  - introduced web-layer analytics snapshot endpoint for asynchronous chart-data retrieval,
+  - replaced filter auto-submit full reload behavior with in-place data refresh,
+  - updated chart and summary-card rendering to refresh immediately after filter changes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics charts now refresh without page navigation while keeping existing scope/security behavior intact.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

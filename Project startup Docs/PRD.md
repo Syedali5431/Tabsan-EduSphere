@@ -60,6 +60,26 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - filter dependency behavior is now enforced end-to-end for analytics filtering,
   - no schema or access-control boundary changes introduced.
 
+### 2026-05-20 - Plan D Phase 2 Stage 2.3 Instant Charts Update
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.3 and make charts update instantly on filter/legend change.
+
+#### Phase 2 Stage 2.3 - Instant Charts Update (Implemented)
+- Implementation Summary:
+  - introduced analytics snapshot response for in-page updates,
+  - replaced full-page filter submit behavior with async refresh and re-render flow,
+  - kept legend-based series visibility toggles in place across chart refreshes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 2.3 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - analytics charts now update in-place on filter changes while preserving existing security and tenant/campus boundaries.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

@@ -2518,6 +2518,41 @@ public class PortalController : Controller
     public async Task<IActionResult> Analytics(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
     {
         ViewData["Title"] = "Analytics";
+        var model = await BuildAnalyticsPageModelAsync(institutionType, departmentId, courseId, semesterId, ct);
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AnalyticsSnapshot(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    {
+        var model = await BuildAnalyticsPageModelAsync(institutionType, departmentId, courseId, semesterId, ct);
+        return Json(new
+        {
+            success = model.IsConnected,
+            message = model.Message,
+            selectedInstitutionType = model.SelectedInstitutionType,
+            selectedDepartmentId = model.SelectedDepartmentId,
+            selectedCourseId = model.SelectedCourseId,
+            selectedSemesterId = model.SelectedSemesterId,
+            departments = model.Departments.Select(d => new { id = d.Id, name = d.Name, institutionType = d.InstitutionType }).ToList(),
+            courses = model.Courses.Select(c => new { id = c.Id, name = c.Name }).ToList(),
+            semesters = model.Semesters.Select(s => new { id = s.Id, name = s.Name }).ToList(),
+            cards = model.Cards.Select(c => new
+            {
+                label = c.Label,
+                value = c.Value,
+                subText = c.SubText,
+                colorClass = c.ColorClass,
+                icon = c.Icon
+            }).ToList(),
+            performance = model.Performance,
+            attendance = model.Attendance,
+            assignments = model.Assignments
+        });
+    }
+
+    private async Task<AnalyticsPageModel> BuildAnalyticsPageModelAsync(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    {
         var identity = _api.GetSessionIdentity();
         var model = new AnalyticsPageModel
         {
@@ -2528,7 +2563,10 @@ public class PortalController : Controller
             SelectedSemesterId = semesterId
         };
 
-        if (!model.IsConnected) return View(model);
+        if (!model.IsConnected)
+        {
+            return model;
+        }
 
         try
         {
@@ -2611,46 +2649,50 @@ public class PortalController : Controller
 
             // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON
             model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
-            model.Attendance  = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
             model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
 
-            // Populate summary cards from real data
+            // Populate summary cards from real data.
             if (model.Performance is not null)
             {
                 model.Cards.Add(new AnalyticsSummaryCard
                 {
-                    Label      = "Avg. Marks",
-                    Value      = $"{model.Performance.AverageMarks:F1}%",
-                    SubText    = $"{model.Performance.TotalStudents} students · {model.Performance.DepartmentName}",
+                    Label = "Avg. Marks",
+                    Value = $"{model.Performance.AverageMarks:F1}%",
+                    SubText = $"{model.Performance.TotalStudents} students · {model.Performance.DepartmentName}",
                     ColorClass = "text-primary",
-                    Icon       = "📊"
+                    Icon = "📊"
                 });
             }
             if (model.Attendance is not null)
             {
                 model.Cards.Add(new AnalyticsSummaryCard
                 {
-                    Label      = "Avg. Attendance",
-                    Value      = $"{model.Attendance.OverallAttendancePercentage:F1}%",
-                    SubText    = model.Attendance.DepartmentName,
+                    Label = "Avg. Attendance",
+                    Value = $"{model.Attendance.OverallAttendancePercentage:F1}%",
+                    SubText = model.Attendance.DepartmentName,
                     ColorClass = "text-success",
-                    Icon       = "📋"
+                    Icon = "📋"
                 });
             }
             if (model.Assignments is not null)
             {
                 model.Cards.Add(new AnalyticsSummaryCard
                 {
-                    Label      = "Assignments",
-                    Value      = model.Assignments.Assignments.Count.ToString(),
-                    SubText    = model.Assignments.DepartmentName,
+                    Label = "Assignments",
+                    Value = model.Assignments.Assignments.Count.ToString(),
+                    SubText = model.Assignments.DepartmentName,
                     ColorClass = "text-warning",
-                    Icon       = "📝"
+                    Icon = "📝"
                 });
             }
         }
-        catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return model;
     }
 
     // ── AI Chat ────────────────────────────────────────────────────────────

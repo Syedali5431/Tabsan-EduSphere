@@ -58,6 +58,24 @@ No new endpoints were added in this stage.
 | `Analytics filter auto-apply handlers` | Auto-submits analytics filters when parent selection changes and resets downstream selections. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
 | `CourseController.GetOfferings` payload (`DepartmentId`) | Exposes department metadata for deterministic dependent filtering in web layer. | `src/Tabsan.EduSphere.API/Controllers/CourseController.cs` |
 
+## 2026-05-20 - Plan D Phase 2 Stage 2.3 (Instant Charts Update)
+
+- Recent request issue:
+  - proceed to Stage 2.3 and make chart updates instant.
+- Implementation Summary:
+  - added snapshot endpoint and client-side refresh flow for instant analytics rendering.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `PortalController.AnalyticsSnapshot` | Returns current analytics filter options and report payload in JSON for in-page refresh. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.BuildAnalyticsPageModelAsync` | Centralizes analytics model construction for initial page load and snapshot responses. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `refreshSnapshot` (Analytics page script) | Fetches analytics snapshot and updates filters/cards/charts without full page reload. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

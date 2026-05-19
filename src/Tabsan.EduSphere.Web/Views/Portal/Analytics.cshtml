@@ -2,10 +2,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AnalyticsPageModel
 @{ ViewData["Title"] = "Analytics"; }
 
-@if (!string.IsNullOrWhiteSpace(Model.Message))
-{
-    <div class="alert alert-info">@Model.Message</div>
-}
+<div id="analyticsMessage" class="alert alert-info @(string.IsNullOrWhiteSpace(Model.Message) ? "d-none" : string.Empty)">@Model.Message</div>
 
 @if (!Model.IsConnected)
 {
@@ -119,26 +116,23 @@ else
     </div>
 
     <div class="analytics-dashboard">
-        @if (Model.Cards.Count > 0)
-        {
-            <div class="row g-3 mb-4">
-                @foreach (var card in Model.Cards)
-                {
-                    <div class="col-12 col-sm-6 col-xl-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="text-muted small text-uppercase fw-semibold mb-1">@card.Icon @card.Label</div>
-                                <div class="display-6 fw-bold @card.ColorClass">@card.Value</div>
-                                @if (!string.IsNullOrWhiteSpace(card.SubText))
-                                {
-                                    <div class="text-muted small mt-1">@card.SubText</div>
-                                }
-                            </div>
+        <div class="row g-3 mb-4" id="analyticsSummaryCards">
+            @foreach (var card in Model.Cards)
+            {
+                <div class="col-12 col-sm-6 col-xl-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold mb-1">@card.Icon @card.Label</div>
+                            <div class="display-6 fw-bold @card.ColorClass">@card.Value</div>
+                            @if (!string.IsNullOrWhiteSpace(card.SubText))
+                            {
+                                <div class="text-muted small mt-1">@card.SubText</div>
+                            }
                         </div>
                     </div>
-                }
-            </div>
-        }
+                </div>
+            }
+        </div>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light fw-bold d-flex align-items-center">
@@ -343,15 +337,138 @@ else
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         (function () {
+            var snapshotUrl = '@Url.Action("AnalyticsSnapshot", "Portal")';
             var filterForm = document.getElementById('analyticsFilterForm');
             var institutionSelect = document.getElementById('analyticsInstitutionType');
             var departmentSelect = document.getElementById('analyticsDepartmentId');
             var courseSelect = document.getElementById('analyticsCourseId');
             var semesterSelect = document.getElementById('analyticsSemesterId');
+            var messageEl = document.getElementById('analyticsMessage');
+            var summaryCardsEl = document.getElementById('analyticsSummaryCards');
+            var submitButton = filterForm ? filterForm.querySelector('button[type="submit"]') : null;
+            var activeRequestId = 0;
+            var charts = {
+                overview: null,
+                performance: null,
+                attendance: null,
+                assignments: null
+            };
+
+            var initialSnapshot = {
+                success: true,
+                message: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Message)),
+                selectedInstitutionType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedInstitutionType)),
+                selectedDepartmentId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedDepartmentId)),
+                selectedCourseId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedCourseId)),
+                selectedSemesterId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedSemesterId)),
+                departments: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Departments)),
+                courses: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Courses)),
+                semesters: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Semesters)),
+                cards: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cards)),
+                performance: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance)),
+                attendance: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance)),
+                assignments: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments))
+            };
+
+            function prop(obj, camelName, pascalName, defaultValue) {
+                if (!obj) return defaultValue;
+                if (Object.prototype.hasOwnProperty.call(obj, camelName)) return obj[camelName];
+                if (Object.prototype.hasOwnProperty.call(obj, pascalName)) return obj[pascalName];
+                return defaultValue;
+            }
+
+            function setLoading(isLoading) {
+                [institutionSelect, departmentSelect, courseSelect, semesterSelect, submitButton].forEach(function (el) {
+                    if (el) el.disabled = isLoading;
+                });
+            }
+
+            function showMessage(message) {
+                if (!messageEl) return;
+                if (!message) {
+                    messageEl.classList.add('d-none');
+                    messageEl.textContent = '';
+                    return;
+                }
+
+                messageEl.textContent = message;
+                messageEl.classList.remove('d-none');
+            }
 
             function clearSelectValue(selectEl) {
                 if (selectEl) {
                     selectEl.value = '';
+                }
+            }
+
+            function setSelectOptions(selectEl, options, selectedValue, emptyLabel) {
+                if (!selectEl) return;
+                var normalizedSelected = selectedValue ? String(selectedValue) : '';
+                selectEl.innerHTML = '';
+
+                var emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = emptyLabel;
+                if (!normalizedSelected) {
+                    emptyOption.selected = true;
+                }
+                selectEl.appendChild(emptyOption);
+
+                (options || []).forEach(function (item) {
+                    var id = String(prop(item, 'id', 'Id', ''));
+                    if (!id) return;
+                    var name = prop(item, 'name', 'Name', id);
+                    var option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = name;
+                    if (normalizedSelected && normalizedSelected === id) {
+                        option.selected = true;
+                    }
+                    selectEl.appendChild(option);
+                });
+            }
+
+            function renderSummaryCards(cards) {
+                if (!summaryCardsEl) return;
+                summaryCardsEl.innerHTML = '';
+                (cards || []).forEach(function (card) {
+                    var col = document.createElement('div');
+                    col.className = 'col-12 col-sm-6 col-xl-4';
+
+                    var cardWrap = document.createElement('div');
+                    cardWrap.className = 'card border-0 shadow-sm h-100';
+
+                    var cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    var label = document.createElement('div');
+                    label.className = 'text-muted small text-uppercase fw-semibold mb-1';
+                    label.textContent = (prop(card, 'icon', 'Icon', '') + ' ' + prop(card, 'label', 'Label', '')).trim();
+
+                    var value = document.createElement('div');
+                    value.className = 'display-6 fw-bold ' + prop(card, 'colorClass', 'ColorClass', 'text-primary');
+                    value.textContent = prop(card, 'value', 'Value', '0');
+
+                    cardBody.appendChild(label);
+                    cardBody.appendChild(value);
+
+                    var subTextValue = prop(card, 'subText', 'SubText', null);
+                    if (subTextValue) {
+                        var subText = document.createElement('div');
+                        subText.className = 'text-muted small mt-1';
+                        subText.textContent = subTextValue;
+                        cardBody.appendChild(subText);
+                    }
+
+                    cardWrap.appendChild(cardBody);
+                    col.appendChild(cardWrap);
+                    summaryCardsEl.appendChild(col);
+                });
+            }
+
+            function destroyChart(chart) {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
                 }
             }
 
@@ -360,7 +477,7 @@ else
                     clearSelectValue(departmentSelect);
                     clearSelectValue(courseSelect);
                     clearSelectValue(semesterSelect);
-                    filterForm.submit();
+                    refreshSnapshot();
                 });
             }
 
@@ -368,14 +485,27 @@ else
                 departmentSelect.addEventListener('change', function () {
                     clearSelectValue(courseSelect);
                     clearSelectValue(semesterSelect);
-                    filterForm.submit();
+                    refreshSnapshot();
                 });
             }
 
             if (courseSelect && filterForm) {
                 courseSelect.addEventListener('change', function () {
                     clearSelectValue(semesterSelect);
-                    filterForm.submit();
+                    refreshSnapshot();
+                });
+            }
+
+            if (semesterSelect && filterForm) {
+                semesterSelect.addEventListener('change', function () {
+                    refreshSnapshot();
+                });
+            }
+
+            if (filterForm) {
+                filterForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    refreshSnapshot();
                 });
             }
 
@@ -428,17 +558,31 @@ else
                 });
             }
 
-            function renderOverview() {
+            function renderOverview(snapshot) {
                 var el = document.getElementById('sampleChart');
                 if (!el) return;
 
-                var chart = new Chart(el, {
+                var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
+                var attendance = snapshot ? prop(snapshot, 'attendance', 'Attendance', null) : null;
+                var assignments = snapshot ? prop(snapshot, 'assignments', 'Assignments', null) : null;
+
+                var overviewLabels = ['Avg Marks', 'Attendance', 'Assignments', 'Students'];
+                var overviewValues = [
+                    Number(prop(performance, 'averageMarks', 'AverageMarks', 0)) || 0,
+                    Number(prop(attendance, 'overallAttendancePercentage', 'OverallAttendancePercentage', 0)) || 0,
+                    Number((prop(assignments, 'assignments', 'Assignments', []) || []).length) || 0,
+                    Number(prop(performance, 'totalStudents', 'TotalStudents', 0)) || 0
+                ];
+
+                destroyChart(charts.overview);
+
+                charts.overview = new Chart(el, {
                     type: 'bar',
                     data: {
-                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
+                        labels: overviewLabels,
                         datasets: [{
-                            label: 'Student Count',
-                            data: [120, 90, 150, 80],
+                            label: 'Snapshot Metrics',
+                            data: overviewValues,
                             backgroundColor: [
                                 'rgba(54, 162, 235, 0.7)',
                                 'rgba(255, 206, 86, 0.7)',
@@ -461,16 +605,20 @@ else
                     }
                 });
 
-                buildClickableLegend('overviewLegend', chart);
+                buildClickableLegend('overviewLegend', charts.overview);
             }
 
-            function renderPerformance() {
+            function renderPerformance(snapshot) {
                 var el = document.getElementById('performanceChart');
                 if (!el) return;
-                var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance?.Students.Select(s => s.FullName).Take(10).ToList() ?? new List<string>()));
-                var values = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance?.Students.Select(s => s.AverageMarks).Take(10).ToList() ?? new List<double>()));
+                var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
+                var students = prop(performance, 'students', 'Students', []) || [];
+                var labels = students.slice(0, 10).map(function (s) { return prop(s, 'fullName', 'FullName', ''); });
+                var values = students.slice(0, 10).map(function (s) { return Number(prop(s, 'averageMarks', 'AverageMarks', 0)) || 0; });
                 if (!labels.length) return;
-                var chart = new Chart(el, {
+
+                destroyChart(charts.performance);
+                charts.performance = new Chart(el, {
                     type: 'bar',
                     data: {
                         labels: labels,
@@ -490,16 +638,20 @@ else
                     }
                 });
 
-                buildClickableLegend('performanceLegend', chart);
+                buildClickableLegend('performanceLegend', charts.performance);
             }
 
-            function renderAttendance() {
+            function renderAttendance(snapshot) {
                 var el = document.getElementById('attendanceChart');
                 if (!el) return;
-                var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance?.Rows.Select(r => r.FullName).Take(10).ToList() ?? new List<string>()));
-                var values = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance?.Rows.Select(r => r.AttendancePercentage).Take(10).ToList() ?? new List<double>()));
+                var attendance = snapshot ? prop(snapshot, 'attendance', 'Attendance', null) : null;
+                var rows = prop(attendance, 'rows', 'Rows', []) || [];
+                var labels = rows.slice(0, 10).map(function (r) { return prop(r, 'fullName', 'FullName', ''); });
+                var values = rows.slice(0, 10).map(function (r) { return Number(prop(r, 'attendancePercentage', 'AttendancePercentage', 0)) || 0; });
                 if (!labels.length) return;
-                var chart = new Chart(el, {
+
+                destroyChart(charts.attendance);
+                charts.attendance = new Chart(el, {
                     type: 'line',
                     data: {
                         labels: labels,
@@ -521,17 +673,21 @@ else
                     }
                 });
 
-                buildClickableLegend('attendanceLegend', chart);
+                buildClickableLegend('attendanceLegend', charts.attendance);
             }
 
-            function renderAssignments() {
+            function renderAssignments(snapshot) {
                 var el = document.getElementById('assignmentChart');
                 if (!el) return;
-                var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments?.Assignments.Select(a => a.Title).Take(8).ToList() ?? new List<string>()));
-                var submitted = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments?.Assignments.Select(a => a.Submissions).Take(8).ToList() ?? new List<int>()));
-                var graded = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments?.Assignments.Select(a => a.Graded).Take(8).ToList() ?? new List<int>()));
+                var assignmentReport = snapshot ? prop(snapshot, 'assignments', 'Assignments', null) : null;
+                var assignments = prop(assignmentReport, 'assignments', 'Assignments', []) || [];
+                var labels = assignments.slice(0, 8).map(function (a) { return prop(a, 'title', 'Title', ''); });
+                var submitted = assignments.slice(0, 8).map(function (a) { return Number(prop(a, 'submissions', 'Submissions', 0)) || 0; });
+                var graded = assignments.slice(0, 8).map(function (a) { return Number(prop(a, 'graded', 'Graded', 0)) || 0; });
                 if (!labels.length) return;
-                var chart = new Chart(el, {
+
+                destroyChart(charts.assignments);
+                charts.assignments = new Chart(el, {
                     type: 'bar',
                     data: {
                         labels: labels,
@@ -559,13 +715,84 @@ else
                     }
                 });
 
-                buildClickableLegend('assignmentLegend', chart);
+                buildClickableLegend('assignmentLegend', charts.assignments);
             }
 
-            renderOverview();
-            renderPerformance();
-            renderAttendance();
-            renderAssignments();
+            function applySnapshot(snapshot) {
+                showMessage(snapshot && snapshot.message ? snapshot.message : '');
+
+                var selectedInstitutionType = prop(snapshot, 'selectedInstitutionType', 'SelectedInstitutionType', null);
+                var selectedDepartmentId = prop(snapshot, 'selectedDepartmentId', 'SelectedDepartmentId', null);
+                var selectedCourseId = prop(snapshot, 'selectedCourseId', 'SelectedCourseId', null);
+                var selectedSemesterId = prop(snapshot, 'selectedSemesterId', 'SelectedSemesterId', null);
+
+                if (institutionSelect) {
+                    institutionSelect.value = selectedInstitutionType !== null && selectedInstitutionType !== undefined
+                        ? String(selectedInstitutionType)
+                        : '';
+                }
+
+                setSelectOptions(departmentSelect, prop(snapshot, 'departments', 'Departments', []), selectedDepartmentId, 'All Departments');
+                setSelectOptions(courseSelect, prop(snapshot, 'courses', 'Courses', []), selectedCourseId, 'All Courses');
+                setSelectOptions(semesterSelect, prop(snapshot, 'semesters', 'Semesters', []), selectedSemesterId, 'All Semesters');
+
+                renderSummaryCards(prop(snapshot, 'cards', 'Cards', []));
+                renderOverview(snapshot);
+                renderPerformance(snapshot);
+                renderAttendance(snapshot);
+                renderAssignments(snapshot);
+            }
+
+            function buildSnapshotQuery() {
+                var query = new URLSearchParams();
+                if (institutionSelect && institutionSelect.value) query.set('institutionType', institutionSelect.value);
+                if (departmentSelect && departmentSelect.value) query.set('departmentId', departmentSelect.value);
+                if (courseSelect && courseSelect.value) query.set('courseId', courseSelect.value);
+                if (semesterSelect && semesterSelect.value) query.set('semesterId', semesterSelect.value);
+                return query;
+            }
+
+            async function refreshSnapshot() {
+                var currentRequest = ++activeRequestId;
+                setLoading(true);
+
+                try {
+                    var response = await fetch(snapshotUrl + '?' + buildSnapshotQuery().toString(), {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Unable to load analytics snapshot.');
+                    }
+
+                    var snapshot = await response.json();
+                    if (currentRequest !== activeRequestId) {
+                        return;
+                    }
+
+                    if (!snapshot || snapshot.success === false) {
+                        showMessage(snapshot && snapshot.message ? snapshot.message : 'Unable to load analytics data.');
+                        return;
+                    }
+
+                    applySnapshot(snapshot);
+                } catch (error) {
+                    if (currentRequest !== activeRequestId) {
+                        return;
+                    }
+
+                    showMessage(error && error.message ? error.message : 'Unable to load analytics data.');
+                } finally {
+                    if (currentRequest === activeRequestId) {
+                        setLoading(false);
+                    }
+                }
+            }
+
+            applySnapshot(initialSnapshot);
         })();
     </script>
 }
