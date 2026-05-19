@@ -128,6 +128,18 @@ Enhance the application to fully support environment-based configuration managem
 - **Stage 8.1:** Avoid unnecessary config reloads
 - **Stage 8.2:** Cache config where appropriate
 
+#### Phase 8 Implementation Summary (2026-05-19)
+- Optimized `AddEduSphereConfigurationHierarchy` to stop re-registering base appsettings and environment-variable providers that default .NET builders already include.
+- Preserved configuration precedence while inserting deployment, external, local, and tenant overlay sources ahead of environment variables instead of duplicating full provider chains.
+- Reduced unnecessary file-watch churn by disabling reload-on-change for deployment, external, and tenant overlay files while keeping development-friendly reload behavior for local settings.
+
+#### Phase 8 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 9: Logging & Visibility
 - **Stage 9.1:** Log active environment, config source, and DB type (not credentials)
 

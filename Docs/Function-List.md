@@ -3,6 +3,22 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 8 Implementation (Performance & Stability)
+
+- Recent request issue:
+  - proceed to configuration performance and stability improvements.
+- Implementation Summary:
+  - optimized shared configuration hierarchy registration to avoid duplicate providers and unnecessary reload watchers.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy` | Builds the shared configuration hierarchy without duplicating default appsettings/environment providers and preserves correct source precedence. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+| `ConfigurationBootstrapper.InsertJsonSourceIfMissing` | Inserts optional JSON configuration sources only when they are not already registered. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+| `ConfigurationBootstrapper.InsertEnvironmentVariablesSourceIfMissing` | Avoids duplicate environment-variable providers while preserving intended override order. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+| `ConfigurationBootstrapper.GetInsertionIndex` | Places overlay config sources ahead of environment variables and command-line inputs to keep expected precedence stable. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+
 ## 2026-05-19 - Plan B Phase 7 Implementation (Fail-Safe Behavior)
 
 - Recent request issue:

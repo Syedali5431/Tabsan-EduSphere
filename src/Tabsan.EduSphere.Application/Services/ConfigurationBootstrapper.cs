@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Hosting;
 
 namespace Tabsan.EduSphere.Application.Services;
@@ -6,6 +8,10 @@ namespace Tabsan.EduSphere.Application.Services;
 public static class ConfigurationBootstrapper
 {
     private const string DefaultEnvironmentVariablePrefix = "EDUSPHERE_";
+    private const string BaseSettingsFile = "appsettings.json";
+    private const string DeploymentSettingsFile = "appsettings.Deployment.json";
+    private const string ExternalSettingsFile = "appsettings.External.json";
+    private const string LocalSettingsFile = "appsettings.Local.json";
 
     public static IConfigurationBuilder AddEduSphereConfigurationHierarchy(
         this IConfigurationBuilder configurationBuilder,
@@ -15,23 +21,89 @@ public static class ConfigurationBootstrapper
         var prefix = string.IsNullOrWhiteSpace(environmentVariablePrefix)
             ? DefaultEnvironmentVariablePrefix
             : environmentVariablePrefix.Trim();
-        var tenantConfigPath = Environment.GetEnvironmentVariable("EDUSPHERE_TENANT_CONFIG_PATH");
+        var tenantConfigPath = Environment.GetEnvironmentVariable("EDUSPHERE_TENANT_CONFIG_PATH")?.Trim();
+        var environmentSettingsFile = $"appsettings.{environment.EnvironmentName}.json";
+        var insertIndex = GetInsertionIndex(configurationBuilder);
 
-        var builder = configurationBuilder
-            .SetBasePath(environment.ContentRootPath)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-            .AddJsonFile("appsettings.Deployment.json", optional: true, reloadOnChange: true)
-            .AddJsonFile("appsettings.External.json", optional: true, reloadOnChange: true)
-            .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+        configurationBuilder.SetBasePath(environment.ContentRootPath);
+
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, BaseSettingsFile, optional: false, reloadOnChange: environment.IsDevelopment());
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, environmentSettingsFile, optional: true, reloadOnChange: environment.IsDevelopment());
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, DeploymentSettingsFile, optional: true, reloadOnChange: false);
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, ExternalSettingsFile, optional: true, reloadOnChange: false);
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, LocalSettingsFile, optional: true, reloadOnChange: environment.IsDevelopment());
 
         if (!string.IsNullOrWhiteSpace(tenantConfigPath))
         {
-            builder.AddJsonFile(tenantConfigPath.Trim(), optional: true, reloadOnChange: true);
+            insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, tenantConfigPath, optional: true, reloadOnChange: false);
         }
 
-        return builder
-            .AddEnvironmentVariables(prefix)
-            .AddEnvironmentVariables();
+        insertIndex = InsertEnvironmentVariablesSourceIfMissing(configurationBuilder, insertIndex, prefix);
+        InsertEnvironmentVariablesSourceIfMissing(configurationBuilder, insertIndex, prefix: null);
+
+        return configurationBuilder;
+    }
+
+    private static int InsertJsonSourceIfMissing(IConfigurationBuilder configurationBuilder, int insertIndex, string path, bool optional, bool reloadOnChange)
+    {
+        if (HasJsonSource(configurationBuilder, path))
+        {
+            return insertIndex;
+        }
+
+        var source = new JsonConfigurationSource
+        {
+            Path = path,
+            Optional = optional,
+            ReloadOnChange = reloadOnChange
+        };
+        source.EnsureDefaults(configurationBuilder);
+
+        configurationBuilder.Sources.Insert(insertIndex, source);
+
+        return insertIndex + 1;
+    }
+
+    private static int InsertEnvironmentVariablesSourceIfMissing(IConfigurationBuilder configurationBuilder, int insertIndex, string? prefix)
+    {
+        if (configurationBuilder.Sources.OfType<EnvironmentVariablesConfigurationSource>()
+            .Any(source => string.Equals(source.Prefix ?? string.Empty, prefix ?? string.Empty, StringComparison.OrdinalIgnoreCase)))
+        {
+            return insertIndex;
+        }
+
+        configurationBuilder.Sources.Insert(insertIndex, new EnvironmentVariablesConfigurationSource
+        {
+            Prefix = prefix
+        });
+
+        return insertIndex + 1;
+    }
+
+    private static bool HasJsonSource(IConfigurationBuilder configurationBuilder, string path)
+    {
+        return configurationBuilder.Sources.OfType<JsonConfigurationSource>()
+            .Any(source => string.Equals(NormalizePath(source.Path), NormalizePath(path), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static int GetInsertionIndex(IConfigurationBuilder configurationBuilder)
+    {
+        for (var index = 0; index < configurationBuilder.Sources.Count; index++)
+        {
+            var source = configurationBuilder.Sources[index];
+            if (source is EnvironmentVariablesConfigurationSource || source.GetType().Name.Contains("CommandLineConfigurationSource", StringComparison.Ordinal))
+            {
+                return index;
+            }
+        }
+
+        return configurationBuilder.Sources.Count;
+    }
+
+    private static string NormalizePath(string? path)
+    {
+        return (path ?? string.Empty)
+            .Trim()
+            .Replace('\\', '/');
     }
 }
