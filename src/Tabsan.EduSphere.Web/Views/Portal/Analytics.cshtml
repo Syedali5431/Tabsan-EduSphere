@@ -82,32 +82,27 @@ else
         </div>
     </div>
 
-
     <div class="analytics-dashboard">
-        <div class="d-flex flex-column flex-lg-row align-items-stretch gap-4 mb-4">
-            @if (Model.Cards.Count > 0)
-            {
-                <div class="flex-grow-1">
-                    <div class="row g-3">
-                        @foreach (var card in Model.Cards)
-                        {
-                            <div class="col-12 col-sm-6 col-xl-4">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body">
-                                        <div class="text-muted small text-uppercase fw-semibold mb-1">@card.Icon @card.Label</div>
-                                        <div class="display-6 fw-bold @card.ColorClass">@card.Value</div>
-                                        @if (!string.IsNullOrWhiteSpace(card.SubText))
-                                        {
-                                            <div class="text-muted small mt-1">@card.SubText</div>
-                                        }
-                                    </div>
-                                </div>
+        @if (Model.Cards.Count > 0)
+        {
+            <div class="row g-3 mb-4">
+                @foreach (var card in Model.Cards)
+                {
+                    <div class="col-12 col-sm-6 col-xl-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="text-muted small text-uppercase fw-semibold mb-1">@card.Icon @card.Label</div>
+                                <div class="display-6 fw-bold @card.ColorClass">@card.Value</div>
+                                @if (!string.IsNullOrWhiteSpace(card.SubText))
+                                {
+                                    <div class="text-muted small mt-1">@card.SubText</div>
+                                }
                             </div>
-                        }
+                        </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light fw-bold d-flex align-items-center">
@@ -115,127 +110,11 @@ else
                 Analytics Overview
             </div>
             <div class="card-body">
+                <div id="overviewLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                 <canvas id="sampleChart" height="120"></canvas>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var chartCanvas = document.getElementById('sampleChart');
-            if (chartCanvas) {
-                var ctx = chartCanvas.getContext('2d');
-                var chart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
-                        datasets: [{
-                            label: 'Student Count',
-                            data: [120, 90, 150, 80],
-                            backgroundColor: [
-                                'rgba(54, 162, 235, 0.7)',
-                                'rgba(255, 206, 86, 0.7)',
-                                'rgba(75, 192, 192, 0.7)',
-                                'rgba(255, 99, 132, 0.7)'
-                            ],
-                            borderColor: [
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 99, 132, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { display: true },
-                            title: { display: false }
-                        },
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-
-    <!-- Chart.js sample chart integration (Plan D Phase 1 Stage 1.1) -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-light fw-bold">Sample Analytics Chart (Plan D Phase 1 Stage 1.1)</div>
-        <div class="card-body">
-            <canvas id="sampleChart" height="120"></canvas>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var chartCanvas = document.getElementById('sampleChart');
-            if (chartCanvas) {
-                var ctx = chartCanvas.getContext('2d');
-                var chart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
-                        datasets: [{
-                            label: 'Student Count',
-                            data: [120, 90, 150, 80],
-                            backgroundColor: [
-                                'rgba(54, 162, 235, 0.7)',
-                                'rgba(255, 206, 86, 0.7)',
-                                'rgba(75, 192, 192, 0.7)',
-                                'rgba(255, 99, 132, 0.7)'
-                            ],
-                            borderColor: [
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 99, 132, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { display: true },
-                            title: { display: false }
-                        },
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-
-
-    @* Summary cards *@
-    @if (Model.Cards.Count > 0)
-    {
-        <div class="row g-3 mb-4">
-            @foreach (var card in Model.Cards)
-            {
-                <div class="col-sm-6 col-xl-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-muted small text-uppercase fw-semibold mb-1">@card.Icon @card.Label</div>
-                            <div class="display-6 fw-bold @card.ColorClass">@card.Value</div>
-                            @if (!string.IsNullOrWhiteSpace(card.SubText))
-                            {
-                                <div class="text-muted small mt-1">@card.SubText</div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
 
     <div class="accordion" id="analyticsAccordion">
 
@@ -260,6 +139,7 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
+                                <div id="performanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                                 <canvas id="performanceChart" height="120"></canvas>
                             </div>
                             <div class="table-responsive">
@@ -316,6 +196,7 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
+                                <div id="attendanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                                 <canvas id="attendanceChart" height="120"></canvas>
                             </div>
                             <div class="table-responsive">
@@ -372,6 +253,7 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
+                                <div id="assignmentLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                                 <canvas id="assignmentChart" height="120"></canvas>
                             </div>
                             <div class="table-responsive">
@@ -425,13 +307,98 @@ else
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         (function () {
+            function legendColor(dataset, idx) {
+                if (Array.isArray(dataset.backgroundColor)) {
+                    return dataset.backgroundColor[Math.min(idx, dataset.backgroundColor.length - 1)] || '#6c757d';
+                }
+                return dataset.borderColor || dataset.backgroundColor || '#6c757d';
+            }
+
+            function buildClickableLegend(containerId, chart) {
+                var container = document.getElementById(containerId);
+                if (!container || !chart || !chart.data || !chart.data.datasets) return;
+
+                container.innerHTML = '';
+
+                chart.data.datasets.forEach(function (dataset, datasetIndex) {
+                    var item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
+
+                    var swatch = document.createElement('span');
+                    swatch.style.width = '10px';
+                    swatch.style.height = '10px';
+                    swatch.style.borderRadius = '999px';
+                    swatch.style.backgroundColor = legendColor(dataset, datasetIndex);
+                    swatch.style.display = 'inline-block';
+
+                    var text = document.createElement('span');
+                    text.textContent = dataset.label || ('Series ' + (datasetIndex + 1));
+
+                    item.appendChild(swatch);
+                    item.appendChild(text);
+
+                    var updateState = function () {
+                        var hidden = !chart.isDatasetVisible(datasetIndex);
+                        item.classList.toggle('opacity-50', hidden);
+                        item.classList.toggle('text-decoration-line-through', hidden);
+                    };
+
+                    item.addEventListener('click', function () {
+                        var currentlyVisible = chart.isDatasetVisible(datasetIndex);
+                        chart.setDatasetVisibility(datasetIndex, !currentlyVisible);
+                        chart.update();
+                        updateState();
+                    });
+
+                    updateState();
+                    container.appendChild(item);
+                });
+            }
+
+            function renderOverview() {
+                var el = document.getElementById('sampleChart');
+                if (!el) return;
+
+                var chart = new Chart(el, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
+                        datasets: [{
+                            label: 'Student Count',
+                            data: [120, 90, 150, 80],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(255, 99, 132, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                buildClickableLegend('overviewLegend', chart);
+            }
+
             function renderPerformance() {
                 var el = document.getElementById('performanceChart');
                 if (!el) return;
                 var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance?.Students.Select(s => s.FullName).Take(10).ToList() ?? new List<string>()));
                 var values = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance?.Students.Select(s => s.AverageMarks).Take(10).ToList() ?? new List<double>()));
                 if (!labels.length) return;
-                new Chart(el, {
+                var chart = new Chart(el, {
                     type: 'bar',
                     data: {
                         labels: labels,
@@ -450,6 +417,8 @@ else
                         plugins: { legend: { display: false } }
                     }
                 });
+
+                buildClickableLegend('performanceLegend', chart);
             }
 
             function renderAttendance() {
@@ -458,7 +427,7 @@ else
                 var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance?.Rows.Select(r => r.FullName).Take(10).ToList() ?? new List<string>()));
                 var values = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance?.Rows.Select(r => r.AttendancePercentage).Take(10).ToList() ?? new List<double>()));
                 if (!labels.length) return;
-                new Chart(el, {
+                var chart = new Chart(el, {
                     type: 'line',
                     data: {
                         labels: labels,
@@ -475,9 +444,12 @@ else
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
                         scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
+
+                buildClickableLegend('attendanceLegend', chart);
             }
 
             function renderAssignments() {
@@ -487,7 +459,7 @@ else
                 var submitted = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments?.Assignments.Select(a => a.Submissions).Take(8).ToList() ?? new List<int>()));
                 var graded = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments?.Assignments.Select(a => a.Graded).Take(8).ToList() ?? new List<int>()));
                 if (!labels.length) return;
-                new Chart(el, {
+                var chart = new Chart(el, {
                     type: 'bar',
                     data: {
                         labels: labels,
@@ -510,11 +482,15 @@ else
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
                     }
                 });
+
+                buildClickableLegend('assignmentLegend', chart);
             }
 
+            renderOverview();
             renderPerformance();
             renderAttendance();
             renderAssignments();
