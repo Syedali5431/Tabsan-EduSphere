@@ -1,23 +1,3 @@
-## 2026-05-20 Update - Plan D Phase 1 Stage 1.3 Clickable Legends
-
-- Recent request issue:
-  - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends across Analytics charts.
-
-### Phase 1 Stage 1.3 - Clickable Legends (Implemented)
-- Implementation Summary:
-  - introduced reusable color-coded clickable legend chips for all Analytics charts,
-  - legends now toggle dataset visibility for overview, performance, attendance, and assignments charts,
-  - removed duplicate analytics rendering blocks to preserve a clean single dashboard rendering path.
-- Validation Summary:
-  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-  - unit tests passed (`151/151`),
-  - integration tests passed (`241/241`),
-  - contract tests passed (`1/1`).
-
-- Behavior impact:
-  - Analytics charts now support interactive legend-based data control,
-  - no backend API, schema, or tenancy/campus isolation behavior changed.
-
 # Tabsan-EduSphere - Complete Functionality Reference
 
 **Document Version:** 2.1 (Final Phase 38 Baseline)  
@@ -32,6 +12,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 - `Validation Summary`
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
+
+Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
+
+## 2026-05-20 Update - Plan D Phase 1 (Charting Framework & UI)
+
+- Recent request issue:
+  - complete Plan D Phase 1 with phase-end summary placement.
+
+### Phase 1 - Charting Framework & UI (Implemented)
+- Implementation Summary:
+  - integrated Chart.js,
+  - added responsive Analytics cards/panels layout,
+  - added color-coded clickable legends with dataset visibility toggling.
+- Validation Summary:
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`241/241`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - Analytics supports interactive legend-based data control,
+  - no backend API, schema, or tenancy/campus isolation behavior changed.
 
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 

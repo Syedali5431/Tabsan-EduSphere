@@ -1,22 +1,24 @@
-## Execution Update - 2026-05-20 (Plan D Phase 1 Stage 1.3 Clickable Legends)
-
-- Recent request issue:
-  - proceed to Plan D Phase 1 Stage 1.3 for interactive analytics legend controls.
-- Implementation Summary:
-  - enabled clickable, color-coded chart legends in Analytics UI for dataset visibility control,
-  - no module activation/deactivation, package pricing, or entitlement mapping changes were introduced.
-- Validation Summary:
-  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
-  - unit tests passed (`151/151`),
-  - integration tests passed (`241/241`),
-  - contract tests passed (`1/1`).
-
 # University Portal – Module Definition, Activation & Packaging
 
 **Document Version:** 1.3 (Implementation Baseline — Extended)  
 **Aligned With PRD Version:** 1.8  
 **Audience:** Super Admin, University Decision Makers  
 **Purpose:** Define selectable system modules, activation rules, and pricing packages  
+
+Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
+
+## Execution Update - 2026-05-20 (Plan D Phase 1 Charting Framework & UI)
+
+- Recent request issue:
+  - complete Plan D Phase 1 and keep phase-end summary placement.
+- Implementation Summary:
+  - added interactive Analytics charting layout and clickable legends,
+  - no module activation/deactivation, package pricing, or entitlement mapping changes were introduced.
+- Validation Summary:
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`241/241`),
+  - contract tests passed (`1/1`).
 
 ## Execution Update - 2026-05-19 (Plan C Phase 4 Implementation)
 

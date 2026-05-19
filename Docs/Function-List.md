@@ -1,21 +1,21 @@
-## 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
+# Function List — Tabsan EduSphere
+
+> **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
+> Format: `Name | Purpose | Location`
+
+## 2026-05-20 - Plan D Phase 1 (Charting Framework & UI)
 
 - Recent request issue:
-  - proceed to Stage 1.3 and implement color-coded clickable legends on Analytics charts.
+  - complete Plan D Phase 1 and keep summary placement at phase end.
 - Implementation Summary:
-  - added front-end chart legend interactivity using reusable client-side helper logic.
+  - implemented front-end charting and legend interactivity for Analytics.
 - Validation Summary:
   - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
   - unit tests passed (`151/151`),
   - integration tests passed (`241/241`),
   - contract tests passed (`1/1`).
 
-No new backend functions/endpoints were added in this stage.
-
-# Function List — Tabsan EduSphere
-
-> **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
-> Format: `Name | Purpose | Location`
+No new backend functions/endpoints were added in this phase.
 
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
