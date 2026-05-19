@@ -22,15 +22,17 @@ public sealed class AnalyticsService : IAnalyticsService
 {
     private readonly ApplicationDbContext _db;
     private readonly IDistributedCache _distributedCache;
+    private readonly IAccessScopeResolver? _accessScope;
 
     // Final-Touches Phase 34 Stage 4.1 — short-TTL distributed cache policy for expensive analytics read endpoints.
     private static readonly TimeSpan AnalyticsCacheTtl = TimeSpan.FromSeconds(30);
 
     /// <summary>Initialises the service with the application DbContext.</summary>
-    public AnalyticsService(ApplicationDbContext db, IDistributedCache distributedCache)
+    public AnalyticsService(ApplicationDbContext db, IDistributedCache distributedCache, IAccessScopeResolver? accessScope = null)
     {
         _db = db;
         _distributedCache = distributedCache;
+        _accessScope = accessScope;
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
@@ -43,8 +45,9 @@ public sealed class AnalyticsService : IAnalyticsService
         Guid? courseId = null,
         Guid? semesterId = null)
     {
+        var accessScope = GetAnalyticsAccessScope();
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("performance", departmentId, institutionType, courseId, semesterId);
+        var cacheKey = BuildAnalyticsCacheKey("performance", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -65,6 +68,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
                     && (!courseId.HasValue || c.Id == courseId.Value)
                     && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { sp.Id, sp.RegistrationNumber, DisplayName = u.Username, sp.CurrentSemesterNumber, OfferingId = co.Id };
@@ -111,8 +116,9 @@ public sealed class AnalyticsService : IAnalyticsService
         Guid? courseId = null,
         Guid? semesterId = null)
     {
+        var accessScope = GetAnalyticsAccessScope();
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("attendance", departmentId, institutionType, courseId, semesterId);
+        var cacheKey = BuildAnalyticsCacheKey("attendance", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -133,6 +139,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
                     && (!courseId.HasValue || c.Id == courseId.Value)
                     && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { sp.Id, DisplayName = u.Username, CourseName = c.Title, ar.Status }
@@ -175,8 +183,9 @@ public sealed class AnalyticsService : IAnalyticsService
         Guid? courseId = null,
         Guid? semesterId = null)
     {
+        var accessScope = GetAnalyticsAccessScope();
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("assignments", departmentId, institutionType, courseId, semesterId);
+        var cacheKey = BuildAnalyticsCacheKey("assignments", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -195,6 +204,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
                     && (!courseId.HasValue || c.Id == courseId.Value)
                     && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { a.Id, a.Title, CourseName = c.Title, OfferingId = co.Id }
@@ -233,8 +244,9 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default)
     {
+        var accessScope = GetAnalyticsAccessScope();
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("quizzes", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey("quizzes", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -247,12 +259,14 @@ public sealed class AnalyticsService : IAnalyticsService
 
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var quizzes = await (
-            from q  in _db.Quizzes.IgnoreQueryFilters()
+                from q  in _db.Quizzes
             join co in _db.CourseOfferings on q.CourseOfferingId equals co.Id
             join c  in _db.Courses         on co.CourseId         equals c.Id
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
             select new { q.Id, q.Title, CourseName = c.Title }
         ).ToListAsync(ct);
 
@@ -290,8 +304,9 @@ public sealed class AnalyticsService : IAnalyticsService
         int take = 10,
         CancellationToken ct = default)
     {
+        var accessScope = GetAnalyticsAccessScope();
         var normalizedTake = Math.Clamp(take, 1, 100);
-        var cacheKey = BuildAnalyticsCacheKey($"top-performers:{normalizedTake}", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey($"top-performers:{normalizedTake}", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -316,6 +331,8 @@ public sealed class AnalyticsService : IAnalyticsService
                && r.MaxMarks > 0
                && (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
             select new
             {
                 sp.Id,
@@ -392,8 +409,9 @@ public sealed class AnalyticsService : IAnalyticsService
         int windowDays = 30,
         CancellationToken ct = default)
     {
+        var accessScope = GetAnalyticsAccessScope();
         var normalizedWindowDays = Math.Clamp(windowDays, 7, 180);
-        var cacheKey = BuildAnalyticsCacheKey($"performance-trends:{normalizedWindowDays}", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey($"performance-trends:{normalizedWindowDays}", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -418,6 +436,8 @@ public sealed class AnalyticsService : IAnalyticsService
                && (r.PublishedAt ?? r.CreatedAt) >= windowStartDateUtc
                && (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+                    && (!accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
             select new
             {
                 Day = (r.PublishedAt ?? r.CreatedAt).Date,
@@ -471,7 +491,8 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default)
     {
-        var cacheKey = BuildAnalyticsCacheKey("comparative-summary", departmentId, institutionType);
+        var accessScope = GetAnalyticsAccessScope();
+        var cacheKey = BuildAnalyticsCacheKey("comparative-summary", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -485,6 +506,8 @@ public sealed class AnalyticsService : IAnalyticsService
         var scopedDepartments = await _db.Departments
             .Where(d => !departmentId.HasValue || d.Id == departmentId.Value)
             .Where(d => !institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+            .Where(d => !accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
+            .Where(d => !accessScope.CampusId.HasValue || d.CampusId == accessScope.CampusId.Value)
             .Select(d => new { d.Id, d.Name, InstitutionType = (int)d.InstitutionType })
             .ToListAsync(ct);
 
@@ -871,14 +894,33 @@ public sealed class AnalyticsService : IAnalyticsService
         return dept?.Name ?? "Unknown Department";
     }
 
-    private static string BuildAnalyticsCacheKey(string reportType, Guid? departmentId, int? institutionType, Guid? courseId = null, Guid? semesterId = null)
+    private AnalyticsAccessScope GetAnalyticsAccessScope()
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return new AnalyticsAccessScope(null, null, true);
+
+        return new AnalyticsAccessScope(_accessScope?.GetTenantId(), _accessScope?.GetCampusId(), false);
+    }
+
+    private static string BuildAnalyticsCacheKey(
+        string reportType,
+        Guid? departmentId,
+        int? institutionType,
+        AnalyticsAccessScope accessScope,
+        Guid? courseId = null,
+        Guid? semesterId = null)
     {
         var departmentSegment = departmentId?.ToString("N") ?? "all";
         var institutionSegment = institutionType?.ToString() ?? "any";
         var courseSegment = courseId?.ToString("N") ?? "all-courses";
         var semesterSegment = semesterId?.ToString("N") ?? "all-semesters";
-        return $"analytics:{reportType}:{departmentSegment}:{institutionSegment}:{courseSegment}:{semesterSegment}";
+        var tenantSegment = accessScope.TenantId?.ToString("N") ?? "any-tenant";
+        var campusSegment = accessScope.CampusId?.ToString("N") ?? "any-campus";
+        var roleSegment = accessScope.IsSuperAdmin ? "superadmin" : "scoped";
+        return $"analytics:{reportType}:{departmentSegment}:{institutionSegment}:{courseSegment}:{semesterSegment}:{tenantSegment}:{campusSegment}:{roleSegment}";
     }
+
+    private readonly record struct AnalyticsAccessScope(Guid? TenantId, Guid? CampusId, bool IsSuperAdmin);
 
     private static void AddPdfHeader(TableDescriptor table, params string[] headers)
     {

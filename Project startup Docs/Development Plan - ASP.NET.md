@@ -91,6 +91,25 @@ Validation summaries must include at minimum:
 - Stage status: Plan D Phase 3 Stage 3.1 completed.
 - Phase status: Plan D Phase 3 in progress.
 
+### 2026-05-20 - Plan D Phase 4 Stage 4.1 Tenant/Campus Isolation
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.1 and enforce strict tenant/campus filtering for analytics reads.
+
+#### Phase 4 Stage 4.1 - Analytics Isolation Hardening (Implemented)
+- Implementation Summary:
+  - enforced tenant/campus scope filters in analytics service query paths,
+  - removed analytics quiz query filter bypass,
+  - partitioned analytics cache keys by tenant/campus and caller scope,
+  - added integration test coverage for tenant/campus-constrained assignment analytics visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan D Phase 4 Stage 4.1 completed.
+- Phase status: Plan D Phase 4 in progress (Stage 4.2 pending).
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

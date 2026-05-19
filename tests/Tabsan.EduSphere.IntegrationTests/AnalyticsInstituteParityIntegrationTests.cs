@@ -6,6 +6,7 @@ using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
+using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
 
@@ -51,6 +52,36 @@ public class AnalyticsInstituteParityIntegrationTests
 
         Assert.Contains(seeded.CollegeAssignmentTitle, assignments);
         Assert.DoesNotContain(seeded.UniversityAssignmentTitle, assignments);
+    }
+
+    [Fact]
+    public async Task AnalyticsAssignments_WithTenantCampusClaims_ReturnsOnlyCallerScopeData()
+    {
+        var seeded = await SeedAssignmentAnalyticsAcrossTenantCampusAsync();
+
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            JwtTestHelper.GenerateToken(
+                role: "Admin",
+                userId: Guid.NewGuid().ToString(),
+                institutionType: (int)InstitutionType.College,
+                tenantId: seeded.CallerTenantId.ToString(),
+                campusId: seeded.CallerCampusId.ToString()));
+
+        var response = await client.GetAsync("api/analytics/assignments");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var assignments = doc.RootElement
+            .GetProperty("assignments")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("title").GetString())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        Assert.Contains(seeded.CallerAssignmentTitle, assignments);
+        Assert.DoesNotContain(seeded.OtherTenantAssignmentTitle, assignments);
     }
 
     [Fact]
@@ -185,6 +216,55 @@ public class AnalyticsInstituteParityIntegrationTests
         await db.SaveChangesAsync();
 
         return (collegeAssignmentTitle, universityAssignmentTitle);
+    }
+
+    private async Task<(
+        Guid CallerTenantId,
+        Guid CallerCampusId,
+        string CallerAssignmentTitle,
+        string OtherTenantAssignmentTitle)> SeedAssignmentAnalyticsAcrossTenantCampusAsync()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var callerTenant = new Tenant($"ATC{suffix}", $"Analytics Tenant Caller {suffix}");
+        var otherTenant = new Tenant($"ATO{suffix}", $"Analytics Tenant Other {suffix}");
+        db.Tenants.AddRange(callerTenant, otherTenant);
+
+        var callerCampus = new Campus(callerTenant.Id, $"ATCC{suffix}", $"Analytics Caller Campus {suffix}");
+        var otherCampus = new Campus(otherTenant.Id, $"ATOC{suffix}", $"Analytics Other Campus {suffix}");
+        db.Campuses.AddRange(callerCampus, otherCampus);
+
+        var callerDepartment = new Department($"Analytics Tenant Caller {suffix}", $"ATC{suffix}", InstitutionType.College);
+        callerDepartment.SetTenantCampus(callerTenant.Id, callerCampus.Id);
+
+        var otherDepartment = new Department($"Analytics Tenant Other {suffix}", $"ATO{suffix}", InstitutionType.College);
+        otherDepartment.SetTenantCampus(otherTenant.Id, otherCampus.Id);
+
+        db.Departments.AddRange(callerDepartment, otherDepartment);
+
+        var semester = new Semester($"Analytics Tenant Sem {suffix}", DateTime.UtcNow.Date.AddDays(-10), DateTime.UtcNow.Date.AddDays(70));
+        db.Semesters.Add(semester);
+
+        var callerCourse = new Course($"Analytics Tenant Caller Course {suffix}", $"ATCC{suffix}", 3, callerDepartment.Id);
+        var otherCourse = new Course($"Analytics Tenant Other Course {suffix}", $"ATOC{suffix}", 3, otherDepartment.Id);
+        db.Courses.AddRange(callerCourse, otherCourse);
+
+        var callerOffering = new CourseOffering(callerCourse.Id, semester.Id, 40);
+        var otherOffering = new CourseOffering(otherCourse.Id, semester.Id, 40);
+        db.CourseOfferings.AddRange(callerOffering, otherOffering);
+
+        var callerAssignmentTitle = $"Tenant Caller Assignment {suffix}";
+        var otherTenantAssignmentTitle = $"Tenant Other Assignment {suffix}";
+        db.Assignments.Add(new Assignment(callerOffering.Id, callerAssignmentTitle, "seed", DateTime.UtcNow.Date.AddDays(10), 100));
+        db.Assignments.Add(new Assignment(otherOffering.Id, otherTenantAssignmentTitle, "seed", DateTime.UtcNow.Date.AddDays(10), 100));
+
+        await db.SaveChangesAsync();
+
+        return (callerTenant.Id, callerCampus.Id, callerAssignmentTitle, otherTenantAssignmentTitle);
     }
 
     private async Task<(

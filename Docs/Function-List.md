@@ -95,6 +95,24 @@ No new endpoints were added in this stage.
 | `renderCourseTrend` | Renders course trend line based on average assignment marks. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
 | `renderSemesterTrend` | Renders combined semester trend lines for marks and attendance where available. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
 
+## 2026-05-20 - Plan D Phase 4 Stage 4.1 (Tenant/Campus Isolation)
+
+- Recent request issue:
+  - proceed to Stage 4.1 analytics isolation hardening.
+- Implementation Summary:
+  - enforced analytics query and cache partition scoping by tenant/campus.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `GetAnalyticsAccessScope` | Resolves effective analytics access scope from caller tenant/campus claims with superadmin bypass handling. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `BuildAnalyticsCacheKey(..., accessScope, ...)` | Partitions analytics cache entries by tenant/campus and caller scope profile to prevent cross-scope cache collisions. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `AnalyticsAssignments_WithTenantCampusClaims_ReturnsOnlyCallerScopeData` | Integration regression guard that verifies tenant/campus scoped analytics assignment visibility. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

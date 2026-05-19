@@ -113,6 +113,27 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - analytics now provides broader comparative visual coverage without API contract or security model changes.
 
+## 2026-05-20 Update - Plan D Phase 4 Stage 4.1 (Tenant/Campus Isolation)
+
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.1 isolation hardening.
+
+### Phase 4 Stage 4.1 - Tenant/Campus Isolation Hardening (Implemented)
+- Implementation Summary:
+  - applied tenant/campus filtering constraints to analytics read query paths,
+  - removed query-filter bypass from quiz analytics pipeline,
+  - expanded analytics cache-key scoping with tenant/campus dimensions to prevent cross-scope cache reuse,
+  - added integration regression test validating tenant/campus constrained analytics result visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics report reads are now explicitly isolated by tenant/campus scope for non-superadmin callers,
+  - no schema mutation and no public API contract change introduced.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

@@ -92,6 +92,18 @@ Enhance the Analytical section with advanced, interactive charts and global filt
 - **Stage 4.1:** All queries/data strictly filtered by TenantId and CampusId
 - **Stage 4.2:** Prevent cross-tenant/campus data leakage
 
+#### Phase 4 Progress Summary (through Stage 4.1) (2026-05-20)
+- Implementation Summary:
+  - hardened analytics query paths to enforce tenant/campus scope at department join points using request access-scope claims,
+  - removed `IgnoreQueryFilters` from quiz analytics query path to avoid bypassing scoped data filters,
+  - partitioned analytics distributed-cache keys by tenant/campus and caller scope profile to prevent cross-scope cache bleed,
+  - added integration regression coverage validating tenant/campus constrained analytics assignment visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ### Phase 5: Performance & Optimization
 - **Stage 5.1:** Optimize queries, avoid full dataset loads
 - **Stage 5.2:** Use proper indexes and efficient data loading

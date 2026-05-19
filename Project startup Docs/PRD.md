@@ -100,6 +100,28 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 - Behavior impact:
   - analytics now exposes broader visual insights for distribution and trends while keeping existing access boundaries unchanged.
 
+### 2026-05-20 - Plan D Phase 4 Stage 4.1 Tenant/Campus Isolation
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.1 and enforce tenant/campus analytics isolation.
+
+#### Phase 4 Stage 4.1 - Tenant/Campus Isolation (Implemented)
+- Implementation Summary:
+  - implemented explicit tenant/campus scoped analytics query filtering for non-superadmin access contexts,
+  - removed quiz analytics query-filter bypass path,
+  - partitioned distributed analytics cache keys by tenant/campus scope,
+  - added integration regression test covering tenant/campus scoped assignment analytics visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 4.1 completed with full selected quality-gate pass.
+
+- Behavior impact:
+  - analytics query and cache behavior now enforces stricter tenant/campus isolation boundaries,
+  - no schema migration and no public endpoint contract change introduced.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

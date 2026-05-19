@@ -117,6 +117,24 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan D Phase 4 Stage 4.1 Tenant/Campus Isolation Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.1 and harden strict tenant/campus analytics isolation.
+- Implementation Summary:
+  - enforced tenant/campus scoped filtering in analytics service read queries,
+  - removed quiz analytics query-filter bypass (`IgnoreQueryFilters`),
+  - scoped analytics distributed-cache keys by tenant/campus and caller scope profile,
+  - added integration regression test for tenant/campus constrained analytics visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`66/66`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan D Phase 4 Stage 4.1 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
