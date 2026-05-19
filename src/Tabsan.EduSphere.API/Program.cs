@@ -81,6 +81,7 @@ var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
+var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
 
 Console.WriteLine($"[Startup] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine("[Startup] Configuration sources: appsettings.json, appsettings.{Environment}.json, environment variables");
@@ -153,6 +154,7 @@ var isDevDatabase = configuredConnectionString.Contains("localhost", StringCompa
 Console.WriteLine($"[Startup] Database mode: {(isDevDatabase ? "Development" : "Production/External")}");
 Console.WriteLine($"[Startup] Database connection source: {databaseConnection.Source}");
 Console.WriteLine($"[Startup] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
+Console.WriteLine($"[Startup] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -782,6 +784,18 @@ app.MapGet("/health/scaling", () => Results.Ok(new
         minReplicas = deploymentTopology.MinReplicas,
         maxReplicas = deploymentTopology.MaxReplicas,
         source = deploymentTopology.Source
+    },
+    tenantIsolation = new
+    {
+        enabled = tenantIsolation.Enabled,
+        mode = tenantIsolation.Mode,
+        tenantCode = tenantIsolation.TenantCode,
+        tenantName = tenantIsolation.TenantName,
+        tenantDomain = tenantIsolation.TenantDomain,
+        tenantDatabaseName = tenantIsolation.TenantDatabaseName,
+        configPath = string.IsNullOrWhiteSpace(tenantIsolation.TenantConfigPath) ? null : tenantIsolation.TenantConfigPath,
+        isolationStrategy = tenantIsolation.IsolationStrategy,
+        source = tenantIsolation.Source
     },
     autoScalingEnabled,
     minReplicas = autoScalingMinReplicas,

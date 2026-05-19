@@ -36,9 +36,11 @@ var builder = Host.CreateApplicationBuilder(args);
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
+var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
 
 Console.WriteLine($"[BackgroundJobs] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine($"[BackgroundJobs] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
+Console.WriteLine($"[BackgroundJobs] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");
 
 // Final-Touches Phase 8 Stage 8.1 — auto-scaling policy metadata and startup guardrails.
 var autoScalingEnabled = builder.Configuration.GetValue("InfrastructureTuning:AutoScaling:Enabled", true);

@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 6 Implementation (Tenant + Campus Aware Configuration)
+
+- Recent request issue:
+  - proceed to tenant-aware configuration and isolation phase.
+- Implementation Summary:
+  - added tenant-isolation resolver and optional tenant JSON overlay support.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `TenantIsolationResolver` | Centralizes per-tenant settings and isolation metadata layered on top of deployment/customer profile resolution. | `src/Tabsan.EduSphere.Application/Services/TenantIsolationResolver.cs` |
+| `TenantIsolationResolver.Resolve` | Resolves tenant isolation mode, tenant code/name/domain/database, and tenant config path from config and environment variables. | `src/Tabsan.EduSphere.Application/Services/TenantIsolationResolver.cs` |
+| `TenantIsolationResolution` | Value contract carrying non-secret tenant-isolation metadata for startup logs and health diagnostics. | `src/Tabsan.EduSphere.Application/Services/TenantIsolationResolver.cs` |
+
 ## 2026-05-19 - Plan B Phase 5 Implementation (Customer Deployment Support)
 
 - Recent request issue:

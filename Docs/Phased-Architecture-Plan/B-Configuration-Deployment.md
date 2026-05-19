@@ -95,6 +95,19 @@ Enhance the application to fully support environment-based configuration managem
 ### Phase 6: Tenant + Campus Aware Configuration
 - **Stage 6.1:** Prepare for per-tenant settings and isolation
 
+#### Phase 6 Implementation Summary (2026-05-19)
+- Added `TenantIsolationResolver` to centralize per-tenant settings and isolation metadata on top of deployment/customer profile resolution.
+- Added optional `EDUSPHERE_TENANT_CONFIG_PATH` overlay support so a tenant-specific JSON file can be injected without changing code.
+- Seeded API, Web, and BackgroundJobs deployment templates with a `TenantIsolation` section for shared vs isolated operation, tenant code/domain/database, and config-path metadata.
+- Surfaced tenant-isolation metadata in startup logs and `/health/scaling` to make per-tenant deployment posture observable without exposing secrets.
+
+#### Phase 6 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 7: Fail-Safe Behavior
 - **Stage 7.1:** Provide clear error messages for missing config
 - **Stage 7.2:** Fail early with meaningful logs

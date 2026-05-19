@@ -15,14 +15,22 @@ public static class ConfigurationBootstrapper
         var prefix = string.IsNullOrWhiteSpace(environmentVariablePrefix)
             ? DefaultEnvironmentVariablePrefix
             : environmentVariablePrefix.Trim();
+        var tenantConfigPath = Environment.GetEnvironmentVariable("EDUSPHERE_TENANT_CONFIG_PATH");
 
-        return configurationBuilder
+        var builder = configurationBuilder
             .SetBasePath(environment.ContentRootPath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
             .AddJsonFile("appsettings.Deployment.json", optional: true, reloadOnChange: true)
             .AddJsonFile("appsettings.External.json", optional: true, reloadOnChange: true)
-            .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+        if (!string.IsNullOrWhiteSpace(tenantConfigPath))
+        {
+            builder.AddJsonFile(tenantConfigPath.Trim(), optional: true, reloadOnChange: true);
+        }
+
+        return builder
             .AddEnvironmentVariables(prefix)
             .AddEnvironmentVariables();
     }
