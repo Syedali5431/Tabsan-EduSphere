@@ -20,6 +20,7 @@ public static class ConfigurationBootstrapper
             .SetBasePath(environment.ContentRootPath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.External.json", optional: true, reloadOnChange: true)
             .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables(prefix)
             .AddEnvironmentVariables();

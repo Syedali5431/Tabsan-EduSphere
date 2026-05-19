@@ -73,6 +73,9 @@ static void EnsureSecureStartupValue(string settingPath, string? value, int minL
     }
 }
 
+static string RequireSecureStartupValue(IConfiguration configuration, IHostEnvironment environment, string settingPath, int minLength = 1)
+    => SecureConfigurationValidator.RequireSecureValue(configuration, environment, settingPath, minLength);
+
 var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
@@ -265,25 +268,25 @@ if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("
         }
     }
 
-    EnsureSecureStartupValue("ConnectionStrings:DefaultConnection", configuredConnectionString);
-    EnsureSecureStartupValue("JwtSettings:SecretKey", jwtSettings.SecretKey, minLength: 32);
+    RequireSecureStartupValue(builder.Configuration, builder.Environment, "ConnectionStrings:DefaultConnection");
+    RequireSecureStartupValue(builder.Configuration, builder.Environment, "JwtSettings:SecretKey", minLength: 32);
 
     var notificationEmailEnabled = builder.Configuration.GetValue("NotificationEmail:Enabled", false);
     if (notificationEmailEnabled)
     {
-        EnsureSecureStartupValue("Email:Username", builder.Configuration["Email:Username"]);
-        EnsureSecureStartupValue("Email:Password", builder.Configuration["Email:Password"]);
+        RequireSecureStartupValue(builder.Configuration, builder.Environment, "Email:Username");
+        RequireSecureStartupValue(builder.Configuration, builder.Environment, "Email:Password");
     }
 
-    EnsureSecureStartupValue("ScaleOut:RedisConnectionString", builder.Configuration["ScaleOut:RedisConnectionString"]);
-    EnsureSecureStartupValue("MediaStorage:SignedUrlSecret", builder.Configuration["MediaStorage:SignedUrlSecret"]);
+    RequireSecureStartupValue(builder.Configuration, builder.Environment, "ScaleOut:RedisConnectionString");
+    RequireSecureStartupValue(builder.Configuration, builder.Environment, "MediaStorage:SignedUrlSecret");
 
     var queueProvider = builder.Configuration["QueuePlatform:Provider"]?.Trim() ?? "InMemory";
     var rabbitMqEnabled = builder.Configuration.GetValue("QueuePlatform:RabbitMq:Enabled", false)
         || string.Equals(queueProvider, "RabbitMq", StringComparison.OrdinalIgnoreCase);
     if (rabbitMqEnabled)
     {
-        EnsureSecureStartupValue("QueuePlatform:RabbitMq:ConnectionString", builder.Configuration["QueuePlatform:RabbitMq:ConnectionString"]);
+        RequireSecureStartupValue(builder.Configuration, builder.Environment, "QueuePlatform:RabbitMq:ConnectionString");
     }
 }
 

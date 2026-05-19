@@ -94,9 +94,15 @@ builder.Services.AddScoped<IEmailSender, MailKitEmailSender>();
 builder.Services.AddSingleton<IEmailTemplateRenderer, EmailTemplateRenderer>();
 
 // ── Phase 12: Academic Calendar ───────────────────────────────────────────────
+if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
+{
+    RequireSecureStartupValue(builder.Configuration, builder.Environment, "ConnectionStrings:DefaultConnection");
+}
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAcademicDeadlineRepository, AcademicDeadlineRepository>();
 builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
+static string RequireSecureStartupValue(IConfiguration configuration, IHostEnvironment environment, string settingPath)
+    => SecureConfigurationValidator.RequireSecureValue(configuration, environment, settingPath);
 
 // ── Background jobs ───────────────────────────────────────────────────────────
 builder.Services.AddHostedService<Worker>();
