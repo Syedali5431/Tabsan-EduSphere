@@ -54,6 +54,9 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.HasIndex(d => d.CampusId)
                .HasDatabaseName("IX_departments_campus_id");
 
+        builder.HasIndex(d => new { d.TenantId, d.CampusId, d.Name })
+               .HasDatabaseName("IX_departments_tenant_campus_name");
+
         builder.HasOne<Tenant>()
                .WithMany()
                .HasForeignKey(d => d.TenantId)

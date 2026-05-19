@@ -13,6 +13,27 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 	- `No schema mutation` or
 	- `Schema updated` with table/column/index/migration details.
 
+## 2026-05-19 Update - Plan A Phase 6 Implementation (Performance and Optimization)
+
+- Recent request issue:
+	- proceed to Plan A Phase 6 and optimize tenant/campus scoped query performance.
+- Implementation Summary:
+	- added scoped query optimization changes in repository predicates,
+	- added composite indexes in EF configuration for user and department scoped query paths,
+	- added migration `20260519040540_Phase46_TenantCampusQueryOptimization`.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- focused unit tests passed (`9/9`),
+	- focused integration tests passed (`52/52`).
+- Testing and result summary:
+	- total focused tests passed: `61/61`.
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- added migration `20260519040540_Phase46_TenantCampusQueryOptimization`.
+	- added index `IX_users_tenant_campus_active_role`.
+	- added index `IX_users_tenant_campus_username`.
+	- added index `IX_departments_tenant_campus_name`.
+
 ## 2026-05-19 Update - Plan A Phase 5 Implementation (Tenant/Campus UI Management Interfaces)
 
 - Recent request issue:

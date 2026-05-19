@@ -13,6 +13,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan A Phase 6 Implementation (Performance and Optimization)
+
+- Recent request issue:
+  - proceed to Plan A Phase 6 and optimize tenant/campus scoped query execution.
+
+### Phase 6 - Performance & Optimization (Implemented)
+- Implementation Summary:
+  - optimized user lookup predicates to avoid non-sargable case-conversion filters,
+  - added composite scoped indexes for tenant/campus user and department query hot paths,
+  - added migration `Phase46_TenantCampusQueryOptimization`.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - focused unit tests passed (`9/9`),
+  - focused integration tests passed (`52/52`).
+- Testing and result summary:
+  - total focused tests passed: `61/61`.
+
+- Behavior impact:
+  - no functional behavior changes; this phase is performance-focused,
+  - tenant/campus scoped reads retain same correctness semantics,
+  - InstitutionType behavior remains unchanged.
+
 ## 2026-05-19 Update - Plan A Phase 5 Implementation (Tenant/Campus UI Management Interfaces)
 
 - Recent request issue:

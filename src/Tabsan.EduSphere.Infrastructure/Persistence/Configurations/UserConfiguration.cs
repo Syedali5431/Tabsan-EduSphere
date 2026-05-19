@@ -80,6 +80,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.CampusId)
                .HasDatabaseName("IX_users_campus_id");
 
+        builder.HasIndex(u => new { u.TenantId, u.CampusId, u.IsActive, u.RoleId })
+               .HasDatabaseName("IX_users_tenant_campus_active_role");
+
+        builder.HasIndex(u => new { u.TenantId, u.CampusId, u.Username })
+               .HasDatabaseName("IX_users_tenant_campus_username");
+
         // Many users belong to one role; role is required.
         builder.HasOne(u => u.Role)
                .WithMany()

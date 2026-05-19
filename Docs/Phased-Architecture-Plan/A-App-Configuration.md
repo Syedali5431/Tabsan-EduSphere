@@ -119,6 +119,21 @@ Refactor and extend the application to support a proper multi-tenant architectur
 - **Stage 6.1:** Optimize queries for Tenant + Campus scoping
 - **Stage 6.2:** Add indexes and avoid unnecessary joins
 
+#### Phase 6 Implementation Summary
+- Optimized tenant/campus scoped repository predicates to avoid non-sargable string transforms on username/email/role lookups.
+- Added composite query-path indexes for scoped user and department read patterns.
+- Added migration `Phase46_TenantCampusQueryOptimization` for index rollout.
+
+#### Phase 6 Validation Summary
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- Focused unit tests passed (`9/9`):
+	- `EnrollmentServiceWaitlistTests`
+	- `AuthSecurityUxTests`
+- Focused integration tests passed (`52/52`):
+	- `AdminUserManagementIntegrationTests`
+	- `AuthorizationRegressionTests`
+- Verified existing InstitutionType behavior remains unchanged.
+
 ### Phase 7: Validation & Finalization
 - **Stage 7.1:** Validate system behavior, data safety, and UI
 - **Stage 7.2:** Final review for scalability and stability

@@ -51,18 +51,18 @@ public class UserRepository : IUserRepository
     public Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default)
         => ApplyTenantCampusScope(_db.Users)
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower(), ct);
+            .FirstOrDefaultAsync(u => u.Username == username, ct);
 
     /// <summary>Finds a user by email address. Returns null when no match exists.</summary>
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
         => ApplyTenantCampusScope(_db.Users)
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower(), ct);
+            .FirstOrDefaultAsync(u => u.Email != null && u.Email == email, ct);
 
     /// <summary>Returns true when the username string is already taken by another account.</summary>
     public Task<bool> UsernameExistsAsync(string username, CancellationToken ct = default)
         => ApplyTenantCampusScope(_db.Users)
-            .AnyAsync(u => u.Username.ToLower() == username.ToLower(), ct);
+            .AnyAsync(u => u.Username == username, ct);
 
     /// <summary>
     /// Returns all non-admin accounts that are currently locked out.
@@ -125,7 +125,7 @@ public class UserRepository : IUserRepository
 
     /// <summary>Returns the role matching the given name (case-insensitive), or null if not found.</summary>
     public Task<Role?> GetRoleByNameAsync(string roleName, CancellationToken ct = default)
-        => _db.Roles.FirstOrDefaultAsync(r => r.Name.ToLower() == roleName.ToLower(), ct);
+        => _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
 
     /// <summary>Marks the user entity as Modified so EF Core generates an UPDATE statement.</summary>
     public void Update(User user) => _db.Users.Update(user);

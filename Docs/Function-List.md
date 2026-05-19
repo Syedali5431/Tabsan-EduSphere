@@ -3,6 +3,25 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan A Phase 6 Implementation (Performance and Scoped Query Optimization)
+
+- Recent request issue:
+  - proceed to Plan A Phase 6 and optimize tenant/campus scoped data access paths.
+- Implementation Summary:
+  - optimized user lookup predicates to preserve index usage,
+  - added composite scoped indexes for users/departments,
+  - added migration for performance index rollout.
+- Validation Summary:
+  - build and focused unit/integration suites passed (`61/61`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `UserRepository scoped predicate optimization` | Removes non-sargable lowercasing on username/email/role lookups to improve index utilization. | `src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs` |
+| `IX_users_tenant_campus_active_role` | Speeds tenant/campus scoped role-based active user retrieval paths. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519040540_Phase46_TenantCampusQueryOptimization.cs` |
+| `IX_users_tenant_campus_username` | Speeds tenant/campus scoped username lookup and ordered user retrieval paths. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519040540_Phase46_TenantCampusQueryOptimization.cs` |
+| `IX_departments_tenant_campus_name` | Speeds tenant/campus scoped department listing ordered by name. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/DepartmentConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519040540_Phase46_TenantCampusQueryOptimization.cs` |
+| `Phase46_TenantCampusQueryOptimization migration` | Applies composite index optimizations for tenant/campus scoped query workloads. | `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519040540_Phase46_TenantCampusQueryOptimization.cs` |
+
 ## 2026-05-19 - Plan A Phase 5 Implementation (Tenant/Campus UI Management Interfaces)
 
 - Recent request issue:
