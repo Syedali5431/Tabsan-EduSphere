@@ -39,6 +39,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - analytics can now be scoped by course and semester in addition to institution and department,
   - no schema mutation and no change to existing role/institution access boundaries.
 
+### 2026-05-20 - Plan D Phase 2 Stage 2.2 Dependent Filtering
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.2 and enforce dependent filtering behavior.
+
+#### Phase 2 Stage 2.2 - Dependent Filtering (Implemented)
+- Implementation Summary:
+  - implemented dependent filter cascade behavior so each upstream analytics filter updates downstream options,
+  - added server-side offering-based option derivation and invalid downstream selection reset,
+  - added client-side auto-apply submit handlers on parent filter changes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - all selected quality gates passed with no regressions.
+
+- Behavior impact:
+  - filter dependency behavior is now enforced end-to-end for analytics filtering,
+  - no schema or access-control boundary changes introduced.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

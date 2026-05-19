@@ -2533,7 +2533,8 @@ public class PortalController : Controller
         try
         {
             model.Departments = await _api.GetDepartmentsAsync(ct);
-            model.Semesters = await _api.GetSemestersAsync(ct);
+            var allSemesters = await _api.GetSemestersAsync(ct);
+            var offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, ct);
 
             // Constrained roles are auto-scoped to their institute claim for analytics filters.
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
@@ -2546,21 +2547,60 @@ public class PortalController : Controller
                 model.Departments = model.Departments
                     .Where(d => !d.InstitutionType.HasValue || d.InstitutionType.Value == model.SelectedInstitutionType.Value)
                     .ToList();
-            }
 
-            model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, ct);
+                var allowedDepartmentIds = model.Departments.Select(d => d.Id).ToHashSet();
+                offerings = offerings.Where(o => allowedDepartmentIds.Contains(o.DepartmentId)).ToList();
+            }
 
             if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
             {
                 model.Message = "Selected department is outside your current analytics scope.";
                 model.SelectedDepartmentId = null;
-                model.Courses = await _api.GetCoursesAsync(null, ct);
+                model.SelectedCourseId = null;
+                model.SelectedSemesterId = null;
+                offerings = await _api.GetCourseOfferingsAsync(null, ct);
+                if (model.SelectedInstitutionType.HasValue)
+                {
+                    var allowedDepartmentIds = model.Departments.Select(d => d.Id).ToHashSet();
+                    offerings = offerings.Where(o => allowedDepartmentIds.Contains(o.DepartmentId)).ToList();
+                }
             }
 
-            if (model.SelectedCourseId.HasValue && model.Courses.All(c => c.Id != model.SelectedCourseId.Value))
+            if (model.SelectedDepartmentId.HasValue)
             {
-                model.Message = "Selected course is outside your current analytics scope.";
-                model.SelectedCourseId = null;
+                offerings = offerings.Where(o => o.DepartmentId == model.SelectedDepartmentId.Value).ToList();
+            }
+
+            model.Courses = offerings
+                .GroupBy(o => new { o.CourseId, o.CourseTitle })
+                .Select(g => new LookupItem { Id = g.Key.CourseId, Name = g.Key.CourseTitle })
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            if (model.SelectedCourseId.HasValue)
+            {
+                if (model.Courses.All(c => c.Id != model.SelectedCourseId.Value))
+                {
+                    model.Message = "Selected course is outside your current analytics scope.";
+                    model.SelectedCourseId = null;
+                    model.SelectedSemesterId = null;
+                }
+                else
+                {
+                    offerings = offerings.Where(o => o.CourseId == model.SelectedCourseId.Value).ToList();
+                }
+            }
+
+            model.Semesters = offerings
+                .GroupBy(o => new { o.SemesterId, o.SemesterName })
+                .Select(g => new LookupItem { Id = g.Key.SemesterId, Name = g.Key.SemesterName })
+                .OrderBy(s => s.Name)
+                .ToList();
+
+            // When there are no offerings yet for current scope, fall back to catalog semesters.
+            if (model.Semesters.Count == 0)
+            {
+                model.Semesters = allSemesters;
             }
 
             if (model.SelectedSemesterId.HasValue && model.Semesters.All(s => s.Id != model.SelectedSemesterId.Value))

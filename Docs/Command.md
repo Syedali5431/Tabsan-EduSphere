@@ -66,6 +66,23 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan D Phase 2 Stage 2.2 Dependent Filtering Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.2 and make each filter update downstream filters.
+- Implementation Summary:
+  - implemented dependent filter cascading for Analytics (`Institution -> Department -> Course -> Semester`),
+  - added offering metadata (`CourseId`, `SemesterId`, `DepartmentId`) to support deterministic dependent option construction,
+  - added server-side reset of invalid downstream selections and client-side auto-apply on parent filter changes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan D Phase 2 Stage 2.2 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.

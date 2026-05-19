@@ -621,6 +621,9 @@ public class CourseItem
 public class CourseOfferingItem
 {
     public Guid   Id          { get; set; }
+    public Guid   CourseId    { get; set; }
+    public Guid   SemesterId  { get; set; }
+    public Guid   DepartmentId { get; set; }
     public string CourseTitle { get; set; } = "";
     public string CourseCode  { get; set; } = "";
     public string FacultyName { get; set; } = "";

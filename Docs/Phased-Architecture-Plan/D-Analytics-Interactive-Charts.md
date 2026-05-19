@@ -42,6 +42,18 @@ Enhance the Analytical section with advanced, interactive charts and global filt
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
 
+#### Phase 2 Progress Summary (through Stage 2.2) (2026-05-20)
+- Implementation Summary:
+  - implemented dependent filter cascade behavior (`Institution -> Department -> Course -> Semester`) for Analytics,
+  - enriched course-offering payload metadata with `CourseId`, `SemesterId`, and `DepartmentId` for reliable downstream option computation,
+  - added server-side dependent option generation and invalid-selection auto-reset logic,
+  - added client-side auto-apply behavior so parent-filter changes immediately refresh dependent dropdown options.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ### Phase 3: Chart Types & Data
 - **Stage 3.1:** Add Pie, Bar, and Line charts for:
   - Student distribution

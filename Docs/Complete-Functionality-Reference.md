@@ -55,6 +55,26 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - analytics reports/charts are now globally filterable by institution, department, course, and semester,
   - no schema mutation and no change to tenant/campus security isolation boundaries.
 
+## 2026-05-20 Update - Plan D Phase 2 Stage 2.2 (Dependent Filtering)
+
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.2 and enforce dependent filtering behavior.
+
+### Phase 2 Stage 2.2 - Dependent Filtering (Implemented)
+- Implementation Summary:
+  - enforced dependent filter ordering where upstream selection constrains downstream options,
+  - added offering metadata mapping and server-side dependent option computation,
+  - implemented UI auto-apply on parent filter changes with downstream reset behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - filter flow is now deterministic and dependency-aware,
+  - no API security boundary or schema behavior changed.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

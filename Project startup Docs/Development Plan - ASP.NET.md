@@ -37,6 +37,24 @@ Validation summaries must include at minimum:
 - Stage status: Plan D Phase 2 Stage 2.1 completed.
 - Phase status: Plan D Phase 2 in progress (Stages 2.2 and 2.3 pending).
 
+### 2026-05-20 - Plan D Phase 2 Stage 2.2 Dependent Filtering
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.2 and ensure each filter updates downstream filters.
+
+#### Phase 2 Stage 2.2 - Dependent Filtering (Implemented)
+- Implementation Summary:
+  - implemented dependent filter cascade for Analytics and downstream auto-reset behavior,
+  - added offering metadata mapping to support deterministic dependency calculation,
+  - enabled auto-apply form submit on parent filter change in the analytics view.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan D Phase 2 Stage 2.2 completed.
+- Phase status: Plan D Phase 2 in progress (Stage 2.3 pending).
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

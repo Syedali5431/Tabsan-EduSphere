@@ -38,6 +38,26 @@ No new endpoints were added in this stage.
 | `AnalyticsService.GetAttendanceReportAsync(..., courseId, semesterId)` | Applies course/semester-scoped attendance filtering. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 | `AnalyticsService.GetAssignmentStatsAsync(..., courseId, semesterId)` | Applies course/semester-scoped assignment filtering. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 
+## 2026-05-20 - Plan D Phase 2 Stage 2.2 (Dependent Filtering)
+
+- Recent request issue:
+  - proceed to Stage 2.2 and enforce dependent filter updates.
+- Implementation Summary:
+  - added dependent filter cascade logic in Analytics page and controller.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+No new endpoints were added in this stage.
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `PortalController.Analytics` (dependent option computation) | Computes and validates downstream dependent filter options from offering metadata. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `Analytics filter auto-apply handlers` | Auto-submits analytics filters when parent selection changes and resets downstream selections. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `CourseController.GetOfferings` payload (`DepartmentId`) | Exposes department metadata for deterministic dependent filtering in web layer. | `src/Tabsan.EduSphere.API/Controllers/CourseController.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

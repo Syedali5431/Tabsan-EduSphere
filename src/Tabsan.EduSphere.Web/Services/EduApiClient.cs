@@ -1748,6 +1748,9 @@ public class EduApiClient : IEduApiClient
         return raw.Select(o => new CourseOfferingItem
         {
             Id           = o.Id,
+            CourseId     = o.CourseId,
+            SemesterId   = o.SemesterId,
+            DepartmentId = o.DepartmentId,
             CourseTitle  = o.CourseTitle ?? "",
             CourseCode   = o.CourseCode ?? "",
             FacultyName  = o.FacultyName ?? "",
@@ -2144,6 +2147,9 @@ public class EduApiClient : IEduApiClient
     private sealed class OfferingApiDto
     {
         public Guid    Id           { get; set; }
+        public Guid    CourseId     { get; set; }
+        public Guid    SemesterId   { get; set; }
+        public Guid    DepartmentId { get; set; }
         public string? CourseTitle  { get; set; }
         public string? CourseCode   { get; set; }
         public string? FacultyName  { get; set; }

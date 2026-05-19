@@ -15,10 +15,10 @@ else
 {
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form asp-action="Analytics" method="get" class="row g-3 align-items-end">
+            <form asp-action="Analytics" method="get" class="row g-3 align-items-end" id="analyticsFilterForm">
                 <div class="col-md-3">
                     <label class="form-label">Institution</label>
-                    <select class="form-select" name="institutionType">
+                    <select class="form-select" name="institutionType" id="analyticsInstitutionType">
                         @if (!Model.SelectedInstitutionType.HasValue)
                         {
                             <option value="" selected>All Institutions</option>
@@ -58,7 +58,7 @@ else
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Department</label>
-                    <select class="form-select" name="departmentId">
+                    <select class="form-select" name="departmentId" id="analyticsDepartmentId">
                         <option value="">All Departments</option>
                         @foreach (var d in Model.Departments)
                         {
@@ -76,7 +76,7 @@ else
 
                 <div class="col-md-3">
                     <label class="form-label">Course</label>
-                    <select class="form-select" name="courseId">
+                    <select class="form-select" name="courseId" id="analyticsCourseId">
                         <option value="">All Courses</option>
                         @foreach (var c in Model.Courses)
                         {
@@ -94,7 +94,7 @@ else
 
                 <div class="col-md-3">
                     <label class="form-label">Semester</label>
-                    <select class="form-select" name="semesterId">
+                    <select class="form-select" name="semesterId" id="analyticsSemesterId">
                         <option value="">All Semesters</option>
                         @foreach (var s in Model.Semesters)
                         {
@@ -343,6 +343,42 @@ else
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         (function () {
+            var filterForm = document.getElementById('analyticsFilterForm');
+            var institutionSelect = document.getElementById('analyticsInstitutionType');
+            var departmentSelect = document.getElementById('analyticsDepartmentId');
+            var courseSelect = document.getElementById('analyticsCourseId');
+            var semesterSelect = document.getElementById('analyticsSemesterId');
+
+            function clearSelectValue(selectEl) {
+                if (selectEl) {
+                    selectEl.value = '';
+                }
+            }
+
+            if (institutionSelect && filterForm) {
+                institutionSelect.addEventListener('change', function () {
+                    clearSelectValue(departmentSelect);
+                    clearSelectValue(courseSelect);
+                    clearSelectValue(semesterSelect);
+                    filterForm.submit();
+                });
+            }
+
+            if (departmentSelect && filterForm) {
+                departmentSelect.addEventListener('change', function () {
+                    clearSelectValue(courseSelect);
+                    clearSelectValue(semesterSelect);
+                    filterForm.submit();
+                });
+            }
+
+            if (courseSelect && filterForm) {
+                courseSelect.addEventListener('change', function () {
+                    clearSelectValue(semesterSelect);
+                    filterForm.submit();
+                });
+            }
+
             function legendColor(dataset, idx) {
                 if (Array.isArray(dataset.backgroundColor)) {
                     return dataset.backgroundColor[Math.min(idx, dataset.backgroundColor.length - 1)] || '#6c757d';

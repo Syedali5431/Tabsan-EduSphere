@@ -209,6 +209,7 @@ public class CourseController : ControllerBase
         return Ok(offerings.Select(o => new
         {
             o.Id, o.CourseId, CourseCode = o.Course.Code, CourseTitle = o.Course.Title,
+            DepartmentId = o.Course.DepartmentId,
             o.SemesterId, SemesterName = o.Semester.Name, o.FacultyUserId,
             o.MaxEnrollment, IsActive = o.IsOpen
         }));
