@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan A Phase 2 Implementation (Default Tenant/Campus Data Integration)
+
+- Recent request issue:
+  - proceed with Plan A Phase 2 and ensure all existing core records are safely assigned to default tenant/campus.
+- Implementation Summary:
+  - added migration-backed data integration and runtime seeding safeguards for tenant/campus backfill.
+- Validation Summary:
+  - build and focused unit/integration suites passed (`61/61`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `Phase42_DefaultTenantCampusBackfill migration` | Ensures default tenant/campus rows exist and backfills null tenant/campus on existing users and departments. | `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519032844_Phase42_DefaultTenantCampusBackfill.cs` |
+| `EnsureDefaultTenantCampusAsync` | Guarantees default tenant (`DEFAULT`) and default campus (`MAIN`) are present and active at startup. | `src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs` |
+| `EnsureTenantCampusBackfillAsync` | Performs startup safety backfill for users/departments missing tenant/campus assignments. | `src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs` |
+
 ## 2026-05-19 - Plan A Phase 1 Implementation (Tenant + Campus Domain Foundation)
 
 - Recent request issue:

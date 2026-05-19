@@ -1,10 +1,12 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Modules;
 using Tabsan.EduSphere.Domain.Settings;
+using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Modules;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -22,6 +24,11 @@ namespace Tabsan.EduSphere.Infrastructure.Persistence;
 /// </summary>
 public static class DatabaseSeeder
 {
+    private const string DefaultTenantCode = "DEFAULT";
+    private const string DefaultTenantName = "Default Tenant";
+    private const string DefaultCampusCode = "MAIN";
+    private const string DefaultCampusName = "Main Campus";
+
     /// <summary>
     /// Entry point called from Program.cs after EF migrations have been applied.
     /// Resolves all dependencies from the DI container via a scoped service provider.
@@ -49,11 +56,74 @@ public static class DatabaseSeeder
 
         await SeedRolesAsync(db);
         await SeedModulesAsync(db);
-        await SeedSuperAdminAsync(db, hasher);
+        var (defaultTenantId, defaultCampusId) = await EnsureDefaultTenantCampusAsync(db);
+        await SeedSuperAdminAsync(db, hasher, defaultTenantId, defaultCampusId);
         await SeedSidebarMenusAsync(db);
         await SeedReportDefinitionsAsync(db);
+        await EnsureTenantCampusBackfillAsync(db, defaultTenantId, defaultCampusId);
 
         await db.SaveChangesAsync();
+    }
+
+    // ── Tenant and Campus Defaults (Phase 2) ─────────────────────────────────
+
+    private static async Task<(Guid TenantId, Guid CampusId)> EnsureDefaultTenantCampusAsync(ApplicationDbContext db)
+    {
+        var tenant = await db.Tenants
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Code == DefaultTenantCode);
+
+        if (tenant is null)
+        {
+            tenant = new Tenant(DefaultTenantCode, DefaultTenantName);
+            db.Tenants.Add(tenant);
+            await db.SaveChangesAsync();
+        }
+        else
+        {
+            if (tenant.IsDeleted)
+                tenant.Restore();
+            if (!tenant.IsActive)
+                tenant.Activate();
+        }
+
+        var campus = await db.Campuses
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.TenantId == tenant.Id && c.Code == DefaultCampusCode);
+
+        if (campus is null)
+        {
+            campus = new Campus(tenant.Id, DefaultCampusCode, DefaultCampusName);
+            db.Campuses.Add(campus);
+            await db.SaveChangesAsync();
+        }
+        else
+        {
+            if (campus.IsDeleted)
+                campus.Restore();
+            if (!campus.IsActive)
+                campus.Activate();
+        }
+
+        return (tenant.Id, campus.Id);
+    }
+
+    private static async Task EnsureTenantCampusBackfillAsync(
+        ApplicationDbContext db,
+        Guid defaultTenantId,
+        Guid defaultCampusId)
+    {
+        await db.Users
+            .Where(u => u.TenantId == null || u.CampusId == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.TenantId, u => u.TenantId ?? defaultTenantId)
+                .SetProperty(u => u.CampusId, u => u.CampusId ?? defaultCampusId));
+
+        await db.Departments
+            .Where(d => d.TenantId == null || d.CampusId == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(d => d.TenantId, d => d.TenantId ?? defaultTenantId)
+                .SetProperty(d => d.CampusId, d => d.CampusId ?? defaultCampusId));
     }
 
     // ── Roles ─────────────────────────────────────────────────────────────────
@@ -136,7 +206,11 @@ public static class DatabaseSeeder
     /// The account is only created when no user with the SuperAdmin role exists,
     /// so this is safe to run on every startup.
     /// </summary>
-    private static async Task SeedSuperAdminAsync(ApplicationDbContext db, IPasswordHasher hasher)
+    private static async Task SeedSuperAdminAsync(
+        ApplicationDbContext db,
+        IPasswordHasher hasher,
+        Guid defaultTenantId,
+        Guid defaultCampusId)
     {
         var superAdminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "SuperAdmin");
         if (superAdminRole is null) return; // roles not seeded yet — will run on next start
@@ -151,7 +225,12 @@ public static class DatabaseSeeder
         var email    = Environment.GetEnvironmentVariable("TABSAN_SUPER_EMAIL");
 
         var hash = hasher.Hash(password);
-        var superAdmin = new User(username, hash, superAdminRole.Id);
+        var superAdmin = new User(
+            username,
+            hash,
+            superAdminRole.Id,
+            tenantId: defaultTenantId,
+            campusId: defaultCampusId);
 
         if (!string.IsNullOrWhiteSpace(email))
             superAdmin.UpdateEmail(email);
