@@ -80,6 +80,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
+var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 
 Console.WriteLine($"[Startup] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine("[Startup] Configuration sources: appsettings.json, appsettings.{Environment}.json, environment variables");
@@ -151,6 +152,7 @@ var isDevDatabase = configuredConnectionString.Contains("localhost", StringCompa
     || configuredConnectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase);
 Console.WriteLine($"[Startup] Database mode: {(isDevDatabase ? "Development" : "Production/External")}");
 Console.WriteLine($"[Startup] Database connection source: {databaseConnection.Source}");
+Console.WriteLine($"[Startup] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -770,6 +772,17 @@ app.MapGet("/health/background-jobs", (
 })).AllowAnonymous();
 app.MapGet("/health/scaling", () => Results.Ok(new
 {
+    deployment = new
+    {
+        mode = deploymentTopology.Mode,
+        customerCode = deploymentTopology.CustomerCode,
+        customerDomain = deploymentTopology.CustomerDomain,
+        customerDatabaseName = deploymentTopology.CustomerDatabaseName,
+        scalingEnabled = deploymentTopology.ScalingEnabled,
+        minReplicas = deploymentTopology.MinReplicas,
+        maxReplicas = deploymentTopology.MaxReplicas,
+        source = deploymentTopology.Source
+    },
     autoScalingEnabled,
     minReplicas = autoScalingMinReplicas,
     maxReplicas = autoScalingMaxReplicas,

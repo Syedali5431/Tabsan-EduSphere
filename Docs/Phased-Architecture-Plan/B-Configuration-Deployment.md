@@ -64,6 +64,18 @@ Enhance the application to fully support environment-based configuration managem
 - **Stage 4.1:** Support cloud, customer-hosted, and multi-instance deployments
 - **Stage 4.2:** Allow per-customer DB, domain, and scaling
 
+#### Phase 4 Implementation Summary (2026-05-19)
+- Added shared deployment-topology resolver to centralize cloud/customer-hosted/multi-instance profile metadata.
+- Added support for per-customer deployment overrides for domain, database name, and scaling values via config and environment variables.
+- Exposed safe deployment metadata in startup logs and `/health/scaling` without revealing secrets.
+
+#### Phase 4 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 5: Customer Deployment Support
 - **Stage 5.1:** Enable customer-specific config without code changes
 - **Stage 5.2:** Support config via app settings, env vars, deployment pipeline

@@ -41,8 +41,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
+var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 
 Console.WriteLine($"[Web] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
+Console.WriteLine($"[Web] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 
 // Final-Touches Phase 8 Stage 8.1 — auto-scaling policy metadata and startup guardrails.
 var autoScalingEnabled = builder.Configuration.GetValue("InfrastructureTuning:AutoScaling:Enabled", true);

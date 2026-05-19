@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 4 Implementation (Deployment Flexibility)
+
+- Recent request issue:
+  - proceed to deployment flexibility phase.
+- Implementation Summary:
+  - added shared deployment-topology resolver and deployment metadata exposure.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `DeploymentTopologyResolver` | Centralizes deployment-profile resolution for cloud/customer-hosted/multi-instance runtime modes. | `src/Tabsan.EduSphere.Application/Services/DeploymentTopologyResolver.cs` |
+| `DeploymentTopologyResolver.Resolve` | Resolves effective deployment mode, customer identity, domain, database name, and scaling settings from config and environment variables. | `src/Tabsan.EduSphere.Application/Services/DeploymentTopologyResolver.cs` |
+| `DeploymentTopologyResolution` | Value contract carrying non-secret deployment metadata used by startup logs and health diagnostics. | `src/Tabsan.EduSphere.Application/Services/DeploymentTopologyResolver.cs` |
+
 ## 2026-05-19 - Plan B Phase 3 Implementation (Secure Configuration Handling)
 
 - Recent request issue:
