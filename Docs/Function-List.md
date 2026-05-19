@@ -3,6 +3,23 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan C Phase 2 Implementation (Data Safety & Migration)
+
+- Recent request issue:
+  - proceed after Plan C Phase 1.
+- Implementation Summary:
+  - added strict domain and database safety guards for course material scope and location validity.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CourseMaterial.EnsureRequiredScope` | Prevents creation of unscoped material records by rejecting empty scope identifiers. | `src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs` |
+| `CourseMaterial.EnsureMaterialLocation` | Enforces material-type-specific file/link requirements before persistence. | `src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs` |
+| `CK_course_materials_scope_required` | Database check constraint enforcing non-empty tenant/campus/department/program/semester/course/creator identifiers. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Migrations/20260519055118_PlanCPhase2DataSafetyScopeGuard.cs` |
+| `CK_course_materials_material_type` | Database check constraint allowing only defined material type values. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Migrations/20260519055118_PlanCPhase2DataSafetyScopeGuard.cs` |
+| `CK_course_materials_location_by_type` | Database check constraint enforcing valid file/link location per material type. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Migrations/20260519055118_PlanCPhase2DataSafetyScopeGuard.cs` |
+
 ## 2026-05-19 - Plan C Phase 1 Implementation (Domain & Database Extension)
 
 - Recent request issue:

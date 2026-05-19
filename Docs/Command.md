@@ -20,6 +20,28 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Plan C Phase 2 Data Safety and Migration Checkpoint (2026-05-19)
+- Recent request issue:
+  - proceed after Plan C Phase 1.
+- Implementation Summary:
+  - added domain-level scope and name validation for `CourseMaterial`,
+  - added database check constraints for scope integrity, material type safety, and file/link location validity,
+  - added migration `PlanCPhase2DataSafetyScopeGuard` for safe enforcement.
+- Validation Summary:
+  - solution build passed,
+  - full unit, integration, and contract suites passed,
+  - migration compiled without diagnostics.
+- Testing and result summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`236/236`),
+  - contract tests passed (`1/1`),
+  - total automated validations passed (`388/388`).
+- Status of Checks Done:
+  - Plan C Phase 2 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 1 Domain and Database Extension Checkpoint (2026-05-19)
 - Recent request issue:
   - start Plan C Phase 1.

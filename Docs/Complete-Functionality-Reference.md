@@ -13,6 +13,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan C Phase 2 Implementation (Data Safety & Migration)
+
+- Recent request issue:
+  - proceed after Plan C Phase 1.
+
+### Phase 2 - Data Safety & Migration (Implemented)
+- Implementation Summary:
+  - added strict constructor/update guards to reject unscoped or invalid course-material records,
+  - added DB check constraints for scope integrity, material-type validity, and file/link location validity,
+  - applied migration `PlanCPhase2DataSafetyScopeGuard`.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed: `388/388`.
+
+- Behavior impact:
+  - all new course-material records are now hard-guarded for tenant/campus scoping and valid location shape,
+  - no runtime role/institute/module behavior regression introduced.
+
 ## 2026-05-19 Update - Plan C Phase 1 Implementation (Domain & Database Extension)
 
 - Recent request issue:

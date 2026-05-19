@@ -28,6 +28,18 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 2.1:** Migrate existing data safely (if any)
 - **Stage 2.2:** Ensure all new records are scoped by Tenant and Campus
 
+#### Phase 2 Implementation Summary (2026-05-19)
+- Added strict domain guards in `CourseMaterial` to reject empty tenant/campus/department/program/semester/course/user scope values and empty material names.
+- Added database-level check constraints for `course_materials` to enforce valid material type values, required scope IDs, and location-by-type validity (file/link requirements).
+- Added migration `PlanCPhase2DataSafetyScopeGuard` to apply data-safety constraints without changing existing runtime workflows.
+
+#### Phase 2 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 3: Access Control & Security
 - **Stage 3.1:** Implement role-based access (SuperAdmin, Admin, Faculty, Student)
 - **Stage 3.2:** Enforce strict isolation (no cross-tenant/campus access)

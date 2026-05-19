@@ -13,6 +13,23 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 	- `No schema mutation` or
 	- `Schema updated` with table/column/index/migration details.
 
+## 2026-05-19 Update - Plan C Phase 2 Implementation (Data Safety & Migration)
+
+- Recent request issue:
+	- proceed after Plan C Phase 1.
+- Implementation Summary:
+	- added migration `20260519055118_PlanCPhase2DataSafetyScopeGuard` to harden `course_materials` data integrity.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- full unit tests passed (`151/151`),
+	- full integration tests passed (`236/236`),
+	- contract tests passed (`1/1`).
+- Testing and result summary:
+	- total automated validations passed: `388/388`.
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- added constraints: `CK_course_materials_scope_required`, `CK_course_materials_material_type`, `CK_course_materials_location_by_type`.
+
 ## 2026-05-19 Update - Plan C Phase 1 Implementation (Domain & Database Extension)
 
 - Recent request issue:

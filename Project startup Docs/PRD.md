@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-19 - Plan C Phase 2 Implementation (Data Safety & Migration)
+- Recent request issue:
+  - proceed after Plan C Phase 1.
+
+#### Phase 2 - Data Safety & Migration (Implemented)
+- Implementation Summary:
+  - added strict domain guards for required scope IDs and material metadata,
+  - added DB-level constraints for scope integrity, material-type validity, and file/link location validity,
+  - added migration `PlanCPhase2DataSafetyScopeGuard`.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed (`388/388`).
+
+- Behavior impact:
+  - new material records are now hard-enforced to be tenant/campus scoped and location-valid,
+  - no regression in existing role/institute/module functionality.
+
 ### 2026-05-19 - Plan C Phase 1 Implementation (Domain & Database Extension)
 - Recent request issue:
   - start Plan C Phase 1.

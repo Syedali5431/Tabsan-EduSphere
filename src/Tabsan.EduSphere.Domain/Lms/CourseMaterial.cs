@@ -46,6 +46,18 @@ public class CourseMaterial : AuditableEntity
         string? filePath = null,
         string? description = null)
     {
+        EnsureRequiredScope(
+            tenantId,
+            campusId,
+            departmentId,
+            academicProgramId,
+            semesterId,
+            courseId,
+            createdByUserId);
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Course material name is required.", nameof(name));
+
         TenantId = tenantId;
         CampusId = campusId;
         DepartmentId = departmentId;
@@ -64,6 +76,9 @@ public class CourseMaterial : AuditableEntity
 
     public void UpdateMetadata(string name, string? description)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Course material name is required.", nameof(name));
+
         Name = name.Trim();
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         Touch();
@@ -105,5 +120,30 @@ public class CourseMaterial : AuditableEntity
             case CourseMaterialType.FileAndLink when !hasFile && !hasLink:
                 throw new InvalidOperationException("FileAndLink material requires at least one location (file or link).");
         }
+    }
+
+    private static void EnsureRequiredScope(
+        Guid tenantId,
+        Guid campusId,
+        Guid departmentId,
+        Guid academicProgramId,
+        Guid semesterId,
+        Guid courseId,
+        Guid createdByUserId)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant scope is required.", nameof(tenantId));
+        if (campusId == Guid.Empty)
+            throw new ArgumentException("Campus scope is required.", nameof(campusId));
+        if (departmentId == Guid.Empty)
+            throw new ArgumentException("Department scope is required.", nameof(departmentId));
+        if (academicProgramId == Guid.Empty)
+            throw new ArgumentException("Academic program scope is required.", nameof(academicProgramId));
+        if (semesterId == Guid.Empty)
+            throw new ArgumentException("Semester scope is required.", nameof(semesterId));
+        if (courseId == Guid.Empty)
+            throw new ArgumentException("Course scope is required.", nameof(courseId));
+        if (createdByUserId == Guid.Empty)
+            throw new ArgumentException("Created-by user is required.", nameof(createdByUserId));
     }
 }
