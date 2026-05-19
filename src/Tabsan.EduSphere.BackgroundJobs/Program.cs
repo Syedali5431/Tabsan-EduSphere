@@ -76,13 +76,14 @@ builder.Services.ConfigureHttpClientDefaults(httpClientBuilder =>
 });
 
 // ── Database ──────────────────────────────────────────────────────────────────
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("DefaultConnection is required.");
+var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
+var connectionString = databaseConnection.ConnectionString;
 if (connectionString.Contains("NOT_SET", StringComparison.OrdinalIgnoreCase)
     || (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing") && IsUnsafePlaceholderValue(connectionString)))
 {
     throw new InvalidOperationException("DefaultConnection must be overridden by environment-specific configuration.");
 }
+Console.WriteLine($"[BackgroundJobs] Database connection source: {databaseConnection.Source}");
 builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(connectionString));
 
 // ── Repository + notification services ───────────────────────────────────────

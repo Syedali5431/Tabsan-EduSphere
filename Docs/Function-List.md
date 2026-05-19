@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 2 Implementation (Database Connection Management)
+
+- Recent request issue:
+  - proceed to next Plan B phase for connection-management hardening.
+- Implementation Summary:
+  - added centralized startup DB connection resolver and integrated it into API/BackgroundJobs.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `DatabaseConnectionResolver` | Centralized startup database connection selection strategy for deployment and environment aware resolution. | `src/Tabsan.EduSphere.Application/Services/DatabaseConnectionResolver.cs` |
+| `DatabaseConnectionResolver.ResolveDefaultConnection` | Resolves DB connection string from prioritized environment/deployment keys with backward-compatible fallback to legacy connection-string key. | `src/Tabsan.EduSphere.Application/Services/DatabaseConnectionResolver.cs` |
+| `DatabaseConnectionResolution` | Value contract carrying resolved connection string and sanitized source metadata for startup diagnostics. | `src/Tabsan.EduSphere.Application/Services/DatabaseConnectionResolver.cs` |
+
 ## 2026-05-19 - Plan B Phase 1 Implementation (Configuration Structure)
 
 - Recent request issue:

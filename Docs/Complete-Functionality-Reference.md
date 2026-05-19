@@ -13,6 +13,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan B Phase 2 Implementation (Database Connection Management)
+
+- Recent request issue:
+  - proceed to Plan B Phase 2 and harden runtime database connection management.
+
+### Phase 2 - Database Connection Management (Implemented)
+- Implementation Summary:
+  - added shared startup DB connection resolver used by API and BackgroundJobs,
+  - prioritized deployment and environment variable overrides,
+  - preserved backward-compatible fallback to `ConnectionStrings:DefaultConnection`.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed: `388/388`.
+
+- Behavior impact:
+  - deployment-specific DB connection control is now explicit and centralized,
+  - no regression in role/institute/module behavior.
+
 ## 2026-05-19 Update - Plan B Phase 1 Implementation (Configuration Structure)
 
 - Recent request issue:

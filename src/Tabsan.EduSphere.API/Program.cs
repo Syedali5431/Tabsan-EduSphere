@@ -134,11 +134,8 @@ var networkHttp2MaxStreamsPerConnection = Math.Max(100, builder.Configuration.Ge
 var networkOutboundMaxConnectionsPerServer = Math.Max(50, builder.Configuration.GetValue("InfrastructureTuning:NetworkStack:OutboundMaxConnectionsPerServer", 512));
 var networkOutboundConnectTimeoutSeconds = Math.Max(2, builder.Configuration.GetValue("InfrastructureTuning:NetworkStack:OutboundConnectTimeoutSeconds", 10));
 
-var configuredConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(configuredConnectionString))
-{
-    throw new InvalidOperationException("DefaultConnection string is missing. Configure ConnectionStrings:DefaultConnection.");
-}
+var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
+var configuredConnectionString = databaseConnection.ConnectionString;
 
 var useForwardedHeaders = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
 var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
@@ -150,6 +147,7 @@ if (useForwardedHeaders && !builder.Environment.IsDevelopment() && configuredKno
 var isDevDatabase = configuredConnectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase)
     || configuredConnectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase);
 Console.WriteLine($"[Startup] Database mode: {(isDevDatabase ? "Development" : "Production/External")}");
+Console.WriteLine($"[Startup] Database connection source: {databaseConnection.Source}");
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -236,7 +234,7 @@ builder.Host.UseSerilog((ctx, services, config) =>
 // ── Database ────────────────────────────────────────────────────────────────────
 // Reads the connection string from appsettings.json → ConnectionStrings:DefaultConnection.
 builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    opts.UseSqlServer(configuredConnectionString,
         sql =>
         {
             sql.MigrationsAssembly("Tabsan.EduSphere.Infrastructure");

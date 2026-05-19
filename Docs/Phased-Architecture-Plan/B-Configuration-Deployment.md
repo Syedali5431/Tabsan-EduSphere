@@ -28,6 +28,21 @@ Enhance the application to fully support environment-based configuration managem
 - **Stage 2.2:** Support overrides via environment variables and deployment settings
 - **Stage 2.3:** Auto-detect environment and load correct settings
 
+#### Phase 2 Implementation Summary (2026-05-19)
+- Added shared database connection resolver (`DatabaseConnectionResolver`) to centralize startup DB connection selection.
+- Implemented ordered override strategy for deployment and environment sources before legacy fallback:
+	- explicit environment variables (`EDUSPHERE_DB_CONNECTION`, `EDUSPHERE_DEFAULT_CONNECTION`, `DB_CONNECTION`, `DATABASE_URL`),
+	- deployment/application config keys (`Deployment:Database:ConnectionString`, `Database:ConnectionString`, `Database:DefaultConnection`),
+	- backward-compatible fallback (`ConnectionStrings:DefaultConnection`).
+- Updated API and BackgroundJobs startup to consume the shared resolver and report connection source metadata (without exposing credentials).
+
+#### Phase 2 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 3: Secure Configuration Handling
 - **Stage 3.1:** Use environment variables for secrets in production
 - **Stage 3.2:** Support external configuration sources
