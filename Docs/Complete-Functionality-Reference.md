@@ -13,6 +13,29 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan A Phase 4 Implementation (Access Control and Tenant/Campus Filtering)
+
+- Recent request issue:
+  - proceed to Plan A Phase 4 and enforce tenant/campus-scoped data visibility with SuperAdmin bypass.
+
+### Phase 4 - Access Control & Filtering (Implemented)
+- Implementation Summary:
+  - added request-scope resolver for role/tenant/campus extraction from authenticated claims,
+  - added `tenant_id` and `campus_id` claims to JWT issuance,
+  - added repository-level tenant/campus filtering on user and department reads,
+  - added SuperAdmin cross-tenant/campus bypass.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - focused unit tests passed (`9/9`),
+  - focused integration tests passed (`52/52`).
+- Testing and result summary:
+  - total focused tests passed: `61/61`.
+
+- Behavior impact:
+  - non-superadmin reads are now tenant/campus scoped for user and department repositories,
+  - SuperAdmin retains full cross-tenant/campus visibility,
+  - InstitutionType behavior remains unchanged.
+
 ## 2026-05-19 Update - Plan A Phase 3 Implementation (Compatibility and Safety Hardening)
 
 - Recent request issue:

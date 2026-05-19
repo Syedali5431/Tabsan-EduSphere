@@ -3,6 +3,25 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan A Phase 4 Implementation (Access Control and Tenant/Campus Filtering)
+
+- Recent request issue:
+  - proceed to Plan A Phase 4 and enforce tenant/campus-based data access while keeping SuperAdmin global visibility.
+- Implementation Summary:
+  - added request access-scope resolution,
+  - added JWT tenant/campus scope claims,
+  - enforced repository-level scoped filtering with SuperAdmin bypass.
+- Validation Summary:
+  - build and focused unit/integration suites passed (`61/61`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `IAccessScopeResolver` | Contract for resolving caller scope (isSuperAdmin, tenantId, campusId) from request identity context. | `src/Tabsan.EduSphere.Application/Interfaces/IAccessScopeResolver.cs` |
+| `HttpAccessScopeResolver` | Reads role and tenant/campus claims from `HttpContext` to provide runtime scope values. | `src/Tabsan.EduSphere.API/Services/HttpAccessScopeResolver.cs` |
+| `TokenService tenant/campus claims emission` | Publishes `tenant_id` and `campus_id` claims in JWT tokens so downstream data filtering can be enforced. | `src/Tabsan.EduSphere.Infrastructure/Auth/TokenService.cs` |
+| `UserRepository.ApplyTenantCampusScope` | Applies tenant/campus query filtering for user reads with SuperAdmin bypass. | `src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs` |
+| `DepartmentRepository.ApplyTenantCampusScope` | Applies tenant/campus query filtering for department reads with SuperAdmin bypass. | `src/Tabsan.EduSphere.Infrastructure/Repositories/DepartmentRepository.cs` |
+
 ## 2026-05-19 - Plan A Phase 3 Implementation (Tenant/Campus Compatibility and Safety)
 
 - Recent request issue:

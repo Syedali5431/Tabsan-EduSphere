@@ -326,6 +326,7 @@ builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantScopeResolver, HttpTenantScopeResolver>();
+builder.Services.AddScoped<IAccessScopeResolver, HttpAccessScopeResolver>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<TokenService>(); // also registered directly for AuthController resolving

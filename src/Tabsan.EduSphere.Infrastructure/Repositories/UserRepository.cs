@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
@@ -12,44 +13,70 @@ namespace Tabsan.EduSphere.Infrastructure.Repositories;
 public class UserRepository : IUserRepository
 {
     private readonly ApplicationDbContext _db;
+    private readonly IAccessScopeResolver? _accessScope;
 
-    public UserRepository(ApplicationDbContext db) => _db = db;
+    public UserRepository(ApplicationDbContext db, IAccessScopeResolver? accessScope = null)
+    {
+        _db = db;
+        _accessScope = accessScope;
+    }
+
+    private IQueryable<User> ApplyTenantCampusScope(IQueryable<User> query)
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return query;
+
+        var tenantId = _accessScope?.GetTenantId();
+        var campusId = _accessScope?.GetCampusId();
+
+        if (tenantId.HasValue && campusId.HasValue)
+            return query.Where(u => u.TenantId == tenantId && u.CampusId == campusId);
+
+        if (tenantId.HasValue)
+            return query.Where(u => u.TenantId == tenantId);
+
+        return query;
+    }
 
     /// <summary>Finds a user by their GUID primary key. Returns null if not found.</summary>
     public Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => _db.Users.Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Id == id, ct);
+        => ApplyTenantCampusScope(_db.Users)
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
 
     /// <summary>
     /// Finds a user by username using a case-insensitive comparison.
     /// Used during login to locate the account before password verification.
     /// </summary>
     public Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default)
-        => _db.Users.Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower(), ct);
+        => ApplyTenantCampusScope(_db.Users)
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower(), ct);
 
     /// <summary>Finds a user by email address. Returns null when no match exists.</summary>
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
-        => _db.Users.Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower(), ct);
+        => ApplyTenantCampusScope(_db.Users)
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower(), ct);
 
     /// <summary>Returns true when the username string is already taken by another account.</summary>
     public Task<bool> UsernameExistsAsync(string username, CancellationToken ct = default)
-        => _db.Users.AnyAsync(u => u.Username.ToLower() == username.ToLower(), ct);
+        => ApplyTenantCampusScope(_db.Users)
+            .AnyAsync(u => u.Username.ToLower() == username.ToLower(), ct);
 
     /// <summary>
     /// Returns all non-admin accounts that are currently locked out.
     /// Excludes Admin and SuperAdmin roles (those cannot be locked via automated policy).
     /// </summary>
     public async Task<IList<User>> GetLockedAccountsAsync(CancellationToken ct = default)
-        => await _db.Users
+        => await ApplyTenantCampusScope(_db.Users)
             .Include(u => u.Role)
             .Where(u => u.IsLockedOut && u.Role.Name != "Admin" && u.Role.Name != "SuperAdmin")
             .ToListAsync(ct);
 
     /// <summary>Returns all active users in Faculty role. Used for timetable teacher dropdowns.</summary>
     public async Task<IList<User>> GetFacultyUsersAsync(CancellationToken ct = default)
-        => await _db.Users
+        => await ApplyTenantCampusScope(_db.Users)
             .Include(u => u.Role)
             .Where(u => u.IsActive && u.Role.Name == "Faculty")
             .OrderBy(u => u.Username)
@@ -76,7 +103,7 @@ public class UserRepository : IUserRepository
         if (normalized.Count == 0)
             return new List<User>();
 
-        var query = _db.Users
+        var query = ApplyTenantCampusScope(_db.Users)
             .Include(u => u.Role)
             .Where(u => normalized.Contains(u.Role.Name));
 

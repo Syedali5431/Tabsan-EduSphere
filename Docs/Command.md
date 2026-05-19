@@ -20,6 +20,27 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Plan A Phase 4 Access Control and Filtering Checkpoint (2026-05-19)
+- Recent request issue:
+  - proceed to Plan A Phase 4 and implement tenant/campus scoped access with SuperAdmin bypass.
+- Implementation Summary:
+  - added request access-scope resolver to read tenant/campus claims plus caller role,
+  - added token claims (`tenant_id`, `campus_id`) at login for runtime scope propagation,
+  - enforced tenant/campus filtering in user and department repositories,
+  - enabled explicit SuperAdmin cross-tenant/campus bypass.
+- Validation Summary:
+  - solution build passed,
+  - focused unit and integration suites passed,
+  - InstitutionType (School/College/University) behavior remained unchanged.
+- Testing and result summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - unit tests filter passed (`9/9`),
+  - integration tests passed (`52/52`).
+- Status of Checks Done:
+  - Plan A Phase 4 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan A Phase 3 Compatibility and Safety Checkpoint (2026-05-19)
 - Recent request issue:
   - proceed to Plan A Phase 3 and enforce compatibility/safety guarantees for tenant/campus integration without changing InstitutionType flow.

@@ -19,6 +19,26 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-19 - Plan A Phase 4 Implementation (Access Control and Filtering)
+- Recent request issue:
+  - proceed to Plan A Phase 4 and implement tenant/campus access filtering with SuperAdmin bypass.
+
+#### Phase 4 - Access Control & Filtering (Implemented)
+- Implementation Summary:
+  - added `IAccessScopeResolver` and HTTP claims-backed implementation,
+  - added `tenant_id` and `campus_id` JWT claim issuance,
+  - enforced tenant/campus filtering in user and department repositories,
+  - preserved SuperAdmin cross-tenant/campus access.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - focused unit tests passed (`9/9`),
+  - focused integration tests passed (`52/52`).
+- Testing and result summary:
+  - total focused tests passed: `61/61`.
+
+- Stage status: Phase 4 implementation completed.
+- Phase status: tenant/campus scoped access control baseline completed.
+
 ### 2026-05-19 - Plan A Phase 3 Implementation (Compatibility and Safety Hardening)
 - Recent request issue:
   - proceed to Plan A Phase 3 and enforce compatibility/safety constraints for tenant+campus integration.

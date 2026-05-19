@@ -18,6 +18,28 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-19 - Plan A Phase 4 Implementation (Access Control and Filtering)
+- Recent request issue:
+  - proceed to Plan A Phase 4 and enforce tenant/campus-scoped reads while preserving SuperAdmin full access.
+
+#### Phase 4 - Access Control & Filtering (Implemented)
+- Implementation Summary:
+  - added request-scope resolver for role/tenant/campus claim extraction,
+  - added `tenant_id` and `campus_id` claims to JWT access tokens,
+  - enforced scoped filtering in user and department repositories,
+  - preserved SuperAdmin cross-tenant/campus bypass.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - unit tests filter passed (`9/9`),
+  - integration tests passed (`52/52`).
+- Testing and result summary:
+  - total focused tests passed: `61/61`.
+
+- Behavior impact:
+  - non-superadmin user/department data reads are now tenant/campus scoped,
+  - SuperAdmin retains global visibility,
+  - School/College/University InstitutionType behavior remains unchanged.
+
 ### 2026-05-19 - Plan A Phase 3 Implementation (Compatibility and Safety Hardening)
 - Recent request issue:
   - proceed to Plan A Phase 3 and harden tenant/campus compatibility safety without changing InstitutionType logic.

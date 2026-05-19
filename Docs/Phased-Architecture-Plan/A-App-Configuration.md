@@ -79,6 +79,22 @@ Refactor and extend the application to support a proper multi-tenant architectur
 - **Stage 4.2:** SuperAdmin cross-tenant/campus access
 - **Stage 4.3:** User access limited to their Tenant/Campus
 
+#### Phase 4 Implementation Summary
+- Implemented access-scope resolution for current requests using authenticated claims (tenant/campus + role).
+- Added JWT claim emission for `tenant_id` and `campus_id` during login token generation.
+- Enforced repository-level data filtering for `User` and `Department` by tenant/campus scope.
+- Added explicit SuperAdmin bypass for cross-tenant/campus visibility.
+
+#### Phase 4 Validation Summary
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- Focused unit tests passed (`9/9`):
+	- `EnrollmentServiceWaitlistTests`
+	- `AuthSecurityUxTests`
+- Focused integration tests passed (`52/52`):
+	- `AdminUserManagementIntegrationTests`
+	- `AuthorizationRegressionTests`
+- Verified scoped filtering is additive and does not alter InstitutionType (School/College/University) behavior.
+
 ### Phase 5: UI Management Interfaces
 - **Stage 5.1:** Add Tenant Management UI (SuperAdmin only)
 - **Stage 5.2:** Add Campus Management UI (linked to Tenant)
