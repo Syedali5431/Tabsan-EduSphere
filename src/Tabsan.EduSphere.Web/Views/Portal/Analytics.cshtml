@@ -1,4 +1,4 @@
-@* Final-Touches Phase 6 Stage 6.2 — replaced raw JSON pre/code blocks with proper Bootstrap 5 cards and tables *@
+@* Plan D Phase 1 Stage 1.1 — Chart.js integration and sample chart rendering *@
 @model Tabsan.EduSphere.Web.Models.Portal.AnalyticsPageModel
 @{ ViewData["Title"] = "Analytics"; }
 
@@ -73,6 +73,7 @@ else
                         }
                     </select>
                 </div>
+
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
                     <a asp-action="Analytics" class="btn btn-outline-secondary">Reset</a>
@@ -80,6 +81,109 @@ else
             </form>
         </div>
     </div>
+
+    <!-- Chart.js sample chart integration (Plan D Phase 1 Stage 1.1) -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">Sample Analytics Chart (Plan D Phase 1 Stage 1.1)</div>
+        <div class="card-body">
+            <canvas id="sampleChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var chartCanvas = document.getElementById('sampleChart');
+            if (chartCanvas) {
+                var ctx = chartCanvas.getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
+                        datasets: [{
+                            label: 'Student Count',
+                            data: [120, 90, 150, 80],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(255, 99, 132, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true },
+                            title: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Chart.js sample chart integration (Plan D Phase 1 Stage 1.1) -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">Sample Analytics Chart (Plan D Phase 1 Stage 1.1)</div>
+        <div class="card-body">
+            <canvas id="sampleChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var chartCanvas = document.getElementById('sampleChart');
+            if (chartCanvas) {
+                var ctx = chartCanvas.getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Dept A', 'Dept B', 'Dept C', 'Dept D'],
+                        datasets: [{
+                            label: 'Student Count',
+                            data: [120, 90, 150, 80],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(255, 99, 132, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true },
+                            title: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
 
     @* Summary cards *@
     @if (Model.Cards.Count > 0)
