@@ -747,22 +747,30 @@ textarea:focus,
   gap: 0.55rem;
   min-height: 3rem;
   padding: 0.55rem 0.9rem;
+@media (min-width: 992px) {
+  .header-meta {
+    flex-wrap: nowrap;
+  }
+}
   border-radius: 999px;
   background: rgba(255,255,255,0.78);
   border: 1px solid rgba(18, 32, 51, 0.08);
 }
-
+  z-index: 1040;
 .header-chip-icon {
   width: 2rem;
   height: 2rem;
   display: grid;
   place-items: center;
-  border-radius: 999px;
+  width: min(26rem, calc(100vw - 3rem));
   background: var(--color-primary-50);
   color: var(--color-primary-700);
 }
 
 .header-chip-icon svg {
+.app-content {
+  padding-bottom: 7rem;
+}
   width: 1rem;
   height: 1rem;
 }
@@ -917,6 +925,20 @@ textarea:focus,
   padding: 1.25rem 2rem 2rem;
   color: var(--color-slate-500);
   font-size: 0.9rem;
+}
+
+.rooms-page .page-section-card {
+  overflow: hidden;
+}
+
+.rooms-page .card-body {
+  padding: 1.25rem;
+}
+
+@media (max-width: 1199.98px) {
+  .rooms-page .col-xl-7 {
+    padding-right: calc(var(--bs-gutter-x) * 0.5);
+  }
 }
 
 @keyframes pulse-dot {
@@ -1505,6 +1527,10 @@ textarea:focus,
 .ai-chat-message-bubble {
   max-width: 82%;
   padding: 0.95rem 1rem;
+
+  .app-content {
+    padding-bottom: 6rem;
+  }
   border-radius: 1.25rem;
   box-shadow: var(--shadow-sm);
 }
