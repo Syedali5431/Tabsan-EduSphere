@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-19 - Plan C Phase 3 Implementation (Access Control & Security)
+- Recent request issue:
+  - proceed to Plan C Phase 3 access control and strict isolation.
+
+#### Phase 3 - Access Control & Security (Implemented)
+- Implementation Summary:
+  - added `CourseMaterialController` endpoints with authenticated read and role-restricted write access,
+  - added service/repository contracts and implementations for course-material operations,
+  - enforced strict tenant/campus repository filtering for reads and mutation target resolution.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed (`388/388`).
+
+- Behavior impact:
+  - Course Material now has secured API-level access and strict scoped data access aligned to existing repository policies,
+  - no regression in existing role/institute/module functionality.
+
 ### 2026-05-19 - Plan C Phase 2 Implementation (Data Safety & Migration)
 - Recent request issue:
   - proceed after Plan C Phase 1.

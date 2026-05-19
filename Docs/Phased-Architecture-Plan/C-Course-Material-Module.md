@@ -44,6 +44,18 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 3.1:** Implement role-based access (SuperAdmin, Admin, Faculty, Student)
 - **Stage 3.2:** Enforce strict isolation (no cross-tenant/campus access)
 
+#### Phase 3 Implementation Summary (2026-05-19)
+- Added `CourseMaterialController` with authenticated read access and write access restricted to `Faculty,Admin,SuperAdmin`.
+- Added `ICourseMaterialService`/`CourseMaterialService` and `ICourseMaterialRepository`/`CourseMaterialRepository` for end-to-end material CRUD flow.
+- Enforced strict tenant/campus repository scope filtering using `IAccessScopeResolver` with SuperAdmin bypass behavior aligned to existing repository patterns.
+
+#### Phase 3 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 4: UI & UX Implementation
 - **Stage 4.1:** Add "Course Material" to sidebar/menu
 - **Stage 4.2:** Create Manage Materials page (Admin/Faculty)

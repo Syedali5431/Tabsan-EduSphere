@@ -13,6 +13,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan C Phase 3 Implementation (Access Control & Security)
+
+- Recent request issue:
+  - proceed to Plan C Phase 3 access control and strict isolation.
+
+### Phase 3 - Access Control & Security (Implemented)
+- Implementation Summary:
+  - added `api/v1/course-materials` endpoints with authenticated read access and `Faculty,Admin,SuperAdmin` write restrictions,
+  - added application/domain/infrastructure contracts and implementations for course material operations,
+  - enforced strict tenant/campus repository scoping for list/get flows and mutation target resolution.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed: `388/388`.
+
+- Behavior impact:
+  - course-material API access now follows established role policy boundaries and request-scope isolation patterns,
+  - no regression introduced in existing module, institute, or role behavior outside the new course-material slice.
+
 ## 2026-05-19 Update - Plan C Phase 2 Implementation (Data Safety & Migration)
 
 - Recent request issue:

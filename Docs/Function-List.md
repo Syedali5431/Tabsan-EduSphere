@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan C Phase 3 Implementation (Access Control & Security)
+
+- Recent request issue:
+  - proceed to Plan C Phase 3 access control and strict isolation.
+- Implementation Summary:
+  - added scope-aware course material API/service/repository flow with role-based write guards.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CourseMaterialController.GetAll` | Returns course materials with strict repository-enforced tenant/campus filtering. | `src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs` |
+| `CourseMaterialController.Create` | Creates scoped material records for authorized Faculty/Admin/SuperAdmin users using caller identity. | `src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs` |
+| `ICourseMaterialService` | Defines the course material application contract for read/write and activation workflows. | `src/Tabsan.EduSphere.Application/Interfaces/ICourseMaterialService.cs` |
+| `CourseMaterialService` | Implements material create/update/activation logic with scope-derived tenant/campus enforcement. | `src/Tabsan.EduSphere.Application/Lms/CourseMaterialService.cs` |
+| `ICourseMaterialRepository` | Defines course material data-access contract with filter-based retrieval APIs. | `src/Tabsan.EduSphere.Domain/Interfaces/ICourseMaterialRepository.cs` |
+| `CourseMaterialRepository.ApplyTenantCampusScope` | Enforces strict tenant/campus query isolation with SuperAdmin bypass behavior. | `src/Tabsan.EduSphere.Infrastructure/Repositories/CourseMaterialRepository.cs` |
+
 ## 2026-05-19 - Plan C Phase 2 Implementation (Data Safety & Migration)
 
 - Recent request issue:

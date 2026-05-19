@@ -20,6 +20,28 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Plan C Phase 3 Access Control and Security Checkpoint (2026-05-19)
+- Recent request issue:
+  - proceed to Plan C Phase 3 access control and strict isolation.
+- Implementation Summary:
+  - added `CourseMaterialController` with read access for authenticated users and write access restricted to `Faculty,Admin,SuperAdmin`,
+  - added `ICourseMaterialService`/`CourseMaterialService` and `ICourseMaterialRepository`/`CourseMaterialRepository`,
+  - enforced strict tenant/campus filtering in repository queries with SuperAdmin bypass consistency.
+- Validation Summary:
+  - solution build passed,
+  - full unit, integration, and contract suites passed,
+  - new access-control and scope-enforcement code compiled without diagnostics.
+- Testing and result summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`236/236`),
+  - contract tests passed (`1/1`),
+  - total automated validations passed (`388/388`).
+- Status of Checks Done:
+  - Plan C Phase 3 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 2 Data Safety and Migration Checkpoint (2026-05-19)
 - Recent request issue:
   - proceed after Plan C Phase 1.

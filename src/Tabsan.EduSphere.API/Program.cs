@@ -489,9 +489,11 @@ builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ICourseGradin
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.ILmsRepository, Tabsan.EduSphere.Infrastructure.Repositories.LmsRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.IDiscussionRepository, Tabsan.EduSphere.Infrastructure.Repositories.DiscussionRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.IAnnouncementRepository, Tabsan.EduSphere.Infrastructure.Repositories.AnnouncementRepository>();
+builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.ICourseMaterialRepository, Tabsan.EduSphere.Infrastructure.Repositories.CourseMaterialRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ILmsService, Tabsan.EduSphere.Application.Lms.LmsService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IDiscussionService, Tabsan.EduSphere.Application.Lms.DiscussionService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IAnnouncementService, Tabsan.EduSphere.Application.Lms.AnnouncementService>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ICourseMaterialService, Tabsan.EduSphere.Application.Lms.CourseMaterialService>();
 
 // ── Phase 21: Study Planner ──────────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.IStudyPlanRepository, Tabsan.EduSphere.Infrastructure.Repositories.StudyPlanRepository>();

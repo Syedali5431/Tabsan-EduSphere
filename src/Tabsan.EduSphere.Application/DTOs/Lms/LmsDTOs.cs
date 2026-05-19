@@ -123,3 +123,50 @@ public sealed class CourseAnnouncementDto
     public string   Body       { get; set; } = "";
     public DateTime PostedAt   { get; set; }
 }
+
+// ── Plan C Phase 3 — Course Materials Access & Isolation ───────────────────
+
+public sealed record CreateCourseMaterialRequest(
+    Guid    DepartmentId,
+    Guid    AcademicProgramId,
+    Guid    SemesterId,
+    Guid    CourseId,
+    string  MaterialType,
+    string  Title,
+    string? Description,
+    string? ExternalUrl,
+    string? BlobPath,
+    string? FileName,
+    long?   FileSizeBytes,
+    bool    IsActive = true);
+
+public sealed record UpdateCourseMaterialRequest(
+    string  MaterialType,
+    string  Title,
+    string? Description,
+    string? ExternalUrl,
+    string? BlobPath,
+    string? FileName,
+    long?   FileSizeBytes,
+    bool    IsActive);
+
+public sealed class CourseMaterialDto
+{
+    public Guid     Id               { get; set; }
+    public Guid     TenantId         { get; set; }
+    public Guid     CampusId         { get; set; }
+    public Guid     DepartmentId     { get; set; }
+    public Guid     AcademicProgramId { get; set; }
+    public Guid     SemesterId       { get; set; }
+    public Guid     CourseId         { get; set; }
+    public string   MaterialType     { get; set; } = "";
+    public string   Title            { get; set; } = "";
+    public string?  Description      { get; set; }
+    public string?  ExternalUrl      { get; set; }
+    public string?  BlobPath         { get; set; }
+    public string?  FileName         { get; set; }
+    public long?    FileSizeBytes    { get; set; }
+    public bool     IsActive         { get; set; }
+    public DateTime CreatedAt        { get; set; }
+    public DateTime UpdatedAt        { get; set; }
+}
