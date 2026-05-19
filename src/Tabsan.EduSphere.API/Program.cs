@@ -35,6 +35,7 @@ using Tabsan.EduSphere.Application.Services;
 using Tabsan.EduSphere.Infrastructure.Exporters;
 using Tabsan.EduSphere.Infrastructure.Integrations;
 using Tabsan.EduSphere.API.Services;
+using Tabsan.EduSphere.Application.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -75,11 +76,7 @@ static void EnsureSecureStartupValue(string settingPath, string? value, int minL
 var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
-builder.Configuration
-    .SetBasePath(env.ContentRootPath)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 
 Console.WriteLine($"[Startup] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine("[Startup] Configuration sources: appsettings.json, appsettings.{Environment}.json, environment variables");

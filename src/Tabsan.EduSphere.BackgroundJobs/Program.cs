@@ -5,6 +5,7 @@ using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Application.Notifications;
 using Tabsan.EduSphere.BackgroundJobs;
 using Tabsan.EduSphere.Domain.Interfaces;
+using Tabsan.EduSphere.Application.Services;
 using Tabsan.EduSphere.Infrastructure.Email;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.Infrastructure.Repositories;
@@ -33,11 +34,7 @@ static bool IsUnsafePlaceholderValue(string? value)
 var builder = Host.CreateApplicationBuilder(args);
 
 var env = builder.Environment;
-builder.Configuration
-    .SetBasePath(env.ContentRootPath)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 
 Console.WriteLine($"[BackgroundJobs] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 

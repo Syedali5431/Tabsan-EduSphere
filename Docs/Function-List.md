@@ -3,6 +3,20 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 1 Implementation (Configuration Structure)
+
+- Recent request issue:
+  - proceed and begin Plan B with environment configuration hierarchy standardization.
+- Implementation Summary:
+  - introduced shared startup configuration hierarchy bootstrap and applied it across API/Web/BackgroundJobs.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `ConfigurationBootstrapper` | Shared startup configuration loader that standardizes source order for base, environment-specific, local, and environment-variable layers. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+| `ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy` | Applies consistent configuration hierarchy with prefixed-env override support and backward-compatible fallback to regular environment variables. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+
 ## 2026-05-19 - Plan A Phase 7 Implementation (Validation and Finalization)
 
 - Recent request issue:

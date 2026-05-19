@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Tabsan.EduSphere.Application.Services;
 
 static bool IsUnsafePlaceholderValue(string? value)
 {
@@ -39,11 +40,7 @@ static void EnsureSecureStartupValue(string settingPath, string? value)
 var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
-builder.Configuration
-    .SetBasePath(env.ContentRootPath)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 
 Console.WriteLine($"[Web] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 
