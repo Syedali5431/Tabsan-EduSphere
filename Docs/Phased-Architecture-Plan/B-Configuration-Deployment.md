@@ -80,6 +80,18 @@ Enhance the application to fully support environment-based configuration managem
 - **Stage 5.1:** Enable customer-specific config without code changes
 - **Stage 5.2:** Support config via app settings, env vars, deployment pipeline
 
+#### Phase 5 Implementation Summary (2026-05-19)
+- Added optional `appsettings.Deployment.json` to the shared bootstrap hierarchy so deployment-pipeline mounted config can override customer-specific values without code changes.
+- Seeded API, Web, and BackgroundJobs appsettings templates with a `Deployment` section for customer mode, code, name, domain, database, and scaling metadata.
+- Extended deployment resolution to support config-first customer overrides with environment-variable fallback and safe startup diagnostics.
+
+#### Phase 5 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 6: Tenant + Campus Aware Configuration
 - **Stage 6.1:** Prepare for per-tenant settings and isolation
 

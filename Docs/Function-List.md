@@ -3,6 +3,20 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 5 Implementation (Customer Deployment Support)
+
+- Recent request issue:
+  - proceed to customer deployment support phase.
+- Implementation Summary:
+  - added deployment-pipeline config layer support and customer deployment templates.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `appsettings.Deployment.json support` | Allows deployment-pipeline mounted configuration to override customer-specific values without code changes. | `src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs` |
+| `Deployment config templates` | Provide appsettings-based deployment metadata for customer mode, code, name, domain, database, and scaling overrides. | `src/Tabsan.EduSphere.API/appsettings.json`, `src/Tabsan.EduSphere.API/appsettings.Production.json`, `src/Tabsan.EduSphere.Web/appsettings.json`, `src/Tabsan.EduSphere.Web/appsettings.Production.json`, `src/Tabsan.EduSphere.BackgroundJobs/appsettings.json`, `src/Tabsan.EduSphere.BackgroundJobs/appsettings.Production.json` |
+
 ## 2026-05-19 - Plan B Phase 4 Implementation (Deployment Flexibility)
 
 - Recent request issue:
