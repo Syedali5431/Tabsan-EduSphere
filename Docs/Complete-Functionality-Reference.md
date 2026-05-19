@@ -13,6 +13,28 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-19 Update - Plan B Phase 9 Implementation (Logging & Visibility)
+
+- Recent request issue:
+  - proceed to logging and visibility after configuration performance and stability.
+
+### Phase 9 - Logging & Visibility (Implemented)
+- Implementation Summary:
+  - added shared startup visibility reporting,
+  - standardized startup logs across API, Web, and BackgroundJobs to show active environment, safe configuration source summary, database type, deployment profile, and tenant isolation posture,
+  - kept secrets and full connection strings out of logs.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/151`),
+  - full integration tests passed (`236/236`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - total automated validations passed: `388/388`.
+
+- Behavior impact:
+  - startup diagnostics are now more readable and operationally useful without increasing secret exposure risk,
+  - no runtime role, institute, module, or schema behavior changed.
+
 ## 2026-05-19 Update - Plan B Phase 8 Implementation (Performance & Stability)
 
 - Recent request issue:

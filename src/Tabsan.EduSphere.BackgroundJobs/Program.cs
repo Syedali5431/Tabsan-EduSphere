@@ -16,8 +16,16 @@ var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
+var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
+var configurationSourceSummary = StartupVisibilityReporter.DescribeConfigurationSources(
+    databaseConnection.Source,
+    deploymentTopology.Source,
+    tenantIsolation.Source);
+var databaseType = StartupVisibilityReporter.DescribeDatabaseType(databaseConnection.ConnectionString);
 
 Console.WriteLine($"[BackgroundJobs] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
+Console.WriteLine($"[BackgroundJobs] Database type: {databaseType}");
+Console.WriteLine($"[BackgroundJobs] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[BackgroundJobs] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 Console.WriteLine($"[BackgroundJobs] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");
 
@@ -59,7 +67,6 @@ builder.Services.ConfigureHttpClientDefaults(httpClientBuilder =>
 });
 
 // ── Database ──────────────────────────────────────────────────────────────────
-var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
 var connectionString = databaseConnection.ConnectionString;
 StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
     builder.Configuration,

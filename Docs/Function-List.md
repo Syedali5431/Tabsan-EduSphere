@@ -3,6 +3,21 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 9 Implementation (Logging & Visibility)
+
+- Recent request issue:
+  - proceed to logging and visibility for startup metadata.
+- Implementation Summary:
+  - added shared startup visibility reporting and standardized safe startup logs.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `StartupVisibilityReporter` | Produces safe startup visibility metadata such as database type and configuration source summaries without exposing secrets. | `src/Tabsan.EduSphere.Application/Services/StartupVisibilityReporter.cs` |
+| `StartupVisibilityReporter.DescribeDatabaseType` | Classifies the resolved connection string into a safe database-type label for logging. | `src/Tabsan.EduSphere.Application/Services/StartupVisibilityReporter.cs` |
+| `StartupVisibilityReporter.DescribeConfigurationSources` | Builds a safe, human-readable summary of the active configuration source metadata. | `src/Tabsan.EduSphere.Application/Services/StartupVisibilityReporter.cs` |
+
 ## 2026-05-19 - Plan B Phase 8 Implementation (Performance & Stability)
 
 - Recent request issue:

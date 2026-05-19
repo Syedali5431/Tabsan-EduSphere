@@ -119,12 +119,17 @@ StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
     deploymentTopology,
     tenantIsolation);
 
+var configurationSourceSummary = StartupVisibilityReporter.DescribeConfigurationSources(
+    databaseConnection.Source,
+    deploymentTopology.Source,
+    tenantIsolation.Source);
+var databaseType = StartupVisibilityReporter.DescribeDatabaseType(configuredConnectionString);
+
 var useForwardedHeaders = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
 var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
 
-var isDevDatabase = configuredConnectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase)
-    || configuredConnectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase);
-Console.WriteLine($"[Startup] Database mode: {(isDevDatabase ? "Development" : "Production/External")}");
+Console.WriteLine($"[Startup] Database type: {databaseType}");
+Console.WriteLine($"[Startup] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[Startup] Database connection source: {databaseConnection.Source}");
 Console.WriteLine($"[Startup] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 Console.WriteLine($"[Startup] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");

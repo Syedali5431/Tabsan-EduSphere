@@ -21,7 +21,16 @@ StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
     deploymentTopology,
     tenantIsolation);
 
+var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
+var configurationSourceSummary = StartupVisibilityReporter.DescribeConfigurationSources(
+    databaseConnection.Source,
+    deploymentTopology.Source,
+    tenantIsolation.Source);
+var databaseType = StartupVisibilityReporter.DescribeDatabaseType(databaseConnection.ConnectionString);
+
 Console.WriteLine($"[Web] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
+Console.WriteLine($"[Web] Database type: {databaseType}");
+Console.WriteLine($"[Web] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[Web] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 Console.WriteLine($"[Web] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");
 
