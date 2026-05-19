@@ -144,6 +144,37 @@ else
                 <canvas id="sampleChart" height="120"></canvas>
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold d-flex align-items-center">
+                <i class="bi bi-graph-up-arrow me-2"></i>
+                Advanced Trends
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-6">
+                        <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
+                        <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <canvas id="studentDistributionChart" height="170"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
+                        <div id="departmentCountLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <canvas id="departmentCountChart" height="170"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
+                        <div id="courseTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <canvas id="courseTrendChart" height="170"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
+                        <div id="semesterTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <canvas id="semesterTrendChart" height="170"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="accordion" id="analyticsAccordion">
@@ -351,7 +382,11 @@ else
                 overview: null,
                 performance: null,
                 attendance: null,
-                assignments: null
+                assignments: null,
+                studentDistribution: null,
+                departmentCounts: null,
+                courseTrend: null,
+                semesterTrend: null
             };
 
             var initialSnapshot = {
@@ -472,6 +507,42 @@ else
                 }
             }
 
+            function clearLegend(containerId) {
+                var container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = '';
+                }
+            }
+
+            function clearChartCanvas(el, message) {
+                if (!el || !el.getContext) return;
+                var ctx = el.getContext('2d');
+                if (!ctx) return;
+                ctx.clearRect(0, 0, el.width, el.height);
+                if (!message) return;
+                ctx.save();
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(message, el.width / 2, el.height / 2);
+                ctx.restore();
+            }
+
+            function palette(idx, alpha) {
+                var colors = [
+                    [13, 110, 253],
+                    [25, 135, 84],
+                    [255, 193, 7],
+                    [220, 53, 69],
+                    [13, 202, 240],
+                    [111, 66, 193],
+                    [253, 126, 20],
+                    [32, 201, 151]
+                ];
+                var c = colors[idx % colors.length];
+                return 'rgba(' + c[0] + ', ' + c[1] + ', ' + c[2] + ', ' + alpha + ')';
+            }
+
             if (institutionSelect && filterForm) {
                 institutionSelect.addEventListener('change', function () {
                     clearSelectValue(departmentSelect);
@@ -576,6 +647,13 @@ else
 
                 destroyChart(charts.overview);
 
+                if (!overviewValues.some(function (v) { return v > 0; })) {
+                    clearLegend('overviewLegend');
+                    clearChartCanvas(el, 'No overview metrics available.');
+                    charts.overview = null;
+                    return;
+                }
+
                 charts.overview = new Chart(el, {
                     type: 'bar',
                     data: {
@@ -615,9 +693,15 @@ else
                 var students = prop(performance, 'students', 'Students', []) || [];
                 var labels = students.slice(0, 10).map(function (s) { return prop(s, 'fullName', 'FullName', ''); });
                 var values = students.slice(0, 10).map(function (s) { return Number(prop(s, 'averageMarks', 'AverageMarks', 0)) || 0; });
-                if (!labels.length) return;
-
                 destroyChart(charts.performance);
+
+                if (!labels.length) {
+                    clearLegend('performanceLegend');
+                    clearChartCanvas(el, 'No performance data available.');
+                    charts.performance = null;
+                    return;
+                }
+
                 charts.performance = new Chart(el, {
                     type: 'bar',
                     data: {
@@ -648,9 +732,15 @@ else
                 var rows = prop(attendance, 'rows', 'Rows', []) || [];
                 var labels = rows.slice(0, 10).map(function (r) { return prop(r, 'fullName', 'FullName', ''); });
                 var values = rows.slice(0, 10).map(function (r) { return Number(prop(r, 'attendancePercentage', 'AttendancePercentage', 0)) || 0; });
-                if (!labels.length) return;
-
                 destroyChart(charts.attendance);
+
+                if (!labels.length) {
+                    clearLegend('attendanceLegend');
+                    clearChartCanvas(el, 'No attendance data available.');
+                    charts.attendance = null;
+                    return;
+                }
+
                 charts.attendance = new Chart(el, {
                     type: 'line',
                     data: {
@@ -684,9 +774,15 @@ else
                 var labels = assignments.slice(0, 8).map(function (a) { return prop(a, 'title', 'Title', ''); });
                 var submitted = assignments.slice(0, 8).map(function (a) { return Number(prop(a, 'submissions', 'Submissions', 0)) || 0; });
                 var graded = assignments.slice(0, 8).map(function (a) { return Number(prop(a, 'graded', 'Graded', 0)) || 0; });
-                if (!labels.length) return;
-
                 destroyChart(charts.assignments);
+
+                if (!labels.length) {
+                    clearLegend('assignmentLegend');
+                    clearChartCanvas(el, 'No assignment data available.');
+                    charts.assignments = null;
+                    return;
+                }
+
                 charts.assignments = new Chart(el, {
                     type: 'bar',
                     data: {
@@ -718,6 +814,257 @@ else
                 buildClickableLegend('assignmentLegend', charts.assignments);
             }
 
+            function renderStudentDistribution(snapshot) {
+                var el = document.getElementById('studentDistributionChart');
+                if (!el) return;
+
+                var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
+                var students = prop(performance, 'students', 'Students', []) || [];
+                var grouped = {};
+
+                students.forEach(function (student) {
+                    var semester = Number(prop(student, 'currentSemester', 'CurrentSemester', 0)) || 0;
+                    if (semester <= 0) return;
+                    var key = 'Sem ' + semester;
+                    grouped[key] = (grouped[key] || 0) + 1;
+                });
+
+                var labels = Object.keys(grouped).sort(function (a, b) {
+                    return Number(a.replace('Sem ', '')) - Number(b.replace('Sem ', ''));
+                });
+                var values = labels.map(function (key) { return grouped[key]; });
+
+                destroyChart(charts.studentDistribution);
+
+                if (!labels.length) {
+                    clearLegend('studentDistributionLegend');
+                    clearChartCanvas(el, 'No student distribution data available.');
+                    charts.studentDistribution = null;
+                    return;
+                }
+
+                charts.studentDistribution = new Chart(el, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Students',
+                            data: values,
+                            backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
+                            borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                buildClickableLegend('studentDistributionLegend', charts.studentDistribution);
+            }
+
+            function renderDepartmentCounts(snapshot) {
+                var el = document.getElementById('departmentCountChart');
+                if (!el) return;
+
+                var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
+                var students = prop(performance, 'students', 'Students', []) || [];
+                var grouped = {};
+
+                students.forEach(function (student) {
+                    var dept = prop(student, 'department', 'Department', 'Unspecified');
+                    grouped[dept] = (grouped[dept] || 0) + 1;
+                });
+
+                var labels = Object.keys(grouped).slice(0, 10);
+                var values = labels.map(function (key) { return grouped[key]; });
+
+                destroyChart(charts.departmentCounts);
+
+                if (!labels.length) {
+                    clearLegend('departmentCountLegend');
+                    clearChartCanvas(el, 'No department distribution data available.');
+                    charts.departmentCounts = null;
+                    return;
+                }
+
+                charts.departmentCounts = new Chart(el, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Students',
+                            data: values,
+                            backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.45); }),
+                            borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                buildClickableLegend('departmentCountLegend', charts.departmentCounts);
+            }
+
+            function renderCourseTrend(snapshot) {
+                var el = document.getElementById('courseTrendChart');
+                if (!el) return;
+
+                var assignmentReport = snapshot ? prop(snapshot, 'assignments', 'Assignments', null) : null;
+                var assignmentRows = prop(assignmentReport, 'assignments', 'Assignments', []) || [];
+                var grouped = {};
+
+                assignmentRows.forEach(function (row) {
+                    var course = prop(row, 'courseName', 'CourseName', 'Unspecified');
+                    var avg = Number(prop(row, 'averageMarks', 'AverageMarks', 0)) || 0;
+                    if (!grouped[course]) {
+                        grouped[course] = { sum: 0, count: 0 };
+                    }
+                    grouped[course].sum += avg;
+                    grouped[course].count += 1;
+                });
+
+                var labels = Object.keys(grouped).slice(0, 10);
+                var values = labels.map(function (key) {
+                    var cell = grouped[key];
+                    return cell.count > 0 ? Number((cell.sum / cell.count).toFixed(2)) : 0;
+                });
+
+                destroyChart(charts.courseTrend);
+
+                if (!labels.length) {
+                    clearLegend('courseTrendLegend');
+                    clearChartCanvas(el, 'No course trend data available.');
+                    charts.courseTrend = null;
+                    return;
+                }
+
+                charts.courseTrend = new Chart(el, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Avg Assignment Marks',
+                            data: values,
+                            fill: false,
+                            tension: 0.3,
+                            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+
+                buildClickableLegend('courseTrendLegend', charts.courseTrend);
+            }
+
+            function renderSemesterTrend(snapshot) {
+                var el = document.getElementById('semesterTrendChart');
+                if (!el) return;
+
+                var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
+                var attendance = snapshot ? prop(snapshot, 'attendance', 'Attendance', null) : null;
+                var students = prop(performance, 'students', 'Students', []) || [];
+                var attendanceRows = prop(attendance, 'rows', 'Rows', []) || [];
+
+                var marksBySemester = {};
+                students.forEach(function (student) {
+                    var sem = Number(prop(student, 'currentSemester', 'CurrentSemester', 0)) || 0;
+                    if (sem <= 0) return;
+                    if (!marksBySemester[sem]) {
+                        marksBySemester[sem] = { sum: 0, count: 0 };
+                    }
+                    marksBySemester[sem].sum += Number(prop(student, 'averageMarks', 'AverageMarks', 0)) || 0;
+                    marksBySemester[sem].count += 1;
+                });
+
+                var attendanceBySemester = {};
+                attendanceRows.forEach(function (row) {
+                    var courseName = prop(row, 'courseName', 'CourseName', '');
+                    var match = /sem(?:ester)?\s*(\d+)/i.exec(courseName);
+                    var sem = match ? Number(match[1]) : 0;
+                    if (sem <= 0) return;
+                    if (!attendanceBySemester[sem]) {
+                        attendanceBySemester[sem] = { sum: 0, count: 0 };
+                    }
+                    attendanceBySemester[sem].sum += Number(prop(row, 'attendancePercentage', 'AttendancePercentage', 0)) || 0;
+                    attendanceBySemester[sem].count += 1;
+                });
+
+                var semesterSet = {};
+                Object.keys(marksBySemester).forEach(function (k) { semesterSet[k] = true; });
+                Object.keys(attendanceBySemester).forEach(function (k) { semesterSet[k] = true; });
+                var semesters = Object.keys(semesterSet)
+                    .map(function (k) { return Number(k); })
+                    .filter(function (n) { return n > 0; })
+                    .sort(function (a, b) { return a - b; });
+
+                destroyChart(charts.semesterTrend);
+
+                if (!semesters.length) {
+                    clearLegend('semesterTrendLegend');
+                    clearChartCanvas(el, 'No semester trend data available.');
+                    charts.semesterTrend = null;
+                    return;
+                }
+
+                var labels = semesters.map(function (s) { return 'Sem ' + s; });
+                var avgMarks = semesters.map(function (s) {
+                    var cell = marksBySemester[s];
+                    return cell && cell.count > 0 ? Number((cell.sum / cell.count).toFixed(2)) : null;
+                });
+                var avgAttendance = semesters.map(function (s) {
+                    var cell = attendanceBySemester[s];
+                    return cell && cell.count > 0 ? Number((cell.sum / cell.count).toFixed(2)) : null;
+                });
+
+                charts.semesterTrend = new Chart(el, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Avg Marks',
+                                data: avgMarks,
+                                fill: false,
+                                tension: 0.25,
+                                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                                borderColor: 'rgba(13, 110, 253, 1)',
+                                borderWidth: 2,
+                                spanGaps: true
+                            },
+                            {
+                                label: 'Avg Attendance',
+                                data: avgAttendance,
+                                fill: false,
+                                tension: 0.25,
+                                backgroundColor: 'rgba(25, 135, 84, 0.2)',
+                                borderColor: 'rgba(25, 135, 84, 1)',
+                                borderWidth: 2,
+                                spanGaps: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+
+                buildClickableLegend('semesterTrendLegend', charts.semesterTrend);
+            }
+
             function applySnapshot(snapshot) {
                 showMessage(snapshot && snapshot.message ? snapshot.message : '');
 
@@ -741,6 +1088,10 @@ else
                 renderPerformance(snapshot);
                 renderAttendance(snapshot);
                 renderAssignments(snapshot);
+                renderStudentDistribution(snapshot);
+                renderDepartmentCounts(snapshot);
+                renderCourseTrend(snapshot);
+                renderSemesterTrend(snapshot);
             }
 
             function buildSnapshotQuery() {

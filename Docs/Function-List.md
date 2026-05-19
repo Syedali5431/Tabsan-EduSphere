@@ -76,6 +76,25 @@ No new endpoints were added in this stage.
 | `PortalController.BuildAnalyticsPageModelAsync` | Centralizes analytics model construction for initial page load and snapshot responses. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
 | `refreshSnapshot` (Analytics page script) | Fetches analytics snapshot and updates filters/cards/charts without full page reload. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
 
+## 2026-05-20 - Plan D Phase 3 Stage 3.1 (Chart Types and Data)
+
+- Recent request issue:
+  - proceed to Stage 3.1 chart expansion.
+- Implementation Summary:
+  - added advanced chart renderers and chart containers for expanded analytics data visualization.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `renderStudentDistribution` | Renders semester-based student distribution using a pie chart. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `renderDepartmentCounts` | Renders department-wise student counts using a bar chart. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `renderCourseTrend` | Renders course trend line based on average assignment marks. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `renderSemesterTrend` | Renders combined semester trend lines for marks and attendance where available. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

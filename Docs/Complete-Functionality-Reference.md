@@ -94,6 +94,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - analytics charts now refresh without page navigation while keeping existing scope/security behavior intact.
 
+## 2026-05-20 Update - Plan D Phase 3 Stage 3.1 (Chart Types and Data)
+
+- Recent request issue:
+  - proceed to Plan D Phase 3 Stage 3.1 chart expansion.
+
+### Phase 3 Stage 3.1 - Additional Chart Types (Implemented)
+- Implementation Summary:
+  - added `Pie`, `Bar`, and `Line` analytics visualizations for student distribution, department counts, and trend views,
+  - added semester trend chart combining performance and attendance trajectories where data is available,
+  - retained instant in-page refresh behavior for all charts after filter changes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics now provides broader comparative visual coverage without API contract or security model changes.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:
