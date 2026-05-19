@@ -10,6 +10,12 @@ namespace Tabsan.EduSphere.Domain.Academic;
 /// </summary>
 public class Department : AuditableEntity
 {
+    /// <summary>Optional tenant association for SaaS-scoped ownership.</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Optional campus association under the tenant.</summary>
+    public Guid? CampusId { get; private set; }
+
     /// <summary>Full name of the department as displayed in the UI.</summary>
     public string Name { get; private set; } = default!;
 
@@ -62,6 +68,14 @@ public class Department : AuditableEntity
     public void SetInstitutionType(InstitutionType institutionType)
     {
         InstitutionType = institutionType;
+        Touch();
+    }
+
+    /// <summary>Assigns or clears tenant/campus ownership for this department.</summary>
+    public void SetTenantCampus(Guid? tenantId, Guid? campusId)
+    {
+        TenantId = tenantId;
+        CampusId = campusId;
         Touch();
     }
 }

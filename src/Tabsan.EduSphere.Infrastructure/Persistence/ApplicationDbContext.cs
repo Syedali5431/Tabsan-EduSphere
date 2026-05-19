@@ -15,6 +15,7 @@ using Tabsan.EduSphere.Domain.Settings;
 using Tabsan.EduSphere.Domain.Lms;
 using Tabsan.EduSphere.Domain.StudentLifecycle;
 using Tabsan.EduSphere.Domain.StudyPlanner;
+using Tabsan.EduSphere.Domain.Tenancy;
 
 namespace Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -32,6 +33,12 @@ public class ApplicationDbContext : DbContext
     // ── Identity ───────────────────────────────────────────────────────────
     /// <summary>All system users (students, faculty, admins, super admins).</summary>
     public DbSet<User> Users => Set<User>();
+
+    /// <summary>Top-level tenant organizations.</summary>
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+
+    /// <summary>Tenant campuses used for data scoping within a tenant.</summary>
+    public DbSet<Campus> Campuses => Set<Campus>();
 
     /// <summary>Predefined system roles seeded at startup.</summary>
     public DbSet<Role> Roles => Set<Role>();

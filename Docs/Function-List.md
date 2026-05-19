@@ -3,6 +3,27 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan A Phase 1 Implementation (Tenant + Campus Domain Foundation)
+
+- Recent request issue:
+  - proceed with Plan A Phase 1 actual implementation and keep documentation plus repository synchronization mandatory.
+- Implementation Summary:
+  - implemented additive tenancy domain foundation,
+  - introduced optional tenant/campus references on root entities to preserve backward compatibility.
+- Validation Summary:
+  - solution build passed,
+  - focused unit tests passed (`9/9`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `Tenant aggregate` | Represents a top-level customer organization for multi-tenant SaaS ownership and activation lifecycle. | `src/Tabsan.EduSphere.Domain/Tenancy/Tenant.cs` |
+| `Campus aggregate` | Represents a tenant-owned campus (physical/logical) with activation lifecycle and tenant linkage. | `src/Tabsan.EduSphere.Domain/Tenancy/Campus.cs` |
+| `User.SetTenantCampus(tenantId, campusId)` | Assigns or clears tenant/campus ownership for user-level scoping without breaking existing identity flows. | `src/Tabsan.EduSphere.Domain/Identity/User.cs` |
+| `Department.SetTenantCampus(tenantId, campusId)` | Assigns or clears tenant/campus ownership for department-level scoping while preserving InstitutionType behavior. | `src/Tabsan.EduSphere.Domain/Academic/Department.cs` |
+| `TenantConfiguration` | Maps the `tenants` table with unique tenant code and soft-delete filter for non-destructive lifecycle management. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/TenantConfiguration.cs` |
+| `CampusConfiguration` | Maps the `campuses` table with tenant-bound uniqueness and FK relationship to tenants. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/CampusConfiguration.cs` |
+| `Phase41_TenantCampusFoundation migration` | Applies non-breaking schema expansion for tenancy foundation tables/columns/FKs/indexes. | `src/Tabsan.EduSphere.Infrastructure/Migrations/20260519031636_Phase41_TenantCampusFoundation.cs` |
+
 ## 2026-05-19 - Plan A Phase 1 Kickoff (Tenant + Campus Domain Layer Extension)
 
 - Recent request issue:

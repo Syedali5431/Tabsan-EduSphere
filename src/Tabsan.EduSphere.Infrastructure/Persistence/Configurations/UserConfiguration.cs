@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tabsan.EduSphere.Domain.Identity;
+using Tabsan.EduSphere.Domain.Tenancy;
 
 namespace Tabsan.EduSphere.Infrastructure.Persistence.Configurations;
 
@@ -26,6 +27,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.PhoneNumber)
                .HasMaxLength(32)
+               .IsRequired(false);
+
+        builder.Property(u => u.TenantId)
+               .IsRequired(false);
+
+        builder.Property(u => u.CampusId)
                .IsRequired(false);
 
         builder.Property(u => u.PasswordHash)
@@ -63,10 +70,26 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .HasFilter("[email] IS NOT NULL")
                .HasDatabaseName("IX_users_email");
 
+        builder.HasIndex(u => u.TenantId)
+               .HasDatabaseName("IX_users_tenant_id");
+
+        builder.HasIndex(u => u.CampusId)
+               .HasDatabaseName("IX_users_campus_id");
+
         // Many users belong to one role; role is required.
         builder.HasOne(u => u.Role)
                .WithMany()
                .HasForeignKey(u => u.RoleId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Tenant>()
+               .WithMany()
+               .HasForeignKey(u => u.TenantId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Campus>()
+               .WithMany()
+               .HasForeignKey(u => u.CampusId)
                .OnDelete(DeleteBehavior.Restrict);
 
         // Phase 9: per-user theme preference — nullable, max 50 chars.

@@ -12,6 +12,12 @@ namespace Tabsan.EduSphere.Domain.Identity;
 /// </summary>
 public class User : AuditableEntity
 {
+    /// <summary>Optional tenant association for SaaS-scoped ownership.</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Optional campus association under the tenant.</summary>
+    public Guid? CampusId { get; private set; }
+
     /// <summary>Unique login handle chosen during account creation.</summary>
     public string Username { get; private set; } = default!;
 
@@ -82,13 +88,16 @@ public class User : AuditableEntity
 
     /// <summary>Creates a new user. Password must already be hashed by the caller.</summary>
     public User(string username, string passwordHash, int roleId, string? email = null, Guid? departmentId = null,
-                bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null)
+                bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null,
+                Guid? tenantId = null, Guid? campusId = null)
     {
         Username = username;
         PasswordHash = passwordHash;
         RoleId = roleId;
         Email = email;
         PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
+        TenantId = tenantId;
+        CampusId = campusId;
         DepartmentId = departmentId;
         MustChangePassword = mustChangePassword;
         InstitutionType = institutionType;
@@ -184,6 +193,14 @@ public class User : AuditableEntity
     public void SetInstitutionType(InstitutionType? institutionType)
     {
         InstitutionType = institutionType;
+        Touch();
+    }
+
+    /// <summary>Assigns or clears tenant/campus ownership for this user.</summary>
+    public void SetTenantCampus(Guid? tenantId, Guid? campusId)
+    {
+        TenantId = tenantId;
+        CampusId = campusId;
         Touch();
     }
 
