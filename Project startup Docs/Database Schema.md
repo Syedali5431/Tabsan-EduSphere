@@ -13,6 +13,33 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 	- `No schema mutation` or
 	- `Schema updated` with table/column/index/migration details.
 
+## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
+
+- Recent request issue:
+	- complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+- Implementation Summary:
+	- Stage 6.1 optimized Course Material repository read-query execution without table/column mutation,
+	- Stage 6.2 added migration `20260519215715_PlanCPhase6Stage2CourseMaterialIndexTuning`.
+- Validation Summary:
+	- targeted Course Material authorization regression tests passed (`5/5`),
+	- `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- added index `IX_course_materials_scope_active_sort` on (`TenantId`, `CampusId`, `IsActive`, `Name`, `CreatedAt`).
+
+## 2026-05-20 Update - Plan C Phase 5 Implementation (File & Link Handling)
+
+- Recent request issue:
+	- complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+- Implementation Summary:
+	- added upload/download API and portal integration for Course Material file handling,
+	- persisted file keys through existing `course_materials.FilePath` model without new schema objects.
+- Validation Summary:
+	- targeted Course Material authorization regression tests passed (`5/5`),
+	- `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-19 Update - Plan C Phase 4 Implementation (UI & UX)
 
 - Recent request issue:

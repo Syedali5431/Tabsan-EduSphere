@@ -114,7 +114,7 @@ else
                                         }
                                         @if (!string.IsNullOrWhiteSpace(m.BlobPath))
                                         {
-                                            <span class="small text-muted">@m.BlobPath</span>
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="student">Download File</a>
                                         }
                                     </div>
 

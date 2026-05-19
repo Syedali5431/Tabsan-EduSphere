@@ -3,6 +3,42 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan C Phase 6 Implementation (Performance & Optimization)
+
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+- Implementation Summary:
+  - optimized Course Material read-query execution path and added targeted scoped sort index.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - full build passed.
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CourseMaterialRepository.IsScopeMissingForNonSuperAdmin` | Short-circuits read operations early when tenant scope is missing for non-SuperAdmin callers. | `src/Tabsan.EduSphere.Infrastructure/Repositories/CourseMaterialRepository.cs` |
+| `IX_course_materials_scope_active_sort` | Optimizes scoped active Course Material listing and sort pattern (`TenantId`, `CampusId`, `IsActive`, `Name`, `CreatedAt`). | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/LmsConfigurations.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Migrations/20260519215715_PlanCPhase6Stage2CourseMaterialIndexTuning.cs` |
+
+## 2026-05-20 - Plan C Phase 5 Implementation (File & Link Handling)
+
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+- Implementation Summary:
+  - added upload/download API + web flows and role-context-aware fallback handling.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - full build passed.
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CourseMaterialController.Upload` | Uploads validated material files and persists them in scoped storage for Faculty/Admin/SuperAdmin users. | `src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs` |
+| `CourseMaterialController.DownloadFile` | Streams stored material files with metadata-aware content type and file name for authorized scoped users. | `src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs` |
+| `CourseMaterialController.BuildScopedStorageCategory` | Builds tenant/campus-aware storage category path for Course Material upload isolation. | `src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs` |
+| `IEduApiClient.UploadCourseMaterialFileAsync` | Uploads Course Material files from portal to API multipart endpoint. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `IEduApiClient.DownloadCourseMaterialFileAsync` | Downloads Course Material files from API for portal-proxied file delivery. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `PortalController.DownloadCourseMaterialFile` | Proxies material file download from API and preserves student/manage redirect context on failure. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `JwtTestHelper.GenerateToken(...tenantId, campusId)` | Emits scoped tenant/campus JWT claims for integration authorization tests. | `tests/Tabsan.EduSphere.IntegrationTests/Infrastructure/JwtTestHelper.cs` |
+| `AuthorizationRegressionTests.CourseMaterial_*` | Validates endpoint authorization matrix for Course Material upload/download access. | `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs` |
+
 ## 2026-05-19 - Plan C Phase 4 Implementation (UI & UX)
 
 - Recent request issue:

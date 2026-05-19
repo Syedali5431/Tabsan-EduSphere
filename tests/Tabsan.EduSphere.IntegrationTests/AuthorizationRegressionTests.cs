@@ -34,6 +34,24 @@ public class AuthorizationRegressionTests
         return client;
     }
 
+    private HttpClient CreateScopedClient(
+        string role,
+        string userId = "00000000-0000-0000-0000-000000000001",
+        string tenantId = "00000000-0000-0000-0000-000000000111",
+        string campusId = "00000000-0000-0000-0000-000000000222")
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                JwtTestHelper.GenerateToken(
+                    role,
+                    userId,
+                    tenantId: tenantId,
+                    campusId: campusId));
+        return client;
+    }
+
     private HttpClient CreateUnauthenticatedClient() => _factory.CreateClient();
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -442,5 +460,68 @@ public class AuthorizationRegressionTests
             $"api/v1/result/correct?studentProfileId={Guid.NewGuid()}&courseOfferingId={Guid.NewGuid()}&resultType=Final",
             JsonContent.Create(new { marksObtained = 80, maxMarks = 100 }));
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // COURSE MATERIAL
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task CourseMaterial_DownloadFile_Unauthenticated_Returns401()
+    {
+        using var client = CreateUnauthenticatedClient();
+        var response = await client.GetAsync($"api/v1/course-materials/{Guid.NewGuid()}/file");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CourseMaterial_DownloadFile_Student_ReturnsNotForbiddenOrUnauthorized()
+    {
+        using var client = CreateClient("Student");
+        var response = await client.GetAsync($"api/v1/course-materials/{Guid.NewGuid()}/file");
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CourseMaterial_Upload_Unauthenticated_Returns401()
+    {
+        using var client = CreateUnauthenticatedClient();
+        using var content = BuildCourseMaterialUploadContent();
+
+        var response = await client.PostAsync("api/v1/course-materials/upload", content);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CourseMaterial_Upload_Student_Returns403()
+    {
+        using var client = CreateClient("Student");
+        using var content = BuildCourseMaterialUploadContent();
+
+        var response = await client.PostAsync("api/v1/course-materials/upload", content);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CourseMaterial_Upload_Faculty_ReturnsNotForbiddenOrUnauthorized()
+    {
+        using var client = CreateScopedClient("Faculty");
+        using var content = BuildCourseMaterialUploadContent();
+
+        var response = await client.PostAsync("api/v1/course-materials/upload", content);
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private static MultipartFormDataContent BuildCourseMaterialUploadContent()
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 test file");
+        var fileContent = new ByteArrayContent(bytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        var content = new MultipartFormDataContent();
+        content.Add(fileContent, "file", "sample.pdf");
+        return content;
     }
 }

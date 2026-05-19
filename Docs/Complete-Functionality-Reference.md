@@ -13,6 +13,41 @@ For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the
 
 After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
 
+## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
+
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+
+### Phase 6 - Performance & Optimization (Implemented)
+- Implementation Summary:
+  - Stage 6.1 optimized Course Material read paths with `AsNoTracking` and missing-scope short-circuit behavior,
+  - Stage 6.2 added targeted index `IX_course_materials_scope_active_sort` through migration `PlanCPhase6Stage2CourseMaterialIndexTuning`.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+
+- Behavior impact:
+  - no feature-surface change; Course Material listing/retrieval performance is improved under scoped filters,
+  - no regression introduced in School/College/University role behavior.
+
+## 2026-05-20 Update - Plan C Phase 5 Implementation (File & Link Handling)
+
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+
+### Phase 5 - File & Link Handling (Implemented)
+- Implementation Summary:
+  - Stage 5.1 added Course Material multipart upload endpoint and portal upload flow,
+  - Stage 5.2 added scoped persistent storage pathing and file streaming endpoint,
+  - Stage 5.3 added role-access regression tests and student/manage-aware download fallback behavior.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+
+- Behavior impact:
+  - Course Material now supports validated uploads and student-accessible downloads via scoped storage,
+  - no regression introduced in existing institute/role/module behavior outside Course Material.
+
 ## 2026-05-19 Update - Plan C Phase 4 Implementation (UI & UX)
 
 - Recent request issue:

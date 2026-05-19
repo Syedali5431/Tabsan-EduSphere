@@ -4647,6 +4647,7 @@ public class PortalController : Controller
         string? description,
         string? externalUrl,
         string? blobPath,
+        IFormFile? materialFile,
         string? fileName,
         long? fileSizeBytes,
         bool isActive,
@@ -4661,6 +4662,18 @@ public class PortalController : Controller
         {
             try
             {
+                if (materialFile is { Length: > 0 })
+                {
+                    await using var uploadStream = materialFile.OpenReadStream();
+                    var uploaded = await _api.UploadCourseMaterialFileAsync(uploadStream, materialFile.FileName, ct);
+                    if (uploaded is not null)
+                    {
+                        blobPath = uploaded.BlobPath;
+                        fileName = uploaded.FileName;
+                        fileSizeBytes = uploaded.FileSizeBytes;
+                    }
+                }
+
                 await _api.CreateCourseMaterialAsync(
                     departmentId,
                     academicProgramId,
@@ -4701,6 +4714,7 @@ public class PortalController : Controller
         string? description,
         string? externalUrl,
         string? blobPath,
+        IFormFile? materialFile,
         string? fileName,
         long? fileSizeBytes,
         bool isActive,
@@ -4715,6 +4729,18 @@ public class PortalController : Controller
         {
             try
             {
+                if (materialFile is { Length: > 0 })
+                {
+                    await using var uploadStream = materialFile.OpenReadStream();
+                    var uploaded = await _api.UploadCourseMaterialFileAsync(uploadStream, materialFile.FileName, ct);
+                    if (uploaded is not null)
+                    {
+                        blobPath = uploaded.BlobPath;
+                        fileName = uploaded.FileName;
+                        fileSizeBytes = uploaded.FileSizeBytes;
+                    }
+                }
+
                 await _api.UpdateCourseMaterialAsync(
                     id,
                     materialType,
@@ -4776,6 +4802,34 @@ public class PortalController : Controller
             courseId = selectedCourseId,
             activeOnly
         });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadCourseMaterialFile(Guid id, string? returnTo, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        var redirectAction = string.Equals(returnTo, "student", StringComparison.OrdinalIgnoreCase)
+            ? nameof(CourseMaterialStudent)
+            : nameof(CourseMaterial);
+
+        try
+        {
+            var file = await _api.DownloadCourseMaterialFileAsync(id, ct);
+            if (file is null || file.Content.Length == 0)
+            {
+                TempData["PortalMessage"] = "Error: Material file is not available.";
+                return RedirectToAction(redirectAction);
+            }
+
+            return File(file.Content, file.ContentType, file.FileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Error: {ex.Message}";
+            return RedirectToAction(redirectAction);
+        }
     }
 
     // Final-Touches Phase 20 Stage 20.3 — discussion forum

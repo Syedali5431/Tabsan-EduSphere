@@ -79,9 +79,34 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 5.2:** Store files in persistent storage
 - **Stage 5.3:** Ensure files/links are always accessible to students
 
+#### Phase 5 Stage 5.1 Implementation Summary (2026-05-20)
+- Added `POST /api/v1/course-materials/upload` with role guard (`Faculty,Admin,SuperAdmin`) to accept multipart uploads.
+- Integrated deep file validation via `FileUploadValidator` before persistence, then saved files through the existing `IMediaStorageService` abstraction under `course-materials` category.
+- Added portal wiring so Manage Course Materials create/update forms can upload files directly (`materialFile`), auto-populating `BlobPath`, `FileName`, and `FileSizeBytes` for material create/update requests.
+
+#### Phase 5 Stage 5.2 Implementation Summary (2026-05-20)
+- Updated Course Material uploads to persist under scope-aware storage categories (`course-materials/{tenantId}/{campusId}`) for tenant/campus isolation in persistent storage.
+- Added `GET /api/v1/course-materials/{id}/file` to stream persisted files from storage with metadata-aware content type and download filename.
+- Added portal download integration so both manage and student pages consume persisted files through a first-class "Download File" flow instead of displaying raw blob paths.
+
+#### Phase 5 Stage 5.3 Implementation Summary (2026-05-20)
+- Added authorization regression coverage for Course Material file endpoints to ensure student read access is preserved while upload remains restricted to elevated roles.
+- Improved portal download UX fallback by preserving role-context redirect targets (`CourseMaterial` vs `CourseMaterialStudent`) when file retrieval fails.
+- Completed student-access hardening for uploaded materials by validating end-to-end API and portal consumption paths without exposing raw storage keys in the UI.
+
 ### Phase 6: Performance & Optimization
 - **Stage 6.1:** Optimize queries by TenantId, CampusId, DepartmentId, CourseId
 - **Stage 6.2:** Add proper indexes
+
+#### Phase 6 Stage 6.1 Implementation Summary (2026-05-20)
+- Optimized `CourseMaterialRepository` read paths to use `AsNoTracking()` for filter and by-id lookups, reducing EF Core tracking overhead on read-mostly flows.
+- Added early scope short-circuit for non-SuperAdmin calls without tenant scope to avoid unnecessary database round-trips.
+- Preserved existing tenant/campus/department/program/semester/course filter behavior and ordering while improving query execution efficiency.
+
+#### Phase 6 Stage 6.2 Implementation Summary (2026-05-20)
+- Added composite index `IX_course_materials_scope_active_sort` on (`TenantId`, `CampusId`, `IsActive`, `Name`, `CreatedAt`) to support scoped active listing and default sort pattern efficiently.
+- Added migration `PlanCPhase6Stage2CourseMaterialIndexTuning` to apply/revert the index cleanly in deployment pipelines.
+- Kept existing scope lookup indexes intact and introduced only targeted index expansion to avoid unnecessary write overhead.
 
 ### Phase 7: Validation & Finalization
 - **Stage 7.1:** Validate data safety, access control, and UI

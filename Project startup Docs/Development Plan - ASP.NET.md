@@ -19,6 +19,41 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Plan C Phase 6 Implementation (Performance & Optimization)
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+
+#### Phase 6 - Performance & Optimization (Implemented)
+- Implementation Summary:
+  - Stage 6.1 optimized `CourseMaterialRepository` read paths using no-tracking reads and scope-missing short-circuit behavior,
+  - Stage 6.2 added targeted index tuning via `PlanCPhase6Stage2CourseMaterialIndexTuning` migration.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Testing and result summary:
+  - focused validations passed and full solution build stayed green.
+
+- Stage status: Plan C Phase 6 implementation completed.
+- Phase status: performance optimization and index tuning completed.
+
+### 2026-05-20 - Plan C Phase 5 Implementation (File & Link Handling)
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+
+#### Phase 5 - File & Link Handling (Implemented)
+- Implementation Summary:
+  - Stage 5.1 added validated file upload endpoint and portal multipart upload integration,
+  - Stage 5.2 added scoped persistent storage category routing and file streaming download endpoint,
+  - Stage 5.3 added authorization regression coverage and portal role-context-aware fallback behavior.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Testing and result summary:
+  - focused validations passed and full solution build stayed green.
+
+- Stage status: Plan C Phase 5 implementation completed.
+- Phase status: file/link handling feature completed end-to-end.
+
 ### 2026-05-19 - Plan C Phase 4 Implementation (UI & UX)
 - Recent request issue:
   - proceed to Plan C Phase 4 UI and UX implementation.

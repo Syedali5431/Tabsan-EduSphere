@@ -20,6 +20,45 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+## Mandatory Documentation Sync Rule (Always Mandatory)
+After each completed stage, also update these files (where applicable) with `Implementation Summary` and `Validation Summary`:
+1. `Docs/Command.md`
+2. `Docs/Complete-Functionality-Reference.md` (when functionality changes)
+3. `Docs/Function-List.md` (when functions/endpoints/methods are added)
+4. `Project startup Docs/Database Schema.md`
+5. `Project startup Docs/Development Plan - ASP.NET.md`
+6. `Project startup Docs/Modules.md`
+7. `Project startup Docs/PRD.md`
+
+### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+- Implementation Summary:
+  - Stage 6.1 optimized Course Material read queries with `AsNoTracking` and scope-missing short-circuit logic,
+  - Stage 6.2 added composite index `IX_course_materials_scope_active_sort` and migration `PlanCPhase6Stage2CourseMaterialIndexTuning`.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Status of Checks Done:
+  - Plan C Phase 6 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
+### Plan C Phase 5 File and Link Handling Checkpoint (2026-05-20)
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+- Implementation Summary:
+  - Stage 5.1 added multipart upload endpoint and portal upload wiring,
+  - Stage 5.2 added scoped persistent storage paths and file download endpoint,
+  - Stage 5.3 added authorization/access regression coverage and role-aware portal fallback handling.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Status of Checks Done:
+  - Plan C Phase 5 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 4 UI and UX Checkpoint (2026-05-19)
 - Recent request issue:
   - proceed to Plan C Phase 4 UI and UX implementation.

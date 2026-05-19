@@ -170,3 +170,12 @@ public sealed class CourseMaterialDto
     public DateTime CreatedAt        { get; set; }
     public DateTime UpdatedAt        { get; set; }
 }
+
+public sealed class CourseMaterialUploadDto
+{
+    public string BlobPath       { get; set; } = string.Empty;
+    public string FileUrl        { get; set; } = string.Empty;
+    public string FileName       { get; set; } = string.Empty;
+    public long   FileSizeBytes  { get; set; }
+    public string ContentType    { get; set; } = string.Empty;
+}

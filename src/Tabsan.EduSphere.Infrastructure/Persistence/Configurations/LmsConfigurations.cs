@@ -152,6 +152,9 @@ public class CourseAnnouncementConfiguration : IEntityTypeConfiguration<CourseAn
          builder.HasIndex(m => new { m.CourseId, m.SemesterId, m.IsActive })
              .HasDatabaseName("IX_course_materials_course_semester_active");
 
+         builder.HasIndex(m => new { m.TenantId, m.CampusId, m.IsActive, m.Name, m.CreatedAt })
+             .HasDatabaseName("IX_course_materials_scope_active_sort");
+
          builder.HasOne<Tenant>()
              .WithMany()
              .HasForeignKey(m => m.TenantId)

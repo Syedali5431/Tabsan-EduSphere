@@ -21,7 +21,9 @@ public static class JwtTestHelper
         string userId = "00000000-0000-0000-0000-000000000001",
         string email  = "test@tabsan.local",
         string? studentProfileId = null,
-        int? institutionType = null)
+        int? institutionType = null,
+        string? tenantId = null,
+        string? campusId = null)
     {
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -44,6 +46,12 @@ public static class JwtTestHelper
 
         if (institutionType.HasValue)
             claims.Add(new Claim("institutionType", institutionType.Value.ToString()));
+
+        if (!string.IsNullOrWhiteSpace(tenantId))
+            claims.Add(new Claim("tenant_id", tenantId));
+
+        if (!string.IsNullOrWhiteSpace(campusId))
+            claims.Add(new Claim("campus_id", campusId));
 
         var token = new JwtSecurityToken(
             issuer:             Issuer,

@@ -131,7 +131,7 @@ else
                                         }
                                         else if (!string.IsNullOrWhiteSpace(m.BlobPath))
                                         {
-                                            <span class="text-muted">@m.BlobPath</span>
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="manage">Download file</a>
                                         }
                                         else
                                         {
@@ -169,7 +169,7 @@ else
 
                                 <div class="modal fade" id="editMaterialModal-@m.Id" tabindex="-1">
                                     <div class="modal-dialog">
-                                        <form method="post" asp-action="UpdateCourseMaterial">
+                                        <form method="post" asp-action="UpdateCourseMaterial" enctype="multipart/form-data">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@m.Id" />
                                             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
@@ -207,6 +207,11 @@ else
                                                         <label class="form-label">File Path</label>
                                                         <input type="text" name="blobPath" class="form-control" value="@m.BlobPath" />
                                                     </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Upload File</label>
+                                                        <input type="file" name="materialFile" class="form-control" />
+                                                        <div class="form-text">Optional. Uploading replaces the current file path.</div>
+                                                    </div>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@m.IsActive" id="isActive-@m.Id">
                                                         <label class="form-check-label" for="isActive-@m.Id">Active</label>
@@ -233,7 +238,7 @@ else
 
 <div class="modal fade" id="createMaterialModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="post" asp-action="CreateCourseMaterial">
+        <form method="post" asp-action="CreateCourseMaterial" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
             <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
@@ -309,6 +314,11 @@ else
                     <div class="mb-3">
                         <label class="form-label">File Path</label>
                         <input type="text" name="blobPath" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload File</label>
+                        <input type="file" name="materialFile" class="form-control" />
+                        <div class="form-text">Allowed types: PDF, DOC, DOCX, JPG, PNG. Max 5 MB.</div>
                     </div>
                     <input type="hidden" name="fileName" value="" />
                     <input type="hidden" name="fileSizeBytes" value="" />

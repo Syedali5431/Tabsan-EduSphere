@@ -17,6 +17,28 @@
   - build, full unit, full integration, and contract tests passed,
   - module behavior remained unchanged outside Course Material navigation visibility.
 
+## Execution Update - 2026-05-20 (Plan C Phase 6 Implementation)
+
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+- Implementation Summary:
+  - optimized Course Material read-query execution and added targeted scoped/sorted index,
+  - no module activation/deactivation, package pricing, or entitlement contract changes were introduced.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - full solution build passed.
+
+## Execution Update - 2026-05-20 (Plan C Phase 5 Implementation)
+
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+- Implementation Summary:
+  - added Course Material upload/download flows and role-context-aware portal fallback handling,
+  - kept module contract unchanged (feature remained within existing `course_material` to `courses` entitlement mapping).
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - full solution build passed.
+
 ## Execution Update - 2026-05-19 (Plan C Phase 3 Implementation)
 
 - Recent request issue:

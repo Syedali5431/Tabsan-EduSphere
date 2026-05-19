@@ -36,6 +36,15 @@ public sealed class CourseMaterialRepository : ICourseMaterialRepository
         return query;
     }
 
+    private bool IsScopeMissingForNonSuperAdmin()
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return false;
+
+        var tenantId = _accessScope?.GetTenantId();
+        return !tenantId.HasValue;
+    }
+
     public async Task<IReadOnlyList<CourseMaterial>> GetByFiltersAsync(
         Guid? departmentId,
         Guid? academicProgramId,
@@ -44,7 +53,10 @@ public sealed class CourseMaterialRepository : ICourseMaterialRepository
         bool activeOnly,
         CancellationToken ct = default)
     {
-        var query = ApplyTenantCampusScope(_db.CourseMaterials.AsQueryable());
+        if (IsScopeMissingForNonSuperAdmin())
+            return Array.Empty<CourseMaterial>();
+
+        var query = ApplyTenantCampusScope(_db.CourseMaterials.AsNoTracking());
 
         if (departmentId.HasValue)
             query = query.Where(m => m.DepartmentId == departmentId.Value);
@@ -68,8 +80,13 @@ public sealed class CourseMaterialRepository : ICourseMaterialRepository
     }
 
     public Task<CourseMaterial?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => ApplyTenantCampusScope(_db.CourseMaterials)
+    {
+        if (IsScopeMissingForNonSuperAdmin())
+            return Task.FromResult<CourseMaterial?>(null);
+
+        return ApplyTenantCampusScope(_db.CourseMaterials.AsNoTracking())
             .FirstOrDefaultAsync(m => m.Id == id, ct);
+    }
 
     public async Task AddAsync(CourseMaterial material, CancellationToken ct = default)
         => await _db.CourseMaterials.AddAsync(material, ct);

@@ -18,6 +18,42 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan C Phase 6 Implementation (Performance & Optimization)
+- Recent request issue:
+  - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
+
+#### Phase 6 - Performance & Optimization (Implemented)
+- Implementation Summary:
+  - Stage 6.1 optimized Course Material repository read behavior with no-tracking execution and missing-scope short-circuit,
+  - Stage 6.2 introduced index `IX_course_materials_scope_active_sort` through migration `PlanCPhase6Stage2CourseMaterialIndexTuning`.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Testing and result summary:
+  - focused validations and full build passed.
+
+- Behavior impact:
+  - no functional change in role/institute behavior; performance characteristics improved for scoped Course Material list/read paths.
+
+### 2026-05-20 - Plan C Phase 5 Implementation (File & Link Handling)
+- Recent request issue:
+  - complete Plan C Phase 5 Stage 5.1, Stage 5.2, and Stage 5.3.
+
+#### Phase 5 - File & Link Handling (Implemented)
+- Implementation Summary:
+  - Stage 5.1 added validated multipart upload endpoint and portal upload integration,
+  - Stage 5.2 added scoped persistent storage routing and file download endpoint,
+  - Stage 5.3 added role-authorization regression tests and role-context-aware portal fallback handling.
+- Validation Summary:
+  - targeted Course Material authorization regression tests passed (`5/5`),
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed.
+- Testing and result summary:
+  - focused validations and full build passed.
+
+- Behavior impact:
+  - Course Material now supports upload/download flows under strict tenant/campus scope and role boundaries,
+  - no regression in School/College/University and existing module behavior.
+
 ### 2026-05-19 - Plan C Phase 4 Implementation (UI & UX)
 - Recent request issue:
   - proceed to Plan C Phase 4 UI and UX implementation.

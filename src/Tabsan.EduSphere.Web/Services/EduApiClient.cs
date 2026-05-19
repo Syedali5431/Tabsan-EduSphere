@@ -199,6 +199,8 @@ public interface IEduApiClient
         bool activeOnly,
         CancellationToken ct);
     Task<CourseMaterialApiModel?> GetCourseMaterialByIdAsync(Guid id, CancellationToken ct);
+    Task<CourseMaterialFileDownloadApiModel?> DownloadCourseMaterialFileAsync(Guid id, CancellationToken ct);
+    Task<CourseMaterialUploadApiModel?> UploadCourseMaterialFileAsync(Stream fileStream, string fileName, CancellationToken ct);
     Task<CourseMaterialApiModel?> CreateCourseMaterialAsync(
         Guid departmentId,
         Guid academicProgramId,
@@ -1893,6 +1895,43 @@ public class EduApiClient : IEduApiClient
 
     public Task<CourseMaterialApiModel?> GetCourseMaterialByIdAsync(Guid id, CancellationToken ct)
         => GetAsync<CourseMaterialApiModel>($"api/v1/course-materials/{id}", ct);
+
+    public async Task<CourseMaterialFileDownloadApiModel?> DownloadCourseMaterialFileAsync(Guid id, CancellationToken ct)
+    {
+        using var request = CreateRequest(HttpMethod.Get, $"api/v1/course-materials/{id}/file");
+        using var response = await CreateClient().SendAsync(request, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            throw BuildException(response.StatusCode, body);
+        }
+
+        var fileBytes = await response.Content.ReadAsByteArrayAsync(ct);
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+        var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+            ?? response.Content.Headers.ContentDisposition?.FileName
+            ?? "course-material";
+
+        return new CourseMaterialFileDownloadApiModel
+        {
+            Content = fileBytes,
+            ContentType = contentType,
+            FileName = fileName.Trim('"')
+        };
+    }
+
+    public async Task<CourseMaterialUploadApiModel?> UploadCourseMaterialFileAsync(Stream fileStream, string fileName, CancellationToken ct)
+    {
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fileStream), "file", fileName);
+        using var request = CreateRequest(HttpMethod.Post, "api/v1/course-materials/upload");
+        request.Content = content;
+        using var response = await CreateClient().SendAsync(request, ct);
+        var body = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode) throw BuildException(response.StatusCode, body);
+        return JsonSerializer.Deserialize<CourseMaterialUploadApiModel>(body, _jsonOptions);
+    }
 
     public Task<CourseMaterialApiModel?> CreateCourseMaterialAsync(
         Guid departmentId,
@@ -4440,6 +4479,22 @@ public sealed class CourseMaterialApiModel
     public bool     IsActive          { get; set; }
     public DateTime CreatedAt         { get; set; }
     public DateTime UpdatedAt         { get; set; }
+}
+
+public sealed class CourseMaterialUploadApiModel
+{
+    public string BlobPath      { get; set; } = string.Empty;
+    public string FileUrl       { get; set; } = string.Empty;
+    public string FileName      { get; set; } = string.Empty;
+    public long   FileSizeBytes { get; set; }
+    public string ContentType   { get; set; } = string.Empty;
+}
+
+public sealed class CourseMaterialFileDownloadApiModel
+{
+    public byte[] Content      { get; set; } = Array.Empty<byte>();
+    public string ContentType  { get; set; } = "application/octet-stream";
+    public string FileName     { get; set; } = "course-material";
 }
 
 // ── Phase 21: Study Planner API models ──────────────────────────────────────
