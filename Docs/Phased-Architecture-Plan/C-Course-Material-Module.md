@@ -12,6 +12,18 @@ Add a new "Course Material" feature, fully compatible with Tenant + Campus + Ins
 - **Stage 1.2:** Link CourseMaterial to Tenant, Campus, Department, Course, Semester, Subject
 - **Stage 1.3:** Update schema, add foreign keys and indexes
 
+#### Phase 1 Implementation Summary (2026-05-19)
+- Added `CourseMaterial` domain entity with required material metadata, tenant/campus ownership, department/program/semester/course references, and file/link location support.
+- Added EF Core configuration for `course_materials` with foreign keys to tenant, campus, department, academic program, semester, course (subject), and creator user.
+- Extended `ApplicationDbContext` with `DbSet<CourseMaterial>` and created migration `PlanCPhase1CourseMaterialFoundation` to apply table, foreign keys, and scope-first indexes.
+
+#### Phase 1 Validation Summary (2026-05-19)
+- `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+- unit tests passed (`151/151`).
+- integration tests passed (`236/236`).
+- contract tests passed (`1/1`).
+- total automated validations passed (`388/388`).
+
 ### Phase 2: Data Safety & Migration
 - **Stage 2.1:** Migrate existing data safely (if any)
 - **Stage 2.2:** Ensure all new records are scoped by Tenant and Campus

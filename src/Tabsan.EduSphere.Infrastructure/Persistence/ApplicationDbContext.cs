@@ -257,6 +257,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<DiscussionReply> DiscussionReplies => Set<DiscussionReply>();
     /// <summary>Announcements for a course offering or department-wide.</summary>
     public DbSet<CourseAnnouncement> CourseAnnouncements => Set<CourseAnnouncement>();
+    /// <summary>Tenant/campus scoped course materials (file/link) for department/program/semester/subject-course slices.</summary>
+    public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
 
     // Final-Touches Phase 21 Stage 21.1 — Study Planner
     /// <summary>Student semester study plans.</summary>

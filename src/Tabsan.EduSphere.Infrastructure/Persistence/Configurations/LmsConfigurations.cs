@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Lms;
+using Tabsan.EduSphere.Domain.Tenancy;
 
 namespace Tabsan.EduSphere.Infrastructure.Persistence.Configurations;
 
@@ -112,3 +115,70 @@ public class CourseAnnouncementConfiguration : IEntityTypeConfiguration<CourseAn
         builder.HasQueryFilter(a => !a.IsDeleted);
     }
 }
+
+    /// <summary>EF Core configuration for the CourseMaterial entity.</summary>
+    public class CourseMaterialConfiguration : IEntityTypeConfiguration<CourseMaterial>
+    {
+        public void Configure(EntityTypeBuilder<CourseMaterial> builder)
+        {
+         builder.ToTable("course_materials");
+         builder.HasKey(m => m.Id);
+
+         builder.Property(m => m.Name).IsRequired().HasMaxLength(300);
+         builder.Property(m => m.Description).HasMaxLength(4_000);
+         builder.Property(m => m.LinkUrl).HasMaxLength(1_000);
+         builder.Property(m => m.FilePath).HasMaxLength(1_000);
+         builder.Property(m => m.MaterialType).HasConversion<int>().IsRequired();
+         builder.Property(m => m.RowVersion).IsRowVersion();
+
+         builder.HasIndex(m => m.TenantId)
+             .HasDatabaseName("IX_course_materials_tenant_id");
+
+         builder.HasIndex(m => m.CampusId)
+             .HasDatabaseName("IX_course_materials_campus_id");
+
+         builder.HasIndex(m => new { m.TenantId, m.CampusId, m.DepartmentId, m.AcademicProgramId, m.SemesterId, m.CourseId, m.IsActive })
+             .HasDatabaseName("IX_course_materials_scope_lookup");
+
+         builder.HasIndex(m => new { m.CourseId, m.SemesterId, m.IsActive })
+             .HasDatabaseName("IX_course_materials_course_semester_active");
+
+         builder.HasOne<Tenant>()
+             .WithMany()
+             .HasForeignKey(m => m.TenantId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<Campus>()
+             .WithMany()
+             .HasForeignKey(m => new { m.CampusId, m.TenantId })
+             .HasPrincipalKey(c => new { c.Id, c.TenantId })
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<Department>()
+             .WithMany()
+             .HasForeignKey(m => m.DepartmentId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<AcademicProgram>()
+             .WithMany()
+             .HasForeignKey(m => m.AcademicProgramId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<Semester>()
+             .WithMany()
+             .HasForeignKey(m => m.SemesterId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<Course>()
+             .WithMany()
+             .HasForeignKey(m => m.CourseId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<User>()
+             .WithMany()
+             .HasForeignKey(m => m.CreatedByUserId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasQueryFilter(m => !m.IsDeleted);
+        }
+    }

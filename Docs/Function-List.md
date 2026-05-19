@@ -3,6 +3,23 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan C Phase 1 Implementation (Domain & Database Extension)
+
+- Recent request issue:
+  - start Plan C Phase 1.
+- Implementation Summary:
+  - added course-material domain model and schema foundation.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CourseMaterial` | Represents tenant/campus scoped course materials linked to department/program/semester/course context. | `src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs` |
+| `CourseMaterial.UpdateMetadata` | Updates material title and description metadata. | `src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs` |
+| `CourseMaterial.UpdateLocation` | Updates material storage location for file/link and validates required location by material type. | `src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs` |
+| `CourseMaterialConfiguration` | Configures `course_materials` table, foreign keys, and indexes for isolation and lookup efficiency. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/LmsConfigurations.cs` |
+| `ApplicationDbContext.CourseMaterials` | Registers course-material aggregate set in EF DbContext. | `src/Tabsan.EduSphere.Infrastructure/Persistence/ApplicationDbContext.cs` |
+
 ## 2026-05-19 - Plan B Phase 10 Implementation (Validation & Finalization)
 
 - Recent request issue:

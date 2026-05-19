@@ -13,6 +13,26 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 	- `No schema mutation` or
 	- `Schema updated` with table/column/index/migration details.
 
+## 2026-05-19 Update - Plan C Phase 1 Implementation (Domain & Database Extension)
+
+- Recent request issue:
+	- start Plan C Phase 1.
+- Implementation Summary:
+	- added `course_materials` schema foundation with tenant/campus/department/program/semester/course scope columns,
+	- added migration `20260519054518_PlanCPhase1CourseMaterialFoundation`.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- full unit tests passed (`151/151`),
+	- full integration tests passed (`236/236`),
+	- contract tests passed (`1/1`).
+- Testing and result summary:
+	- total automated validations passed: `388/388`.
+- Schema impact: `Schema updated`.
+- EF migration impact:
+	- new table: `course_materials`,
+	- foreign keys: tenant, campus (composite with tenant), department, academic program, semester, course, created-by user,
+	- indexes: tenant/campus indexes and scope lookup indexes for filtered material retrieval.
+
 ## 2026-05-19 Update - Plan B Phase 10 Implementation (Validation & Finalization)
 
 - Recent request issue:

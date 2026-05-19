@@ -20,6 +20,28 @@ After that, always update the repository (commit, push, and pull required) using
 
 Do not end a completed task with local-only changes.
 
+### Plan C Phase 1 Domain and Database Extension Checkpoint (2026-05-19)
+- Recent request issue:
+  - start Plan C Phase 1.
+- Implementation Summary:
+  - added `CourseMaterial` domain entity for tenant/campus scoped material records,
+  - linked materials to department, academic program, semester, and course (subject scope),
+  - added EF configuration and migration `PlanCPhase1CourseMaterialFoundation` with foreign keys and indexes.
+- Validation Summary:
+  - solution build passed,
+  - full unit, integration, and contract suites passed,
+  - migration compiled without diagnostics.
+- Testing and result summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - unit tests passed (`151/151`),
+  - integration tests passed (`236/236`),
+  - contract tests passed (`1/1`),
+  - total automated validations passed (`388/388`).
+- Status of Checks Done:
+  - Plan C Phase 1 implementation completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan B Phase 10 Validation and Finalization Checkpoint (2026-05-19)
 - Recent request issue:
   - proceed to validation and finalization after logging and visibility.
