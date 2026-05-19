@@ -17,6 +17,27 @@
 
 No new backend functions/endpoints were added in this phase.
 
+## 2026-05-20 - Plan D Phase 2 Stage 2.1 (Global Filters)
+
+- Recent request issue:
+  - proceed to Stage 2.1 and implement global analytics filters.
+- Implementation Summary:
+  - added Course/Semester filter state and analytics query plumbing in existing analytics methods.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+No new endpoints were added in this stage.
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `EduApiClient.BuildAnalyticsQuery` | Builds analytics query string including optional `courseId` and `semesterId` filters. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `AnalyticsService.GetPerformanceReportAsync(..., courseId, semesterId)` | Applies course/semester-scoped performance filtering. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `AnalyticsService.GetAttendanceReportAsync(..., courseId, semesterId)` | Applies course/semester-scoped attendance filtering. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `AnalyticsService.GetAssignmentStatsAsync(..., courseId, semesterId)` | Applies course/semester-scoped assignment filtering. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

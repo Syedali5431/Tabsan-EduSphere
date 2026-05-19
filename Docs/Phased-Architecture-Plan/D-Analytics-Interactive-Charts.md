@@ -30,6 +30,18 @@ Enhance the Analytical section with advanced, interactive charts and global filt
 - **Stage 2.2:** Ensure dependent filtering (each filter updates the next)
 - **Stage 2.3:** Charts update instantly on filter/legend change
 
+#### Phase 2 Progress Summary (through Stage 2.1) (2026-05-20)
+- Implementation Summary:
+  - added global Analytics filters for `InstitutionType`, `Department`, `Course`, and `Semester` in the portal UI,
+  - extended analytics request/query plumbing across Web -> API -> AnalyticsService for `courseId` and `semesterId`,
+  - applied course/semester filtering in performance, attendance, and assignment analytics queries,
+  - updated analytics cache-key scoping to include course and semester filter dimensions.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ### Phase 3: Chart Types & Data
 - **Stage 3.1:** Add Pie, Bar, and Line charts for:
   - Student distribution

@@ -35,6 +35,26 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - Analytics supports interactive legend-based data control,
   - no backend API, schema, or tenancy/campus isolation behavior changed.
 
+## 2026-05-20 Update - Plan D Phase 2 Stage 2.1 (Global Filters)
+
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.1 and add global analytics filters.
+
+### Phase 2 Stage 2.1 - Global Filters (Implemented)
+- Implementation Summary:
+  - added global filter support for institution, department, course, and semester,
+  - wired filter values through portal model/controller, API client query builder, API analytics endpoints, and analytics service methods,
+  - applied course/semester scoped analytics query filtering and cache-key partitioning.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics reports/charts are now globally filterable by institution, department, course, and semester,
+  - no schema mutation and no change to tenant/campus security isolation boundaries.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

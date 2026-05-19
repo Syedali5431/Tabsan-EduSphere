@@ -2515,7 +2515,7 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Analytics(int? institutionType, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> Analytics(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
     {
         ViewData["Title"] = "Analytics";
         var identity = _api.GetSessionIdentity();
@@ -2523,7 +2523,9 @@ public class PortalController : Controller
         {
             IsConnected = _api.IsConnected(),
             SelectedInstitutionType = institutionType,
-            SelectedDepartmentId = departmentId
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId,
+            SelectedSemesterId = semesterId
         };
 
         if (!model.IsConnected) return View(model);
@@ -2531,6 +2533,7 @@ public class PortalController : Controller
         try
         {
             model.Departments = await _api.GetDepartmentsAsync(ct);
+            model.Semesters = await _api.GetSemestersAsync(ct);
 
             // Constrained roles are auto-scoped to their institute claim for analytics filters.
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
@@ -2545,16 +2548,31 @@ public class PortalController : Controller
                     .ToList();
             }
 
+            model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, ct);
+
             if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
             {
                 model.Message = "Selected department is outside your current analytics scope.";
                 model.SelectedDepartmentId = null;
+                model.Courses = await _api.GetCoursesAsync(null, ct);
+            }
+
+            if (model.SelectedCourseId.HasValue && model.Courses.All(c => c.Id != model.SelectedCourseId.Value))
+            {
+                model.Message = "Selected course is outside your current analytics scope.";
+                model.SelectedCourseId = null;
+            }
+
+            if (model.SelectedSemesterId.HasValue && model.Semesters.All(s => s.Id != model.SelectedSemesterId.Value))
+            {
+                model.Message = "Selected semester is outside your current analytics scope.";
+                model.SelectedSemesterId = null;
             }
 
             // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON
-            model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, ct);
-            model.Attendance  = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, ct);
-            model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, ct);
+            model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            model.Attendance  = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
 
             // Populate summary cards from real data
             if (model.Performance is not null)

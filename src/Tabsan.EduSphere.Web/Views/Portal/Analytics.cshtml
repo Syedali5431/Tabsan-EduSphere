@@ -16,7 +16,7 @@ else
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form asp-action="Analytics" method="get" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Institution</label>
                     <select class="form-select" name="institutionType">
                         @if (!Model.SelectedInstitutionType.HasValue)
@@ -56,7 +56,7 @@ else
                         }
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label class="form-label">Department</label>
                     <select class="form-select" name="departmentId">
                         <option value="">All Departments</option>
@@ -74,8 +74,44 @@ else
                     </select>
                 </div>
 
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                <div class="col-md-3">
+                    <label class="form-label">Course</label>
+                    <select class="form-select" name="courseId">
+                        <option value="">All Courses</option>
+                        @foreach (var c in Model.Courses)
+                        {
+                            if (Model.SelectedCourseId == c.Id)
+                            {
+                                <option value="@c.Id" selected>@c.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Id">@c.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Semester</label>
+                    <select class="form-select" name="semesterId">
+                        <option value="">All Semesters</option>
+                        @foreach (var s in Model.Semesters)
+                        {
+                            if (Model.SelectedSemesterId == s.Id)
+                            {
+                                <option value="@s.Id" selected>@s.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@s.Id">@s.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 d-flex gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
                     <a asp-action="Analytics" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>

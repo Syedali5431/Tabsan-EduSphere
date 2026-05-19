@@ -20,6 +20,19 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - integration tests passed (`241/241`),
   - contract tests passed (`1/1`).
 
+## Execution Update - 2026-05-20 (Plan D Phase 2 Stage 2.1 Global Filters)
+
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.1.
+- Implementation Summary:
+  - introduced global analytics filters for institution/department/course/semester,
+  - no module activation/deactivation, pricing, or entitlement mapping changes were introduced.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ## Execution Update - 2026-05-19 (Plan C Phase 4 Implementation)
 
 - Recent request issue:

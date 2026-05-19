@@ -8,13 +8,13 @@ namespace Tabsan.EduSphere.Application.Interfaces;
 public interface IAnalyticsService
 {
     /// <summary>Returns a performance report for a department, or all departments if null.</summary>
-    Task<DepartmentPerformanceReport?> GetPerformanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<DepartmentPerformanceReport?> GetPerformanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
 
     /// <summary>Returns an attendance summary report for a department, or all departments if null.</summary>
-    Task<DepartmentAttendanceReport?> GetAttendanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<DepartmentAttendanceReport?> GetAttendanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
 
     /// <summary>Returns assignment statistics for a department, or all departments if null.</summary>
-    Task<AssignmentStatsReport?> GetAssignmentStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<AssignmentStatsReport?> GetAssignmentStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
 
     /// <summary>Returns quiz statistics for a department, or all departments if null.</summary>
     Task<QuizStatsReport?> GetQuizStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);

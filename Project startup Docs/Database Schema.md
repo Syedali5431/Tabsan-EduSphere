@@ -30,6 +30,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan D Phase 2 Stage 2.1 (Global Filters)
+
+- Recent request issue:
+	- proceed to Stage 2.1 and implement global analytics filters.
+- Implementation Summary:
+	- added course/semester filter plumbing for analytics query scope,
+	- no table/column/index/migration updates were required.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:

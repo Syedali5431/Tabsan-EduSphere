@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan D Phase 2 Stage 2.1 Global Filters
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.1 and implement global analytics filters.
+
+#### Phase 2 Stage 2.1 - Global Filters (Implemented)
+- Implementation Summary:
+  - added global analytics filter support for institution, department, course, and semester,
+  - extended analytics query propagation from portal UI through web API client and API endpoints to backend analytics queries,
+  - added course/semester-aware analytics cache-key segments to avoid cross-filter cache bleed.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - all selected quality gates passed with no regressions.
+
+- Behavior impact:
+  - analytics can now be scoped by course and semester in addition to institution and department,
+  - no schema mutation and no change to existing role/institution access boundaries.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

@@ -860,7 +860,11 @@ public class AnalyticsPageModel
     public string? Message    { get; set; }
     public int? SelectedInstitutionType { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
     public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
     public List<AnalyticsSummaryCard>   Cards       { get; set; } = new();
     public DepartmentPerformanceReport? Performance { get; set; }
     public DepartmentAttendanceReport?  Attendance  { get; set; }

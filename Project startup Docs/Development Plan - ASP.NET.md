@@ -19,6 +19,24 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Plan D Phase 2 Stage 2.1 Global Filters
+- Recent request issue:
+  - proceed to Plan D Phase 2 Stage 2.1 and add global analytics filters.
+
+#### Phase 2 Stage 2.1 - Global Filters (Implemented)
+- Implementation Summary:
+  - added analytics filter inputs for institution, department, course, and semester in portal UI,
+  - propagated course/semester filters through web client, API endpoints, and analytics service calls,
+  - added course/semester filtering and cache-key partitioning in analytics queries.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`65/65`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan D Phase 2 Stage 2.1 completed.
+- Phase status: Plan D Phase 2 in progress (Stages 2.2 and 2.3 pending).
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

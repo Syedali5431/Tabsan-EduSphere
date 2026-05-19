@@ -278,9 +278,9 @@ public interface IEduApiClient
     Task ApproveFypCompletionAsync(Guid id, CancellationToken ct);
 
     // Analytics — Final-Touches Phase 6 Stage 6.2: typed return instead of raw JSON strings
-    Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct);
-    Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct);
-    Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
+    Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
+    Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
 
     // AI Chat
     Task<List<AiChatConversationItem>> GetChatConversationsAsync(CancellationToken ct);
@@ -2683,22 +2683,26 @@ public class EduApiClient : IEduApiClient
     // ── Analytics ─────────────────────────────────────────────────────────────
 
     // Final-Touches Phase 6 Stage 6.2 — replaced raw JSON fetch with typed GetAsync<T> deserialization
-    public Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct)
-        => GetAsync<DepartmentPerformanceReport>($"api/v1/analytics/performance{BuildAnalyticsQuery(departmentId, institutionType)}", ct);
+    public Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
+        => GetAsync<DepartmentPerformanceReport>($"api/v1/analytics/performance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
 
-    public Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct)
-        => GetAsync<DepartmentAttendanceReport>($"api/v1/analytics/attendance{BuildAnalyticsQuery(departmentId, institutionType)}", ct);
+    public Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
+        => GetAsync<DepartmentAttendanceReport>($"api/v1/analytics/attendance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
 
-    public Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, CancellationToken ct)
-        => GetAsync<AssignmentStatsReport>($"api/v1/analytics/assignments{BuildAnalyticsQuery(departmentId, institutionType)}", ct);
+    public Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
+        => GetAsync<AssignmentStatsReport>($"api/v1/analytics/assignments{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
 
-    private static string BuildAnalyticsQuery(Guid? departmentId, int? institutionType)
+    private static string BuildAnalyticsQuery(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)
             parts.Add($"departmentId={departmentId.Value}");
         if (institutionType.HasValue)
             parts.Add($"institutionType={institutionType.Value}");
+        if (courseId.HasValue)
+            parts.Add($"courseId={courseId.Value}");
+        if (semesterId.HasValue)
+            parts.Add($"semesterId={semesterId.Value}");
 
         return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
     }

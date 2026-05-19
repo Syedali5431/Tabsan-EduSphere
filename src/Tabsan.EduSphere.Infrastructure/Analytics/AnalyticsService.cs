@@ -39,10 +39,12 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<DepartmentPerformanceReport?> GetPerformanceReportAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? courseId = null,
+        Guid? semesterId = null)
     {
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("performance", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey("performance", departmentId, institutionType, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -63,6 +65,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!courseId.HasValue || c.Id == courseId.Value)
+                    && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { sp.Id, sp.RegistrationNumber, DisplayName = u.Username, sp.CurrentSemesterNumber, OfferingId = co.Id };
 
         var raw = await query.Distinct().ToListAsync(ct);
@@ -103,10 +107,12 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<DepartmentAttendanceReport?> GetAttendanceReportAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? courseId = null,
+        Guid? semesterId = null)
     {
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("attendance", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey("attendance", departmentId, institutionType, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -127,6 +133,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!courseId.HasValue || c.Id == courseId.Value)
+                    && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { sp.Id, DisplayName = u.Username, CourseName = c.Title, ar.Status }
         ).ToListAsync(ct);
 
@@ -163,10 +171,12 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<AssignmentStatsReport?> GetAssignmentStatsAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? courseId = null,
+        Guid? semesterId = null)
     {
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
-        var cacheKey = BuildAnalyticsCacheKey("assignments", departmentId, institutionType);
+        var cacheKey = BuildAnalyticsCacheKey("assignments", departmentId, institutionType, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -185,6 +195,8 @@ public sealed class AnalyticsService : IAnalyticsService
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
             where (departmentId == null || c.DepartmentId == departmentId)
                && (!institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
+                    && (!courseId.HasValue || c.Id == courseId.Value)
+                    && (!semesterId.HasValue || co.SemesterId == semesterId.Value)
             select new { a.Id, a.Title, CourseName = c.Title, OfferingId = co.Id }
         ).ToListAsync(ct);
 
@@ -859,11 +871,13 @@ public sealed class AnalyticsService : IAnalyticsService
         return dept?.Name ?? "Unknown Department";
     }
 
-    private static string BuildAnalyticsCacheKey(string reportType, Guid? departmentId, int? institutionType)
+    private static string BuildAnalyticsCacheKey(string reportType, Guid? departmentId, int? institutionType, Guid? courseId = null, Guid? semesterId = null)
     {
         var departmentSegment = departmentId?.ToString("N") ?? "all";
         var institutionSegment = institutionType?.ToString() ?? "any";
-        return $"analytics:{reportType}:{departmentSegment}:{institutionSegment}";
+        var courseSegment = courseId?.ToString("N") ?? "all-courses";
+        var semesterSegment = semesterId?.ToString("N") ?? "all-semesters";
+        return $"analytics:{reportType}:{departmentSegment}:{institutionSegment}:{courseSegment}:{semesterSegment}";
     }
 
     private static void AddPdfHeader(TableDescriptor table, params string[] headers)
