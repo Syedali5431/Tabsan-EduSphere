@@ -1,4 +1,4 @@
-Create a new md file in docs for each A, B, C and D based on titles and create phases and stages based on below requirements:
+Create a new md file in docs for each A, B, C, D and E, based on titles and create phases and stages based on below requirements:
 
 A. App configuration:
 
@@ -724,3 +724,264 @@ Upgrade the Analytical section into a professional dashboard that:
 
 Focus on usability, interactivity, and clean integration.
 Avoid static or non-interactive chart implementations.
+
+
+E. MASTER SYSTEM VALIDATION PROMPT
+
+Perform a FULL system validation of the current project after recent changes.
+
+------------------------------------------
+✅ OBJECTIVE
+------------------------------------------
+
+Verify that all new and existing features are stable, consistent, and working correctly.
+
+------------------------------------------
+✅ VALIDATION REQUIREMENTS
+------------------------------------------
+
+Check:
+
+1. No existing functionality is broken
+2. All modules work correctly end-to-end
+3. No UI misalignment or layout issues exist
+4. No missing data bindings or broken forms
+5. APIs return correct and consistent responses
+6. No null reference or runtime errors occur
+7. Database relationships are valid and consistent
+
+------------------------------------------
+✅ MULTI-TENANT VALIDATION
+------------------------------------------
+
+Ensure:
+
+- Tenant isolation is correct
+- Campus isolation is correct
+- No cross-tenant or cross-campus data leakage
+- All queries respect TenantId and CampusId
+
+------------------------------------------
+✅ FEATURE VALIDATION
+------------------------------------------
+
+Verify:
+
+- Course Material module works completely
+- Analytics charts load correctly and update with filters
+- Campus and Tenant management works properly
+- Role-based access works correctly
+
+------------------------------------------
+✅ UI VALIDATION
+------------------------------------------
+
+- No overlapping elements
+- Proper alignment and spacing
+- Responsive layout
+- All buttons and actions functional
+
+------------------------------------------
+✅ PERFORMANCE CHECK
+------------------------------------------
+
+- No slow or blocking queries
+- Efficient filtering
+- No unnecessary full dataset loads
+
+------------------------------------------
+✅ FINAL GOAL
+------------------------------------------
+
+Identify issues, inconsistencies, or risks and provide fixes without breaking the system.
+
+
+✅ 2. DATABASE SAFETY & CONSISTENCY CHECK
+👉 Prevents silent data corruption (VERY IMPORTANT)
+Act as a senior database architect.
+
+Audit the database schema, migrations, and relationships for consistency and safety.
+
+------------------------------------------
+
+Check:
+
+- All tables correctly use TenantId and CampusId
+- Foreign keys are valid and enforced
+- Indexes exist for filtering columns
+- No duplicate or conflicting constraints exist
+- No nullable fields where they should not be
+- Existing data integrity is maintained
+
+------------------------------------------
+
+Ensure:
+
+- Queries are optimized
+- No redundant indexes
+- No risk of data inconsistency
+
+------------------------------------------
+
+Goal:
+
+A stable, optimized, and future-proof database.
+
+
+✅ 3. PERMISSION & ACCESS CONTROL AUDIT
+👉 Prevents security leaks (critical for SaaS)
+Act as a security and access control expert.
+
+Audit role-based access across the system.
+
+------------------------------------------
+
+Ensure:
+
+- SuperAdmin has full access
+- Admin has scoped access
+- Faculty limited to assigned courses
+- Students have read-only access
+
+------------------------------------------
+
+Check:
+
+- No unauthorized access to features
+- No cross-tenant or cross-campus access
+- Proper restrictions on API endpoints
+
+------------------------------------------
+
+Goal:
+
+Strict, secure, and predictable access control.
+
+
+✅ 4. UI CONSISTENCY & DESIGN SYSTEM CHECK
+👉 Prevents your earlier UI break issue
+Act as a senior UI/UX engineer.
+
+Review all pages for design consistency.
+
+------------------------------------------
+
+Check:
+
+- All pages use the same layout and grid system
+- Consistent spacing, fonts, and styling
+- No raw HTML elements without styling
+- Buttons and components follow design system
+
+------------------------------------------
+
+Ensure:
+
+- Sidebar alignment is correct
+- Headers and content are properly structured
+- No overlapping elements
+
+------------------------------------------
+
+Goal:
+
+A clean, professional, and consistent interface.
+
+
+✅ 5. PERFORMANCE & QUERY OPTIMIZATION CHECK
+👉 Ensures your system scales later
+Act as a performance optimization expert.
+
+Analyze system performance and database queries.
+
+------------------------------------------
+
+Check:
+
+- Queries filtered by TenantId and CampusId
+- No unnecessary joins
+- No full table scans
+- Efficient pagination where needed
+
+------------------------------------------
+
+Ensure:
+
+- Fast response times
+- Scalable architecture
+- Efficient analytics queries
+
+------------------------------------------
+
+Goal:
+
+Optimized system ready for scale.
+
+
+✅ 6. DEPLOYMENT READINESS CHECK (VERY IMPORTANT)
+👉 Makes sure your app won’t fail on customer deployment
+Act as a DevOps and deployment expert.
+
+Prepare the system for production deployment.
+
+------------------------------------------
+
+Check:
+
+- Environment-based configuration works
+- Database connection is configurable
+- No hardcoded values
+- Proper error handling in production mode
+
+------------------------------------------
+
+Ensure:
+
+- Logs are meaningful
+- Missing configs fail safely
+- System is deployable on different environments
+
+------------------------------------------
+
+Goal:
+
+Production-ready, stable, and configurable system.
+
+
+✅ 7. DATA FLOW & USER JOURNEY VALIDATION
+👉 Ensures real users can actually use it smoothly
+Act as a product and workflow expert.
+
+Validate real user flows across the system.
+
+------------------------------------------
+
+Check:
+
+- Student journey (login → view data → download material)
+- Faculty journey (upload → manage → update material)
+- Admin journey (manage campus, users, analytics)
+
+------------------------------------------
+
+Ensure:
+
+- No blockers or broken steps
+- Logical data flow
+- Smooth navigation
+
+------------------------------------------
+
+Goal:
+
+Usable, intuitive, and complete workflows.
+
+
+✅ ✅ FINAL ADVICE (CRITICAL)
+Now your workflow should be:
+✅ After EACH major change:
+
+Run Feature Prompt
+Run Validation Prompt (#1)
+Run DB Check (#2)
+Run UI Fix (#4 if needed)
