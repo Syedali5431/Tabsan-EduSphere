@@ -18,7 +18,7 @@ public static class SecureConfigurationValidator
         return trimmed;
     }
 
-    private static bool IsUnsafePlaceholderValue(string? value)
+    public static bool IsUnsafePlaceholderValue(string? value)
     {
         var incompleteMarker = string.Concat("to", "do");
 

@@ -3,6 +3,22 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-19 - Plan B Phase 7 Implementation (Fail-Safe Behavior)
+
+- Recent request issue:
+  - proceed to fail-safe startup behavior for configuration and deployment settings.
+- Implementation Summary:
+  - added centralized startup fail-safe validation and removed duplicated host-specific placeholder checks.
+- Validation Summary:
+  - full automated validation passed (`388/388`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `StartupConfigurationFailSafeValidator` | Centralizes startup fail-fast validation for deployment, database, reverse-proxy, and tenant-isolation configuration. | `src/Tabsan.EduSphere.Application/Services/StartupConfigurationFailSafeValidator.cs` |
+| `StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration` | Validates shared host startup settings and throws clear errors before the app starts serving traffic. | `src/Tabsan.EduSphere.Application/Services/StartupConfigurationFailSafeValidator.cs` |
+| `StartupConfigurationFailSafeValidator.ValidateRequiredSetting` | Validates required non-development settings against missing or placeholder values. | `src/Tabsan.EduSphere.Application/Services/StartupConfigurationFailSafeValidator.cs` |
+| `SecureConfigurationValidator.IsUnsafePlaceholderValue` | Exposes shared placeholder detection so startup validation uses one consistent unsafe-value rule set. | `src/Tabsan.EduSphere.Application/Services/SecureConfigurationValidator.cs` |
+
 ## 2026-05-19 - Plan B Phase 6 Implementation (Tenant + Campus Aware Configuration)
 
 - Recent request issue:

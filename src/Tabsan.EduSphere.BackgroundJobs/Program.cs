@@ -10,27 +10,6 @@ using Tabsan.EduSphere.Infrastructure.Email;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.Infrastructure.Repositories;
 
-static bool IsUnsafePlaceholderValue(string? value)
-{
-    var incompleteMarker = string.Concat("to", "do");
-
-    if (string.IsNullOrWhiteSpace(value))
-    {
-        return true;
-    }
-
-    var normalized = value.Trim().ToLowerInvariant();
-    return normalized.Contains("replace_with", StringComparison.Ordinal)
-        || normalized.Contains("or_set_via_env_var", StringComparison.Ordinal)
-        || normalized.Contains("change_me", StringComparison.Ordinal)
-        || normalized.Contains("changeme", StringComparison.Ordinal)
-        || normalized.Contains(incompleteMarker, StringComparison.Ordinal)
-        || normalized.Contains("yourdomain.com", StringComparison.Ordinal)
-        || normalized.Contains("example.com", StringComparison.Ordinal)
-        || normalized.Contains("<")
-        || normalized.Contains(">");
-}
-
 var builder = Host.CreateApplicationBuilder(args);
 
 var env = builder.Environment;
@@ -82,11 +61,13 @@ builder.Services.ConfigureHttpClientDefaults(httpClientBuilder =>
 // ── Database ──────────────────────────────────────────────────────────────────
 var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
 var connectionString = databaseConnection.ConnectionString;
-if (connectionString.Contains("NOT_SET", StringComparison.OrdinalIgnoreCase)
-    || (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing") && IsUnsafePlaceholderValue(connectionString)))
-{
-    throw new InvalidOperationException("DefaultConnection must be overridden by environment-specific configuration.");
-}
+StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
+    builder.Configuration,
+    env,
+    "Tabsan.EduSphere.BackgroundJobs",
+    databaseConnection,
+    deploymentTopology,
+    tenantIsolation);
 Console.WriteLine($"[BackgroundJobs] Database connection source: {databaseConnection.Source}");
 builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(connectionString));
 
@@ -98,15 +79,9 @@ builder.Services.AddScoped<IEmailSender, MailKitEmailSender>();
 builder.Services.AddSingleton<IEmailTemplateRenderer, EmailTemplateRenderer>();
 
 // ── Phase 12: Academic Calendar ───────────────────────────────────────────────
-if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
-{
-    RequireSecureStartupValue(builder.Configuration, builder.Environment, "ConnectionStrings:DefaultConnection");
-}
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAcademicDeadlineRepository, AcademicDeadlineRepository>();
 builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
-static string RequireSecureStartupValue(IConfiguration configuration, IHostEnvironment environment, string settingPath)
-    => SecureConfigurationValidator.RequireSecureValue(configuration, environment, settingPath);
 
 // ── Background jobs ───────────────────────────────────────────────────────────
 builder.Services.AddHostedService<Worker>();

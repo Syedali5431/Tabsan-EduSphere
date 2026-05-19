@@ -43,36 +43,6 @@ using Serilog;
 using Serilog.Events;
 using OpenTelemetry.Metrics;
 
-static bool IsUnsafePlaceholderValue(string? value)
-{
-    var incompleteMarker = string.Concat("to", "do");
-
-    if (string.IsNullOrWhiteSpace(value))
-    {
-        return true;
-    }
-
-    var normalized = value.Trim().ToLowerInvariant();
-    return normalized.Contains("replace_with", StringComparison.Ordinal)
-        || normalized.Contains("or_set_via_env_var", StringComparison.Ordinal)
-        || normalized.Contains("change_me", StringComparison.Ordinal)
-        || normalized.Contains("changeme", StringComparison.Ordinal)
-        || normalized.Contains(incompleteMarker, StringComparison.Ordinal)
-        || normalized.Contains("yourdomain.com", StringComparison.Ordinal)
-        || normalized.Contains("example.com", StringComparison.Ordinal)
-        || normalized.Contains("<")
-        || normalized.Contains(">");
-}
-
-static void EnsureSecureStartupValue(string settingPath, string? value, int minLength = 1)
-{
-    var trimmed = value?.Trim() ?? string.Empty;
-    if (trimmed.Length < minLength || IsUnsafePlaceholderValue(trimmed))
-    {
-        throw new InvalidOperationException($"{settingPath} contains an unsafe placeholder or missing value for non-development startup.");
-    }
-}
-
 static string RequireSecureStartupValue(IConfiguration configuration, IHostEnvironment environment, string settingPath, int minLength = 1)
     => SecureConfigurationValidator.RequireSecureValue(configuration, environment, settingPath, minLength);
 
@@ -141,13 +111,16 @@ var networkOutboundConnectTimeoutSeconds = Math.Max(2, builder.Configuration.Get
 
 var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
 var configuredConnectionString = databaseConnection.ConnectionString;
+StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
+    builder.Configuration,
+    env,
+    "Tabsan.EduSphere.API",
+    databaseConnection,
+    deploymentTopology,
+    tenantIsolation);
 
 var useForwardedHeaders = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
 var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
-if (useForwardedHeaders && !builder.Environment.IsDevelopment() && configuredKnownProxies.Length == 0)
-{
-    throw new InvalidOperationException("ReverseProxy is enabled but no known proxy IPs are configured in ReverseProxy:KnownProxies.");
-}
 
 var isDevDatabase = configuredConnectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase)
     || configuredConnectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase);
@@ -272,7 +245,6 @@ if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("
         }
     }
 
-    RequireSecureStartupValue(builder.Configuration, builder.Environment, "ConnectionStrings:DefaultConnection");
     RequireSecureStartupValue(builder.Configuration, builder.Environment, "JwtSettings:SecretKey", minLength: 32);
 
     var notificationEmailEnabled = builder.Configuration.GetValue("NotificationEmail:Enabled", false);

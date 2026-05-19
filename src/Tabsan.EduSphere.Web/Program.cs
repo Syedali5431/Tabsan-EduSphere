@@ -8,41 +8,18 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Tabsan.EduSphere.Application.Services;
 
-static bool IsUnsafePlaceholderValue(string? value)
-{
-    var incompleteMarker = string.Concat("to", "do");
-
-    if (string.IsNullOrWhiteSpace(value))
-    {
-        return true;
-    }
-
-    var normalized = value.Trim().ToLowerInvariant();
-    return normalized.Contains("replace_with", StringComparison.Ordinal)
-        || normalized.Contains("or_set_via_env_var", StringComparison.Ordinal)
-        || normalized.Contains("change_me", StringComparison.Ordinal)
-        || normalized.Contains("changeme", StringComparison.Ordinal)
-        || normalized.Contains(incompleteMarker, StringComparison.Ordinal)
-        || normalized.Contains("yourdomain.com", StringComparison.Ordinal)
-        || normalized.Contains("example.com", StringComparison.Ordinal)
-        || normalized.Contains("<")
-        || normalized.Contains(">");
-}
-
-static void EnsureSecureStartupValue(string settingPath, string? value)
-{
-    if (IsUnsafePlaceholderValue(value))
-    {
-        throw new InvalidOperationException($"{settingPath} contains an unsafe placeholder or missing value for non-development startup.");
-    }
-}
-
 var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
+StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
+    builder.Configuration,
+    env,
+    "Tabsan.EduSphere.Web",
+    deploymentTopology,
+    tenantIsolation);
 
 Console.WriteLine($"[Web] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine($"[Web] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
@@ -86,19 +63,12 @@ if (string.IsNullOrWhiteSpace(eduApiBaseUrl))
 {
     throw new InvalidOperationException("EduApi:BaseUrl is required for Tabsan.EduSphere.Web startup.");
 }
-if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
-{
-    EnsureSecureStartupValue("EduApi:BaseUrl", eduApiBaseUrl);
-}
+StartupConfigurationFailSafeValidator.ValidateRequiredSetting(builder.Environment, "Tabsan.EduSphere.Web", "EduApi:BaseUrl", eduApiBaseUrl);
 var useForwardedHeaders = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
 var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
 // Final-Touches Phase 34 Stage 4.2 — edge/static caching controls for CDN-friendly web assets.
 var staticAssetCachingEnabled = builder.Configuration.GetValue("StaticAssetCaching:Enabled", true);
 var staticAssetMaxAgeSeconds = Math.Max(0, builder.Configuration.GetValue("StaticAssetCaching:MaxAgeSeconds", 86400));
-if (useForwardedHeaders && !builder.Environment.IsDevelopment() && configuredKnownProxies.Length == 0)
-{
-    throw new InvalidOperationException("ReverseProxy is enabled but no known proxy IPs are configured in ReverseProxy:KnownProxies.");
-}
 
 // Add services to the container.
 builder.Services.AddResponseCompression(options =>
@@ -141,10 +111,7 @@ else if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironm
     throw new InvalidOperationException("ScaleOut:SharedDataProtectionKeyRingPath is required outside Development/Testing to keep web auth cookies valid across instances.");
 }
 
-if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
-{
-    EnsureSecureStartupValue("ScaleOut:SharedDataProtectionKeyRingPath", sharedKeyRingPath);
-}
+StartupConfigurationFailSafeValidator.ValidateRequiredSetting(builder.Environment, "Tabsan.EduSphere.Web", "ScaleOut:SharedDataProtectionKeyRingPath", sharedKeyRingPath);
 
 // Final-Touches Phase 34 Stage 3.3 — transport tuning for keep-alive and HTTP/2-friendly connection handling.
 builder.WebHost.ConfigureKestrel(options =>
