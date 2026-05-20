@@ -1594,7 +1594,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 	- `Scripts/05-PostDeployment-Checks.sql`
 		- added department institute-type validity and coverage checks,
 		- added orphan-count checks for institute-linked entities and assignment mappings.
-- Schema impact: `No schema mutation`; verification coverage expanded for post-deployment integrity checks.
+- Schema impact: `No schema mutation`;
 - EF migration impact: none.
 
 ## 2026-05-13 Update - Institute Parity Stage 2.1 (Execution Snapshot)

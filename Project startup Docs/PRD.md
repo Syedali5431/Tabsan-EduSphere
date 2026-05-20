@@ -119,7 +119,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 - Behavior impact:
   - analytics can now be scoped by course and semester in addition to institution and department,
-  - no schema mutation and no change to existing role/institution access boundaries.
+  - no schema mutation and no change to existing role/institute access boundaries.
 
 ### 2026-05-20 - Plan D Phase 2 Stage 2.2 Dependent Filtering
 - Recent request issue:
@@ -1080,7 +1080,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
 - Testing and result summary:
-  - total automated validations passed (`388/388`).
+  - total automated validations passed: `388/388`.
 
 - Behavior impact:
   - new material records are now hard-enforced to be tenant/campus scoped and location-valid,
@@ -1101,7 +1101,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
 - Testing and result summary:
-  - total automated validations passed (`388/388`).
+  - total automated validations passed: `388/388`.
 
 - Behavior impact:
   - Course Material data foundation is now available for subsequent Plan C access-control and UI phases,
@@ -1122,7 +1122,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
 - Testing and result summary:
-  - total automated validations passed (`388/388`).
+  - total automated validations passed: `388/388`.
 
 - Behavior impact:
   - the Phase B stack is finalized for release closeout,
@@ -1201,7 +1201,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - added optional tenant JSON overlay support,
   - exposed tenant-isolation metadata in startup logs and health diagnostics.
 - Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  -
   - full unit tests passed (`151/151`),
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
@@ -2260,7 +2260,7 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - no additional runtime logic changes introduced in this stage.
 - Validation Summary:
   - solution build passed,
-  - combined Stage 2 integration suites passed (`34/34`),
+  - combined Stage 2 integration suites
   - verified no unresolved access-mismatch regressions in tested parity authorization paths.
 - Behavior impact:
   - no new feature behavior introduced by Stage 2.4 itself,

@@ -2023,7 +2023,7 @@ Validation summaries must include at minimum:
 - Completed Phase 1 Stage 1.1 institute model normalization.
 - Implementation Summary:
   - added canonical `InstitutionType` to `Department` domain entity,
-  - added EF persistence + default + institute index on departments,
+  - added EF persistence + default + institution index on departments,
   - added migration `20260513121000_Phase1Stage11DepartmentInstitutionType`,
   - updated department API contracts and policy enforcement to validate institution type against active license policy.
 - Validation Summary:
