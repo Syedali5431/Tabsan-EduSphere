@@ -3,50 +3,43 @@
 ## Objective
 Modify result calculation logic so it adapts dynamically based on institute types enabled in the license file, while preserving existing flows, lifecycle behavior, and the current GPA system.
 
+## Stage Format Rule
+- Each phase is executed in explicit stages.
+- Maximum stages per phase: 4.
+- Existing GPA/CGPA architecture remains the baseline unless a phase explicitly defines conditional branching.
+
 ## Phase 0 - Strict Safety Rules (Do Not Break Anything)
-- Do NOT modify:
-  - Existing GPA/CGPA calculation logic
-  - Student lifecycle workflows (promotion, graduation, failure)
-  - Existing result storage structure
-  - Report generation logic unless required
-- Implement only a conditional logic layer.
-- Ensure full backward compatibility.
-- Keep default behavior as University (GPA) if no condition applies.
+### Stage 0.1 - Protected Surface Declaration
+- Freeze direct modification of GPA/CGPA logic, lifecycle workflows, storage structure, and report logic (unless required).
+
+### Stage 0.2 - Conditional-Layer-Only Contract
+- Implement only a conditional decision layer over existing calculation paths.
+
+### Stage 0.3 - Compatibility Defaults
+- Maintain full backward compatibility and default to University GPA behavior when no condition applies.
 
 ## Phase 1 - License-Based Institute Detection
-### Requirement
-- Read institute types from license:
-  - School
-  - College
-  - University
+### Stage 1.1 - License Parsing
+- Read enabled institute types from license: School, College, University.
 
-### Rule
-- Result calculation must adapt based on:
-  - Enabled institute type(s) in license
-  - Department/institution type context already present in the system
+### Stage 1.2 - Context Resolution
+- Resolve department/institution type context from existing system data.
+
+### Stage 1.3 - Detection Contract
+- Define deterministic calculation-mode selection using both license enablement and department context.
 
 ## Phase 2 - Result Calculation Logic
-### 2.1 School Result Logic
-- For schools use percentage calculation (marks-based).
-- Output:
-  - Percentage (for example: 65%, 78%)
-  - Grade (A+, A, B, etc)
+### Stage 2.1 - School Calculation Path
+- Use marks-based percentage calculation and return Percentage + Grade.
 
-### 2.2 College Result Logic
-- For colleges use percentage-based system (same as school).
-- Output:
-  - Percentage
-  - Grade
+### Stage 2.2 - College Calculation Path
+- Use percentage-based calculation (aligned to school path) and return Percentage + Grade.
 
-### 2.3 University Result Logic (Unchanged)
-- Keep existing:
-  - GPA
-  - CGPA
-  - Credit-based system
+### Stage 2.3 - University Calculation Path
+- Preserve existing GPA/CGPA credit-based calculation behavior unchanged.
 
-### Important
-- No modification to existing GPA system.
-- No refactoring of current GPA logic.
+### Stage 2.4 - Non-Refactor Guard
+- Explicitly prohibit GPA system modification/refactor during this phase.
 
 ## Phase 3 - Mapping Rules (Critical)
 Ensure consistent mapping:
@@ -57,79 +50,90 @@ Ensure consistent mapping:
 | College | Percentage + Grade |
 | University | GPA / CGPA |
 
-## Phase 4 - Grade Mapping (For School and College)
-Define standardized grade rules:
-- A+ -> high percentage range
-- A -> slightly lower range
-- B -> average range
-- C / D -> low range
+### Stage 3.1 - Canonical Mapping Table
+- Finalize and lock institute-to-calculation mapping.
 
-Requirements:
-- Must be configurable (future-safe).
-- Must not affect GPA structure.
+### Stage 3.2 - Mapping Resolver Enforcement
+- Ensure resolver always applies canonical mapping before any display/output logic.
+
+### Stage 3.3 - Invalid Context Handling
+- Define fallback/error behavior for unsupported or missing institute context.
+
+## Phase 4 - Grade Mapping (For School and College)
+### Stage 4.1 - Base Grade Bands
+- Define standardized percentage bands for A+, A, B, C/D.
+
+### Stage 4.2 - Configurable Grade Scale
+- Implement grade-band configuration hooks for future adjustments.
+
+### Stage 4.3 - GPA Isolation Guard
+- Ensure percentage grade mapping does not affect GPA data structures.
 
 ## Phase 5 - System Integration
-Apply logic only at:
-- Result calculation stage
-- Result display layer
+### Stage 5.1 - Calculation-Layer Integration
+- Apply institute-conditional logic at result calculation stage.
 
-Do NOT affect:
-- Enrollment
-- Assignments
-- Quizzes
-- Analytics (except where result values are displayed)
+### Stage 5.2 - Display-Layer Integration
+- Apply institute-conditional formatting at result display layer.
+
+### Stage 5.3 - Non-Target Module Protection
+- Ensure enrollment, assignments, quizzes, and unrelated analytics remain unchanged.
 
 ## Phase 6 - Lifecycle Compatibility (Very Important)
-Ensure result changes support:
-- Student promotion (School/College based on percentage)
-- Graduation workflows
-- Failure criteria
-- Semester progression
+### Stage 6.1 - Promotion/Failure Compatibility
+- Ensure School/College promotion/failure decisions consume percentage outputs correctly.
 
-Constraints:
-- No changes to lifecycle APIs or workflows.
-- Only calculation output changes.
+### Stage 6.2 - Graduation/Progression Compatibility
+- Ensure graduation workflows and semester progression remain valid.
+
+### Stage 6.3 - Lifecycle API Freeze
+- Keep lifecycle APIs/workflows unchanged; only adjust calculation outputs.
 
 ## Phase 7 - Mixed License Handling
-If license includes multiple institute types:
-- Use department institution type to decide calculation.
+### Stage 7.1 - Multi-Institute Dispatch Logic
+- When multiple institute types are enabled, select calculation method by department institution type.
 
-Example:
-- School department -> percentage
-- University department -> GPA
+### Stage 7.2 - Cross-Context Example Validation
+- Validate representative scenarios (School->percentage, University->GPA).
 
-Outcome:
-- Prevents conflicts
-- Supports multi-institution operation already present in the system
+### Stage 7.3 - Conflict Prevention in Shared Deployments
+- Confirm conflict-free behavior for mixed-institution tenants.
 
 ## Phase 8 - Reports and UI
-Display correct format:
-- School/College -> Percentage + Grade
-- University -> GPA/CGPA
+### Stage 8.1 - Result Format Rendering
+- Render School/College as Percentage + Grade and University as GPA/CGPA.
 
-Ensure:
-- Reports reflect correct calculation type.
-- No mixing of percentage and GPA in the same context.
+### Stage 8.2 - Report Format Alignment
+- Ensure reports use the correct calculation type per context.
+
+### Stage 8.3 - Context Purity Guard
+- Prevent percentage/GPA mixing within a single context.
 
 ## Phase 9 - Conflict Prevention (Critical)
-Avoid:
-- Overwriting GPA logic
-- Mixing percentage and GPA calculations
-- Breaking existing report queries
-- Unnecessary DB schema changes
+### Stage 9.1 - GPA Overwrite Prevention
+- Prevent any overwrite of existing GPA logic.
 
-Enforce:
-- Clear separation of calculation types
-- Strict institute-based conditional handling
+### Stage 9.2 - Calculation-Type Separation
+- Enforce strict separation between percentage and GPA calculations.
+
+### Stage 9.3 - Query and Schema Safety
+- Protect existing report queries and avoid unnecessary DB schema changes.
+
+### Stage 9.4 - Conditional Enforcement Audit
+- Verify strict institute-based conditional handling at all decision points.
 
 ## Phase 10 - Validation Checklist
-- License-based switching works.
-- School results show percentage + grade.
-- College results show percentage + grade.
-- University results remain unchanged (GPA/CGPA).
-- Lifecycle flows remain unaffected.
-- Reports display correct formats.
-- Multi-institute behavior works without conflict.
+### Stage 10.1 - Switching Validation
+- Confirm license-based switching behavior works across institute types.
+
+### Stage 10.2 - Output Validation by Institute
+- Validate School/College outputs (Percentage + Grade) and University outputs (GPA/CGPA).
+
+### Stage 10.3 - Regression and Lifecycle Validation
+- Verify lifecycle flows remain unaffected.
+
+### Stage 10.4 - Reporting and Mixed-Mode Validation
+- Validate report format correctness and mixed-institute behavior without conflicts.
 
 ## Optional Enhancements (Safe to Add)
 - Configurable grading scale (Admin settings)

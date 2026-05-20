@@ -1,152 +1,145 @@
 # Plan F - Finance Feature and System Update (No Code)
 
+## Execution Readiness Checkpoint (2026-05-20)
+- Status: Ready to start Plan F implementation.
+- Entry gate evidence:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`151/151`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Governance pointer:
+  - command center and startup trackers are aligned to Plan F Phase 0 with Phase 1 as next execution target.
+
+## Stage Format Rule
+- Each phase is executed in explicit stages.
+- Maximum stages per phase: 4.
+- All stages are additive and must preserve backward compatibility.
+
 ## Phase 0 - Stability and Safety
-- Ensure no existing functionality breaks.
-- Maintain:
-  - Tenant isolation
-  - Campus-level access rules
-  - Analytics filters
-  - Existing role permissions
-- Treat all changes as additive only.
+### Stage 0.1 - Baseline Safety Verification
+- Ensure no existing functionality breaks before any finance feature work.
+
+### Stage 0.2 - Isolation and Access Invariants
+- Confirm tenant isolation, campus-level access rules, analytics filter safety, and existing role permissions remain intact.
+
+### Stage 0.3 - Additive-Only Guardrails
+- Enforce additive-only implementation rules for all upcoming phases.
 
 ## Phase 1 - Database Updates
-- Add `Mobile Number` field for all users (optional but available across system).
+### Stage 1.1 - User and Identity Fields
+- Add `Mobile Number` for all users (optional, system-wide available).
+
+### Stage 1.2 - Multi-Campus User Assignment Model
 - Allow multiple campus assignment per user.
-- Introduce new role: `Finance`.
-- Ensure payment records support:
-  - Paid / Unpaid status
-  - Payment tracking (date/updates)
+
+### Stage 1.3 - Finance Role Seed and Linking
+- Introduce `Finance` role and connect to authorization model.
+
+### Stage 1.4 - Payment Record State Model
+- Ensure payment records support Paid/Unpaid status and payment tracking (date/update trail).
 
 ## Phase 2 - Role and Access Control
-### Finance Role Rules
-- Can:
-  - Add payments
-  - Edit payments
-  - Mark payments as paid
-- Cannot:
-  - Delete payments
-  - Access academic modules
-- Access is always restricted by:
-  - Tenant
-  - Assigned Campus (multi-campus support)
+### Stage 2.1 - Finance Capability Scope
+- Allow Finance role to add payments, edit payments, and mark payments as paid.
+
+### Stage 2.2 - Finance Restriction Scope
+- Disallow payment deletion and block access to academic modules.
+
+### Stage 2.3 - Tenant and Campus Enforcement
+- Enforce access boundaries by tenant and assigned campuses (including multi-campus users).
 
 ## Phase 3 - Analytics
-- Add interactive pie chart:
-  - Paid vs Unpaid payments
-- Chart must:
-  - Respect filters (Campus, Department, Course, Semester/Class)
-  - Update dynamically
-- Finance users:
-  - See only payment-related analytics
-  - Do NOT see academic analytics
+### Stage 3.1 - Payment Status Pie Chart
+- Add interactive Paid vs Unpaid pie chart.
+
+### Stage 3.2 - Filter-Aware Analytics Behavior
+- Ensure chart respects Campus, Department, Course, and Semester/Class filters and updates dynamically.
+
+### Stage 3.3 - Finance Analytics Isolation
+- Finance users see payment analytics only and never academic analytics.
 
 ## Phase 4 - Reports
-### Report Types
-- Payment reports:
-  - Monthly
-  - Yearly
-  - Semester-based (only for university)
-- Payment status report:
-  - School/College -> Class-based
-  - University -> Semester-based
+### Stage 4.1 - Payment Report Types
+- Implement monthly/yearly/semester-based payment reports (semester only for university context).
+- Implement payment status report split: School/College class-based, University semester-based.
 
-### Report Data
-- Student ID
-- Student Name
-- Payment Amount
-- Payment Status
+### Stage 4.2 - Report Payload Standardization
+- Include Student ID, Student Name, Payment Amount, and Payment Status.
 
-### Filters
-- Campus
-- Department
-- Course
-- Class / Semester
+### Stage 4.3 - Report Filter Model
+- Apply Campus, Department, Course, and Class/Semester filters.
 
-### Access Control
-- Finance users:
-  - Can view/download payment reports only
-- Other roles remain unchanged.
+### Stage 4.4 - Report Access Rules
+- Finance users can view/download payment reports only; existing behavior for other roles remains unchanged.
 
 ## Phase 5 - UI / UX
-### Add Finance Section
-- Finance
-  - Payments
-  - Payment Reports
-  - Analytics
+### Stage 5.1 - Finance Navigation Surface
+- Add Finance section with Payments, Payment Reports, and Analytics entries.
 
-### Enhancements
-- Add `Mark as Paid` option in payments.
-- Show Paid / Unpaid status clearly.
-- Enable campus-based selection (multi-campus).
-- Add pie chart in analytics dashboard.
+### Stage 5.2 - Payment Interaction UX
+- Add `Mark as Paid`, clear Paid/Unpaid status presentation, and campus-based selection UX.
 
-### Theme Access
-- Finance users can apply themes.
-- No access to system configuration settings beyond themes.
+### Stage 5.3 - Finance Analytics Presentation
+- Place payment pie chart in the analytics dashboard.
+
+### Stage 5.4 - Theme and Configuration Access Boundary
+- Permit theme application for Finance users while blocking broader system-configuration access.
 
 ## Phase 6 - Import Sheets
-- Update all CSV templates:
-  - Add `Mobile Number` field
-  - Add campus assignment field (multiple allowed)
-- Ensure:
-  - Backward compatibility with existing imports
-  - Validation for new fields
+### Stage 6.1 - CSV Template Extension
+- Add `Mobile Number` field and multi-campus assignment field to relevant import templates.
+
+### Stage 6.2 - Backward Compatibility Validation
+- Keep existing templates/imports functional when new fields are omitted.
+
+### Stage 6.3 - Field Validation Rules
+- Add validation for mobile number and campus assignment formats.
 
 ## Phase 7 - Documentation Updates
-- Update all documents.
+### Stage 7.1 - User Guide Update
+- Add Finance role explanation, payment workflows, and reporting/analytics usage.
 
-### User Guide
-- Add Finance role explanation.
-- Add payment workflows.
-- Add reporting and analytics usage.
+### Stage 7.2 - Training Manual Update
+- Add Finance-specific training, payment handling procedures, and report generation training.
 
-### Training Manual
-- Finance-specific training section.
-- Payment handling procedures.
-- Report generation training.
-
-### UAT / SAT Docs
-- Add test scenarios:
-  - Finance permissions
-  - Multi-campus assignment
-  - Payment updates
-  - Report filtering accuracy
+### Stage 7.3 - UAT/SAT Scenario Update
+- Add scenarios for Finance permissions, multi-campus assignment, payment updates, and report filter accuracy.
 
 ## Phase 8 - DB Script Synchronization
-- Update all database scripts to reflect:
-  - New role (Finance)
-  - Multi-campus support
-  - Mobile number field
-  - Payments enhancements
-- Ensure:
-  - Scripts remain idempotent
-  - No duplication or conflicts
+### Stage 8.1 - Schema Script Updates
+- Update DB scripts for Finance role, multi-campus support, mobile number, and payments enhancements.
+
+### Stage 8.2 - Idempotency and Conflict Guarding
+- Ensure scripts remain idempotent and free from duplication/conflict.
+
+### Stage 8.3 - Post-Deployment Verification Alignment
+- Align verification scripts/checks with new finance-related schema and seed behavior.
 
 ## Phase 9 - Conflict Prevention (Critical)
-### Role Separation
-- Finance must NOT inherit Admin privileges.
-- Keep permissions isolated.
+### Stage 9.1 - Permission Isolation
+- Finance must not inherit Admin privileges.
 
-### Data Security
-- Always enforce:
-  - Tenant boundary
-  - Campus filtering
+### Stage 9.2 - Data Boundary Enforcement
+- Enforce tenant boundaries and campus filtering in all finance paths.
 
-### Analytics Integrity
-- Payment analytics must remain separate from academic analytics.
+### Stage 9.3 - Analytics Separation
+- Keep payment analytics fully separate from academic analytics.
 
-### Report Isolation
-- Payment reports must not pull unrelated academic data.
+### Stage 9.4 - Report Data Isolation
+- Prevent payment reports from pulling unrelated academic datasets.
 
 ## Phase 10 - Final Validation Checklist
-- Ensure:
-  - Multi-campus assignment works correctly
-  - Finance permissions are enforced strictly
-  - Pie chart functions with filters
-  - Reports export correctly (PDF and Excel)
-  - Mobile number is saved and usable
-  - Import templates work with new fields
-  - All documentation reflects updates
+### Stage 10.1 - Access and Multi-Campus Validation
+- Validate strict Finance permissions and multi-campus assignment behavior.
+
+### Stage 10.2 - Analytics and Reporting Validation
+- Validate pie chart filtering behavior and report export correctness (PDF/Excel).
+
+### Stage 10.3 - Data and Import Validation
+- Validate mobile number persistence/usability and import template compatibility.
+
+### Stage 10.4 - Documentation Closure
+- Confirm all required documentation is updated and internally consistent.
 
 ## Recommended Enhancements (Optional)
 - Payment audit tracking (who marked paid)
