@@ -49,6 +49,31 @@ public class AdminUserManagementIntegrationTests
             includeUniversity
         });
 
+    private static async Task ExecuteWithPolicyAsync(
+        HttpClient client,
+        bool includeSchool,
+        bool includeCollege,
+        bool includeUniversity,
+        Func<Task> action)
+    {
+        var originalPolicy = await GetPolicySnapshotAsync(client);
+        try
+        {
+            var setResponse = await SetPolicyAsync(client, includeSchool, includeCollege, includeUniversity);
+            Assert.Equal(HttpStatusCode.NoContent, setResponse.StatusCode);
+            await action();
+        }
+        finally
+        {
+            var restoreResponse = await SetPolicyAsync(
+                client,
+                originalPolicy.IncludeSchool,
+                originalPolicy.IncludeCollege,
+                originalPolicy.IncludeUniversity);
+            Assert.Equal(HttpStatusCode.NoContent, restoreResponse.StatusCode);
+        }
+    }
+
     [Fact]
     public async Task AdminUser_List_WithSuperAdminRole_ReturnsSuccess()
     {
@@ -75,75 +100,78 @@ public class AdminUserManagementIntegrationTests
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000010");
 
-        var username = $"admin_it_{Guid.NewGuid():N}";
-        var createPayload = new
+        await ExecuteWithPolicyAsync(client, includeSchool: false, includeCollege: false, includeUniversity: true, async () =>
         {
-            username,
-            email = $"{username}@tabsan.local",
-            password = "Pass@123",
-            institutionType = 0
-        };
-
-        var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
-        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
-
-        using var createDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
-        var adminUserId = createDoc.RootElement.GetProperty("id").GetGuid();
-        Assert.Equal(0, createDoc.RootElement.GetProperty("institutionType").GetInt32());
-
-        var deptsResponse = await client.GetAsync("api/v1/department");
-        Assert.Equal(HttpStatusCode.OK, deptsResponse.StatusCode);
-        using var deptsDoc = JsonDocument.Parse(await deptsResponse.Content.ReadAsStringAsync());
-        var departmentItems = deptsDoc.RootElement.EnumerateArray().ToList();
-        Guid firstDepartmentId;
-        var universityDepartment = departmentItems
-            .FirstOrDefault(d => d.TryGetProperty("institutionType", out var t) && t.GetInt32() == 0);
-
-        if (universityDepartment.ValueKind != JsonValueKind.Undefined)
-        {
-            firstDepartmentId = universityDepartment.GetProperty("id").GetGuid();
-        }
-        else
-        {
-            var suffix = Guid.NewGuid().ToString("N")[..6];
-            var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+            var username = $"admin_it_{Guid.NewGuid():N}";
+            var createPayload = new
             {
-                name = $"Integration Dept {suffix}",
-                code = $"INT{suffix}",
+                username,
+                email = $"{username}@tabsan.local",
+                password = "Pass@123",
                 institutionType = 0
+            };
+
+            var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
+            Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+            using var createDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+            var adminUserId = createDoc.RootElement.GetProperty("id").GetGuid();
+            Assert.Equal(0, createDoc.RootElement.GetProperty("institutionType").GetInt32());
+
+            var deptsResponse = await client.GetAsync("api/v1/department");
+            Assert.Equal(HttpStatusCode.OK, deptsResponse.StatusCode);
+            using var deptsDoc = JsonDocument.Parse(await deptsResponse.Content.ReadAsStringAsync());
+            var departmentItems = deptsDoc.RootElement.EnumerateArray().ToList();
+            Guid firstDepartmentId;
+            var universityDepartment = departmentItems
+                .FirstOrDefault(d => d.TryGetProperty("institutionType", out var t) && t.GetInt32() == 0);
+
+            if (universityDepartment.ValueKind != JsonValueKind.Undefined)
+            {
+                firstDepartmentId = universityDepartment.GetProperty("id").GetGuid();
+            }
+            else
+            {
+                var suffix = Guid.NewGuid().ToString("N")[..6];
+                var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+                {
+                    name = $"Integration Dept {suffix}",
+                    code = $"INT{suffix}",
+                    institutionType = 0
+                });
+                Assert.Equal(HttpStatusCode.Created, createDepartmentResponse.StatusCode);
+
+                using var createDeptDoc = JsonDocument.Parse(await createDepartmentResponse.Content.ReadAsStringAsync());
+                firstDepartmentId = createDeptDoc.RootElement.GetProperty("id").GetGuid();
+            }
+
+            var assignResponse = await client.PostAsJsonAsync("api/v1/department/admin-assignment", new
+            {
+                adminUserId,
+                departmentId = firstDepartmentId
             });
-            Assert.Equal(HttpStatusCode.Created, createDepartmentResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, assignResponse.StatusCode);
 
-            using var createDeptDoc = JsonDocument.Parse(await createDepartmentResponse.Content.ReadAsStringAsync());
-            firstDepartmentId = createDeptDoc.RootElement.GetProperty("id").GetGuid();
-        }
+            var listAssignmentsResponse = await client.GetAsync($"api/v1/department/admin-assignment/{adminUserId}");
+            Assert.Equal(HttpStatusCode.OK, listAssignmentsResponse.StatusCode);
+            using var assignmentsDoc = JsonDocument.Parse(await listAssignmentsResponse.Content.ReadAsStringAsync());
+            Assert.Contains(assignmentsDoc.RootElement.EnumerateArray(), x => x.GetProperty("departmentId").GetGuid() == firstDepartmentId);
 
-        var assignResponse = await client.PostAsJsonAsync("api/v1/department/admin-assignment", new
-        {
-            adminUserId,
-            departmentId = firstDepartmentId
+            var updateResponse = await client.PutAsJsonAsync($"api/v1/admin-user/{adminUserId}", new
+            {
+                email = $"updated_{username}@tabsan.local",
+                isActive = false,
+                newPassword = "Pass@1234"
+            });
+            Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+
+            var removeRequest = new HttpRequestMessage(HttpMethod.Delete, "api/v1/department/admin-assignment")
+            {
+                Content = JsonContent.Create(new { adminUserId, departmentId = firstDepartmentId })
+            };
+            var removeResponse = await client.SendAsync(removeRequest);
+            Assert.Equal(HttpStatusCode.NoContent, removeResponse.StatusCode);
         });
-        Assert.Equal(HttpStatusCode.NoContent, assignResponse.StatusCode);
-
-        var listAssignmentsResponse = await client.GetAsync($"api/v1/department/admin-assignment/{adminUserId}");
-        Assert.Equal(HttpStatusCode.OK, listAssignmentsResponse.StatusCode);
-        using var assignmentsDoc = JsonDocument.Parse(await listAssignmentsResponse.Content.ReadAsStringAsync());
-        Assert.Contains(assignmentsDoc.RootElement.EnumerateArray(), x => x.GetProperty("departmentId").GetGuid() == firstDepartmentId);
-
-        var updateResponse = await client.PutAsJsonAsync($"api/v1/admin-user/{adminUserId}", new
-        {
-            email = $"updated_{username}@tabsan.local",
-            isActive = false,
-            newPassword = "Pass@1234"
-        });
-        Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
-
-        var removeRequest = new HttpRequestMessage(HttpMethod.Delete, "api/v1/department/admin-assignment")
-        {
-            Content = JsonContent.Create(new { adminUserId, departmentId = firstDepartmentId })
-        };
-        var removeResponse = await client.SendAsync(removeRequest);
-        Assert.Equal(HttpStatusCode.NoContent, removeResponse.StatusCode);
     }
 
     [Fact]
@@ -151,17 +179,20 @@ public class AdminUserManagementIntegrationTests
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000011");
 
-        var username = $"admin_disabled_{Guid.NewGuid():N}";
-        var createPayload = new
+        await ExecuteWithPolicyAsync(client, includeSchool: false, includeCollege: false, includeUniversity: true, async () =>
         {
-            username,
-            email = $"{username}@tabsan.local",
-            password = "Pass@123",
-            institutionType = 1
-        };
+            var username = $"admin_disabled_{Guid.NewGuid():N}";
+            var createPayload = new
+            {
+                username,
+                email = $"{username}@tabsan.local",
+                password = "Pass@123",
+                institutionType = 1
+            };
 
-        var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
-        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+            var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
+            Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+        });
     }
 
     [Fact]
@@ -237,45 +268,42 @@ public class AdminUserManagementIntegrationTests
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000013");
 
-        var username = $"admin_mismatch_{Guid.NewGuid():N}";
-        var createPayload = new
+        await ExecuteWithPolicyAsync(client, includeSchool: true, includeCollege: true, includeUniversity: true, async () =>
         {
-            username,
-            email = $"{username}@tabsan.local",
-            password = "Pass@123",
-            institutionType = 0
-        };
+            var username = $"admin_mismatch_{Guid.NewGuid():N}";
+            var createPayload = new
+            {
+                username,
+                email = $"{username}@tabsan.local",
+                password = "Pass@123",
+                institutionType = 0
+            };
 
-        var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
-        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+            var createResponse = await client.PostAsJsonAsync("api/v1/admin-user", createPayload);
+            Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
 
-        using var createDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
-        var adminUserId = createDoc.RootElement.GetProperty("id").GetGuid();
+            using var createDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+            var adminUserId = createDoc.RootElement.GetProperty("id").GetGuid();
 
-        var suffix = Guid.NewGuid().ToString("N")[..6];
-        var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
-        {
-            name = $"College Dept {suffix}",
-            code = $"COL{suffix}",
-            institutionType = 1
+            var suffix = Guid.NewGuid().ToString("N")[..6];
+            var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+            {
+                name = $"College Dept {suffix}",
+                code = $"COL{suffix}",
+                institutionType = 1
+            });
+
+            Assert.Equal(HttpStatusCode.Created, createDepartmentResponse.StatusCode);
+            using var deptDoc = JsonDocument.Parse(await createDepartmentResponse.Content.ReadAsStringAsync());
+            var departmentId = deptDoc.RootElement.GetProperty("id").GetGuid();
+
+            var assignResponse = await client.PostAsJsonAsync("api/v1/department/admin-assignment", new
+            {
+                adminUserId,
+                departmentId
+            });
+            Assert.Equal(HttpStatusCode.BadRequest, assignResponse.StatusCode);
         });
-
-        if (createDepartmentResponse.StatusCode == HttpStatusCode.BadRequest)
-        {
-            // The active policy can disable College mode in this environment.
-            return;
-        }
-
-        Assert.Equal(HttpStatusCode.Created, createDepartmentResponse.StatusCode);
-        using var deptDoc = JsonDocument.Parse(await createDepartmentResponse.Content.ReadAsStringAsync());
-        var departmentId = deptDoc.RootElement.GetProperty("id").GetGuid();
-
-        var assignResponse = await client.PostAsJsonAsync("api/v1/department/admin-assignment", new
-        {
-            adminUserId,
-            departmentId
-        });
-        Assert.Equal(HttpStatusCode.BadRequest, assignResponse.StatusCode);
     }
 
     [Fact]
