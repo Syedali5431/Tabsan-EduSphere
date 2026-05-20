@@ -668,6 +668,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 6.3 records API-restriction audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 7 Stage 7.1 (Query Scope Filtering)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 7 Stage 7.1 - Tenant/Campus Query Filtering Verification (Implemented)
+- Implementation Summary:
+  - executed tenant/campus query-filter audit across source and repository layers,
+  - audit reported `551` Tenant/Campus scope references, `11` LINQ `Where` scope-filter references, and `20` repository-layer scope references,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 7.1 records query-scope audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:
