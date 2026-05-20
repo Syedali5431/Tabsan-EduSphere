@@ -386,6 +386,14 @@
 ### Stage 9.1 - Permission Isolation
 - Finance must not inherit Admin privileges.
 
+#### Phase 9 - Conflict Prevention Stage 9.1 (2026-05-21)
+- Implementation Summary:
+  - tightened the API Finance authorization policy so it now allows only `SuperAdmin` and `Finance` roles,
+  - removed the implicit Admin fallback from Finance-gated authorization to keep the Finance surface isolated.
+- Validation Summary:
+  - code review confirmed the policy now excludes `Admin` from Finance access,
+  - no schema or runtime behavior outside authorization was changed.
+
 ### Stage 9.2 - Data Boundary Enforcement
 - Enforce tenant boundaries and campus filtering in all finance paths.
 
