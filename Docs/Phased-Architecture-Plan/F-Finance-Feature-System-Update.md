@@ -421,6 +421,15 @@
 ### Stage 9.4 - Report Data Isolation
 - Prevent payment reports from pulling unrelated academic datasets.
 
+#### Phase 9 - Conflict Prevention Stage 9.4 (2026-05-21)
+- Implementation Summary:
+  - hardened payment summary reporting so enrollment/course/semester academic joins are executed only when academic filters (`semesterId` or `courseId`) are explicitly requested,
+  - kept finance receipt totals, status aggregation, and scoped filtering behavior unchanged for non-academic report usage,
+  - reduced unrelated academic data loading in the default finance report path.
+- Validation Summary:
+  - code review confirmed default payment-summary execution now avoids academic dataset joins unless filter-driven,
+  - no schema changes were introduced.
+
 ## Phase 10 - Final Validation Checklist
 ### Stage 10.1 - Access and Multi-Campus Validation
 - Validate strict Finance permissions and multi-campus assignment behavior.

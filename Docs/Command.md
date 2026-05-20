@@ -1027,6 +1027,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - Plan E Phase 9 Stage 9.2 completed,
   - Plan E Phase 9 fully completed,
   - governance docs synchronized,
+
+### Plan F Phase 9 Stage 9.4 Report Data Isolation Checkpoint (2026-05-21)
+- Recent request issue:
+  - proceed with Stage 9.4 and prevent payment reports from pulling unrelated academic datasets.
+- Implementation Summary:
+  - updated payment summary reporting so enrollment/course/semester joins run only when `semesterId` or `courseId` filters are provided,
+  - preserved payment totals and receipt-status behavior for the default finance report path,
+  - reduced non-required academic data loading from finance report execution.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - code review confirmed default payment-summary execution avoids academic joins unless filter-driven.
+- Status of Checks Done:
+  - Plan F Phase 9 Stage 9.4 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
   - repository synchronization required.
 
 ### Final-Touches Tracker Restoration Checkpoint (2026-05-20)

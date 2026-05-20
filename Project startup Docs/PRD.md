@@ -75,6 +75,24 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - finance analytics remains separate from academic analytics/reporting,
   - no runtime API or schema changes were introduced.
 
+### 2026-05-21 - Plan F Phase 9 Stage 9.4 Report Data Isolation
+- Recent request issue:
+  - proceed with Stage 9.4 and prevent payment reports from pulling unrelated academic datasets.
+
+#### Plan F Phase 9 Stage 9.4 (Implemented)
+- Implementation Summary:
+  - updated payment summary report data retrieval so enrollment/course/semester joins execute only when academic filters (`semesterId` or `courseId`) are explicitly requested,
+  - preserved finance totals/status behavior for the default payment-summary path while reducing unrelated academic data loading.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - code review confirmed the default payment-summary path no longer pulls academic datasets unless filter-driven.
+- Testing and result summary:
+  - Phase 9.4 completed as a report-data isolation hardening update.
+
+- Behavior impact:
+  - payment reports avoid unrelated academic dataset reads by default,
+  - finance reporting outputs remain stable for totals and status aggregation.
+
 ### 2026-05-21 - Plan F Phase 7 Documentation Synchronization
 - Recent request issue:
   - update Finance documentation and related governance references for Phase 7.

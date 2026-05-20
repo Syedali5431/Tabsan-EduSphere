@@ -480,38 +480,46 @@ public sealed class ReportRepository : IReportRepository
         if (receipts.Count == 0)
             return Array.Empty<PaymentSummaryReportRow>();
 
-        var studentIds = receipts.Select(r => r.StudentProfileId).Distinct().ToList();
-        var enrollments = await (
-            from e in _db.Enrollments
-            join co in _db.CourseOfferings on e.CourseOfferingId equals co.Id
-            join c in _db.Courses on co.CourseId equals c.Id
-            join sem in _db.Semesters on co.SemesterId equals sem.Id
-            where studentIds.Contains(e.StudentProfileId)
-               && e.Status == EnrollmentStatus.Active
-               && (semesterId == null || co.SemesterId == semesterId)
-               && (courseId == null || c.Id == courseId)
-            select new
-            {
-                e.StudentProfileId,
-                e.EnrolledAt,
-                CourseCode = c.Code,
-                CourseTitle = c.Title,
-                SemesterName = sem.Name
-            }
-        ).ToListAsync(ct);
+        var requireEnrollmentFilter = semesterId.HasValue || courseId.HasValue;
+        Dictionary<Guid, (string CourseCode, string CourseTitle, string SemesterName)> enrollmentLookup = new();
 
-        var enrollmentLookup = enrollments
-            .GroupBy(e => e.StudentProfileId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderByDescending(x => x.EnrolledAt).First());
+        if (requireEnrollmentFilter)
+        {
+            var studentIds = receipts.Select(r => r.StudentProfileId).Distinct().ToList();
+            var enrollments = await (
+                from e in _db.Enrollments
+                join co in _db.CourseOfferings on e.CourseOfferingId equals co.Id
+                join c in _db.Courses on co.CourseId equals c.Id
+                join sem in _db.Semesters on co.SemesterId equals sem.Id
+                where studentIds.Contains(e.StudentProfileId)
+                   && e.Status == EnrollmentStatus.Active
+                   && (semesterId == null || co.SemesterId == semesterId)
+                   && (courseId == null || c.Id == courseId)
+                select new
+                {
+                    e.StudentProfileId,
+                    e.EnrolledAt,
+                    CourseCode = c.Code,
+                    CourseTitle = c.Title,
+                    SemesterName = sem.Name
+                }
+            ).ToListAsync(ct);
+
+            enrollmentLookup = enrollments
+                .GroupBy(e => e.StudentProfileId)
+                .ToDictionary(
+                    g => g.Key,
+                    g =>
+                    {
+                        var latest = g.OrderByDescending(x => x.EnrolledAt).First();
+                        return (latest.CourseCode, latest.CourseTitle, latest.SemesterName);
+                    });
+        }
 
         var levelPrefix = institutionType == (int)Domain.Enums.InstitutionType.School
             || institutionType == (int)Domain.Enums.InstitutionType.College
                 ? "Class"
                 : "Semester";
-
-        var requireEnrollmentFilter = semesterId.HasValue || courseId.HasValue;
 
         return receipts
             .Where(r => !requireEnrollmentFilter || enrollmentLookup.ContainsKey(r.StudentProfileId))
@@ -528,9 +536,9 @@ public sealed class ReportRepository : IReportRepository
                     r.DueDate,
                     r.PaidDate,
                     r.DepartmentName,
-                    enrollment?.CourseCode,
-                    enrollment?.CourseTitle,
-                    enrollment?.SemesterName,
+                        enrollment.CourseCode,
+                        enrollment.CourseTitle,
+                        enrollment.SemesterName,
                     r.CurrentLevel,
                     $"{levelPrefix} {r.CurrentLevel}");
             })

@@ -65,6 +65,20 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - no module catalog, package pricing, activation rule, or entitlement matrix mutation,
   - Phase 9.3 confirms the finance analytics surface remains separate from academic analytics/reporting.
 
+## Execution Update - 2026-05-21 (Plan F Phase 9 Stage 9.4 Report Data Isolation)
+
+### Plan F Phase 9 - Report Data Isolation
+- Implementation Summary:
+  - hardened payment summary reporting so enrollment/course/semester joins execute only when academic filters are explicitly supplied,
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced.
+- Validation Summary:
+  - manual review confirmed module definitions remain unchanged,
+  - no module-level configuration migration was required.
+
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation,
+  - Phase 9.4 reduces unrelated academic data loading from finance payment reports.
+
 ## Execution Update - 2026-05-20 (Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Behavior)
 
 - Recent request issue:

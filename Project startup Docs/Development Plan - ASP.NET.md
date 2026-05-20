@@ -69,6 +69,18 @@ Validation summaries must include at minimum:
 - Stage status: Plan F Phase 9 Stage 9.3 completed.
 - Phase status: Plan F Phase 9 in progress (Stage 9.4 next).
 
+## 2026-05-21 Update - Plan F Phase 9 Stage 9.4 Report Data Isolation
+
+### Plan F Phase 9 - Report Data Isolation
+- Implementation Summary:
+  - hardened payment summary reporting so enrollment/course/semester joins execute only when academic filters are explicitly supplied,
+  - preserved finance totals/status behavior while reducing non-required academic data loading in the default report path.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - code review confirmed default payment-summary execution avoids academic joins unless filter-driven.
+- Stage status: Plan F Phase 9 Stage 9.4 completed.
+- Phase status: Plan F Phase 9 completed.
+
 ### 2026-05-21 - Plan F Phases 4 and 5 Payment Reports and Finance UI Surface
 - Recent request issue:
   - proceed and complete finance report delivery plus finance UI boundary updates.
