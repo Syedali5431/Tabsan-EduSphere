@@ -12,6 +12,7 @@ public static class ConfigurationBootstrapper
     private const string DeploymentSettingsFile = "appsettings.Deployment.json";
     private const string ExternalSettingsFile = "appsettings.External.json";
     private const string LocalSettingsFile = "appsettings.Local.json";
+    private const string EnvironmentProfilesFile = "environments.json";
 
     public static IConfigurationBuilder AddEduSphereConfigurationHierarchy(
         this IConfigurationBuilder configurationBuilder,
@@ -22,8 +23,10 @@ public static class ConfigurationBootstrapper
             ? DefaultEnvironmentVariablePrefix
             : environmentVariablePrefix.Trim();
         var tenantConfigPath = Environment.GetEnvironmentVariable("EDUSPHERE_TENANT_CONFIG_PATH")?.Trim();
+        var environmentProfilesPath = Environment.GetEnvironmentVariable("EDUSPHERE_ENVIRONMENTS_FILE")?.Trim();
         var environmentSettingsFile = $"appsettings.{environment.EnvironmentName}.json";
         var insertIndex = GetInsertionIndex(configurationBuilder);
+        var contentRootParent = Directory.GetParent(environment.ContentRootPath)?.FullName;
 
         configurationBuilder.SetBasePath(environment.ContentRootPath);
 
@@ -32,10 +35,22 @@ public static class ConfigurationBootstrapper
         insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, DeploymentSettingsFile, optional: true, reloadOnChange: false);
         insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, ExternalSettingsFile, optional: true, reloadOnChange: false);
         insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, LocalSettingsFile, optional: true, reloadOnChange: environment.IsDevelopment());
+        insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, EnvironmentProfilesFile, optional: true, reloadOnChange: environment.IsDevelopment());
+
+        if (!string.IsNullOrWhiteSpace(contentRootParent))
+        {
+            var parentEnvironmentProfilesPath = Path.Combine(contentRootParent, EnvironmentProfilesFile);
+            insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, parentEnvironmentProfilesPath, optional: true, reloadOnChange: false);
+        }
 
         if (!string.IsNullOrWhiteSpace(tenantConfigPath))
         {
             insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, tenantConfigPath, optional: true, reloadOnChange: false);
+        }
+
+        if (!string.IsNullOrWhiteSpace(environmentProfilesPath))
+        {
+            insertIndex = InsertJsonSourceIfMissing(configurationBuilder, insertIndex, environmentProfilesPath, optional: true, reloadOnChange: false);
         }
 
         insertIndex = InsertEnvironmentVariablesSourceIfMissing(configurationBuilder, insertIndex, prefix);

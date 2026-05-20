@@ -51,11 +51,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
+var environmentProfile = EnvironmentConfigurationResolver.Resolve(builder.Configuration, env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
 
 Console.WriteLine($"[Startup] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
 Console.WriteLine("[Startup] Configuration sources: appsettings.json, appsettings.{Environment}.json, environment variables");
+Console.WriteLine($"[Startup] Environment profile detection: {environmentProfile.EnvironmentName} via {environmentProfile.DetectionSource}");
+foreach (var warning in environmentProfile.Warnings)
+{
+    Console.WriteLine($"[Startup][Warning] {warning}");
+}
 
 // Final-Touches Phase 34 Stage 2.1 — per-instance identity baseline for horizontal API scale verification.
 var configuredInstanceId = builder.Configuration["ScaleOut:InstanceId"];

@@ -1,0 +1,38 @@
+{
+  "Environments": {
+    "LocalHost": {
+      "AppConnectionString": "http://localhost:5181",
+      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb;Trusted_Connection=True;TrustServerCertificate=True;"
+    },
+    "Cloud": {
+      "AppConnectionString": "https://api.example.com",
+      "DatabaseConnectionString": "Server=tcp:cloud-sql.example.com,1433;Database=TabsanEduSphereDb;Encrypt=True;TrustServerCertificate=False;"
+    },
+    "Staging": {
+      "AppConnectionString": "https://staging-api.example.com",
+      "DatabaseConnectionString": "Server=tcp:staging-sql.example.com,1433;Database=TabsanEduSphereDb_Staging;Encrypt=True;TrustServerCertificate=False;"
+    },
+    "Docker": {
+      "AppConnectionString": "http://api:8080",
+      "DatabaseConnectionString": "Server=db;Database=TabsanEduSphereDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;"
+    },
+    "CI/CD": {
+      "AppConnectionString": "http://localhost:5181",
+      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb_CI;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;"
+    },
+    "VPS": {
+      "AppConnectionString": "https://vps-api.example.com",
+      "DatabaseConnectionString": "Server=127.0.0.1;Database=TabsanEduSphereDb_Vps;User Id=edusphere;Password=ChangeMe;TrustServerCertificate=True;"
+    },
+    "Testing": {
+      "AppConnectionString": "http://localhost:5181",
+      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb_Testing;Trusted_Connection=True;TrustServerCertificate=True;"
+    }
+  },
+  "DefaultEnvironment": "LocalHost",
+  "EnvironmentHostMap": {
+    "staging-host": "Staging",
+    "prod-host": "Cloud",
+    "vps-host": "VPS"
+  }
+}

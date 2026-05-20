@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
+var environmentProfile = EnvironmentConfigurationResolver.Resolve(builder.Configuration, env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
 StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
@@ -29,6 +30,11 @@ var configurationSourceSummary = StartupVisibilityReporter.DescribeConfiguration
 var databaseType = StartupVisibilityReporter.DescribeDatabaseType(databaseConnection.ConnectionString);
 
 Console.WriteLine($"[Web] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
+Console.WriteLine($"[Web] Environment profile detection: {environmentProfile.EnvironmentName} via {environmentProfile.DetectionSource}");
+foreach (var warning in environmentProfile.Warnings)
+{
+    Console.WriteLine($"[Web][Warning] {warning}");
+}
 Console.WriteLine($"[Web] Database type: {databaseType}");
 Console.WriteLine($"[Web] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[Web] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
@@ -68,6 +74,14 @@ var networkOutboundMaxConnectionsPerServer = Math.Max(25, builder.Configuration.
 var networkOutboundConnectTimeoutSeconds = Math.Max(2, builder.Configuration.GetValue("InfrastructureTuning:NetworkStack:OutboundConnectTimeoutSeconds", 10));
 
 var eduApiBaseUrl = builder.Configuration["EduApi:BaseUrl"];
+if (environmentProfile.ShouldPreferProfile && !string.IsNullOrWhiteSpace(environmentProfile.AppConnectionString))
+{
+    eduApiBaseUrl = environmentProfile.AppConnectionString;
+}
+else if (string.IsNullOrWhiteSpace(eduApiBaseUrl) && !string.IsNullOrWhiteSpace(environmentProfile.AppConnectionString))
+{
+    eduApiBaseUrl = environmentProfile.AppConnectionString;
+}
 if (string.IsNullOrWhiteSpace(eduApiBaseUrl))
 {
     throw new InvalidOperationException("EduApi:BaseUrl is required for Tabsan.EduSphere.Web startup.");

@@ -14,6 +14,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
+var environmentProfile = EnvironmentConfigurationResolver.Resolve(builder.Configuration, env);
 var deploymentTopology = DeploymentTopologyResolver.Resolve(builder.Configuration, env);
 var tenantIsolation = TenantIsolationResolver.Resolve(builder.Configuration, env, deploymentTopology);
 var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
@@ -24,6 +25,11 @@ var configurationSourceSummary = StartupVisibilityReporter.DescribeConfiguration
 var databaseType = StartupVisibilityReporter.DescribeDatabaseType(databaseConnection.ConnectionString);
 
 Console.WriteLine($"[BackgroundJobs] Environment: {env.EnvironmentName} | App: {env.ApplicationName}");
+Console.WriteLine($"[BackgroundJobs] Environment profile detection: {environmentProfile.EnvironmentName} via {environmentProfile.DetectionSource}");
+foreach (var warning in environmentProfile.Warnings)
+{
+    Console.WriteLine($"[BackgroundJobs][Warning] {warning}");
+}
 Console.WriteLine($"[BackgroundJobs] Database type: {databaseType}");
 Console.WriteLine($"[BackgroundJobs] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[BackgroundJobs] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");

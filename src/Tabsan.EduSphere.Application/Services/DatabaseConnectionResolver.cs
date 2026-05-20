@@ -7,6 +7,8 @@ public static class DatabaseConnectionResolver
 {
     public static DatabaseConnectionResolution ResolveDefaultConnection(IConfiguration configuration, IHostEnvironment environment)
     {
+        var profileResolution = EnvironmentConfigurationResolver.Resolve(configuration, environment);
+
         var explicitEnvironmentCandidates = new[]
         {
             (Name: "EDUSPHERE_DB_CONNECTION", Value: Environment.GetEnvironmentVariable("EDUSPHERE_DB_CONNECTION")),
@@ -21,6 +23,13 @@ public static class DatabaseConnectionResolver
             {
                 return new DatabaseConnectionResolution(candidate.Value.Trim(), $"Environment variable: {candidate.Name}");
             }
+        }
+
+        if (profileResolution.ShouldPreferProfile && !string.IsNullOrWhiteSpace(profileResolution.DatabaseConnectionString))
+        {
+            return new DatabaseConnectionResolution(
+                profileResolution.DatabaseConnectionString.Trim(),
+                $"Environment profile: {profileResolution.EnvironmentName} ({profileResolution.DetectionSource})");
         }
 
         var orderedConfigurationCandidates = new[]
@@ -40,7 +49,14 @@ public static class DatabaseConnectionResolver
             }
         }
 
-        throw new InvalidOperationException($"Default database connection string is missing for environment '{environment.EnvironmentName}'. Configure Deployment:Database:ConnectionString, Database:ConnectionString, or ConnectionStrings:DefaultConnection.");
+        if (!string.IsNullOrWhiteSpace(profileResolution.DatabaseConnectionString))
+        {
+            return new DatabaseConnectionResolution(
+                profileResolution.DatabaseConnectionString.Trim(),
+                $"Environment profile fallback: {profileResolution.EnvironmentName} ({profileResolution.DetectionSource})");
+        }
+
+        throw new InvalidOperationException($"Default database connection string is missing for environment '{environment.EnvironmentName}'. Configure EDUSPHERE_DB_CONNECTION, Deployment:Database:ConnectionString, Database:ConnectionString, ConnectionStrings:DefaultConnection, or Environments:<name>:DatabaseConnectionString in environments.json.");
     }
 }
 

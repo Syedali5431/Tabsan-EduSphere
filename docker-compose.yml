@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/Tabsan.EduSphere.API/Dockerfile
+    container_name: tabsan-edusphere-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      EDUSPHERE_ENVIRONMENT: Docker
+      EDUSPHERE_DB_CONNECTION: "Server=db;Database=TabsanEduSphereDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: tabsan-edusphere-db
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "14333:1433"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD:-YourStrong!Passw0rd}" -Q "SELECT 1" -C
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+volumes:
+  mssql_data:
