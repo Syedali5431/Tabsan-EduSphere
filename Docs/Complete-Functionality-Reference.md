@@ -192,6 +192,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - analytics read patterns now align with stronger index coverage while preserving existing API/report behavior.
 
+## 2026-05-20 Update - Plan D Phase 6 Stage 6.1 (Validation and UI Consistency)
+
+- Recent request issue:
+  - proceed to Plan D Phase 6 Stage 6.1 validation.
+
+### Phase 6 Stage 6.1 - Interactivity, Filtering, and UI Consistency Validation (Implemented)
+- Implementation Summary:
+  - executed Stage 6.1 analytics validation for interactivity, filter consistency, and role/scope-safe behavior continuity,
+  - confirmed previously delivered Stage 2 to Stage 5 analytics features remain stable without further implementation changes,
+  - no schema mutation or functional API change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior change; Stage 6.1 establishes regression confidence for analytics interactivity and filtering consistency.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:
