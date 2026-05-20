@@ -687,6 +687,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 7.1 records query-scope audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 7 Stage 7.2 (Join and Full-Scan Risk Audit)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 7 Stage 7.2 - Query-Shape Risk Verification (Implemented)
+- Implementation Summary:
+  - executed query-shape/full-scan risk audit for joins, includes, raw SQL usage, and pagination coverage,
+  - audit reported `134` join references (`18` in repository layer), `167` include/then-include references, `0` raw SQL query references, `475` materialization references, and `37` pagination references,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 7.2 records query-shape audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

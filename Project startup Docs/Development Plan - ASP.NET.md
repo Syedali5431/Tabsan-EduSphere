@@ -615,6 +615,24 @@ Validation summaries must include at minimum:
 - Stage status: Plan E Phase 7 Stage 7.1 completed.
 - Phase status: Plan E Phase 7 in progress (Stages 7.2-7.3 pending).
 
+### 2026-05-20 - Plan E Phase 7 Stage 7.2 Join and Full-Scan Risk Audit
+- Recent request issue:
+  - proceed.
+
+#### Phase 7 Stage 7.2 - Query-Shape Risk Baseline (Implemented)
+- Implementation Summary:
+  - executed query-shape/full-scan risk audit for joins, includes, raw SQL usage, and pagination coverage,
+  - recorded `134` join references (`18` in repository layer), `167` include/then-include references, `0` raw SQL query references, `475` materialization references, and `37` pagination references,
+  - confirmed no production code/schema updates were required for Stage 7.2 closure.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan E Phase 7 Stage 7.2 completed.
+- Phase status: Plan E Phase 7 in progress (Stage 7.3 pending).
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.
