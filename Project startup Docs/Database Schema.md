@@ -872,6 +872,33 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan F Phase 6 Stage 6.1/6.2/6.3 (User Import Template Extension)
+
+- Recent request issue:
+	- proceed.
+- Implementation Summary:
+	- extended CSV user-import parser to support optional `MobileNumber` alias handling and optional `CampusAssignments`/`CampusIds` format validation,
+	- updated distributed import templates and portal import guidance with new optional columns,
+	- no table/column/index/constraint changes were applied during this stage.
+- Validation Summary:
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+	- touched import files reported no static diagnostics errors.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
+## 2026-05-21 Update - Plan F Phase 6 Completion (Import Sheets)
+
+- Recent request issue:
+	- proceed and close Plan F Phase 6 with synchronized stage summaries.
+- Implementation Summary:
+	- completed Stage 6.1/6.2/6.3 import-sheet extension, compatibility, and validation updates,
+	- no table/column/index/constraint changes were applied for phase closure.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Final-Touches Tracker Restoration (Governance)
 
 - Recent request issue:

@@ -1938,6 +1938,36 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository sync required after this checkpoint.
 
+### Stage Completion Checkpoint (2026-05-20 - Plan F Phase 6 Stage 6.1/6.2/6.3 User Import Template and Validation Extension)
+- Completed Plan F Phase 6 import-template extension with compatibility and validation safeguards.
+- Implementation Summary:
+  - extended user import parser to support optional `MobileNumber` aliasing to existing phone-number ingestion,
+  - added optional `CampusAssignments` parser validation (pipe-separated GUID format) while keeping persistence behavior unchanged,
+  - updated portal import guidance and distributed CSV templates with `MobileNumber` and `CampusAssignments` columns,
+  - preserved backward compatibility for legacy templates without new columns.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+  - parser diagnostics for touched files reported no static errors,
+  - verified both extended-template and legacy-template import flows in integration coverage.
+- Status of Checks Done:
+  - code change validated,
+  - governance docs synchronized,
+  - repository sync required after this checkpoint.
+
+### Phase Completion Checkpoint (2026-05-21 - Plan F Phase 6 Import Sheets)
+- Completed Plan F Phase 6 with all stage summaries and validations recorded.
+- Implementation Summary:
+  - Stage 6.1 completed template/header extension with optional `MobileNumber` and `CampusAssignments`,
+  - Stage 6.2 confirmed legacy template backward compatibility when new columns are omitted,
+  - Stage 6.3 completed mobile/campus field-format validation rules without schema mutation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+- Status of Checks Done:
+  - phase-level implementation and validation summaries completed,
+  - mandatory docs synchronized,
+  - repository sync (commit/pull/push/pull) pending this checkpoint.
+
 ## Institution License Validation Workflow (2026-05-12)
 - Plan file: `Docs/Institution-License-Validation-Phases.md`
 - For each completed validation phase, mandatory outputs are:

@@ -970,6 +970,31 @@ Validation summaries must include at minimum:
 - Stage status: Plan E Phase 9 Stage 9.2 completed.
 - Phase status: Plan E Phase 9 completed.
 
+### 2026-05-20 - Plan F Phase 6 Stage 6.1/6.2/6.3 User Import Template Extension
+- Recent request issue:
+  - proceed.
+
+#### Phase 6 Stage 6.1/6.2/6.3 - Import Template, Compatibility, and Validation (Implemented)
+- Implementation Summary:
+  - extended import parser header handling with optional `MobileNumber` alias support for `PhoneNumber`,
+  - added optional `CampusAssignments`/`CampusIds` parser validation as pipe-separated GUID values,
+  - updated user import UI template guidance and distributed CSV template files with the new columns,
+  - preserved backward compatibility for prior CSV templates that omit new headers.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+  - static diagnostics on touched import files returned no errors.
+
+- Stage status: Plan F Phase 6 Stage 6.1/6.2/6.3 completed.
+- Phase status: Plan F Phase 6 completed.
+
+#### Plan F Phase 6 Completion Checkpoint (2026-05-21)
+- Implementation Summary:
+  - closed Stage 6.1/6.2/6.3 with additive user-import template extension and parser validation coverage,
+  - maintained backward compatibility and avoided schema mutation for this phase.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+
 ### 2026-05-20 - Final-Touches Tracker Restoration (Governance)
 - Recent request issue:
   - proceed.

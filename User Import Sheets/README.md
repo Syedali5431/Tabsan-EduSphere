@@ -2,7 +2,7 @@
 
 This folder contains CSV templates for bulk-importing user accounts via the admin portal.
 
-Version: 1.5  
+Version: 1.6  
 Date: 15 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
@@ -37,6 +37,8 @@ Note: CSV format itself cannot store in-cell dropdown validation metadata. Dropd
 | Role | Yes | Must be `Admin` or `Faculty` for this template. |
 | DepartmentId | Yes | Department GUID. Required for faculty and recommended for admin scope assignment. |
 | InstitutionType | Yes | `School`, `College`, or `University` (must be license-enabled). |
+| MobileNumber | Optional | Mobile number for SMS/notification readiness. Accepts digits and common separators. |
+| CampusAssignments | Optional | Pipe-separated campus GUID list (for assignment workflow prep), e.g. `guid1|guid2`. |
 
 ## Template: `students-import-template.csv`
 
@@ -50,6 +52,8 @@ Note: CSV format itself cannot store in-cell dropdown validation metadata. Dropd
 | Role | Yes | Must be `Student`. |
 | DepartmentId | Yes | Student department GUID. |
 | InstitutionType | Yes | `School`, `College`, or `University` (must be license-enabled). |
+| MobileNumber | Optional | Mobile number for SMS/notification readiness. Accepts digits and common separators. |
+| CampusAssignments | Optional | Pipe-separated campus GUID list (for assignment workflow prep), e.g. `guid1|guid2`. |
 | ProgramId | Recommended | Program GUID for downstream student profile setup. |
 | RegistrationNumber | Recommended | Student registration number for profile/whitelist workflows. |
 | CurrentSemesterNumber | Recommended | Numeric level/semester value for initial academic state. |
@@ -66,8 +70,11 @@ Note: CSV format itself cannot store in-cell dropdown validation metadata. Dropd
 - Rows with missing required fields or invalid values are skipped and reported as errors.
 - If `InstitutionType` is provided, it must be enabled in the active institution license policy.
 - `DepartmentId` must be a valid GUID and should match an active department in the current environment.
+- `MobileNumber`/`PhoneNumber` (if provided) must contain only digits, spaces, `+`, `-`, `(`, `)` and be within the 32-character max length.
+- `CampusAssignments` (if provided) must be a pipe-separated list of valid GUID values.
 - Keep `InstitutionType` values consistent with active deployment policy to avoid avoidable import rejects.
 - The current API import parser requires these minimum columns in uploaded files: `Username, Email, Role`.
+- Older templates remain backward-compatible; new columns are optional and can be left blank.
 - Extra student-oriented columns are included for operational consistency and downstream mapping workflows.
 
 ## Excel Dropdown Setup

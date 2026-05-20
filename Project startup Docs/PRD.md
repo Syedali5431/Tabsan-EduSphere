@@ -1099,6 +1099,43 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 - Behavior impact:
   - no feature behavior changes were introduced; Stage 9.2 is final verification and closure only.
 
+### 2026-05-20 - Plan F Phase 6 Stage 6.1/6.2/6.3 User Import Template Extension
+- Recent request issue:
+  - proceed.
+
+#### Phase 6 Stage 6.1/6.2/6.3 - Import Template, Compatibility, and Validation (Implemented)
+- Implementation Summary:
+  - extended user import parsing to accept optional `MobileNumber` header (with legacy `PhoneNumber` compatibility),
+  - added optional `CampusAssignments`/`CampusIds` format validation (pipe-separated GUID values),
+  - updated official CSV templates and portal guidance to include `MobileNumber` and `CampusAssignments` columns,
+  - kept old template uploads fully supported with no required new columns.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+  - static diagnostics on touched import files returned no errors,
+  - verified both extended and legacy template import paths in integration coverage.
+- Testing and result summary:
+  - Phase 6 Stage 6.1/6.2/6.3 import extension checkpoint completed with all selected quality gates passing.
+
+- Behavior impact:
+  - import templates now include mobile and multi-campus assignment-ready fields with backward-compatible ingestion behavior.
+
+### 2026-05-21 - Plan F Phase 6 Completion (Import Sheets)
+- Recent request issue:
+  - proceed and close Plan F Phase 6.
+
+#### Plan F Phase 6 Completion - Import Template and Validation Closure (Implemented)
+- Implementation Summary:
+  - completed Stage 6.1, 6.2, and 6.3 execution with template extension, compatibility retention, and field-validation safeguards,
+  - preserved additive-only behavior with no schema or API-contract mutation required for this phase closeout.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+- Testing and result summary:
+  - Plan F Phase 6 completed with required implementation and validation summaries recorded for all included stages.
+
+- Behavior impact:
+  - no breaking changes to existing user import flows; legacy templates continue to import successfully.
+
 ### 2026-05-20 - Final-Touches Tracker Restoration (Governance)
 - Recent request issue:
   - proceed.

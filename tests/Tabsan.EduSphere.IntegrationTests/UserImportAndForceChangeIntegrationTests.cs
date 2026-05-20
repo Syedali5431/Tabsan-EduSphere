@@ -195,6 +195,56 @@ public class UserImportAndForceChangeIntegrationTests
         Assert.Contains(errorDetails, detail => detail.Contains("InstitutionType 'School' is not enabled", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public async Task UserImportCsv_WithMobileNumberAndCampusAssignments_ImportsSuccessfully()
+    {
+        using var adminClient = CreateClient("Admin");
+        using var superAdminClient = CreateClient("SuperAdmin");
+        await SetInstitutionPolicyAsync(superAdminClient, university: true, school: true, college: true);
+
+        var username = $"import_mobile_{Guid.NewGuid():N}";
+        var csv = string.Join('\n',
+        [
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments",
+            $"{username},{username}@tabsan.local,Import Mobile,Finance,,University,+61412345678,22222222-2222-2222-2222-222222222221|22222222-2222-2222-2222-222222222222"
+        ]);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(csv)), "file", "import-users-mobile-campus.csv");
+
+        var response = await adminClient.PostAsync("api/v1/user-import/csv", content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, ReadInt(body.RootElement, "imported"));
+        Assert.Equal(0, ReadInt(body.RootElement, "errors"));
+    }
+
+    [Fact]
+    public async Task UserImportCsv_BackwardCompatibleWithoutNewColumns_ImportsSuccessfully()
+    {
+        using var adminClient = CreateClient("Admin");
+        using var superAdminClient = CreateClient("SuperAdmin");
+        await SetInstitutionPolicyAsync(superAdminClient, university: true, school: false, college: false);
+
+        var username = $"import_legacy_{Guid.NewGuid():N}";
+        var csv = string.Join('\n',
+        [
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType",
+            $"{username},{username}@tabsan.local,Import Legacy,Admin,,University"
+        ]);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(csv)), "file", "import-users-legacy-template.csv");
+
+        var response = await adminClient.PostAsync("api/v1/user-import/csv", content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, ReadInt(body.RootElement, "imported"));
+        Assert.Equal(0, ReadInt(body.RootElement, "errors"));
+    }
+
     private static int ReadInt(JsonElement root, string propertyName)
     {
         if (TryGetProperty(root, propertyName, out var value) && value.ValueKind == JsonValueKind.Number)

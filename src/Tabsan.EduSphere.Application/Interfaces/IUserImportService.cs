@@ -13,7 +13,7 @@ public interface IUserImportService
     /// <summary>
     /// Parses a CSV stream and creates user accounts for each valid row.
     /// CSV must have a header row: Username,Email,FullName,Role
-    /// (DepartmentId/InstitutionType/PhoneNumber are optional; omit or leave blank when not needed).
+    /// (DepartmentId/InstitutionType/PhoneNumber/MobileNumber/CampusAssignments are optional; omit or leave blank when not needed).
     /// Returns a summary with counts of imported, duplicate, and erroneous rows.
     /// </summary>
     Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, bool strictMode = false, CancellationToken ct = default);

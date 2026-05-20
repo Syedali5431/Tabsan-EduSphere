@@ -9,7 +9,7 @@ namespace Tabsan.EduSphere.Application.Services;
 /// <summary>
 /// Parses a CSV stream and bulk-creates user accounts (P4-S1-01).
 /// Rules:
-///   - CSV header row required: Username,Email,Role (FullName/DepartmentId/InstitutionType/PhoneNumber optional)
+///   - CSV header row required: Username,Email,Role (FullName/DepartmentId/InstitutionType/PhoneNumber/MobileNumber/CampusAssignments optional)
 ///   - Initial password = Username (P4-S2-01)
 ///   - MustChangePassword is set to true so the user is forced to change on first login (P4-S2-02)
 ///   - Rows with duplicate usernames (in batch or existing in DB) are counted as duplicates
@@ -68,7 +68,8 @@ public class UserImportService : IUserImportService
 
         var departmentIdIndex = headerMap.TryGetValue("departmentid", out var depIdx) ? depIdx : -1;
         var institutionTypeIndex = headerMap.TryGetValue("institutiontype", out var instIdx) ? instIdx : -1;
-        var phoneNumberIndex = headerMap.TryGetValue("phonenumber", out var phoneIdx) ? phoneIdx : -1;
+        var phoneNumberIndex = ResolvePhoneNumberIndex(headerMap);
+        var campusAssignmentsIndex = ResolveCampusAssignmentsIndex(headerMap);
 
         var policy = await _institutionPolicyService.GetPolicyAsync(ct);
 
@@ -98,6 +99,7 @@ public class UserImportService : IUserImportService
             var deptIdStr = departmentIdIndex >= 0 ? GetValue(parts, departmentIdIndex) : string.Empty;
             var institutionTypeStr = institutionTypeIndex >= 0 ? GetValue(parts, institutionTypeIndex) : string.Empty;
             var phoneNumberRaw = phoneNumberIndex >= 0 ? GetValue(parts, phoneNumberIndex) : string.Empty;
+            var campusAssignmentsRaw = campusAssignmentsIndex >= 0 ? GetValue(parts, campusAssignmentsIndex) : string.Empty;
 
             // ── Validate username ─────────────────────────────────────────────
             if (string.IsNullOrWhiteSpace(username))
@@ -164,7 +166,19 @@ public class UserImportService : IUserImportService
                     continue;
                 }
 
+                if (!IsValidMobileNumber(phoneNumberRaw))
+                {
+                    errors.Add($"Line {lineNumber}: MobileNumber/PhoneNumber '{phoneNumberRaw}' contains invalid characters.");
+                    continue;
+                }
+
                 phoneNumber = phoneNumberRaw;
+            }
+
+            if (!string.IsNullOrWhiteSpace(campusAssignmentsRaw) && !TryValidateCampusAssignments(campusAssignmentsRaw))
+            {
+                errors.Add($"Line {lineNumber}: CampusAssignments must be a pipe-separated list of GUID values.");
+                continue;
             }
 
             // ── Check intra-batch duplicate ────────────────────────────────────
@@ -260,5 +274,50 @@ public class UserImportService : IUserImportService
             return string.Empty;
 
         return parts[index].Trim();
+    }
+
+    private static int ResolvePhoneNumberIndex(IReadOnlyDictionary<string, int> headerMap)
+    {
+        if (headerMap.TryGetValue("mobilenumber", out var mobileIndex))
+            return mobileIndex;
+
+        if (headerMap.TryGetValue("phonenumber", out var phoneIndex))
+            return phoneIndex;
+
+        return -1;
+    }
+
+    private static int ResolveCampusAssignmentsIndex(IReadOnlyDictionary<string, int> headerMap)
+    {
+        if (headerMap.TryGetValue("campusassignments", out var assignmentsIndex))
+            return assignmentsIndex;
+
+        if (headerMap.TryGetValue("campusids", out var idsIndex))
+            return idsIndex;
+
+        return -1;
+    }
+
+    private static bool IsValidMobileNumber(string value)
+    {
+        foreach (var ch in value)
+        {
+            var allowed = char.IsDigit(ch) || ch is '+' or '-' or '(' or ')' or ' ';
+            if (!allowed)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryValidateCampusAssignments(string value)
+    {
+        var segments = value
+            .Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (segments.Length == 0)
+            return false;
+
+        return segments.All(segment => Guid.TryParse(segment, out _));
     }
 }

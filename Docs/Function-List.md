@@ -1598,6 +1598,15 @@ No new functions were added in this stage.
 | `TotpService RFC 6238 implementation` | Generates Base32 secrets, provisioning URIs, and validates TOTP codes with configurable drift windows. | `src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs`, `src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs` |
 | `User MFA persistence fields` | Persists per-user MFA enablement, TOTP secret, and hashed recovery-code set. | `src/Tabsan.EduSphere.Domain/Identity/User.cs`, `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, `src/Tabsan.EduSphere.Infrastructure/Migrations/20260518091500_Phase39_MfaTotpRecoveryCodes.cs` |
 
+## 2026-05-20 - Plan F Phase 6 User Import Template Extension (Execution Snapshot)
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `UserImportService MobileNumber alias support` | Accepts optional `MobileNumber` header as an alias for existing phone-number ingestion while preserving legacy `PhoneNumber` support. | `src/Tabsan.EduSphere.Application/Services/UserImportService.cs` |
+| `UserImportService CampusAssignments format validation` | Validates optional `CampusAssignments`/`CampusIds` as pipe-separated GUIDs for multi-campus assignment workflow readiness. | `src/Tabsan.EduSphere.Application/Services/UserImportService.cs` |
+| `User import template distribution update` | Extends official CSV templates and template guidance with `MobileNumber` and `CampusAssignments` columns while keeping old template compatibility. | `User Import Sheets/faculty-admin-import-template.csv`, `User Import Sheets/students-import-template.csv`, `User Import Sheets/README.md`, `src/Tabsan.EduSphere.Web/Views/Portal/UserImport.cshtml` |
+| `User import compatibility coverage` | Verifies successful imports for both extended templates and legacy templates without new columns. | `tests/Tabsan.EduSphere.IntegrationTests/UserImportAndForceChangeIntegrationTests.cs` |
+
 ## Phase 36 - Deployment Readiness (2026-05-15)
 
 | Function Name | Purpose | Location |

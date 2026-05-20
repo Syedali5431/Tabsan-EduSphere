@@ -261,11 +261,42 @@
 ### Stage 6.1 - CSV Template Extension
 - Add `Mobile Number` field and multi-campus assignment field to relevant import templates.
 
+#### Stage 6.1 - CSV Template Extension (2026-05-21)
+- Implementation Summary:
+  - extended official user import templates and portal guidance to include optional `MobileNumber` and `CampusAssignments` columns,
+  - updated parser header handling so `MobileNumber` works as an alias for existing phone ingestion behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+
 ### Stage 6.2 - Backward Compatibility Validation
 - Keep existing templates/imports functional when new fields are omitted.
 
+#### Stage 6.2 - Backward Compatibility Validation (2026-05-21)
+- Implementation Summary:
+  - preserved import behavior for legacy CSV templates that do not include new optional columns,
+  - added explicit integration coverage for legacy-template success path.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+
 ### Stage 6.3 - Field Validation Rules
 - Add validation for mobile number and campus assignment formats.
+
+#### Stage 6.3 - Field Validation Rules (2026-05-21)
+- Implementation Summary:
+  - added mobile-number character validation for optional phone/mobile import values,
+  - added optional campus-assignment format validation for pipe-separated GUID lists.
+- Validation Summary:
+  - static diagnostics for touched import files returned no errors,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
+
+### Phase 6 Completion Summary (2026-05-21)
+- Implementation Summary:
+  - completed Plan F Phase 6 stages (6.1, 6.2, 6.3) with template extension, compatibility preservation, and additive validation rules,
+  - kept persistence/schema behavior unchanged while preparing import data for future multi-campus assignment workflow wiring.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`).
 
 ## Phase 7 - Documentation Updates
 ### Stage 7.1 - User Guide Update

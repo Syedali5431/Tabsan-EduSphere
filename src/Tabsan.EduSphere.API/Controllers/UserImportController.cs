@@ -24,7 +24,7 @@ public class UserImportController : ControllerBase
 
     /// <summary>
     /// Imports user accounts from a CSV file.
-    /// Expected CSV header: Username,Email,FullName,Role[,DepartmentId]
+    /// Expected CSV header: Username,Email,FullName,Role[,DepartmentId,InstitutionType,MobileNumber,CampusAssignments]
     /// On import: initial password = Username; MustChangePassword is set to true (P4-S2-01/02).
     /// Returns a summary: total rows, imported, duplicates, errors.
     /// </summary>

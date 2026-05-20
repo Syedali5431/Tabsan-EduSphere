@@ -24,10 +24,11 @@
                         </div>
                         <ul class="mb-0 ps-3">
                             <li>Required columns: <strong>Username, Email, Role</strong></li>
-                            <li>Optional columns: <strong>FullName, DepartmentId, InstitutionType</strong></li>
+                            <li>Optional columns: <strong>FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments</strong></li>
                             <li>Accepted file type: <strong>.csv</strong> only</li>
-                            <li>Role values: <strong>Admin</strong>, <strong>Faculty</strong>, <strong>Student</strong></li>
+                            <li>Role values: <strong>Admin</strong>, <strong>Faculty</strong>, <strong>Student</strong>, <strong>Finance</strong></li>
                             <li>If you provide <strong>DepartmentId</strong>, use valid IDs from your current database.</li>
+                            <li>If you provide <strong>CampusAssignments</strong>, use pipe-separated campus GUIDs (example: <strong>guid1|guid2</strong>).</li>
                             <li>Imported accounts use Username as temporary password and must change it at first login.</li>
                         </ul>
                     </div>
@@ -48,10 +49,10 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h5 mb-3">CSV Header Example</h2>
-                    <pre class="bg-light rounded p-3 mb-0" style="white-space:pre-wrap;">Username,Email,FullName,Role,DepartmentId,InstitutionType
-admin1,admin1@tabsan.local,Admin One,Admin,,University
-faculty1,faculty1@tabsan.local,Faculty One,Faculty,{valid-department-guid},University
-student1,student1@tabsan.local,Student One,Student,{valid-department-guid},School</pre>
+                    <pre class="bg-light rounded p-3 mb-0" style="white-space:pre-wrap;">Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments
+admin1,admin1@tabsan.local,Admin One,Admin,,University,+61412345678,
+faculty1,faculty1@tabsan.local,Faculty One,Faculty,{valid-department-guid},University,+61412345679,{campus-guid-1}
+student1,student1@tabsan.local,Student One,Student,{valid-department-guid},School,+61412345680,{campus-guid-1}|{campus-guid-2}</pre>
                 </div>
             </div>
         </div>

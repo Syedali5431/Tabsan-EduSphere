@@ -1945,6 +1945,22 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - recovery codes are one-time and automatically invalidated after use,
   - auth flows remain compatible while enforcing stronger factor controls.
 
+## 2026-05-21 Update - Plan F Phase 6 Import Sheets Completion (Execution Snapshot)
+
+- Recent request issue:
+  - proceed with Plan F Phase 6 import-sheet completion and synchronized documentation closure.
+- Implementation Summary:
+  - Stage 6.1 extended user import templates and parser header handling with optional `MobileNumber` and `CampusAssignments` support,
+  - Stage 6.2 preserved backward-compatible imports for legacy templates without new columns,
+  - Stage 6.3 added additive field-format validation for mobile numbers and campus assignment GUID lists.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+  - touched import files reported no static diagnostics errors.
+- Behavior impact:
+  - import templates now include mobile and multi-campus assignment-ready fields,
+  - existing import files remain valid and functional.
+
 ## 2026-05-15 Update - Final Phase 37/38 Execute Closure Snapshot
 
 - Completed execute-mode closure for final separation phases.
