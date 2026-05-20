@@ -19,6 +19,42 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Plan F Phase 0 Stage 0.1 Baseline Safety Verification
+- Recent request issue:
+  - start Plan F and complete Stage 0.1.
+
+#### Plan F Phase 0 Stage 0.1 (Implemented)
+- Implementation Summary:
+  - completed baseline safety verification gate before finance feature implementation,
+  - no production code or schema changes were introduced.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed.
+
+### 2026-05-20 - Plan F Phase 0 Stage 0.2 Isolation and Access Invariants
+- Recent request issue:
+  - complete Stage 0.2 and confirm tenant/campus/role invariants.
+
+#### Plan F Phase 0 Stage 0.2 (Implemented)
+- Implementation Summary:
+  - validated tenant/campus scope and role-access invariants,
+  - preserved current authorization and boundary behavior.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`).
+
+### 2026-05-20 - Plan F Phase 0 Stage 0.3 Additive-Only Guardrails
+- Recent request issue:
+  - complete Stage 0.3 and lock additive-only execution guardrails.
+
+#### Plan F Phase 0 Stage 0.3 (Implemented)
+- Implementation Summary:
+  - finalized additive-only guardrails for upcoming phases,
+  - no production code or schema changes were introduced.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`151/151`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Stage status: Plan F Phase 0 stages 0.1/0.2/0.3 completed.
+- Phase status: Plan F Phase 0 completed; ready to start Plan F Phase 1 Stage 1.1.
 ### 2026-05-20 - Plan F Transition Readiness
 - Recent request issue:
   - complete everything required to move execution to Plan F.
@@ -3254,3 +3290,4 @@ A feature is complete only when:
 - Commit: `56cf1dd` pushed.
 
 ---
+
