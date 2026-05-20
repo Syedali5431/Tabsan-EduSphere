@@ -873,6 +873,7 @@ public class AnalyticsPageModel
     public DepartmentPerformanceReport? Performance { get; set; }
     public DepartmentAttendanceReport?  Attendance  { get; set; }
     public AssignmentStatsReport?       Assignments { get; set; }
+    public PaymentStatusReport?         PaymentStatus { get; set; }
 }
 
 // ── AI Chat ───────────────────────────────────────────────────────────────────

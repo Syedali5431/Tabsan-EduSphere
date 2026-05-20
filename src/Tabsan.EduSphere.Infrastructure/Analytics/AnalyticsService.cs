@@ -11,6 +11,7 @@ using Tabsan.EduSphere.Domain.Attendance;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Quizzes;
+using Tabsan.EduSphere.Domain.StudentLifecycle;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
 namespace Tabsan.EduSphere.Infrastructure.Analytics;
@@ -703,6 +704,90 @@ public sealed class AnalyticsService : IAnalyticsService
         var report = new ComparativeSummaryReport(
             effectiveInstitutionType,
             rows.OrderByDescending(r => r.AverageResultPercentage).ToList());
+
+        await _distributedCache.SetStringAsync(
+            cacheKey,
+            JsonSerializer.Serialize(report),
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = AnalyticsCacheTtl
+            },
+            ct);
+
+        return report;
+    }
+
+    // Stage 3.1 - Payment status summary
+    public async Task<PaymentStatusReport?> GetPaymentStatusReportAsync(
+        Guid? departmentId,
+        int? institutionType = null,
+        CancellationToken ct = default)
+    {
+        var accessScope = GetAnalyticsAccessScope();
+        var cacheKey = BuildAnalyticsCacheKey("payment-status", departmentId, institutionType, accessScope);
+        var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
+        if (!string.IsNullOrWhiteSpace(cached))
+        {
+            var cachedReport = JsonSerializer.Deserialize<PaymentStatusReport>(cached);
+            if (cachedReport is not null)
+            {
+                return cachedReport;
+            }
+        }
+
+        var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
+        var effectiveInstitutionType = institutionType ?? (int)InstitutionType.University;
+
+        var rows = await (
+            from receipt in _db.PaymentReceipts.AsNoTracking()
+            join student in _db.StudentProfiles.AsNoTracking() on receipt.StudentProfileId equals student.Id
+            join department in _db.Departments.AsNoTracking() on student.DepartmentId equals department.Id
+            where (departmentId == null || student.DepartmentId == departmentId)
+                && (!institutionType.HasValue || (int)department.InstitutionType == institutionType.Value)
+                && (!accessScope.TenantId.HasValue || department.TenantId == accessScope.TenantId.Value)
+                && (!accessScope.CampusId.HasValue || department.CampusId == accessScope.CampusId.Value)
+            select new
+            {
+                receipt.Status,
+                receipt.Amount,
+                DepartmentInstitutionType = (int)department.InstitutionType
+            }
+        ).ToListAsync(ct);
+
+        if (!rows.Any()) return null;
+
+        if (!institutionType.HasValue)
+        {
+            effectiveInstitutionType = rows
+                .GroupBy(x => x.DepartmentInstitutionType)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault((int)InstitutionType.University);
+        }
+
+        var paidRows = rows.Where(x => x.Status == PaymentReceiptStatus.Paid).ToList();
+        var unpaidRows = rows.Where(x => x.Status is PaymentReceiptStatus.Pending or PaymentReceiptStatus.Submitted).ToList();
+
+        var paidCount = paidRows.Count;
+        var unpaidCount = unpaidRows.Count;
+        var paidAmount = paidRows.Sum(x => x.Amount);
+        var unpaidAmount = unpaidRows.Sum(x => x.Amount);
+
+        var slices = new List<PaymentStatusSlice>
+        {
+            new("Paid", paidCount, paidAmount),
+            new("Unpaid", unpaidCount, unpaidAmount)
+        };
+
+        var report = new PaymentStatusReport(
+            departmentId ?? Guid.Empty,
+            deptName,
+            effectiveInstitutionType,
+            paidCount,
+            unpaidCount,
+            paidAmount,
+            unpaidAmount,
+            slices);
 
         await _distributedCache.SetStringAsync(
             cacheKey,

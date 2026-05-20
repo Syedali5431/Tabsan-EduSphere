@@ -2608,7 +2608,8 @@ public class PortalController : Controller
             }).ToList(),
             performance = model.Performance,
             attendance = model.Attendance,
-            assignments = model.Assignments
+            assignments = model.Assignments,
+            paymentStatus = model.PaymentStatus
         });
     }
 
@@ -2708,10 +2709,18 @@ public class PortalController : Controller
                 model.SelectedSemesterId = null;
             }
 
-            // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON
-            model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
-            model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
-            model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            var isFinanceOnly = identity is { IsFinance: true, IsAdmin: false, IsSuperAdmin: false };
+
+            // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON.
+            // Finance-only users can access payment analytics without academic report permissions.
+            if (!isFinanceOnly)
+            {
+                model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+                model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+                model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            }
+
+            model.PaymentStatus = await _api.GetPaymentStatusAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
 
             // Populate summary cards from real data.
             if (model.Performance is not null)
@@ -2745,6 +2754,18 @@ public class PortalController : Controller
                     SubText = model.Assignments.DepartmentName,
                     ColorClass = "text-warning",
                     Icon = "📝"
+                });
+            }
+            if (model.PaymentStatus is not null)
+            {
+                var total = model.PaymentStatus.PaidCount + model.PaymentStatus.UnpaidCount;
+                model.Cards.Add(new AnalyticsSummaryCard
+                {
+                    Label = "Payment Status",
+                    Value = $"{model.PaymentStatus.PaidCount}/{total}",
+                    SubText = $"Paid vs total · {model.PaymentStatus.DepartmentName}",
+                    ColorClass = "text-info",
+                    Icon = "💳"
                 });
             }
         }

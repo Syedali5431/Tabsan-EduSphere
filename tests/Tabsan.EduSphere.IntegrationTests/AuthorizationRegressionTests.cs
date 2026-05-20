@@ -546,6 +546,38 @@ public class AuthorizationRegressionTests
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // ANALYTICS (PAYMENT STATUS)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Analytics_PaymentStatus_Unauthenticated_Returns401()
+    {
+        using var client = CreateUnauthenticatedClient();
+
+        var response = await client.GetAsync("api/analytics/payment-status");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Analytics_PaymentStatus_Student_Returns403()
+    {
+        using var client = CreateClient("Student");
+
+        var response = await client.GetAsync("api/analytics/payment-status");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Analytics_PaymentStatus_Finance_ReturnsNotForbiddenOrUnauthorized()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/analytics/payment-status");
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private static MultipartFormDataContent BuildCourseMaterialUploadContent()
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 test file");

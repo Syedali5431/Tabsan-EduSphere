@@ -6,6 +6,7 @@ using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
+using Tabsan.EduSphere.Domain.StudentLifecycle;
 using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
@@ -153,6 +154,48 @@ public class AnalyticsInstituteParityIntegrationTests
 
         Assert.Contains(seeded.CollegeDepartmentName, departmentNames);
         Assert.DoesNotContain(seeded.UniversityDepartmentName, departmentNames);
+    }
+
+    [Fact]
+    public async Task AnalyticsPaymentStatus_WithMismatchedInstitutionQueryForAdminClaim_ReturnsForbidden()
+    {
+        using var client = CreateAdminClient(institutionType: (int)InstitutionType.College);
+
+        var response = await client.GetAsync("api/analytics/payment-status?institutionType=0");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AnalyticsPaymentStatus_WithTenantCampusClaims_ReturnsOnlyCallerScopeData()
+    {
+        var seeded = await SeedPaymentAnalyticsAcrossTenantCampusAsync();
+
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            JwtTestHelper.GenerateToken(
+                role: "Admin",
+                userId: Guid.NewGuid().ToString(),
+                institutionType: (int)InstitutionType.College,
+                tenantId: seeded.CallerTenantId.ToString(),
+                campusId: seeded.CallerCampusId.ToString()));
+
+        var response = await client.GetAsync("api/analytics/payment-status");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(seeded.CallerPaidCount, doc.RootElement.GetProperty("paidCount").GetInt32());
+        Assert.Equal(seeded.CallerUnpaidCount, doc.RootElement.GetProperty("unpaidCount").GetInt32());
+
+        var statuses = doc.RootElement.GetProperty("slices")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("status").GetString())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        Assert.Contains("Paid", statuses);
+        Assert.Contains("Unpaid", statuses);
     }
 
     private HttpClient CreateAdminClient(int institutionType)
@@ -325,5 +368,61 @@ public class AnalyticsInstituteParityIntegrationTests
             88m,
             collegeDepartment.Name,
             universityDepartment.Name);
+    }
+
+    private async Task<(
+        Guid CallerTenantId,
+        Guid CallerCampusId,
+        int CallerPaidCount,
+        int CallerUnpaidCount)> SeedPaymentAnalyticsAcrossTenantCampusAsync()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var studentRole = db.Roles.First(r => r.Name == "Student");
+        var financeRole = db.Roles.First(r => r.Name == "Finance");
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+
+        var callerTenant = new Tenant($"PTC{suffix}", $"Payment Tenant Caller {suffix}");
+        var otherTenant = new Tenant($"PTO{suffix}", $"Payment Tenant Other {suffix}");
+        db.Tenants.AddRange(callerTenant, otherTenant);
+
+        var callerCampus = new Campus(callerTenant.Id, $"PTCC{suffix}", $"Payment Caller Campus {suffix}");
+        var otherCampus = new Campus(otherTenant.Id, $"PTOC{suffix}", $"Payment Other Campus {suffix}");
+        db.Campuses.AddRange(callerCampus, otherCampus);
+
+        var callerDepartment = new Department($"Payment Caller Department {suffix}", $"PCD{suffix}", InstitutionType.College);
+        callerDepartment.SetTenantCampus(callerTenant.Id, callerCampus.Id);
+        var otherDepartment = new Department($"Payment Other Department {suffix}", $"POD{suffix}", InstitutionType.College);
+        otherDepartment.SetTenantCampus(otherTenant.Id, otherCampus.Id);
+        db.Departments.AddRange(callerDepartment, otherDepartment);
+
+        var callerProgram = new AcademicProgram($"Payment Caller Program {suffix}", $"PCP{suffix}", callerDepartment.Id, 4);
+        var otherProgram = new AcademicProgram($"Payment Other Program {suffix}", $"POP{suffix}", otherDepartment.Id, 4);
+        db.AcademicPrograms.AddRange(callerProgram, otherProgram);
+
+        var callerStudentUser = new User($"pay_caller_student_{suffix}", "integration-hash", studentRole.Id, $"pay_caller_student_{suffix}@tabsan.local");
+        var otherStudentUser = new User($"pay_other_student_{suffix}", "integration-hash", studentRole.Id, $"pay_other_student_{suffix}@tabsan.local");
+        var financeUser = new User($"pay_finance_{suffix}", "integration-hash", financeRole.Id, $"pay_finance_{suffix}@tabsan.local");
+        db.Users.AddRange(callerStudentUser, otherStudentUser, financeUser);
+
+        var callerProfile = new StudentProfile(callerStudentUser.Id, $"PAY-CALL-{suffix}", callerProgram.Id, callerDepartment.Id, DateTime.UtcNow.Date);
+        var otherProfile = new StudentProfile(otherStudentUser.Id, $"PAY-OTH-{suffix}", otherProgram.Id, otherDepartment.Id, DateTime.UtcNow.Date);
+        db.StudentProfiles.AddRange(callerProfile, otherProfile);
+
+        var callerPaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 100m, "Caller paid", DateTime.UtcNow.Date.AddDays(7));
+        callerPaid.ConfirmPayment(financeUser.Id, "paid");
+        var callerUnpaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 75m, "Caller unpaid", DateTime.UtcNow.Date.AddDays(7));
+
+        var otherPaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 120m, "Other paid", DateTime.UtcNow.Date.AddDays(7));
+        otherPaid.ConfirmPayment(financeUser.Id, "paid");
+        var otherUnpaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 90m, "Other unpaid", DateTime.UtcNow.Date.AddDays(7));
+
+        db.PaymentReceipts.AddRange(callerPaid, callerUnpaid, otherPaid, otherUnpaid);
+        await db.SaveChangesAsync();
+
+        return (callerTenant.Id, callerCampus.Id, CallerPaidCount: 1, CallerUnpaidCount: 1);
     }
 }

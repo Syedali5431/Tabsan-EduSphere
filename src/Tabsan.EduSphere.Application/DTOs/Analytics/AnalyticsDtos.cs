@@ -125,3 +125,22 @@ public record ComparativeSummaryRow(
 public record ComparativeSummaryReport(
     int EffectiveInstitutionType,
     IReadOnlyList<ComparativeSummaryRow> Rows);
+
+// ── Payment status analytics ────────────────────────────────────────────────
+
+/// <summary>Single segment in payment status distribution.</summary>
+public record PaymentStatusSlice(
+    string Status,
+    int Count,
+    decimal TotalAmount);
+
+/// <summary>Paid vs unpaid payment status summary for the selected analytics scope.</summary>
+public record PaymentStatusReport(
+    Guid DepartmentId,
+    string DepartmentName,
+    int EffectiveInstitutionType,
+    int PaidCount,
+    int UnpaidCount,
+    decimal PaidAmount,
+    decimal UnpaidAmount,
+    IReadOnlyList<PaymentStatusSlice> Slices);

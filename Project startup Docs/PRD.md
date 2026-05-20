@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 3 Stage 3.1 Payment Status Pie Chart
+- Recent request issue:
+  - proceed with Stage 3.1 and add finance-compatible paid vs unpaid analytics charting.
+
+#### Plan F Phase 3 Stage 3.1 (Implemented)
+- Implementation Summary:
+  - added payment status analytics contracts/service endpoint for scoped paid vs unpaid aggregates,
+  - integrated payment status retrieval into portal analytics snapshot/model/client flow,
+  - rendered interactive payment status pie chart with clickable segment legend.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`65/65`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+- Testing and result summary:
+  - Stage 3.1 completed with scoped analytics and authorization regression checks green.
+
+- Behavior impact:
+  - analytics now includes finance-relevant paid vs unpaid visibility,
+  - finance role can access payment analytics while academic analytics behavior remains unchanged.
+
 ### 2026-05-20 - Plan F Phase 2 Stage 2.3 Tenant and Campus Enforcement
 - Recent request issue:
   - proceed with Stage 2.3 and enforce tenant/campus boundaries for finance payment paths.

@@ -145,6 +145,32 @@ public sealed class AnalyticsController : ControllerBase
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
+    /// <summary>Returns paid vs unpaid payment status summary for the selected analytics scope.</summary>
+    [HttpGet("payment-status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPaymentStatus(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct = default)
+    {
+        if (User?.Identity?.IsAuthenticated != true)
+            return Unauthorized();
+
+        var canAccess = User.IsInRole("SuperAdmin")
+                     || User.IsInRole("Admin")
+                     || User.IsInRole("Faculty")
+                     || User.IsInRole("Finance");
+
+        if (!canAccess)
+            return Forbid();
+
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        if (scope.Error is not null) return scope.Error;
+
+        var result = await _analytics.GetPaymentStatusReportAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        return result is null ? NotFound("No data found.") : Ok(result);
+    }
+
     // ── Export endpoints ──────────────────────────────────────────────────────
 
     /// <summary>Downloads the performance report as a PDF file.</summary>

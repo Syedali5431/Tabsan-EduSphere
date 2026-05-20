@@ -153,6 +153,11 @@ else
             <div class="card-body">
                 <div class="row g-4">
                     <div class="col-12 col-lg-6">
+                        <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
+                        <div id="paymentStatusLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <canvas id="paymentStatusChart" height="170"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6">
                         <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
                         <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
                         <canvas id="studentDistributionChart" height="170"></canvas>
@@ -383,6 +388,7 @@ else
                 performance: null,
                 attendance: null,
                 assignments: null,
+                paymentStatus: null,
                 studentDistribution: null,
                 departmentCounts: null,
                 courseTrend: null,
@@ -402,7 +408,8 @@ else
                 cards: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cards)),
                 performance: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Performance)),
                 attendance: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Attendance)),
-                assignments: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments))
+                assignments: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Assignments)),
+                paymentStatus: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentStatus))
             };
 
             function prop(obj, camelName, pascalName, defaultValue) {
@@ -592,6 +599,51 @@ else
                 if (!container || !chart || !chart.data || !chart.data.datasets) return;
 
                 container.innerHTML = '';
+
+                if (chart.config && (chart.config.type === 'pie' || chart.config.type === 'doughnut')) {
+                    var labels = chart.data.labels || [];
+                    var pieDataset = chart.data.datasets[0] || {};
+
+                    labels.forEach(function (rawLabel, dataIndex) {
+                        var item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
+
+                        var swatch = document.createElement('span');
+                        swatch.style.width = '10px';
+                        swatch.style.height = '10px';
+                        swatch.style.borderRadius = '999px';
+                        swatch.style.display = 'inline-block';
+                        if (Array.isArray(pieDataset.backgroundColor)) {
+                            swatch.style.backgroundColor = pieDataset.backgroundColor[Math.min(dataIndex, pieDataset.backgroundColor.length - 1)] || '#6c757d';
+                        } else {
+                            swatch.style.backgroundColor = pieDataset.backgroundColor || '#6c757d';
+                        }
+
+                        var text = document.createElement('span');
+                        text.textContent = String(rawLabel || ('Segment ' + (dataIndex + 1)));
+
+                        item.appendChild(swatch);
+                        item.appendChild(text);
+
+                        var updateState = function () {
+                            var hidden = !chart.getDataVisibility(dataIndex);
+                            item.classList.toggle('opacity-50', hidden);
+                            item.classList.toggle('text-decoration-line-through', hidden);
+                        };
+
+                        item.addEventListener('click', function () {
+                            chart.toggleDataVisibility(dataIndex);
+                            chart.update();
+                            updateState();
+                        });
+
+                        updateState();
+                        container.appendChild(item);
+                    });
+
+                    return;
+                }
 
                 chart.data.datasets.forEach(function (dataset, datasetIndex) {
                     var item = document.createElement('button');
@@ -864,6 +916,61 @@ else
                 buildClickableLegend('studentDistributionLegend', charts.studentDistribution);
             }
 
+            function renderPaymentStatus(snapshot) {
+                var el = document.getElementById('paymentStatusChart');
+                if (!el) return;
+
+                var paymentStatus = snapshot ? prop(snapshot, 'paymentStatus', 'PaymentStatus', null) : null;
+                var slices = prop(paymentStatus, 'slices', 'Slices', []) || [];
+
+                var labels = [];
+                var values = [];
+
+                slices.forEach(function (slice) {
+                    var label = prop(slice, 'status', 'Status', '');
+                    var count = Number(prop(slice, 'count', 'Count', 0)) || 0;
+                    if (!label) return;
+                    labels.push(label);
+                    values.push(count);
+                });
+
+                if (!labels.length) {
+                    var paid = Number(prop(paymentStatus, 'paidCount', 'PaidCount', 0)) || 0;
+                    var unpaid = Number(prop(paymentStatus, 'unpaidCount', 'UnpaidCount', 0)) || 0;
+                    labels = ['Paid', 'Unpaid'];
+                    values = [paid, unpaid];
+                }
+
+                destroyChart(charts.paymentStatus);
+
+                if (!values.some(function (v) { return v > 0; })) {
+                    clearLegend('paymentStatusLegend');
+                    clearChartCanvas(el, 'No payment status data available.');
+                    charts.paymentStatus = null;
+                    return;
+                }
+
+                charts.paymentStatus = new Chart(el, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Receipts',
+                            data: values,
+                            backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
+                            borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                buildClickableLegend('paymentStatusLegend', charts.paymentStatus);
+            }
+
             function renderDepartmentCounts(snapshot) {
                 var el = document.getElementById('departmentCountChart');
                 if (!el) return;
@@ -1088,6 +1195,7 @@ else
                 renderPerformance(snapshot);
                 renderAttendance(snapshot);
                 renderAssignments(snapshot);
+                renderPaymentStatus(snapshot);
                 renderStudentDistribution(snapshot);
                 renderDepartmentCounts(snapshot);
                 renderCourseTrend(snapshot);

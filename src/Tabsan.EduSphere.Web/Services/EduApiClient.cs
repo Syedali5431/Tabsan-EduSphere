@@ -281,6 +281,7 @@ public interface IEduApiClient
     Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
     Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
     Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
+    Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
 
     // AI Chat
     Task<List<AiChatConversationItem>> GetChatConversationsAsync(CancellationToken ct);
@@ -2698,6 +2699,9 @@ public class EduApiClient : IEduApiClient
 
     public Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
         => GetAsync<AssignmentStatsReport>($"api/v1/analytics/assignments{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
+
+    public Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
+        => GetAsync<PaymentStatusReport>($"api/v1/analytics/payment-status{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
 
     private static string BuildAnalyticsQuery(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId)
     {

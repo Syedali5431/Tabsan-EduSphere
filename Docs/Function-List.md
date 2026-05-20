@@ -3,6 +3,29 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 3 Stage 3.1 (Payment Status Pie Chart)
+
+- Recent request issue:
+  - proceed with Stage 3.1 and add interactive paid vs unpaid payment analytics charting.
+- Implementation Summary:
+  - added payment status analytics DTO/service contract and scoped aggregation implementation,
+  - added finance-compatible payment status analytics endpoint and web client consumption method,
+  - extended portal analytics snapshot/render flow with payment status data and interactive pie chart behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`65/65`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `AnalyticsService.GetPaymentStatusReportAsync` | Aggregates scoped paid vs unpaid receipt counts/amounts for analytics consumption. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `AnalyticsController.GetPaymentStatus` | Exposes payment status analytics endpoint with finance-compatible authorization handling. | `src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs` |
+| `EduApiClient.GetPaymentStatusAnalyticsAsync` | Retrieves payment status analytics data for portal snapshots. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `PortalController.BuildAnalyticsPageModelAsync` (payment status integration) | Loads payment status analytics into analytics page/snapshot model and summary cards. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `renderPaymentStatus` | Renders the Paid vs Unpaid interactive pie chart on the analytics page. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `AnalyticsInstituteParityIntegrationTests.AnalyticsPaymentStatus_WithTenantCampusClaims_ReturnsOnlyCallerScopeData` | Verifies tenant/campus isolation for payment status analytics payloads. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 2 Stage 2.3 (Tenant and Campus Enforcement)
 
 - Recent request issue:
