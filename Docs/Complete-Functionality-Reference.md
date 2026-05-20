@@ -534,6 +534,26 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 4.4 confirms button/action baseline stability.
 
+## 2026-05-20 Update - Plan E Phase 5 Stage 5.1 (TenantId/CampusId Schema Audit)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 5 Stage 5.1 - Tenant/Campus Schema Usage Audit (Implemented)
+- Implementation Summary:
+  - executed schema audit checkpoint for `TenantId`/`CampusId` usage on `Scripts/01-Schema-Current.sql`,
+  - audit parsed `82` tables and found `0` tables containing both `TenantId` and `CampusId` in this script,
+  - validated that tenant/campus access control remains enforced at application/domain layers,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 5.1 records audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:
