@@ -443,6 +443,7 @@ public static class DatabaseSeeder
         EnsureRoleAccess(payments.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(payments.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(payments.Id, "Student", isAllowed: true);
+        EnsureRoleAccess(payments.Id, "Finance", isAllowed: true);
 
         // Enrollments: Admin + Faculty
         EnsureRoleAccess(enrollments.Id, "Admin",   isAllowed: true);
@@ -453,6 +454,16 @@ public static class DatabaseSeeder
         EnsureRoleAccess(reportCenter.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(reportCenter.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(reportCenter.Id, "Student", isAllowed: true);
+        EnsureRoleAccess(reportCenter.Id, "Finance", isAllowed: true);
+
+        // Analytics: Admin + Faculty + Finance
+        EnsureRoleAccess(analytics.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(analytics.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(analytics.Id, "Student", isAllowed: false);
+        EnsureRoleAccess(analytics.Id, "Finance", isAllowed: true);
+
+        // Theme Settings: allow Finance to personalize theme without broader settings access
+        EnsureRoleAccess(themeSettings.Id, "Finance", isAllowed: true);
 
         await db.SaveChangesAsync();
     }
@@ -477,6 +488,7 @@ public static class DatabaseSeeder
             (ReportKeys.StudentTranscript,    "Student Transcript",        "Full academic record for a selected student including all result components."),
             (ReportKeys.LowAttendanceWarning, "Low Attendance Warning",    "Students whose attendance falls below a configurable threshold."),
             (ReportKeys.FypStatus,            "FYP Status Report",         "Final Year Project status overview filterable by department and project status."),
+            (ReportKeys.PaymentSummary,       "Payment Summary",           "Finance-ready payment receipts with month, department, course, level, and semester filters."),
         };
 
         foreach (var (key, name, purpose) in definitions)
@@ -489,7 +501,10 @@ public static class DatabaseSeeder
             // Default role assignments: SuperAdmin, Admin and Faculty can view all reports
             db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "SuperAdmin"));
             db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "Admin"));
-            db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "Faculty"));
+            if (key != ReportKeys.PaymentSummary)
+                db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "Faculty"));
+            if (key == ReportKeys.PaymentSummary)
+                db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "Finance"));
             // Student Transcript is also accessible by students
             if (key == ReportKeys.StudentTranscript)
                 db.Set<ReportRoleAssignment>().Add(new ReportRoleAssignment(report.Id, "Student"));

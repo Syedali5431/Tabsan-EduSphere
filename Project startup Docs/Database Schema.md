@@ -15,6 +15,18 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-21 Update - Plan F Phases 4 and 5
+
+### Plan F Phases 4 and 5 - Payment Reports and Finance UI Surface
+- Implementation Summary:
+	- implemented finance payment reporting and finance navigation/report-access behavior using existing payment receipt, student, enrollment, course, semester, department, and user scope relations,
+	- no table/column/index/constraint or migration changes were required for this delivery.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan F Phase 3 Stage 3.2
 
 ### Plan F Phase 3 Stage 3.2 - Filter-Aware Analytics Behavior

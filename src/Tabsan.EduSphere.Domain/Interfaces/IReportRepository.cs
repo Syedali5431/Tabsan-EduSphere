@@ -106,6 +106,21 @@ public interface IReportRepository
         string? status,
         int? institutionType,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns payment receipt rows with optional time and academic filters.
+    /// </summary>
+    Task<IList<PaymentSummaryReportRow>> GetPaymentSummaryDataAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct = default);
 }
 
 // ── Raw data row types returned by the repository ─────────────────────────────
@@ -230,3 +245,19 @@ public sealed record FypStatusReportRow(
     string Status,
     DateTime ProposedAt,
     int MeetingCount);
+
+public sealed record PaymentSummaryReportRow(
+    Guid ReceiptId,
+    Guid StudentProfileId,
+    string RegistrationNumber,
+    string StudentName,
+    decimal Amount,
+    string Status,
+    DateTime DueDate,
+    DateTime? PaidDate,
+    string DepartmentName,
+    string? CourseCode,
+    string? CourseTitle,
+    string? SemesterName,
+    int CurrentLevel,
+    string LevelLabel);

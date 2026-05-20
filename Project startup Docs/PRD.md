@@ -18,6 +18,26 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-21 - Plan F Phases 4 and 5 Payment Reports and Finance UI Surface
+- Recent request issue:
+  - proceed and complete the remaining finance reporting and UI phases.
+
+#### Plan F Phases 4 and 5 (Implemented)
+- Implementation Summary:
+  - added finance payment summary reporting with time, institution, department, course, semester, and level filters plus Excel/CSV/PDF export,
+  - surfaced payment reports in the portal report center with a dedicated finance report page and finance-focused totals/status presentation,
+  - enabled finance navigation access for Payments, Report Center, Analytics, and Theme Settings while preserving academic-module blocking for finance-only sessions.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+- Testing and result summary:
+  - finance report and navigation scope behavior completed with build and regression authorization checks green.
+
+- Behavior impact:
+  - finance users can now open and export payment reports without gaining access to academic reports,
+  - finance navigation now includes payments, reporting, analytics, and theme personalization surfaces,
+  - existing admin/faculty/student report behavior remains unchanged.
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Behavior
 - Recent request issue:
   - proceed with Stage 3.2 and ensure payment analytics honors course/semester filter scope.

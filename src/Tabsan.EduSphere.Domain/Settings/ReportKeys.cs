@@ -14,4 +14,5 @@ public static class ReportKeys
     public const string StudentTranscript    = "student_transcript";
     public const string LowAttendanceWarning = "low_attendance_warning";
     public const string FypStatus            = "fyp_status";
+    public const string PaymentSummary       = "payment_summary";
 }

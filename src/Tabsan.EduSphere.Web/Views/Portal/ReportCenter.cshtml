@@ -8,7 +8,7 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h2 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Report Center</h2>
-            <small class="text-muted">Generate and export academic reports</small>
+            <small class="text-muted">Generate and export academic and finance reports</small>
         </div>
     </div>
 
@@ -47,6 +47,7 @@
                     "student_transcript" or "student-transcript" => ("bi-journal-text",       Url.Action("ReportTranscript",      "Portal")),
                     "low_attendance_warning"                     => ("bi-exclamation-triangle",Url.Action("ReportLowAttendance",   "Portal")),
                     "fyp_status"         or "fyp-status"         => ("bi-mortarboard",         Url.Action("ReportFypStatus",       "Portal")),
+                    "payment_summary"    or "payment-summary"    => ("bi-cash-stack",          Url.Action("ReportPayments",        "Portal")),
                     _                                           => ("bi-file-earmark-text", "#")
                 };
                 <div class="col-md-6 col-xl-4">

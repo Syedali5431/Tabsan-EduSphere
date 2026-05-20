@@ -226,6 +226,15 @@
 ### Stage 4.4 - Report Access Rules
 - Finance users can view/download payment reports only; existing behavior for other roles remains unchanged.
 
+### Phase 4 Completion Summary (2026-05-21)
+- Implementation Summary:
+  - added `payment_summary` report definition plus finance role assignment and finance-visible report center/menu access,
+  - implemented payment report repository/service/controller flow with year/month/semester/department/course/level/institution filters and Excel/CSV/PDF exports,
+  - added portal payment report page, client bindings, report-center routing, and finance authorization regressions proving finance is allowed for payment reports and denied for academic report endpoints.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+
 ## Phase 5 - UI / UX
 ### Stage 5.1 - Finance Navigation Surface
 - Add Finance section with Payments, Payment Reports, and Analytics entries.
@@ -238,6 +247,15 @@
 
 ### Stage 5.4 - Theme and Configuration Access Boundary
 - Permit theme application for Finance users while blocking broader system-configuration access.
+
+### Phase 5 Completion Summary (2026-05-21)
+- Implementation Summary:
+  - extended finance navigation availability by seeding finance access for `payments`, `report_center`, `analytics`, and `theme_settings`,
+  - added a dedicated payment summary report UI with export actions and finance-ready status/amount presentation while preserving existing payments interaction UX,
+  - kept finance blocked from academic modules through existing portal guards while allowing theme personalization without opening broader system-configuration surfaces.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
 
 ## Phase 6 - Import Sheets
 ### Stage 6.1 - CSV Template Extension

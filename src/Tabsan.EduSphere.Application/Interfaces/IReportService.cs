@@ -61,7 +61,11 @@ public interface IReportService
     Task<TranscriptReportResponse?>    GetStudentTranscriptAsync(TranscriptRequest request, CancellationToken ct = default);
     Task<LowAttendanceReportResponse>  GetLowAttendanceWarningAsync(LowAttendanceRequest request, CancellationToken ct = default);
     Task<FypStatusReportResponse>      GetFypStatusReportAsync(FypStatusRequest request, CancellationToken ct = default);
+    Task<PaymentSummaryReportResponse> GetPaymentSummaryAsync(PaymentSummaryRequest request, CancellationToken ct = default);
 
     /// <summary>Returns an Excel workbook (.xlsx) byte array for the student transcript.</summary>
     Task<byte[]> ExportTranscriptExcelAsync(TranscriptRequest request, CancellationToken ct = default);
+    Task<byte[]> ExportPaymentSummaryExcelAsync(PaymentSummaryRequest request, CancellationToken ct = default);
+    Task<byte[]> ExportPaymentSummaryCsvAsync(PaymentSummaryRequest request, CancellationToken ct = default);
+    Task<byte[]> ExportPaymentSummaryPdfAsync(PaymentSummaryRequest request, CancellationToken ct = default);
 }

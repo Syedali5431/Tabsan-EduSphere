@@ -769,6 +769,121 @@ public sealed class ReportController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Returns finance payment receipts with optional calendar and academic filters.</summary>
+    [HttpGet("payment-summary")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public async Task<IActionResult> GetPaymentSummary(
+        [FromQuery] int? year,
+        [FromQuery] int? month,
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? courseId,
+        [FromQuery] int? levelNumber,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (month is < 1 or > 12)
+            return BadRequest("month must be between 1 and 12.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new PaymentSummaryRequest(
+            year,
+            month,
+            semesterId,
+            scope.DepartmentId,
+            courseId,
+            levelNumber,
+            scope.InstitutionType,
+            GetCurrentTenantId(),
+            GetCurrentCampusId());
+
+        var result = await _reports.GetPaymentSummaryAsync(request, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("payment-summary/export")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public async Task<IActionResult> ExportPaymentSummary(
+        [FromQuery] int? year,
+        [FromQuery] int? month,
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? courseId,
+        [FromQuery] int? levelNumber,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (month is < 1 or > 12)
+            return BadRequest("month must be between 1 and 12.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new PaymentSummaryRequest(year, month, semesterId, scope.DepartmentId, courseId, levelNumber, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportPaymentSummaryExcelAsync(request, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "payment-summary.xlsx");
+    }
+
+    [HttpGet("payment-summary/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public async Task<IActionResult> ExportPaymentSummaryCsv(
+        [FromQuery] int? year,
+        [FromQuery] int? month,
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? courseId,
+        [FromQuery] int? levelNumber,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (month is < 1 or > 12)
+            return BadRequest("month must be between 1 and 12.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new PaymentSummaryRequest(year, month, semesterId, scope.DepartmentId, courseId, levelNumber, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportPaymentSummaryCsvAsync(request, ct);
+        return File(bytes, "text/csv", "payment-summary.csv");
+    }
+
+    [HttpGet("payment-summary/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public async Task<IActionResult> ExportPaymentSummaryPdf(
+        [FromQuery] int? year,
+        [FromQuery] int? month,
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? courseId,
+        [FromQuery] int? levelNumber,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (month is < 1 or > 12)
+            return BadRequest("month must be between 1 and 12.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new PaymentSummaryRequest(year, month, semesterId, scope.DepartmentId, courseId, levelNumber, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportPaymentSummaryPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "payment-summary.pdf");
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────────
 
     private string? GetCurrentUserRole() =>
@@ -784,6 +899,22 @@ public sealed class ReportController : ControllerBase
     {
         var raw = User.FindFirst("institutionType")?.Value;
         return int.TryParse(raw, out var value) ? value : null;
+    }
+
+    private Guid? GetCurrentTenantId()
+    {
+        var raw = User.FindFirstValue("tenant_id")
+                  ?? User.FindFirstValue("tenantId")
+                  ?? User.FindFirstValue("tid");
+        return Guid.TryParse(raw, out var value) ? value : null;
+    }
+
+    private Guid? GetCurrentCampusId()
+    {
+        var raw = User.FindFirstValue("campus_id")
+                  ?? User.FindFirstValue("campusId")
+                  ?? User.FindFirstValue("cid");
+        return Guid.TryParse(raw, out var value) ? value : null;
     }
 
     private async Task<IActionResult?> EnforceInstitutionTypeDepartmentScopeAsync(Guid departmentId, CancellationToken ct)
@@ -1058,6 +1189,11 @@ public sealed class ReportController : ControllerBase
             ReportKeys.SemesterResults
         };
 
+        var financeKeys = new[]
+        {
+            ReportKeys.PaymentSummary
+        };
+
         var institutionSpecific = (InstitutionType)effectiveInstitutionType switch
         {
             InstitutionType.School => BuildSection(
@@ -1101,6 +1237,10 @@ public sealed class ReportController : ControllerBase
             BuildSection("compliance", "Compliance Reports", complianceKeys, reportLookup),
             institutionSpecific
         };
+
+        var financeSection = BuildSection("finance", "Finance Reports", financeKeys, reportLookup);
+        if (financeSection.Reports.Count > 0)
+            sections.Add(financeSection);
 
         return new InstitutionReportSectionsResponse(
             effectiveInstitutionType,

@@ -19,6 +19,22 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-21 - Plan F Phases 4 and 5 Payment Reports and Finance UI Surface
+- Recent request issue:
+  - proceed and complete finance report delivery plus finance UI boundary updates.
+
+#### Plan F Phases 4 and 5 (Implemented)
+- Implementation Summary:
+  - implemented payment summary reporting across repository, application service, API controller, and web client/view layers,
+  - added export paths for Excel/CSV/PDF and a portal `ReportPayments` page integrated into report center routing,
+  - updated seeded sidebar/report access so finance can reach payments, reports, analytics, and theme settings while remaining outside academic modules.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+
+- Stage status: Plan F Phase 4 completed.
+- Phase status: Plan F Phase 5 completed; Plan F execution ready to move to Phase 6.
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Behavior
 - Recent request issue:
   - proceed with Stage 3.2 and ensure payment analytics respects dynamic course/semester filters.

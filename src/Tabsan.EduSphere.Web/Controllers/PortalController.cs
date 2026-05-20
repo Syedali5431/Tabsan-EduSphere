@@ -46,6 +46,7 @@ public class PortalController : Controller
         [nameof(Payments)] = "payments",
         [nameof(Enrollments)] = "enrollments",
         [nameof(ReportCenter)] = "report_center",
+        [nameof(ReportPayments)] = "report_center",
         [nameof(DashboardSettings)] = "dashboard_settings",
         [nameof(DegreeAudit)] = "degree_audit",
         [nameof(GraduationEligibility)] = "graduation_eligibility",
@@ -3712,6 +3713,120 @@ public class PortalController : Controller
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ReportPayments(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        ViewData["Title"] = "Payment Summary Report";
+        var model = new ReportPaymentsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Year = year,
+            Month = month,
+            SemesterId = semesterId,
+            DepartmentId = departmentId,
+            CourseId = courseId,
+            LevelNumber = levelNumber,
+            InstitutionType = selectedInstitutionType
+        };
+        if (!model.IsConnected) return View(model);
+
+        try
+        {
+            model.Semesters = await _api.GetSemestersAsync(ct);
+            model.Departments = await _api.GetDepartmentsAsync(ct);
+            model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
+            model.Courses = await _api.GetCoursesAsync(departmentId, ct);
+
+            if (year.HasValue || month.HasValue || semesterId.HasValue || departmentId.HasValue || courseId.HasValue || levelNumber.HasValue)
+            {
+                model.Report = await _api.GetPaymentSummaryReportAsync(
+                    year,
+                    month,
+                    semesterId,
+                    departmentId,
+                    courseId,
+                    levelNumber,
+                    selectedInstitutionType,
+                    ct);
+            }
+        }
+        catch (Exception ex) { model.Message = ex.Message; }
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportPaymentSummary(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(ReportPayments));
+        try
+        {
+            var bytes = await _api.ExportPaymentSummaryAsync(year, month, semesterId, departmentId, courseId, levelNumber, ResolveReportInstitutionType(institutionType), ct);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "payment-summary.xlsx");
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = $"Export failed: {ex.Message}"; }
+        return RedirectToAction(nameof(ReportPayments), new { year, month, semesterId, departmentId, courseId, levelNumber, institutionType = ResolveReportInstitutionType(institutionType) });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportPaymentSummaryCsv(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(ReportPayments));
+        try
+        {
+            var bytes = await _api.ExportPaymentSummaryCsvAsync(year, month, semesterId, departmentId, courseId, levelNumber, ResolveReportInstitutionType(institutionType), ct);
+            return File(bytes, "text/csv", "payment-summary.csv");
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = $"Export CSV failed: {ex.Message}"; }
+        return RedirectToAction(nameof(ReportPayments), new { year, month, semesterId, departmentId, courseId, levelNumber, institutionType = ResolveReportInstitutionType(institutionType) });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportPaymentSummaryPdf(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(ReportPayments));
+        try
+        {
+            var bytes = await _api.ExportPaymentSummaryPdfAsync(year, month, semesterId, departmentId, courseId, levelNumber, ResolveReportInstitutionType(institutionType), ct);
+            return File(bytes, "application/pdf", "payment-summary.pdf");
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}"; }
+        return RedirectToAction(nameof(ReportPayments), new { year, month, semesterId, departmentId, courseId, levelNumber, institutionType = ResolveReportInstitutionType(institutionType) });
     }
 
     private int? ResolveReportInstitutionType(int? requestedInstitutionType)

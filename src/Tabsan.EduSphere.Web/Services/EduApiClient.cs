@@ -108,7 +108,11 @@ public interface IEduApiClient
     Task<TranscriptWebModel?> GetStudentTranscriptReportAsync(Guid studentProfileId, CancellationToken ct);
     Task<LowAttendanceWebModel?> GetLowAttendanceReportAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
     Task<FypStatusWebModel?> GetFypStatusReportAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
+    Task<PaymentSummaryWebModel?> GetPaymentSummaryReportAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportPaymentSummaryAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportPaymentSummaryCsvAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportPaymentSummaryPdfAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
 
     // Notifications
     Task<List<NotificationItem>> GetNotificationsAsync(CancellationToken ct);
@@ -3388,8 +3392,102 @@ public class EduApiClient : IEduApiClient
         };
     }
 
+    public async Task<PaymentSummaryWebModel?> GetPaymentSummaryReportAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        var qs = BuildPaymentReportQuery(year, month, semesterId, departmentId, courseId, levelNumber, institutionType);
+        var raw = await GetAsync<PaymentSummaryApiDto>($"api/v1/reports/payment-summary{qs}", ct);
+        if (raw is null) return null;
+
+        return new PaymentSummaryWebModel
+        {
+            TotalAmount = raw.TotalAmount,
+            TotalPaid = raw.TotalPaid,
+            TotalPending = raw.TotalPending,
+            TotalReceipts = raw.TotalReceipts,
+            GeneratedAt = raw.GeneratedAt,
+            Rows = raw.Rows?.Select(r => new PaymentSummaryRowItem
+            {
+                ReceiptId = r.ReceiptId,
+                StudentProfileId = r.StudentProfileId,
+                RegistrationNumber = r.RegistrationNumber ?? "",
+                StudentName = r.StudentName ?? "",
+                Amount = r.Amount,
+                Status = r.Status ?? "",
+                DueDate = r.DueDate,
+                PaidDate = r.PaidDate,
+                DepartmentName = r.DepartmentName ?? "",
+                CourseCode = r.CourseCode,
+                CourseTitle = r.CourseTitle,
+                SemesterName = r.SemesterName,
+                CurrentLevel = r.CurrentLevel,
+                LevelLabel = r.LevelLabel ?? ""
+            }).ToList() ?? new()
+        };
+    }
+
     public Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct)
         => GetBytesAsync($"api/v1/reports/student-transcript/export?studentProfileId={studentProfileId}", ct);
+
+    public Task<byte[]> ExportPaymentSummaryAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/payment-summary/export{BuildPaymentReportQuery(year, month, semesterId, departmentId, courseId, levelNumber, institutionType)}", ct);
+
+    public Task<byte[]> ExportPaymentSummaryCsvAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/payment-summary/export/csv{BuildPaymentReportQuery(year, month, semesterId, departmentId, courseId, levelNumber, institutionType)}", ct);
+
+    public Task<byte[]> ExportPaymentSummaryPdfAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/payment-summary/export/pdf{BuildPaymentReportQuery(year, month, semesterId, departmentId, courseId, levelNumber, institutionType)}", ct);
+
+    private static string BuildPaymentReportQuery(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType)
+    {
+        var parts = new List<string>();
+        if (year.HasValue) parts.Add($"year={year.Value}");
+        if (month.HasValue) parts.Add($"month={month.Value}");
+        if (semesterId.HasValue) parts.Add($"semesterId={semesterId.Value}");
+        if (departmentId.HasValue) parts.Add($"departmentId={departmentId.Value}");
+        if (courseId.HasValue) parts.Add($"courseId={courseId.Value}");
+        if (levelNumber.HasValue) parts.Add($"levelNumber={levelNumber.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        return parts.Any() ? "?" + string.Join("&", parts) : string.Empty;
+    }
 
     // Private API DTOs for Phase 12
     private sealed class ReportCatalogApiDto
@@ -3586,6 +3684,34 @@ public class EduApiClient : IEduApiClient
         public string?   Status             { get; set; }
         public DateTime  ProposedAt         { get; set; }
         public int       MeetingCount       { get; set; }
+    }
+
+    private sealed class PaymentSummaryApiDto
+    {
+        public decimal TotalAmount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalPending { get; set; }
+        public int TotalReceipts { get; set; }
+        public DateTime GeneratedAt { get; set; }
+        public List<PaymentSummaryRowApiDto>? Rows { get; set; }
+    }
+
+    private sealed class PaymentSummaryRowApiDto
+    {
+        public Guid ReceiptId { get; set; }
+        public Guid StudentProfileId { get; set; }
+        public string? RegistrationNumber { get; set; }
+        public string? StudentName { get; set; }
+        public decimal Amount { get; set; }
+        public string? Status { get; set; }
+        public DateTime DueDate { get; set; }
+        public DateTime? PaidDate { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? CourseCode { get; set; }
+        public string? CourseTitle { get; set; }
+        public string? SemesterName { get; set; }
+        public int CurrentLevel { get; set; }
+        public string? LevelLabel { get; set; }
     }
 
     // ── Portal / Dashboard Settings ───────────────────────────────────────────

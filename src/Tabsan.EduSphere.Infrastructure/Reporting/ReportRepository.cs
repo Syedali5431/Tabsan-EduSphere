@@ -435,4 +435,105 @@ public sealed class ReportRepository : IReportRepository
                 _db.FypMeetings.Count(m => m.FypProjectId == p.Id))
         ).ToListAsync(ct);
     }
+
+    public async Task<IList<PaymentSummaryReportRow>> GetPaymentSummaryDataAsync(
+        int? year,
+        int? month,
+        Guid? semesterId,
+        Guid? departmentId,
+        Guid? courseId,
+        int? levelNumber,
+        int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct = default)
+    {
+        var receipts = await (
+            from pr in _db.PaymentReceipts
+            join sp in _db.StudentProfiles on pr.StudentProfileId equals sp.Id
+            join u in _db.Users on sp.UserId equals u.Id
+            join dep in _db.Departments on sp.DepartmentId equals dep.Id
+            let reportDate = pr.ConfirmedAt ?? pr.DueDate
+            where (departmentId == null || sp.DepartmentId == departmentId)
+               && (institutionType == null || (int)dep.InstitutionType == institutionType)
+               && (tenantId == null || u.TenantId == tenantId)
+               && (campusId == null || u.CampusId == campusId)
+               && (levelNumber == null || sp.CurrentSemesterNumber == levelNumber)
+               && (year == null || reportDate.Year == year)
+               && (month == null || reportDate.Month == month)
+            orderby reportDate descending
+            select new
+            {
+                pr.Id,
+                pr.StudentProfileId,
+                sp.RegistrationNumber,
+                StudentName = u.Username,
+                pr.Amount,
+                Status = pr.Status.ToString(),
+                pr.DueDate,
+                PaidDate = pr.ConfirmedAt,
+                DepartmentName = dep.Name,
+                CurrentLevel = sp.CurrentSemesterNumber
+            }
+        ).ToListAsync(ct);
+
+        if (receipts.Count == 0)
+            return Array.Empty<PaymentSummaryReportRow>();
+
+        var studentIds = receipts.Select(r => r.StudentProfileId).Distinct().ToList();
+        var enrollments = await (
+            from e in _db.Enrollments
+            join co in _db.CourseOfferings on e.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            join sem in _db.Semesters on co.SemesterId equals sem.Id
+            where studentIds.Contains(e.StudentProfileId)
+               && e.Status == EnrollmentStatus.Active
+               && (semesterId == null || co.SemesterId == semesterId)
+               && (courseId == null || c.Id == courseId)
+            select new
+            {
+                e.StudentProfileId,
+                e.EnrolledAt,
+                CourseCode = c.Code,
+                CourseTitle = c.Title,
+                SemesterName = sem.Name
+            }
+        ).ToListAsync(ct);
+
+        var enrollmentLookup = enrollments
+            .GroupBy(e => e.StudentProfileId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.EnrolledAt).First());
+
+        var levelPrefix = institutionType == (int)Domain.Enums.InstitutionType.School
+            || institutionType == (int)Domain.Enums.InstitutionType.College
+                ? "Class"
+                : "Semester";
+
+        var requireEnrollmentFilter = semesterId.HasValue || courseId.HasValue;
+
+        return receipts
+            .Where(r => !requireEnrollmentFilter || enrollmentLookup.ContainsKey(r.StudentProfileId))
+            .Select(r =>
+            {
+                enrollmentLookup.TryGetValue(r.StudentProfileId, out var enrollment);
+                return new PaymentSummaryReportRow(
+                    r.Id,
+                    r.StudentProfileId,
+                    r.RegistrationNumber,
+                    r.StudentName,
+                    r.Amount,
+                    r.Status,
+                    r.DueDate,
+                    r.PaidDate,
+                    r.DepartmentName,
+                    enrollment?.CourseCode,
+                    enrollment?.CourseTitle,
+                    enrollment?.SemesterName,
+                    r.CurrentLevel,
+                    $"{levelPrefix} {r.CurrentLevel}");
+            })
+            .ToList();
+    }
 }

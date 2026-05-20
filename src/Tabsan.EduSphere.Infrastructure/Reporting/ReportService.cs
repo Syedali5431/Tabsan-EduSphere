@@ -307,7 +307,8 @@ public sealed class ReportService : IReportService
         Guid? studentProfileId,
         int? institutionType,
         Guid? departmentId,
-        Guid? programId)
+        Guid? programId,
+        string? extra = null)
         => string.Join(
             ":",
             "report_summary",
@@ -317,7 +318,8 @@ public sealed class ReportService : IReportService
             studentProfileId?.ToString("N") ?? "none",
             institutionType?.ToString() ?? "none",
             departmentId?.ToString("N") ?? "none",
-            programId?.ToString("N") ?? "none");
+            programId?.ToString("N") ?? "none",
+            extra ?? "none");
 
     // ── Excel Exports ──────────────────────────────────────────────────────────
 
@@ -546,6 +548,69 @@ public sealed class ReportService : IReportService
         return BuildExcelBytes("GPA Report", headers, rows);
     }
 
+    public async Task<byte[]> ExportPaymentSummaryExcelAsync(
+        PaymentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetPaymentSummaryAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Department", "Course", "Level", "Status", "Amount", "Due Date", "Paid Date" };
+        var rows = report.Rows.Select(r => new object[]
+        {
+            r.RegistrationNumber,
+            r.StudentName,
+            r.DepartmentName,
+            string.IsNullOrWhiteSpace(r.CourseCode) ? "-" : $"{r.CourseCode} - {r.CourseTitle}",
+            r.LevelLabel,
+            r.Status,
+            r.Amount,
+            r.DueDate.ToString("yyyy-MM-dd"),
+            r.PaidDate?.ToString("yyyy-MM-dd") ?? "-"
+        }).ToList();
+
+        return BuildExcelBytes("Payment Summary", headers, rows);
+    }
+
+    public async Task<byte[]> ExportPaymentSummaryCsvAsync(
+        PaymentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetPaymentSummaryAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Department", "Course", "Level", "Status", "Amount", "Due Date", "Paid Date" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber,
+            r.StudentName,
+            r.DepartmentName,
+            string.IsNullOrWhiteSpace(r.CourseCode) ? "-" : $"{r.CourseCode} - {r.CourseTitle}",
+            r.LevelLabel,
+            r.Status,
+            r.Amount.ToString("F2"),
+            r.DueDate.ToString("yyyy-MM-dd"),
+            r.PaidDate?.ToString("yyyy-MM-dd") ?? "-"
+        });
+
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportPaymentSummaryPdfAsync(
+        PaymentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetPaymentSummaryAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Dept", "Course", "Level", "Status", "Amount", "Due", "Paid" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber,
+            r.StudentName,
+            r.DepartmentName,
+            string.IsNullOrWhiteSpace(r.CourseCode) ? "-" : r.CourseCode,
+            r.LevelLabel,
+            r.Status,
+            r.Amount.ToString("F2"),
+            r.DueDate.ToString("yyyy-MM-dd"),
+            r.PaidDate?.ToString("yyyy-MM-dd") ?? "-"
+        }).ToList();
+
+        return BuildPdfBytes("Payment Summary", headers, rows);
+    }
+
     // ── Stage 4.2: Student Transcript ─────────────────────────────────────────
 
     public async Task<TranscriptReportResponse?> GetStudentTranscriptAsync(
@@ -609,6 +674,65 @@ public sealed class ReportService : IReportService
             r.DepartmentName, r.SupervisorName, r.Status, r.ProposedAt, r.MeetingCount)).ToList();
 
         return new FypStatusReportResponse(rows, rows.Count, DateTime.UtcNow);
+    }
+
+    public async Task<PaymentSummaryReportResponse> GetPaymentSummaryAsync(
+        PaymentSummaryRequest request, CancellationToken ct = default)
+    {
+        var cacheScope = $"y:{request.Year?.ToString() ?? "none"}|m:{request.Month?.ToString() ?? "none"}|s:{request.SemesterId?.ToString("N") ?? "none"}|d:{request.DepartmentId?.ToString("N") ?? "none"}|c:{request.CourseId?.ToString("N") ?? "none"}|l:{request.LevelNumber?.ToString() ?? "none"}|t:{request.TenantId?.ToString("N") ?? "none"}|cp:{request.CampusId?.ToString("N") ?? "none"}";
+        var cacheKey = BuildSummaryCacheKey(
+            "payment-summary",
+            request.SemesterId,
+            null,
+            null,
+            request.InstitutionType,
+            request.DepartmentId,
+            request.CourseId,
+            cacheScope);
+
+        return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
+        {
+            var raw = await _repo.GetPaymentSummaryDataAsync(
+                request.Year,
+                request.Month,
+                request.SemesterId,
+                request.DepartmentId,
+                request.CourseId,
+                request.LevelNumber,
+                request.InstitutionType,
+                request.TenantId,
+                request.CampusId,
+                ct);
+
+            var rows = raw.Select(r => new PaymentSummaryRow(
+                r.ReceiptId,
+                r.StudentProfileId,
+                r.RegistrationNumber,
+                r.StudentName,
+                r.Amount,
+                r.Status,
+                r.DueDate,
+                r.PaidDate,
+                r.DepartmentName,
+                r.CourseCode,
+                r.CourseTitle,
+                r.SemesterName,
+                r.CurrentLevel,
+                r.LevelLabel)).ToList();
+
+            var totalAmount = rows.Sum(r => r.Amount);
+            var totalPaid = rows
+                .Where(r => string.Equals(r.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+                .Sum(r => r.Amount);
+
+            return new PaymentSummaryReportResponse(
+                rows,
+                totalAmount,
+                totalPaid,
+                totalAmount - totalPaid,
+                rows.Count,
+                DateTime.UtcNow);
+        }, ct);
     }
 
     // ── Private Helpers ────────────────────────────────────────────────────────

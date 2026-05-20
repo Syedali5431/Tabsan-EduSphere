@@ -1362,6 +1362,52 @@ public class FypStatusWebModel
     public DateTime GeneratedAt   { get; set; }
     public List<FypStatusRowItem> Rows { get; set; } = new();
 }
+
+public class PaymentSummaryRowItem
+{
+    public Guid      ReceiptId           { get; set; }
+    public Guid      StudentProfileId    { get; set; }
+    public string    RegistrationNumber  { get; set; } = "";
+    public string    StudentName         { get; set; } = "";
+    public decimal   Amount              { get; set; }
+    public string    Status              { get; set; } = "";
+    public DateTime  DueDate             { get; set; }
+    public DateTime? PaidDate            { get; set; }
+    public string    DepartmentName      { get; set; } = "";
+    public string?   CourseCode          { get; set; }
+    public string?   CourseTitle         { get; set; }
+    public string?   SemesterName        { get; set; }
+    public int       CurrentLevel        { get; set; }
+    public string    LevelLabel          { get; set; } = "";
+}
+
+public class PaymentSummaryWebModel
+{
+    public decimal TotalAmount   { get; set; }
+    public decimal TotalPaid     { get; set; }
+    public decimal TotalPending  { get; set; }
+    public int     TotalReceipts { get; set; }
+    public DateTime GeneratedAt  { get; set; }
+    public List<PaymentSummaryRowItem> Rows { get; set; } = new();
+}
+
+public class ReportPaymentsPageModel
+{
+    public bool             IsConnected      { get; set; }
+    public string?          Message          { get; set; }
+    public int?             Year             { get; set; }
+    public int?             Month            { get; set; }
+    public Guid?            SemesterId       { get; set; }
+    public Guid?            DepartmentId     { get; set; }
+    public Guid?            CourseId         { get; set; }
+    public int?             LevelNumber      { get; set; }
+    public int?             InstitutionType  { get; set; }
+    public List<LookupItem> Semesters        { get; set; } = new();
+    public List<LookupItem> Departments      { get; set; } = new();
+    public List<LookupItem> Courses          { get; set; } = new();
+    public PaymentSummaryWebModel? Report    { get; set; }
+}
+
 public class ReportFypStatusPageModel
 {
     public bool             IsConnected    { get; set; }

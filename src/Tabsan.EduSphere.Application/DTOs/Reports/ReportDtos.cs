@@ -258,3 +258,40 @@ public record FypStatusReportResponse(
     IReadOnlyList<FypStatusRow> Rows,
     int TotalProjects,
     DateTime GeneratedAt);
+
+// ── Plan F Phase 4: Payment Summary Report ───────────────────────────────────
+
+public record PaymentSummaryRequest(
+    int? Year,
+    int? Month,
+    Guid? SemesterId,
+    Guid? DepartmentId,
+    Guid? CourseId,
+    int? LevelNumber,
+    int? InstitutionType,
+    Guid? TenantId,
+    Guid? CampusId);
+
+public record PaymentSummaryRow(
+    Guid ReceiptId,
+    Guid StudentProfileId,
+    string RegistrationNumber,
+    string StudentName,
+    decimal Amount,
+    string Status,
+    DateTime DueDate,
+    DateTime? PaidDate,
+    string DepartmentName,
+    string? CourseCode,
+    string? CourseTitle,
+    string? SemesterName,
+    int CurrentLevel,
+    string LevelLabel);
+
+public record PaymentSummaryReportResponse(
+    IReadOnlyList<PaymentSummaryRow> Rows,
+    decimal TotalAmount,
+    decimal TotalPaid,
+    decimal TotalPending,
+    int TotalReceipts,
+    DateTime GeneratedAt);

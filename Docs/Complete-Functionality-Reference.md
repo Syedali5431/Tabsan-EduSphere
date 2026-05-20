@@ -15,6 +15,25 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-21 Update - Plan F Phases 4 and 5 (Payment Reports and Finance UI Surface)
+
+- Recent request issue:
+  - proceed and complete the finance reporting and UI/navigation stages.
+
+### Plan F Phases 4 and 5 - Payment Reports and Finance UI Surface (Implemented)
+- Implementation Summary:
+  - added payment summary report behavior with finance-ready filters for year, month, semester, department, course, level, and institution type,
+  - added portal payment report browsing/export behavior plus report-center discovery for finance users,
+  - extended finance-visible navigation/config scope to include payments, reports, analytics, and theme settings while keeping finance out of academic report endpoints and academic modules.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+
+- Behavior impact:
+  - finance users now have a dedicated exportable payment report surface,
+  - finance can access payment reports but is still denied on academic report endpoints,
+  - existing academic reporting behavior for other roles remains intact.
+
 ## 2026-05-20 Update - Plan F Phase 3 Stage 3.2 (Filter-Aware Analytics Behavior)
 
 - Recent request issue:

@@ -605,6 +605,47 @@ public class AuthorizationRegressionTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // REPORTS (PAYMENT SUMMARY)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Reports_PaymentSummary_Unauthenticated_Returns401()
+    {
+        using var client = CreateUnauthenticatedClient();
+
+        var response = await client.GetAsync("api/v1/reports/payment-summary");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Reports_PaymentSummary_Finance_ReturnsNotForbiddenOrUnauthorized()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/v1/reports/payment-summary");
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Reports_PaymentSummary_Student_Returns403()
+    {
+        using var client = CreateClient("Student");
+
+        var response = await client.GetAsync("api/v1/reports/payment-summary");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Reports_ResultSummary_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/v1/reports/result-summary");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private static MultipartFormDataContent BuildCourseMaterialUploadContent()
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 test file");

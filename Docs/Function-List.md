@@ -3,6 +3,28 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-21 - Plan F Phases 4 and 5 (Payment Reports and Finance UI Surface)
+
+- Recent request issue:
+  - proceed and complete finance payment reporting plus finance navigation boundary work.
+- Implementation Summary:
+  - added payment summary DTO/service/repository/controller/web methods with export support,
+  - added portal payment report page/action and report-center routing for finance-only reporting visibility,
+  - added finance authorization regression coverage for payment reports and academic report denial.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --no-build --filter "FullyQualifiedName~AuthorizationRegressionTests"` passed (`64/64`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `IReportRepository.GetPaymentSummaryDataAsync` | Queries filtered payment receipt reporting rows with tenant/campus-safe scope and academic dimensions. | `src/Tabsan.EduSphere.Domain/Interfaces/IReportRepository.cs` |
+| `ReportService.GetPaymentSummaryAsync` | Aggregates payment report rows into finance-ready totals and report response shape. | `src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs` |
+| `ReportController.GetPaymentSummary` | Exposes finance/admin/superadmin payment summary report endpoint with optional filters. | `src/Tabsan.EduSphere.API/Controllers/ReportController.cs` |
+| `ReportController.ExportPaymentSummary*` | Streams Excel, CSV, and PDF payment report exports. | `src/Tabsan.EduSphere.API/Controllers/ReportController.cs` |
+| `EduApiClient.GetPaymentSummaryReportAsync` | Retrieves payment summary report data for the portal. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `PortalController.ReportPayments` | Renders and filters the finance payment report page in the portal. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `AuthorizationRegressionTests.Reports_PaymentSummary_*` | Verifies finance-only report authorization behavior for payment vs academic report endpoints. | `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 3 Stage 3.2 (Filter-Aware Analytics Behavior)
 
 - Recent request issue:
