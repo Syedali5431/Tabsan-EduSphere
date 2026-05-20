@@ -611,6 +611,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 5.4 records integrity/migration-safety audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 6 Stage 6.1 (Role-Based Access Review)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 6 Stage 6.1 - Role Access Baseline Verification (Implemented)
+- Implementation Summary:
+  - executed role-based access audit across API/Web controller authorization attributes, role/policy enforcement code, and seed-role SQL artifacts,
+  - audit reported `359` API `[Authorize]` attributes, `369` role/policy enforcement references, `5` policy registration references, and `105` role-seeding script references,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 6.1 records role-access audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:
