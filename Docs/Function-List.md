@@ -3,6 +3,17 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-21 Update - Plan F Phase 7 Documentation Synchronization
+
+- Recent request issue:
+  - update Finance documentation references for Phase 7.
+- Implementation Summary:
+  - completed documentation-only updates for Finance user guidance, training, UAT, and SAT materials,
+  - no new functions, endpoints, or methods were added in Phase 7.
+- Validation Summary:
+  - manual review confirmed the codebase did not gain new callable functions in this phase,
+  - the function inventory remains unchanged.
+
 ## 2026-05-21 - Plan F Phases 4 and 5 (Payment Reports and Finance UI Surface)
 
 - Recent request issue:

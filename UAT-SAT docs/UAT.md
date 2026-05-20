@@ -20,6 +20,18 @@ User acceptance testing confirms the product behaves correctly from an operator 
 11. Test import/export (CSV, PDF, Excel) features for users and timetables.
 12. Run Scripts/01-Schema-Current.sql through Scripts/05-PostDeployment-Checks.sql in order for full deployment validation.
 
+## Finance UAT Steps
+
+1. Sign in as a Finance user.
+2. Confirm Finance navigation shows Payments, Payment Reports, Analytics, and Theme Settings only.
+3. Verify academic modules are blocked from the Finance account.
+4. Open Payments and update an existing receipt in the correct campus scope.
+5. Mark a payment as paid and confirm the paid/update trail fields change.
+6. Open Payment Reports and apply campus, department, course, and class/semester filters.
+7. Export the filtered payment report to PDF and Excel.
+8. Open Finance Analytics and confirm the Paid vs Unpaid chart matches the filtered report totals.
+9. Verify a Finance user with multi-campus assignment can only see receipts for assigned campuses.
+
 ## Tabsan.Lic UAT Steps
 
 1. Start the console tool.
@@ -36,4 +48,5 @@ User acceptance testing confirms the product behaves correctly from an operator 
 - The license payload carries institution-scope flags and the app applies them on activation.
 - Import/export and index maintenance features are validated.
 - User import templates are role-specific and aligned to current onboarding workflow.
+- Finance payment workflows, report filters, and analytics scope are validated.
 - The unit-test build for the main application passed during this session.

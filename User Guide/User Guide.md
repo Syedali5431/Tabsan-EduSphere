@@ -4,7 +4,7 @@
 **Date:** 15 May 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
 **Completion Status:** Phase 38 complete (final separation baseline)  
-**Audience:** Students, Faculty, Admins, Super Admins
+**Audience:** Students, Faculty, Admins, Finance, Super Admins
 
 ---
 
@@ -201,7 +201,47 @@ Upon login you see a personalised dashboard showing:
 
 ---
 
-## 7. Troubleshooting
+## 7. Finance Guide
+
+Finance users can work with payments, payment reports, and payment analytics without accessing academic modules.
+
+### 7.1 Finance Access
+
+Finance users can access:
+- Payments for creating, updating, and confirming payment records
+- Payment Reports for viewing and exporting payment summaries
+- Analytics for payment-status insights only
+- Theme Settings for personal UI preferences
+
+Finance users cannot:
+- Access academic modules such as courses, attendance, results, assignments, or quizzes
+- Delete payment records; use cancellation or reversal workflows instead
+
+### 7.2 Payment Workflow
+
+1. Open **Payments** from the finance navigation area.
+2. Review unpaid and paid records for your assigned campus scope.
+3. Create or update a payment record as needed before finalization.
+4. Mark the payment as paid when cash or confirmed settlement is received.
+5. Use the timestamp and update trail fields to verify the latest payment state.
+
+### 7.3 Payment Reports
+
+1. Open **Payment Reports**.
+2. Select the required filter combination, such as campus, department, course, class, semester, year, or month.
+3. Review the report summary and confirm the displayed student, amount, and payment status data.
+4. Export the report to PDF, Excel, or CSV when required.
+
+### 7.4 Finance Analytics
+
+1. Open **Analytics** from the finance navigation area.
+2. Review the Paid vs Unpaid payment chart.
+3. Apply campus, department, course, and semester/class filters to narrow the results.
+4. Use the chart and legend to compare payment status totals for the selected scope.
+
+---
+
+## 8. Troubleshooting
 
 - If you cannot log in, contact your department admin or SuperAdmin.
 - For license or module issues, see SuperAdmin Guide and License-KeyGen-Guide.md.

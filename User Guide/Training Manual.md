@@ -4,7 +4,7 @@
 **Date:** 15 May 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
 **Completion Status:** Phase 38 complete (final separation baseline)  
-**Audience:** Trainers, IT Staff, Super Admins, Department Coordinators
+**Audience:** Trainers, IT Staff, Finance, Super Admins, Department Coordinators
 
 ---
 
@@ -79,6 +79,7 @@ The Tabsan.Lic tool now supports institution scope (School/College/University) a
 | Session 5 | Faculty | 45 min | FYP scheduling, notifications, results publication |
 | Session 6 | Admins | 45 min | Reporting, student data access, broadcast notifications |
 | Session 7 | Super Admin | 60 min | User management, license, modules, themes, audit |
+| Session 8 | Finance | 60 min | Payments, payment reports, payment analytics, access boundaries |
 | Session 9 | Admin / Faculty | 60 min | Advanced analytics: top performers, trends, comparative metrics, exports |
 | Session 10 | Admins | 45 min | Institution-aware report sections and institution-specific analytics |
 | Session 11 | IT Staff / Super Admin | 30 min | Analytics export pipeline and queued job tracking |
@@ -158,6 +159,43 @@ Each participant should:
 - Understand attendance tracking and thresholds
 - View FYP meeting details
 - Use the AI chatbot for academic queries
+
+---
+
+## 7. Session 8 – Finance: Payments, Reports, Analytics
+
+### Learning Objectives
+- Understand Finance role boundaries and allowed access
+- Create, update, and confirm payment records
+- Generate and export payment reports
+- Review payment analytics with filters
+
+### Agenda
+1. Finance role overview and access boundaries (10 min)
+2. Payment workflow walkthrough (20 min)
+3. Payment report generation and export (15 min)
+4. Payment analytics review and filtering (15 min)
+
+### Exercise 8A – Finance Access Check
+1. Log in as a Finance user.
+2. Confirm the sidebar shows Payments, Payment Reports, Analytics, and Theme Settings.
+3. Confirm academic modules are not visible or accessible.
+
+### Exercise 8B – Payment Update Flow
+1. Open Payments.
+2. Locate an unpaid receipt in the assigned campus scope.
+3. Update the receipt if required.
+4. Mark the payment as paid and confirm the update trail changes.
+
+### Exercise 8C – Report and Analytics Review
+1. Open Payment Reports and apply campus, department, course, and semester/class filters.
+2. Export the report to PDF and Excel.
+3. Open Analytics and verify the Paid vs Unpaid chart updates with the same scope.
+
+### Trainer Notes
+- Stress that Finance users must not access academic modules.
+- Demonstrate that multi-campus assignment affects which payment records are visible.
+- Confirm report filters and chart filters produce matching scoped totals.
 
 ---
 
