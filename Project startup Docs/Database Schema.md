@@ -1,3 +1,25 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.3 (Detection Contract)
+
+- Implementation Summary:
+  - Documented the requirement to define deterministic calculation-mode selection using both license enablement and department context.
+  - No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the detection contract requirement.
+- Validation Summary:
+  - Manual review confirmed the detection contract requirement is documented and no implementation or schema changes were made.
+  - No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.2 (Institute Type Detection)
+
+- Implementation Summary:
+	- Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the detection requirement.
+- Validation Summary:
+	- Manual review confirmed the detection requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
 
 - Implementation Summary:
@@ -1699,7 +1721,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 	- recorded that DeepScan remediation planning was added as phase/stage entries in the consolidated tracker.
 - Validation Summary:
 	- verified all six mandatory documents include this dated synchronization snapshot,
-	- verified no table/column/index/constraint/view/stored-procedure changes were introduced by this request.
+	- verified no table/column/index/constraint/view/stored-procedure/migration changes were introduced by this request.
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 

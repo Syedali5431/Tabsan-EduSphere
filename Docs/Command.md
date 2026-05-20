@@ -1,3 +1,11 @@
+### Plan G Phase 1 Stage 1.2 Institute Type Detection (2026-05-21)
+- Implementation Summary:
+  - Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the detection requirement.
+- Validation Summary:
+  - Manual review confirmed the detection requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 1 Stage 1.1 License Parsing (2026-05-21)
 - Implementation Summary:
   - Documented the requirement to parse enabled institute types (School, College, University) from the license file for future conditional logic.

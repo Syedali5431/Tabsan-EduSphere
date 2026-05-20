@@ -1,3 +1,27 @@
+## Execution Update - 2026-05-21 (Plan G Phase 1 Stage 1.3 Detection Contract)
+
+### Plan G Phase 1 Stage 1.3 - Detection Contract
+- Implementation Summary:
+  - Documented the requirement to define deterministic calculation-mode selection using both license enablement and department context.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the detection contract requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
+## Execution Update - 2026-05-21 (Plan G Phase 1 Stage 1.2 Institute Type Detection)
+
+### Plan G Phase 1 Stage 1.2 - Institute Type Detection
+- Implementation Summary:
+  - Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the detection requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 1 Stage 1.1 License Parsing)
 
 ### Plan G Phase 1 Stage 1.1 - License Parsing

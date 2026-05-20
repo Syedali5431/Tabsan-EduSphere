@@ -38,8 +38,6 @@ Modify result calculation logic so it adapts dynamically based on institute type
 
 ---
 
----
-
 ### Implementation Summary (Plan G Phase 0 Stage 0.1)
 - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
 - No code, schema, or report logic was changed; this stage is a declaration and safety gate only.
@@ -54,6 +52,9 @@ Modify result calculation logic so it adapts dynamically based on institute type
 ### Stage 1.1 - License Parsing
 - Read enabled institute types from license: School, College, University.
 
+### Stage 1.3 - Detection Contract
+- Define deterministic calculation-mode selection using both license enablement and department context.
+
 ---
 
 ### Implementation Summary (Plan G Phase 1 Stage 1.1)
@@ -64,13 +65,15 @@ Modify result calculation logic so it adapts dynamically based on institute type
 - Manual review confirmed the parsing requirement is documented and no implementation or schema changes were made.
 - No build, test, or migration was required; this stage is documentation-only.
 
+### Implementation Summary (Plan G Phase 1 Stage 1.3)
+- Documented the requirement to define deterministic calculation-mode selection using both license enablement and department context.
+- No code, schema, or runtime logic was changed; this stage is documentation-only and sets the detection contract requirement.
+
+### Validation Summary (Plan G Phase 1 Stage 1.3)
+- Manual review confirmed the detection contract requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ---
-
-### Stage 1.2 - Context Resolution
-- Resolve department/institution type context from existing system data.
-
-### Stage 1.3 - Detection Contract
-- Define deterministic calculation-mode selection using both license enablement and department context.
 
 ## Phase 2 - Result Calculation Logic
 ### Stage 2.1 - School Calculation Path

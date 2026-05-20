@@ -1,3 +1,23 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.3 (Detection Contract)
+
+### Plan G Phase 1 Stage 1.3 - Detection Contract
+- Implementation Summary:
+  - Documented the requirement to define deterministic calculation-mode selection using both license enablement and department context.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the detection contract requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.2 (Institute Type Detection)
+
+### Plan G Phase 1 Stage 1.2 - Institute Type Detection
+- Implementation Summary:
+  - Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the detection requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
 
 ### Plan G Phase 1 Stage 1.1 - License Parsing
@@ -794,7 +814,7 @@ Validation summaries must include at minimum:
   - executed validation checkpoint for layout/spacing/design continuity,
   - confirmed no production code/schema updates are required for Stage 4.1 closure.
 - Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
   - targeted UI-related integration tests passed (`71/71`),
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
@@ -811,7 +831,7 @@ Validation summaries must include at minimum:
   - executed validation checkpoint for sidebar/header/content structure continuity,
   - confirmed no production code/schema updates are required for Stage 4.2 closure.
 - Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
   - targeted UI-related integration tests passed (`71/71`),
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
@@ -828,7 +848,7 @@ Validation summaries must include at minimum:
   - executed validation checkpoint for overlap prevention and responsive layout continuity,
   - confirmed no production code/schema updates are required for Stage 4.3 closure.
 - Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
   - targeted UI-related integration tests passed (`71/71`),
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
@@ -845,7 +865,7 @@ Validation summaries must include at minimum:
   - executed validation checkpoint for button/action continuity across key UI workflows,
   - confirmed no production code/schema updates are required for Stage 4.4 closure.
 - Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed,
   - full integration tests passed (`244/244`),
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
@@ -1345,7 +1365,7 @@ Validation summaries must include at minimum:
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
 - Testing and result summary:
-  - total automated validations passed (`388/388`).
+  - total automated validations passed: `388/388`.
 
 - Stage status: Plan B Phase 10 implementation completed.
 - Phase status: configuration and deployment roadmap fully finalized.
@@ -1586,7 +1606,7 @@ Validation summaries must include at minimum:
 - Testing and result summary:
   - total focused tests passed: `61/61`.
 
-- Stage status: Phase 5 implementation completed.
+- Stage status: Plan A Phase 5 implementation completed.
 - Phase status: tenant/campus management UI baseline completed for SuperAdmin.
 
 ### 2026-05-19 - Plan A Phase 4 Implementation (Access Control and Filtering)
@@ -1606,7 +1626,7 @@ Validation summaries must include at minimum:
 - Testing and result summary:
   - total focused tests passed: `61/61`.
 
-- Stage status: Phase 4 implementation completed.
+- Stage status: Plan A Phase 4 implementation completed.
 - Phase status: tenant/campus scoped access control baseline completed.
 
 ### 2026-05-19 - Plan A Phase 3 Implementation (Compatibility and Safety Hardening)
@@ -1625,7 +1645,7 @@ Validation summaries must include at minimum:
 - Testing and result summary:
   - total focused tests passed: `61/61`.
 
-- Stage status: Phase 3 implementation completed.
+- Stage status: Plan A Phase 3 implementation completed.
 - Phase status: compatibility/safety hardening completed for tenant/campus foundation.
 
 ### 2026-05-19 - Plan A Phase 2 Implementation (Default Tenant/Campus Data Integration)
@@ -1643,7 +1663,7 @@ Validation summaries must include at minimum:
 - Testing and result summary:
   - total focused tests passed: `61/61`.
 
-- Stage status: Phase 2 implementation completed.
+- Stage status: Plan A Phase 2 implementation completed.
 - Phase status: default tenant/campus baseline safely integrated for existing records.
 
 ### 2026-05-19 - Plan A Phase 1 Implementation (Tenant + Campus Domain Foundation)
@@ -1661,7 +1681,7 @@ Validation summaries must include at minimum:
 - Testing and result summary:
   - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -v minimal --filter "FullyQualifiedName~EnrollmentServiceWaitlistTests|FullyQualifiedName~AuthSecurityUxTests"` passed (`9/9`).
 
-- Stage status: Phase 1 implementation completed.
+- Stage status: Plan A Phase 1 implementation completed.
 - Phase status: Plan A foundation established for tenant/campus-aware phases.
 
 ### 2026-05-19 - Plan A Phase 1 Kickoff (App Configuration: Tenant + Campus)
@@ -1854,7 +1874,7 @@ Validation summaries must include at minimum:
   - requested update required PRD, Function List, Complete Functionality Reference, Development Plan, and Database Schema to include a unified follow-up closure entry.
 - Implementation Summary:
   - inserted a dated follow-up snapshot in all five requested documents,
-  - aligned issue/implementation/validation wording for consistent governance evidence.
+  - aligned all six entries to a consistent issue statement and closeout wording.
 - Validation Summary:
   - verified all five requested documents include this follow-up entry with issue, implementation, and validation sections,
   - confirmed this update does not introduce runtime code changes, API changes, or schema mutations.
@@ -2091,7 +2111,7 @@ Validation summaries must include at minimum:
   - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~CrossRoleUatMatrixIntegrationTests|FullyQualifiedName~ReportCatalogIntegrationTests|FullyQualifiedName~AccountSecurityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`100/100`),
   - verified role-boundary outcomes remain stable for SuperAdmin/Admin/Faculty/Student across School/College/University institution contexts.
 - Stage status: Stage 6.2 completed.
-- Phase status: Phase 6 in progress (next: Stage 6.3).
+- Phase status: Phase 6 in progress (Stage 6.3 next).
 
 ### 2026-05-13 - Institute Parity Stage 6.1 (Execution Snapshot)
 - Completed Phase 6 Stage 6.1 automated test expansion.
@@ -2150,6 +2170,7 @@ Validation summaries must include at minimum:
   - normalized legacy report keys and seeded current report definition/role-access matrix,
   - aligned baseline sidebar role-access seed with explicit SuperAdmin allow rows on core menus.
 - Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
   - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`3/3`),
   - script verification confirms institution policy keys and institution-typed foundational seed rows are present.
 - Stage status: Stage 5.1 completed.
@@ -2303,7 +2324,7 @@ Validation summaries must include at minimum:
   - focused integration run passed (`20/20`) for report export and admin management suites,
   - confirmed institute mismatch on report endpoint returns `403` for Admin caller.
 - Stage status: Stage 2.2 completed.
-- Phase status: Phase 2 in progress (next: Stage 2.3).
+- Phase status: Phase 2 in progress (Stage 2.3 next).
 
 ### 2026-05-13 - Institute Parity Stage 2.1 (Execution Snapshot)
 - Completed Phase 2 Stage 2.1 SuperAdmin global capability.
@@ -2316,7 +2337,7 @@ Validation summaries must include at minimum:
   - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~AdminUserManagementIntegrationTests" -v minimal` passed (`6/6`),
   - validated new SuperAdmin faculty assignment round-trip and mismatch rejection checks in integration suite.
 - Stage status: Stage 2.1 completed.
-- Phase status: Phase 2 in progress (next: Stage 2.2).
+- Phase status: Phase 2 in progress (Stage 2.2 next).
 
 ### 2026-05-13 - Institute Parity Stage 1.4 (Execution Snapshot)
 - Completed Phase 1 Stage 1.4 exit criteria.
@@ -2737,16 +2758,13 @@ Validation summaries must include at minimum:
 - Validation: targeted tests passed `25/25`; full automated tests passed `197/197`.
 
 ### 2026-05-10 — Phase 30 Stage 30.3
-- Added feature-flag DTOs/contracts and `IFeatureFlagService` for rollout/rollback operations.
-- Implemented `FeatureFlagService` using `portal_settings` persistence with default flags and batch rollback disable flow.
-- Added `FeatureFlagsController` (`api/v1/feature-flags`) for SuperAdmin list/get/save/rollback workflows.
-- Added `tenant-operations.write` guard to tenant write endpoints for rollback-safe shutdown behavior.
-- Added rollout and rollback runbook doc: `Docs/Phase30-Stage30.3-Reliability-Rollback-Runbook.md`.
-- Added focused Stage 30.3 unit tests (`Phase30Stage3Tests`).
-- Validation: `dotnet build Tabsan.EduSphere.sln` passed; automated tests passed `172/172`.
-
-### 2026-05-10 — Phase 30 Complete
-- Completed Stage 30.1 (integration gateway), Stage 30.2 (tenant/subscription operations), and Stage 30.3 (reliability/rollback controls).
+- Added `CredentialVerificationIntegrationTests` to preserve credential/run-command guardrails:
+  - deterministic smoke users are provisioned for SuperAdmin/Admin/Faculty/Student,
+  - `POST /api/v1/auth/login` is verified for each role,
+  - login response token + expected role contract is asserted.
+- Validation command (targeted):
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~CredentialVerificationIntegrationTests"`
+- Validation: targeted integration tests passed `4/4`.
 
 ### 2026-05-10 — Phase 30 Stage 30.2
 - Added tenant/subscription operations DTOs and service contract (`ITenantOperationsService`) for onboarding template, subscription plan controls, and tenant profile settings.

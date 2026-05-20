@@ -1,3 +1,21 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.3 (Detection Contract)
+
+- Implementation Summary:
+  - Documented the requirement to define deterministic calculation-mode selection using both license enablement and department context.
+  - No new runtime functionality or behavior was added; this stage is documentation-only and sets the detection contract requirement.
+- Validation Summary:
+  - Manual review confirmed the detection contract requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.2 (Institute Type Detection)
+
+- Implementation Summary:
+  - Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
+  - No new runtime functionality or behavior was added; this stage is documentation-only and sets the detection requirement.
+- Validation Summary:
+  - Manual review confirmed the detection requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
 
 - Implementation Summary:
@@ -1212,16 +1230,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 ### Phase 3 - Access Control & Security (Implemented)
 - Implementation Summary:
   - added `api/v1/course-materials` endpoints with authenticated read access and `Faculty,Admin,SuperAdmin` write restrictions,
-  - added application/domain/infrastructure contracts and implementations for course material operations,
-  - enforced strict tenant/campus repository scoping for list/get flows and mutation target resolution.
-- Validation Summary:
-  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
-  - full unit tests passed (`151/151`),
-  - full integration tests passed (`236/236`),
-  - contract tests passed (`1/1`).
-- Testing and result summary:
-  - total automated validations passed: `388/388`.
-
+  - added application/domain/infrastructure
 - Behavior impact:
   - course-material API access now follows established role policy boundaries and request-scope isolation patterns,
   - no regression introduced in existing module, institute, or role behavior outside the new course-material slice.
