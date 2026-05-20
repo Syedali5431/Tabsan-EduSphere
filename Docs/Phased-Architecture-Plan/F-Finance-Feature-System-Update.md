@@ -344,11 +344,43 @@
 ### Stage 8.1 - Schema Script Updates
 - Update DB scripts for Finance role, multi-campus support, mobile number, and payments enhancements.
 
+#### Phase 8 - DB Script Synchronization Stage 8.1 (2026-05-21)
+- Implementation Summary:
+  - synchronized the standard and clean seed scripts to include Finance role and payment-summary report coverage,
+  - kept schema creation additive and idempotent by reusing existing tables and role/report seed guards.
+- Validation Summary:
+  - manual script review confirmed the Finance seed/report additions are present in both deployment paths,
+  - no destructive schema changes were introduced in this stage.
+
 ### Stage 8.2 - Idempotency and Conflict Guarding
 - Ensure scripts remain idempotent and free from duplication/conflict.
 
+#### Phase 8 - DB Script Synchronization Stage 8.2 (2026-05-21)
+- Implementation Summary:
+  - verified the SQL seed scripts use `MERGE`/`WHERE NOT EXISTS` guards to avoid duplication on rerun,
+  - confirmed the Finance additions do not introduce conflicting or duplicate seed rows.
+- Validation Summary:
+  - manual script review confirmed the updates are replay-safe,
+  - no code execution was required for this documentation checkpoint.
+
 ### Stage 8.3 - Post-Deployment Verification Alignment
 - Align verification scripts/checks with new finance-related schema and seed behavior.
+
+#### Phase 8 - DB Script Synchronization Stage 8.3 (2026-05-21)
+- Implementation Summary:
+  - extended the post-deployment validation scripts to check Finance role presence and payment-summary report access,
+  - aligned deployment verification with the updated Finance seed behavior.
+- Validation Summary:
+  - manual review confirmed the new checks are additive and read-only,
+  - no runtime behavior change was introduced.
+
+### Phase 8 Completion Summary (2026-05-21)
+- Implementation Summary:
+  - completed Plan F Phase 8 DB script synchronization for Finance role and payment-summary reporting coverage,
+  - no schema-breaking or destructive changes were introduced.
+- Validation Summary:
+  - standard deployment scripts were reviewed for repeatability and verification alignment,
+  - repository synchronization remains required after this phase closeout.
 
 ## Phase 9 - Conflict Prevention (Critical)
 ### Stage 9.1 - Permission Isolation

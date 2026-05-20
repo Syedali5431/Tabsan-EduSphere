@@ -62,6 +62,21 @@ After each completed stage, also update these files (where applicable) with `Imp
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan F Phase 8 DB Script Synchronization Checkpoint (2026-05-21)
+- Recent request issue:
+  - update the standard deployment scripts so Finance and payment-summary behavior is seeded and verified consistently.
+- Implementation Summary:
+  - added Finance role seeding and payment-summary report access into the standard and clean seed scripts,
+  - extended post-deployment checks to verify Finance role presence and payment-summary report role access,
+  - recorded Phase 8 as an additive, idempotent script-sync pass.
+- Validation Summary:
+  - script review confirmed the changes are repeatable and non-destructive,
+  - no automated test execution was required for this script synchronization pass.
+- Status of Checks Done:
+  - Plan F Phase 8 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
 ### Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Checkpoint (2026-05-20)

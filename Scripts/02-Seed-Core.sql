@@ -68,6 +68,7 @@ USING (
     UNION ALL SELECT N'Admin', N'Department-level admin - manages users and courses.', CAST(1 AS bit)
     UNION ALL SELECT N'Faculty', N'Teaches courses and manages academic content.', CAST(1 AS bit)
     UNION ALL SELECT N'Student', N'Enrolled student - accesses course and academic content.', CAST(1 AS bit)
+    UNION ALL SELECT N'Finance', N'Finance and fee workflow access.', CAST(1 AS bit)
 ) AS src
 ON tgt.[Name] = src.[Name]
 WHEN MATCHED THEN
@@ -220,7 +221,8 @@ INSERT INTO @Reports ([Key], [Name], [Purpose]) VALUES
 (N'semester_results', N'Semester Results', N'Full published result set for a selected semester with optional department filter.'),
 (N'student_transcript', N'Student Transcript', N'Full academic record for a selected student including all result components.'),
 (N'low_attendance_warning', N'Low Attendance Warning', N'Students whose attendance falls below a configurable threshold.'),
-(N'fyp_status', N'FYP Status Report', N'Final Year Project status overview filterable by department and project status.');
+(N'fyp_status', N'FYP Status Report', N'Final Year Project status overview filterable by department and project status.'),
+(N'payment_summary', N'Payment Summary', N'Payment receipt summary for finance workflows with campus, department, course, class, semester, year, and month filters.');
 
 INSERT INTO [report_definitions] ([Id], [Name], [Purpose], [Key], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT NEWID(), r.[Name], r.[Purpose], r.[Key], 1, @Now, NULL, 0, NULL
@@ -245,6 +247,17 @@ WHERE d.[Key] IN (
       FROM [report_role_assignments] x
       WHERE x.[ReportDefinitionId] = d.[Id] AND x.[RoleName] = rr.[RoleName]
   );
+
+INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
+SELECT NEWID(), d.[Id], rr.[RoleName], @Now, NULL
+FROM [report_definitions] d
+CROSS APPLY (VALUES (N'SuperAdmin'), (N'Admin'), (N'Finance')) rr([RoleName])
+WHERE d.[Key] = N'payment_summary'
+    AND NOT EXISTS (
+            SELECT 1
+            FROM [report_role_assignments] x
+            WHERE x.[ReportDefinitionId] = d.[Id] AND x.[RoleName] = rr.[RoleName]
+    );
 
 INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
 SELECT NEWID(), d.[Id], N'Student', @Now, NULL

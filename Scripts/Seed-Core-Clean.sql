@@ -288,7 +288,8 @@ BEGIN
     (N'attendance_summary', N'Attendance Summary', N'Attendance metrics by student and class.'),
     (N'result_summary', N'Result Summary', N'Published results and grade summaries.'),
     (N'gpa_report', N'GPA & CGPA Report', N'GPA and CGPA analytics by cohort.'),
-    (N'student_transcript', N'Student Transcript', N'Complete academic transcript per student.');
+    (N'student_transcript', N'Student Transcript', N'Complete academic transcript per student.'),
+    (N'payment_summary', N'Payment Summary', N'Payment receipt summary for finance workflows.');
 
     INSERT INTO [report_definitions] ([Id], [Name], [Purpose], [Key], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT NEWID(), r.[Name], r.[Purpose], r.[Key], 1, @Now, NULL, 0, NULL
@@ -319,6 +320,18 @@ BEGIN
               WHERE x.[ReportDefinitionId] = d.[Id]
                 AND x.[RoleName] = N'Student'
           );
+
+                INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
+                SELECT NEWID(), d.[Id], rr.[RoleName], @Now, NULL
+                FROM [report_definitions] d
+                CROSS APPLY (VALUES (N'SuperAdmin'), (N'Admin'), (N'Finance')) rr([RoleName])
+                WHERE d.[Key] = N'payment_summary'
+                    AND NOT EXISTS (
+                            SELECT 1
+                            FROM [report_role_assignments] x
+                            WHERE x.[ReportDefinitionId] = d.[Id]
+                                AND x.[RoleName] = rr.[RoleName]
+                    );
     END;
 END;
 

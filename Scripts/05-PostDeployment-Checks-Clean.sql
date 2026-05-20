@@ -61,6 +61,13 @@ SELECT
     CAST((SELECT COUNT(1) FROM [roles] WHERE [Name] IN (SELECT [Name] FROM @RequiredRoles)) AS NVARCHAR(20)),
     N'6';
 
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'Roles.FinancePresent',
+    CASE WHEN EXISTS (SELECT 1 FROM [roles] WHERE [Name] = N'Finance') THEN 1 ELSE 0 END,
+    CAST((SELECT COUNT(1) FROM [roles] WHERE [Name] = N'Finance') AS NVARCHAR(20)),
+    N'1';
+
 /* 2) SuperAdmin-only startup user baseline */
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT
@@ -182,6 +189,32 @@ BEGIN
         ) THEN 1 ELSE 0 END,
         CAST((SELECT COUNT(1) FROM [portal_settings] WHERE [Key] IN (SELECT [Key] FROM @RequiredPortalKeys)) AS NVARCHAR(20)),
         N'7';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'PaymentSummaryReportPresent',
+        CASE WHEN EXISTS (SELECT 1 FROM [report_definitions] WHERE [Key] = N'payment_summary') THEN 1 ELSE 0 END,
+        CAST((SELECT COUNT(1) FROM [report_definitions] WHERE [Key] = N'payment_summary') AS NVARCHAR(20)),
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'PaymentSummaryReportFinanceAssignmentPresent',
+        CASE WHEN EXISTS (
+            SELECT 1
+            FROM [report_definitions] rd
+            INNER JOIN [report_role_assignments] rra ON rra.[ReportDefinitionId] = rd.[Id]
+            WHERE rd.[Key] = N'payment_summary'
+              AND rra.[RoleName] = N'Finance'
+        ) THEN 1 ELSE 0 END,
+        CAST((
+            SELECT COUNT(1)
+            FROM [report_definitions] rd
+            INNER JOIN [report_role_assignments] rra ON rra.[ReportDefinitionId] = rd.[Id]
+            WHERE rd.[Key] = N'payment_summary'
+              AND rra.[RoleName] = N'Finance'
+        ) AS NVARCHAR(20)),
+        N'1';
 END;
 
 /* 7) Report functionality permissions */

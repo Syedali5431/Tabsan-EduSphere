@@ -47,6 +47,10 @@ FROM __EFMigrationsHistory;
 SELECT 'RoleCount' AS [CheckName], COUNT(1) AS [Value]
 FROM roles;
 
+SELECT 'FinanceRoleCount' AS [CheckName], COUNT(1) AS [Value]
+FROM roles
+WHERE [Name] = N'Finance';
+
 SELECT 'ModuleCount' AS [CheckName], COUNT(1) AS [Value]
 FROM modules;
 
@@ -121,6 +125,16 @@ SELECT
 SELECT
 	'UsersPhoneNumberMaxLength' AS [CheckName],
 	ISNULL(COL_LENGTH('users', 'PhoneNumber'), 0) AS [Value];
+
+SELECT 'PaymentSummaryReportCount' AS [CheckName], COUNT(1) AS [Value]
+FROM report_definitions
+WHERE [Key] = N'payment_summary';
+
+SELECT 'PaymentSummaryReportFinanceRoleAssignmentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM report_definitions rd
+INNER JOIN report_role_assignments rra ON rra.ReportDefinitionId = rd.Id
+WHERE rd.[Key] = N'payment_summary'
+  AND rra.[RoleName] = N'Finance';
 
 SELECT 'UsersInstitutionTypeAssignedCount' AS [CheckName], COUNT(1) AS [Value]
 FROM users

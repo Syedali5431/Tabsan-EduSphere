@@ -31,6 +31,18 @@ Validation summaries must include at minimum:
 - Stage status: Plan F Phase 7 completed.
 - Phase status: Plan F execution ready to proceed to Phase 8.
 
+## 2026-05-21 Update - Plan F Phase 8 DB Script Synchronization
+
+### Plan F Phase 8 - DB Script Synchronization
+- Implementation Summary:
+  - aligned the ASP.NET development plan with the SQL deployment script updates for Finance role and payment-summary coverage,
+  - no application runtime behavior or API surface was changed.
+- Validation Summary:
+  - manual review confirmed the script sync is additive and replay-safe,
+  - no build or test execution was required for this SQL-only pass.
+- Stage status: Plan F Phase 8 completed.
+- Phase status: Plan F execution ready to proceed to Phase 9.
+
 ### 2026-05-21 - Plan F Phases 4 and 5 Payment Reports and Finance UI Surface
 - Recent request issue:
   - proceed and complete finance report delivery plus finance UI boundary updates.

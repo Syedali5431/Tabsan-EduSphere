@@ -27,6 +27,18 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-21 Update - Plan F Phase 8 DB Script Synchronization
+
+### Plan F Phase 8 - DB Script Synchronization
+- Implementation Summary:
+	- synchronized the standard and clean seed/check scripts to include Finance role seeding and payment-summary report validation,
+	- no table/column/index/constraint or migration changes were introduced.
+- Validation Summary:
+	- manual review confirmed the database-related script updates are additive and idempotent,
+	- no database migrations or automated schema tests were required.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan F Phases 4 and 5
 
 ### Plan F Phases 4 and 5 - Payment Reports and Finance UI Surface
