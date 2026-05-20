@@ -1,0 +1,47 @@
+# Plan I: keep repository files intact, but exclude non-runtime artifacts from Docker build context.
+
+# VCS and editor
+.git
+.gitignore
+.vs/
+.vscode/
+.idea/
+
+# Build outputs
+**/bin/
+**/obj/
+artifacts/
+
+# Tests and load scripts
+tests/
+
+# Documentation and planning assets
+Docs/
+Project startup Docs/
+UAT-SAT docs/
+User Guide/
+User Import Sheets/
+PPT/
+New Enhancements/
+Artifacts/
+front-end-fixing.md
+DBconnection.md
+README.md
+**/*.md
+
+# Runtime-irrelevant scripts and SQL packs
+Scripts/
+
+# Temporary/debug/backup content
+**/*.log
+**/*.tmp
+**/*.old
+**/*.bak
+
+# Local-only config and launch settings
+**/appsettings.Local.json
+**/launchSettings.json
+
+# OS noise
+**/.DS_Store
+**/Thumbs.db

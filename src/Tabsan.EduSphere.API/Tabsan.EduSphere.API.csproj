@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>tabsan-edusphere-api-dev</UserSecretsId>
+    <!-- Plan I: preserve API publish continuity when transitive project content introduces duplicate appsettings files. -->
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +35,30 @@
   <ItemGroup>
     <ProjectReference Include="..\Tabsan.EduSphere.Application\Tabsan.EduSphere.Application.csproj" />
     <ProjectReference Include="..\Tabsan.EduSphere.Infrastructure\Tabsan.EduSphere.Infrastructure.csproj" />
-    <ProjectReference Include="..\Tabsan.EduSphere.BackgroundJobs\Tabsan.EduSphere.BackgroundJobs.csproj" />
+    <ProjectReference Include="..\Tabsan.EduSphere.BackgroundJobs\Tabsan.EduSphere.BackgroundJobs.csproj">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
+
+  <!-- Plan I: keep repository artifacts on disk, but do not copy them to build/publish output. -->
+  <ItemGroup>
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="..\..\Docs\**\*;..\..\Project startup Docs\**\*;..\..\UAT-SAT docs\**\*;..\..\Artifacts\**\*;..\..\tests\**\*;..\..\Scripts\**\*;..\..\User Guide\**\*;..\..\User Import Sheets\**\*;..\..\PPT\**\*;..\..\New Enhancements\**\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Plan I: API publish should not carry transitive BackgroundJobs appsettings files. -->
+  <Target Name="PlanI_FilterBackgroundJobsAppSettingsFromApiPublish" BeforeTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('Tabsan.EduSphere.BackgroundJobs\\appsettings'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>

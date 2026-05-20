@@ -11,4 +11,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- Plan I: exclude non-runtime repository content from publish output without deleting source files. -->
+  <ItemGroup>
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="..\..\Docs\**\*;..\..\Project startup Docs\**\*;..\..\UAT-SAT docs\**\*;..\..\Artifacts\**\*;..\..\tests\**\*;..\..\Scripts\**\*;..\..\User Guide\**\*;..\..\User Import Sheets\**\*;..\..\PPT\**\*;..\..\New Enhancements\**\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

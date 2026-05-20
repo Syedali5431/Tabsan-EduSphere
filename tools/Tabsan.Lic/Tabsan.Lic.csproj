@@ -16,4 +16,16 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
+
+  <!-- Plan I: exclude non-runtime docs/scratch/script files from license module publish artifacts only. -->
+  <ItemGroup>
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;**\*.design;**\*.draft;appsettings.Local.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="..\..\Docs\**\*;..\..\Project startup Docs\**\*;..\..\UAT-SAT docs\**\*;..\..\Artifacts\**\*;..\..\tests\**\*;..\..\Scripts\**\*;..\..\User Guide\**\*;..\..\User Import Sheets\**\*;..\..\PPT\**\*;..\..\New Enhancements\**\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 </Project>

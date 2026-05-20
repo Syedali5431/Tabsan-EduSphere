@@ -17,4 +17,16 @@
     <ProjectReference Include="..\Tabsan.EduSphere.Application\Tabsan.EduSphere.Application.csproj" />
     <ProjectReference Include="..\Tabsan.EduSphere.Infrastructure\Tabsan.EduSphere.Infrastructure.csproj" />
   </ItemGroup>
+
+  <!-- Plan I: keep docs/tests/scripts in repo, exclude them from build and publish artifacts. -->
+  <ItemGroup>
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="..\..\Docs\**\*;..\..\Project startup Docs\**\*;..\..\UAT-SAT docs\**\*;..\..\Artifacts\**\*;..\..\tests\**\*;..\..\Scripts\**\*;..\..\User Guide\**\*;..\..\User Import Sheets\**\*;..\..\PPT\**\*;..\..\New Enhancements\**\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 </Project>
