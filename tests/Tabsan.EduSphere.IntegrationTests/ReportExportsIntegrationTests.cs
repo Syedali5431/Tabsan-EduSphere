@@ -66,6 +66,8 @@ public class ReportExportsIntegrationTests
     [InlineData("api/v1/reports/quiz-summary/export", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "quiz-summary.xlsx")]
     [InlineData("api/v1/reports/quiz-summary/export/csv", "text/csv", "quiz-summary.csv")]
     [InlineData("api/v1/reports/quiz-summary/export/pdf", "application/pdf", "quiz-summary.pdf")]
+    [InlineData("api/v1/reports/payment-summary/export", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "payment-summary.xlsx")]
+    [InlineData("api/v1/reports/payment-summary/export/pdf", "application/pdf", "payment-summary.pdf")]
     public async Task ReportExports_WithSuperAdmin_ReturnExpectedFileMetadata(string route, string expectedContentType, string expectedFileName)
     {
         // Final-Touches Phase 32 Stage 32.2 — export endpoint guardrails for content-type and filename contracts.
