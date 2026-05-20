@@ -106,6 +106,13 @@ public record CreatePaymentReceiptCommand(
     DateTime DueDate
 );
 
+public record UpdatePaymentReceiptCommand(
+    decimal Amount,
+    string Description,
+    DateTime DueDate,
+    string? Notes = null
+);
+
 public record PaymentReceiptDto(
     Guid Id,
     Guid StudentProfileId,

@@ -123,6 +123,17 @@
 ### Stage 2.1 - Finance Capability Scope
 - Allow Finance role to add payments, edit payments, and mark payments as paid.
 
+#### Stage 2.1 - Finance Capability Scope (2026-05-20)
+- Implementation Summary:
+  - introduced finance-edit capability for payment receipts through a new update command and API endpoint,
+  - allowed Finance role to update actionable receipts before finalization while preserving existing create/confirm/cancel actions,
+  - surfaced update-trail visibility in the payments UI to support finance review workflows.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
 ### Stage 2.2 - Finance Restriction Scope
 - Disallow payment deletion and block access to academic modules.
 

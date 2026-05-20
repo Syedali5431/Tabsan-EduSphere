@@ -15,6 +15,20 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Plan F Phase 2 Stage 2.1
+
+### Plan F Phase 2 Stage 2.1 - Finance Payment Edit Capability
+- Implementation Summary:
+	- added finance payment edit behavior at the application/domain/API/UI layers,
+	- no table/column/index/constraint shape changes were introduced.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+	- `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan F Phase 0 Stage Execution
 
 ### Stage 0.1 - Baseline Safety Verification

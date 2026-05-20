@@ -301,6 +301,7 @@ public interface IEduApiClient
     Task<PaymentReceiptPageItem> GetAllPaymentsAsync(int page, int pageSize, CancellationToken ct);
     Task<PaymentReceiptPageItem> GetMyPaymentsAsync(int page, int pageSize, CancellationToken ct);
     Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string description, DateTime dueDate, CancellationToken ct);
+    Task UpdatePaymentAsync(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, CancellationToken ct);
     Task ConfirmPaymentAsync(Guid receiptId, CancellationToken ct);
     Task CancelPaymentAsync(Guid receiptId, CancellationToken ct);
     Task SubmitProofAsync(Guid receiptId, string proofNote, CancellationToken ct);
@@ -2884,6 +2885,9 @@ public class EduApiClient : IEduApiClient
 
     public Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string description, DateTime dueDate, CancellationToken ct)
         => PostAsync<object, object>("api/v1/payments", new { studentProfileId, amount, description, dueDate }, ct);
+
+    public Task UpdatePaymentAsync(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/payments/{receiptId}", new { amount, description, dueDate, notes }, ct);
 
     public Task ConfirmPaymentAsync(Guid receiptId, CancellationToken ct)
         => PostAsync<string, object>($"api/v1/payments/{receiptId}/confirm", string.Empty, ct);

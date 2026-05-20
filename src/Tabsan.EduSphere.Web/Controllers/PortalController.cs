@@ -2945,6 +2945,20 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments));
     }
 
+    // Final-Touches Phase 7 Stage 7.2 — edit receipt (Admin/Finance)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, CancellationToken ct)
+    {
+        try
+        {
+            await _api.UpdatePaymentAsync(receiptId, amount, description, dueDate, notes, ct);
+            TempData["PortalMessage"] = "Receipt updated successfully.";
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Payments));
+    }
+
     // Final-Touches Phase 7 Stage 7.2 — confirm payment (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]

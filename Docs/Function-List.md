@@ -3,6 +3,29 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 2 Stage 2.1 (Finance Capability Scope)
+
+- Recent request issue:
+  - proceed with Stage 2.1 and add Finance payment editing support.
+- Implementation Summary:
+  - added update command and endpoint for finance-managed payment edits,
+  - added web client/controller action flow and payments UI edit controls,
+  - retained the existing create/confirm/cancel payment actions.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `PaymentReceipt.UpdateDetails` | Updates actionable receipt fields while preserving audit trail and blocking edits on Paid/Cancelled receipts. | `src/Tabsan.EduSphere.Domain/StudentLifecycle/PaymentReceipt.cs` |
+| `IStudentLifecycleService.UpdatePaymentReceiptAsync` | Exposes finance receipt edit capability through the application contract. | `src/Tabsan.EduSphere.Application/Interfaces/IStudentLifecycleService.cs` |
+| `StudentLifecycleService.UpdatePaymentReceiptAsync` | Applies finance receipt edits, persists them, and notifies the student of the update. | `src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs` |
+| `PaymentReceiptController.Update` | API endpoint for finance/admin users to edit actionable payment receipts. | `src/Tabsan.EduSphere.API/Controllers/PaymentReceiptController.cs` |
+| `EduApiClient.UpdatePaymentAsync` | Web client method that calls the finance payment edit endpoint. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+| `PortalController.UpdatePayment` | Web action that posts finance payment edits from the payments page. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+
 ## 2026-05-20 - Plan F Phase 1 Stage 1.4 (Payment Record State Model)
 
 - Recent request issue:

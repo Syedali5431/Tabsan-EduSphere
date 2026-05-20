@@ -457,6 +457,33 @@ public class StudentLifecycleService : IStudentLifecycleService
         return MapPaymentReceipt(receipt, student?.RegistrationNumber ?? "");
     }
 
+    public async Task<PaymentReceiptDto> UpdatePaymentReceiptAsync(
+        Guid receiptId,
+        Guid financeUserId,
+        UpdatePaymentReceiptCommand cmd,
+        CancellationToken ct = default)
+    {
+        var receipt = await _repository.GetReceiptByIdAsync(receiptId, ct);
+        if (receipt == null)
+            throw new KeyNotFoundException($"Receipt {receiptId} not found.");
+
+        receipt.UpdateDetails(cmd.Amount, cmd.Description, cmd.DueDate, cmd.Notes);
+        await _repository.UpdateReceiptAsync(receipt, ct);
+
+        var student = await _repository.GetByIdAsync(receipt.StudentProfileId, ct);
+        if (student is not null)
+        {
+            await _notifications.SendSystemAsync(
+                title:            "Fee Receipt Updated",
+                body:             $"A fee receipt of {cmd.Amount:N2} for '{cmd.Description}' was updated.",
+                type:             NotificationType.System,
+                recipientUserIds: new[] { student.UserId },
+                ct:               ct);
+        }
+
+        return MapPaymentReceipt(receipt, student?.RegistrationNumber ?? "");
+    }
+
     public async Task<PaymentReceiptPageDto> GetActiveReceiptsByStudentAsync(
         Guid studentProfileId,
         int page,

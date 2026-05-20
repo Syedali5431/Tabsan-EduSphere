@@ -86,6 +86,19 @@ public class PaymentReceipt : AuditableEntity
         Touch();
     }
 
+    /// <summary>Finance edits receipt details while it is still actionable.</summary>
+    public void UpdateDetails(decimal amount, string description, DateTime dueDate, string? notes = null)
+    {
+        if (Status is PaymentReceiptStatus.Paid or PaymentReceiptStatus.Cancelled)
+            throw new InvalidOperationException("Paid or Cancelled receipts cannot be edited.");
+
+        Amount = amount;
+        Description = description;
+        DueDate = dueDate;
+        Notes = notes;
+        Touch();
+    }
+
     /// <summary>Finance confirms payment received, marking the receipt as Paid (final state).</summary>
     public void ConfirmPayment(Guid confirmedByUserId, string? notes = null)
     {

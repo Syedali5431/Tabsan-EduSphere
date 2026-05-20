@@ -47,6 +47,32 @@ public class PaymentReceiptController : ControllerBase
         var receipt = await _service.CreatePaymentReceiptAsync(userId, cmd, ct);
         return CreatedAtAction(nameof(GetById), new { id = receipt.Id }, receipt);
     }
+
+    // ── PUT /api/v1/payments/{id} ───────────────────────────────────────────
+
+    /// <summary>Finance edits an actionable receipt before it is finalized.</summary>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentReceiptCommand cmd, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Forbid();
+
+        try
+        {
+            var receipt = await _service.UpdatePaymentReceiptAsync(id, userId, cmd, ct);
+            return Ok(receipt);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(new { message = e.Message });
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+    }
+
     // ── GET /api/v1/payments ──────────────────────────────────────────────
 
     // Final-Touches Phase 7 Stage 7.2 — all receipts for admin view

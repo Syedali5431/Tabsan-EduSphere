@@ -122,6 +122,13 @@ public interface IStudentLifecycleService
         CreatePaymentReceiptCommand cmd,
         CancellationToken ct = default);
 
+    /// <summary>Finance edits an actionable payment receipt before it is finalized.</summary>
+    Task<PaymentReceiptDto> UpdatePaymentReceiptAsync(
+        Guid receiptId,
+        Guid financeUserId,
+        UpdatePaymentReceiptCommand cmd,
+        CancellationToken ct = default);
+
     /// <summary>Gets a paged payment receipt slice across all students (admin view).</summary>
     Task<PaymentReceiptPageDto> GetAllReceiptsAsync(int page, int pageSize, CancellationToken ct = default);
 
