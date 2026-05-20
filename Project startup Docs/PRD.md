@@ -39,6 +39,30 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - payment analytics now dynamically tracks course/semester filter selections,
   - existing tenant/campus and role access constraints remain unchanged.
 
+### 2026-05-20 - Plan F Phase 3 Stage 3.3 Finance Analytics Isolation
+- Recent request issue:
+  - proceed with next stage.
+
+#### Plan F Phase 3 Stage 3.3 (Implemented)
+- Implementation Summary:
+  - added finance-only analytics mode in portal analytics model/snapshot flow,
+  - restricted finance analytics UI to payment analytics only and suppressed academic analytics charts/sections for finance-only sessions,
+  - added integration regression checks proving finance is denied on academic analytics endpoints while remaining allowed on payment analytics endpoint.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `runTests` targeted integration suites passed (`66/66`):
+    - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs`,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+- Testing and result summary:
+  - Stage 3.3 completed with finance-role analytics isolation validated end-to-end.
+
+- Behavior impact:
+  - finance users now see payment analytics only,
+  - finance users are prevented from academic analytics endpoints and academic analytics UI surfaces,
+  - admin/superadmin/faculty analytics behavior remains unchanged.
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.1 Payment Status Pie Chart
 - Recent request issue:
   - proceed with Stage 3.1 and add finance-compatible paid vs unpaid analytics charting.

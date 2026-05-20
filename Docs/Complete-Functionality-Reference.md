@@ -35,6 +35,29 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - payment status chart data now follows active course/semester filter selections,
   - tenant/campus scoped isolation remains in force while adding filter sensitivity.
 
+## 2026-05-20 Update - Plan F Phase 3 Stage 3.3 (Finance Analytics Isolation)
+
+- Recent request issue:
+  - proceed with next stage.
+
+### Plan F Phase 3 Stage 3.3 - Finance Analytics Isolation (Implemented)
+- Implementation Summary:
+  - added finance-only analytics mode (`IsFinanceOnly`) to portal analytics model and snapshot payload,
+  - updated analytics UI rendering so finance-only users see payment analytics only and never academic analytics chart sections,
+  - added authorization regression tests asserting finance gets `403` on academic analytics endpoints while keeping payment analytics access.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `runTests` targeted integration suites passed (`66/66`) for:
+    - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs`,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+
+- Behavior impact:
+  - finance role analytics is now payment-only across API/UI paths,
+  - academic analytics remains available to admin/superadmin/faculty under existing policies,
+  - no schema changes were introduced.
+
 ## 2026-05-20 Update - Plan F Phase 3 Stage 3.1 (Payment Status Pie Chart)
 
 - Recent request issue:

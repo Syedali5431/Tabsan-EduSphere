@@ -100,6 +100,26 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized (stage-level),
   - repository synchronization required.
 
+### Plan F Phase 3 Stage 3.3 Finance Analytics Isolation Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed with next stage.
+- Implementation Summary:
+  - enforced finance-only analytics presentation in the portal by introducing `IsFinanceOnly` model/snapshot mode and suppressing academic analytics chart rendering for finance-only sessions,
+  - kept payment analytics available for finance while preserving existing academic analytics behavior for admin/superadmin/faculty roles,
+  - added authorization regression tests asserting finance denial on academic analytics endpoints (`performance`, `attendance`, `assignments`) while allowing finance payment analytics access.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - targeted integration tests passed (`66/66`) via `runTests` on:
+    - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs`,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+- Status of Checks Done:
+  - Plan F Phase 3 Stage 3.3 completed,
+  - Plan F Phase 3 completed,
+  - governance docs synchronized (stage-level),
+  - repository synchronization required.
+
 ### Plan F Phase 2 Stage 2.1 Finance Capability Scope Checkpoint (2026-05-20)
 - Recent request issue:
   - proceed with Plan F Phase 2 Stage 2.1 and allow Finance to add, edit, and mark payments as paid.

@@ -861,6 +861,7 @@ public class AnalyticsSummaryCard
 public class AnalyticsPageModel
 {
     public bool   IsConnected { get; set; }
+    public bool   IsFinanceOnly { get; set; }
     public string? Message    { get; set; }
     public int? SelectedInstitutionType { get; set; }
     public Guid? SelectedDepartmentId { get; set; }

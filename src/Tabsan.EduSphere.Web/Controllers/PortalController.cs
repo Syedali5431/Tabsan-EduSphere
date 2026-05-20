@@ -2590,6 +2590,7 @@ public class PortalController : Controller
         return Json(new
         {
             success = model.IsConnected,
+            isFinanceOnly = model.IsFinanceOnly,
             message = model.Message,
             selectedInstitutionType = model.SelectedInstitutionType,
             selectedDepartmentId = model.SelectedDepartmentId,
@@ -2619,6 +2620,7 @@ public class PortalController : Controller
         var model = new AnalyticsPageModel
         {
             IsConnected = _api.IsConnected(),
+            IsFinanceOnly = identity is { IsFinance: true, IsAdmin: false, IsSuperAdmin: false },
             SelectedInstitutionType = institutionType,
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
@@ -2709,11 +2711,9 @@ public class PortalController : Controller
                 model.SelectedSemesterId = null;
             }
 
-            var isFinanceOnly = identity is { IsFinance: true, IsAdmin: false, IsSuperAdmin: false };
-
             // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON.
             // Finance-only users can access payment analytics without academic report permissions.
-            if (!isFinanceOnly)
+            if (!model.IsFinanceOnly)
             {
                 model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
                 model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);

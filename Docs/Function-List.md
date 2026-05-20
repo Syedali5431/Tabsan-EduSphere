@@ -24,6 +24,28 @@
 | `AnalyticsService.GetPaymentStatusReportAsync(..., courseId, semesterId)` | Restricts payment status aggregation to students enrolled in matching course/semester scope. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 | `AnalyticsInstituteParityIntegrationTests.AnalyticsPaymentStatus_WithCourseAndSemesterFilters_ReturnsMatchingEnrollmentScope` | Verifies payment analytics filter behavior for course+semester constrained queries. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs` |
 
+## 2026-05-20 - Plan F Phase 3 Stage 3.3 (Finance Analytics Isolation)
+
+- Recent request issue:
+  - proceed with next stage.
+- Implementation Summary:
+  - added finance-only analytics mode flag to portal analytics model/snapshot payloads,
+  - restricted finance portal analytics rendering to payment analytics only,
+  - added authorization regression tests to ensure finance cannot access academic analytics endpoints.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `runTests` for `AuthorizationRegressionTests.cs` + `AnalyticsInstituteParityIntegrationTests.cs` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `AnalyticsPageModel.IsFinanceOnly` | Marks finance-only sessions so analytics rendering can enforce payment-only visibility. | `src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs` |
+| `PortalController.BuildAnalyticsPageModelAsync` (finance-only isolation mode) | Computes finance-only analytics mode and suppresses academic analytics retrieval for finance-only sessions. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PortalController.AnalyticsSnapshot` (`isFinanceOnly`) | Exposes finance-only mode to client snapshot payload for runtime UI isolation. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `Analytics.cshtml` finance-only rendering gates | Hides academic analytics sections/charts and keeps payment-status analytics visible for finance-only sessions. | `src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml` |
+| `AuthorizationRegressionTests.Analytics_*_Finance_Returns403` | Verifies finance access is denied for academic analytics endpoints (`performance`, `attendance`, `assignments`). | `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 3 Stage 3.1 (Payment Status Pie Chart)
 
 - Recent request issue:

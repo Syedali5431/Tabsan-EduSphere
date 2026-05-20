@@ -37,6 +37,24 @@ Validation summaries must include at minimum:
 - Stage status: Plan F Phase 3 Stage 3.2 completed.
 - Phase status: Plan F Phase 3 in progress.
 
+### 2026-05-20 - Plan F Phase 3 Stage 3.3 Finance Analytics Isolation
+- Recent request issue:
+  - proceed with next stage.
+
+#### Plan F Phase 3 Stage 3.3 (Implemented)
+- Implementation Summary:
+  - introduced finance-only analytics mode in portal analytics view model and snapshot payload,
+  - constrained finance analytics UI rendering to payment analytics and removed academic analytics visual surfaces for finance-only sessions,
+  - added authorization regression tests for finance denial on academic analytics routes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `runTests` for `AuthorizationRegressionTests.cs` and `AnalyticsInstituteParityIntegrationTests.cs` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+
+- Stage status: Plan F Phase 3 Stage 3.3 completed.
+- Phase status: Plan F Phase 3 completed (Phase 4 Stage 4.1 next).
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.1 Payment Status Pie Chart
 - Recent request issue:
   - proceed with Stage 3.1 and add paid vs unpaid payment analytics chart support.

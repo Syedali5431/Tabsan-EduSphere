@@ -194,6 +194,24 @@
 ### Stage 3.3 - Finance Analytics Isolation
 - Finance users see payment analytics only and never academic analytics.
 
+#### Stage 3.3 - Finance Analytics Isolation (2026-05-20)
+- Implementation Summary:
+  - introduced `IsFinanceOnly` in portal analytics model/snapshot flow and set it for finance-only sessions,
+  - constrained finance analytics page rendering to payment analytics visuals by suppressing academic chart sections/renderers,
+  - added finance analytics access regression tests for deny-list behavior on academic analytics endpoints.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `runTests` on `AuthorizationRegressionTests.cs` + `AnalyticsInstituteParityIntegrationTests.cs` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+
+### Phase 3 Completion Summary (2026-05-20)
+- Implementation Summary:
+  - completed Plan F Phase 3 stages (3.1, 3.2, 3.3) with payment analytics delivery, filter-aware scope behavior, and finance-only analytics isolation,
+  - preserved additive/backward-compatible behavior for existing non-finance analytics flows.
+- Validation Summary:
+  - build and targeted integration/unit/contract validations are green for Phase 3 closure.
+
 ## Phase 4 - Reports
 ### Stage 4.1 - Payment Report Types
 - Implement monthly/yearly/semester-based payment reports (semester only for university context).

@@ -578,6 +578,33 @@ public class AuthorizationRegressionTests
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Analytics_Performance_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/analytics/performance");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Analytics_Attendance_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/analytics/attendance");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Analytics_Assignments_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+
+        var response = await client.GetAsync("api/analytics/assignments");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private static MultipartFormDataContent BuildCourseMaterialUploadContent()
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 test file");

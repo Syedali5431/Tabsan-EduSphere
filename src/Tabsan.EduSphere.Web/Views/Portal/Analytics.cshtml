@@ -10,6 +10,8 @@
 }
 else
 {
+    var isFinanceOnly = Model.IsFinanceOnly;
+
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form asp-action="Analytics" method="get" class="row g-3 align-items-end" id="analyticsFilterForm">
@@ -134,21 +136,24 @@ else
             }
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-light fw-bold d-flex align-items-center">
-                <i class="bi bi-bar-chart me-2"></i>
-                Analytics Overview
+        @if (!isFinanceOnly)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light fw-bold d-flex align-items-center">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Analytics Overview
+                </div>
+                <div class="card-body">
+                    <div id="overviewLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
+                    <canvas id="sampleChart" height="120"></canvas>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="overviewLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                <canvas id="sampleChart" height="120"></canvas>
-            </div>
-        </div>
+        }
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light fw-bold d-flex align-items-center">
                 <i class="bi bi-graph-up-arrow me-2"></i>
-                Advanced Trends
+                @(isFinanceOnly ? "Payment Analytics" : "Advanced Trends")
             </div>
             <div class="card-body">
                 <div class="row g-4">
@@ -157,26 +162,29 @@ else
                         <div id="paymentStatusLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
                         <canvas id="paymentStatusChart" height="170"></canvas>
                     </div>
-                    <div class="col-12 col-lg-6">
-                        <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
-                        <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="studentDistributionChart" height="170"></canvas>
-                    </div>
-                    <div class="col-12 col-lg-6">
-                        <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
-                        <div id="departmentCountLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="departmentCountChart" height="170"></canvas>
-                    </div>
-                    <div class="col-12 col-lg-6">
-                        <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
-                        <div id="courseTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="courseTrendChart" height="170"></canvas>
-                    </div>
-                    <div class="col-12 col-lg-6">
-                        <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
-                        <div id="semesterTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="semesterTrendChart" height="170"></canvas>
-                    </div>
+                    @if (!isFinanceOnly)
+                    {
+                        <div class="col-12 col-lg-6">
+                            <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
+                            <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                            <canvas id="studentDistributionChart" height="170"></canvas>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
+                            <div id="departmentCountLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                            <canvas id="departmentCountChart" height="170"></canvas>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
+                            <div id="courseTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                            <canvas id="courseTrendChart" height="170"></canvas>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
+                            <div id="semesterTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
+                            <canvas id="semesterTrendChart" height="170"></canvas>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -357,12 +365,13 @@ else
 
     </div>
 
-    @if (Model.Performance is null && Model.Attendance is null && Model.Assignments is null)
+    @if ((!isFinanceOnly && Model.Performance is null && Model.Attendance is null && Model.Assignments is null)
+        || (isFinanceOnly && Model.PaymentStatus is null))
     {
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center text-muted py-5">
                 <div class="fs-1 mb-2"><i class="bi bi-bar-chart"></i></div>
-                <p>No analytics data available.</p>
+                <p>@(isFinanceOnly ? "No payment analytics data available." : "No analytics data available.")</p>
             </div>
         </div>
     }
@@ -397,6 +406,7 @@ else
 
             var initialSnapshot = {
                 success: true,
+                isFinanceOnly: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.IsFinanceOnly)),
                 message: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Message)),
                 selectedInstitutionType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedInstitutionType)),
                 selectedDepartmentId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedDepartmentId)),
@@ -1174,6 +1184,7 @@ else
 
             function applySnapshot(snapshot) {
                 showMessage(snapshot && snapshot.message ? snapshot.message : '');
+                var isFinanceOnly = !!prop(snapshot, 'isFinanceOnly', 'IsFinanceOnly', false);
 
                 var selectedInstitutionType = prop(snapshot, 'selectedInstitutionType', 'SelectedInstitutionType', null);
                 var selectedDepartmentId = prop(snapshot, 'selectedDepartmentId', 'SelectedDepartmentId', null);
@@ -1191,15 +1202,18 @@ else
                 setSelectOptions(semesterSelect, prop(snapshot, 'semesters', 'Semesters', []), selectedSemesterId, 'All Semesters');
 
                 renderSummaryCards(prop(snapshot, 'cards', 'Cards', []));
-                renderOverview(snapshot);
-                renderPerformance(snapshot);
-                renderAttendance(snapshot);
-                renderAssignments(snapshot);
                 renderPaymentStatus(snapshot);
-                renderStudentDistribution(snapshot);
-                renderDepartmentCounts(snapshot);
-                renderCourseTrend(snapshot);
-                renderSemesterTrend(snapshot);
+
+                if (!isFinanceOnly) {
+                    renderOverview(snapshot);
+                    renderPerformance(snapshot);
+                    renderAttendance(snapshot);
+                    renderAssignments(snapshot);
+                    renderStudentDistribution(snapshot);
+                    renderDepartmentCounts(snapshot);
+                    renderCourseTrend(snapshot);
+                    renderSemesterTrend(snapshot);
+                }
             }
 
             function buildSnapshotQuery() {

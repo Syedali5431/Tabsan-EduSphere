@@ -29,6 +29,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan F Phase 3 Stage 3.3
+
+### Plan F Phase 3 Stage 3.3 - Finance Analytics Isolation
+- Implementation Summary:
+	- added finance-only analytics presentation flags in web model/controller snapshot flow,
+	- restricted finance analytics page rendering to payment analytics visuals while keeping existing academic analytics for non-finance roles,
+	- added integration authorization checks for finance-denied academic analytics endpoints.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+	- `runTests` targeted integration suites passed (`66/66`) for authorization + analytics parity,
+	- `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug -v minimal` passed (`158/158`),
+	- `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug -v minimal` passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan F Phase 3 Stage 3.1
 
 ### Plan F Phase 3 Stage 3.1 - Payment Status Pie Chart
