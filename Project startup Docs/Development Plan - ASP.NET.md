@@ -19,6 +19,24 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Behavior
+- Recent request issue:
+  - proceed with Stage 3.2 and ensure payment analytics respects dynamic course/semester filters.
+
+#### Plan F Phase 3 Stage 3.2 (Implemented)
+- Implementation Summary:
+  - added `courseId`/`semesterId` support to payment analytics API and service signatures,
+  - implemented enrollment-filtered student scoping before payment receipt status aggregation,
+  - added integration regression to validate filtered payment analytics output.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+
+- Stage status: Plan F Phase 3 Stage 3.2 completed.
+- Phase status: Plan F Phase 3 in progress.
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.1 Payment Status Pie Chart
 - Recent request issue:
   - proceed with Stage 3.1 and add paid vs unpaid payment analytics chart support.

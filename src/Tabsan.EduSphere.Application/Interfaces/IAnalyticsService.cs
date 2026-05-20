@@ -59,5 +59,5 @@ public interface IAnalyticsService
     Task<ComparativeSummaryReport?> GetComparativeSummaryAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
 
     /// <summary>Returns paid vs unpaid payment status summary for a scoped analytics context.</summary>
-    Task<PaymentStatusReport?> GetPaymentStatusReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<PaymentStatusReport?> GetPaymentStatusReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
 }

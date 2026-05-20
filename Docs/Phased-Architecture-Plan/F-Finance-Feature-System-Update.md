@@ -180,6 +180,17 @@
 ### Stage 3.2 - Filter-Aware Analytics Behavior
 - Ensure chart respects Campus, Department, Course, and Semester/Class filters and updates dynamically.
 
+#### Stage 3.2 - Filter-Aware Analytics Behavior (2026-05-20)
+- Implementation Summary:
+  - extended payment status analytics endpoint/service contract to accept `courseId` and `semesterId` filters,
+  - applied filter-aware payment scope by resolving eligible students through enrollment, course-offering, and semester relationships before receipt aggregation,
+  - added integration coverage validating course+semester filtered payment status responses return only matching-scope receipt totals.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+
 ### Stage 3.3 - Finance Analytics Isolation
 - Finance users see payment analytics only and never academic analytics.
 

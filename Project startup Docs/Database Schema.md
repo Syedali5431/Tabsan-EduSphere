@@ -15,6 +15,20 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Plan F Phase 3 Stage 3.2
+
+### Plan F Phase 3 Stage 3.2 - Filter-Aware Analytics Behavior
+- Implementation Summary:
+	- extended payment analytics filtering logic to include course/semester scope via enrollment-aware query behavior,
+	- reused existing academic/payment relational schema without table/column/index/constraint changes.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+	- `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+	- `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan F Phase 3 Stage 3.1
 
 ### Plan F Phase 3 Stage 3.1 - Payment Status Pie Chart

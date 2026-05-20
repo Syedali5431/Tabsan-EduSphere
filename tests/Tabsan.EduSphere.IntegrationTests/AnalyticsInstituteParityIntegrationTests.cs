@@ -198,6 +198,29 @@ public class AnalyticsInstituteParityIntegrationTests
         Assert.Contains("Unpaid", statuses);
     }
 
+    [Fact]
+    public async Task AnalyticsPaymentStatus_WithCourseAndSemesterFilters_ReturnsMatchingEnrollmentScope()
+    {
+        var seeded = await SeedPaymentAnalyticsWithCourseSemesterScopeAsync();
+
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            JwtTestHelper.GenerateToken(
+                role: "Admin",
+                userId: Guid.NewGuid().ToString(),
+                institutionType: (int)InstitutionType.College,
+                tenantId: seeded.CallerTenantId.ToString(),
+                campusId: seeded.CallerCampusId.ToString()));
+
+        var response = await client.GetAsync($"api/analytics/payment-status?courseId={seeded.FilterCourseId}&semesterId={seeded.FilterSemesterId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, doc.RootElement.GetProperty("paidCount").GetInt32());
+        Assert.Equal(0, doc.RootElement.GetProperty("unpaidCount").GetInt32());
+    }
+
     private HttpClient CreateAdminClient(int institutionType)
     {
         var client = _factory.CreateClient();
@@ -424,5 +447,64 @@ public class AnalyticsInstituteParityIntegrationTests
         await db.SaveChangesAsync();
 
         return (callerTenant.Id, callerCampus.Id, CallerPaidCount: 1, CallerUnpaidCount: 1);
+    }
+
+    private async Task<(Guid CallerTenantId, Guid CallerCampusId, Guid FilterCourseId, Guid FilterSemesterId)>
+        SeedPaymentAnalyticsWithCourseSemesterScopeAsync()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var studentRole = db.Roles.First(r => r.Name == "Student");
+        var financeRole = db.Roles.First(r => r.Name == "Finance");
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+
+        var tenant = new Tenant($"PTS{suffix}", $"Payment Tenant Scoped {suffix}");
+        db.Tenants.Add(tenant);
+
+        var campus = new Campus(tenant.Id, $"PTSC{suffix}", $"Payment Scoped Campus {suffix}");
+        db.Campuses.Add(campus);
+
+        var department = new Department($"Payment Scoped Department {suffix}", $"PSD{suffix}", InstitutionType.College);
+        department.SetTenantCampus(tenant.Id, campus.Id);
+        db.Departments.Add(department);
+
+        var program = new AcademicProgram($"Payment Scoped Program {suffix}", $"PSP{suffix}", department.Id, 4);
+        db.AcademicPrograms.Add(program);
+
+        var semesterFilter = new Semester($"Payment Scoped Sem A {suffix}", DateTime.UtcNow.Date.AddDays(-10), DateTime.UtcNow.Date.AddDays(80));
+        var semesterOther = new Semester($"Payment Scoped Sem B {suffix}", DateTime.UtcNow.Date.AddDays(-10), DateTime.UtcNow.Date.AddDays(80));
+        db.Semesters.AddRange(semesterFilter, semesterOther);
+
+        var courseFilter = new Course($"Payment Scoped Course A {suffix}", $"PSCA{suffix}", 3, department.Id);
+        var courseOther = new Course($"Payment Scoped Course B {suffix}", $"PSCB{suffix}", 3, department.Id);
+        db.Courses.AddRange(courseFilter, courseOther);
+
+        var filterOffering = new CourseOffering(courseFilter.Id, semesterFilter.Id, 30);
+        var otherOffering = new CourseOffering(courseOther.Id, semesterOther.Id, 30);
+        db.CourseOfferings.AddRange(filterOffering, otherOffering);
+
+        var matchedStudentUser = new User($"pay_scope_match_{suffix}", "integration-hash", studentRole.Id, $"pay_scope_match_{suffix}@tabsan.local");
+        var otherStudentUser = new User($"pay_scope_other_{suffix}", "integration-hash", studentRole.Id, $"pay_scope_other_{suffix}@tabsan.local");
+        var financeUser = new User($"pay_scope_finance_{suffix}", "integration-hash", financeRole.Id, $"pay_scope_finance_{suffix}@tabsan.local");
+        db.Users.AddRange(matchedStudentUser, otherStudentUser, financeUser);
+
+        var matchedProfile = new StudentProfile(matchedStudentUser.Id, $"PAY-SCOPE-M-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
+        var otherProfile = new StudentProfile(otherStudentUser.Id, $"PAY-SCOPE-O-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
+        db.StudentProfiles.AddRange(matchedProfile, otherProfile);
+
+        db.Enrollments.Add(new Enrollment(matchedProfile.Id, filterOffering.Id));
+        db.Enrollments.Add(new Enrollment(otherProfile.Id, otherOffering.Id));
+
+        var matchedReceipt = new PaymentReceipt(matchedProfile.Id, financeUser.Id, 110m, "Scoped matched", DateTime.UtcNow.Date.AddDays(7));
+        matchedReceipt.ConfirmPayment(financeUser.Id, "paid");
+        var otherReceipt = new PaymentReceipt(otherProfile.Id, financeUser.Id, 95m, "Scoped other", DateTime.UtcNow.Date.AddDays(7));
+
+        db.PaymentReceipts.AddRange(matchedReceipt, otherReceipt);
+        await db.SaveChangesAsync();
+
+        return (tenant.Id, campus.Id, courseFilter.Id, semesterFilter.Id);
     }
 }

@@ -151,6 +151,8 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> GetPaymentStatus(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? courseId,
+        [FromQuery] Guid? semesterId,
         CancellationToken ct = default)
     {
         if (User?.Identity?.IsAuthenticated != true)
@@ -167,7 +169,7 @@ public sealed class AnalyticsController : ControllerBase
         var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
         if (scope.Error is not null) return scope.Error;
 
-        var result = await _analytics.GetPaymentStatusReportAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var result = await _analytics.GetPaymentStatusReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 

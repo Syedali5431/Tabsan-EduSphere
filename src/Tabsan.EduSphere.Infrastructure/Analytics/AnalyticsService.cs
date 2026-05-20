@@ -721,10 +721,12 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<PaymentStatusReport?> GetPaymentStatusReportAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? courseId = null,
+        Guid? semesterId = null)
     {
         var accessScope = GetAnalyticsAccessScope();
-        var cacheKey = BuildAnalyticsCacheKey("payment-status", departmentId, institutionType, accessScope);
+        var cacheKey = BuildAnalyticsCacheKey("payment-status", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
         {
@@ -738,27 +740,56 @@ public sealed class AnalyticsService : IAnalyticsService
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var effectiveInstitutionType = institutionType ?? (int)InstitutionType.University;
 
-        var rows = await (
-            from receipt in _db.PaymentReceipts.AsNoTracking()
-            join student in _db.StudentProfiles.AsNoTracking() on receipt.StudentProfileId equals student.Id
+        var scopedStudentsQuery =
+            from student in _db.StudentProfiles.AsNoTracking()
             join department in _db.Departments.AsNoTracking() on student.DepartmentId equals department.Id
             where (departmentId == null || student.DepartmentId == departmentId)
-                && (!institutionType.HasValue || (int)department.InstitutionType == institutionType.Value)
-                && (!accessScope.TenantId.HasValue || department.TenantId == accessScope.TenantId.Value)
-                && (!accessScope.CampusId.HasValue || department.CampusId == accessScope.CampusId.Value)
+               && (!institutionType.HasValue || (int)department.InstitutionType == institutionType.Value)
+               && (!accessScope.TenantId.HasValue || department.TenantId == accessScope.TenantId.Value)
+               && (!accessScope.CampusId.HasValue || department.CampusId == accessScope.CampusId.Value)
             select new
             {
-                receipt.Status,
-                receipt.Amount,
+                StudentId = student.Id,
                 DepartmentInstitutionType = (int)department.InstitutionType
-            }
-        ).ToListAsync(ct);
+            };
+
+        if (courseId.HasValue || semesterId.HasValue)
+        {
+            scopedStudentsQuery =
+                from scopedStudent in scopedStudentsQuery
+                join enrollment in _db.Enrollments.AsNoTracking() on scopedStudent.StudentId equals enrollment.StudentProfileId
+                join offering in _db.CourseOfferings.AsNoTracking() on enrollment.CourseOfferingId equals offering.Id
+                join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
+                where (!courseId.HasValue || course.Id == courseId.Value)
+                   && (!semesterId.HasValue || offering.SemesterId == semesterId.Value)
+                select scopedStudent;
+        }
+
+        var scopedStudents = await scopedStudentsQuery
+            .Distinct()
+            .ToListAsync(ct);
+
+        if (!scopedStudents.Any()) return null;
+
+        var scopedStudentIds = scopedStudents
+            .Select(x => x.StudentId)
+            .Distinct()
+            .ToList();
+
+        var rows = await _db.PaymentReceipts.AsNoTracking()
+            .Where(receipt => scopedStudentIds.Contains(receipt.StudentProfileId))
+            .Select(receipt => new
+            {
+                receipt.Status,
+                receipt.Amount
+            })
+            .ToListAsync(ct);
 
         if (!rows.Any()) return null;
 
         if (!institutionType.HasValue)
         {
-            effectiveInstitutionType = rows
+            effectiveInstitutionType = scopedStudents
                 .GroupBy(x => x.DepartmentInstitutionType)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)

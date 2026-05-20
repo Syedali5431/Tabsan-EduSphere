@@ -3,6 +3,27 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 3 Stage 3.2 (Filter-Aware Analytics Behavior)
+
+- Recent request issue:
+  - proceed with Stage 3.2 and enforce filter-aware payment analytics behavior.
+- Implementation Summary:
+  - extended payment status analytics API/service signatures with course and semester filters,
+  - implemented enrollment-based student filtering before payment receipt aggregation,
+  - added integration coverage for course+semester filtered payment analytics responses.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `IAnalyticsService.GetPaymentStatusReportAsync(..., courseId, semesterId)` | Exposes filter-aware payment analytics contract including course/semester dimensions. | `src/Tabsan.EduSphere.Application/Interfaces/IAnalyticsService.cs` |
+| `AnalyticsController.GetPaymentStatus` (course/semester query support) | Accepts and forwards course/semester filters for payment analytics requests. | `src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs` |
+| `AnalyticsService.GetPaymentStatusReportAsync(..., courseId, semesterId)` | Restricts payment status aggregation to students enrolled in matching course/semester scope. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `AnalyticsInstituteParityIntegrationTests.AnalyticsPaymentStatus_WithCourseAndSemesterFilters_ReturnsMatchingEnrollmentScope` | Verifies payment analytics filter behavior for course+semester constrained queries. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 3 Stage 3.1 (Payment Status Pie Chart)
 
 - Recent request issue:

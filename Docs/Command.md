@@ -32,6 +32,23 @@ After each completed stage, also update these files (where applicable) with `Imp
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+### Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed with Stage 3.2 and ensure payment analytics respects department/course/semester scope and dynamic updates.
+- Implementation Summary:
+  - added `courseId` and `semesterId` query support to payment analytics API/service signatures,
+  - enforced course/semester-aware payment aggregation by scoping receipt owners through matching enrollments and offerings,
+  - added integration regression test for filtered payment analytics behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+- Status of Checks Done:
+  - Plan F Phase 3 Stage 3.2 completed,
+  - governance docs synchronized (stage-level),
+  - repository synchronization required.
+
 ### Plan F Phase 3 Stage 3.1 Payment Status Pie Chart Checkpoint (2026-05-20)
 - Recent request issue:
   - proceed with Stage 3.1 and add finance-compatible Paid vs Unpaid analytics pie chart behavior.

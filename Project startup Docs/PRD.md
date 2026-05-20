@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Behavior
+- Recent request issue:
+  - proceed with Stage 3.2 and ensure payment analytics honors course/semester filter scope.
+
+#### Plan F Phase 3 Stage 3.2 (Implemented)
+- Implementation Summary:
+  - added course/semester filter support to payment analytics endpoint and service contract,
+  - enforced enrollment-linked filtering so payment status aggregates only include matching scope students,
+  - added integration test coverage for filtered payment analytics requests.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Debug` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~AnalyticsInstituteParityIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests"` passed (`66/66`),
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Debug` passed (`158/158`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Debug` passed (`1/1`).
+- Testing and result summary:
+  - Stage 3.2 completed with filter-path and authorization regression checks green.
+
+- Behavior impact:
+  - payment analytics now dynamically tracks course/semester filter selections,
+  - existing tenant/campus and role access constraints remain unchanged.
+
 ### 2026-05-20 - Plan F Phase 3 Stage 3.1 Payment Status Pie Chart
 - Recent request issue:
   - proceed with Stage 3.1 and add finance-compatible paid vs unpaid analytics charting.
