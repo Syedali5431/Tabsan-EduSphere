@@ -15,6 +15,26 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Plan F Phase 1 Stage 1.4 (Payment Record State Model)
+
+- Recent request issue:
+  - proceed with Stage 1.4 and finalize paid/unpaid state tracking behavior.
+
+### Plan F Phase 1 Stage 1.4 - Payment Record State Model (Implemented)
+- Implementation Summary:
+  - payment payload now exposes `PaidDate` and `UpdatedAt` as first-class tracking fields while retaining `ConfirmedAt` compatibility,
+  - web payment mapping now tolerates legacy/new payload shapes by deriving paid date from `ConfirmedAt` fallback,
+  - payments page now shows `Last Updated` to present update-trail visibility alongside status and paid date.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`156/156`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Behavior impact:
+  - paid/unpaid tracking now includes explicit paid-date and update-trail semantics in operational views,
+  - no endpoint removals and no schema mutation were introduced in this stage.
+
 ## 2026-05-20 Update - Plan F Phase 1 Stage 1.3 (Finance Role Seed and Linking)
 
 - Recent request issue:

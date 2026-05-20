@@ -2855,7 +2855,8 @@ public class EduApiClient : IEduApiClient
         FeeType            = p.Description ?? p.FeeType ?? "",
         Status             = p.Status ?? "",
         DueDate            = p.DueDate,
-        PaidDate           = p.PaidDate,
+        PaidDate           = p.PaidDate ?? p.ConfirmedAt,
+        UpdatedAt          = p.UpdatedAt,
         ProofOfPaymentPath = p.ProofOfPaymentPath,
         Notes              = p.Notes
     };
@@ -2905,6 +2906,8 @@ public class EduApiClient : IEduApiClient
         public string?  Status             { get; set; }
         public DateTime DueDate            { get; set; }
         public DateTime? PaidDate          { get; set; }
+        public DateTime? ConfirmedAt       { get; set; }
+        public DateTime? UpdatedAt         { get; set; }
         public string?  ProofOfPaymentPath { get; set; }
         public string?  Notes              { get; set; }
     }

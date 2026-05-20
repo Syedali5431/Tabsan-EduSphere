@@ -98,6 +98,27 @@
 ### Stage 1.4 - Payment Record State Model
 - Ensure payment records support Paid/Unpaid status and payment tracking (date/update trail).
 
+#### Stage 1.4 - Payment Record State Model (2026-05-20)
+- Implementation Summary:
+  - extended payment response model to expose explicit payment tracking fields for stage goals:
+    - `PaidDate` (paid-state date),
+    - `UpdatedAt` (update trail timestamp),
+    - backward-compatible `ConfirmedAt` retained,
+  - aligned payment mapping so `PaidDate` is reliably populated from `ConfirmedAt` when older payload shapes are returned,
+  - surfaced `Last Updated` in payments UI for operational audit visibility without changing existing payment actions or routes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`156/156`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+### Phase 1 Completion Summary (2026-05-20)
+- Implementation Summary:
+  - completed Plan F Phase 1 stages (1.1, 1.2, 1.3, 1.4) with additive updates,
+  - finalized finance role seeding/linking and payment paid/unpaid tracking surface with update trail visibility.
+- Validation Summary:
+  - release build and unit/integration/contract regression gates are all green for Phase 1 closure.
+
 ## Phase 2 - Role and Access Control
 ### Stage 2.1 - Finance Capability Scope
 - Allow Finance role to add payments, edit payments, and mark payments as paid.

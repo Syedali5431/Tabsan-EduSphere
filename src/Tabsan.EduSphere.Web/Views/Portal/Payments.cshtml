@@ -117,6 +117,7 @@ else
                                 <th>Due Date</th>
                                 <th>Status</th>
                                 <th>Confirmed</th>
+                                <th>Last Updated</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -150,6 +151,7 @@ else
                                     <td>@r.DueDate.ToString("dd MMM yyyy")</td>
                                     <td><span class="badge stat-pill @badgeCls">@r.Status</span></td>
                                     <td>@(r.PaidDate?.ToString("dd MMM yyyy") ?? "–")</td>
+                                    <td>@(r.UpdatedAt?.ToString("dd MMM yyyy HH:mm") ?? "–")</td>
                                     <td>
                                         @* Admin actions: Confirm (Pending/Submitted) or Cancel (not Paid/Cancelled) *@
                                         @if (Model.Students.Count > 0)

@@ -116,7 +116,9 @@ public record PaymentReceiptDto(
     string Status,
     string? ProofOfPaymentPath = null,
     DateTime? ProofUploadedAt = null,
+    DateTime? PaidDate = null,
     DateTime? ConfirmedAt = null,
+    DateTime? UpdatedAt = null,
     string? Notes = null,
     DateTime CreatedAt = default
 );

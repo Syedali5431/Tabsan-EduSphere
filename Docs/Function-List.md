@@ -3,6 +3,26 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 1 Stage 1.4 (Payment Record State Model)
+
+- Recent request issue:
+  - proceed with Stage 1.4 and complete payment paid/unpaid tracking with date/update trail.
+- Implementation Summary:
+  - extended payment DTO and mapping surfaces to include paid-date and update-trail fields,
+  - added payments UI update-trail visibility.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`156/156`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `StudentLifecycleService.MapPaymentReceipt` | Maps receipt state to output contract including `PaidDate` and `UpdatedAt` tracking fields. | `src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs` |
+| `EduApiClient.MapPayment` | Consumes payment payload with compatibility fallback (`PaidDate ?? ConfirmedAt`) and update trail mapping. | `src/Tabsan.EduSphere.Web/Services/EduApiClient.cs` |
+
+No new endpoints were added in this stage.
+
 ## 2026-05-20 - Plan F Phase 1 Stage 1.3 (Finance Role Seed and Linking)
 
 - Recent request issue:

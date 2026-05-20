@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 1 Stage 1.4 Payment Record State Model
+- Recent request issue:
+  - proceed with Stage 1.4 and ensure payment records expose paid/unpaid state tracking with date/update trail.
+
+#### Plan F Phase 1 Stage 1.4 (Implemented)
+- Implementation Summary:
+  - added explicit payment tracking fields in payment output model (`PaidDate`, `UpdatedAt`) while retaining backward-compatible `ConfirmedAt`,
+  - applied compatibility fallback in web mapping to preserve behavior across older/newer payload shapes,
+  - added `Last Updated` presentation in payments screen for end-user tracking clarity.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release -v minimal` passed (`156/156`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Testing and result summary:
+  - Stage 1.4 completed with all baseline quality gates green.
+
+- Behavior impact:
+  - payment records now present paid/unpaid state with paid-date and update-trail visibility,
+  - no schema mutation and no endpoint-removal contract break introduced.
+
 ### 2026-05-20 - Plan F Phase 1 Stage 1.3 Finance Role Seed and Linking
 - Recent request issue:
   - proceed with Stage 1.3 and introduce the Finance role with authorization linkage.

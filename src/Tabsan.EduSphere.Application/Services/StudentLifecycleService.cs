@@ -624,6 +624,8 @@ public class StudentLifecycleService : IStudentLifecycleService
             receipt.ProofOfPaymentPath,
             receipt.ProofUploadedAt,
             receipt.ConfirmedAt,
+            receipt.ConfirmedAt,
+            receipt.UpdatedAt,
             receipt.Notes,
             receipt.CreatedAt
         );

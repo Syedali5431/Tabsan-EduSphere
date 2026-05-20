@@ -944,6 +944,7 @@ public class PaymentReceiptItem
     public string   Status             { get; set; } = "";
     public DateTime DueDate            { get; set; }
     public DateTime? PaidDate          { get; set; }
+    public DateTime? UpdatedAt         { get; set; }
     public string?  ProofOfPaymentPath { get; set; }
     public string?  Notes              { get; set; }
 }
