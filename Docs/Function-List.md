@@ -3,7 +3,16 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
-## 2026-05-21 Update - Plan F Phase 7 Documentation Synchronization
+
+## 2026-05-21 Update - Plan G Phase 0 Stage 0.1 (Protected Surface Declaration)
+
+- Implementation Summary:
+  - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
+  - No new functions, endpoints, or methods were added; this stage is a governance declaration only.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 
 - Recent request issue:
   - update Finance documentation references for Phase 7.

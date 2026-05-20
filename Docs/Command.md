@@ -77,7 +77,16 @@ After each completed stage, also update these files (where applicable) with `Imp
   - governance docs synchronized,
   - repository synchronization required.
 
-Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
+
+### Plan G Phase 0 Stage 0.1 Protected Surface Declaration (2026-05-21)
+- Implementation Summary:
+  - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
+  - No code, schema, or report logic was changed; this stage is a declaration and safety gate only.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
+---
 
 ### Plan F Phase 3 Stage 3.2 Filter-Aware Analytics Checkpoint (2026-05-20)
 - Recent request issue:

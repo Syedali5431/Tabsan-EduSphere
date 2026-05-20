@@ -18,6 +18,18 @@ Modify result calculation logic so it adapts dynamically based on institute type
 ### Stage 0.3 - Compatibility Defaults
 - Maintain full backward compatibility and default to University GPA behavior when no condition applies.
 
+---
+
+### Implementation Summary (Plan G Phase 0 Stage 0.1)
+- Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
+- No code, schema, or report logic was changed; this stage is a declaration and safety gate only.
+
+### Validation Summary (Plan G Phase 0 Stage 0.1)
+- Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+- No build, test, or migration was required; this stage is documentation-only.
+
+---
+
 ## Phase 1 - License-Based Institute Detection
 ### Stage 1.1 - License Parsing
 - Read enabled institute types from license: School, College, University.

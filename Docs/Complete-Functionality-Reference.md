@@ -15,7 +15,16 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
-## 2026-05-21 Update - Plan F Phase 7 Documentation Synchronization
+
+## 2026-05-21 Update - Plan G Phase 0 Stage 0.1 (Protected Surface Declaration)
+
+- Implementation Summary:
+  - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
+  - No new runtime functionality or behavior was added; this stage is a governance declaration only.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 
 - Recent request issue:
   - update the Finance-facing documentation and governance references for Phase 7.

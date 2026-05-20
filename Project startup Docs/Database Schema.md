@@ -51,7 +51,18 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
-## 2026-05-21 Update - Plan F Phase 10 Stage 10.4 Documentation Closure
+
+## 2026-05-21 Update - Plan G Phase 0 Stage 0.1 (Protected Surface Declaration)
+
+- Implementation Summary:
+	- Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is a governance declaration only.
+- Validation Summary:
+	- Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 
 ### Plan F Phase 10 Stage 10.4 - Documentation Closure
 - Implementation Summary:
