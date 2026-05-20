@@ -215,6 +215,7 @@ public class SessionIdentity
 
     public bool IsAdmin => Roles.Contains("Admin") || Roles.Contains("SuperAdmin");
     public bool IsSuperAdmin => Roles.Contains("SuperAdmin");
+    public bool IsFinance => Roles.Contains("Finance");
     public bool IsFaculty => Roles.Contains("Faculty");
     public bool IsStudent => Roles.Contains("Student");
 }

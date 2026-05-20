@@ -3,6 +3,27 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 2 Stage 2.2 (Finance Restriction Scope)
+
+- Recent request issue:
+  - proceed with Stage 2.2 and enforce deletion and academic-access restrictions for Finance.
+- Implementation Summary:
+  - added explicit payment deletion rejection endpoint,
+  - added finance-only academic action guard in the portal pipeline,
+  - extended auth regression tests with finance restriction coverage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `SessionIdentity.IsFinance` | Exposes finance role detection in web session identity for role-specific UI guards. | `src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs` |
+| `PortalController.ShouldBlockFinanceAcademicAction` | Blocks finance-only sessions from mapped academic module actions before action execution. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+| `PaymentReceiptController.Delete` | Explicitly rejects receipt deletion requests with `405` to preserve immutable payment history. | `src/Tabsan.EduSphere.API/Controllers/PaymentReceiptController.cs` |
+| `AuthorizationRegressionTests.Payments_Delete_Finance_ReturnsMethodNotAllowed` | Verifies finance payment delete requests are rejected with `405`. | `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 2 Stage 2.1 (Finance Capability Scope)
 
 - Recent request issue:

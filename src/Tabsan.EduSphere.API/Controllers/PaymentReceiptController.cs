@@ -73,6 +73,18 @@ public class PaymentReceiptController : ControllerBase
         }
     }
 
+    // ── DELETE /api/v1/payments/{id} ─────────────────────────────────────────
+
+    /// <summary>Deletion is intentionally disabled. Payment receipts are permanent audit records.</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Finance")]
+    public IActionResult Delete(Guid id)
+    {
+        Response.Headers.Allow = "GET,POST,PUT";
+        return StatusCode(StatusCodes.Status405MethodNotAllowed,
+            new { message = "Payment receipt deletion is not allowed. Use cancellation to retain audit history." });
+    }
+
     // ── GET /api/v1/payments ──────────────────────────────────────────────
 
     // Final-Touches Phase 7 Stage 7.2 — all receipts for admin view

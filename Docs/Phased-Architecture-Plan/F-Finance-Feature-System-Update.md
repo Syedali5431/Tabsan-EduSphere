@@ -137,6 +137,17 @@
 ### Stage 2.2 - Finance Restriction Scope
 - Disallow payment deletion and block access to academic modules.
 
+#### Stage 2.2 - Finance Restriction Scope (2026-05-20)
+- Implementation Summary:
+  - added an explicit `DELETE /api/v1/payments/{id}` handler that rejects deletion with `405 Method Not Allowed` and points callers to cancellation,
+  - introduced web portal guardrails that block finance-only users from academic section actions and redirect them to payments,
+  - preserved finance payment create/edit/confirm/cancel flows and left admin/superadmin behavior unchanged.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
 ### Stage 2.3 - Tenant and Campus Enforcement
 - Enforce access boundaries by tenant and assigned campuses (including multi-campus users).
 

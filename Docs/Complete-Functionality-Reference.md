@@ -15,6 +15,26 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Plan F Phase 2 Stage 2.2 (Finance Restriction Scope)
+
+- Recent request issue:
+  - proceed with Stage 2.2 and enforce finance restrictions for deletion and academic module access.
+
+### Plan F Phase 2 Stage 2.2 - Finance Restriction Scope (Implemented)
+- Implementation Summary:
+  - payment delete requests are now explicitly rejected with `405 Method Not Allowed` on payment routes,
+  - finance-only web sessions are blocked from academic-section actions and redirected to finance payments workspace,
+  - regression tests were extended to assert finance denial on academic APIs and payment-delete rejection behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Behavior impact:
+  - payment receipts remain non-deletable permanent records,
+  - finance users are now explicitly prevented from accessing academic modules.
+
 ## 2026-05-20 Update - Plan F Phase 2 Stage 2.1 (Finance Capability Scope)
 
 - Recent request issue:
@@ -33,7 +53,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 
 - Behavior impact:
   - Finance can now update actionable receipts prior to finalization,
-  - no schema mutation or delete-path exposure was introduced.
+  - no schema mutation was introduced.
 
 ## 2026-05-20 Update - Plan F Phase 1 Stage 1.4 (Payment Record State Model)
 

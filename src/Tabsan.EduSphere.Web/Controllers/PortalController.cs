@@ -62,6 +62,40 @@ public class PortalController : Controller
         [nameof(InstitutionPolicy)] = "institution_policy"
     };
 
+    private static readonly HashSet<string> FinanceBlockedAcademicMenuKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "timetable_admin",
+        "timetable_teacher",
+        "timetable_student",
+        "buildings",
+        "rooms",
+        "students",
+        "user_import",
+        "departments",
+        "courses",
+        "assignments",
+        "attendance",
+        "results",
+        "quizzes",
+        "fyp",
+        "prerequisites",
+        "gradebook",
+        "rubric_manage",
+        "student_lifecycle",
+        "enrollments",
+        "degree_audit",
+        "graduation_eligibility",
+        "degree_rules",
+        "graduation_apply",
+        "graduation_applications",
+        "grading_config",
+        "lms_manage",
+        "course_material",
+        "discussion",
+        "announcements",
+        "study_plan"
+    };
+
     public PortalController(IEduApiClient api, IWebHostEnvironment environment)
     {
         _api = api;
@@ -76,6 +110,13 @@ public class PortalController : Controller
         if (!isForceChangeAction && _api.IsConnected() && _api.IsForcePasswordChangeRequired())
         {
             context.Result = RedirectToAction(nameof(ForceChangePassword));
+            return;
+        }
+
+        if (ShouldBlockFinanceAcademicAction(action))
+        {
+            TempData["PortalMessage"] = "Finance access is limited to finance modules. Academic sections are blocked.";
+            context.Result = RedirectToAction(nameof(Payments));
             return;
         }
 
@@ -104,6 +145,21 @@ public class PortalController : Controller
         }
 
         await base.OnActionExecutionAsync(context, next);
+    }
+
+    private bool ShouldBlockFinanceAcademicAction(string? actionName)
+    {
+        if (!_api.IsConnected() || string.IsNullOrWhiteSpace(actionName))
+            return false;
+
+        if (!ActionMenuKeyMap.TryGetValue(actionName, out var menuKey))
+            return false;
+
+        var identity = _api.GetSessionIdentity();
+        if (identity is null || !identity.IsFinance || identity.IsAdmin || identity.IsSuperAdmin)
+            return false;
+
+        return FinanceBlockedAcademicMenuKeys.Contains(menuKey);
     }
 
     private bool ShouldEnforceSidebarGuard(string? actionName)

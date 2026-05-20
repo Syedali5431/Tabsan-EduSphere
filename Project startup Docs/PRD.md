@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 2 Stage 2.2 Finance Restriction Scope
+- Recent request issue:
+  - proceed with Stage 2.2 and enforce finance restrictions for payment deletion and academic module access.
+
+#### Plan F Phase 2 Stage 2.2 (Implemented)
+- Implementation Summary:
+  - added explicit payment delete rejection route so receipt records remain permanent,
+  - introduced finance-only web action guard that blocks academic modules and routes back to payments,
+  - added regression tests to validate finance-denied academic APIs and delete rejection behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Testing and result summary:
+  - Stage 2.2 completed with targeted and regression quality gates green.
+
+- Behavior impact:
+  - finance users can no longer delete payment receipts,
+  - finance users are blocked from academic modules in portal action routing.
+
 ### 2026-05-20 - Plan F Phase 2 Stage 2.1 Finance Payment Edit Capability
 - Recent request issue:
   - proceed with Stage 2.1 and add Finance payment editing support.

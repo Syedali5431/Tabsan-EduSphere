@@ -7,6 +7,24 @@
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## Execution Update - 2026-05-20 (Plan F Phase 2 Stage 2.2 Finance Restriction Scope)
+
+- Recent request issue:
+  - proceed with Stage 2.2 and block deletion and academic module access for finance scope.
+- Implementation Summary:
+  - made payment records explicitly non-deletable through API behavior (`405` on delete route),
+  - blocked finance-only users from academic module actions in portal routing,
+  - retained finance payment operational surface without changing module catalog or package rules.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation,
+  - finance restrictions now prevent academic module usage while preserving finance payment workflows.
+
 ## Execution Update - 2026-05-20 (Plan F Phase 2 Stage 2.1 Finance Payment Edit Capability)
 
 - Recent request issue:

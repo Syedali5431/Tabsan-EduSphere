@@ -32,6 +32,23 @@ After each completed stage, also update these files (where applicable) with `Imp
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+### Plan F Phase 2 Stage 2.2 Finance Restriction Scope Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed with Stage 2.2 and disallow payment deletion while blocking finance access to academic modules.
+- Implementation Summary:
+  - added explicit payment delete rejection endpoint (`405 Method Not Allowed`) to preserve permanent receipt history,
+  - added finance-only academic module guard in web portal action pipeline with payments-page fallback,
+  - added authorization regression coverage for finance restrictions and payment delete rejection.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`54/54`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Status of Checks Done:
+  - Plan F Phase 2 Stage 2.2 completed,
+  - governance docs synchronized (stage-level),
+  - repository synchronization required.
+
 ### Plan F Phase 2 Stage 2.1 Finance Capability Scope Checkpoint (2026-05-20)
 - Recent request issue:
   - proceed with Plan F Phase 2 Stage 2.1 and allow Finance to add, edit, and mark payments as paid.

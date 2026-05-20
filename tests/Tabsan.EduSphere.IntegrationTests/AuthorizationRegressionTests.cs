@@ -76,6 +76,14 @@ public class AuthorizationRegressionTests
     }
 
     [Fact]
+    public async Task Attendance_GetByOffering_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+        var response = await client.GetAsync($"api/v1/attendance/by-offering/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Attendance_GetByOffering_Faculty_ReturnsNotForbiddenOrUnauthorized()
     {
         using var client = CreateClient("Faculty");
@@ -200,6 +208,14 @@ public class AuthorizationRegressionTests
     }
 
     [Fact]
+    public async Task Assignment_Delete_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+        var response = await client.DeleteAsync($"api/v1/assignment/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Assignment_Delete_Admin_ReturnsNotForbiddenOrUnauthorized()
     {
         using var client = CreateClient("Admin");
@@ -248,6 +264,22 @@ public class AuthorizationRegressionTests
         using var client = CreateClient("Student");
         var response = await client.PostAsync("api/v1/assignment", JsonContent.Create(new { }));
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Assignment_Create_Finance_Returns403()
+    {
+        using var client = CreateClient("Finance");
+        var response = await client.PostAsync("api/v1/assignment", JsonContent.Create(new { }));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Payments_Delete_Finance_ReturnsMethodNotAllowed()
+    {
+        using var client = CreateClient("Finance");
+        var response = await client.DeleteAsync($"api/v1/payments/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
     }
 
     [Fact]
