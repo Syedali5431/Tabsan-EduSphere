@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
+
+- Implementation Summary:
+	- Documented the requirement to parse enabled institute types (School, College, University) from the license file for future conditional logic.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the parsing requirement.
+- Validation Summary:
+	- Manual review confirmed the parsing requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 # Database Schema Documentation
 ## University Portal & License Creation Tool
 

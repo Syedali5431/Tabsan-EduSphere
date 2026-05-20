@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
+
+- Implementation Summary:
+  - Documented the requirement to parse enabled institute types (School, College, University) from the license file for future conditional logic.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only and sets the parsing requirement.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 # Function List — Tabsan EduSphere
 
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.

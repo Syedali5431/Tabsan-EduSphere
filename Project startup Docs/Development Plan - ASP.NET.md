@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 1 Stage 1.1 (License Parsing)
+
+### Plan G Phase 1 Stage 1.1 - License Parsing
+- Implementation Summary:
+  - Documented the requirement to parse enabled institute types (School, College, University) from the license file for future conditional logic.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the parsing requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 # Tabsan EduSphere Development Plan (ASP.NET)
 
 **Version:** 1.5  
