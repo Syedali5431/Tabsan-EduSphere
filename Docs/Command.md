@@ -564,6 +564,23 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan E Phase 6 Stage 6.2 Unauthorized/Cross-Scope Access Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed.
+- Implementation Summary:
+  - executed unauthorized/cross-tenant/cross-campus access audit across source enforcement points,
+  - recorded `1326` isolation-enforcement source hits and `128` explicit `Forbid`/`Unauthorized` enforcement hits,
+  - confirmed no code/schema mutation was required for this checkpoint.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan E Phase 6 Stage 6.2 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.
