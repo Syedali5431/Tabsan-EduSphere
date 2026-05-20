@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 2 Stage 2.3 Tenant and Campus Enforcement
+- Recent request issue:
+  - proceed with Stage 2.3 and enforce tenant/campus boundaries for finance payment paths.
+
+#### Plan F Phase 2 Stage 2.3 (Implemented)
+- Implementation Summary:
+  - scoped payment lifecycle repository queries by tenant/campus,
+  - blocked receipt creation for out-of-scope student profiles before persistence,
+  - added integration proof for scoped payment visibility behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`63/63`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Testing and result summary:
+  - Stage 2.3 completed with build, unit, integration, and contract gates green.
+
+- Behavior impact:
+  - finance payment reads are now tenant/campus scoped,
+  - out-of-scope receipts are excluded from finance list retrieval.
+
 ### 2026-05-20 - Plan F Phase 2 Stage 2.2 Finance Restriction Scope
 - Recent request issue:
   - proceed with Stage 2.2 and enforce finance restrictions for payment deletion and academic module access.

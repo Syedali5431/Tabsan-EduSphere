@@ -151,6 +151,17 @@
 ### Stage 2.3 - Tenant and Campus Enforcement
 - Enforce access boundaries by tenant and assigned campuses (including multi-campus users).
 
+#### Stage 2.3 - Tenant and Campus Enforcement (2026-05-20)
+- Implementation Summary:
+  - added tenant/campus scope filtering to payment receipt repository queries so finance payment reads and receipt lookups are restricted to caller access scope,
+  - added pre-create student scope validation before receipt issuance to prevent out-of-scope receipt creation,
+  - added integration coverage for scoped payment visibility (matching campus includes receipt, mismatched campus excludes receipt).
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`63/63`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
 ## Phase 3 - Analytics
 ### Stage 3.1 - Payment Status Pie Chart
 - Add interactive Paid vs Unpaid pie chart.

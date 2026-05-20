@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
+using Tabsan.EduSphere.Domain.StudentLifecycle;
+using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
 
@@ -121,6 +123,42 @@ public class StudentLifecycleIntegrationTests
         Assert.Equal(3, student!.CurrentSemesterNumber);
     }
 
+    [Fact]
+    public async Task Payments_GetAll_WithMatchingTenantCampusScope_ReturnsScopedReceipt()
+    {
+        var seeded = await SeedPaymentScopeDataAsync();
+
+        using var client = CreateFinanceClient(
+            seeded.FinanceUserId,
+            seeded.TenantId,
+            seeded.CampusId);
+
+        var response = await client.GetAsync("api/v1/payments?page=1&pageSize=50");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<PaymentReceiptPage>();
+        Assert.NotNull(page);
+        Assert.Contains(page!.Items, i => i.Id == seeded.ReceiptId);
+    }
+
+    [Fact]
+    public async Task Payments_GetAll_WithMismatchedCampusScope_HidesOutOfScopeReceipt()
+    {
+        var seeded = await SeedPaymentScopeDataAsync();
+
+        using var client = CreateFinanceClient(
+            seeded.FinanceUserId,
+            seeded.TenantId,
+            seeded.OtherCampusId);
+
+        var response = await client.GetAsync("api/v1/payments?page=1&pageSize=50");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<PaymentReceiptPage>();
+        Assert.NotNull(page);
+        Assert.DoesNotContain(page!.Items, i => i.Id == seeded.ReceiptId);
+    }
+
     private HttpClient CreateAdminClient(Guid adminUserId, int institutionType)
     {
         var client = _factory.CreateClient();
@@ -130,6 +168,19 @@ public class StudentLifecycleIntegrationTests
                 role: "Admin",
                 userId: adminUserId.ToString(),
                 institutionType: institutionType));
+        return client;
+    }
+
+    private HttpClient CreateFinanceClient(Guid financeUserId, Guid tenantId, Guid campusId)
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            JwtTestHelper.GenerateToken(
+                role: "Finance",
+                userId: financeUserId.ToString(),
+                tenantId: tenantId.ToString(),
+                campusId: campusId.ToString()));
         return client;
     }
 
@@ -206,9 +257,86 @@ public class StudentLifecycleIntegrationTests
         return (department.Id, studentProfile.Id, admin.Id, (int)adminInstitutionType);
     }
 
+    private async Task<(Guid ReceiptId, Guid FinanceUserId, Guid TenantId, Guid CampusId, Guid OtherCampusId)> SeedPaymentScopeDataAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var tenantSuffix = Guid.NewGuid().ToString("N")[..6];
+        var tenant = new Tenant($"TP{tenantSuffix}", $"Tenant {tenantSuffix}");
+        db.Tenants.Add(tenant);
+
+        var campus = new Campus(tenant.Id, $"CP{tenantSuffix}", $"Campus {tenantSuffix}");
+        var otherCampus = new Campus(tenant.Id, $"CX{tenantSuffix}", $"Campus X {tenantSuffix}");
+        db.Campuses.AddRange(campus, otherCampus);
+
+        var financeRole = db.Roles.First(r => r.Name == "Finance");
+        var studentRole = db.Roles.First(r => r.Name == "Student");
+
+        var department = new Department($"Payments Dept {tenantSuffix}", $"PD{tenantSuffix}", InstitutionType.University);
+        department.SetTenantCampus(tenant.Id, campus.Id);
+        db.Departments.Add(department);
+
+        var program = new AcademicProgram($"Payments Program {tenantSuffix}", $"PP{tenantSuffix}", department.Id, 8);
+        db.AcademicPrograms.Add(program);
+
+        var finance = new User(
+            username: $"finance_scope_{tenantSuffix}",
+            passwordHash: "integration-hash",
+            roleId: financeRole.Id,
+            email: $"finance_scope_{tenantSuffix}@tabsan.local",
+            tenantId: tenant.Id,
+            campusId: campus.Id);
+        db.Users.Add(finance);
+
+        var studentUser = new User(
+            username: $"payment_student_{tenantSuffix}",
+            passwordHash: "integration-hash",
+            roleId: studentRole.Id,
+            email: $"payment_student_{tenantSuffix}@tabsan.local",
+            tenantId: tenant.Id,
+            campusId: campus.Id);
+        db.Users.Add(studentUser);
+
+        var studentProfile = new StudentProfile(
+            studentUser.Id,
+            $"PAY-{tenantSuffix}",
+            program.Id,
+            department.Id,
+            DateTime.UtcNow.Date);
+        db.StudentProfiles.Add(studentProfile);
+
+        var receipt = new PaymentReceipt(
+            studentProfile.Id,
+            finance.Id,
+            1000m,
+            $"Scoped receipt {tenantSuffix}",
+            DateTime.UtcNow.Date.AddDays(14));
+        db.PaymentReceipts.Add(receipt);
+
+        await db.SaveChangesAsync();
+
+        return (receipt.Id, finance.Id, tenant.Id, campus.Id, otherCampus.Id);
+    }
+
     private sealed record SemesterPromotionSummary(
         Guid StudentProfileId,
         string RegistrationNumber,
         string ProgramName,
         int CurrentSemesterNumber);
+
+    private sealed record PaymentReceiptPage(
+        IReadOnlyList<PaymentReceiptItem> Items,
+        int Page,
+        int PageSize,
+        int TotalCount);
+
+    private sealed record PaymentReceiptItem(
+        Guid Id,
+        Guid StudentProfileId,
+        string StudentName,
+        decimal Amount,
+        string Description,
+        DateTime DueDate,
+        string Status);
 }

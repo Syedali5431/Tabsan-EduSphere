@@ -3,6 +3,27 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 2 Stage 2.3 (Tenant and Campus Enforcement)
+
+- Recent request issue:
+  - proceed with Stage 2.3 and enforce finance tenant/campus access boundaries.
+- Implementation Summary:
+  - added scope-filter helpers for student/payment lifecycle repository queries,
+  - enforced scope-aware student validation before payment receipt creation,
+  - added integration tests for payment list scope behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`63/63`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `StudentLifecycleRepository.ApplyStudentAccessScope` | Applies tenant/campus scope filtering to student profile lifecycle queries. | `src/Tabsan.EduSphere.Infrastructure/Repositories/StudentLifecycleRepository.cs` |
+| `StudentLifecycleRepository.ApplyPaymentAccessScope` | Applies tenant/campus scope filtering to payment receipt lifecycle queries. | `src/Tabsan.EduSphere.Infrastructure/Repositories/StudentLifecycleRepository.cs` |
+| `StudentLifecycleIntegrationTests.Payments_GetAll_WithMatchingTenantCampusScope_ReturnsScopedReceipt` | Verifies in-scope finance payment listing returns the scoped receipt. | `tests/Tabsan.EduSphere.IntegrationTests/StudentLifecycleIntegrationTests.cs` |
+| `StudentLifecycleIntegrationTests.Payments_GetAll_WithMismatchedCampusScope_HidesOutOfScopeReceipt` | Verifies cross-campus finance payment listing does not leak out-of-scope receipts. | `tests/Tabsan.EduSphere.IntegrationTests/StudentLifecycleIntegrationTests.cs` |
+
 ## 2026-05-20 - Plan F Phase 2 Stage 2.2 (Finance Restriction Scope)
 
 - Recent request issue:

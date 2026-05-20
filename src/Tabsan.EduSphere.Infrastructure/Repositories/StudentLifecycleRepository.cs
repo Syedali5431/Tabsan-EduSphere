@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
@@ -14,10 +15,46 @@ namespace Tabsan.EduSphere.Infrastructure.Repositories;
 public class StudentLifecycleRepository : IStudentLifecycleRepository
 {
     private readonly ApplicationDbContext _db;
+    private readonly IAccessScopeResolver? _accessScope;
 
-    public StudentLifecycleRepository(ApplicationDbContext db)
+    public StudentLifecycleRepository(ApplicationDbContext db, IAccessScopeResolver? accessScope = null)
     {
         _db = db;
+        _accessScope = accessScope;
+    }
+
+    private IQueryable<StudentProfile> ApplyStudentAccessScope(IQueryable<StudentProfile> query)
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return query;
+
+        var tenantId = _accessScope?.GetTenantId();
+        var campusId = _accessScope?.GetCampusId();
+
+        if (tenantId.HasValue)
+            query = query.Where(sp => sp.Department.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(sp => sp.Department.CampusId == campusId.Value);
+
+        return query;
+    }
+
+    private IQueryable<PaymentReceipt> ApplyPaymentAccessScope(IQueryable<PaymentReceipt> query)
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return query;
+
+        var tenantId = _accessScope?.GetTenantId();
+        var campusId = _accessScope?.GetCampusId();
+
+        if (tenantId.HasValue)
+            query = query.Where(pr => pr.StudentProfile.Department.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(pr => pr.StudentProfile.Department.CampusId == campusId.Value);
+
+        return query;
     }
 
     // ── Graduation ────────────────────────────────────────────────────────
@@ -47,7 +84,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
 
     public async Task<StudentProfile?> GetByIdAsync(Guid studentProfileId, CancellationToken ct = default)
     {
-        return await _db.StudentProfiles
+        return await ApplyStudentAccessScope(_db.StudentProfiles)
             .Include(sp => sp.Program)
             .Include(sp => sp.Department)
             .FirstOrDefaultAsync(sp => sp.Id == studentProfileId, ct);
@@ -209,8 +246,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         Guid studentProfileId,
         CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.StudentProfileId == studentProfileId && pr.Status != PaymentReceiptStatus.Cancelled)
             .Include(pr => pr.CreatedByUser)
             .Include(pr => pr.ConfirmedByUser)
@@ -224,8 +260,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         int take,
         CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.StudentProfileId == studentProfileId && pr.Status != PaymentReceiptStatus.Cancelled)
             .Include(pr => pr.CreatedByUser)
             .Include(pr => pr.ConfirmedByUser)
@@ -236,15 +271,14 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
     }
 
     public Task<int> CountActiveReceiptsByStudentAsync(Guid studentProfileId, CancellationToken ct = default)
-        => _db.PaymentReceipts.AsNoTracking()
+        => ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .CountAsync(pr => pr.StudentProfileId == studentProfileId && pr.Status != PaymentReceiptStatus.Cancelled, ct);
 
     public async Task<IList<PaymentReceipt>> GetAllReceiptsByStudentAsync(
         Guid studentProfileId,
         CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.StudentProfileId == studentProfileId)
             .Include(pr => pr.CreatedByUser)
             .Include(pr => pr.ConfirmedByUser)
@@ -258,8 +292,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         int take,
         CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.StudentProfileId == studentProfileId)
             .Include(pr => pr.CreatedByUser)
             .Include(pr => pr.ConfirmedByUser)
@@ -270,11 +303,11 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
     }
 
     public Task<int> CountAllReceiptsByStudentAsync(Guid studentProfileId, CancellationToken ct = default)
-        => _db.PaymentReceipts.AsNoTracking().CountAsync(pr => pr.StudentProfileId == studentProfileId, ct);
+        => ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking()).CountAsync(pr => pr.StudentProfileId == studentProfileId, ct);
 
     public async Task<PaymentReceipt?> GetReceiptByIdAsync(Guid receiptId, CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts)
             .Include(pr => pr.StudentProfile)
             .Include(pr => pr.CreatedByUser)
             .Include(pr => pr.ConfirmedByUser)
@@ -285,8 +318,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         Guid studentProfileId,
         CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.StudentProfileId == studentProfileId &&
                          (pr.Status == PaymentReceiptStatus.Pending || pr.Status == PaymentReceiptStatus.Submitted))
             .OrderByDescending(pr => pr.DueDate)
@@ -295,8 +327,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
 
     public async Task<IList<PaymentReceipt>> GetAllUnpaidReceiptsAsync(CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.Status == PaymentReceiptStatus.Pending || pr.Status == PaymentReceiptStatus.Submitted)
             .Include(pr => pr.StudentProfile)
             .OrderByDescending(pr => pr.DueDate)
@@ -305,8 +336,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
 
     public async Task<IList<PaymentReceipt>> GetAllUnpaidReceiptsPagedAsync(int skip, int take, CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Where(pr => pr.Status == PaymentReceiptStatus.Pending || pr.Status == PaymentReceiptStatus.Submitted)
             .Include(pr => pr.StudentProfile)
             .OrderByDescending(pr => pr.DueDate)
@@ -316,13 +346,12 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
     }
 
     public Task<int> CountAllUnpaidReceiptsAsync(CancellationToken ct = default)
-        => _db.PaymentReceipts.AsNoTracking().CountAsync(pr => pr.Status == PaymentReceiptStatus.Pending || pr.Status == PaymentReceiptStatus.Submitted, ct);
+        => ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking()).CountAsync(pr => pr.Status == PaymentReceiptStatus.Pending || pr.Status == PaymentReceiptStatus.Submitted, ct);
 
     // Final-Touches Phase 7 Stage 7.2 — all receipts for admin + student profile by user ID
     public async Task<IList<PaymentReceipt>> GetAllReceiptsAsync(CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Include(pr => pr.StudentProfile)
             .OrderByDescending(pr => pr.CreatedAt)
             .ToListAsync(ct);
@@ -330,8 +359,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
 
     public async Task<IList<PaymentReceipt>> GetAllReceiptsPagedAsync(int skip, int take, CancellationToken ct = default)
     {
-        return await _db.PaymentReceipts
-            .AsNoTracking()
+        return await ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
             .Include(pr => pr.StudentProfile)
             .OrderByDescending(pr => pr.CreatedAt)
             .Skip(skip)
@@ -340,11 +368,11 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
     }
 
     public Task<int> CountAllReceiptsAsync(CancellationToken ct = default)
-        => _db.PaymentReceipts.AsNoTracking().CountAsync(ct);
+        => ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking()).CountAsync(ct);
 
     public async Task<StudentProfile?> GetStudentProfileByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        return await _db.StudentProfiles
+        return await ApplyStudentAccessScope(_db.StudentProfiles)
             .AsNoTracking()
             .Where(sp => sp.UserId == userId)
             .Include(sp => sp.Program)

@@ -15,6 +15,26 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Plan F Phase 2 Stage 2.3 (Tenant and Campus Enforcement)
+
+- Recent request issue:
+  - proceed with Stage 2.3 and enforce tenant/campus boundaries for finance payment operations.
+
+### Plan F Phase 2 Stage 2.3 - Tenant and Campus Enforcement (Implemented)
+- Implementation Summary:
+  - payment receipt queries now enforce caller tenant/campus scope at repository level,
+  - finance receipt creation now validates student scope before persisting receipts,
+  - integration tests now validate scoped payment visibility for matching vs mismatched campus contexts.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~PaymentReceiptTests|FullyQualifiedName~InstitutionPolicyTests" -v minimal` passed (`27/27`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~StudentLifecycleIntegrationTests|FullyQualifiedName~AuthorizationRegressionTests" -v minimal` passed (`63/63`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Behavior impact:
+  - finance payment data visibility is now constrained to effective tenant/campus scope,
+  - out-of-scope payment receipts are no longer returned in finance listing paths.
+
 ## 2026-05-20 Update - Plan F Phase 2 Stage 2.2 (Finance Restriction Scope)
 
 - Recent request issue:

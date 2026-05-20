@@ -433,6 +433,10 @@ public class StudentLifecycleService : IStudentLifecycleService
         CreatePaymentReceiptCommand cmd,
         CancellationToken ct = default)
     {
+        var student = await _repository.GetByIdAsync(cmd.StudentProfileId, ct);
+        if (student is null)
+            throw new KeyNotFoundException($"Student profile {cmd.StudentProfileId} not found.");
+
         var receipt = new PaymentReceipt(
             cmd.StudentProfileId,
             financeUserId,
@@ -444,7 +448,6 @@ public class StudentLifecycleService : IStudentLifecycleService
         await _repository.AddReceiptAsync(receipt, ct);
 
         // Final-Touches Phase 7 Stage 7.3 — notify student on receipt creation
-        var student = await _repository.GetByIdAsync(cmd.StudentProfileId, ct);
         if (student is not null)
         {
             await _notifications.SendSystemAsync(
