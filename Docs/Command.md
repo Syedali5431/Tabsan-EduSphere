@@ -1075,6 +1075,20 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
     - governance docs synchronized,
     - repository synchronization required.
 
+  ### Plan F Phase 10 Stage 10.3 Data and Import Validation Checkpoint (2026-05-21)
+  - Recent request issue:
+    - proceed.
+  - Implementation Summary:
+    - added integration assertions confirming imported mobile/phone values persist for created users,
+    - added legacy CSV template compatibility coverage validating `PhoneNumber` header handling.
+  - Validation Summary:
+    - `runTests` targeted suite passed (`6/6`):
+      - `tests/Tabsan.EduSphere.IntegrationTests/UserImportAndForceChangeIntegrationTests.cs`.
+  - Status of Checks Done:
+    - Plan F Phase 10 Stage 10.3 completed,
+    - governance docs synchronized,
+    - repository synchronization required.
+
 ### Final-Touches Tracker Restoration Checkpoint (2026-05-20)
 - Recent request issue:
   - proceed.

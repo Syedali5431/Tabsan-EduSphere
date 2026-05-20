@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
 
 namespace Tabsan.EduSphere.IntegrationTests;
@@ -203,10 +205,11 @@ public class UserImportAndForceChangeIntegrationTests
         await SetInstitutionPolicyAsync(superAdminClient, university: true, school: true, college: true);
 
         var username = $"import_mobile_{Guid.NewGuid():N}";
+        const string expectedMobile = "+61412345678";
         var csv = string.Join('\n',
         [
             "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments",
-            $"{username},{username}@tabsan.local,Import Mobile,Finance,,University,+61412345678,22222222-2222-2222-2222-222222222221|22222222-2222-2222-2222-222222222222"
+            $"{username},{username}@tabsan.local,Import Mobile,Finance,,University,{expectedMobile},22222222-2222-2222-2222-222222222221|22222222-2222-2222-2222-222222222222"
         ]);
 
         using var content = new MultipartFormDataContent();
@@ -218,6 +221,44 @@ public class UserImportAndForceChangeIntegrationTests
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(1, ReadInt(body.RootElement, "imported"));
         Assert.Equal(0, ReadInt(body.RootElement, "errors"));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var importedUser = db.Users.SingleOrDefault(u => u.Username == username);
+        Assert.NotNull(importedUser);
+        Assert.Equal(expectedMobile, importedUser!.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task UserImportCsv_WithLegacyPhoneNumberHeader_ImportsAndPersistsPhone()
+    {
+        using var adminClient = CreateClient("Admin");
+        using var superAdminClient = CreateClient("SuperAdmin");
+        await SetInstitutionPolicyAsync(superAdminClient, university: true, school: false, college: false);
+
+        var username = $"import_phone_header_{Guid.NewGuid():N}";
+        const string expectedPhone = "+61123456789";
+        var csv = string.Join('\n',
+        [
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType,PhoneNumber",
+            $"{username},{username}@tabsan.local,Import Phone Header,Admin,,University,{expectedPhone}"
+        ]);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(csv)), "file", "import-users-phone-header.csv");
+
+        var response = await adminClient.PostAsync("api/v1/user-import/csv", content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, ReadInt(body.RootElement, "imported"));
+        Assert.Equal(0, ReadInt(body.RootElement, "errors"));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var importedUser = db.Users.SingleOrDefault(u => u.Username == username);
+        Assert.NotNull(importedUser);
+        Assert.Equal(expectedPhone, importedUser!.PhoneNumber);
     }
 
     [Fact]
