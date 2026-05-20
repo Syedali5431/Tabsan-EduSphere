@@ -15,6 +15,18 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-21 Update - Plan F Phase 10 Stage 10.1 Access and Multi-Campus Validation
+
+### Plan F Phase 10 Stage 10.1 - Access and Multi-Campus Validation
+- Implementation Summary:
+	- aligned Finance policy test expectations with existing API authorization policy behavior,
+	- validated tenant/campus payment scope behavior using existing schema relationships without data-model changes.
+- Validation Summary:
+	- `runTests` targeted validation passed (`97/97`) across authorization and payment-scope unit/integration suites,
+	- no database scripts, migrations, or schema update actions were required.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan F Phase 7 Documentation Synchronization
 
 ### Plan F Phase 7 - Documentation Updates

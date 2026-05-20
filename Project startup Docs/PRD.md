@@ -117,6 +117,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 #### Plan F Phases 4 and 5 (Implemented)
 - Implementation Summary:
   - added finance payment summary reporting with time, institution, department, course, semester, and level filters plus Excel/CSV/PDF export,
+### 2026-05-21 - Plan F Phase 10 Stage 10.1 Access and Multi-Campus Validation
+- Recent request issue:
+  - proceed.
+
+#### Plan F Phase 10 Stage 10.1 (Implemented)
+- Implementation Summary:
+  - corrected Finance policy unit-test modeling to match live policy enforcement (`SuperAdmin` + `Finance`, excluding `Admin`),
+  - validated tenant/campus claim-bound payment visibility behavior using matching and mismatched campus integration scenarios.
+- Validation Summary:
+  - `runTests` targeted suites passed (`97/97`):
+    - `tests/Tabsan.EduSphere.UnitTests/InstitutionPolicyTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/StudentLifecycleIntegrationTests.cs`.
+- Testing and result summary:
+  - Stage 10.1 completed with strict finance access and multi-campus payment scope validation green.
+
+- Behavior impact:
+  - finance policy expectations now consistently reflect production authorization constraints,
+  - finance payment-list access remains tenant/campus scoped with validated out-of-scope campus isolation,
+  - no user-facing feature or schema behavior regression introduced.
+
   - surfaced payment reports in the portal report center with a dedicated finance report page and finance-focused totals/status presentation,
   - enabled finance navigation access for Payments, Report Center, Analytics, and Theme Settings while preserving academic-module blocking for finance-only sessions.
 - Validation Summary:

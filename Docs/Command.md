@@ -1044,6 +1044,22 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - repository synchronization required.
   - repository synchronization required.
 
+  ### Plan F Phase 10 Stage 10.1 Access and Multi-Campus Validation Checkpoint (2026-05-21)
+  - Recent request issue:
+    - proceed.
+  - Implementation Summary:
+    - aligned `InstitutionPolicyTests` Finance policy modeling with current API authorization policy (`SuperAdmin`, `Finance`),
+    - validated multi-campus payment visibility behavior using integration scenarios for matching and mismatched tenant/campus claim scopes.
+  - Validation Summary:
+    - `runTests` targeted suites passed (`97/97`) across:
+      - `tests/Tabsan.EduSphere.UnitTests/InstitutionPolicyTests.cs`,
+      - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+      - `tests/Tabsan.EduSphere.IntegrationTests/StudentLifecycleIntegrationTests.cs`.
+  - Status of Checks Done:
+    - Plan F Phase 10 Stage 10.1 completed,
+    - governance docs synchronized,
+    - repository synchronization required.
+
 ### Final-Touches Tracker Restoration Checkpoint (2026-05-20)
 - Recent request issue:
   - proceed.

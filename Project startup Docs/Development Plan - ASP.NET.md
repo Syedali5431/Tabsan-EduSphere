@@ -43,6 +43,20 @@ Validation summaries must include at minimum:
 - Stage status: Plan F Phase 8 completed.
 - Phase status: Plan F execution ready to proceed to Phase 9.
 
+## 2026-05-21 Update - Plan F Phase 10 Stage 10.1 Access and Multi-Campus Validation
+
+### Plan F Phase 10 - Access and Multi-Campus Validation
+- Implementation Summary:
+  - updated Finance policy unit-test expectations to match live authorization policy (`SuperAdmin` + `Finance`, excluding `Admin`),
+  - validated payment receipt visibility remains tenant/campus scoped for finance claims across matching and mismatched campus contexts.
+- Validation Summary:
+  - `runTests` targeted suites passed (`97/97`) for:
+    - `tests/Tabsan.EduSphere.UnitTests/InstitutionPolicyTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/AuthorizationRegressionTests.cs`,
+    - `tests/Tabsan.EduSphere.IntegrationTests/StudentLifecycleIntegrationTests.cs`.
+- Stage status: Plan F Phase 10 Stage 10.1 completed.
+- Phase status: Plan F Phase 10 in progress (Stage 10.2 next).
+
 ## 2026-05-21 Update - Plan F Phase 9 Stage 9.2 Data Boundary Enforcement
 
 ### Plan F Phase 9 - Data Boundary Enforcement

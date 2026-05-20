@@ -214,15 +214,15 @@ public class InstitutionPolicyTests
 
     [Theory]
     [InlineData("SuperAdmin", true)]
-    [InlineData("Admin", true)]
+    [InlineData("Admin", false)]
     [InlineData("Finance", true)]
     [InlineData("Faculty", false)]
     [InlineData("Student", false)]
     public void FinancePolicy_PolicyInclusion_IsCorrect(string callerRole, bool shouldBeAllowed)
     {
         // Models the policy in Program.cs:
-        //   "Finance"  → RequireRole("SuperAdmin", "Admin", "Finance")
-        var financeAllowedRoles = new[] { "SuperAdmin", "Admin", "Finance" };
+        //   "Finance"  → RequireRole("SuperAdmin", "Finance")
+        var financeAllowedRoles = new[] { "SuperAdmin", "Finance" };
 
         var actual = financeAllowedRoles.Contains(callerRole);
 
