@@ -782,6 +782,26 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 8.3 records secrets/configuration security audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 9 Stage 9.1 (Issue and Inconsistency Remediation)
+
+- Recent request issue:
+  - proceed to Plan E Phase 9 Stage 9.1 (identify and fix issues, inconsistencies, or risks).
+
+### Phase 9 Stage 9.1 - Startup Consistency Risk Fix (Implemented)
+- Implementation Summary:
+  - fixed API startup import inconsistency in `Program.cs` by normalizing merged `using` directives,
+  - removed duplicate `Tabsan.EduSphere.Application.Services` import that produced CS0105 warning noise,
+  - no schema mutation or feature implementation behavior change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full automated test suites passed (`396/396`),
+  - full integration tests passed (`244/244`),
+  - full unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no runtime behavior changes introduced; Stage 9.1 resolves startup-code inconsistency and warning risk only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

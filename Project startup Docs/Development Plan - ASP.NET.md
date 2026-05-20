@@ -705,6 +705,24 @@ Validation summaries must include at minimum:
 - Stage status: Plan E Phase 8 Stage 8.3 completed.
 - Phase status: Plan E Phase 8 completed.
 
+### 2026-05-20 - Plan E Phase 9 Stage 9.1 Issue and Inconsistency Remediation
+- Recent request issue:
+  - proceed to Plan E Phase 9 Stage 9.1 (identify and fix issues, inconsistencies, or risks).
+
+#### Phase 9 Stage 9.1 - Startup Consistency Risk Fix (Implemented)
+- Implementation Summary:
+  - fixed API startup import inconsistency in `Program.cs` by splitting merged `using` directives and removing duplicate import,
+  - removed CS0105 warning source and completed Stage 9.1 risk remediation with no behavior or schema mutation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full automated test suites passed (`396/396`),
+  - full integration tests passed (`244/244`),
+  - full unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan E Phase 9 Stage 9.1 completed.
+- Phase status: Plan E Phase 9 in progress (Stage 9.2 pending).
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

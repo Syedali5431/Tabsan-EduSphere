@@ -666,6 +666,24 @@ No new endpoints were added in this stage.
 | --- | --- | --- |
 | `No new function changes in Plan E Phase 8 Stage 8.3` | Stage 8.3 is audit/validation-only; no production functions were modified. | `N/A` |
 
+## 2026-05-20 - Plan E Phase 9 Stage 9.1 (Issue and Inconsistency Remediation)
+
+- Recent request issue:
+  - proceed to Plan E Phase 9 Stage 9.1 (identify and fix issues, inconsistencies, or risks).
+- Implementation Summary:
+  - fixed API startup using-directive inconsistency and duplicate import warning source in `Program.cs`,
+  - completed risk-focused remediation without introducing new endpoints or service methods.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full automated test suites passed (`396/396`),
+  - full integration tests passed (`244/244`),
+  - full unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `No new function changes in Plan E Phase 9 Stage 9.1` | Stage 9.1 remediates startup consistency risk only; no production function signatures or endpoints were modified. | `N/A` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

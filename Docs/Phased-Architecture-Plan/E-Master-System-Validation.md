@@ -376,6 +376,18 @@ Perform a full system validation and audit after recent changes, ensuring stabil
 - **Stage 9.1:** Identify and fix issues, inconsistencies, or risks
 - **Stage 9.2:** Final review for stability, security, and scalability
 
+#### Phase 9 Stage 9.1 Progress Summary (2026-05-20)
+- Implementation Summary:
+	- identified and fixed startup bootstrap inconsistency in API host initialization by splitting merged `using` directives and removing duplicate import in `Program.cs`,
+	- removed the CS0105 duplicate-using risk source in API startup to keep the release build warning-free and reduce maintenance ambiguity,
+	- no production behavior, endpoint contract, or database schema changes were introduced in this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full automated test suites passed (`396/396`),
+	- full integration tests passed (`244/244`),
+	- full unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+
 ---
 
 ## Key Rules

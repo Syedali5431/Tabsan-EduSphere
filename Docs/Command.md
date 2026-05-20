@@ -704,6 +704,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan E Phase 9 Stage 9.1 Issue and Inconsistency Remediation Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed to Plan E Phase 9 Stage 9.1 (identify and fix issues, inconsistencies, or risks).
+- Implementation Summary:
+  - fixed API startup import inconsistency in `Program.cs` by splitting merged `using` directives and removing duplicate `Tabsan.EduSphere.Application.Services` import,
+  - removed the CS0105 warning source to reduce startup bootstrap ambiguity and maintenance risk,
+  - confirmed no behavior, contract, or schema mutation was required.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full automated test suites passed (`396/396`),
+  - full integration tests passed (`244/244`),
+  - full unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan E Phase 9 Stage 9.1 completed,
+  - Plan E Phase 9 in progress (Stage 9.2 pending),
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.

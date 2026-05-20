@@ -786,6 +786,26 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 - Behavior impact:
   - no feature behavior changes were introduced; this stage records secrets/configuration security audit findings only.
 
+### 2026-05-20 - Plan E Phase 9 Stage 9.1 Issue and Inconsistency Remediation
+- Recent request issue:
+  - proceed to Plan E Phase 9 Stage 9.1 (identify and fix issues, inconsistencies, or risks).
+
+#### Phase 9 Stage 9.1 - Startup Consistency Risk Fix (Implemented)
+- Implementation Summary:
+  - fixed API startup import inconsistency in `Program.cs` by splitting merged `using` directives and removing duplicate import,
+  - removed CS0105 warning source and completed risk remediation without behavior or schema mutation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full automated test suites passed (`396/396`),
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 9.1 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - no feature behavior changes were introduced; this stage resolves startup code consistency and warning risk only.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.
