@@ -27,7 +27,7 @@ public class UserImportService : IUserImportService
     /// (must be provisioned by the super-admin directly).
     /// </summary>
     private static readonly HashSet<string> AllowedRoles =
-        new(StringComparer.OrdinalIgnoreCase) { "Admin", "Faculty", "Student" };
+        new(StringComparer.OrdinalIgnoreCase) { "Admin", "Faculty", "Student", "Finance" };
 
     public UserImportService(
         IUserRepository userRepo,
@@ -109,7 +109,7 @@ public class UserImportService : IUserImportService
             // ── Validate role ─────────────────────────────────────────────────
             if (!AllowedRoles.Contains(roleName))
             {
-                errors.Add($"Line {lineNumber}: Role '{roleName}' is not allowed. Must be one of: Admin, Faculty, Student.");
+                errors.Add($"Line {lineNumber}: Role '{roleName}' is not allowed. Must be one of: Admin, Faculty, Student, Finance.");
                 continue;
             }
 

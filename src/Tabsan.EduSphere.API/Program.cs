@@ -294,6 +294,7 @@ builder.Services.AddAuthorization(opts =>
 {
     opts.AddPolicy("SuperAdmin", p => p.RequireRole("SuperAdmin"));
     opts.AddPolicy("Admin",      p => p.RequireRole("SuperAdmin", "Admin"));
+    opts.AddPolicy("Finance",    p => p.RequireRole("SuperAdmin", "Admin", "Finance"));
     opts.AddPolicy("Faculty",    p => p.RequireRole("SuperAdmin", "Admin", "Faculty"));
     opts.AddPolicy("Student",    p => p.RequireRole("SuperAdmin", "Admin", "Faculty", "Student"));
 });

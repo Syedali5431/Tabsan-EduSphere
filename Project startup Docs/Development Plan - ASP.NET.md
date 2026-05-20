@@ -19,6 +19,24 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Plan F Phase 1 Stage 1.3 Finance Role Seed and Linking
+- Recent request issue:
+  - proceed with Stage 1.3 and connect finance role into the authorization model.
+
+#### Plan F Phase 1 Stage 1.3 (Implemented)
+- Implementation Summary:
+  - seeded `Finance` as a system role in startup role provisioning,
+  - registered `Finance` authorization policy in API startup,
+  - extended CSV user-import role allow-list to include `Finance`.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Stage status: Plan F Phase 1 Stage 1.3 completed.
+- Phase status: Plan F Phase 1 in progress (Stage 1.4 next).
+
 ### 2026-05-20 - Plan F Phase 0 Stage 0.1 Baseline Safety Verification
 - Recent request issue:
   - start Plan F and complete Stage 0.1.

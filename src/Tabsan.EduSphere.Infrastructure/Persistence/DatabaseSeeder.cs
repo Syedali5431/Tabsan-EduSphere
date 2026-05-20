@@ -129,7 +129,7 @@ public static class DatabaseSeeder
     // ── Roles ─────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Inserts the four system roles if they do not already exist.
+    /// Inserts the system roles if they do not already exist.
     /// Roles use an int PK so their IDs are stable across environments.
     /// </summary>
     private static async Task SeedRolesAsync(ApplicationDbContext db)
@@ -142,6 +142,7 @@ public static class DatabaseSeeder
             new Role("Admin",      "Department-level admin — manages users and courses.",       isSystemRole: true),
             new Role("Faculty",    "Teaches courses and manages academic content.",              isSystemRole: true),
             new Role("Student",    "Enrolled student — accesses course and academic content.",  isSystemRole: true),
+            new Role("Finance",    "Handles payment operations, payment tracking, and finance reporting.", isSystemRole: true),
         };
 
         foreach (var role in seed)

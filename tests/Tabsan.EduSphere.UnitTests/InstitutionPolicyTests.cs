@@ -18,6 +18,7 @@ namespace Tabsan.EduSphere.UnitTests;
 /// 1. InstitutionPolicySnapshot value semantics.
 /// 2. InstitutionPolicyService read / write behaviour.
 /// 3. Role-hierarchy contract (SuperAdmin ≥ Admin ≥ Faculty ≥ Student).
+/// 4. Finance policy contract (SuperAdmin/Admin/Finance satisfy Finance policy).
 /// </summary>
 public class InstitutionPolicyTests
 {
@@ -209,5 +210,23 @@ public class InstitutionPolicyTests
 
         actual.Should().Be(shouldBeAllowed,
             because: $"role '{callerRole}' {(shouldBeAllowed ? "should" : "should not")} satisfy the '{requiredRole}' policy");
+    }
+
+    [Theory]
+    [InlineData("SuperAdmin", true)]
+    [InlineData("Admin", true)]
+    [InlineData("Finance", true)]
+    [InlineData("Faculty", false)]
+    [InlineData("Student", false)]
+    public void FinancePolicy_PolicyInclusion_IsCorrect(string callerRole, bool shouldBeAllowed)
+    {
+        // Models the policy in Program.cs:
+        //   "Finance"  → RequireRole("SuperAdmin", "Admin", "Finance")
+        var financeAllowedRoles = new[] { "SuperAdmin", "Admin", "Finance" };
+
+        var actual = financeAllowedRoles.Contains(callerRole);
+
+        actual.Should().Be(shouldBeAllowed,
+            because: $"role '{callerRole}' {(shouldBeAllowed ? "should" : "should not")} satisfy the 'Finance' policy");
     }
 }

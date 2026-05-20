@@ -84,6 +84,17 @@
 ### Stage 1.3 - Finance Role Seed and Linking
 - Introduce `Finance` role and connect to authorization model.
 
+#### Stage 1.3 - Finance Role Seed and Linking (2026-05-20)
+- Implementation Summary:
+  - seeded new system role `Finance` in startup database seeding flow with additive, idempotent behavior,
+  - linked finance authorization into API policy model via a dedicated `Finance` policy (`SuperAdmin`, `Admin`, `Finance`),
+  - aligned user onboarding pipeline by allowing `Finance` in CSV user-import role validation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
 ### Stage 1.4 - Payment Record State Model
 - Ensure payment records support Paid/Unpaid status and payment tracking (date/update trail).
 

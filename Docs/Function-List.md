@@ -3,6 +3,24 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Plan F Phase 1 Stage 1.3 (Finance Role Seed and Linking)
+
+- Recent request issue:
+  - proceed with Stage 1.3 and wire Finance role into core authorization flow.
+- Implementation Summary:
+  - added finance role seeding, finance authorization policy registration, and finance import-role validation support.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `DatabaseSeeder.SeedRolesAsync` | Seeds `Finance` role additively alongside existing system roles during startup bootstrap. | `src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs` |
+| `Program` authorization setup (`AddAuthorization`) | Registers `Finance` policy requiring `SuperAdmin`, `Admin`, or `Finance` role claims. | `src/Tabsan.EduSphere.API/Program.cs` |
+| `UserImportService.AllowedRoles` | Expands import allow-list so CSV onboarding supports `Finance` users. | `src/Tabsan.EduSphere.Application/Services/UserImportService.cs` |
+
 ## 2026-05-20 - Plan F Transition Readiness
 
 - Recent request issue:

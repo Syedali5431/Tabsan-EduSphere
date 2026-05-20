@@ -7,6 +7,24 @@
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## Execution Update - 2026-05-20 (Plan F Phase 1 Stage 1.3 Finance Role Seed and Linking)
+
+- Recent request issue:
+  - proceed with Stage 1.3 and connect Finance role into authorization flow.
+- Implementation Summary:
+  - added `Finance` role to startup role seeding so finance identity is provisioned additively,
+  - registered API `Finance` policy (`SuperAdmin|Admin|Finance`) for upcoming finance module endpoints,
+  - enabled CSV import onboarding support for finance users by extending import role allow-list.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+
+- Module impact:
+  - no module catalog, package pricing, or entitlement-matrix mutation in this stage,
+  - prepares role-policy foundation for later Plan F finance module activation and access controls.
+
 ## Execution Update - 2026-05-20 (Plan F Phase 0 Stage Execution)
 
 ### Stage 0.1 - Baseline Safety Verification

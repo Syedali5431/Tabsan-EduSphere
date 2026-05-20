@@ -32,6 +32,23 @@ After each completed stage, also update these files (where applicable) with `Imp
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+### Plan F Phase 1 Stage 1.3 Finance Role Seed and Linking Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed with Plan F Phase 1 Stage 1.3 and implement finance role seeding plus authorization linkage.
+- Implementation Summary:
+  - added `Finance` as a system role in `DatabaseSeeder` role-seed set,
+  - added API authorization policy `Finance` with role gate `SuperAdmin|Admin|Finance`,
+  - enabled finance role onboarding through CSV import role validation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Status of Checks Done:
+  - Plan F Phase 1 Stage 1.3 completed,
+  - governance docs synchronized (stage-level),
+  - repository synchronization required.
+
 ### Plan F Phase 0 Stage 0.1 Baseline Safety Verification Checkpoint (2026-05-20)
 - Recent request issue:
   - start Plan F and complete Phase 0 Stage 0.1 with stage-level implementation and validation evidence.

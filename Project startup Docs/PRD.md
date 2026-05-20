@@ -18,6 +18,27 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Plan F Phase 1 Stage 1.3 Finance Role Seed and Linking
+- Recent request issue:
+  - proceed with Stage 1.3 and introduce the Finance role with authorization linkage.
+
+#### Plan F Phase 1 Stage 1.3 (Implemented)
+- Implementation Summary:
+  - seeded new `Finance` system role in startup seeding pipeline,
+  - added dedicated `Finance` authorization policy in API composition,
+  - enabled CSV onboarding support for finance users by extending import role validation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -c Release --filter "FullyQualifiedName~InstitutionPolicyTests|FullyQualifiedName~UserImport" -v minimal` passed (`25/25`),
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Release -v minimal` passed (`244/244`),
+  - `dotnet test tests/Tabsan.EduSphere.ContractTests/Tabsan.EduSphere.ContractTests.csproj -c Release -v minimal` passed (`1/1`).
+- Testing and result summary:
+  - Stage 1.3 completed with all targeted and regression quality gates green.
+
+- Behavior impact:
+  - finance role identity is now available in core role model and authorization policy graph,
+  - no breaking API contract or schema mutation introduced in this stage.
+
 ### 2026-05-20 - Plan F Phase 0 Stage 0.1 Baseline Safety Verification
 - Recent request issue:
   - start Plan F and complete stage 0.1 with implementation/validation evidence.
