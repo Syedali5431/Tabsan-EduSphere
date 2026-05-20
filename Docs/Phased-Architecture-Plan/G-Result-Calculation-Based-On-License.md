@@ -20,6 +20,26 @@ Modify result calculation logic so it adapts dynamically based on institute type
 
 ---
 
+### Implementation Summary (Plan G Phase 0 Stage 0.2)
+- Defined the conditional-layer-only contract: Only a conditional decision layer may be added over existing calculation paths; no direct modification of GPA/CGPA, lifecycle, or report logic is allowed.
+- No code, schema, or report logic was changed; this stage is a governance and safety declaration only.
+
+### Validation Summary (Plan G Phase 0 Stage 0.2)
+- Manual review confirmed no direct modification of GPA/CGPA, lifecycle, or report logic.
+- No build, test, or migration was required; this stage is documentation-only.
+
+### Implementation Summary (Plan G Phase 0 Stage 0.3)
+- Established compatibility defaults: Full backward compatibility is enforced, and University GPA behavior is the default when no condition applies.
+- No code, schema, or report logic was changed; this stage is a governance and compatibility declaration only.
+
+### Validation Summary (Plan G Phase 0 Stage 0.3)
+- Manual review confirmed backward compatibility and default behavior are preserved.
+- No build, test, or migration was required; this stage is documentation-only.
+
+---
+
+---
+
 ### Implementation Summary (Plan G Phase 0 Stage 0.1)
 - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
 - No code, schema, or report logic was changed; this stage is a declaration and safety gate only.

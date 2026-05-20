@@ -8,7 +8,31 @@
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
 
-## Execution Update - 2026-05-21 (Plan G Phase 0 Stage 0.1 Protected Surface Declaration)
+
+## Execution Update - 2026-05-21 (Plan G Phase 0 Stage 0.2 Conditional-Layer-Only Contract)
+
+### Plan G Phase 0 Stage 0.2 - Conditional-Layer-Only Contract
+- Implementation Summary:
+  - Defined the conditional-layer-only contract: Only a conditional decision layer may be added over existing calculation paths; no direct modification of GPA/CGPA, lifecycle, or report logic is allowed.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is a governance and safety declaration only.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
+## Execution Update - 2026-05-21 (Plan G Phase 0 Stage 0.3 Compatibility Defaults)
+
+### Plan G Phase 0 Stage 0.3 - Compatibility Defaults
+- Implementation Summary:
+  - Established compatibility defaults: Full backward compatibility is enforced, and University GPA behavior is the default when no condition applies.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is a governance and compatibility declaration only.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 
 ### Plan G Phase 0 Stage 0.1 - Protected Surface Declaration
 - Implementation Summary:

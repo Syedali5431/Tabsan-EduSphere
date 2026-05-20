@@ -79,12 +79,28 @@ After each completed stage, also update these files (where applicable) with `Imp
 
 
 ### Plan G Phase 0 Stage 0.1 Protected Surface Declaration (2026-05-21)
-- Implementation Summary:
   - Declared the protected surface for result calculation: GPA/CGPA logic, lifecycle workflows, storage structure, and report logic are now explicitly frozen against direct modification unless a future phase requires it.
   - No code, schema, or report logic was changed; this stage is a declaration and safety gate only.
-- Validation Summary:
   - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
   - No build, test, or migration was required; this stage is documentation-only.
+
+### Plan G Phase 0 Stage 0.2 Conditional-Layer-Only Contract (2026-05-21)
+- Implementation Summary:
+  - Defined the conditional-layer-only contract: Only a conditional decision layer may be added over existing calculation paths; no direct modification of GPA/CGPA, lifecycle, or report logic is allowed.
+  - No code, schema, or report logic was changed; this stage is a governance and safety declaration only.
+- Validation Summary:
+  - Manual review confirmed no direct modification of GPA/CGPA, lifecycle, or report logic.
+  - No build, test, or migration was required; this stage is documentation-only.
+
+### Plan G Phase 0 Stage 0.3 Compatibility Defaults (2026-05-21)
+- Implementation Summary:
+  - Established compatibility defaults: Full backward compatibility is enforced, and University GPA behavior is the default when no condition applies.
+  - No code, schema, or report logic was changed; this stage is a governance and compatibility declaration only.
+- Validation Summary:
+  - Manual review confirmed backward compatibility and default behavior are preserved.
+  - No build, test, or migration was required; this stage is documentation-only.
+
+---
 
 ---
 
