@@ -649,6 +649,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 6.2 records cross-scope access audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 6 Stage 6.3 (API Endpoint Restriction)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 6 Stage 6.3 - API Restriction Coverage Verification (Implemented)
+- Implementation Summary:
+  - executed API endpoint restriction audit over authorization coverage in API controllers,
+  - audit reported `447` HTTP endpoints: `92` method-level `[Authorize]`, `349` class-level `[Authorize]` coverage, `1` `[AllowAnonymous]`, and `5` review-set endpoints without explicit authorize coverage,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 6.3 records API-restriction audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

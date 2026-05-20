@@ -516,6 +516,22 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan E Phase 6 Stage 6.3 (API Endpoint Restriction)
+
+- Recent request issue:
+	- proceed.
+- Implementation Summary:
+	- executed API endpoint restriction audit over authorization coverage in `src/Tabsan.EduSphere.API/Controllers`,
+	- recorded `447` HTTP endpoints: `92` method-level `[Authorize]`, `349` class-level `[Authorize]` coverage, `1` `[AllowAnonymous]`, and `5` review-set endpoints without explicit authorize coverage,
+	- no table/column/index/constraint changes were applied during this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full integration tests passed (`244/244`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:
