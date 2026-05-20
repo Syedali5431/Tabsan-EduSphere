@@ -20,6 +20,8 @@ public enum AnalyticsExportFormat
 public sealed record AnalyticsExportJobRequest(
     Guid JobId,
     Guid RequestedByUserId,
+    Guid? RequestedByTenantId,
+    Guid? RequestedByCampusId,
     Guid? DepartmentId,
     int? InstitutionType,
     AnalyticsExportReportType ReportType,
@@ -76,6 +78,8 @@ public sealed class AnalyticsExportJobState
 {
     public Guid JobId { get; init; }
     public Guid RequestedByUserId { get; init; }
+    public Guid? RequestedByTenantId { get; init; }
+    public Guid? RequestedByCampusId { get; init; }
     public AnalyticsExportReportType ReportType { get; init; }
     public AnalyticsExportFormat Format { get; init; }
     public string Status { get; init; } = "queued";

@@ -122,6 +122,28 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - analytics query and cache behavior now enforces stricter tenant/campus isolation boundaries,
   - no schema migration and no public endpoint contract change introduced.
 
+### 2026-05-20 - Plan D Phase 4 Stage 4.2 Leakage Prevention
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.2 and prevent cross-scope leakage on broader analytics surfaces.
+
+#### Phase 4 Stage 4.2 - Leakage Prevention (Implemented)
+- Implementation Summary:
+  - enforced owner-or-superadmin semantics for export-job status/download APIs,
+  - added requester tenant/campus metadata in export-job queue/state lifecycle,
+  - enforced tenant/campus scope parity checks during export-job access,
+  - introduced negative integration tests for cross-user and cross-tenant/campus export-job access attempts.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 4.2 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - analytics export-job retrieval now enforces identity ownership and tenant/campus scope consistency,
+  - API routes and schema remained unchanged.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

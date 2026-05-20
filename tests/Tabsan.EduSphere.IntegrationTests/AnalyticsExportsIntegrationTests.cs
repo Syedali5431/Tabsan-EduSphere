@@ -15,11 +15,15 @@ public class AnalyticsExportsIntegrationTests
         _factory = factory;
     }
 
-    private HttpClient CreateClient(string role, string userId = "00000000-0000-0000-0000-000000000001")
+    private HttpClient CreateClient(
+        string role,
+        string userId = "00000000-0000-0000-0000-000000000001",
+        string? tenantId = null,
+        string? campusId = null)
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(role, userId));
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(role, userId, tenantId: tenantId, campusId: campusId));
         return client;
     }
 
@@ -71,5 +75,50 @@ public class AnalyticsExportsIntegrationTests
 
         var payload = await response.Content.ReadAsByteArrayAsync();
         Assert.NotEmpty(payload);
+    }
+
+    [Fact]
+    public async Task AnalyticsExportJobStatus_WithDifferentAdminUser_ReturnsForbidden()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        const string ownerUserId = "00000000-0000-0000-0000-000000000751";
+        const string otherUserId = "00000000-0000-0000-0000-000000000752";
+
+        using var ownerClient = CreateClient("Admin", ownerUserId);
+        var queueResponse = await ownerClient.PostAsync("api/analytics/export-jobs?reportType=performance&format=pdf", content: null);
+        Assert.Equal(HttpStatusCode.Accepted, queueResponse.StatusCode);
+
+        using var queueDoc = JsonDocument.Parse(await queueResponse.Content.ReadAsStringAsync());
+        var jobId = queueDoc.RootElement.GetProperty("jobId").GetGuid();
+
+        using var otherClient = CreateClient("Admin", otherUserId);
+        var statusResponse = await otherClient.GetAsync($"api/analytics/export-jobs/{jobId}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, statusResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task AnalyticsExportJobStatus_WithTenantCampusMismatchForSameUser_ReturnsForbidden()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        const string userId = "00000000-0000-0000-0000-000000000761";
+        var tenantA = Guid.NewGuid().ToString();
+        var campusA = Guid.NewGuid().ToString();
+        var tenantB = Guid.NewGuid().ToString();
+        var campusB = Guid.NewGuid().ToString();
+
+        using var scopedClient = CreateClient("Admin", userId, tenantA, campusA);
+        var queueResponse = await scopedClient.PostAsync("api/analytics/export-jobs?reportType=attendance&format=excel", content: null);
+        Assert.Equal(HttpStatusCode.Accepted, queueResponse.StatusCode);
+
+        using var queueDoc = JsonDocument.Parse(await queueResponse.Content.ReadAsStringAsync());
+        var jobId = queueDoc.RootElement.GetProperty("jobId").GetGuid();
+
+        using var mismatchedScopeClient = CreateClient("Admin", userId, tenantB, campusB);
+        var statusResponse = await mismatchedScopeClient.GetAsync($"api/analytics/export-jobs/{jobId}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, statusResponse.StatusCode);
     }
 }

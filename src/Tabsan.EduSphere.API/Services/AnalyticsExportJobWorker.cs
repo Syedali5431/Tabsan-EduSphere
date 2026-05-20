@@ -38,6 +38,8 @@ public sealed class AnalyticsExportJobWorker : BackgroundService
                 {
                     JobId = request.JobId,
                     RequestedByUserId = request.RequestedByUserId,
+                    RequestedByTenantId = request.RequestedByTenantId,
+                    RequestedByCampusId = request.RequestedByCampusId,
                     ReportType = request.ReportType,
                     Format = request.Format,
                     Status = "running"
@@ -109,6 +111,8 @@ public sealed class AnalyticsExportJobWorker : BackgroundService
                 {
                     JobId = request.JobId,
                     RequestedByUserId = request.RequestedByUserId,
+                    RequestedByTenantId = request.RequestedByTenantId,
+                    RequestedByCampusId = request.RequestedByCampusId,
                     ReportType = request.ReportType,
                     Format = request.Format,
                     Status = "completed",
@@ -135,6 +139,8 @@ public sealed class AnalyticsExportJobWorker : BackgroundService
                 {
                     JobId = request.JobId,
                     RequestedByUserId = request.RequestedByUserId,
+                    RequestedByTenantId = request.RequestedByTenantId,
+                    RequestedByCampusId = request.RequestedByCampusId,
                     ReportType = request.ReportType,
                     Format = request.Format,
                     Status = "failed",

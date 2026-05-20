@@ -110,6 +110,25 @@ Validation summaries must include at minimum:
 - Stage status: Plan D Phase 4 Stage 4.1 completed.
 - Phase status: Plan D Phase 4 in progress (Stage 4.2 pending).
 
+### 2026-05-20 - Plan D Phase 4 Stage 4.2 Leakage Prevention
+- Recent request issue:
+  - proceed to Plan D Phase 4 Stage 4.2 and enforce broader leakage-prevention checks.
+
+#### Phase 4 Stage 4.2 - Leakage Prevention Hardening (Implemented)
+- Implementation Summary:
+  - enforced owner-or-superadmin access semantics for analytics export-job status/download,
+  - added requester tenant/campus metadata propagation for analytics export jobs,
+  - enforced tenant/campus scope parity checks for export-job retrieval endpoints,
+  - added negative integration tests for cross-user and cross-scope access attempts.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Stage status: Plan D Phase 4 Stage 4.2 completed.
+- Phase status: Plan D Phase 4 completed.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

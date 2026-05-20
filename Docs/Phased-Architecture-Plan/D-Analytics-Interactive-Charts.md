@@ -104,6 +104,18 @@ Enhance the Analytical section with advanced, interactive charts and global filt
   - unit tests passed (`151/151`),
   - contract tests passed (`1/1`).
 
+#### Phase 4 Progress Summary (through Stage 4.2) (2026-05-20)
+- Implementation Summary:
+  - tightened analytics export-job access control to `owner-or-superadmin` semantics,
+  - attached requester tenant/campus metadata to analytics export-job request/state records,
+  - enforced tenant/campus scope parity checks on export-job status and download endpoints,
+  - added negative integration tests for cross-user and cross-tenant/campus export-job access attempts.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ### Phase 5: Performance & Optimization
 - **Stage 5.1:** Optimize queries, avoid full dataset loads
 - **Stage 5.2:** Use proper indexes and efficient data loading

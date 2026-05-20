@@ -105,6 +105,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan D Phase 4 Stage 4.2 (Leakage Prevention)
+
+- Recent request issue:
+	- proceed to Stage 4.2 and prevent broader cross-tenant/campus leakage.
+- Implementation Summary:
+	- hardened export-job access control and scope metadata checks in application/API layer,
+	- no relational schema or migration changes were required.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:

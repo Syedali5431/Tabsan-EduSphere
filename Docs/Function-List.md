@@ -113,6 +113,25 @@ No new endpoints were added in this stage.
 | `BuildAnalyticsCacheKey(..., accessScope, ...)` | Partitions analytics cache entries by tenant/campus and caller scope profile to prevent cross-scope cache collisions. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 | `AnalyticsAssignments_WithTenantCampusClaims_ReturnsOnlyCallerScopeData` | Integration regression guard that verifies tenant/campus scoped analytics assignment visibility. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsInstituteParityIntegrationTests.cs` |
 
+## 2026-05-20 - Plan D Phase 4 Stage 4.2 (Leakage Prevention)
+
+- Recent request issue:
+  - proceed to Stage 4.2 leakage-prevention hardening.
+- Implementation Summary:
+  - hardened analytics export-job access checks and scope metadata enforcement.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `CanAccessExportJob` | Enforces owner-or-superadmin and tenant/campus scope parity checks for export job access. | `src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs` |
+| `GetCurrentTenantId` / `GetCurrentCampusId` | Resolves caller tenant/campus claim scope used for export-job ownership checks. | `src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs` |
+| `AnalyticsExportJobStatus_WithDifferentAdminUser_ReturnsForbidden` | Negative integration test preventing cross-user export-job status access. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsExportsIntegrationTests.cs` |
+| `AnalyticsExportJobStatus_WithTenantCampusMismatchForSameUser_ReturnsForbidden` | Negative integration test preventing cross-tenant/campus export-job status access. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsExportsIntegrationTests.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

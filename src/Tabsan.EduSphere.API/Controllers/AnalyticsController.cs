@@ -327,11 +327,16 @@ public sealed class AnalyticsController : ControllerBase
         var requestedByUserId = GetCurrentUserId();
         if (requestedByUserId == Guid.Empty) return Unauthorized();
 
+        var requestedByTenantId = GetCurrentTenantId();
+        var requestedByCampusId = GetCurrentCampusId();
+
         var jobId = Guid.NewGuid();
         await _exportStore.SetStateAsync(new AnalyticsExportJobState
         {
             JobId = jobId,
             RequestedByUserId = requestedByUserId,
+            RequestedByTenantId = requestedByTenantId,
+            RequestedByCampusId = requestedByCampusId,
             ReportType = parsedReportType,
             Format = parsedFormat,
             Status = "queued"
@@ -340,6 +345,8 @@ public sealed class AnalyticsController : ControllerBase
         _exportQueue.Enqueue(new AnalyticsExportJobRequest(
             jobId,
             requestedByUserId,
+            requestedByTenantId,
+            requestedByCampusId,
             scope.DepartmentId,
             scope.InstitutionType,
             parsedReportType,
@@ -365,7 +372,7 @@ public sealed class AnalyticsController : ControllerBase
         var state = await _exportStore.GetStateAsync(jobId, ct);
         if (state is null) return NotFound();
 
-        if (state.RequestedByUserId != requestedByUserId && !User.IsInRole("SuperAdmin") && !User.IsInRole("Admin"))
+        if (!CanAccessExportJob(state, requestedByUserId))
             return Forbid();
 
         return Ok(state);
@@ -382,7 +389,7 @@ public sealed class AnalyticsController : ControllerBase
         var state = await _exportStore.GetStateAsync(jobId, ct);
         if (state is null) return NotFound();
 
-        if (state.RequestedByUserId != requestedByUserId && !User.IsInRole("SuperAdmin") && !User.IsInRole("Admin"))
+        if (!CanAccessExportJob(state, requestedByUserId))
             return Forbid();
 
         if (!string.Equals(state.Status, "completed", StringComparison.OrdinalIgnoreCase))
@@ -406,6 +413,42 @@ public sealed class AnalyticsController : ControllerBase
     {
         var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return Guid.TryParse(raw, out var userId) ? userId : Guid.Empty;
+    }
+
+    private Guid? GetCurrentTenantId()
+    {
+        var raw = User.FindFirstValue("tenant_id")
+                  ?? User.FindFirstValue("tenantId")
+                  ?? User.FindFirstValue("tid");
+        return Guid.TryParse(raw, out var tenantId) ? tenantId : null;
+    }
+
+    private Guid? GetCurrentCampusId()
+    {
+        var raw = User.FindFirstValue("campus_id")
+                  ?? User.FindFirstValue("campusId")
+                  ?? User.FindFirstValue("cid");
+        return Guid.TryParse(raw, out var campusId) ? campusId : null;
+    }
+
+    private bool CanAccessExportJob(AnalyticsExportJobState state, Guid requestedByUserId)
+    {
+        if (User.IsInRole("SuperAdmin"))
+            return true;
+
+        if (state.RequestedByUserId != requestedByUserId)
+            return false;
+
+        var currentTenantId = GetCurrentTenantId();
+        var currentCampusId = GetCurrentCampusId();
+
+        if (state.RequestedByTenantId.HasValue && state.RequestedByTenantId != currentTenantId)
+            return false;
+
+        if (state.RequestedByCampusId.HasValue && state.RequestedByCampusId != currentCampusId)
+            return false;
+
+        return true;
     }
 
     private static bool TryParseReportType(string value, out AnalyticsExportReportType reportType)
