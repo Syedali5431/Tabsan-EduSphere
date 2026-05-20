@@ -7,6 +7,17 @@
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## Execution Update - 2026-05-20 (Backlog Security Hardening User Import Template Access Guard)
+
+- Recent request issue:
+  - proceed with next backlog hardening item and align template download access with import role rules.
+- Implementation Summary:
+  - restricted template-download action to Admin/SuperAdmin to match user-import governance,
+  - no module activation/deactivation, package pricing, or entitlement mapping changes were introduced.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+
 ## Execution Update - 2026-05-20 (Plan D Phase 1 Charting Framework & UI)
 
 - Recent request issue:

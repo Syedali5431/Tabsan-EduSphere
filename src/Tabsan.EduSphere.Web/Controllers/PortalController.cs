@@ -1197,6 +1197,11 @@ public class PortalController : Controller
     [HttpGet]
     public IActionResult UserImportTemplate(string fileName)
     {
+        var identity = _api.GetSessionIdentity();
+        var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+        if (!canImport)
+            return Forbid();
+
         if (string.IsNullOrWhiteSpace(fileName))
             return NotFound();
 

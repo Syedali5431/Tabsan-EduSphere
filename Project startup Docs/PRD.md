@@ -18,6 +18,24 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 
 ## 0. Implementation Update Log
 
+### 2026-05-20 - Backlog Security Hardening User Import Template Access Guard
+- Recent request issue:
+  - proceed with the next backlog stage and fix a user-import security inconsistency.
+
+#### Backlog Hardening - User Import Template Access Guard (Implemented)
+- Implementation Summary:
+  - enforced Admin/SuperAdmin-only access for user import CSV template download,
+  - retained template allow-list and traversal-safe path verification.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+- Testing and result summary:
+  - targeted import + force-change regression suite remained green after the guardrail change.
+
+- Behavior impact:
+  - template downloads are now constrained to the same privileged roles that can execute CSV imports,
+  - no API payload/schema changes introduced.
+
 ### 2026-05-20 - Plan D Phase 2 Stage 2.1 Global Filters
 - Recent request issue:
   - proceed to Plan D Phase 2 Stage 2.1 and implement global analytics filters.

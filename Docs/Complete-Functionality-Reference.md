@@ -15,6 +15,23 @@ After each completed stage, this document must be updated to reflect any net fun
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Backlog Security Hardening (User Import Template Access Guard)
+
+- Recent request issue:
+  - proceed with next backlog hardening item and close template-download access inconsistency.
+
+### User Import Template Access Guard (Implemented)
+- Implementation Summary:
+  - `PortalController.UserImportTemplate(...)` now requires Admin or SuperAdmin session identity,
+  - retained existing template filename allow-list and path traversal protection controls.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+
+- Behavior impact:
+  - non-admin callers can no longer access CSV template download route,
+  - no API contract, database schema, module entitlement, or pricing behavior changed.
+
 ## 2026-05-20 Update - Plan D Phase 1 (Charting Framework & UI)
 
 - Recent request issue:

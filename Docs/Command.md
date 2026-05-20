@@ -32,6 +32,20 @@ After each completed stage, also update these files (where applicable) with `Imp
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+### Backlog Security Hardening Checkpoint - User Import Template Access Guard (2026-05-20)
+- Recent request issue:
+  - proceed with the next actionable backlog item and fix a concrete security risk.
+- Implementation Summary:
+  - enforced Admin/SuperAdmin authorization in `PortalController.UserImportTemplate(...)` so CSV template downloads align with the same access boundary as user import actions,
+  - preserved existing file-name allow-listing and traversal-safe path checks.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+- Status of Checks Done:
+  - backlog hardening checkpoint completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan D Phase 1 Charting Framework & UI Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan D Phase 1 stages 1.1 to 1.3 and enforce phase-end summary placement.

@@ -3,6 +3,20 @@
 > **Maintenance rule**: Every function added to the codebase must be registered here with Name, Purpose, and Location.
 > Format: `Name | Purpose | Location`
 
+## 2026-05-20 - Backlog Security Hardening (User Import Template Access Guard)
+
+- Recent request issue:
+  - proceed with the next backlog item and close user-import template download access risk.
+- Implementation Summary:
+  - tightened authorization on existing template-download action for role parity with import execution.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `PortalController.UserImportTemplate` | Restricts CSV template download to Admin/SuperAdmin callers before file allow-list and path validation checks. | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` |
+
 ## 2026-05-20 - Plan D Phase 1 (Charting Framework & UI)
 
 - Recent request issue:

@@ -15,6 +15,19 @@ After every completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`:
 
 Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
 
+## 2026-05-20 Update - Backlog Security Hardening (User Import Template Access Guard)
+
+- Recent request issue:
+	- proceed with the next backlog hardening task and resolve template download authorization risk.
+- Implementation Summary:
+	- enforced Admin/SuperAdmin guard on the web template download endpoint,
+	- no table/column/index/migration updates were required.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan D Phase 1 (Charting Framework & UI)
 
 - Recent request issue:

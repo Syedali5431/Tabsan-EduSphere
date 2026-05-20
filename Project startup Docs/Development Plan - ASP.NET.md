@@ -19,6 +19,21 @@ Validation summaries must include at minimum:
 
 ## Execution Updates
 
+### 2026-05-20 - Backlog Security Hardening User Import Template Access Guard
+- Recent request issue:
+  - proceed with next backlog stage and fix template-download authorization inconsistency.
+
+#### Backlog Hardening - User Import Template Access Guard (Implemented)
+- Implementation Summary:
+  - added Admin/SuperAdmin role guard to `PortalController.UserImportTemplate(...)`,
+  - preserved template filename allow-list and traversal-safe path validation behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter "FullyQualifiedName~UserImportAndForceChangeIntegrationTests" -v minimal` passed (`4/4`).
+
+- Stage status: backlog security hardening checkpoint completed.
+- Phase status: awaiting next prioritized backlog stage.
+
 ### 2026-05-20 - Plan D Phase 2 Stage 2.1 Global Filters
 - Recent request issue:
   - proceed to Plan D Phase 2 Stage 2.1 and add global analytics filters.
