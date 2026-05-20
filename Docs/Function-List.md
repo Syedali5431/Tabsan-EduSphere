@@ -132,6 +132,25 @@ No new endpoints were added in this stage.
 | `AnalyticsExportJobStatus_WithDifferentAdminUser_ReturnsForbidden` | Negative integration test preventing cross-user export-job status access. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsExportsIntegrationTests.cs` |
 | `AnalyticsExportJobStatus_WithTenantCampusMismatchForSameUser_ReturnsForbidden` | Negative integration test preventing cross-tenant/campus export-job status access. | `tests/Tabsan.EduSphere.IntegrationTests/AnalyticsExportsIntegrationTests.cs` |
 
+## 2026-05-20 - Plan D Phase 5 Stage 5.1 (Performance Optimization)
+
+- Recent request issue:
+  - proceed to Stage 5.1 and optimize analytics query execution.
+- Implementation Summary:
+  - replaced N+1 analytics query loops with batched aggregates and keyed summary dictionaries.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `GetPerformanceReportAsync` (batched aggregates) | Builds performance report using batched results/submissions aggregation instead of per-student round-trips. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `GetAssignmentStatsAsync` (batched stats) | Computes assignment statistics from grouped submission/enrollment snapshots instead of per-assignment query loops. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `GetQuizStatsAsync` (batched attempts) | Aggregates quiz attempt statistics in a grouped pass rather than per-quiz queries. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+| `GetComparativeSummaryAsync` (department aggregates) | Computes comparative summary metrics via department-grouped batched queries. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

@@ -154,6 +154,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - analytics export job retrieval is now isolated by both identity ownership and tenant/campus scope,
   - no API route changes and no schema changes were introduced.
 
+## 2026-05-20 Update - Plan D Phase 5 Stage 5.1 (Performance Optimization)
+
+- Recent request issue:
+  - proceed to Plan D Phase 5 Stage 5.1 query optimization.
+
+### Phase 5 Stage 5.1 - Analytics Query Optimization (Implemented)
+- Implementation Summary:
+  - removed major N+1 query paths from analytics report computation,
+  - replaced repeated row-by-row database calls with batched grouped aggregate reads,
+  - reduced analytics read overhead by enabling no-tracking query execution on report data paths.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics report outputs remain functionally equivalent while query execution is more efficient under broader scopes.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

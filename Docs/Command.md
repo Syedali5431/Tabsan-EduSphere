@@ -152,6 +152,23 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan D Phase 5 Stage 5.1 Performance Optimization Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed to Plan D Phase 5 Stage 5.1 and optimize analytics queries to avoid full dataset loads.
+- Implementation Summary:
+  - refactored analytics aggregation paths to use batched grouped queries and in-memory keyed summaries instead of per-entity N+1 queries,
+  - applied `AsNoTracking` to heavy analytics read queries,
+  - optimized comparative summary aggregation by department-level batched metric retrieval.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan D Phase 5 Stage 5.1 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.

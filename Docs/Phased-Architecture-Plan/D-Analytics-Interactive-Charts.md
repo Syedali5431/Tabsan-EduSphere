@@ -120,6 +120,18 @@ Enhance the Analytical section with advanced, interactive charts and global filt
 - **Stage 5.1:** Optimize queries, avoid full dataset loads
 - **Stage 5.2:** Use proper indexes and efficient data loading
 
+#### Phase 5 Progress Summary (through Stage 5.1) (2026-05-20)
+- Implementation Summary:
+  - replaced multiple analytics N+1 query paths with set-based grouped aggregate retrieval,
+  - optimized `Performance`, `Assignments`, `Quizzes`, and `Comparative Summary` report generation to batch-load scoped data,
+  - added `AsNoTracking` for analytics read paths to reduce tracking overhead on high-volume report queries,
+  - reduced per-row/per-assignment/per-department round-trips by materializing scope-specific dictionaries for aggregation.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - targeted integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
 ### Phase 6: Validation & Finalization
 - **Stage 6.1:** Validate interactivity, filtering, and UI consistency
 - **Stage 6.2:** Final review for performance and security

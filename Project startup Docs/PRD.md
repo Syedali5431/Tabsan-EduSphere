@@ -144,6 +144,26 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
   - analytics export-job retrieval now enforces identity ownership and tenant/campus scope consistency,
   - API routes and schema remained unchanged.
 
+### 2026-05-20 - Plan D Phase 5 Stage 5.1 Performance Optimization
+- Recent request issue:
+  - proceed to Plan D Phase 5 Stage 5.1 and optimize analytics query execution.
+
+#### Phase 5 Stage 5.1 - Performance Optimization (Implemented)
+- Implementation Summary:
+  - removed major N+1 query patterns from analytics report generation,
+  - switched to batched grouped aggregate retrieval for report metrics,
+  - applied no-tracking query execution for heavy report reads.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 5.1 completed with full selected quality-gate pass and no functional regressions.
+
+- Behavior impact:
+  - analytics response behavior is preserved while query execution scales better for wider scopes and higher data volume.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

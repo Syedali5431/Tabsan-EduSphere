@@ -60,7 +60,7 @@ public sealed class AnalyticsService : IAnalyticsService
 
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var query =
-            from sp in _db.StudentProfiles
+            from sp in _db.StudentProfiles.AsNoTracking()
             join u  in _db.Users           on sp.UserId           equals u.Id
             join e  in _db.Enrollments     on sp.Id               equals e.StudentProfileId
             join co in _db.CourseOfferings on e.CourseOfferingId  equals co.Id
@@ -77,18 +77,44 @@ public sealed class AnalyticsService : IAnalyticsService
         var raw = await query.Distinct().ToListAsync(ct);
         if (!raw.Any()) return null;
 
+        var studentIds = raw.Select(r => r.Id).Distinct().ToList();
+        var offeringIds = raw.Select(r => r.OfferingId).Distinct().ToList();
+        var enrollmentPairs = raw.Select(r => (r.Id, r.OfferingId)).ToHashSet();
+
+        var resultRows = await _db.Results
+            .AsNoTracking()
+            .Where(r => studentIds.Contains(r.StudentProfileId) && offeringIds.Contains(r.CourseOfferingId))
+            .Select(r => new { r.StudentProfileId, r.CourseOfferingId, r.MarksObtained })
+            .ToListAsync(ct);
+
+        var resultAveragesByStudent = resultRows
+            .Where(r => enrollmentPairs.Contains((r.StudentProfileId, r.CourseOfferingId)))
+            .GroupBy(r => r.StudentProfileId)
+            .ToDictionary(g => g.Key, g => Math.Round(g.Average(x => (double)x.MarksObtained), 2));
+
+        var submissionsByStudent = await _db.AssignmentSubmissions
+            .AsNoTracking()
+            .Where(s => studentIds.Contains(s.StudentProfileId))
+            .GroupBy(s => s.StudentProfileId)
+            .Select(g => new { StudentProfileId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.StudentProfileId, x => x.Count, ct);
+
         var students = new List<StudentPerformanceRow>();
         foreach (var g in raw.GroupBy(r => r.Id))
         {
             var first = g.First();
-            var oids  = g.Select(x => x.OfferingId).Distinct().ToList();
-            var results = await _db.Results
-                .Where(r => r.StudentProfileId == first.Id && oids.Contains(r.CourseOfferingId))
-                .ToListAsync(ct);
-            var subs = await _db.AssignmentSubmissions.CountAsync(s => s.StudentProfileId == first.Id, ct);
-            var avg  = results.Any() ? results.Average(r => (double)r.MarksObtained) : 0.0;
-            students.Add(new StudentPerformanceRow(first.Id, first.RegistrationNumber, first.DisplayName,
-                deptName, first.CurrentSemesterNumber, Math.Round(avg, 2), subs, subs));
+            var subs = submissionsByStudent.GetValueOrDefault(first.Id, 0);
+            var avg = resultAveragesByStudent.GetValueOrDefault(first.Id, 0.0);
+
+            students.Add(new StudentPerformanceRow(
+                first.Id,
+                first.RegistrationNumber,
+                first.DisplayName,
+                deptName,
+                first.CurrentSemesterNumber,
+                avg,
+                subs,
+                subs));
         }
         students = students.OrderByDescending(s => s.AverageMarks).ToList();
         var report = new DepartmentPerformanceReport(departmentId ?? Guid.Empty, deptName,
@@ -131,7 +157,7 @@ public sealed class AnalyticsService : IAnalyticsService
 
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var rows = await (
-            from ar in _db.AttendanceRecords
+            from ar in _db.AttendanceRecords.AsNoTracking()
             join sp in _db.StudentProfiles on ar.StudentProfileId equals sp.Id
             join u  in _db.Users           on sp.UserId           equals u.Id
             join co in _db.CourseOfferings on ar.CourseOfferingId equals co.Id
@@ -198,7 +224,7 @@ public sealed class AnalyticsService : IAnalyticsService
 
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var assignments = await (
-            from a  in _db.Assignments
+            from a  in _db.Assignments.AsNoTracking()
             join co in _db.CourseOfferings on a.CourseOfferingId equals co.Id
             join c  in _db.Courses         on co.CourseId         equals c.Id
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
@@ -213,15 +239,45 @@ public sealed class AnalyticsService : IAnalyticsService
 
         if (!assignments.Any()) return null;
 
+        var assignmentIds = assignments.Select(a => a.Id).Distinct().ToList();
+        var offeringIds = assignments.Select(a => a.OfferingId).Distinct().ToList();
+
+        var submissionRows = await _db.AssignmentSubmissions
+            .AsNoTracking()
+            .Where(s => assignmentIds.Contains(s.AssignmentId))
+            .Select(s => new { s.AssignmentId, s.Status, s.MarksAwarded })
+            .ToListAsync(ct);
+
+        var submissionStats = submissionRows
+            .GroupBy(s => s.AssignmentId)
+            .ToDictionary(
+                g => g.Key,
+                g => new
+                {
+                    Total = g.Count(),
+                    Graded = g.Count(s => s.Status == SubmissionStatus.Graded),
+                    AverageMarks = g.Any(s => s.Status == SubmissionStatus.Graded && s.MarksAwarded.HasValue)
+                        ? g.Where(s => s.Status == SubmissionStatus.Graded && s.MarksAwarded.HasValue)
+                           .Average(s => (double)s.MarksAwarded!.Value)
+                        : 0
+                });
+
+        var enrollmentCounts = await _db.Enrollments
+            .AsNoTracking()
+            .Where(e => offeringIds.Contains(e.CourseOfferingId))
+            .GroupBy(e => e.CourseOfferingId)
+            .Select(g => new { CourseOfferingId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CourseOfferingId, x => x.Count, ct);
+
         var stats = new List<AssignmentStatsRow>();
         foreach (var a in assignments)
         {
-            var subs     = await _db.AssignmentSubmissions.Where(s => s.AssignmentId == a.Id).ToListAsync(ct);
-            var graded   = subs.Count(s => s.Status == SubmissionStatus.Graded);
-            var avg      = graded > 0 ? subs.Where(s => s.Status == SubmissionStatus.Graded && s.MarksAwarded.HasValue)
-                               .Average(s => (double)s.MarksAwarded!.Value) : 0.0;
-            var enrolled = await _db.Enrollments.CountAsync(e => e.CourseOfferingId == a.OfferingId, ct);
-            stats.Add(new AssignmentStatsRow(a.Id, a.Title, a.CourseName, enrolled, subs.Count, graded, Math.Round(avg, 2)));
+            var subs = submissionStats.GetValueOrDefault(a.Id);
+            var totalSubs = subs?.Total ?? 0;
+            var graded = subs?.Graded ?? 0;
+            var avg = Math.Round(subs?.AverageMarks ?? 0, 2);
+            var enrolled = enrollmentCounts.GetValueOrDefault(a.OfferingId, 0);
+            stats.Add(new AssignmentStatsRow(a.Id, a.Title, a.CourseName, enrolled, totalSubs, graded, avg));
         }
         var report = new AssignmentStatsReport(departmentId ?? Guid.Empty, deptName, stats);
 
@@ -259,7 +315,7 @@ public sealed class AnalyticsService : IAnalyticsService
 
         var deptName = await ResolveDeptNameAsync(departmentId, institutionType, ct);
         var quizzes = await (
-                from q  in _db.Quizzes
+                from q  in _db.Quizzes.AsNoTracking()
             join co in _db.CourseOfferings on q.CourseOfferingId equals co.Id
             join c  in _db.Courses         on co.CourseId         equals c.Id
             join d  in _db.Departments     on c.DepartmentId      equals d.Id
@@ -272,16 +328,39 @@ public sealed class AnalyticsService : IAnalyticsService
 
         if (!quizzes.Any()) return null;
 
+        var quizIds = quizzes.Select(q => q.Id).Distinct().ToList();
+        var attemptStats = await _db.QuizAttempts
+            .AsNoTracking()
+            .Where(a => quizIds.Contains(a.QuizId))
+            .GroupBy(a => a.QuizId)
+            .Select(g => new
+            {
+                QuizId = g.Key,
+                Total = g.Count(),
+                Submitted = g.Count(a => a.Status == AttemptStatus.Submitted || a.Status == AttemptStatus.TimedOut),
+                Average = g.Where(a => a.Status == AttemptStatus.Submitted || a.Status == AttemptStatus.TimedOut)
+                    .Select(a => (double?)(a.TotalScore ?? 0))
+                    .DefaultIfEmpty(0)
+                    .Average() ?? 0,
+                Highest = g.Select(a => (double?)(a.TotalScore ?? 0)).DefaultIfEmpty(0).Max() ?? 0,
+                LowestSubmitted = g.Where(a => a.Status == AttemptStatus.Submitted || a.Status == AttemptStatus.TimedOut)
+                    .Select(a => (double?)(a.TotalScore ?? 0))
+                    .DefaultIfEmpty(0)
+                    .Min() ?? 0
+            })
+            .ToDictionaryAsync(x => x.QuizId, ct);
+
         var stats = new List<QuizStatsRow>();
         foreach (var q in quizzes)
         {
-            var attempts  = await _db.QuizAttempts.Where(a => a.QuizId == q.Id).ToListAsync(ct);
-            var submitted = attempts.Where(a => a.Status == AttemptStatus.Submitted || a.Status == AttemptStatus.TimedOut).ToList();
-            var avg  = submitted.Any() ? submitted.Average(a => (double)(a.TotalScore ?? 0)) : 0.0;
-            var high = attempts.Any()  ? (double)(attempts.Max(a => a.TotalScore) ?? 0)       : 0.0;
-            var low  = submitted.Any() ? (double)(submitted.Min(a => a.TotalScore) ?? 0)      : 0.0;
-            stats.Add(new QuizStatsRow(q.Id, q.Title, q.CourseName, attempts.Count, submitted.Count,
-                Math.Round(avg, 2), Math.Round(high, 2), Math.Round(low, 2)));
+            var attempt = attemptStats.GetValueOrDefault(q.Id);
+            var total = attempt?.Total ?? 0;
+            var submitted = attempt?.Submitted ?? 0;
+            var avg = Math.Round(attempt?.Average ?? 0, 2);
+            var high = Math.Round(attempt?.Highest ?? 0, 2);
+            var low = Math.Round(attempt?.LowestSubmitted ?? 0, 2);
+            stats.Add(new QuizStatsRow(q.Id, q.Title, q.CourseName, total, submitted,
+                avg, high, low));
         }
         var report = new QuizStatsReport(departmentId ?? Guid.Empty, deptName, stats);
 
@@ -321,7 +400,7 @@ public sealed class AnalyticsService : IAnalyticsService
         var effectiveInstitutionType = institutionType ?? (int)InstitutionType.University;
 
         var raw = await (
-            from r in _db.Results
+            from r in _db.Results.AsNoTracking()
             join sp in _db.StudentProfiles on r.StudentProfileId equals sp.Id
             join u  in _db.Users on sp.UserId equals u.Id
             join co in _db.CourseOfferings on r.CourseOfferingId equals co.Id
@@ -427,7 +506,7 @@ public sealed class AnalyticsService : IAnalyticsService
         var windowStartDateUtc = DateTime.UtcNow.Date.AddDays(-(normalizedWindowDays - 1));
 
         var raw = await (
-            from r in _db.Results
+            from r in _db.Results.AsNoTracking()
             join co in _db.CourseOfferings on r.CourseOfferingId equals co.Id
             join c  in _db.Courses on co.CourseId equals c.Id
             join d  in _db.Departments on c.DepartmentId equals d.Id
@@ -504,6 +583,7 @@ public sealed class AnalyticsService : IAnalyticsService
         }
 
         var scopedDepartments = await _db.Departments
+            .AsNoTracking()
             .Where(d => !departmentId.HasValue || d.Id == departmentId.Value)
             .Where(d => !institutionType.HasValue || (int)d.InstitutionType == institutionType.Value)
             .Where(d => !accessScope.TenantId.HasValue || d.TenantId == accessScope.TenantId.Value)
@@ -513,67 +593,96 @@ public sealed class AnalyticsService : IAnalyticsService
 
         if (!scopedDepartments.Any()) return null;
 
+        var departmentIds = scopedDepartments.Select(d => d.Id).ToList();
+
+        var resultAveragesByDepartment = await (
+            from r in _db.Results.AsNoTracking()
+            join co in _db.CourseOfferings on r.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            where departmentIds.Contains(c.DepartmentId)
+                && r.IsPublished
+                && r.MaxMarks > 0
+            group r by c.DepartmentId into g
+            select new
+            {
+                DepartmentId = g.Key,
+                Average = Math.Round(g.Average(x => (x.MarksObtained / x.MaxMarks) * 100m), 2)
+            }
+        ).ToDictionaryAsync(x => x.DepartmentId, x => x.Average, ct);
+
+        var attendanceAggregatesByDepartment = await (
+            from ar in _db.AttendanceRecords.AsNoTracking()
+            join co in _db.CourseOfferings on ar.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            where departmentIds.Contains(c.DepartmentId)
+            group ar by c.DepartmentId into g
+            select new
+            {
+                DepartmentId = g.Key,
+                Total = g.Count(),
+                Attended = g.Count(x => x.Status == AttendanceStatus.Present || x.Status == AttendanceStatus.Late)
+            }
+        ).ToDictionaryAsync(x => x.DepartmentId, ct);
+
+        var expectedSubmissionsByDepartment = await (
+            from a in _db.Assignments.AsNoTracking()
+            join co in _db.CourseOfferings on a.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            join e in _db.Enrollments.AsNoTracking() on co.Id equals e.CourseOfferingId
+            where departmentIds.Contains(c.DepartmentId)
+            group e by c.DepartmentId into g
+            select new
+            {
+                DepartmentId = g.Key,
+                Expected = g.Count()
+            }
+        ).ToDictionaryAsync(x => x.DepartmentId, x => x.Expected, ct);
+
+        var actualSubmissionsByDepartment = await (
+            from s in _db.AssignmentSubmissions.AsNoTracking()
+            join a in _db.Assignments on s.AssignmentId equals a.Id
+            join co in _db.CourseOfferings on a.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            where departmentIds.Contains(c.DepartmentId)
+            group s by c.DepartmentId into g
+            select new
+            {
+                DepartmentId = g.Key,
+                Actual = g.Count()
+            }
+        ).ToDictionaryAsync(x => x.DepartmentId, x => x.Actual, ct);
+
+        var quizAverageByDepartment = await (
+            from qa in _db.QuizAttempts.AsNoTracking()
+            join q in _db.Quizzes on qa.QuizId equals q.Id
+            join co in _db.CourseOfferings on q.CourseOfferingId equals co.Id
+            join c in _db.Courses on co.CourseId equals c.Id
+            where departmentIds.Contains(c.DepartmentId)
+               && (qa.Status == AttemptStatus.Submitted || qa.Status == AttemptStatus.TimedOut)
+               && qa.TotalScore.HasValue
+            group qa by c.DepartmentId into g
+            select new
+            {
+                DepartmentId = g.Key,
+                Average = Math.Round(g.Average(x => x.TotalScore!.Value), 2)
+            }
+        ).ToDictionaryAsync(x => x.DepartmentId, x => x.Average, ct);
+
         var rows = new List<ComparativeSummaryRow>(scopedDepartments.Count);
         foreach (var department in scopedDepartments)
         {
-            var resultAverage = await (
-                from r in _db.Results
-                join co in _db.CourseOfferings on r.CourseOfferingId equals co.Id
-                join c  in _db.Courses on co.CourseId equals c.Id
-                where c.DepartmentId == department.Id
-                   && r.IsPublished
-                   && r.MaxMarks > 0
-                select (r.MarksObtained / r.MaxMarks) * 100m
-            ).ToListAsync(ct);
+            var averageResultPercentage = resultAveragesByDepartment.GetValueOrDefault(department.Id, 0m);
+            var attendance = attendanceAggregatesByDepartment.GetValueOrDefault(department.Id);
+            var averageAttendancePercentage = attendance is null || attendance.Total == 0
+                ? 0m
+                : Math.Round((decimal)attendance.Attended / attendance.Total * 100m, 2);
 
-            var attendanceSnapshot = await (
-                from ar in _db.AttendanceRecords
-                join co in _db.CourseOfferings on ar.CourseOfferingId equals co.Id
-                join c  in _db.Courses on co.CourseId equals c.Id
-                where c.DepartmentId == department.Id
-                select ar.Status
-            ).ToListAsync(ct);
-
-            var assignmentMeta = await (
-                from a in _db.Assignments
-                join co in _db.CourseOfferings on a.CourseOfferingId equals co.Id
-                join c  in _db.Courses on co.CourseId equals c.Id
-                where c.DepartmentId == department.Id
-                select new { a.Id, a.CourseOfferingId }
-            ).ToListAsync(ct);
-
-            var quizScores = await (
-                from qa in _db.QuizAttempts
-                join q in _db.Quizzes on qa.QuizId equals q.Id
-                join co in _db.CourseOfferings on q.CourseOfferingId equals co.Id
-                join c  in _db.Courses on co.CourseId equals c.Id
-                where c.DepartmentId == department.Id
-                   && (qa.Status == AttemptStatus.Submitted || qa.Status == AttemptStatus.TimedOut)
-                   && qa.TotalScore.HasValue
-                select qa.TotalScore!.Value
-            ).ToListAsync(ct);
-
-            var expectedSubmissions = 0;
-            var actualSubmissions = 0;
-            foreach (var assignment in assignmentMeta)
-            {
-                var enrolledCount = await _db.Enrollments
-                    .CountAsync(e => e.CourseOfferingId == assignment.CourseOfferingId, ct);
-                var submissionsCount = await _db.AssignmentSubmissions
-                    .CountAsync(s => s.AssignmentId == assignment.Id, ct);
-                expectedSubmissions += enrolledCount;
-                actualSubmissions += submissionsCount;
-            }
-
-            var averageResultPercentage = resultAverage.Any() ? Math.Round(resultAverage.Average(), 2) : 0m;
-            var averageAttendancePercentage = attendanceSnapshot.Any()
-                ? Math.Round((decimal)attendanceSnapshot.Count(s => s == AttendanceStatus.Present || s == AttendanceStatus.Late)
-                             / attendanceSnapshot.Count * 100m, 2)
-                : 0m;
+            var expectedSubmissions = expectedSubmissionsByDepartment.GetValueOrDefault(department.Id, 0);
+            var actualSubmissions = actualSubmissionsByDepartment.GetValueOrDefault(department.Id, 0);
             var assignmentSubmissionRate = expectedSubmissions > 0
                 ? Math.Round((decimal)actualSubmissions / expectedSubmissions * 100m, 2)
                 : 0m;
-            var quizAverageScore = quizScores.Any() ? Math.Round(quizScores.Average(), 2) : 0m;
+            var quizAverageScore = quizAverageByDepartment.GetValueOrDefault(department.Id, 0m);
 
             rows.Add(new ComparativeSummaryRow(
                 department.Id,
