@@ -135,6 +135,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan D Phase 5 Stage 5.2 (Index and Data-Loading Refinement)
+
+- Recent request issue:
+	- proceed to Stage 5.2 and implement analytics-supporting index strategy.
+- Implementation Summary:
+	- added Stage 5.2 migration `PlanDPhase5Stage52AnalyticsIndexes` with analytics-oriented indexes,
+	- refined `assignment_submissions.Status` column to bounded length (`nvarchar(32)`) for index efficiency.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+	- integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `Index and column-length refinement only`.
+- EF migration impact: `20260520002652_PlanDPhase5Stage52AnalyticsIndexes` added.
+
 ## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:

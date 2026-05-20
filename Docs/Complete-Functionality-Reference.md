@@ -173,6 +173,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - analytics report outputs remain functionally equivalent while query execution is more efficient under broader scopes.
 
+## 2026-05-20 Update - Plan D Phase 5 Stage 5.2 (Index and Data-Loading Refinement)
+
+- Recent request issue:
+  - proceed to Plan D Phase 5 Stage 5.2 schema/index refinement.
+
+### Phase 5 Stage 5.2 - Index Strategy Implementation (Implemented)
+- Implementation Summary:
+  - added index coverage for analytics query hotspots on results publication filters and aggregate submission/attempt paths,
+  - introduced bounded `assignment_submissions.Status` column length to keep status-based index seek paths efficient,
+  - added EF migration to materialize index changes consistently across environments.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - analytics read patterns now align with stronger index coverage while preserving existing API/report behavior.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

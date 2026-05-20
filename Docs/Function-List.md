@@ -151,6 +151,25 @@ No new endpoints were added in this stage.
 | `GetQuizStatsAsync` (batched attempts) | Aggregates quiz attempt statistics in a grouped pass rather than per-quiz queries. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 | `GetComparativeSummaryAsync` (department aggregates) | Computes comparative summary metrics via department-grouped batched queries. | `src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs` |
 
+## 2026-05-20 - Plan D Phase 5 Stage 5.2 (Index and Data-Loading Refinement)
+
+- Recent request issue:
+  - proceed to Stage 5.2 index strategy implementation.
+- Implementation Summary:
+  - added analytics-supporting indexes and migration-backed schema refinement.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+| Function Name | Purpose | Location |
+| --- | --- | --- |
+| `AssignmentSubmissionConfiguration` (Stage 5.2 indexes) | Adds assignment submission indexes for assignment/status and student lookup analytics paths. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AssignmentConfigurations.cs` |
+| `ResultConfiguration` (Stage 5.2 indexes) | Adds published-result indexes for offering/published and publish-time analytics filtering. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AssignmentConfigurations.cs` |
+| `QuizAttemptConfiguration` (Stage 5.2 index) | Adds quiz attempt status index to accelerate quiz aggregate analytics. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/QuizConfigurations.cs` |
+| `PlanDPhase5Stage52AnalyticsIndexes` migration | Materializes Stage 5.2 analytics index and column-length refinements in database schema. | `src/Tabsan.EduSphere.Infrastructure/Persistence/Migrations/20260520002652_PlanDPhase5Stage52AnalyticsIndexes.cs` |
+
 ## 2026-05-20 - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

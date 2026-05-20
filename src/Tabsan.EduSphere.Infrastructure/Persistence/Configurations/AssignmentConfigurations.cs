@@ -40,12 +40,20 @@ public class AssignmentSubmissionConfiguration : IEntityTypeConfiguration<Assign
         builder.Property(s => s.TextContent).HasMaxLength(8000);
         builder.Property(s => s.Feedback).HasMaxLength(2000);
         builder.Property(s => s.MarksAwarded).HasColumnType("decimal(8,2)");
-        builder.Property(s => s.Status).HasConversion<string>();
+        builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(32);
 
         // One submission per student per assignment — the unique index enforces the business rule.
         builder.HasIndex(s => new { s.AssignmentId, s.StudentProfileId })
                .IsUnique()
                .HasDatabaseName("IX_assignment_submissions_assignment_student");
+
+         // Stage 5.2 — analytics aggregate paths frequently group by assignment and submission status.
+         builder.HasIndex(s => new { s.AssignmentId, s.Status })
+             .HasDatabaseName("IX_assignment_submissions_assignment_status");
+
+         // Stage 5.2 — per-student submission analytics and history rollups.
+         builder.HasIndex(s => s.StudentProfileId)
+             .HasDatabaseName("IX_assignment_submissions_student_id");
 
         builder.HasOne(s => s.Assignment)
                .WithMany()
@@ -80,6 +88,13 @@ public class ResultConfiguration : IEntityTypeConfiguration<Result>
         // Index for fast per-offering queries (faculty publishes results for the whole class).
         builder.HasIndex(r => r.CourseOfferingId)
                .HasDatabaseName("IX_results_offering_id");
+
+         // Stage 5.2 — analytics query paths filter published results by offering and recency windows.
+         builder.HasIndex(r => new { r.CourseOfferingId, r.IsPublished })
+             .HasDatabaseName("IX_results_offering_published");
+
+         builder.HasIndex(r => new { r.IsPublished, r.PublishedAt })
+             .HasDatabaseName("IX_results_published_published_at");
 
         // No soft-delete filter — results must remain for audit and transcript purposes.
     }

@@ -97,6 +97,10 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
         builder.HasIndex(a => new { a.QuizId, a.StudentProfileId, a.Status });
         builder.HasIndex(a => a.StudentProfileId);
 
+         // Stage 5.2 — analytics aggregates frequently group by quiz and completion status.
+         builder.HasIndex(a => new { a.QuizId, a.Status })
+             .HasDatabaseName("IX_quiz_attempts_quiz_status");
+
          // Final-Touches Phase 29 Stage 29.1 — support per-student and per-quiz attempt history ordered by recency.
          builder.HasIndex(a => new { a.StudentProfileId, a.StartedAt })
              .HasDatabaseName("IX_quiz_attempts_student_started_at");

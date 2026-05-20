@@ -164,6 +164,26 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 - Behavior impact:
   - analytics response behavior is preserved while query execution scales better for wider scopes and higher data volume.
 
+### 2026-05-20 - Plan D Phase 5 Stage 5.2 Index and Data-Loading Refinement
+- Recent request issue:
+  - proceed to Plan D Phase 5 Stage 5.2 and enforce index strategy for analytics hot paths.
+
+#### Phase 5 Stage 5.2 - Index Strategy and Efficient Loading Alignment (Implemented)
+- Implementation Summary:
+  - added analytics-supporting indexes over assignment submissions, published results, and quiz attempt status aggregates,
+  - introduced bounded `assignment_submissions.Status` storage to maintain efficient indexed access,
+  - added EF migration to ship Stage 5.2 schema refinements.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - integration tests (`Analytics|AuthorizationRegressionTests`) passed (`68/68`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 5.2 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - analytics workloads are now better aligned with index-backed execution while preserving existing functional outcomes.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.
