@@ -725,6 +725,44 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no behavior changes introduced; Stage 7.3 records pagination/analytics audit findings only.
 
+## 2026-05-20 Update - Plan E Phase 8 Stage 8.1 (Environment-Based Configuration)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 8 Stage 8.1 - Environment Configuration Verification (Implemented)
+- Implementation Summary:
+  - executed environment-based configuration audit across startup/configuration-loading paths,
+  - audit reported `61` environment-handling references, `132` configuration/deployment references, `54` `appsettings*.json` files, and `127` Program.cs environment/configuration references,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 8.1 records environment/configuration audit findings only.
+
+## 2026-05-20 Update - Plan E Phase 8 Stage 8.2 (Deployment Scenarios)
+
+- Recent request issue:
+  - proceed.
+
+### Phase 8 Stage 8.2 - Deployment Scenario Verification (Implemented)
+- Implementation Summary:
+  - executed deployment-scenario readiness audit for cloud, on-prem, and multi-instance signals across source startup/configuration paths,
+  - audit reported `1` cloud reference, `0` on-prem references, `14` multi-instance/scale-out references, `200+` deployment/scaling/instance/tenant-isolation source references (search cap reached), and `9` source `appsettings*.json` files,
+  - no schema mutation or feature implementation change introduced in this stage.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+
+- Behavior impact:
+  - no behavior changes introduced; Stage 8.2 records deployment-readiness audit findings only.
+
 ## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
 
 - Recent request issue:

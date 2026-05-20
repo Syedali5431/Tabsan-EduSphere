@@ -339,6 +339,28 @@ Perform a full system validation and audit after recent changes, ensuring stabil
 - **Stage 8.2:** Test deployment scenarios (cloud, on-prem, multi-instance)
 - **Stage 8.3:** Ensure secure handling of secrets and config
 
+#### Phase 8 Stage 8.1 Progress Summary (2026-05-20)
+- Implementation Summary:
+	- executed environment-based configuration audit across startup and configuration-loading paths,
+	- audit baseline reported `61` environment-handling references, `132` configuration/deployment references, `54` `appsettings*.json` files, and `127` Program.cs environment/configuration references,
+	- no production code or schema changes were required in this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full integration tests passed (`244/244`),
+	- full unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+
+#### Phase 8 Stage 8.2 Progress Summary (2026-05-20)
+- Implementation Summary:
+	- executed deployment-scenario readiness audit for cloud, on-prem, and multi-instance signals across source configuration/startup paths,
+	- audit baseline reported `1` cloud reference, `0` on-prem references, `14` multi-instance/scale-out references, `200+` deployment/scaling/instance/tenant-isolation source references (search cap reached), and `9` source `appsettings*.json` files,
+	- no production code or schema changes were required in this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full integration tests passed (`244/244`),
+	- full unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+
 ### Phase 9: Final Review & Fixes
 - **Stage 9.1:** Identify and fix issues, inconsistencies, or risks
 - **Stage 9.2:** Final review for stability, security, and scalability

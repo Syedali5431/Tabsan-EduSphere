@@ -726,6 +726,46 @@ Each stage log entry must clearly describe behavior impact for School/College/Un
 - Behavior impact:
   - no feature behavior changes were introduced; this stage records pagination/analytics audit findings only.
 
+### 2026-05-20 - Plan E Phase 8 Stage 8.1 Environment-Based Configuration
+- Recent request issue:
+  - proceed.
+
+#### Phase 8 Stage 8.1 - Environment Configuration Verification (Implemented)
+- Implementation Summary:
+  - executed environment-based configuration audit across startup/configuration-loading paths,
+  - recorded `61` environment-handling references, `132` configuration/deployment references, `54` `appsettings*.json` files, and `127` Program.cs environment/configuration references,
+  - confirmed no implementation updates were required for Stage 8.1.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 8.1 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - no feature behavior changes were introduced; this stage records environment/configuration audit findings only.
+
+### 2026-05-20 - Plan E Phase 8 Stage 8.2 Deployment Scenarios
+- Recent request issue:
+  - proceed.
+
+#### Phase 8 Stage 8.2 - Deployment Scenario Verification (Implemented)
+- Implementation Summary:
+  - executed deployment-scenario readiness audit for cloud, on-prem, and multi-instance signals across source startup/configuration paths,
+  - recorded `1` cloud reference, `0` on-prem references, `14` multi-instance/scale-out references, `200+` deployment/scaling/instance/tenant-isolation source references (search cap reached), and `9` source `appsettings*.json` files,
+  - confirmed no implementation updates were required for Stage 8.2.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Testing and result summary:
+  - Stage 8.2 completed with all selected quality gates passing.
+
+- Behavior impact:
+  - no feature behavior changes were introduced; this stage records deployment-readiness audit findings only.
+
 ### 2026-05-20 - Plan D Phase 1 Stage 1.3 Clickable Legends
 - Recent request issue:
   - proceed to Plan D Phase 1 Stage 1.3 and add color-coded clickable legends to Analytics charts.

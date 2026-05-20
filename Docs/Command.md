@@ -651,6 +651,41 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - governance docs synchronized,
   - repository synchronization required.
 
+### Plan E Phase 8 Stage 8.1 Environment-Based Configuration Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed.
+- Implementation Summary:
+  - executed environment-based configuration audit across startup and configuration-loading paths,
+  - recorded `61` environment-handling references, `132` configuration/deployment references, `54` `appsettings*.json` files, and `127` Program.cs environment/configuration references,
+  - confirmed no code/schema mutation was required for this checkpoint.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan E Phase 8 Stage 8.1 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
+
+### Plan E Phase 8 Stage 8.2 Deployment Scenarios Checkpoint (2026-05-20)
+- Recent request issue:
+  - proceed.
+- Implementation Summary:
+  - executed deployment-scenario readiness audit for cloud, on-prem, and multi-instance signals across source startup/configuration paths,
+  - recorded `1` cloud reference, `0` on-prem references, `14` multi-instance/scale-out references, `200+` deployment/scaling/instance/tenant-isolation source references (search cap reached), and `9` source `appsettings*.json` files,
+  - confirmed no code/schema mutation was required for this checkpoint.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+  - full integration tests passed (`244/244`),
+  - unit tests passed (`151/151`),
+  - contract tests passed (`1/1`).
+- Status of Checks Done:
+  - Plan E Phase 8 Stage 8.2 completed,
+  - Plan E Phase 8 in progress (Stage 8.3 pending),
+  - governance docs synchronized,
+  - repository synchronization required.
+
 ### Plan C Phase 6 Performance and Optimization Checkpoint (2026-05-20)
 - Recent request issue:
   - complete Plan C Phase 6 Stage 6.1 and Stage 6.2.

@@ -580,6 +580,38 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-20 Update - Plan E Phase 8 Stage 8.1 (Environment-Based Configuration)
+
+- Recent request issue:
+	- proceed.
+- Implementation Summary:
+	- executed environment-based configuration audit across startup/configuration-loading paths,
+	- recorded `61` environment-handling references, `132` configuration/deployment references, `54` `appsettings*.json` files, and `127` Program.cs environment/configuration references,
+	- no table/column/index/constraint changes were applied during this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full integration tests passed (`244/244`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
+## 2026-05-20 Update - Plan E Phase 8 Stage 8.2 (Deployment Scenarios)
+
+- Recent request issue:
+	- proceed.
+- Implementation Summary:
+	- executed deployment-scenario readiness audit for cloud, on-prem, and multi-instance signals across source startup/configuration paths,
+	- recorded `1` cloud reference, `0` on-prem references, `14` multi-instance/scale-out references, `200+` deployment/scaling/instance/tenant-isolation source references (search cap reached), and `9` source `appsettings*.json` files,
+	- no table/column/index/constraint changes were applied during this stage.
+- Validation Summary:
+	- `dotnet build Tabsan.EduSphere.sln -c Release -v minimal` passed,
+	- full integration tests passed (`244/244`),
+	- unit tests passed (`151/151`),
+	- contract tests passed (`1/1`).
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-20 Update - Plan C Phase 6 Implementation (Performance & Optimization)
 
 - Recent request issue:
