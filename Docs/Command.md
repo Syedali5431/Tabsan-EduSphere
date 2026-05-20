@@ -993,6 +993,21 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - Plan E Phase 9 Stage 9.1 completed,
   - Plan E Phase 9 in progress (Stage 9.2 pending),
   - governance docs synchronized,
+
+### Plan F Phase 9 Stage 9.3 Analytics Separation Checkpoint (2026-05-21)
+- Recent request issue:
+  - proceed with Stage 9.3 and keep payment analytics fully separate from academic analytics.
+- Implementation Summary:
+  - verified payment analytics remains isolated in `AnalyticsController` while academic report flows remain in `ReportController`,
+  - confirmed the payment-status endpoint uses finance-scoped analytics inputs and does not reuse the academic report catalog surface,
+  - recorded Stage 9.3 as a verification-only closeout because the separation is already enforced by controller boundaries.
+- Validation Summary:
+  - code review confirmed payment analytics and academic analytics remain on separate controller/service paths,
+  - no schema or runtime behavior changes were required.
+- Status of Checks Done:
+  - Plan F Phase 9 Stage 9.3 completed,
+  - governance docs synchronized,
+  - repository synchronization required.
   - repository synchronization required.
 
 ### Plan E Phase 9 Stage 9.2 Final Stability, Security, and Scalability Review Checkpoint (2026-05-20)

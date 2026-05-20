@@ -56,6 +56,19 @@ Validation summaries must include at minimum:
 - Stage status: Plan F Phase 9 Stage 9.2 completed.
 - Phase status: Plan F Phase 9 in progress (Stage 9.3 next).
 
+## 2026-05-21 Update - Plan F Phase 9 Stage 9.3 Analytics Separation
+
+### Plan F Phase 9 - Analytics Separation
+- Implementation Summary:
+  - verified payment analytics remains isolated in `AnalyticsController` while academic report flows remain in `ReportController`,
+  - confirmed the payment-status endpoint uses finance-scoped analytics inputs and does not reuse the academic report catalog surface,
+  - kept the closeout verification-only because the separation is already enforced by controller boundaries.
+- Validation Summary:
+  - code review confirmed payment analytics and academic analytics remain on separate controller/service paths,
+  - no schema or runtime behavior changes were introduced.
+- Stage status: Plan F Phase 9 Stage 9.3 completed.
+- Phase status: Plan F Phase 9 in progress (Stage 9.4 next).
+
 ### 2026-05-21 - Plan F Phases 4 and 5 Payment Reports and Finance UI Surface
 - Recent request issue:
   - proceed and complete finance report delivery plus finance UI boundary updates.
