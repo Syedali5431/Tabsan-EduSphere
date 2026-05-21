@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan I Phase I1 Stage I1.1 (Identify File Categories)
+
+- Implementation Summary:
+  - Documented the file-category inventory requirement covering documentation/notes, tests and sample/demo assets, debug/temp/backup files, local-only configuration, and non-runtime scripts.
+  - Preserved stage scope so this checkpoint defines exclusion target categories only, without applying exclusions yet.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Final Closure Checkpoint
 
 - Implementation Summary:

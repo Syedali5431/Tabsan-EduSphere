@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan I Phase I1 Stage I1.1 (Identify File Categories)
+
+- Implementation Summary:
+	- Documented the file-category inventory requirement covering documentation/notes, tests and sample/demo assets, debug/temp/backup files, local-only configuration, and non-runtime scripts.
+	- Preserved stage scope so this checkpoint defines exclusion target categories only, without applying exclusions yet.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage I1.1 category boundaries are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan H Final Closure Checkpoint
 
 - Implementation Summary:
