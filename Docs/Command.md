@@ -1,3 +1,11 @@
+### Plan G Phase 5 Stage 5.1 Calculation-Layer Integration (2026-05-21)
+- Implementation Summary:
+  - Documented the requirement to apply institute-conditional logic at the result calculation layer.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the calculation-layer integration requirement.
+- Validation Summary:
+  - Manual review confirmed the calculation-layer integration requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 4 Stage 4.3 GPA Isolation Guard (2026-05-21)
 - Implementation Summary:
   - Documented the requirement to enforce GPA isolation so percentage grade mapping does not affect existing GPA data structures.

@@ -222,6 +222,16 @@ Ensure consistent mapping:
 ### Stage 5.1 - Calculation-Layer Integration
 - Apply institute-conditional logic at result calculation stage.
 
+---
+
+### Implementation Summary (Plan G Phase 5 Stage 5.1)
+- Documented the requirement to apply institute-conditional logic at the result calculation layer.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the calculation-layer integration requirement.
+
+### Validation Summary (Plan G Phase 5 Stage 5.1)
+- Manual review confirmed the calculation-layer integration requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 5.2 - Display-Layer Integration
 - Apply institute-conditional formatting at result display layer.
 
