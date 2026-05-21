@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan H Phase H2 Stage H2.2 (Add Safe Override Behavior)
+
+- Implementation Summary:
+	- Documented the safe override behavior requirement to allow environment variable overrides for app and database connection strings.
+	- Documented guardrails to prefer profile values only when strong detection signals exist, while preserving existing appsettings and legacy fallback behavior.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage H2.2 requirements are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan H Phase H2 Stage H2.1 (Build Detection Helper/Service Module)
 
 - Implementation Summary:

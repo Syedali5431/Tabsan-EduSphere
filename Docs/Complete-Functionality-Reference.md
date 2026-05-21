@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan H Phase H2 Stage H2.2 (Add Safe Override Behavior)
+
+- Implementation Summary:
+  - Documented the safe override behavior requirement to allow environment variable overrides for app and database connection strings.
+  - Documented guardrails to prefer profile values only when strong detection signals exist, while preserving existing appsettings and legacy fallback behavior.
+  - No new runtime functionality or behavior was added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed Stage H2.2 requirements are captured with safety-first override boundaries and backward compatibility expectations.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H2 Stage H2.1 (Build Detection Helper/Service Module)
 
 - Implementation Summary:

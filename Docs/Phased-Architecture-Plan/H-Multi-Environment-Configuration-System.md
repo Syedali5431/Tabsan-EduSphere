@@ -80,6 +80,17 @@ Stage H2.2 - Add safe override behavior
 - Prefer profile values only when strong detection signals exist.
 - Preserve existing appsettings and legacy fallback behavior.
 
+---
+
+### Implementation Summary (Plan H Phase H2 Stage H2.2)
+- Documented the safe override behavior requirement to allow environment variable overrides for app and database connection strings.
+- Documented guardrails to prefer profile values only when strong detection signals exist, while preserving existing appsettings and legacy fallback behavior.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H2 Stage H2.2)
+- Manual review confirmed Stage H2.2 requirements are captured with safety-first override boundaries and backward compatibility expectations.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ## Phase H3 - Runtime Integration Without Breaking Existing Logic
 Reason this phase is third:
 - Integration should happen after resolver behavior is verified and bounded.
