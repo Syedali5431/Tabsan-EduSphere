@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan I Phase I2 Stage I2.2 (License Projects Exclusion Policy)
+
+- Implementation Summary:
+	- Documented extension of the project-level exclusion policy to license projects (`tools/Tabsan.Lic` and `tools/KeyGen`) using the same deterministic non-runtime asset exclusion approach.
+	- Documented explicit safety boundary that exclusion policy must not alter licensing logic or runtime license behavior.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage I2.2 license-project exclusion boundaries are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan I Phase I2 Stage I2.1 (Runtime Projects Exclusion Policy)
 
 - Implementation Summary:

@@ -68,6 +68,17 @@ Stage I2.2 - License projects
   - tools/KeyGen
 - Ensure exclusion policy does not alter licensing logic.
 
+---
+
+### Implementation Summary (Plan I Phase I2 Stage I2.2)
+- Documented extension of the project-level exclusion policy to license projects (`tools/Tabsan.Lic` and `tools/KeyGen`) using the same deterministic non-runtime asset exclusion approach.
+- Documented explicit safety boundary that exclusion policy must not alter licensing logic or runtime license behavior.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan I Phase I2 Stage I2.2)
+- Manual review confirmed Stage I2.2 license-project exclusion boundaries are captured with licensing safety and backward compatibility preserved.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ## Phase I3 - Container Context Minimization (.dockerignore)
 Reason to do third:
 - Docker images should avoid docs/tests/scripts and transient files.

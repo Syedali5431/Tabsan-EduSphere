@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan I Phase I2 Stage I2.2 (License Projects Exclusion Policy)
+
+### Plan I Phase I2 Stage I2.2 - License Projects Exclusion Policy
+- Implementation Summary:
+  - Documented extension of the project-level exclusion policy to license projects (`tools/Tabsan.Lic` and `tools/KeyGen`) using the same deterministic non-runtime asset exclusion approach.
+  - Documented explicit safety boundary that exclusion policy must not alter licensing logic or runtime license behavior.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed Stage I2.2 license-project exclusion boundaries are captured with licensing safety and backward compatibility preserved.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan I Phase I2 Stage I2.1 (Runtime Projects Exclusion Policy)
 
 ### Plan I Phase I2 Stage I2.1 - Runtime Projects Exclusion Policy
