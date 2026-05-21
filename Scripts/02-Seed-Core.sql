@@ -182,6 +182,21 @@ SET u.[Username] = src.[Username],
 FROM [users] u
 INNER JOIN @CoreUsers src ON src.[Id] = u.[Id];
 
+IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[PhoneNumber] = CASE u.[Username]
+        WHEN N'superadmin' THEN N'+61490000001'
+        WHEN N'admin' THEN N'+61490000002'
+        WHEN N'faculty' THEN N'+61490000003'
+        WHEN N'student' THEN N'+61490000004'
+        ELSE u.[PhoneNumber]
+    END,
+    u.[UpdatedAt] = @Now
+    FROM [users] u
+    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
+END;
+
 IF OBJECT_ID(N'[password_history]') IS NOT NULL
 BEGIN
     INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])

@@ -68,6 +68,7 @@ DECLARE @RoleSuperAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'S
 DECLARE @RoleAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin');
 DECLARE @RoleFaculty INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Faculty');
 DECLARE @RoleStudent INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Student');
+DECLARE @RoleFinance INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Finance');
 DECLARE @SuperAdminUserId UNIQUEIDENTIFIER = (
     SELECT TOP 1 [Id]
     FROM [users]
@@ -80,10 +81,10 @@ BEGIN
     SET @SuperAdminUserId = '66666666-6666-6666-6666-666666666601';
 END;
 
-DECLARE @RoleCount INT = (SELECT COUNT(1) FROM [roles] WHERE [Id] IN (@RoleSuperAdmin, @RoleAdmin, @RoleFaculty, @RoleStudent));
-IF @RoleCount < 4
+DECLARE @RoleCount INT = (SELECT COUNT(1) FROM [roles] WHERE [Id] IN (@RoleSuperAdmin, @RoleAdmin, @RoleFaculty, @RoleStudent, @RoleFinance));
+IF @RoleCount < 5
 BEGIN
-    RAISERROR('ERROR: Not all required roles found. You MUST run 02-Seed-Core.sql BEFORE running this script.', 16, 1);
+    RAISERROR('ERROR: Not all required roles found (including Finance). You MUST run 02-Seed-Core.sql BEFORE running this script.', 16, 1);
     RETURN;
 END;
 
@@ -204,6 +205,11 @@ DECLARE @Users TABLE (
 INSERT INTO @Users VALUES
 (@SuperAdminUserId, N'superadmin', N'superadmin@demo.local', @RoleSuperAdmin, NULL, NULL),
 
+-- Finance users
+('99999999-9999-9999-9999-999999999901', N'finance.uni.1', N'finance.uni.1@demo.local', @RoleFinance, '11111111-1111-1111-1111-111111111111', 2),
+('99999999-9999-9999-9999-999999999902', N'finance.col.1', N'finance.col.1@demo.local', @RoleFinance, '12222222-2222-2222-2222-222222222221', 1),
+('99999999-9999-9999-9999-999999999903', N'finance.sch.1', N'finance.sch.1@demo.local', @RoleFinance, '13333333-3333-3333-3333-333333333331', 0),
+
 -- Admins - University departments
 ('66666666-6666-6666-6666-666666666611', N'admin.cs', N'admin.cs@demo.local', @RoleAdmin, '11111111-1111-1111-1111-111111111111', 2),
 ('66666666-6666-6666-6666-666666666612', N'admin.bus', N'admin.bus@demo.local', @RoleAdmin, '11111111-1111-1111-1111-111111111112', 2),
@@ -285,6 +291,22 @@ WHERE u.[Username] <> src.[Username]
    OR ISNULL(CAST(u.[DepartmentId] AS NVARCHAR(36)), N'') <> ISNULL(CAST(src.[DepartmentId] AS NVARCHAR(36)), N'')
    OR ISNULL(u.[InstitutionType], -1) <> ISNULL(src.[InstitutionType], -1)
    OR u.[IsActive] = 0;
+
+IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+BEGIN
+    ;WITH OrderedUsers AS (
+        SELECT
+            u.[Id],
+            rn = ROW_NUMBER() OVER (ORDER BY u.[Username])
+        FROM [users] u
+        WHERE u.[Id] IN (SELECT [Id] FROM @Users)
+    )
+    UPDATE u
+    SET u.[PhoneNumber] = CONCAT(N'+614', RIGHT(CONCAT(N'0000000', CAST(1000000 + o.rn AS NVARCHAR(16))), 7)),
+        u.[UpdatedAt] = @Now
+    FROM [users] u
+    INNER JOIN OrderedUsers o ON o.[Id] = u.[Id];
+END;
 
 /* 4.1) Admin and faculty department assignments */
 IF OBJECT_ID(N'[admin_department_assignments]') IS NOT NULL

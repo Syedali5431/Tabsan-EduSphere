@@ -125,3 +125,10 @@ Summary: The Growth plan offers strong capability coverage with clear ROI for mi
 - Encourage adoption of the Growth plan for operational expansion
 - Highlight feature depth at predictable cost
 - Invite for demo with migration and enablement roadmap
+
+## Mobile APP Roadmap Note (2026-05-21)
+
+- Future implementation includes a dedicated Mobile APP for students, faculty, admins, and finance workflows.
+- Mobile APP rollout is part of planned enhancements and is not billed as a separate pricing tier in the current cycle.
+- Current pricing remains unchanged across this document version.
+- New feature additions in this release wave are provided free under existing pricing plans.

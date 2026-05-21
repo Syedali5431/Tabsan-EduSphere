@@ -68,6 +68,17 @@ SELECT
     CAST((SELECT COUNT(1) FROM [roles] WHERE [Name] = N'Finance') AS NVARCHAR(20)),
     N'1';
 
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+        N'Users.FinanceUserCleanBaselineCount',
+        CASE WHEN COUNT(1) = 0 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'0'
+FROM [users] u
+INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
+WHERE r.[Name] = N'Finance'
+    AND u.[IsDeleted] = 0;
+
 /* 2) SuperAdmin-only startup user baseline */
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT
@@ -91,6 +102,20 @@ WHERE u.[Username] = N'superadmin'
   AND r.[Name] = N'SuperAdmin'
   AND u.[IsActive] = 1
   AND u.[IsDeleted] = 0;
+
+IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+                N'Users.SuperAdminPhonePresent',
+                CASE WHEN COUNT(1) = 1 THEN 1 ELSE 0 END,
+                CAST(COUNT(1) AS NVARCHAR(20)),
+                N'1'
+        FROM [users]
+        WHERE [Id] = '66666666-6666-6666-6666-666666666601'
+            AND [PhoneNumber] IS NOT NULL
+            AND LTRIM(RTRIM([PhoneNumber])) <> N'';
+END;
 
 /* 3) Department institution-type baseline */
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])

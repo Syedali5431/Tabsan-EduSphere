@@ -51,6 +51,12 @@ SELECT 'FinanceRoleCount' AS [CheckName], COUNT(1) AS [Value]
 FROM roles
 WHERE [Name] = N'Finance';
 
+SELECT 'FinanceUserCount' AS [CheckName], COUNT(1) AS [Value]
+FROM users u
+INNER JOIN roles r ON r.Id = u.RoleId
+WHERE r.[Name] = N'Finance'
+	AND u.[IsDeleted] = 0;
+
 SELECT 'ModuleCount' AS [CheckName], COUNT(1) AS [Value]
 FROM modules;
 
@@ -125,6 +131,18 @@ SELECT
 SELECT
 	'UsersPhoneNumberMaxLength' AS [CheckName],
 	ISNULL(COL_LENGTH('users', 'PhoneNumber'), 0) AS [Value];
+
+IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+BEGIN
+	SELECT 'UsersWithPhoneNumberCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM users
+	WHERE PhoneNumber IS NOT NULL
+	  AND LTRIM(RTRIM(PhoneNumber)) <> N'';
+END
+ELSE
+BEGIN
+	SELECT 'UsersWithPhoneNumberCount' AS [CheckName], CAST(0 AS int) AS [Value];
+END;
 
 SELECT 'PaymentSummaryReportCount' AS [CheckName], COUNT(1) AS [Value]
 FROM report_definitions

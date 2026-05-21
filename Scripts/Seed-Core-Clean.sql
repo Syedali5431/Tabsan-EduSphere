@@ -109,6 +109,14 @@ SET [Username] = N'superadmin',
     [UpdatedAt] = @Now
 WHERE [Id] = @SuperAdminUserId;
 
+IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [PhoneNumber] = N'+61490000001',
+        [UpdatedAt] = @Now
+    WHERE [Id] = @SuperAdminUserId;
+END;
+
 IF OBJECT_ID(N'[password_history]') IS NOT NULL
 BEGIN
     INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])

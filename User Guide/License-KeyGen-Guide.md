@@ -161,3 +161,12 @@ After issuing a license:
 - Activation confirmed by SuperAdmin
 - Audit record updated
 - Renewal reminder scheduled
+
+## Phase 40.2 Unified Update (2026-05-21)
+
+- Added alignment note for expanded School/College/University operations and Finance workflows.
+- Confirmed mobile-ready user handling for import and seeded data (MobileNumber/PhoneNumber).
+- Confirmed campus-assignment aware import compatibility (CampusAssignments, pipe-separated GUIDs).
+- Confirmed reporting baseline includes payment summary support for Finance role.
+- Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
+- Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.

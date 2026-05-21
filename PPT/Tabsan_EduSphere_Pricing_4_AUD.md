@@ -125,3 +125,10 @@ Summary: The Advanced plan is ideal for institutions that need deeper visibility
 - Encourage adoption of the Advanced plan for analytics-led operations
 - Highlight reduced manual load and improved governance
 - Invite for demo with KPI-based adoption targets
+
+## Mobile APP Roadmap Note (2026-05-21)
+
+- Future implementation includes a dedicated Mobile APP for students, faculty, admins, and finance workflows.
+- Mobile APP rollout is part of planned enhancements and is not billed as a separate pricing tier in the current cycle.
+- Current pricing remains unchanged across this document version.
+- New feature additions in this release wave are provided free under existing pricing plans.

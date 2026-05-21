@@ -125,3 +125,10 @@ Summary: Start fast with a low-cost core package, then scale features as institu
 - Encourage adoption of the Foundation Lite plan
 - Highlight lowest entry price and upgrade flexibility
 - Invite for demo, trial onboarding, and phased rollout
+
+## Mobile APP Roadmap Note (2026-05-21)
+
+- Future implementation includes a dedicated Mobile APP for students, faculty, admins, and finance workflows.
+- Mobile APP rollout is part of planned enhancements and is not billed as a separate pricing tier in the current cycle.
+- Current pricing remains unchanged across this document version.
+- New feature additions in this release wave are provided free under existing pricing plans.
