@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 4 Stage 4.1 (Base Grade Bands)
+
+- Implementation Summary:
+  - Documented the requirement to define standardized percentage grade bands for A+, A, B, and C/D for school and college contexts.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only and sets the base grade-band definition requirement.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 3 Stage 3.3 (Invalid Context Handling)
 
 - Implementation Summary:

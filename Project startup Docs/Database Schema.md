@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 4 Stage 4.1 (Base Grade Bands)
+
+- Implementation Summary:
+	- Documented the requirement to define standardized percentage grade bands for A+, A, B, and C/D for school and college contexts.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the base grade-band definition requirement.
+- Validation Summary:
+	- Manual review confirmed the base grade-band definition requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 3 Stage 3.3 (Invalid Context Handling)
 
 - Implementation Summary:
