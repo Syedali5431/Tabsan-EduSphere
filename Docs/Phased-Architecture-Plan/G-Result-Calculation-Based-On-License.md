@@ -342,6 +342,16 @@ Ensure consistent mapping:
 ### Stage 8.1 - Result Format Rendering
 - Render School/College as Percentage + Grade and University as GPA/CGPA.
 
+---
+
+### Implementation Summary (Plan G Phase 8 Stage 8.1)
+- Documented the requirement for result format rendering so School/College contexts show Percentage + Grade while University contexts show GPA/CGPA.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the result-format rendering requirement.
+
+### Validation Summary (Plan G Phase 8 Stage 8.1)
+- Manual review confirmed the result-format rendering requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 8.2 - Report Format Alignment
 - Ensure reports use the correct calculation type per context.
 

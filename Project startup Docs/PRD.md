@@ -1,3 +1,11 @@
+### 2026-05-21 - Plan G Phase 8 Stage 8.1 Result Format Rendering
+- Implementation Summary:
+  - Documented the requirement for result format rendering so School/College contexts show Percentage + Grade while University contexts show GPA/CGPA.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only and sets the result-format rendering requirement.
+- Validation Summary:
+  - Manual review confirmed the result-format rendering requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 7 Stage 7.3 Conflict Prevention in Shared Deployments
 - Implementation Summary:
   - Documented the requirement to confirm conflict-free behavior for mixed-institution tenants in shared deployments.

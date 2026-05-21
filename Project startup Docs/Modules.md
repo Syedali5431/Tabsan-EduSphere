@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 8 Stage 8.1 Result Format Rendering)
+
+### Plan G Phase 8 Stage 8.1 - Result Format Rendering
+- Implementation Summary:
+  - Documented the requirement for result format rendering so School/College contexts show Percentage + Grade while University contexts show GPA/CGPA.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the result-format rendering requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 7 Stage 7.3 Conflict Prevention in Shared Deployments)
 
 ### Plan G Phase 7 Stage 7.3 - Conflict Prevention in Shared Deployments

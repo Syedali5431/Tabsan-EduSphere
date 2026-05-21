@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 8 Stage 8.1 (Result Format Rendering)
+
+- Implementation Summary:
+	- Documented the requirement for result format rendering so School/College contexts show Percentage + Grade while University contexts show GPA/CGPA.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the result-format rendering requirement.
+- Validation Summary:
+	- Manual review confirmed the result-format rendering requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 7 Stage 7.3 (Conflict Prevention in Shared Deployments)
 
 - Implementation Summary:
