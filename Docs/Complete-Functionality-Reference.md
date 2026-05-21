@@ -25,25 +25,6 @@
   - Manual review confirmed the parsing requirement is documented and no implementation or schema changes were made.
   - No build, test, or migration was required; this stage is documentation-only.
 
-# Tabsan-EduSphere - Complete Functionality Reference
-
-**Document Version:** 2.1 (Final Phase 38 Baseline)  
-**Date:** May 15, 2026  
-**Project Status:** Phase 38 complete (final publish-separation baseline)  
-**Last Updated:** Based on PRD v1.75 and execute-mode closure evidence  
-
-## Institute Parity Documentation Governance (2026-05-13)
-
-For every completed stage under `Docs/Institute-Parity-Issue-Fix-Phases.md`, the stage entry must include:
-- `Implementation Summary`
-- `Validation Summary`
-
-After each completed stage, this document must be updated to reflect any net functionality behavior change for School/College/University parity, including role/institute filters and report behavior.
-
-Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
-
-
-
 ## 2026-05-21 Update - Plan G Phase 0 Stage 0.2 (Conditional-Layer-Only Contract)
 
 - Implementation Summary:
@@ -1127,7 +1108,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Behavior impact:
   - no functional behavior changes introduced; governance tracking continuity was restored.
 
-## 2026-05-20 Update - Plan C Phase 7 Stage 7.1 Validation
+## 2026-05-20 Update - Plan C
 
 - Recent request issue:
   - start Plan C Phase 7 Stage 7.1 validation for data safety, access control, and UI.
@@ -1251,6 +1232,25 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
   - full integration tests passed (`236/236`),
   - contract tests passed (`1/1`).
 - Testing and result summary:
+  - total automated validations passed: `388/388`.
+
+- Behavior impact:
+  - all new course-material records are now hard-guarded for tenant/campus scoping and valid location shape,
+  - no runtime role/institute/module behavior regression introduced.
+
+## 2026-05-19 Update - Plan C Phase 1 Implementation (Domain & Database Extension)
+
+- Recent request issue:
+  - start Plan C Phase 1.
+
+### Phase 1 - Domain & Database Extension (Implemented)
+- Implementation Summary:
+  - added `CourseMaterial` domain aggregate with required material metadata,
+  - linked material scope to tenant/campus/department/program/semester/course (subject context),
+  - added `course_materials` migration with foreign keys and scope-first indexes.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
+  - full unit tests passed (`151/1
   - total automated validations passed: `388/388`.
 
 - Behavior impact:

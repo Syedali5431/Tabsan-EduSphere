@@ -79,6 +79,18 @@ Modify result calculation logic so it adapts dynamically based on institute type
 ### Stage 2.1 - School Calculation Path
 - Use marks-based percentage calculation and return Percentage + Grade.
 
+---
+
+### Implementation Summary (Plan G Phase 2 Stage 2.1)
+- Documented the requirement to implement marks-based percentage calculation for schools and return Percentage + Grade.
+- No runtime logic was implemented yet; this stage is documentation-only and sets the calculation path requirement.
+
+### Validation Summary (Plan G Phase 2 Stage 2.1)
+- Manual review confirmed the calculation path requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
+---
+
 ### Stage 2.2 - College Calculation Path
 - Use percentage-based calculation (aligned to school path) and return Percentage + Grade.
 

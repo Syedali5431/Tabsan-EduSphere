@@ -28,28 +28,15 @@
   - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
   - No build, test, or migration was required; this stage is documentation-only.
 
-# Tabsan EduSphere Development Plan (ASP.NET)
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.1 (School Calculation Path)
 
-**Version:** 1.5  
-**Date:** 15 May 2026  
-**Based On:** PRD v1.75, Modules v1.3, Database Schema v1.2
-
-## Institute Parity Stage Documentation Rule (2026-05-13)
-
-For each completed stage in `Docs/Institute-Parity-Issue-Fix-Phases.md`, this plan must be updated with:
-- `Implementation Summary`
-- `Validation Summary`
-
-Validation summaries must include at minimum:
-- commands/test suites executed,
-- role/institute behavior checks,
-- regression confirmation status.
-
----
-
-## Execution Updates
-
-
+### Plan G Phase 2 Stage 2.1 - School Calculation Path
+- Implementation Summary:
+  - Documented the requirement to implement marks-based percentage calculation for schools and return Percentage + Grade.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the calculation path requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
 
 ## 2026-05-21 Update - Plan G Phase 0 Stage 0.2 (Conditional-Layer-Only Contract)
 
@@ -1150,6 +1137,19 @@ Validation summaries must include at minimum:
 #### Phase 6 Stage 6.1/6.2/6.3 - Import Template, Compatibility, and Validation (Implemented)
 - Implementation Summary:
   - extended import parser header handling with optional `MobileNumber` alias support for `PhoneNumber`,
+  - added optional `CampusAssignments`/`CampusIds` parser validation as pipe-separated GUID values,
+  - updated user import UI template guidance and distributed CSV template files with the new columns,
+  - preserved backward compatibility for prior CSV templates that omit new headers.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj -c Debug --filter FullyQualifiedName~UserImportAndForceChangeIntegrationTests` passed (`6/6`),
+  - static diagnostics on touched import files returned no errors.
+
+- Stage status: Plan F Phase 6 Stage 6.1/6.2/6.3 completed.
+- Phase status: Plan F Phase 6 completed.
+
+#### Plan F Phase 6 Completion Checkpoint (2026-05-21)
+- Implementation Summary:
+  - closed Stage 6.1/6.
   - added optional `CampusAssignments`/`CampusIds` parser validation as pipe-separated GUID values,
   - updated user import UI template guidance and distributed CSV template files with the new columns,
   - preserved backward compatibility for prior CSV templates that omit new headers.

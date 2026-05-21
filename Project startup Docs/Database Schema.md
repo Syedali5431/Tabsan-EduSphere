@@ -31,6 +31,17 @@
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.1 (School Calculation Path)
+
+- Implementation Summary:
+  - Documented the requirement to implement marks-based percentage calculation for schools and return Percentage + Grade.
+  - No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the calculation path requirement.
+- Validation Summary:
+  - Manual review confirmed the calculation path requirement is documented and no implementation or schema changes were made.
+  - No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 # Database Schema Documentation
 ## University Portal & License Creation Tool
 
@@ -1246,18 +1257,7 @@ Placement rule: put Implementation Summary and Validation Summary at the end of 
 - Schema impact: `No schema mutation`.
 - EF migration impact: none.
 
-## 2026-05-19 Update - Plan B Phase 6 Implementation (Tenant + Campus Aware Configuration)
-
-- Recent request issue:
-	- proceed to tenant-aware configuration and isolation after customer deployment support.
-- Implementation Summary:
-	- added tenant-isolation resolver and tenant config overlay support,
-	- no database schema or migration changes were introduced.
-- Validation Summary:
-	- `dotnet build Tabsan.EduSphere.sln -v minimal` passed,
-	- full unit tests passed (`151/151`),
-	- full integration tests passed (`236/236`),
-	- contract tests passed (`1/1`).
+## 2026-05-
 - Testing and result summary:
 	- total automated validations passed: `388/388`.
 - Schema impact: `No schema mutation`.

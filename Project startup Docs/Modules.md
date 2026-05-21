@@ -34,17 +34,6 @@
 - Module impact:
   - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
 
-# University Portal – Module Definition, Activation & Packaging
-
-**Document Version:** 1.3 (Implementation Baseline — Extended)  
-**Aligned With PRD Version:** 1.8  
-**Audience:** Super Admin, University Decision Makers  
-**Purpose:** Define selectable system modules, activation rules, and pricing packages  
-
-Placement rule: put Implementation Summary and Validation Summary at the end of each phase section (not at the start or end of the document).
-
-
-
 ## Execution Update - 2026-05-21 (Plan G Phase 0 Stage 0.2 Conditional-Layer-Only Contract)
 
 ### Plan G Phase 0 Stage 0.2 - Conditional-Layer-Only Contract
