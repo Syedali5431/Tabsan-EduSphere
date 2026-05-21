@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 4 Stage 4.2 (Configurable Grade Scale)
+
+### Plan G Phase 4 Stage 4.2 - Configurable Grade Scale
+- Implementation Summary:
+  - Documented the requirement to implement configurable grade-scale hooks so percentage grade bands can be adjusted in future iterations.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the configurable grade-scale hook requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 4 Stage 4.1 (Base Grade Bands)
 
 ### Plan G Phase 4 Stage 4.1 - Base Grade Bands
