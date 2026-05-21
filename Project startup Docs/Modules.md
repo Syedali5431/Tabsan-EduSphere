@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 7 Stage 7.1 Multi-Institute Dispatch Logic)
+
+### Plan G Phase 7 Stage 7.1 - Multi-Institute Dispatch Logic
+- Implementation Summary:
+  - Documented the requirement to apply multi-institute dispatch logic so, when multiple institute types are enabled, the calculation method is selected by department institution type.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the multi-institute dispatch requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 6 Stage 6.3 Lifecycle API Freeze)
 
 ### Plan G Phase 6 Stage 6.3 - Lifecycle API Freeze

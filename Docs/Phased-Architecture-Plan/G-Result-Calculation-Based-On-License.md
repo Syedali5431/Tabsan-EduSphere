@@ -302,6 +302,16 @@ Ensure consistent mapping:
 ### Stage 7.1 - Multi-Institute Dispatch Logic
 - When multiple institute types are enabled, select calculation method by department institution type.
 
+---
+
+### Implementation Summary (Plan G Phase 7 Stage 7.1)
+- Documented the requirement to apply multi-institute dispatch logic so, when multiple institute types are enabled, the calculation method is selected by department institution type.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the multi-institute dispatch requirement.
+
+### Validation Summary (Plan G Phase 7 Stage 7.1)
+- Manual review confirmed the multi-institute dispatch requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 7.2 - Cross-Context Example Validation
 - Validate representative scenarios (School->percentage, University->GPA).
 
