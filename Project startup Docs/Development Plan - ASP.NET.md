@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 9 Stage 9.2 (Calculation-Type Separation)
+
+### Plan G Phase 9 Stage 9.2 - Calculation-Type Separation
+- Implementation Summary:
+  - Documented the calculation-type separation requirement to enforce strict separation between percentage and GPA calculations.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the calculation-type separation requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 9 Stage 9.1 (GPA Overwrite Prevention)
 
 ### Plan G Phase 9 Stage 9.1 - GPA Overwrite Prevention

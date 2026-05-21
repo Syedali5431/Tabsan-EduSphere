@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 9 Stage 9.2 Calculation-Type Separation)
+
+### Plan G Phase 9 Stage 9.2 - Calculation-Type Separation
+- Implementation Summary:
+  - Documented the calculation-type separation requirement to enforce strict separation between percentage and GPA calculations.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the calculation-type separation requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 9 Stage 9.1 GPA Overwrite Prevention)
 
 ### Plan G Phase 9 Stage 9.1 - GPA Overwrite Prevention

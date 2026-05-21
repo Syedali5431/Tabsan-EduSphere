@@ -395,6 +395,16 @@ Ensure consistent mapping:
 ### Stage 9.2 - Calculation-Type Separation
 - Enforce strict separation between percentage and GPA calculations.
 
+---
+
+### Implementation Summary (Plan G Phase 9 Stage 9.2)
+- Documented the calculation-type separation requirement to enforce strict separation between percentage and GPA calculations.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the calculation-type separation requirement.
+
+### Validation Summary (Plan G Phase 9 Stage 9.2)
+- Manual review confirmed the calculation-type separation requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 9.3 - Query and Schema Safety
 - Protect existing report queries and avoid unnecessary DB schema changes.
 
