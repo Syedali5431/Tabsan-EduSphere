@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.4 (Non-Refactor Guard)
+
+- Implementation Summary:
+	- Documented the non-refactor guard that explicitly prohibits GPA system modification/refactor during this phase.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the GPA non-refactor protection requirement.
+- Validation Summary:
+	- Manual review confirmed the GPA non-refactor protection requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 2 Stage 2.3 (University Calculation Path)
 
 - Implementation Summary:

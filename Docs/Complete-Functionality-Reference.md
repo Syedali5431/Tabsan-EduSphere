@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.4 (Non-Refactor Guard)
+
+- Implementation Summary:
+  - Documented the non-refactor guard that explicitly prohibits GPA system modification/refactor during this phase.
+  - No new runtime functionality or behavior was added; this stage is documentation-only and sets the GPA non-refactor protection requirement.
+- Validation Summary:
+  - Manual review confirmed the GPA non-refactor protection requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 2 Stage 2.3 (University Calculation Path)
 
 - Implementation Summary:
