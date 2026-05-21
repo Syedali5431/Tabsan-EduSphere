@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan I Phase I2 Stage I2.1 (Runtime Projects Exclusion Policy)
+
+- Implementation Summary:
+	- Documented project-level exclusion policy for runtime projects (API, Web, BackgroundJobs) using `CopyToOutputDirectory=Never` and `CopyToPublishDirectory=Never` patterns for non-runtime assets.
+	- Preserved stage scope so this checkpoint defines deterministic publish/output exclusion behavior at project configuration level only.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage I2.1 project-level exclusion policy is documented without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan I Phase I1 Stage I1.2 (Protect Runtime-Critical Files)
 
 - Implementation Summary:

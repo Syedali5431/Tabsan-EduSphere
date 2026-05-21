@@ -51,6 +51,17 @@ Stage I2.1 - Runtime projects
   - Web
   - BackgroundJobs
 
+---
+
+### Implementation Summary (Plan I Phase I2 Stage I2.1)
+- Documented project-level exclusion policy for runtime projects (API, Web, BackgroundJobs) using `CopyToOutputDirectory=Never` and `CopyToPublishDirectory=Never` patterns for non-runtime assets.
+- Preserved stage scope so this checkpoint defines deterministic publish/output exclusion behavior at project configuration level only.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan I Phase I2 Stage I2.1)
+- Manual review confirmed Stage I2.1 project-level exclusion policy is documented with runtime-safety boundaries preserved.
+- No build, test, or migration was required; this stage is documentation-only.
+
 Stage I2.2 - License projects
 - Apply the same policy to:
   - tools/Tabsan.Lic

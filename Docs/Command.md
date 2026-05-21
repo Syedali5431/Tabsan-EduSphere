@@ -1,3 +1,12 @@
+### Plan I Phase I2 Stage I2.1 Runtime Projects Exclusion Policy (2026-05-21)
+- Implementation Summary:
+  - Documented project-level exclusion policy for runtime projects (API, Web, BackgroundJobs) using `CopyToOutputDirectory=Never` and `CopyToPublishDirectory=Never` patterns for non-runtime assets.
+  - Preserved stage scope so this checkpoint defines deterministic publish/output exclusion behavior at project configuration level only.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed Stage I2.1 project-level exclusion policy is documented with runtime-safety boundaries preserved.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan I Phase I1 Stage I1.2 Protect Runtime-Critical Files (2026-05-21)
 - Implementation Summary:
   - Documented runtime-protection guardrails to keep appsettings runtime files and licensing runtime inputs intact while preserving core logic and existing code paths.

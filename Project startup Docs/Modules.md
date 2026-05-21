@@ -1,3 +1,16 @@
+## Execution Update - 2026-05-21 (Plan I Phase I2 Stage I2.1 Runtime Projects Exclusion Policy)
+
+### Plan I Phase I2 Stage I2.1 - Runtime Projects Exclusion Policy
+- Implementation Summary:
+  - Documented project-level exclusion policy for runtime projects (API, Web, BackgroundJobs) using `CopyToOutputDirectory=Never` and `CopyToPublishDirectory=Never` patterns for non-runtime assets.
+  - Preserved stage scope so this checkpoint defines deterministic publish/output exclusion behavior at project configuration level only.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed module and entitlement behavior remain unchanged.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan I Phase I1 Stage I1.2 Protect Runtime-Critical Files)
 
 ### Plan I Phase I1 Stage I1.2 - Protect Runtime-Critical Files
