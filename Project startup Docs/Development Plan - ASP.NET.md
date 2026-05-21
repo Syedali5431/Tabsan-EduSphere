@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan H Phase H4 Stage H4.2 (Compose App and DB Topology)
+
+### Plan H Phase H4 Stage H4.2 - Compose App and DB Topology
+- Implementation Summary:
+  - Documented the compose topology requirement to add docker-compose.yml with api and db (SQL Server) services.
+  - Documented container DB connectivity expectation using service-name addressing (Server=db;...) and container auto-detection behavior alignment.
+  - Preserved stage scope so this checkpoint declares docker topology and environment-detection compatibility requirements only.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed startup and runtime behavior remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H4 Stage H4.1 (Container Build Support)
 
 ### Plan H Phase H4 Stage H4.1 - Container Build Support

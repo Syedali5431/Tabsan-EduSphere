@@ -151,6 +151,18 @@ Stage H4.2 - Compose app + db topology
 - Use container service name in DB connection string (Server=db;...).
 - Ensure environment auto-detection works in containers.
 
+---
+
+### Implementation Summary (Plan H Phase H4 Stage H4.2)
+- Documented the compose topology requirement to add docker-compose.yml with api and db (SQL Server) services.
+- Documented container DB connectivity expectation using service-name addressing (Server=db;...) and container auto-detection behavior alignment.
+- Preserved stage scope so this checkpoint declares docker topology and environment-detection compatibility requirements only.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H4 Stage H4.2)
+- Manual review confirmed Stage H4.2 requirements are captured with non-breaking container topology boundaries and startup safety preserved.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ## Phase H5 - Operational Documentation and Governance Closure
 Reason this phase is last:
 - Documentation must reflect final implemented behavior and deployment paths.
