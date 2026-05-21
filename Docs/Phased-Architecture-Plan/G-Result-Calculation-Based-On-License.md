@@ -168,6 +168,16 @@ Ensure consistent mapping:
 ### Stage 3.3 - Invalid Context Handling
 - Define fallback/error behavior for unsupported or missing institute context.
 
+---
+
+### Implementation Summary (Plan G Phase 3 Stage 3.3)
+- Documented the requirement to define fallback/error behavior for unsupported or missing institute context.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the invalid-context handling requirement.
+
+### Validation Summary (Plan G Phase 3 Stage 3.3)
+- Manual review confirmed the invalid-context handling requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ## Phase 4 - Grade Mapping (For School and College)
 ### Stage 4.1 - Base Grade Bands
 - Define standardized percentage bands for A+, A, B, C/D.

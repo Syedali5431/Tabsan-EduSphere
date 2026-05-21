@@ -1,3 +1,11 @@
+### 2026-05-21 - Plan G Phase 3 Stage 3.3 Invalid Context Handling
+- Implementation Summary:
+  - Documented the requirement to define fallback/error behavior for unsupported or missing institute context.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only and sets the invalid-context handling requirement.
+- Validation Summary:
+  - Manual review confirmed the invalid-context handling requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 3 Stage 3.2 Mapping Resolver Enforcement
 - Implementation Summary:
   - Documented the requirement to enforce mapping resolver behavior so canonical mapping is always applied before any display/output logic.

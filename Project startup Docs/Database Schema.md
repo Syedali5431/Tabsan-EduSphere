@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 3 Stage 3.3 (Invalid Context Handling)
+
+- Implementation Summary:
+	- Documented the requirement to define fallback/error behavior for unsupported or missing institute context.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the invalid-context handling requirement.
+- Validation Summary:
+	- Manual review confirmed the invalid-context handling requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 3 Stage 3.2 (Mapping Resolver Enforcement)
 
 - Implementation Summary:

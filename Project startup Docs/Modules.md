@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 3 Stage 3.3 Invalid Context Handling)
+
+### Plan G Phase 3 Stage 3.3 - Invalid Context Handling
+- Implementation Summary:
+  - Documented the requirement to define fallback/error behavior for unsupported or missing institute context.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the invalid-context handling requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 3 Stage 3.2 Mapping Resolver Enforcement)
 
 ### Plan G Phase 3 Stage 3.2 - Mapping Resolver Enforcement

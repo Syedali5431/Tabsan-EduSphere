@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 3 Stage 3.3 (Invalid Context Handling)
+
+### Plan G Phase 3 Stage 3.3 - Invalid Context Handling
+- Implementation Summary:
+  - Documented the requirement to define fallback/error behavior for unsupported or missing institute context.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the invalid-context handling requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 3 Stage 3.2 (Mapping Resolver Enforcement)
 
 ### Plan G Phase 3 Stage 3.2 - Mapping Resolver Enforcement
