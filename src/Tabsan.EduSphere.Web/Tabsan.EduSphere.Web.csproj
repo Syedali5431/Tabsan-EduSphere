@@ -17,6 +17,10 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
+    <Content Update="wwwroot\**\*.md">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
     <None Update="..\..\Docs\**\*;..\..\Project startup Docs\**\*;..\..\UAT-SAT docs\**\*;..\..\Artifacts\**\*;..\..\tests\**\*;..\..\Scripts\**\*;..\..\User Guide\**\*;..\..\User Import Sheets\**\*;..\..\PPT\**\*;..\..\New Enhancements\**\*">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
