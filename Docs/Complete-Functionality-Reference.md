@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 12 Stage 12.1 (Ranking Calculation Contract)
+
+- Implementation Summary:
+  - Documented the ranking calculation contract requirement to define deterministic percentage-based ranking rules for School and College contexts.
+  - No new runtime functionality or behavior was added; this stage is documentation-only and sets the percentage-based ranking contract requirement.
+- Validation Summary:
+  - Manual review confirmed the ranking calculation contract requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 11 Stage 11.3 (Compatibility Guard)
 
 - Implementation Summary:

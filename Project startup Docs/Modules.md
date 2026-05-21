@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 12 Stage 12.1 Ranking Calculation Contract)
+
+### Plan G Phase 12 Stage 12.1 - Ranking Calculation Contract
+- Implementation Summary:
+  - Documented the ranking calculation contract requirement to define deterministic percentage-based ranking rules for School and College contexts.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the percentage-based ranking contract requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 11 Stage 11.3 Compatibility Guard)
 
 ### Plan G Phase 11 Stage 11.3 - Compatibility Guard

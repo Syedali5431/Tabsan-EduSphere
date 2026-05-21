@@ -528,6 +528,16 @@ Ensure consistent mapping:
 ### Stage 12.1 - Ranking Calculation Contract
 - Define deterministic percentage-based ranking rules for School and College contexts.
 
+---
+
+### Implementation Summary (Plan G Phase 12 Stage 12.1)
+- Documented the ranking calculation contract requirement to define deterministic percentage-based ranking rules for School and College contexts.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the percentage-based ranking contract requirement.
+
+### Validation Summary (Plan G Phase 12 Stage 12.1)
+- Manual review confirmed the ranking calculation contract requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 12.2 - Tie-Handling and Scope Rules
 - Define tie-handling behavior and ranking scope boundaries (class/section/cohort).
 

@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 12 Stage 12.1 (Ranking Calculation Contract)
+
+- Implementation Summary:
+	- Documented the ranking calculation contract requirement to define deterministic percentage-based ranking rules for School and College contexts.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the percentage-based ranking contract requirement.
+- Validation Summary:
+	- Manual review confirmed the ranking calculation contract requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 11 Stage 11.3 (Compatibility Guard)
 
 - Implementation Summary:
