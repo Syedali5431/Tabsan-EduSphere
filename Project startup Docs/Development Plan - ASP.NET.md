@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 12 Stage 12.3 (Non-Target Protection)
+
+### Plan G Phase 12 Stage 12.3 - Non-Target Protection
+- Implementation Summary:
+  - Documented the non-target protection requirement to ensure ranking logic does not modify existing GPA lifecycle or grading storage.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the ranking non-target protection requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 12 Stage 12.2 (Tie-Handling and Scope Rules)
 
 ### Plan G Phase 12 Stage 12.2 - Tie-Handling and Scope Rules

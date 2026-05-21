@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 12 Stage 12.3 (Non-Target Protection)
+
+- Implementation Summary:
+	- Documented the non-target protection requirement to ensure ranking logic does not modify existing GPA lifecycle or grading storage.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the ranking non-target protection requirement.
+- Validation Summary:
+	- Manual review confirmed the non-target protection requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 12 Stage 12.2 (Tie-Handling and Scope Rules)
 
 - Implementation Summary:
