@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 10 Stage 10.4 (Reporting and Mixed-Mode Validation)
+
+- Implementation Summary:
+  - Documented the reporting and mixed-mode validation requirement to validate report format correctness and mixed-institute behavior without conflicts.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only and sets the reporting/mixed-mode validation requirement.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 10 Stage 10.3 (Regression and Lifecycle Validation)
 
 - Implementation Summary:

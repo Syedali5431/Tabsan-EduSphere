@@ -1,3 +1,11 @@
+### Plan G Phase 10 Stage 10.4 Reporting and Mixed-Mode Validation (2026-05-21)
+- Implementation Summary:
+  - Documented the reporting and mixed-mode validation requirement to validate report format correctness and mixed-institute behavior without conflicts.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the reporting/mixed-mode validation requirement.
+- Validation Summary:
+  - Manual review confirmed the reporting/mixed-mode validation requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 10 Stage 10.3 Regression and Lifecycle Validation (2026-05-21)
 - Implementation Summary:
   - Documented the regression and lifecycle validation requirement to verify lifecycle flows remain unaffected.
