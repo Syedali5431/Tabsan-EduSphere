@@ -98,6 +98,17 @@ Reason this phase is third:
 Stage H3.1 - Integrate resolver into startup visibility
 - API/Web/BackgroundJobs log detected environment and warnings.
 
+---
+
+### Implementation Summary (Plan H Phase H3 Stage H3.1)
+- Documented the startup visibility integration requirement so API, Web, and BackgroundJobs surfaces log detected environment and safety warnings.
+- Preserved scope boundaries by keeping this stage limited to visibility/observability intent without changing core business logic.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H3 Stage H3.1)
+- Manual review confirmed Stage H3.1 requirements are captured with non-breaking integration intent and startup safety boundaries.
+- No build, test, or migration was required; this stage is documentation-only.
+
 Stage H3.2 - Integrate DB and app URL usage safely
 - DB resolver uses environment profile as preference only on strong detection.
 - Web app base URL can use profile app string while preserving existing EduApi:BaseUrl behavior.

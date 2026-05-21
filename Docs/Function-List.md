@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan H Phase H3 Stage H3.1 (Integrate Resolver into Startup Visibility)
+
+- Implementation Summary:
+  - Documented the startup visibility integration requirement so API, Web, and BackgroundJobs surfaces log detected environment and safety warnings.
+  - Preserved scope boundaries by keeping this stage limited to visibility/observability intent without changing core business logic.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H2 Stage H2.2 (Add Safe Override Behavior)
 
 - Implementation Summary:
