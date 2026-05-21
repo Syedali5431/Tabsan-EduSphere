@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan G Optional Enhancements Decomposition (Phases 11-13)
+
+- Implementation Summary:
+	- Converted Plan G Optional Enhancements into explicit phases: Phase 11 (Configurable Grading Scale), Phase 12 (Percentage-Based Ranking), and Phase 13 (Result Summary Dashboard).
+	- Added stage-level contracts for each phase without introducing schema mutations.
+	- No schema/table/column/index/constraint or migration changes were introduced; this is a documentation-only planning decomposition update.
+- Validation Summary:
+	- Manual review confirmed Optional Enhancements are now structured as explicit Phases 11-13 in Plan G and schema remains unchanged.
+	- No database scripts or automated schema tests were required; this update is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 10 Stage 10.4 (Reporting and Mixed-Mode Validation)
 
 - Implementation Summary:

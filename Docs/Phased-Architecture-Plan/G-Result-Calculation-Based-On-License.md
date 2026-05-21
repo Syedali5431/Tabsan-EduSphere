@@ -484,10 +484,47 @@ Ensure consistent mapping:
 - Manual review confirmed the reporting/mixed-mode validation requirement is documented and no implementation or schema changes were made.
 - No build, test, or migration was required; this stage is documentation-only.
 
-## Optional Enhancements (Safe to Add)
-- Configurable grading scale (Admin settings)
-- Percentage-based ranking (School/College)
-- Result summary dashboard per institute type
+## Phase 11 - Optional Enhancement: Configurable Grading Scale
+### Stage 11.1 - Grade Scale Settings Model
+- Define admin-manageable grade band settings for School and College contexts.
+
+### Stage 11.2 - Safe Defaults and Fallback
+- Enforce baseline defaults when custom grade settings are missing or invalid.
+
+### Stage 11.3 - Compatibility Guard
+- Ensure configurable grade scales do not alter University GPA/CGPA flows.
+
+## Phase 12 - Optional Enhancement: Percentage-Based Ranking
+### Stage 12.1 - Ranking Calculation Contract
+- Define deterministic percentage-based ranking rules for School and College contexts.
+
+### Stage 12.2 - Tie-Handling and Scope Rules
+- Define tie-handling behavior and ranking scope boundaries (class/section/cohort).
+
+### Stage 12.3 - Non-Target Protection
+- Ensure ranking logic does not modify existing GPA lifecycle or grading storage.
+
+## Phase 13 - Optional Enhancement: Result Summary Dashboard
+### Stage 13.1 - Per-Institute Summary Widgets
+- Define summary cards/widgets per institute type with context-correct metrics.
+
+### Stage 13.2 - Filter and Context Integrity
+- Ensure dashboard filters preserve institute context and prevent metric mixing.
+
+### Stage 13.3 - Reporting Consistency Guard
+- Ensure dashboard summaries remain consistent with report outputs and mapping rules.
+
+---
+
+### Implementation Summary (Plan G Optional Enhancements Decomposition)
+- Replaced the generic optional-enhancement list with explicit execution phases: Phase 11 (Configurable Grading Scale), Phase 12 (Percentage-Based Ranking), and Phase 13 (Result Summary Dashboard).
+- Defined stage-level contracts for each new phase to preserve backward compatibility and non-target module safety.
+- No runtime logic, API, or schema changes were implemented; this is a documentation and planning decomposition update.
+
+### Validation Summary (Plan G Optional Enhancements Decomposition)
+- Manual review confirmed Optional Enhancements are now structured into explicit Phases 11, 12, and 13 with bounded stage scopes.
+- Manual review confirmed existing Phases 0-10 content remains intact and unchanged.
+- No build, test, or migration was required; this update is documentation-only.
 
 ## Final Result
 This plan ensures:

@@ -1,3 +1,12 @@
+### 2026-05-21 - Plan G Optional Enhancements Decomposition into Phases 11-13
+- Implementation Summary:
+  - Converted Plan G Optional Enhancements into explicit phases: Phase 11 (Configurable Grading Scale), Phase 12 (Percentage-Based Ranking), and Phase 13 (Result Summary Dashboard).
+  - Added stage-level contracts for each phase while preserving existing product behavior boundaries.
+  - No product behavior, API surface, or schema changes were introduced; this is a documentation-only planning decomposition update.
+- Validation Summary:
+  - Manual review confirmed Optional Enhancements are now represented as explicit Phases 11-13 in the Plan G source document.
+  - No build, test, or migration was required; this update is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 10 Stage 10.4 Reporting and Mixed-Mode Validation
 - Implementation Summary:
   - Documented the reporting and mixed-mode validation requirement to validate report format correctness and mixed-institute behavior without conflicts.
