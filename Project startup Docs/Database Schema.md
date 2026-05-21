@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 8 Stage 8.3 (Context Purity Guard)
+
+- Implementation Summary:
+	- Documented the context purity guard requirement to prevent percentage and GPA mixing within a single context.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the context-purity guard requirement.
+- Validation Summary:
+	- Manual review confirmed the context-purity guard requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 8 Stage 8.2 (Report Format Alignment)
 
 - Implementation Summary:

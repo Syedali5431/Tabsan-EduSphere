@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 8 Stage 8.3 (Context Purity Guard)
+
+### Plan G Phase 8 Stage 8.3 - Context Purity Guard
+- Implementation Summary:
+  - Documented the context purity guard requirement to prevent percentage and GPA mixing within a single context.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the context-purity guard requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 8 Stage 8.2 (Report Format Alignment)
 
 ### Plan G Phase 8 Stage 8.2 - Report Format Alignment
