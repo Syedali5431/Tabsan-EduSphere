@@ -177,6 +177,17 @@ Stage H5.1 - Settings.md operational guide
   - env var examples
   - security best practices
 
+---
+
+### Implementation Summary (Plan H Phase H5 Stage H5.1)
+- Documented the Settings.md operational guide requirements: environment overview, detection flow, connection-string editing guidance, new-environment onboarding, setup guidance for local/cloud/vps/ci-cd/docker, environment variable examples, and security best practices.
+- Preserved stage scope so this checkpoint declares operations documentation expectations only.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H5 Stage H5.1)
+- Manual review confirmed Stage H5.1 operational documentation requirements are captured with safety-first guidance boundaries.
+- No build, test, or migration was required; this stage is documentation-only.
+
 Stage H5.2 - Validation checklist
 - Confirm no hardcoded credentials.
 - Confirm fallback behavior when profiles are missing.

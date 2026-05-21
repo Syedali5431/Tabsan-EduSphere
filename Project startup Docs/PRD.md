@@ -1,3 +1,12 @@
+### 2026-05-21 - Plan H Phase H5 Stage H5.1 Settings Operational Guide
+- Implementation Summary:
+  - Documented the Settings.md operational guide requirements: environment overview, detection flow, connection-string editing guidance, new-environment onboarding, setup guidance for local/cloud/vps/ci-cd/docker, environment variable examples, and security best practices.
+  - Preserved stage scope so this checkpoint declares operations documentation expectations only.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed Stage H5.1 documentation guidance is captured with safety-first boundaries.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan H Phase H4 Stage H4.2 Compose App and DB Topology
 - Implementation Summary:
   - Documented the compose topology requirement to add docker-compose.yml with api and db (SQL Server) services.
