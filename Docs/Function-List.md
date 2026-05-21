@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 10 Stage 10.2 (Output Validation by Institute)
+
+- Implementation Summary:
+  - Documented the output-validation-by-institute requirement to validate School/College outputs as Percentage + Grade and University outputs as GPA/CGPA.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only and sets the institute-output validation requirement.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 10 Stage 10.1 (Switching Validation)
 
 - Implementation Summary:

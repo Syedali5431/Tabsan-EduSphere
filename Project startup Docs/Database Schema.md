@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 10 Stage 10.2 (Output Validation by Institute)
+
+- Implementation Summary:
+	- Documented the output-validation-by-institute requirement to validate School/College outputs as Percentage + Grade and University outputs as GPA/CGPA.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the institute-output validation requirement.
+- Validation Summary:
+	- Manual review confirmed the institute-output validation requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 10 Stage 10.1 (Switching Validation)
 
 - Implementation Summary:

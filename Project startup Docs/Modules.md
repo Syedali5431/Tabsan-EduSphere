@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 10 Stage 10.2 Output Validation by Institute)
+
+### Plan G Phase 10 Stage 10.2 - Output Validation by Institute
+- Implementation Summary:
+  - Documented the output-validation-by-institute requirement to validate School/College outputs as Percentage + Grade and University outputs as GPA/CGPA.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the institute-output validation requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 10 Stage 10.1 Switching Validation)
 
 ### Plan G Phase 10 Stage 10.1 - Switching Validation
