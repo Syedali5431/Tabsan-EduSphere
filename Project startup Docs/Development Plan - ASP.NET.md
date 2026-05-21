@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.3 (University Calculation Path)
+
+### Plan G Phase 2 Stage 2.3 - University Calculation Path
+- Implementation Summary:
+  - Documented the requirement to preserve the existing University GPA/CGPA credit-based calculation behavior unchanged.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the university calculation preservation requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 2 Stage 2.2 (College Calculation Path)
 
 ### Plan G Phase 2 Stage 2.2 - College Calculation Path
