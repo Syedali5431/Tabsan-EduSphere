@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan I Phase I3 Stage I3.1 (Root Dockerignore Context Minimization)
+
+- Implementation Summary:
+  - Documented the root `.dockerignore` requirement to exclude docs, test suites, transient/temp artifacts, logs, and local-only configuration from container build context.
+  - Documented safety boundary to preserve required source and runtime assets only, ensuring container context minimization without functional regression.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan I Phase I2 Stage I2.2 (License Projects Exclusion Policy)
 
 - Implementation Summary:

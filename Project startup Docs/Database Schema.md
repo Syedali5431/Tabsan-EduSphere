@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan I Phase I3 Stage I3.1 (Root Dockerignore Context Minimization)
+
+- Implementation Summary:
+	- Documented the root `.dockerignore` requirement to exclude docs, test suites, transient/temp artifacts, logs, and local-only configuration from container build context.
+	- Documented safety boundary to preserve required source and runtime assets only, ensuring container context minimization without functional regression.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage I3.1 container-context exclusion boundaries are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan I Phase I2 Stage I2.2 (License Projects Exclusion Policy)
 
 - Implementation Summary:
