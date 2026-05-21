@@ -1,3 +1,11 @@
+### 2026-05-21 - Plan G Phase 10 Stage 10.1 Switching Validation
+- Implementation Summary:
+  - Documented the switching validation requirement to confirm license-based switching behavior works across institute types.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only and sets the switching-validation requirement.
+- Validation Summary:
+  - Manual review confirmed the switching-validation requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 9 Stage 9.4 Conditional Enforcement Audit
 - Implementation Summary:
   - Documented the conditional enforcement audit requirement to verify strict institute-based conditional handling at all decision points.

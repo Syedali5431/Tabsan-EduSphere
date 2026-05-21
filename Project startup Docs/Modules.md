@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 10 Stage 10.1 Switching Validation)
+
+### Plan G Phase 10 Stage 10.1 - Switching Validation
+- Implementation Summary:
+  - Documented the switching validation requirement to confirm license-based switching behavior works across institute types.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the switching-validation requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 9 Stage 9.4 Conditional Enforcement Audit)
 
 ### Plan G Phase 9 Stage 9.4 - Conditional Enforcement Audit

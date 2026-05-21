@@ -435,6 +435,16 @@ Ensure consistent mapping:
 ### Stage 10.1 - Switching Validation
 - Confirm license-based switching behavior works across institute types.
 
+---
+
+### Implementation Summary (Plan G Phase 10 Stage 10.1)
+- Documented the switching validation requirement to confirm license-based switching behavior works across institute types.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the switching-validation requirement.
+
+### Validation Summary (Plan G Phase 10 Stage 10.1)
+- Manual review confirmed the switching-validation requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 10.2 - Output Validation by Institute
 - Validate School/College outputs (Percentage + Grade) and University outputs (GPA/CGPA).
 

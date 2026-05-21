@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 10 Stage 10.1 (Switching Validation)
+
+### Plan G Phase 10 Stage 10.1 - Switching Validation
+- Implementation Summary:
+  - Documented the switching validation requirement to confirm license-based switching behavior works across institute types.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the switching-validation requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 9 Stage 9.4 (Conditional Enforcement Audit)
 
 ### Plan G Phase 9 Stage 9.4 - Conditional Enforcement Audit

@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 10 Stage 10.1 (Switching Validation)
+
+- Implementation Summary:
+	- Documented the switching validation requirement to confirm license-based switching behavior works across institute types.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the switching-validation requirement.
+- Validation Summary:
+	- Manual review confirmed the switching-validation requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 9 Stage 9.4 (Conditional Enforcement Audit)
 
 - Implementation Summary:
