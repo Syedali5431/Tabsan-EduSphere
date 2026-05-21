@@ -1,3 +1,16 @@
+## 2026-05-21 Update - Plan H Phase H3 Stage H3.2 (Integrate DB and App URL Usage Safely)
+
+- Implementation Summary:
+	- Documented the safe runtime integration requirement so DB resolver uses environment profile preference only on strong detection signals.
+	- Documented web app base URL integration boundaries to allow profile app string usage while preserving existing EduApi:BaseUrl behavior.
+	- Documented preservation of fail-safe validation and legacy configuration paths.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage H3.2 requirements are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan H Phase H3 Stage H3.1 (Integrate Resolver into Startup Visibility)
 
 - Implementation Summary:

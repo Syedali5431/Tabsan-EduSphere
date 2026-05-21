@@ -114,6 +114,18 @@ Stage H3.2 - Integrate DB and app URL usage safely
 - Web app base URL can use profile app string while preserving existing EduApi:BaseUrl behavior.
 - Keep fail-safe validation and legacy config paths intact.
 
+---
+
+### Implementation Summary (Plan H Phase H3 Stage H3.2)
+- Documented the safe runtime integration requirement so DB resolver uses environment profile preference only on strong detection signals.
+- Documented web app base URL integration boundaries to allow profile app string usage while preserving existing EduApi:BaseUrl behavior.
+- Documented preservation of fail-safe validation and legacy configuration paths.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H3 Stage H3.2)
+- Manual review confirmed Stage H3.2 requirements are captured with non-breaking integration boundaries and legacy safety preserved.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ## Phase H4 - Docker Runtime Enablement
 Reason this phase is fourth:
 - Docker relies on the resolver and profile system being in place first.

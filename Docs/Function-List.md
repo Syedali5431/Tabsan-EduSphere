@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan H Phase H3 Stage H3.2 (Integrate DB and App URL Usage Safely)
+
+- Implementation Summary:
+  - Documented the safe runtime integration requirement so DB resolver uses environment profile preference only on strong detection signals.
+  - Documented web app base URL integration boundaries to allow profile app string usage while preserving existing EduApi:BaseUrl behavior.
+  - Documented preservation of fail-safe validation and legacy configuration paths.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H3 Stage H3.1 (Integrate Resolver into Startup Visibility)
 
 - Implementation Summary:
