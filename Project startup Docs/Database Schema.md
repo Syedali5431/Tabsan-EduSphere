@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan I Phase I4 Stage I4.1 (Build and Publish Validation Workflow)
+
+- Implementation Summary:
+	- Documented the validation requirement to run solution build and targeted publish checks for core app and license module as release-safety confirmation steps.
+	- Preserved stage scope so this checkpoint defines validation workflow expectations for exclusion optimization safety only.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage I4.1 validation workflow requirements are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan I Phase I3 Stage I3.1 (Root Dockerignore Context Minimization)
 
 - Implementation Summary:
