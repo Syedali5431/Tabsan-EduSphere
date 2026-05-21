@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 3 Stage 3.1 (Canonical Mapping Table)
+
+- Implementation Summary:
+	- Documented the requirement to finalize and lock the canonical institute-to-calculation mapping table.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the canonical mapping lock requirement.
+- Validation Summary:
+	- Manual review confirmed the canonical mapping lock requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 2 Stage 2.4 (Non-Refactor Guard)
 
 - Implementation Summary:

@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 3 Stage 3.1 Canonical Mapping Table)
+
+### Plan G Phase 3 Stage 3.1 - Canonical Mapping Table
+- Implementation Summary:
+  - Documented the requirement to finalize and lock the canonical institute-to-calculation mapping table.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the canonical mapping lock requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 2 Stage 2.4 Non-Refactor Guard)
 
 ### Plan G Phase 2 Stage 2.4 - Non-Refactor Guard

@@ -142,6 +142,16 @@ Ensure consistent mapping:
 ### Stage 3.1 - Canonical Mapping Table
 - Finalize and lock institute-to-calculation mapping.
 
+---
+
+### Implementation Summary (Plan G Phase 3 Stage 3.1)
+- Documented the requirement to finalize and lock the canonical institute-to-calculation mapping table.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the canonical mapping lock requirement.
+
+### Validation Summary (Plan G Phase 3 Stage 3.1)
+- Manual review confirmed the canonical mapping lock requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 3.2 - Mapping Resolver Enforcement
 - Ensure resolver always applies canonical mapping before any display/output logic.
 
