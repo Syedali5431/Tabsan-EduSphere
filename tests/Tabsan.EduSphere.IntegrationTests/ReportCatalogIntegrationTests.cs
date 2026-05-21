@@ -20,7 +20,8 @@ public class ReportCatalogIntegrationTests
         [ReportKeys.SemesterResults] = "api/v1/reports/semester-results",
         [ReportKeys.StudentTranscript] = "api/v1/reports/student-transcript",
         [ReportKeys.LowAttendanceWarning] = "api/v1/reports/low-attendance",
-        [ReportKeys.FypStatus] = "api/v1/reports/fyp-status"
+        [ReportKeys.FypStatus] = "api/v1/reports/fyp-status",
+        [ReportKeys.PaymentSummary] = "api/v1/reports/payment-summary"
     };
 
     public ReportCatalogIntegrationTests(EduSphereWebFactory factory)

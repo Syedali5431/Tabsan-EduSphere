@@ -54,6 +54,7 @@ public class Phase31Stage2SecurityHardeningTests
 
         var expected = new[]
         {
+            "AnalyticsController.GetPaymentStatus",
             "AuthController.Login",
             "AuthController.Refresh",
             "AuthController.SecurityProfile",
