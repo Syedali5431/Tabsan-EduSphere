@@ -1,3 +1,16 @@
+## Execution Update - 2026-05-21 (Plan H Phase H2 Stage H2.1 Build Detection Helper/Service Module)
+
+### Plan H Phase H2 Stage H2.1 - Build Detection Helper/Service Module
+- Implementation Summary:
+  - Documented the detection helper/service module requirement with ordered resolver priority: environment variables, Docker detection, CI/CD detection, hostname mapping, then DefaultEnvironment fallback.
+  - Documented required resolver outputs: detected environment, app connection string, database connection string, detection source, and safety warnings.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed module and entitlement behavior remain unchanged.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan H Phase H1 Stage H1.2 Load Matrix into Configuration Hierarchy)
 
 ### Plan H Phase H1 Stage H1.2 - Load Matrix into Configuration Hierarchy

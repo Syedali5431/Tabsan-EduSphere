@@ -64,6 +64,17 @@ Stage H2.1 - Build detection helper/service module
   - Detection source
   - Safety warnings
 
+  ---
+
+  ### Implementation Summary (Plan H Phase H2 Stage H2.1)
+  - Documented the detection helper/service module requirement with ordered resolver priority: environment variables, Docker detection, CI/CD detection, hostname mapping, then DefaultEnvironment fallback.
+  - Documented required resolver outputs: detected environment, app connection string, database connection string, detection source, and safety warnings.
+  - No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+  ### Validation Summary (Plan H Phase H2 Stage H2.1)
+  - Manual review confirmed Stage H2.1 requirements are captured with isolated resolver boundaries and backward compatibility expectations.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 Stage H2.2 - Add safe override behavior
 - Allow env var overrides for app/db strings.
 - Prefer profile values only when strong detection signals exist.

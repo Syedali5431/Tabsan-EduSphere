@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan H Phase H2 Stage H2.1 (Build Detection Helper/Service Module)
+
+- Implementation Summary:
+	- Documented the detection helper/service module requirement with ordered resolver priority: environment variables, Docker detection, CI/CD detection, hostname mapping, then DefaultEnvironment fallback.
+	- Documented required resolver outputs: detected environment, app connection string, database connection string, detection source, and safety warnings.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage H2.1 requirements are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan H Phase H1 Stage H1.2 (Load Matrix into Configuration Hierarchy)
 
 - Implementation Summary:

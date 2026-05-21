@@ -1,3 +1,12 @@
+### 2026-05-21 - Plan H Phase H2 Stage H2.1 Build Detection Helper/Service Module
+- Implementation Summary:
+  - Documented the detection helper/service module requirement with ordered resolver priority: environment variables, Docker detection, CI/CD detection, hostname mapping, then DefaultEnvironment fallback.
+  - Documented required resolver outputs: detected environment, app connection string, database connection string, detection source, and safety warnings.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed startup and runtime behavior remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan H Phase H1 Stage H1.2 Load Matrix into Configuration Hierarchy
 - Implementation Summary:
   - Documented the matrix loading requirement to extend configuration bootstrap so environments.json can be read from project path and shared src path.
