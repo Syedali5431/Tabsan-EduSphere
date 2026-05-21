@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan H Phase H1 Stage H1.2 (Load Matrix into Configuration Hierarchy)
+
+### Plan H Phase H1 Stage H1.2 - Load Matrix into Configuration Hierarchy
+- Implementation Summary:
+  - Documented the matrix loading requirement to extend configuration bootstrap so environments.json can be read from project path and shared src path.
+  - Documented optional override path behavior via EDUSPHERE_ENVIRONMENTS_FILE and the optional-source safety rule to avoid startup failures.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed startup and runtime behavior remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H1 Stage H1.1 (Introduce Shared Environment Matrix File)
 
 ### Plan H Phase H1 Stage H1.1 - Introduce Shared Environment Matrix File
