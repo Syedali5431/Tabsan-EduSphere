@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 8 Stage 8.2 (Report Format Alignment)
+
+### Plan G Phase 8 Stage 8.2 - Report Format Alignment
+- Implementation Summary:
+  - Documented the requirement for report format alignment so reports use the correct calculation type for each context.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the report-format alignment requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 8 Stage 8.1 (Result Format Rendering)
 
 ### Plan G Phase 8 Stage 8.1 - Result Format Rendering

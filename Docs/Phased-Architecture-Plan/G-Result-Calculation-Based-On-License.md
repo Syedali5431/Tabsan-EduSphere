@@ -355,6 +355,16 @@ Ensure consistent mapping:
 ### Stage 8.2 - Report Format Alignment
 - Ensure reports use the correct calculation type per context.
 
+---
+
+### Implementation Summary (Plan G Phase 8 Stage 8.2)
+- Documented the requirement for report format alignment so reports use the correct calculation type for each context.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the report-format alignment requirement.
+
+### Validation Summary (Plan G Phase 8 Stage 8.2)
+- Manual review confirmed the report-format alignment requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 8.3 - Context Purity Guard
 - Prevent percentage/GPA mixing within a single context.
 
