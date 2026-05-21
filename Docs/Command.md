@@ -1,3 +1,11 @@
+### Plan G Phase 5 Stage 5.2 Display-Layer Integration (2026-05-21)
+- Implementation Summary:
+  - Documented the requirement to apply institute-conditional formatting at the result display layer.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the display-layer integration requirement.
+- Validation Summary:
+  - Manual review confirmed the display-layer integration requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 5 Stage 5.1 Calculation-Layer Integration (2026-05-21)
 - Implementation Summary:
   - Documented the requirement to apply institute-conditional logic at the result calculation layer.

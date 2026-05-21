@@ -235,6 +235,16 @@ Ensure consistent mapping:
 ### Stage 5.2 - Display-Layer Integration
 - Apply institute-conditional formatting at result display layer.
 
+---
+
+### Implementation Summary (Plan G Phase 5 Stage 5.2)
+- Documented the requirement to apply institute-conditional formatting at the result display layer.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the display-layer integration requirement.
+
+### Validation Summary (Plan G Phase 5 Stage 5.2)
+- Manual review confirmed the display-layer integration requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 5.3 - Non-Target Module Protection
 - Ensure enrollment, assignments, quizzes, and unrelated analytics remain unchanged.
 
