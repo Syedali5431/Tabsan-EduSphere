@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 2 Stage 2.2 (College Calculation Path)
+
+- Implementation Summary:
+	- Documented the requirement to implement percentage-based calculation for colleges (aligned to the school path) and return Percentage + Grade.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the college calculation path requirement.
+- Validation Summary:
+	- Manual review confirmed the college calculation path requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 1 Stage 1.3 (Detection Contract)
 
 - Implementation Summary:

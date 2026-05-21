@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 2 Stage 2.2 College Calculation Path)
+
+### Plan G Phase 2 Stage 2.2 - College Calculation Path
+- Implementation Summary:
+  - Documented the requirement to implement percentage-based calculation for colleges (aligned to the school path) and return Percentage + Grade.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the college calculation path requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 1 Stage 1.3 Detection Contract)
 
 ### Plan G Phase 1 Stage 1.3 - Detection Contract

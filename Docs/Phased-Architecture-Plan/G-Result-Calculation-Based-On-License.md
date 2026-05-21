@@ -94,6 +94,16 @@ Modify result calculation logic so it adapts dynamically based on institute type
 ### Stage 2.2 - College Calculation Path
 - Use percentage-based calculation (aligned to school path) and return Percentage + Grade.
 
+---
+
+### Implementation Summary (Plan G Phase 2 Stage 2.2)
+- Documented the requirement to implement percentage-based calculation for colleges (aligned to the school path) and return Percentage + Grade.
+- No runtime logic was implemented yet; this stage is documentation-only and sets the college calculation path requirement.
+
+### Validation Summary (Plan G Phase 2 Stage 2.2)
+- Manual review confirmed the college calculation path requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 2.3 - University Calculation Path
 - Preserve existing GPA/CGPA credit-based calculation behavior unchanged.
 

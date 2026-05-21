@@ -1,3 +1,11 @@
+### Plan G Phase 2 Stage 2.2 College Calculation Path (2026-05-21)
+- Implementation Summary:
+  - Documented the requirement to implement percentage-based calculation for colleges (aligned to the school path) and return Percentage + Grade.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the college calculation path requirement.
+- Validation Summary:
+  - Manual review confirmed the college calculation path requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 1 Stage 1.2 Institute Type Detection (2026-05-21)
 - Implementation Summary:
   - Documented the requirement to detect the enabled institute type (School, College, University) at runtime based on the parsed license.
