@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 9 Stage 9.3 (Query and Schema Safety)
+
+- Implementation Summary:
+  - Documented the query and schema safety requirement to protect existing report queries and avoid unnecessary database schema changes.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only and sets the query/schema safety requirement.
+- Validation Summary:
+  - Manual review confirmed the function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 9 Stage 9.2 (Calculation-Type Separation)
 
 - Implementation Summary:

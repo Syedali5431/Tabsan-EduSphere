@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 9 Stage 9.3 (Query and Schema Safety)
+
+- Implementation Summary:
+	- Documented the query and schema safety requirement to protect existing report queries and avoid unnecessary database schema changes.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the query/schema safety requirement.
+- Validation Summary:
+	- Manual review confirmed the query/schema safety requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 9 Stage 9.2 (Calculation-Type Separation)
 
 - Implementation Summary:
