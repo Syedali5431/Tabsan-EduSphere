@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan I Phase I1 Stage I1.2 (Protect Runtime-Critical Files)
+
+- Implementation Summary:
+  - Documented runtime-protection guardrails to keep appsettings runtime files and licensing runtime inputs intact while preserving core logic and existing code paths.
+  - Preserved stage scope so this checkpoint sets non-destructive exclusion safety boundaries before project-level exclusion rules.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan I Phase I1 Stage I1.1 (Identify File Categories)
 
 - Implementation Summary:
