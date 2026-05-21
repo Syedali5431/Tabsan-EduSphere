@@ -1,3 +1,15 @@
+## 2026-05-21 Update - Plan H Phase H4 Stage H4.1 (Container Build Support)
+
+- Implementation Summary:
+	- Documented the container build support requirement to add an API Dockerfile for environment-aligned containerized execution.
+	- Preserved stage scope so this checkpoint only declares container build enablement without altering existing runtime behavior.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only.
+- Validation Summary:
+	- Manual review confirmed Stage H4.1 requirements are captured without changing database schema posture.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan H Phase H3 Stage H3.2 (Integrate DB and App URL Usage Safely)
 
 - Implementation Summary:

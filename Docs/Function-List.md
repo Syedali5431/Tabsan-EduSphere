@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan H Phase H4 Stage H4.1 (Container Build Support)
+
+- Implementation Summary:
+  - Documented the container build support requirement to add an API Dockerfile for environment-aligned containerized execution.
+  - Preserved stage scope so this checkpoint only declares container build enablement without altering existing runtime behavior.
+  - No new functions, endpoints, or methods were added; this stage is documentation-only.
+- Validation Summary:
+  - Manual review confirmed function inventory remains unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan H Phase H3 Stage H3.2 (Integrate DB and App URL Usage Safely)
 
 - Implementation Summary:

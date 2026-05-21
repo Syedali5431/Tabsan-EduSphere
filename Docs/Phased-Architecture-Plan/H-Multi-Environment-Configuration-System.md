@@ -133,6 +133,17 @@ Reason this phase is fourth:
 Stage H4.1 - Container build support
 - Add API Dockerfile.
 
+---
+
+### Implementation Summary (Plan H Phase H4 Stage H4.1)
+- Documented the container build support requirement to add an API Dockerfile for environment-aligned containerized execution.
+- Preserved stage scope so this checkpoint only declares container build enablement without altering existing runtime behavior.
+- No runtime logic, API, or schema changes were implemented; this stage is documentation-only.
+
+### Validation Summary (Plan H Phase H4 Stage H4.1)
+- Manual review confirmed Stage H4.1 requirements are captured with non-breaking container enablement boundaries.
+- No build, test, or migration was required; this stage is documentation-only.
+
 Stage H4.2 - Compose app + db topology
 - Add docker-compose.yml with:
   - api service
