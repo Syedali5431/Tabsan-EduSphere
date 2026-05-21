@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 13 Stage 13.1 Per-Institute Summary Widgets)
+
+### Plan G Phase 13 Stage 13.1 - Per-Institute Summary Widgets
+- Implementation Summary:
+  - Documented the per-institute summary widgets requirement to define summary cards/widgets per institute type with context-correct metrics.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the dashboard per-institute summary widget requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 12 Stage 12.3 Non-Target Protection)
 
 ### Plan G Phase 12 Stage 12.3 - Non-Target Protection

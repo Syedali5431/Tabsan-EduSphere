@@ -568,6 +568,16 @@ Ensure consistent mapping:
 ### Stage 13.1 - Per-Institute Summary Widgets
 - Define summary cards/widgets per institute type with context-correct metrics.
 
+---
+
+### Implementation Summary (Plan G Phase 13 Stage 13.1)
+- Documented the per-institute summary widgets requirement to define summary cards/widgets per institute type with context-correct metrics.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the dashboard per-institute summary widget requirement.
+
+### Validation Summary (Plan G Phase 13 Stage 13.1)
+- Manual review confirmed the per-institute summary widgets requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 13.2 - Filter and Context Integrity
 - Ensure dashboard filters preserve institute context and prevent metric mixing.
 

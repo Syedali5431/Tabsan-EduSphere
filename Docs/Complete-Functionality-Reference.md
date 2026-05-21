@@ -1,3 +1,12 @@
+## 2026-05-21 Update - Plan G Phase 13 Stage 13.1 (Per-Institute Summary Widgets)
+
+- Implementation Summary:
+  - Documented the per-institute summary widgets requirement to define summary cards/widgets per institute type with context-correct metrics.
+  - No new runtime functionality or behavior was added; this stage is documentation-only and sets the dashboard per-institute summary widget requirement.
+- Validation Summary:
+  - Manual review confirmed the per-institute summary widgets requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 12 Stage 12.3 (Non-Target Protection)
 
 - Implementation Summary:
