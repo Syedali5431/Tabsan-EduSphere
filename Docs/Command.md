@@ -1,3 +1,11 @@
+### Plan G Phase 3 Stage 3.2 Mapping Resolver Enforcement (2026-05-21)
+- Implementation Summary:
+  - Documented the requirement to enforce mapping resolver behavior so canonical mapping is always applied before any display/output logic.
+  - No code, schema, or runtime logic was changed; this stage is documentation-only and sets the resolver-enforcement requirement.
+- Validation Summary:
+  - Manual review confirmed the resolver-enforcement requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### Plan G Phase 3 Stage 3.1 Canonical Mapping Table (2026-05-21)
 - Implementation Summary:
   - Documented the requirement to finalize and lock the canonical institute-to-calculation mapping table.

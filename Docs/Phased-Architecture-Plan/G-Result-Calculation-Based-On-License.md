@@ -155,6 +155,16 @@ Ensure consistent mapping:
 ### Stage 3.2 - Mapping Resolver Enforcement
 - Ensure resolver always applies canonical mapping before any display/output logic.
 
+---
+
+### Implementation Summary (Plan G Phase 3 Stage 3.2)
+- Documented the requirement to enforce mapping resolver behavior so canonical mapping is always applied before any display/output logic.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the resolver-enforcement requirement.
+
+### Validation Summary (Plan G Phase 3 Stage 3.2)
+- Manual review confirmed the resolver-enforcement requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 3.3 - Invalid Context Handling
 - Define fallback/error behavior for unsupported or missing institute context.
 

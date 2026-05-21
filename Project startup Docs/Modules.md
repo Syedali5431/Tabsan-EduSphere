@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 3 Stage 3.2 Mapping Resolver Enforcement)
+
+### Plan G Phase 3 Stage 3.2 - Mapping Resolver Enforcement
+- Implementation Summary:
+  - Documented the requirement to enforce mapping resolver behavior so canonical mapping is always applied before any display/output logic.
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the resolver-enforcement requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 3 Stage 3.1 Canonical Mapping Table)
 
 ### Plan G Phase 3 Stage 3.1 - Canonical Mapping Table
