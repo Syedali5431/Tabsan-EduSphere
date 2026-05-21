@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 6 Stage 6.1 (Promotion/Failure Compatibility)
+
+### Plan G Phase 6 Stage 6.1 - Promotion/Failure Compatibility
+- Implementation Summary:
+  - Documented the requirement to ensure School/College promotion and failure decisions correctly consume percentage-based outputs.
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the promotion/failure compatibility requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 5 Stage 5.3 (Non-Target Module Protection)
 
 ### Plan G Phase 5 Stage 5.3 - Non-Target Module Protection

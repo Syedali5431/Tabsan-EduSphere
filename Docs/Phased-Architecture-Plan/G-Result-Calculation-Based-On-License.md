@@ -262,6 +262,16 @@ Ensure consistent mapping:
 ### Stage 6.1 - Promotion/Failure Compatibility
 - Ensure School/College promotion/failure decisions consume percentage outputs correctly.
 
+---
+
+### Implementation Summary (Plan G Phase 6 Stage 6.1)
+- Documented the requirement to ensure School/College promotion and failure decisions correctly consume percentage-based outputs.
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the promotion/failure compatibility requirement.
+
+### Validation Summary (Plan G Phase 6 Stage 6.1)
+- Manual review confirmed the promotion/failure compatibility requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 6.2 - Graduation/Progression Compatibility
 - Ensure graduation workflows and semester progression remain valid.
 

@@ -1,3 +1,11 @@
+### 2026-05-21 - Plan G Phase 6 Stage 6.1 Promotion/Failure Compatibility
+- Implementation Summary:
+  - Documented the requirement to ensure School/College promotion and failure decisions correctly consume percentage-based outputs.
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only and sets the promotion/failure compatibility requirement.
+- Validation Summary:
+  - Manual review confirmed the promotion/failure compatibility requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 5 Stage 5.3 Non-Target Module Protection
 - Implementation Summary:
   - Documented the requirement to protect non-target modules so enrollment, assignments, quizzes, and unrelated analytics remain unchanged.

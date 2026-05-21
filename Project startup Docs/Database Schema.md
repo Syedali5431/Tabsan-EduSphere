@@ -1,3 +1,14 @@
+## 2026-05-21 Update - Plan G Phase 6 Stage 6.1 (Promotion/Failure Compatibility)
+
+- Implementation Summary:
+	- Documented the requirement to ensure School/College promotion and failure decisions correctly consume percentage-based outputs.
+	- No schema/table/column/index/constraint or migration changes were introduced; this stage is documentation-only and sets the promotion/failure compatibility requirement.
+- Validation Summary:
+	- Manual review confirmed the promotion/failure compatibility requirement is documented and no implementation or schema changes were made.
+	- No database scripts or automated schema tests were required; this stage is documentation-only.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-21 Update - Plan G Phase 5 Stage 5.3 (Non-Target Module Protection)
 
 - Implementation Summary:
