@@ -92,14 +92,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v3', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v4', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v3',
+    SET [DemoValue] = N'FullDummyData-v4',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -722,6 +722,42 @@ SELECT e.Id, e.StudentProfileId, e.CourseOfferingId, @Now, NULL, e.Status, @Now,
 FROM @Enrollments e
 WHERE NOT EXISTS (SELECT 1 FROM [enrollments] x WHERE x.[Id] = e.Id);
 
+/* 8.1) High-volume enrollments for bulk institute students */
+;WITH BulkStudents AS (
+    SELECT
+        sp.[Id] AS StudentProfileId,
+        sp.[DepartmentId],
+        StudentOrdinal = ROW_NUMBER() OVER (PARTITION BY sp.[DepartmentId] ORDER BY sp.[RegistrationNumber], sp.[Id])
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE u.[Username] LIKE N'bulk.%.student.%'
+), DeptOfferings AS (
+    SELECT
+        co.[Id] AS CourseOfferingId,
+        c.[DepartmentId],
+        OfferingOrdinal = ROW_NUMBER() OVER (PARTITION BY c.[DepartmentId] ORDER BY co.[Id])
+    FROM [course_offerings] co
+    INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+)
+INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+SELECT
+    NEWID(),
+    bs.[StudentProfileId],
+    dof.[CourseOfferingId],
+    DATEADD(day, -((bs.[StudentOrdinal] + dof.[OfferingOrdinal]) % 30), @Now),
+    NULL,
+    N'Enrolled',
+    @Now,
+    NULL
+FROM BulkStudents bs
+INNER JOIN DeptOfferings dof ON dof.[DepartmentId] = bs.[DepartmentId] AND dof.[OfferingOrdinal] <= 2
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM [enrollments] e
+    WHERE e.[StudentProfileId] = bs.[StudentProfileId]
+      AND e.[CourseOfferingId] = dof.[CourseOfferingId]
+);
+
 /* 9) Assignments - Expanded (20+ assignments) */
 DECLARE @Assignments TABLE (Id UNIQUEIDENTIFIER, CourseOfferingId UNIQUEIDENTIFIER, Title NVARCHAR(300), DueDate DATETIME2, MaxMarks DECIMAL(8,2));
 INSERT INTO @Assignments VALUES
@@ -800,6 +836,35 @@ SELECT a.Id, a.StudentProfileId, a.CourseOfferingId, a.[Date], a.[Status], a.Mar
 FROM @Attendance a
 WHERE NOT EXISTS (SELECT 1 FROM [attendance_records] x WHERE x.[Id] = a.Id);
 
+/* 11.1) High-volume attendance for bulk enrollments */
+INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+SELECT
+        NEWID(),
+        e.[StudentProfileId],
+        e.[CourseOfferingId],
+        DATEADD(day, -(ABS(CHECKSUM(e.[Id])) % 10), CAST(@Now AS date)),
+        CASE ABS(CHECKSUM(e.[Id])) % 10
+                WHEN 0 THEN N'Absent'
+                WHEN 1 THEN N'Late'
+                ELSE N'Present'
+        END,
+        COALESCE(co.[FacultyUserId], @SuperAdminUserId),
+        N'Auto-generated bulk attendance record.',
+        @Now,
+        NULL
+FROM [enrollments] e
+INNER JOIN [student_profiles] sp ON sp.[Id] = e.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+INNER JOIN [course_offerings] co ON co.[Id] = e.[CourseOfferingId]
+WHERE u.[Username] LIKE N'bulk.%.student.%'
+    AND NOT EXISTS (
+            SELECT 1
+            FROM [attendance_records] ar
+            WHERE ar.[StudentProfileId] = e.[StudentProfileId]
+                AND ar.[CourseOfferingId] = e.[CourseOfferingId]
+                AND CAST(ar.[Date] AS date) = DATEADD(day, -(ABS(CHECKSUM(e.[Id])) % 10), CAST(@Now AS date))
+    );
+
 /* 12) Results - Massively Expanded */
 IF OBJECT_ID(N'[results]') IS NOT NULL
 BEGIN
@@ -870,6 +935,33 @@ BEGIN
     SELECT r.Id, r.StudentProfileId, r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks, 1, @Now, r.PublishedByUserId, @Now, NULL
     FROM @Results r
     WHERE NOT EXISTS (SELECT 1 FROM [results] x WHERE x.[Id] = r.Id);
+
+        /* 12.0.1) High-volume results for bulk enrollments */
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT
+                NEWID(),
+                e.[StudentProfileId],
+                e.[CourseOfferingId],
+                N'Final',
+                CAST(55 + (ABS(CHECKSUM(e.[Id])) % 46) AS DECIMAL(8,2)),
+                CAST(100 AS DECIMAL(8,2)),
+                1,
+                @Now,
+                COALESCE(co.[FacultyUserId], @SuperAdminUserId),
+                @Now,
+                NULL
+        FROM [enrollments] e
+        INNER JOIN [student_profiles] sp ON sp.[Id] = e.[StudentProfileId]
+        INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+        INNER JOIN [course_offerings] co ON co.[Id] = e.[CourseOfferingId]
+        WHERE u.[Username] LIKE N'bulk.%.student.%'
+            AND NOT EXISTS (
+                    SELECT 1
+                    FROM [results] x
+                    WHERE x.[StudentProfileId] = e.[StudentProfileId]
+                        AND x.[CourseOfferingId] = e.[CourseOfferingId]
+                        AND x.[ResultType] = N'Final'
+            );
 END
 
 /* 12.1) Payments - Expanded */
@@ -904,6 +996,53 @@ BEGIN
     SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
     FROM @PaymentReceipts p
     WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] x WHERE x.[Id] = p.[Id]);
+
+    /* 12.1.1) High-volume payment receipts for bulk students by institution type */
+    DECLARE @FinanceUniUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.uni.1');
+    DECLARE @FinanceColUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.col.1');
+    DECLARE @FinanceSchUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.sch.1');
+
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        sp.[Id],
+        CASE u.[InstitutionType]
+            WHEN 2 THEN COALESCE(@FinanceUniUserId, @SuperAdminUserId)
+            WHEN 1 THEN COALESCE(@FinanceColUserId, @SuperAdminUserId)
+            ELSE COALESCE(@FinanceSchUserId, @SuperAdminUserId)
+        END,
+        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN 0 ELSE 1 END,
+        CASE u.[InstitutionType]
+            WHEN 2 THEN CAST(15000 + (ABS(CHECKSUM(sp.[Id])) % 6000) AS DECIMAL(10,2))
+            WHEN 1 THEN CAST(12000 + (ABS(CHECKSUM(sp.[Id])) % 4500) AS DECIMAL(10,2))
+            ELSE CAST(9000 + (ABS(CHECKSUM(sp.[Id])) % 3000) AS DECIMAL(10,2))
+        END,
+        N'Bulk Tuition Auto Seed - Spring Cycle',
+        DATEADD(day, 10 + (ABS(CHECKSUM(sp.[Id])) % 21), @Now),
+        NULL,
+        NULL,
+        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN NULL ELSE
+            CASE u.[InstitutionType]
+                WHEN 2 THEN COALESCE(@FinanceUniUserId, @SuperAdminUserId)
+                WHEN 1 THEN COALESCE(@FinanceColUserId, @SuperAdminUserId)
+                ELSE COALESCE(@FinanceSchUserId, @SuperAdminUserId)
+            END
+        END,
+        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN NULL ELSE DATEADD(day, -1, @Now) END,
+        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN N'Pending student payment proof.' ELSE N'Auto-confirmed bulk finance seed receipt.' END,
+        @Now,
+        @Now,
+        0,
+        NULL
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE u.[Username] LIKE N'bulk.%.student.%'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM [payment_receipts] pr
+          WHERE pr.[StudentProfileId] = sp.[Id]
+            AND pr.[Description] = N'Bulk Tuition Auto Seed - Spring Cycle'
+      );
 END
 
 /* 12.2) Report export artifacts - Expanded */

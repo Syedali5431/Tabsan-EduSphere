@@ -508,6 +508,44 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
+SELECT 'DummySeed_DemoDatasetVersionIsV4' AS [CheckName], COUNT(1) AS [Value]
+FROM [Tabsan-EduSphere]
+WHERE DemoKey = N'DemoDatasetVersion'
+	AND DemoValue = N'FullDummyData-v4';
+
+SELECT 'DummySeed_BulkUsersCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] LIKE N'bulk.%';
+
+SELECT 'DummySeed_BulkStudentProfilesCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+WHERE u.[Username] LIKE N'bulk.%.student.%';
+
+SELECT 'DummySeed_BulkEnrollmentsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [enrollments] e
+INNER JOIN [student_profiles] sp ON sp.[Id] = e.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+WHERE u.[Username] LIKE N'bulk.%.student.%';
+
+SELECT 'DummySeed_BulkAttendanceCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [attendance_records] ar
+INNER JOIN [student_profiles] sp ON sp.[Id] = ar.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+WHERE u.[Username] LIKE N'bulk.%.student.%';
+
+SELECT 'DummySeed_BulkResultsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results] r
+INNER JOIN [student_profiles] sp ON sp.[Id] = r.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+WHERE u.[Username] LIKE N'bulk.%.student.%';
+
+SELECT 'DummySeed_BulkPaymentReceiptsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [payment_receipts] pr
+INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+WHERE u.[Username] LIKE N'bulk.%.student.%';
+
 SELECT TOP 20 [MigrationId], [ProductVersion]
 FROM __EFMigrationsHistory
 ORDER BY [MigrationId] DESC;
