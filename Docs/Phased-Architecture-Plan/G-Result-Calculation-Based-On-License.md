@@ -541,6 +541,16 @@ Ensure consistent mapping:
 ### Stage 12.2 - Tie-Handling and Scope Rules
 - Define tie-handling behavior and ranking scope boundaries (class/section/cohort).
 
+---
+
+### Implementation Summary (Plan G Phase 12 Stage 12.2)
+- Documented the tie-handling and scope rules requirement to define tie-handling behavior and ranking scope boundaries (class/section/cohort).
+- No runtime logic was implemented or modified; this stage is documentation-only and sets the ranking tie/scope rules requirement.
+
+### Validation Summary (Plan G Phase 12 Stage 12.2)
+- Manual review confirmed the tie-handling and scope rules requirement is documented and no implementation or schema changes were made.
+- No build, test, or migration was required; this stage is documentation-only.
+
 ### Stage 12.3 - Non-Target Protection
 - Ensure ranking logic does not modify existing GPA lifecycle or grading storage.
 

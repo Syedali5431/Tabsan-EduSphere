@@ -1,3 +1,11 @@
+### 2026-05-21 - Plan G Phase 12 Stage 12.2 Tie-Handling and Scope Rules
+- Implementation Summary:
+  - Documented the tie-handling and scope rules requirement to define tie-handling behavior and ranking scope boundaries (class/section/cohort).
+  - No product behavior, API surface, or schema changes were introduced; this stage is documentation-only and sets the ranking tie/scope rules requirement.
+- Validation Summary:
+  - Manual review confirmed the tie-handling and scope rules requirement is documented and no implementation or schema changes were made.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ### 2026-05-21 - Plan G Phase 12 Stage 12.1 Ranking Calculation Contract
 - Implementation Summary:
   - Documented the ranking calculation contract requirement to define deterministic percentage-based ranking rules for School and College contexts.

@@ -1,3 +1,13 @@
+## 2026-05-21 Update - Plan G Phase 12 Stage 12.2 (Tie-Handling and Scope Rules)
+
+### Plan G Phase 12 Stage 12.2 - Tie-Handling and Scope Rules
+- Implementation Summary:
+  - Documented the tie-handling and scope rules requirement to define tie-handling behavior and ranking scope boundaries (class/section/cohort).
+  - No application behavior, API surface, or schema change was introduced; this stage is documentation-only and sets the ranking tie/scope rules requirement.
+- Validation Summary:
+  - Manual review confirmed all GPA/CGPA, lifecycle, and report logic remain unchanged.
+  - No build, test, or migration was required; this stage is documentation-only.
+
 ## 2026-05-21 Update - Plan G Phase 12 Stage 12.1 (Ranking Calculation Contract)
 
 ### Plan G Phase 12 Stage 12.1 - Ranking Calculation Contract

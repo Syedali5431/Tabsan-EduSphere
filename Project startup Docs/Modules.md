@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-21 (Plan G Phase 12 Stage 12.2 Tie-Handling and Scope Rules)
+
+### Plan G Phase 12 Stage 12.2 - Tie-Handling and Scope Rules
+- Implementation Summary:
+  - Documented the tie-handling and scope rules requirement to define tie-handling behavior and ranking scope boundaries (class/section/cohort).
+  - No module catalog, package pricing, activation rule, or entitlement matrix mutation was introduced; this stage is documentation-only and sets the ranking tie/scope rules requirement.
+- Validation Summary:
+  - Manual review confirmed the module definition remains unchanged for runtime behavior.
+  - No build or test execution was required; this stage is documentation-only.
+- Module impact:
+  - no module catalog, package pricing, activation rule, or entitlement matrix mutation.
+
 ## Execution Update - 2026-05-21 (Plan G Phase 12 Stage 12.1 Ranking Calculation Contract)
 
 ### Plan G Phase 12 Stage 12.1 - Ranking Calculation Contract
