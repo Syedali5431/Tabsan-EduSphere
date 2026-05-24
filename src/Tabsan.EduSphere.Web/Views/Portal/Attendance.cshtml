@@ -17,6 +17,29 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <form method="get" asp-action="Attendance" class="row g-2 align-items-end">
+                    @if (User.IsInRole("SuperAdmin"))
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     <div class="col-md-5">
                         <label class="form-label">Select Course Offering</label>
                         <select name="offeringId" class="form-select" onchange="this.form.submit()">
@@ -29,6 +52,15 @@ else
                     </div>
                 </form>
             </div>
+        </div>
+    }
+
+    @if (!User.IsInRole("Student"))
+    {
+        <div class="d-flex justify-content-end mb-3">
+            <a asp-action="ReportLowAttendance" asp-route-threshold="75" class="btn btn-outline-danger btn-sm">
+                View Low Attendance (&lt;75%)
+            </a>
         </div>
     }
 
@@ -61,6 +93,42 @@ else
                                     <td>@s.TotalClasses</td>
                                     <td>@s.PresentCount</td>
                                     <td class="@cls fw-semibold">@pct.ToString("0.0")%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.LowAttendance.Count > 0)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h5 mb-3 text-danger">Low Attendance (&lt;75%)</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Reg. No.</th>
+                                <th>Course</th>
+                                <th>Total</th>
+                                <th>Present</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.LowAttendance)
+                            {
+                                <tr class="table-warning">
+                                    <td>@s.StudentName</td>
+                                    <td><code>@s.RegistrationNumber</code></td>
+                                    <td>@s.CourseName</td>
+                                    <td>@s.TotalClasses</td>
+                                    <td>@s.PresentCount</td>
+                                    <td class="text-danger fw-semibold">@s.AttendancePercentage.ToString("0.0")%</td>
                                 </tr>
                             }
                         </tbody>
@@ -139,6 +207,8 @@ else
                 <form asp-action="BulkMarkAttendance" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <div class="mb-3">
                         <label class="form-label">Date <span class="text-danger">*</span></label>
                         <input name="date" type="date" class="form-control" style="max-width:200px"
@@ -183,6 +253,8 @@ else
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="correctAttendance_studentProfileId" name="studentProfileId" />
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Correct Attendance</h5>

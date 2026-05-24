@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Attendance;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Notifications;
@@ -107,27 +108,76 @@ public class NotificationRepository : INotificationRepository
 public class AttendanceRepository : IAttendanceRepository
 {
     private readonly ApplicationDbContext _db;
-    public AttendanceRepository(ApplicationDbContext db) => _db = db;
+    private readonly IAccessScopeResolver? _accessScope;
+
+    public AttendanceRepository(ApplicationDbContext db, IAccessScopeResolver? accessScope = null)
+    {
+        _db = db;
+        _accessScope = accessScope;
+    }
+
+    private IQueryable<AttendanceRecord> ApplyTenantCampusScope(
+        IQueryable<AttendanceRecord> query,
+        Guid? tenantId,
+        Guid? campusId)
+    {
+        var effectiveTenantId = tenantId ?? _accessScope?.GetTenantId();
+        var effectiveCampusId = campusId ?? _accessScope?.GetCampusId();
+        var hasExplicitScope = tenantId.HasValue || campusId.HasValue;
+
+        if (!effectiveTenantId.HasValue)
+        {
+            if (_accessScope?.IsSuperAdmin() == true && !hasExplicitScope)
+                return query;
+
+            return query.Where(_ => false);
+        }
+
+        var scopedOfferingIds = _db.CourseOfferings
+            .AsNoTracking()
+            .Where(o => o.TenantId == effectiveTenantId.Value && (!effectiveCampusId.HasValue || o.CampusId == effectiveCampusId.Value))
+            .Select(o => o.Id);
+
+        return query.Where(a => scopedOfferingIds.Contains(a.CourseOfferingId));
+    }
 
     /// <summary>Returns the attendance record for a student / offering / date, or null.</summary>
-    public Task<AttendanceRecord?> GetAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date, CancellationToken ct = default)
-        => _db.AttendanceRecords.FirstOrDefaultAsync(a =>
+    public Task<AttendanceRecord?> GetAsync(
+        Guid studentProfileId,
+        Guid courseOfferingId,
+        DateTime date,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
+        => ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId).FirstOrDefaultAsync(a =>
             a.StudentProfileId == studentProfileId &&
             a.CourseOfferingId == courseOfferingId &&
             a.Date == date.Date, ct);
 
     /// <summary>Returns true when a record already exists for the combination.</summary>
-    public Task<bool> ExistsAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date, CancellationToken ct = default)
-        => _db.AttendanceRecords.AnyAsync(a =>
+    public Task<bool> ExistsAsync(
+        Guid studentProfileId,
+        Guid courseOfferingId,
+        DateTime date,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
+        => ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId).AnyAsync(a =>
             a.StudentProfileId == studentProfileId &&
             a.CourseOfferingId == courseOfferingId &&
             a.Date == date.Date, ct);
 
     /// <summary>Returns all records for a course offering, optionally filtered by date range.</summary>
     public async Task<IReadOnlyList<AttendanceRecord>> GetByOfferingAsync(
-        Guid courseOfferingId, DateTime? from = null, DateTime? to = null, CancellationToken ct = default)
+        Guid courseOfferingId,
+        DateTime? from = null,
+        DateTime? to = null,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        var query = _db.AttendanceRecords.Where(a => a.CourseOfferingId == courseOfferingId);
+        var query = ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId)
+            .Where(a => a.CourseOfferingId == courseOfferingId);
 
         if (from.HasValue) query = query.Where(a => a.Date >= from.Value.Date);
         if (to.HasValue)   query = query.Where(a => a.Date <= to.Value.Date);
@@ -137,9 +187,14 @@ public class AttendanceRepository : IAttendanceRepository
 
     /// <summary>Returns all records for a student, optionally filtered to a single offering.</summary>
     public async Task<IReadOnlyList<AttendanceRecord>> GetByStudentAsync(
-        Guid studentProfileId, Guid? courseOfferingId = null, CancellationToken ct = default)
+        Guid studentProfileId,
+        Guid? courseOfferingId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        var query = _db.AttendanceRecords.Where(a => a.StudentProfileId == studentProfileId);
+        var query = ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId)
+            .Where(a => a.StudentProfileId == studentProfileId);
 
         if (courseOfferingId.HasValue)
             query = query.Where(a => a.CourseOfferingId == courseOfferingId.Value);
@@ -152,9 +207,13 @@ public class AttendanceRepository : IAttendanceRepository
     /// Attended = Present or Late.
     /// </summary>
     public async Task<(int TotalSessions, int AttendedSessions)> GetAttendanceSummaryAsync(
-        Guid studentProfileId, Guid courseOfferingId, CancellationToken ct = default)
+        Guid studentProfileId,
+        Guid courseOfferingId,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        var records = await _db.AttendanceRecords
+        var records = await ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId)
             .Where(a => a.StudentProfileId == studentProfileId && a.CourseOfferingId == courseOfferingId)
             .Select(a => a.Status)
             .ToListAsync(ct);
@@ -170,9 +229,12 @@ public class AttendanceRepository : IAttendanceRepository
     /// Only students with at least one recorded session are considered.
     /// </summary>
     public async Task<IReadOnlyList<(Guid StudentProfileId, Guid CourseOfferingId, double AttendancePercent)>> GetBelowThresholdAsync(
-        double thresholdPercent, CancellationToken ct = default)
+        double thresholdPercent,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        var grouped = await _db.AttendanceRecords
+        var grouped = await ApplyTenantCampusScope(_db.AttendanceRecords, tenantId, campusId)
             .GroupBy(a => new { a.StudentProfileId, a.CourseOfferingId })
             .Select(g => new
             {

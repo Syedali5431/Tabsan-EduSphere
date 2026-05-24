@@ -290,9 +290,9 @@ public interface IEduApiClient
 
     // Attendance
     Task<List<AttendanceSummaryItem>> GetMyAttendanceSummaryAsync(CancellationToken ct);
-    Task<List<AttendanceRecordItem>> GetAttendanceByOfferingAsync(Guid offeringId, CancellationToken ct);
-    Task BulkMarkAttendanceAsync(Guid offeringId, DateTime date, IEnumerable<(Guid StudentProfileId, string Status)> entries, CancellationToken ct);
-    Task CorrectAttendanceAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date, string newStatus, string? remarks, CancellationToken ct);
+    Task<List<AttendanceRecordItem>> GetAttendanceByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task BulkMarkAttendanceAsync(Guid offeringId, DateTime date, IEnumerable<(Guid StudentProfileId, string Status)> entries, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CorrectAttendanceAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date, string newStatus, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Results
     Task<List<ResultItem>> GetMyResultsAsync(CancellationToken ct);
@@ -3071,9 +3071,13 @@ public class EduApiClient : IEduApiClient
         }).ToList();
     }
 
-    public async Task<List<AttendanceRecordItem>> GetAttendanceByOfferingAsync(Guid offeringId, CancellationToken ct)
+    public async Task<List<AttendanceRecordItem>> GetAttendanceByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<AttendanceRecordApiDto>>($"api/v1/attendance/by-offering/{offeringId}", ct) ?? new();
+        var parts = new List<string>();
+        if (tenantId.HasValue) parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) parts.Add($"campusId={campusId.Value}");
+        var qs = parts.Count > 0 ? "?" + string.Join("&", parts) : string.Empty;
+        var raw = await GetAsync<List<AttendanceRecordApiDto>>($"api/v1/attendance/by-offering/{offeringId}{qs}", ct) ?? new();
         return raw.Select(r => new AttendanceRecordItem
         {
             Id                 = r.Id,
@@ -3111,7 +3115,7 @@ public class EduApiClient : IEduApiClient
     // ── Attendance write methods ──────────────────────────────────────────────
 
     public Task BulkMarkAttendanceAsync(Guid offeringId, DateTime date,
-        IEnumerable<(Guid StudentProfileId, string Status)> entries, CancellationToken ct)
+        IEnumerable<(Guid StudentProfileId, string Status)> entries, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new
         {
@@ -3119,14 +3123,22 @@ public class EduApiClient : IEduApiClient
             date,
             entries = entries.Select(e => new { studentProfileId = e.StudentProfileId, status = e.Status }).ToList()
         };
-        return PostAsync<object, object>("api/v1/attendance/bulk", payload, ct);
+        var parts = new List<string>();
+        if (tenantId.HasValue) parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) parts.Add($"campusId={campusId.Value}");
+        var qs = parts.Count > 0 ? "?" + string.Join("&", parts) : string.Empty;
+        return PostAsync<object, object>($"api/v1/attendance/bulk{qs}", payload, ct);
     }
 
     public Task CorrectAttendanceAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date,
-        string newStatus, string? remarks, CancellationToken ct)
+        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { studentProfileId, courseOfferingId, date, newStatus, remarks };
-        return PutAsync<object, object>("api/v1/attendance/correct", payload, ct);
+        var parts = new List<string>();
+        if (tenantId.HasValue) parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) parts.Add($"campusId={campusId.Value}");
+        var qs = parts.Count > 0 ? "?" + string.Join("&", parts) : string.Empty;
+        return PutAsync<object, object>($"api/v1/attendance/correct{qs}", payload, ct);
     }
 
     // ── Results ───────────────────────────────────────────────────────────────

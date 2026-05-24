@@ -92,7 +92,7 @@ public class ParentPortalService : IParentPortalService
             ?? throw new InvalidOperationException("Attendance service is not configured.");
 
         await EnsureLinkedStudentAccessAsync(parentUserId, studentProfileId, ct);
-        return await service.GetByStudentAsync(studentProfileId, courseOfferingId, ct);
+        return await service.GetByStudentAsync(studentProfileId, courseOfferingId, ct: ct);
     }
 
     public async Task<IReadOnlyList<CourseAnnouncementDto>> GetLinkedStudentAnnouncementsAsync(

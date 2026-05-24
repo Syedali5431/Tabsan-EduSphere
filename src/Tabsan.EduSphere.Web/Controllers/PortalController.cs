@@ -2317,30 +2317,71 @@ public class PortalController : Controller
     // ── Attendance ─────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Attendance(Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Attendance";
         var model = new AttendancePageModel
         {
             IsConnected      = _api.IsConnected(),
             SelectedOfferingId = offeringId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             Message          = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
         {
             var sessionId = _api.GetSessionIdentity();
+            var effectiveTenantId = sessionId?.IsSuperAdmin == true ? model.SelectedTenantId : sessionId?.TenantId;
+            var effectiveCampusId = sessionId?.IsSuperAdmin == true ? model.SelectedCampusId : sessionId?.CampusId;
+
+            if (sessionId?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
             if (sessionId?.IsStudent == true)
             {
                 model.Summary = await _api.GetMyAttendanceSummaryAsync(ct);
+                model.LowAttendance = model.Summary
+                    .Where(s => s.AttendancePercentage < 75)
+                    .OrderBy(s => s.AttendancePercentage)
+                    .ToList();
             }
             else if (offeringId.HasValue)
             {
-                model.Records = await _api.GetAttendanceByOfferingAsync(offeringId.Value, ct);
-                model.Roster  = await _api.GetEnrollmentRosterAsync(offeringId.Value, null, null, ct);
-            }
+                model.Records = await _api.GetAttendanceByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+                model.Roster  = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
 
-            model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+                model.Summary = model.Records
+                    .GroupBy(r => new { r.StudentProfileId, r.StudentName, r.RegistrationNumber })
+                    .Select(g =>
+                    {
+                        var total = g.Count();
+                        var present = g.Count(x => string.Equals(x.Status, "Present", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(x.Status, "Late", StringComparison.OrdinalIgnoreCase));
+                        var pct = total > 0 ? Math.Round((double)present / total * 100, 2) : 0.0;
+                        return new AttendanceSummaryItem
+                        {
+                            StudentId = g.Key.StudentProfileId,
+                            StudentName = g.Key.StudentName,
+                            RegistrationNumber = g.Key.RegistrationNumber,
+                            CourseName = model.CourseOfferings.FirstOrDefault(o => o.Id == offeringId.Value)?.Name ?? string.Empty,
+                            TotalClasses = total,
+                            PresentCount = present,
+                            AttendancePercentage = pct
+                        };
+                    })
+                    .OrderBy(s => s.StudentName)
+                    .ToList();
+
+                model.LowAttendance = model.Summary
+                    .Where(s => s.AttendancePercentage < 75)
+                    .OrderBy(s => s.AttendancePercentage)
+                    .ToList();
+            }
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
@@ -2670,33 +2711,44 @@ public class PortalController : Controller
     public async Task<IActionResult> BulkMarkAttendance(
         Guid offeringId, DateTime date,
         [FromForm] Guid[] studentIds, [FromForm] string[] statuses,
+        Guid? tenantId, Guid? campusId,
         CancellationToken ct)
     {
         if (_api.IsConnected() && studentIds.Length > 0)
         {
             try
             {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 var entries = studentIds
                     .Zip(statuses, (sid, s) => (StudentProfileId: sid, Status: s));
-                await _api.BulkMarkAttendanceAsync(offeringId, date, entries, ct);
+                await _api.BulkMarkAttendanceAsync(offeringId, date, entries, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Attendance marked.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Attendance), new { offeringId });
+        return RedirectToAction(nameof(Attendance), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectAttendance(
         Guid studentProfileId, Guid offeringId, DateTime date,
-        string newStatus, string? remarks, CancellationToken ct)
+        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, newStatus, remarks, ct); TempData["PortalMessage"] = "Attendance corrected."; }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, newStatus, remarks, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Attendance corrected.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Attendance), new { offeringId });
+        return RedirectToAction(nameof(Attendance), new { offeringId, tenantId, campusId });
     }
 
     // ── Result write actions ────────────────────────────────────────────────
@@ -4143,6 +4195,7 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportLowAttendance(
         decimal threshold = 75m, Guid? departmentId = null, Guid? courseOfferingId = null, int? institutionType = null, CancellationToken ct = default)
     {
+        threshold = 75m;
         var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
         ViewData["Title"] = "Low Attendance Warning";
         var model = new ReportLowAttendancePageModel
@@ -4159,11 +4212,17 @@ public class PortalController : Controller
             var isAdminOnly = _api.GetSessionIdentity() is { } id && id.IsAdmin && !id.IsSuperAdmin;
             model.Departments     = await _api.GetDepartmentsAsync(ct);
             model.Departments     = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
-            model.CourseOfferings = await _api.GetCoursesAsync(departmentId, ct);
+            var sessionIdentity = _api.GetSessionIdentity();
+            var effectiveTenantId = sessionIdentity?.TenantId;
+            var effectiveCampusId = sessionIdentity?.CampusId;
+            var scopedOfferings = await _api.GetCourseOfferingsAsync(departmentId, effectiveTenantId, effectiveCampusId, selectedInstitutionType, ct);
+            model.CourseOfferings = scopedOfferings
+                .Select(o => new LookupItem { Id = o.Id, Name = $"{o.CourseCode} - {o.CourseTitle}" })
+                .ToList();
             if (isAdminOnly && !departmentId.HasValue && !courseOfferingId.HasValue)
                 model.Message = "Admin must select a department or course offering before generating report data.";
             else
-                model.Report = await _api.GetLowAttendanceReportAsync(threshold, departmentId, courseOfferingId, selectedInstitutionType, ct);
+                model.Report = await _api.GetLowAttendanceReportAsync(75m, departmentId, courseOfferingId, selectedInstitutionType, ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);

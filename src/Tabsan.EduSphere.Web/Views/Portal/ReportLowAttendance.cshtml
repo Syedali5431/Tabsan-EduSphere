@@ -66,8 +66,8 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small mb-1">Threshold (%)</label>
-                        <input type="number" name="threshold" class="form-control form-control-sm"
-                               value="@Model.Threshold" min="1" max="100" step="1" />
+                        <input type="hidden" name="threshold" value="75" />
+                        <input type="text" class="form-control form-control-sm" value="75 (Fixed)" readonly />
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small mb-1">Department</label>

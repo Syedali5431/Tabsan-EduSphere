@@ -796,9 +796,14 @@ public class AttendancePageModel
     public string? Message           { get; set; }
     public List<AttendanceRecordItem>  Records         { get; set; } = new();
     public List<AttendanceSummaryItem> Summary         { get; set; } = new();
+    public List<AttendanceSummaryItem> LowAttendance   { get; set; } = new();
+    public List<TenantItem> Tenants                    { get; set; } = new();
+    public List<CampusItem> Campuses                   { get; set; } = new();
     public List<LookupItem>            CourseOfferings { get; set; } = new();
     public List<EnrollmentRosterItem>  Roster          { get; set; } = new();
     public Guid?  SelectedOfferingId { get; set; }
+    public Guid?  SelectedTenantId   { get; set; }
+    public Guid?  SelectedCampusId   { get; set; }
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────

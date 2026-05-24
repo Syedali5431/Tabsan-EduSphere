@@ -68,7 +68,7 @@ public class AttendanceAlertJob : BackgroundService
             var notificationService  = scope.ServiceProvider.GetRequiredService<INotificationService>();
             var parentLinkRepository = scope.ServiceProvider.GetRequiredService<IParentStudentLinkRepository>();
 
-            var belowThreshold = await attendanceService.GetBelowThresholdAsync(_threshold, ct);
+            var belowThreshold = await attendanceService.GetBelowThresholdAsync(_threshold, ct: ct);
 
             if (belowThreshold.Count == 0)
             {
