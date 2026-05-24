@@ -18,6 +18,73 @@ else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
+            <form asp-action="TimetableStudent" method="get" class="row g-2 align-items-end">
+                @if (Model.Identity?.IsSuperAdmin == true)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Select Department</option>
+                        @foreach (var d in Model.Departments)
+                        {
+                            <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@d.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Timetable</label>
+                    <select name="timetableId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Latest</option>
+                        @foreach (var t in Model.Timetables)
+                        {
+                            <option value="@t.Id" selected="@(Model.SelectedTimetableId == t.Id)">@t.Title</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Day Filter</label>
+                    <select name="dayOfWeek" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Days</option>
+                        @for (var i = 0; i <= 6; i++)
+                        {
+                            <option value="@i" selected="@(Model.SelectedDayOfWeek == i)">@((DayOfWeek)i)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
             <h2 class="h5">Published Timetables</h2>
             @if (Model.Timetables.Count == 0)
             {
@@ -28,7 +95,12 @@ else
                 <div class="d-flex flex-column gap-2">
                     @foreach (var t in Model.Timetables)
                     {
-                        <a asp-action="TimetableStudent" asp-route-departmentId="@Model.DepartmentId" asp-route-timetableId="@t.Id">@t.Title</a>
+                        <a asp-action="TimetableStudent"
+                           asp-route-departmentId="@Model.DepartmentId"
+                           asp-route-timetableId="@t.Id"
+                           asp-route-tenantId="@Model.SelectedTenantId"
+                           asp-route-campusId="@Model.SelectedCampusId"
+                           asp-route-dayOfWeek="@Model.SelectedDayOfWeek">@t.Title</a>
                     }
                 </div>
             }
@@ -39,7 +111,36 @@ else
     {
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h3 class="h5">@Model.SelectedTimetable.Title</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">@Model.SelectedTimetable.Title</h3>
+                    @if (Model.Identity?.IsAdmin == true || Model.Identity?.IsSuperAdmin == true)
+                    {
+                        @if (Model.SelectedTimetable.IsPublished)
+                        {
+                            <form asp-action="DeactivateStudentTimetable" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="timetableId" value="@Model.SelectedTimetable.Id" />
+                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="dayOfWeek" value="@Model.SelectedDayOfWeek" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning">Deactivate</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="ActivateStudentTimetable" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="timetableId" value="@Model.SelectedTimetable.Id" />
+                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="dayOfWeek" value="@Model.SelectedDayOfWeek" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                            </form>
+                        }
+                    }
+                </div>
                 <div class="table-responsive mt-3">
                     <table class="table table-sm table-striped">
                         <thead>

@@ -141,7 +141,15 @@ public class TimetableStudentPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? DepartmentId { get; set; }
+    public Guid? SelectedTimetableId { get; set; }
+    public int? SelectedDayOfWeek { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
     public List<TimetableSummaryItem> Timetables { get; set; } = new();
     public TimetableDetailsItem? SelectedTimetable { get; set; }
 }

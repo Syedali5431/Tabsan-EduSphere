@@ -608,12 +608,24 @@ public class PortalController : Controller
     // ── Timetable Student ───────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> TimetableStudent(Guid? departmentId, Guid? timetableId, CancellationToken ct)
+    public async Task<IActionResult> TimetableStudent(
+        Guid? departmentId,
+        Guid? timetableId,
+        Guid? tenantId,
+        Guid? campusId,
+        int? dayOfWeek,
+        CancellationToken ct)
     {
         ViewData["Title"] = "Student Timetable";
+        var identity = _api.GetSessionIdentity();
         var vm = new TimetableStudentPageModel
         {
             IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedTimetableId = timetableId,
+            SelectedDayOfWeek = dayOfWeek,
             Message = TempData["PortalMessage"]?.ToString()
         };
 
@@ -625,17 +637,42 @@ public class PortalController : Controller
 
         try
         {
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? vm.SelectedTenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? vm.SelectedCampusId : identity?.CampusId;
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                vm.Tenants = await _api.GetTenantsAsync(ct);
+                if (vm.SelectedTenantId.HasValue)
+                    vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
+            }
+
+            vm.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+
             vm.DepartmentId = departmentId ?? await GetEffectiveStudentDepartmentIdAsync(ct);
+            if (vm.DepartmentId.HasValue && vm.Departments.All(d => d.Id != vm.DepartmentId.Value))
+                vm.DepartmentId = vm.Departments.FirstOrDefault()?.Id;
+
             if (!vm.DepartmentId.HasValue)
             {
                 vm.Message = "Department is required. Set default department in Dashboard connection.";
                 return View(vm);
             }
 
-            vm.Timetables = await _api.GetTimetablesByDepartmentAsync(vm.DepartmentId.Value, null, null, ct);
-            var activeTimetableId = timetableId ?? vm.Timetables.FirstOrDefault()?.Id;
+            vm.Timetables = await _api.GetTimetablesByDepartmentAsync(vm.DepartmentId.Value, effectiveTenantId, effectiveCampusId, ct);
+            var activeTimetableId = vm.SelectedTimetableId ?? vm.Timetables.FirstOrDefault()?.Id;
+            vm.SelectedTimetableId = activeTimetableId;
             if (activeTimetableId.HasValue)
-                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, null, null, ct);
+            {
+                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, effectiveTenantId, effectiveCampusId, ct);
+
+                if (vm.SelectedTimetable is not null && vm.SelectedDayOfWeek.HasValue)
+                {
+                    vm.SelectedTimetable.Entries = vm.SelectedTimetable.Entries
+                        .Where(e => e.DayOfWeek == vm.SelectedDayOfWeek.Value)
+                        .ToList();
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -643,6 +680,66 @@ public class PortalController : Controller
         }
 
         return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivateStudentTimetable(
+        Guid timetableId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        int? dayOfWeek,
+        CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Only Admin or SuperAdmin can activate student timetables.";
+            return RedirectToAction(nameof(TimetableStudent), new { departmentId, timetableId, tenantId, campusId, dayOfWeek });
+        }
+
+        try
+        {
+            await _api.PublishTimetableAsync(timetableId, tenantId, campusId, ct);
+            TempData["PortalMessage"] = "Student timetable activated.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(TimetableStudent), new { departmentId, timetableId, tenantId, campusId, dayOfWeek });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeactivateStudentTimetable(
+        Guid timetableId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        int? dayOfWeek,
+        CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Only Admin or SuperAdmin can deactivate student timetables.";
+            return RedirectToAction(nameof(TimetableStudent), new { departmentId, timetableId, tenantId, campusId, dayOfWeek });
+        }
+
+        try
+        {
+            await _api.UnpublishTimetableAsync(timetableId, tenantId, campusId, ct);
+            TempData["PortalMessage"] = "Student timetable deactivated.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(TimetableStudent), new { departmentId, timetableId, tenantId, campusId, dayOfWeek });
     }
 
     // ── Timetable Teacher ───────────────────────────────────────────────────
