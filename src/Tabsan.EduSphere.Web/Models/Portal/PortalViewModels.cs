@@ -2243,6 +2243,7 @@ public class AnnouncementItem
     public string   Title      { get; set; } = string.Empty;
     public string   Body       { get; set; } = string.Empty;
     public string   AuthorName { get; set; } = string.Empty;
+    public bool     IsActive   { get; set; }
     public DateTime PostedAt   { get; set; }
 }
 
@@ -2250,6 +2251,8 @@ public class AnnouncementsPageModel
 {
     public Guid   OfferingId    { get; set; }
     public string OfferingTitle { get; set; } = string.Empty;
+    public bool   IncludeInactive { get; set; }
+    public bool   CanManage { get; set; }
     public List<AnnouncementItem> Announcements { get; set; } = new();
     public string? SuccessMessage { get; set; }
     public string? ErrorMessage   { get; set; }

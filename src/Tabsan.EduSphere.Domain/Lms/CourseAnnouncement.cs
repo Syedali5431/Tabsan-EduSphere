@@ -45,4 +45,14 @@ public class CourseAnnouncement : AuditableEntity
         Body  = body.Trim();
         Touch();
     }
+
+    public void Deactivate()
+    {
+        SoftDelete();
+    }
+
+    public void Activate()
+    {
+        Restore();
+    }
 }

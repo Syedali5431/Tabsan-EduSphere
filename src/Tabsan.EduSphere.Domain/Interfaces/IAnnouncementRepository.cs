@@ -8,10 +8,20 @@ namespace Tabsan.EduSphere.Domain.Interfaces;
 public interface IAnnouncementRepository
 {
     /// <summary>Returns announcements for a specific offering, newest first.</summary>
-    Task<IReadOnlyList<CourseAnnouncement>> GetByOfferingAsync(Guid offeringId, CancellationToken ct = default);
+    Task<IReadOnlyList<CourseAnnouncement>> GetByOfferingAsync(
+        Guid offeringId,
+        bool includeInactive = false,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default);
 
     /// <summary>Returns a single announcement by id.</summary>
-    Task<CourseAnnouncement?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<CourseAnnouncement?> GetByIdAsync(
+        Guid id,
+        bool includeInactive = false,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default);
 
     Task AddAsync(CourseAnnouncement announcement, CancellationToken ct = default);
     void Update(CourseAnnouncement announcement);

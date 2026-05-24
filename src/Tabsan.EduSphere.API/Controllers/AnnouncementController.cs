@@ -23,9 +23,14 @@ public class AnnouncementController : ControllerBase
 
     /// <summary>Returns all announcements for the given offering.</summary>
     [HttpGet("{offeringId:guid}")]
-    public async Task<IActionResult> GetAnnouncements(Guid offeringId, CancellationToken ct = default)
+    public async Task<IActionResult> GetAnnouncements(
+        Guid offeringId,
+        [FromQuery] bool includeInactive = true,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        var items = await _announcements.GetByOfferingAsync(offeringId, ct);
+        var items = await _announcements.GetByOfferingAsync(offeringId, includeInactive, tenantId, campusId, ct);
         return Ok(items);
     }
 
@@ -33,21 +38,42 @@ public class AnnouncementController : ControllerBase
     [HttpPost]
     [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
     public async Task<IActionResult> CreateAnnouncement(
-        [FromBody] CreateAnnouncementRequest request, CancellationToken ct = default)
+        [FromBody] CreateAnnouncementRequest request,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
+        CancellationToken ct = default)
     {
         var idStr    = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
         if (!Guid.TryParse(idStr, out var authorId)) return Unauthorized();
         var actualRequest = request with { AuthorId = authorId };
-        var item = await _announcements.CreateAsync(actualRequest, ct);
+        var item = await _announcements.CreateAsync(actualRequest, tenantId, campusId, ct);
         return Ok(item);
+    }
+
+    /// <summary>Activates/deactivates an announcement. Faculty/Admin/SuperAdmin only.</summary>
+    [HttpPost("{announcementId:guid}/active")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
+    public async Task<IActionResult> SetActive(
+        Guid announcementId,
+        [FromQuery] bool isActive,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
+        CancellationToken ct = default)
+    {
+        await _announcements.SetActiveAsync(announcementId, isActive, tenantId, campusId, ct);
+        return NoContent();
     }
 
     /// <summary>Soft-deletes an announcement. Faculty/Admin/SuperAdmin only.</summary>
     [HttpDelete("{announcementId:guid}")]
     [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
-    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteAnnouncement(
+        Guid announcementId,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
+        CancellationToken ct = default)
     {
-        await _announcements.DeleteAsync(announcementId, ct);
+        await _announcements.DeleteAsync(announcementId, tenantId, campusId, ct);
         return NoContent();
     }
 }

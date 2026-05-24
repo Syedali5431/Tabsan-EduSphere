@@ -32,6 +32,7 @@
         <form asp-action="CreateAnnouncement" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
             <div class="mb-2">
                 <input name="title" class="form-control" placeholder="Announcement title..." required />
             </div>
@@ -43,31 +44,62 @@
     </div>
 </div>
 
+<form method="get" asp-action="Announcements" class="mb-3">
+    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+    <input type="hidden" name="includeInactive" value="false" />
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" checked="@(Model.IncludeInactive ? "checked" : null)" onchange="this.form.submit()" />
+        <label class="form-check-label" for="includeInactive">Show inactive announcements</label>
+    </div>
+</form>
+
 @if (!Model.Announcements.Any())
 {
     <div class="alert alert-info">No announcements for this course.</div>
 }
 else
 {
-    @foreach (var a in Model.Announcements)
-    {
-        <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>@a.Title</strong>
-                <div>
-                    <small class="text-muted me-3">@a.AuthorName &mdash; @a.PostedAt.ToString("MMM dd, yyyy HH:mm")</small>
-                    <form asp-action="DeleteAnnouncement" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete announcement?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="announcementId" value="@a.Id" />
-                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                    </form>
-                </div>
-            </div>
-            <div class="card-body">
-                <p class="mb-0">@a.Body</p>
-            </div>
-        </div>
-    }
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Author</th>
+                    <th>Posted</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Announcements)
+                {
+                    <tr>
+                        <td class="fw-semibold">@a.Title</td>
+                        <td>@a.Body</td>
+                        <td>@a.AuthorName</td>
+                        <td class="text-muted">@a.PostedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>
+                            <span class="badge @(a.IsActive ? "bg-success" : "bg-secondary")">@(a.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                        <td class="text-nowrap">
+                            @if (Model.CanManage)
+                            {
+                                <form asp-action="SetAnnouncementActive" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="announcementId" value="@a.Id" />
+                                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                    <input type="hidden" name="isActive" value="@(!a.IsActive)" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        @(a.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

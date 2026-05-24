@@ -225,9 +225,10 @@ public interface IEduApiClient
     Task DeleteDiscussionReplyAsync(Guid replyId, CancellationToken ct);
 
     // Final-Touches Phase 20 Stage 20.4 — announcements
-    Task<List<AnnouncementApiModel>> GetAnnouncementsAsync(Guid offeringId, CancellationToken ct);
-    Task<AnnouncementApiModel?> CreateAnnouncementAsync(Guid? offeringId, Guid authorId, string title, string body, CancellationToken ct);
-    Task DeleteAnnouncementAsync(Guid announcementId, CancellationToken ct);
+    Task<List<AnnouncementApiModel>> GetAnnouncementsAsync(Guid offeringId, bool includeInactive, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<AnnouncementApiModel?> CreateAnnouncementAsync(Guid? offeringId, Guid authorId, string title, string body, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task SetAnnouncementActiveAsync(Guid announcementId, bool isActive, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeleteAnnouncementAsync(Guid announcementId, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Plan C Phase 4 — course materials UI API bindings
     Task<List<CourseMaterialApiModel>> GetCourseMaterialsAsync(
@@ -2429,14 +2430,49 @@ public class EduApiClient : IEduApiClient
 
     // ── Phase 20: Announcements ─────────────────────────────────────────────────
 
-    public async Task<List<AnnouncementApiModel>> GetAnnouncementsAsync(Guid offeringId, CancellationToken ct)
-        => await GetAsync<List<AnnouncementApiModel>>($"api/v1/announcement/{offeringId}", ct) ?? new();
+    public async Task<List<AnnouncementApiModel>> GetAnnouncementsAsync(Guid offeringId, bool includeInactive, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var query = new List<string> { $"includeInactive={includeInactive.ToString().ToLowerInvariant()}" };
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
 
-    public Task<AnnouncementApiModel?> CreateAnnouncementAsync(Guid? offeringId, Guid authorId, string title, string body, CancellationToken ct)
-        => PostAsync<object, AnnouncementApiModel>("api/v1/announcement", new { offeringId, authorId, title, body }, ct);
+        return await GetAsync<List<AnnouncementApiModel>>($"api/v1/announcement/{offeringId}?{string.Join("&", query)}", ct) ?? new();
+    }
 
-    public Task DeleteAnnouncementAsync(Guid announcementId, CancellationToken ct)
-        => DeleteAsync($"api/v1/announcement/{announcementId}", ct);
+    public Task<AnnouncementApiModel?> CreateAnnouncementAsync(Guid? offeringId, Guid authorId, string title, string body, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0
+            ? "api/v1/announcement"
+            : $"api/v1/announcement?{string.Join("&", query)}";
+
+        return PostAsync<object, AnnouncementApiModel>(path, new { offeringId, authorId, title, body }, ct);
+    }
+
+    public Task SetAnnouncementActiveAsync(Guid announcementId, bool isActive, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var query = new List<string> { $"isActive={isActive.ToString().ToLowerInvariant()}" };
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        return PostAsync<object, object>($"api/v1/announcement/{announcementId}/active?{string.Join("&", query)}", new { }, ct);
+    }
+
+    public Task DeleteAnnouncementAsync(Guid announcementId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0
+            ? $"api/v1/announcement/{announcementId}"
+            : $"api/v1/announcement/{announcementId}?{string.Join("&", query)}";
+
+        return DeleteAsync(path, ct);
+    }
 
     // ── Plan C: Course Materials ──────────────────────────────────────────────
 
@@ -5371,6 +5407,7 @@ public sealed class AnnouncementApiModel
     public string   AuthorName { get; set; } = string.Empty;
     public string   Title      { get; set; } = string.Empty;
     public string   Body       { get; set; } = string.Empty;
+    public bool     IsActive   { get; set; }
     public DateTime PostedAt   { get; set; }
 }
 

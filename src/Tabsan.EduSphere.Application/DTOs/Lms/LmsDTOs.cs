@@ -121,6 +121,7 @@ public sealed class CourseAnnouncementDto
     public string   AuthorName { get; set; } = "";
     public string   Title      { get; set; } = "";
     public string   Body       { get; set; } = "";
+    public bool     IsActive   { get; set; }
     public DateTime PostedAt   { get; set; }
 }
 

@@ -5914,12 +5914,19 @@ public class PortalController : Controller
 
     // Final-Touches Phase 20 Stage 20.4 — announcements
     [HttpGet]
-    public async Task<IActionResult> Announcements(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> Announcements(Guid offeringId, bool includeInactive = true, CancellationToken ct = default)
     {
         ViewData["Title"] = "Announcements";
+        var session = _api.GetSessionIdentity();
+        var canManage = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+        var tenantId = session?.TenantId;
+        var campusId = session?.CampusId;
+
         var model = new AnnouncementsPageModel
         {
             OfferingId     = offeringId,
+            IncludeInactive = includeInactive,
+            CanManage      = canManage,
             IsConnected    = _api.IsConnected(),
             SuccessMessage = TempData["SuccessMessage"]?.ToString(),
             ErrorMessage   = TempData["ErrorMessage"]?.ToString()
@@ -5927,11 +5934,11 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var items = await _api.GetAnnouncementsAsync(offeringId, ct);
+            var items = await _api.GetAnnouncementsAsync(offeringId, includeInactive, tenantId, campusId, ct);
             model.Announcements = items.Select(a => new AnnouncementItem
             {
                 Id = a.Id, OfferingId = a.OfferingId, Title = a.Title,
-                Body = a.Body, AuthorName = a.AuthorName, PostedAt = a.PostedAt
+                Body = a.Body, AuthorName = a.AuthorName, IsActive = a.IsActive, PostedAt = a.PostedAt
             }).ToList();
         }
         catch (Exception ex) { model.ErrorMessage = ex.Message; }
@@ -5939,29 +5946,54 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateAnnouncement(Guid offeringId, string title, string body, CancellationToken ct)
+    public async Task<IActionResult> CreateAnnouncement(Guid offeringId, string title, string body, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, ct);
+                if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
+                    throw new InvalidOperationException("Title and body are required.");
+
+                var session = _api.GetSessionIdentity();
+                await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, session?.TenantId, session?.CampusId, ct);
                 TempData["SuccessMessage"] = "Announcement posted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId });
+        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid offeringId, bool isActive, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeleteAnnouncementAsync(announcementId, ct); TempData["SuccessMessage"] = "Announcement deleted."; }
+            try
+            {
+                var session = _api.GetSessionIdentity();
+                await _api.SetAnnouncementActiveAsync(announcementId, isActive, session?.TenantId, session?.CampusId, ct);
+                TempData["SuccessMessage"] = isActive ? "Announcement activated." : "Announcement deactivated.";
+            }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId });
+        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid offeringId, bool includeInactive, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var session = _api.GetSessionIdentity();
+                await _api.DeleteAnnouncementAsync(announcementId, session?.TenantId, session?.CampusId, ct);
+                TempData["SuccessMessage"] = "Announcement deleted.";
+            }
+            catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
+        }
+        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
     }
 
     // ── Phase 21 Stage 21.1/21.2 — Study Planner ─────────────────────────────

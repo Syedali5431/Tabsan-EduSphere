@@ -127,7 +127,7 @@ public class ParentPortalService : IParentPortalService
         var items = new List<CourseAnnouncementDto>();
         foreach (var offeringId in targetOfferingIds)
         {
-            var offeringItems = await announcementService.GetByOfferingAsync(offeringId, ct);
+            var offeringItems = await announcementService.GetByOfferingAsync(offeringId, includeInactive: false, tenantId: null, campusId: null, ct);
             items.AddRange(offeringItems);
         }
 
