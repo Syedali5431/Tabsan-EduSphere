@@ -3,6 +3,7 @@
 using Tabsan.EduSphere.Application.DTOs.Academic;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Notifications;
 
@@ -139,6 +140,23 @@ public class GraduationService : IGraduationService
     public async Task<GraduationApplicationSummary> SubmitApplicationAsync(
         Guid studentProfileId, SubmitGraduationApplicationRequest request, CancellationToken ct = default)
     {
+        var student = await _lifecycleRepo.GetByIdAsync(studentProfileId, ct)
+            ?? throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
+
+        if (student.Department?.InstitutionType != InstitutionType.University)
+            throw new InvalidOperationException("Graduation apply is available only for university students.");
+
+        if (student.Status != StudentStatus.Active)
+            throw new InvalidOperationException("Only active students can apply for graduation.");
+
+        var totalSemesters = student.Program?.TotalSemesters ?? 0;
+        if (totalSemesters <= 0 || student.CurrentSemesterNumber < totalSemesters)
+            throw new InvalidOperationException("Graduation apply is allowed only in the final semester.");
+
+        var hasCompletedFyp = await _repo.HasCompletedFypProjectAsync(studentProfileId, ct);
+        if (!hasCompletedFyp)
+            throw new InvalidOperationException("Complete your FYP before submitting graduation apply.");
+
         // Guard: only one active application at a time
         var existing = await _repo.GetActiveByStudentAsync(studentProfileId, ct);
         if (existing is not null &&
@@ -151,17 +169,13 @@ public class GraduationService : IGraduationService
         await _repo.SaveChangesAsync(ct);
 
         // Final-Touches Phase 18 Stage 18.1 — notify faculty of new application
-        var student     = await _lifecycleRepo.GetByIdAsync(studentProfileId, ct);
-        if (student is not null)
-        {
-            var facultyIds = await _repo.GetFacultyUserIdsByDepartmentAsync(student.DepartmentId, ct);
-            if (facultyIds.Count > 0)
-                await _notifications.SendSystemAsync(
-                    "Graduation Application Submitted",
-                    $"A graduation application has been submitted and is awaiting your review.",
-                    NotificationType.General,
-                    facultyIds, ct);
-        }
+        var facultyIds = await _repo.GetFacultyUserIdsByDepartmentAsync(student.DepartmentId, ct);
+        if (facultyIds.Count > 0)
+            await _notifications.SendSystemAsync(
+                "Graduation Application Submitted",
+                "A graduation application has been submitted and is awaiting your review.",
+                NotificationType.General,
+                facultyIds, ct);
 
         var name  = await _repo.GetStudentDisplayNameAsync(studentProfileId, ct);
         var regNo = await _repo.GetStudentRegistrationNumberAsync(studentProfileId, ct);

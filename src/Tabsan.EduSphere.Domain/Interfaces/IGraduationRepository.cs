@@ -62,6 +62,9 @@ public interface IGraduationRepository
     /// <summary>Returns the program name for the student's profile for the certificate.</summary>
     Task<string> GetStudentProgramNameAsync(Guid studentProfileId, CancellationToken ct = default);
 
+    /// <summary>Returns true when the student has at least one completed FYP project.</summary>
+    Task<bool> HasCompletedFypProjectAsync(Guid studentProfileId, CancellationToken ct = default);
+
     /// <summary>Returns the User IDs of Faculty assigned to the student's department (for notifications).</summary>
     Task<IReadOnlyList<Guid>> GetFacultyUserIdsByDepartmentAsync(Guid departmentId, CancellationToken ct = default);
 

@@ -125,6 +125,14 @@ END
     ON student_profiles (ProgramId, Status);
   END
 
+  IF COL_LENGTH('fyp_projects', 'StudentProfileId') IS NOT NULL
+  AND COL_LENGTH('fyp_projects', 'Status') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_fyp_projects_student_status' AND object_id = OBJECT_ID('fyp_projects'))
+  BEGIN
+    CREATE INDEX IX_fyp_projects_student_status
+    ON fyp_projects (StudentProfileId, Status);
+  END
+
   DECLARE @EnrollmentStatusType sysname = NULL;
   DECLARE @EnrollmentStatusMaxLength smallint = NULL;
 

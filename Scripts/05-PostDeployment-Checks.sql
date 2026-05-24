@@ -368,6 +368,22 @@ FROM graduation_applications;
 SELECT 'DummySeed_CriticalEntityCount_GraduationApprovals' AS [CheckName], COUNT(1) AS [Value]
 FROM graduation_application_approvals;
 
+SELECT 'GraduationApply_InvalidRows_NotFinalSemesterOrFypIncomplete' AS [CheckName], COUNT(1) AS [Value]
+FROM graduation_applications ga
+INNER JOIN student_profiles sp ON sp.Id = ga.StudentProfileId
+INNER JOIN academic_programs ap ON ap.Id = sp.ProgramId
+INNER JOIN departments d ON d.Id = sp.DepartmentId
+WHERE d.InstitutionType <> 2
+	OR sp.Status <> 1
+	OR sp.CurrentSemesterNumber < ap.TotalSemesters
+	OR NOT EXISTS
+	(
+		 SELECT 1
+		 FROM fyp_projects fp
+		 WHERE fp.StudentProfileId = sp.Id
+			AND fp.Status = 4
+	);
+
 SELECT 'DummySeed_CriticalEntityCount_StudentReportCards' AS [CheckName], COUNT(1) AS [Value]
 FROM student_report_cards;
 

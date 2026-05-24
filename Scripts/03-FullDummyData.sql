@@ -1558,9 +1558,30 @@ END
 
 IF OBJECT_ID(N'[graduation_applications]') IS NOT NULL
 BEGIN
-    DECLARE @GraduationApplications TABLE (Id UNIQUEIDENTIFIER, StudentProfileId UNIQUEIDENTIFIER, [Status] INT, StudentNote NVARCHAR(2000), SubmittedAt DATETIME2, CertificatePath NVARCHAR(500) NULL, CertificateGeneratedAt DATETIME2 NULL);
-    INSERT INTO @GraduationApplications VALUES
-    ('31313131-3131-3131-3131-313131313101', '99999999-9999-9999-9999-999999999916', 2, N'All degree requirements completed.', DATEADD(day, -20, @Now), N'https://demo.local/certificates/2026-IT-0001.pdf', DATEADD(day, -2, @Now));
+        DECLARE @EligibleGraduationStudentId UNIQUEIDENTIFIER;
+        SELECT TOP (1) @EligibleGraduationStudentId = sp.Id
+        FROM [student_profiles] sp
+        INNER JOIN [academic_programs] ap ON ap.Id = sp.ProgramId
+        INNER JOIN [departments] d ON d.Id = sp.DepartmentId
+        WHERE d.InstitutionType = 2
+            AND sp.Status = 1
+            AND sp.CurrentSemesterNumber >= ap.TotalSemesters
+            AND EXISTS
+            (
+                    SELECT 1
+                    FROM [fyp_projects] fp
+                    WHERE fp.StudentProfileId = sp.Id
+                        AND fp.Status = 4
+            )
+        ORDER BY sp.CreatedAt;
+
+        DECLARE @GraduationApplications TABLE (Id UNIQUEIDENTIFIER, StudentProfileId UNIQUEIDENTIFIER, [Status] INT, StudentNote NVARCHAR(2000), SubmittedAt DATETIME2, CertificatePath NVARCHAR(500) NULL, CertificateGeneratedAt DATETIME2 NULL);
+
+        IF @EligibleGraduationStudentId IS NOT NULL
+        BEGIN
+                INSERT INTO @GraduationApplications VALUES
+                ('31313131-3131-3131-3131-313131313101', @EligibleGraduationStudentId, 2, N'All degree requirements completed.', DATEADD(day, -20, @Now), N'https://demo.local/certificates/2026-IT-0001.pdf', DATEADD(day, -2, @Now));
+        END
 
     INSERT INTO [graduation_applications] ([Id], [StudentProfileId], [Status], [StudentNote], [SubmittedAt], [CertificatePath], [CertificateGeneratedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT g.[Id], g.[StudentProfileId], g.[Status], g.[StudentNote], g.[SubmittedAt], g.[CertificatePath], g.[CertificateGeneratedAt], @Now, NULL, 0, NULL

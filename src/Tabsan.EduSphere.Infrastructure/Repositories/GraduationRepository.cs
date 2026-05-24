@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Fyp;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -154,6 +155,11 @@ public class GraduationRepository : IGraduationRepository
             .FirstOrDefaultAsync(ct);
         return name ?? string.Empty;
     }
+
+    public Task<bool> HasCompletedFypProjectAsync(Guid studentProfileId, CancellationToken ct = default)
+        => _db.FypProjects
+              .AnyAsync(p => p.StudentProfileId == studentProfileId
+                          && p.Status == FypProjectStatus.Completed, ct);
 
     // Final-Touches Phase 18 Stage 18.1 — faculty user IDs for a department
     public async Task<IReadOnlyList<Guid>> GetFacultyUserIdsByDepartmentAsync(
