@@ -314,10 +314,13 @@ public interface IEduApiClient
     Task ApproveFypCompletionAsync(Guid id, CancellationToken ct);
 
     // Analytics — Final-Touches Phase 6 Stage 6.2: typed return instead of raw JSON strings
-    Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
-    Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
-    Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
-    Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct);
+    Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<bool> GetAnalyticsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateAnalyticsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeactivateAnalyticsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // AI Chat
     Task<List<AiChatConversationItem>> GetChatConversationsAsync(CancellationToken ct);
@@ -3261,19 +3264,31 @@ public class EduApiClient : IEduApiClient
     // ── Analytics ─────────────────────────────────────────────────────────────
 
     // Final-Touches Phase 6 Stage 6.2 — replaced raw JSON fetch with typed GetAsync<T> deserialization
-    public Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
-        => GetAsync<DepartmentPerformanceReport>($"api/v1/analytics/performance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
+    public Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => GetAsync<DepartmentPerformanceReport>($"api/v1/analytics/performance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId, tenantId, campusId)}", ct);
 
-    public Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
-        => GetAsync<DepartmentAttendanceReport>($"api/v1/analytics/attendance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
+    public Task<DepartmentAttendanceReport?> GetAttendanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => GetAsync<DepartmentAttendanceReport>($"api/v1/analytics/attendance{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId, tenantId, campusId)}", ct);
 
-    public Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
-        => GetAsync<AssignmentStatsReport>($"api/v1/analytics/assignments{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
+    public Task<AssignmentStatsReport?> GetAssignmentAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => GetAsync<AssignmentStatsReport>($"api/v1/analytics/assignments{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId, tenantId, campusId)}", ct);
 
-    public Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, CancellationToken ct)
-        => GetAsync<PaymentStatusReport>($"api/v1/analytics/payment-status{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId)}", ct);
+    public Task<PaymentStatusReport?> GetPaymentStatusAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => GetAsync<PaymentStatusReport>($"api/v1/analytics/payment-status{BuildAnalyticsQuery(departmentId, institutionType, courseId, semesterId, tenantId, campusId)}", ct);
 
-    private static string BuildAnalyticsQuery(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId)
+    public async Task<bool> GetAnalyticsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var response = await GetAsync<AnalyticsScopeStatusApiDto>($"api/v1/analytics/status{BuildAnalyticsScopeQuery(tenantId, campusId)}", ct);
+        return response?.IsActive ?? true;
+    }
+
+    public Task ActivateAnalyticsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/analytics/activate{BuildAnalyticsScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    public Task DeactivateAnalyticsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/analytics/deactivate{BuildAnalyticsScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    private static string BuildAnalyticsQuery(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)
@@ -3284,8 +3299,28 @@ public class EduApiClient : IEduApiClient
             parts.Add($"courseId={courseId.Value}");
         if (semesterId.HasValue)
             parts.Add($"semesterId={semesterId.Value}");
+        if (tenantId.HasValue)
+            parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            parts.Add($"campusId={campusId.Value}");
 
         return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
+    }
+
+    private static string BuildAnalyticsScopeQuery(Guid? tenantId, Guid? campusId)
+    {
+        var parts = new List<string>();
+        if (tenantId.HasValue)
+            parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            parts.Add($"campusId={campusId.Value}");
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
+    }
+
+    private sealed class AnalyticsScopeStatusApiDto
+    {
+        public bool IsActive { get; set; }
     }
 
     // ── AI Chat ───────────────────────────────────────────────────────────────

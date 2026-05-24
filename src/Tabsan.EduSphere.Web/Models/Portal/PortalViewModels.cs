@@ -921,11 +921,17 @@ public class AnalyticsPageModel
 {
     public bool   IsConnected { get; set; }
     public bool   IsFinanceOnly { get; set; }
+    public bool   IsAnalyticsActive { get; set; } = true;
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
     public int? SelectedInstitutionType { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
     public Guid? SelectedCourseId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Courses { get; set; } = new();
     public List<LookupItem> Semesters { get; set; } = new();

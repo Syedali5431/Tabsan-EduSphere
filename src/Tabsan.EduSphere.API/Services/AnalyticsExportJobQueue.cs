@@ -24,6 +24,8 @@ public sealed record AnalyticsExportJobRequest(
     Guid? RequestedByCampusId,
     Guid? DepartmentId,
     int? InstitutionType,
+    Guid? TenantId,
+    Guid? CampusId,
     AnalyticsExportReportType ReportType,
     AnalyticsExportFormat Format);
 

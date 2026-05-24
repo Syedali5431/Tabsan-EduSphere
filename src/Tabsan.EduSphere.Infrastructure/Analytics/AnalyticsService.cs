@@ -44,9 +44,11 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default,
         Guid? courseId = null,
-        Guid? semesterId = null)
+        Guid? semesterId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
         var cacheKey = BuildAnalyticsCacheKey("performance", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -141,9 +143,11 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default,
         Guid? courseId = null,
-        Guid? semesterId = null)
+        Guid? semesterId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
         var cacheKey = BuildAnalyticsCacheKey("attendance", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -208,9 +212,11 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default,
         Guid? courseId = null,
-        Guid? semesterId = null)
+        Guid? semesterId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
         var cacheKey = BuildAnalyticsCacheKey("assignments", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -299,9 +305,11 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<QuizStatsReport?> GetQuizStatsAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         // Final-Touches Phase 34 Stage 4.1 — cache expensive analytics report reads in shared distributed cache.
         var cacheKey = BuildAnalyticsCacheKey("quizzes", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -382,9 +390,11 @@ public sealed class AnalyticsService : IAnalyticsService
         Guid? departmentId,
         int? institutionType = null,
         int take = 10,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         var normalizedTake = Math.Clamp(take, 1, 100);
         var cacheKey = BuildAnalyticsCacheKey($"top-performers:{normalizedTake}", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -487,9 +497,11 @@ public sealed class AnalyticsService : IAnalyticsService
         Guid? departmentId,
         int? institutionType = null,
         int windowDays = 30,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         var normalizedWindowDays = Math.Clamp(windowDays, 7, 180);
         var cacheKey = BuildAnalyticsCacheKey($"performance-trends:{normalizedWindowDays}", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
@@ -569,9 +581,11 @@ public sealed class AnalyticsService : IAnalyticsService
     public async Task<ComparativeSummaryReport?> GetComparativeSummaryAsync(
         Guid? departmentId,
         int? institutionType = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         var cacheKey = BuildAnalyticsCacheKey("comparative-summary", departmentId, institutionType, accessScope);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
@@ -723,9 +737,11 @@ public sealed class AnalyticsService : IAnalyticsService
         int? institutionType = null,
         CancellationToken ct = default,
         Guid? courseId = null,
-        Guid? semesterId = null)
+        Guid? semesterId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
-        var accessScope = GetAnalyticsAccessScope();
+        var accessScope = GetAnalyticsAccessScope(tenantId, campusId);
         var cacheKey = BuildAnalyticsCacheKey("payment-status", departmentId, institutionType, accessScope, courseId, semesterId);
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);
         if (!string.IsNullOrWhiteSpace(cached))
@@ -834,9 +850,9 @@ public sealed class AnalyticsService : IAnalyticsService
 
     // PDF exports
     /// <summary>Exports the performance report to a PDF byte array.</summary>
-    public async Task<byte[]> ExportPerformancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportPerformancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetPerformanceReportAsync(departmentId, institutionType, ct)
+        var report = await GetPerformanceReportAsync(departmentId, institutionType, ct, null, null, tenantId, campusId)
                      ?? new DepartmentPerformanceReport(Guid.Empty, "All Departments", 0, 0, []);
         return Document.Create(container => container.Page(page =>
         {
@@ -863,9 +879,9 @@ public sealed class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>Exports the attendance report to a PDF byte array.</summary>
-    public async Task<byte[]> ExportAttendancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportAttendancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetAttendanceReportAsync(departmentId, institutionType, ct)
+        var report = await GetAttendanceReportAsync(departmentId, institutionType, ct, null, null, tenantId, campusId)
                      ?? new DepartmentAttendanceReport(Guid.Empty, "All Departments", 0, []);
         return Document.Create(container => container.Page(page =>
         {
@@ -894,9 +910,9 @@ public sealed class AnalyticsService : IAnalyticsService
 
     // Excel exports
     /// <summary>Exports the performance report to an Excel byte array.</summary>
-    public async Task<byte[]> ExportPerformanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportPerformanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetPerformanceReportAsync(departmentId, institutionType, ct)
+        var report = await GetPerformanceReportAsync(departmentId, institutionType, ct, null, null, tenantId, campusId)
                      ?? new DepartmentPerformanceReport(Guid.Empty, "All Departments", 0, 0, []);
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Performance");
@@ -916,9 +932,9 @@ public sealed class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>Exports the attendance report to an Excel byte array.</summary>
-    public async Task<byte[]> ExportAttendanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportAttendanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetAttendanceReportAsync(departmentId, institutionType, ct)
+        var report = await GetAttendanceReportAsync(departmentId, institutionType, ct, null, null, tenantId, campusId)
                      ?? new DepartmentAttendanceReport(Guid.Empty, "All Departments", 0, []);
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Attendance");
@@ -937,9 +953,9 @@ public sealed class AnalyticsService : IAnalyticsService
         using var ms2 = new MemoryStream(); wb.SaveAs(ms2); return ms2.ToArray();
     }
 
-    public async Task<byte[]> ExportTopPerformersPdfAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default)
+    public async Task<byte[]> ExportTopPerformersPdfAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetTopPerformersAsync(departmentId, institutionType, take, ct)
+        var report = await GetTopPerformersAsync(departmentId, institutionType, take, ct, tenantId, campusId)
                      ?? new TopPerformersReport(Guid.Empty, "All Departments", institutionType ?? (int)InstitutionType.University, take, []);
 
         return Document.Create(container => container.Page(page =>
@@ -966,9 +982,9 @@ public sealed class AnalyticsService : IAnalyticsService
         })).GeneratePdf();
     }
 
-    public async Task<byte[]> ExportTopPerformersExcelAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default)
+    public async Task<byte[]> ExportTopPerformersExcelAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetTopPerformersAsync(departmentId, institutionType, take, ct)
+        var report = await GetTopPerformersAsync(departmentId, institutionType, take, ct, tenantId, campusId)
                      ?? new TopPerformersReport(Guid.Empty, "All Departments", institutionType ?? (int)InstitutionType.University, take, []);
 
         using var wb = new XLWorkbook();
@@ -995,9 +1011,9 @@ public sealed class AnalyticsService : IAnalyticsService
         using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
     }
 
-    public async Task<byte[]> ExportPerformanceTrendsPdfAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default)
+    public async Task<byte[]> ExportPerformanceTrendsPdfAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetPerformanceTrendsAsync(departmentId, institutionType, windowDays, ct)
+        var report = await GetPerformanceTrendsAsync(departmentId, institutionType, windowDays, ct, tenantId, campusId)
                      ?? new PerformanceTrendReport(Guid.Empty, "All Departments", institutionType ?? (int)InstitutionType.University, windowDays, []);
 
         return Document.Create(container => container.Page(page =>
@@ -1022,9 +1038,9 @@ public sealed class AnalyticsService : IAnalyticsService
         })).GeneratePdf();
     }
 
-    public async Task<byte[]> ExportPerformanceTrendsExcelAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default)
+    public async Task<byte[]> ExportPerformanceTrendsExcelAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetPerformanceTrendsAsync(departmentId, institutionType, windowDays, ct)
+        var report = await GetPerformanceTrendsAsync(departmentId, institutionType, windowDays, ct, tenantId, campusId)
                      ?? new PerformanceTrendReport(Guid.Empty, "All Departments", institutionType ?? (int)InstitutionType.University, windowDays, []);
 
         using var wb = new XLWorkbook();
@@ -1047,9 +1063,9 @@ public sealed class AnalyticsService : IAnalyticsService
         using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
     }
 
-    public async Task<byte[]> ExportComparativeSummaryPdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportComparativeSummaryPdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetComparativeSummaryAsync(departmentId, institutionType, ct)
+        var report = await GetComparativeSummaryAsync(departmentId, institutionType, ct, tenantId, campusId)
                      ?? new ComparativeSummaryReport(institutionType ?? (int)InstitutionType.University, []);
 
         return Document.Create(container => container.Page(page =>
@@ -1078,9 +1094,9 @@ public sealed class AnalyticsService : IAnalyticsService
         })).GeneratePdf();
     }
 
-    public async Task<byte[]> ExportComparativeSummaryExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default)
+    public async Task<byte[]> ExportComparativeSummaryExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null)
     {
-        var report = await GetComparativeSummaryAsync(departmentId, institutionType, ct)
+        var report = await GetComparativeSummaryAsync(departmentId, institutionType, ct, tenantId, campusId)
                      ?? new ComparativeSummaryReport(institutionType ?? (int)InstitutionType.University, []);
 
         using var wb = new XLWorkbook();
@@ -1119,10 +1135,10 @@ public sealed class AnalyticsService : IAnalyticsService
         return dept?.Name ?? "Unknown Department";
     }
 
-    private AnalyticsAccessScope GetAnalyticsAccessScope()
+    private AnalyticsAccessScope GetAnalyticsAccessScope(Guid? requestedTenantId = null, Guid? requestedCampusId = null)
     {
         if (_accessScope?.IsSuperAdmin() == true)
-            return new AnalyticsAccessScope(null, null, true);
+            return new AnalyticsAccessScope(requestedTenantId, requestedCampusId, true);
 
         return new AnalyticsAccessScope(_accessScope?.GetTenantId(), _accessScope?.GetCampusId(), false);
     }

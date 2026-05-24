@@ -2770,26 +2770,31 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Analytics(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    public async Task<IActionResult> Analytics(int? institutionType, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
     {
         ViewData["Title"] = "Analytics";
-        var model = await BuildAnalyticsPageModelAsync(institutionType, departmentId, courseId, semesterId, ct);
+        var model = await BuildAnalyticsPageModelAsync(institutionType, tenantId, campusId, departmentId, courseId, semesterId, ct);
         return View(model);
     }
 
     [HttpGet]
-    public async Task<IActionResult> AnalyticsSnapshot(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    public async Task<IActionResult> AnalyticsSnapshot(int? institutionType, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
     {
-        var model = await BuildAnalyticsPageModelAsync(institutionType, departmentId, courseId, semesterId, ct);
+        var model = await BuildAnalyticsPageModelAsync(institutionType, tenantId, campusId, departmentId, courseId, semesterId, ct);
         return Json(new
         {
             success = model.IsConnected,
             isFinanceOnly = model.IsFinanceOnly,
+            isAnalyticsActive = model.IsAnalyticsActive,
             message = model.Message,
             selectedInstitutionType = model.SelectedInstitutionType,
+            selectedTenantId = model.SelectedTenantId,
+            selectedCampusId = model.SelectedCampusId,
             selectedDepartmentId = model.SelectedDepartmentId,
             selectedCourseId = model.SelectedCourseId,
             selectedSemesterId = model.SelectedSemesterId,
+            tenants = model.Tenants.Select(t => new { id = t.Id, name = t.Name, code = t.Code }).ToList(),
+            campuses = model.Campuses.Select(c => new { id = c.Id, name = c.Name, code = c.Code }).ToList(),
             departments = model.Departments.Select(d => new { id = d.Id, name = d.Name, institutionType = d.InstitutionType }).ToList(),
             courses = model.Courses.Select(c => new { id = c.Id, name = c.Name }).ToList(),
             semesters = model.Semesters.Select(s => new { id = s.Id, name = s.Name }).ToList(),
@@ -2808,14 +2813,36 @@ public class PortalController : Controller
         });
     }
 
-    private async Task<AnalyticsPageModel> BuildAnalyticsPageModelAsync(int? institutionType, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetAnalyticsActive(bool isActive, int? institutionType, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                if (isActive)
+                    await _api.ActivateAnalyticsScopeAsync(tenantId, campusId, ct);
+                else
+                    await _api.DeactivateAnalyticsScopeAsync(tenantId, campusId, ct);
+                TempData["PortalMessage"] = isActive ? "Analytics activated for selected scope." : "Analytics deactivated for selected scope.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+
+        return RedirectToAction(nameof(Analytics), new { institutionType, tenantId, campusId, departmentId, courseId, semesterId });
+    }
+
+    private async Task<AnalyticsPageModel> BuildAnalyticsPageModelAsync(int? institutionType, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? semesterId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         var model = new AnalyticsPageModel
         {
             IsConnected = _api.IsConnected(),
             IsFinanceOnly = identity is { IsFinance: true, IsAdmin: false, IsSuperAdmin: false },
+            Identity = identity,
             SelectedInstitutionType = institutionType,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
             SelectedSemesterId = semesterId
@@ -2828,9 +2855,23 @@ public class PortalController : Controller
 
         try
         {
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.IsAnalyticsActive = await _api.GetAnalyticsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            if (!model.IsAnalyticsActive)
+            {
+                model.Message = "Analytics is currently deactivated for the selected tenant/campus scope.";
+                return model;
+            }
+
             model.Departments = await _api.GetDepartmentsAsync(ct);
             var allSemesters = await _api.GetSemestersAsync(ct);
-            var offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, null, null, null, ct);
+            var offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, null, ct);
 
             // Constrained roles are auto-scoped to their institute claim for analytics filters.
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
@@ -2854,7 +2895,7 @@ public class PortalController : Controller
                 model.SelectedDepartmentId = null;
                 model.SelectedCourseId = null;
                 model.SelectedSemesterId = null;
-                offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
+                offerings = await _api.GetCourseOfferingsAsync(null, model.SelectedTenantId, model.SelectedCampusId, null, ct);
                 if (model.SelectedInstitutionType.HasValue)
                 {
                     var allowedDepartmentIds = model.Departments.Select(d => d.Id).ToHashSet();
@@ -2909,12 +2950,12 @@ public class PortalController : Controller
             // Finance-only users can access payment analytics without academic report permissions.
             if (!model.IsFinanceOnly)
             {
-                model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
-                model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
-                model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+                model.Performance = await _api.GetPerformanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, model.SelectedTenantId, model.SelectedCampusId, ct);
+                model.Attendance = await _api.GetAttendanceAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, model.SelectedTenantId, model.SelectedCampusId, ct);
+                model.Assignments = await _api.GetAssignmentAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, model.SelectedTenantId, model.SelectedCampusId, ct);
             }
 
-            model.PaymentStatus = await _api.GetPaymentStatusAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, ct);
+            model.PaymentStatus = await _api.GetPaymentStatusAnalyticsAsync(model.SelectedDepartmentId, model.SelectedInstitutionType, model.SelectedCourseId, model.SelectedSemesterId, model.SelectedTenantId, model.SelectedCampusId, ct);
 
             // Populate summary cards from real data.
             if (model.Performance is not null)

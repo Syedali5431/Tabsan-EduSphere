@@ -59,34 +59,34 @@ public sealed class AnalyticsExportJobWorker : BackgroundService
                         switch (request.ReportType)
                         {
                             case AnalyticsExportReportType.Attendance when request.Format == AnalyticsExportFormat.Excel:
-                                bytes = await analytics.ExportAttendanceExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportAttendanceExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.Attendance:
-                                bytes = await analytics.ExportAttendancePdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportAttendancePdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.Performance when request.Format == AnalyticsExportFormat.Excel:
-                                bytes = await analytics.ExportPerformanceExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportPerformanceExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.TopPerformers when request.Format == AnalyticsExportFormat.Excel:
-                                bytes = await analytics.ExportTopPerformersExcelAsync(request.DepartmentId, request.InstitutionType, 10, stoppingToken);
+                                bytes = await analytics.ExportTopPerformersExcelAsync(request.DepartmentId, request.InstitutionType, 10, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.TopPerformers:
-                                bytes = await analytics.ExportTopPerformersPdfAsync(request.DepartmentId, request.InstitutionType, 10, stoppingToken);
+                                bytes = await analytics.ExportTopPerformersPdfAsync(request.DepartmentId, request.InstitutionType, 10, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.PerformanceTrends when request.Format == AnalyticsExportFormat.Excel:
-                                bytes = await analytics.ExportPerformanceTrendsExcelAsync(request.DepartmentId, request.InstitutionType, 30, stoppingToken);
+                                bytes = await analytics.ExportPerformanceTrendsExcelAsync(request.DepartmentId, request.InstitutionType, 30, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.PerformanceTrends:
-                                bytes = await analytics.ExportPerformanceTrendsPdfAsync(request.DepartmentId, request.InstitutionType, 30, stoppingToken);
+                                bytes = await analytics.ExportPerformanceTrendsPdfAsync(request.DepartmentId, request.InstitutionType, 30, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.ComparativeSummary when request.Format == AnalyticsExportFormat.Excel:
-                                bytes = await analytics.ExportComparativeSummaryExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportComparativeSummaryExcelAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             case AnalyticsExportReportType.ComparativeSummary:
-                                bytes = await analytics.ExportComparativeSummaryPdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportComparativeSummaryPdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                             default:
-                                bytes = await analytics.ExportPerformancePdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken);
+                                bytes = await analytics.ExportPerformancePdfAsync(request.DepartmentId, request.InstitutionType, stoppingToken, request.TenantId, request.CampusId);
                                 break;
                         }
 

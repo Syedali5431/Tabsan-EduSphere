@@ -1,9 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.API.Services;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Interfaces;
+using Tabsan.EduSphere.Infrastructure.Persistence;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -19,6 +22,8 @@ public sealed class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analytics;
     private readonly IDepartmentRepository _departments;
+    private readonly IAccessScopeResolver _accessScope;
+    private readonly ApplicationDbContext _db;
     private readonly AnalyticsExportJobQueue _exportQueue;
     private readonly AnalyticsExportJobStore _exportStore;
 
@@ -26,11 +31,15 @@ public sealed class AnalyticsController : ControllerBase
     public AnalyticsController(
         IAnalyticsService analytics,
         IDepartmentRepository departments,
+        IAccessScopeResolver accessScope,
+        ApplicationDbContext db,
         AnalyticsExportJobQueue exportQueue,
         AnalyticsExportJobStore exportStore)
     {
         _analytics = analytics;
         _departments = departments;
+        _accessScope = accessScope;
+        _db = db;
         _exportQueue = exportQueue;
         _exportStore = exportStore;
     }
@@ -47,12 +56,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] int? institutionType,
         [FromQuery] Guid? courseId,
         [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetPerformanceReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId);
+        var result = await _analytics.GetPerformanceReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -63,12 +76,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] int? institutionType,
         [FromQuery] Guid? courseId,
         [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetAttendanceReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId);
+        var result = await _analytics.GetAttendanceReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -79,12 +96,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] int? institutionType,
         [FromQuery] Guid? courseId,
         [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetAssignmentStatsAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId);
+        var result = await _analytics.GetAssignmentStatsAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -93,12 +114,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> GetQuizStats(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetQuizStatsAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var result = await _analytics.GetQuizStatsAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -108,12 +133,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int take = 10,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetTopPerformersAsync(scope.DepartmentId, scope.InstitutionType, take, ct);
+        var result = await _analytics.GetTopPerformersAsync(scope.DepartmentId, scope.InstitutionType, take, ct, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -123,12 +152,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int windowDays = 30,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetPerformanceTrendsAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct);
+        var result = await _analytics.GetPerformanceTrendsAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -137,12 +170,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> GetComparativeSummary(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var result = await _analytics.GetComparativeSummaryAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var result = await _analytics.GetComparativeSummaryAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return result is null ? NotFound("No data found.") : Ok(result);
     }
 
@@ -154,6 +191,8 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] int? institutionType,
         [FromQuery] Guid? courseId,
         [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct = default)
     {
         if (User?.Identity?.IsAuthenticated != true)
@@ -167,11 +206,46 @@ public sealed class AnalyticsController : ControllerBase
         if (!canAccess)
             return Forbid();
 
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
+        if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
+
+        var result = await _analytics.GetPaymentStatusReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId, scope.TenantId, scope.CampusId);
+        return result is null ? NotFound("No data found.") : Ok(result);
+    }
+
+    [HttpGet("status")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> GetAnalyticsStatus([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveScopeAsync(null, null, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
 
-        var result = await _analytics.GetPaymentStatusReportAsync(scope.DepartmentId, scope.InstitutionType, ct, courseId, semesterId);
-        return result is null ? NotFound("No data found.") : Ok(result);
+        var isActive = await IsAnalyticsScopeActiveAsync(scope.TenantId, scope.CampusId, ct);
+        return Ok(new { isActive, tenantId = scope.TenantId, campusId = scope.CampusId });
+    }
+
+    [HttpPost("activate")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> ActivateAnalytics([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveScopeAsync(null, null, tenantId, campusId, ct);
+        if (scope.Error is not null) return scope.Error;
+
+        await SetAnalyticsScopeActiveAsync(scope.TenantId, scope.CampusId, true, ct);
+        return NoContent();
+    }
+
+    [HttpPost("deactivate")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> DeactivateAnalytics([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveScopeAsync(null, null, tenantId, campusId, ct);
+        if (scope.Error is not null) return scope.Error;
+
+        await SetAnalyticsScopeActiveAsync(scope.TenantId, scope.CampusId, false, ct);
+        return NoContent();
     }
 
     // ── Export endpoints ──────────────────────────────────────────────────────
@@ -182,12 +256,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportPerformancePdf(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportPerformancePdfAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportPerformancePdfAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.Performance, AnalyticsExportFormat.Pdf);
     }
 
@@ -197,12 +275,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportPerformanceExcel(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportPerformanceExcelAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportPerformanceExcelAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.Performance, AnalyticsExportFormat.Excel);
     }
 
@@ -212,12 +294,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportAttendancePdf(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportAttendancePdfAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportAttendancePdfAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.Attendance, AnalyticsExportFormat.Pdf);
     }
 
@@ -227,12 +313,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportAttendanceExcelAsync(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportAttendanceExcelAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportAttendanceExcelAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.Attendance, AnalyticsExportFormat.Excel);
     }
 
@@ -243,12 +333,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int take = 10,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportTopPerformersPdfAsync(scope.DepartmentId, scope.InstitutionType, take, ct);
+        var bytes = await _analytics.ExportTopPerformersPdfAsync(scope.DepartmentId, scope.InstitutionType, take, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.TopPerformers, AnalyticsExportFormat.Pdf);
     }
 
@@ -259,12 +353,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int take = 10,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportTopPerformersExcelAsync(scope.DepartmentId, scope.InstitutionType, take, ct);
+        var bytes = await _analytics.ExportTopPerformersExcelAsync(scope.DepartmentId, scope.InstitutionType, take, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.TopPerformers, AnalyticsExportFormat.Excel);
     }
 
@@ -275,12 +373,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int windowDays = 30,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportPerformanceTrendsPdfAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct);
+        var bytes = await _analytics.ExportPerformanceTrendsPdfAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.PerformanceTrends, AnalyticsExportFormat.Pdf);
     }
 
@@ -291,12 +393,16 @@ public sealed class AnalyticsController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
         [FromQuery] int windowDays = 30,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportPerformanceTrendsExcelAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct);
+        var bytes = await _analytics.ExportPerformanceTrendsExcelAsync(scope.DepartmentId, scope.InstitutionType, windowDays, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.PerformanceTrends, AnalyticsExportFormat.Excel);
     }
 
@@ -306,12 +412,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportComparativeSummaryPdf(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportComparativeSummaryPdfAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportComparativeSummaryPdfAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.ComparativeSummary, AnalyticsExportFormat.Pdf);
     }
 
@@ -321,12 +431,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> ExportComparativeSummaryExcel(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
-        var bytes = await _analytics.ExportComparativeSummaryExcelAsync(scope.DepartmentId, scope.InstitutionType, ct);
+        var bytes = await _analytics.ExportComparativeSummaryExcelAsync(scope.DepartmentId, scope.InstitutionType, ct, scope.TenantId, scope.CampusId);
         return ReturnAnalyticsFile(bytes, AnalyticsExportReportType.ComparativeSummary, AnalyticsExportFormat.Excel);
     }
 
@@ -340,12 +454,16 @@ public sealed class AnalyticsController : ControllerBase
     public async Task<IActionResult> QueueExportJob(
         [FromQuery] Guid? departmentId,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         [FromQuery] string reportType = "performance",
         [FromQuery] string format = "pdf",
         CancellationToken ct = default)
     {
-        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, ct);
+        var scope = await ResolveEffectiveScopeAsync(departmentId, institutionType, tenantId, campusId, ct);
         if (scope.Error is not null) return scope.Error;
+        var activeCheck = await EnsureAnalyticsScopeIsActiveAsync(scope.TenantId, scope.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
 
         if (!TryParseReportType(reportType, out var parsedReportType))
             return BadRequest("reportType must be one of: performance, attendance, top-performers, performance-trends, comparative-summary.");
@@ -378,6 +496,8 @@ public sealed class AnalyticsController : ControllerBase
             requestedByCampusId,
             scope.DepartmentId,
             scope.InstitutionType,
+            scope.TenantId,
+            scope.CampusId,
             parsedReportType,
             parsedFormat));
 
@@ -535,12 +655,16 @@ public sealed class AnalyticsController : ControllerBase
     /// Faculty users are scoped to their own department. Constrained roles are auto-scoped
     /// to their institution claim when present; explicit mismatches are forbidden.
     /// </summary>
-    private async Task<(Guid? DepartmentId, int? InstitutionType, IActionResult? Error)> ResolveEffectiveScopeAsync(
+    private async Task<(Guid? DepartmentId, int? InstitutionType, Guid? TenantId, Guid? CampusId, IActionResult? Error)> ResolveEffectiveScopeAsync(
         Guid? requestedDepartmentId,
         int? requestedInstitutionType,
+        Guid? requestedTenantId,
+        Guid? requestedCampusId,
         CancellationToken ct)
     {
         Guid? effectiveDepartmentId = requestedDepartmentId;
+        Guid? effectiveTenantId = requestedTenantId;
+        Guid? effectiveCampusId = requestedCampusId;
 
         var isAdminOrAbove = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         if (!isAdminOrAbove)
@@ -553,10 +677,35 @@ public sealed class AnalyticsController : ControllerBase
         var callerInstitutionType = GetCurrentInstitutionType();
         var effectiveInstitutionType = requestedInstitutionType;
 
+        if (!_accessScope.IsSuperAdmin())
+        {
+            var callerTenantId = _accessScope.GetTenantId();
+            var callerCampusId = _accessScope.GetCampusId();
+
+            if (callerTenantId.HasValue)
+            {
+                if (requestedTenantId.HasValue && requestedTenantId.Value != callerTenantId.Value)
+                    return (null, null, null, null, Forbid());
+
+                effectiveTenantId = callerTenantId.Value;
+            }
+
+            if (callerCampusId.HasValue)
+            {
+                if (requestedCampusId.HasValue && requestedCampusId.Value != callerCampusId.Value)
+                    return (null, null, null, null, Forbid());
+
+                effectiveCampusId = callerCampusId.Value;
+            }
+        }
+
+        if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            return (null, null, null, null, BadRequest(new { message = "TenantId and CampusId must be provided together." }));
+
         if (!User.IsInRole("SuperAdmin") && callerInstitutionType.HasValue)
         {
             if (requestedInstitutionType.HasValue && requestedInstitutionType.Value != callerInstitutionType.Value)
-                return (null, null, Forbid());
+                return (null, null, null, null, Forbid());
 
             effectiveInstitutionType = callerInstitutionType.Value;
         }
@@ -565,15 +714,62 @@ public sealed class AnalyticsController : ControllerBase
         {
             var department = await _departments.GetByIdAsync(effectiveDepartmentId.Value, ct);
             if (department is null)
-                return (null, null, NotFound("Department not found."));
+                return (null, null, null, null, NotFound("Department not found."));
+
+            if (effectiveTenantId.HasValue && department.TenantId != effectiveTenantId.Value)
+                return (null, null, null, null, Forbid());
+
+            if (effectiveCampusId.HasValue && department.CampusId != effectiveCampusId.Value)
+                return (null, null, null, null, Forbid());
 
             if (effectiveInstitutionType.HasValue && (int)department.InstitutionType != effectiveInstitutionType.Value)
-                return (null, null, Forbid());
+                return (null, null, null, null, Forbid());
 
             if (!effectiveInstitutionType.HasValue)
                 effectiveInstitutionType = (int)department.InstitutionType;
         }
 
-        return (effectiveDepartmentId, effectiveInstitutionType, null);
+        return (effectiveDepartmentId, effectiveInstitutionType, effectiveTenantId, effectiveCampusId, null);
+    }
+
+    private static string GetAnalyticsScopeSettingKey(Guid? tenantId, Guid? campusId)
+        => tenantId.HasValue && campusId.HasValue
+            ? $"analytics.active.{tenantId.Value:N}.{campusId.Value:N}"
+            : "analytics.active.global";
+
+    private async Task<bool> IsAnalyticsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var key = GetAnalyticsScopeSettingKey(tenantId, campusId);
+        var setting = await _db.PortalSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (setting is null)
+            return true;
+
+        return bool.TryParse(setting.Value, out var isActive) ? isActive : true;
+    }
+
+    private async Task SetAnalyticsScopeActiveAsync(Guid? tenantId, Guid? campusId, bool isActive, CancellationToken ct)
+    {
+        var key = GetAnalyticsScopeSettingKey(tenantId, campusId);
+        var setting = await _db.PortalSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (setting is null)
+        {
+            setting = new Domain.Settings.PortalSetting(key, isActive.ToString().ToLowerInvariant());
+            await _db.PortalSettings.AddAsync(setting, ct);
+        }
+        else
+        {
+            setting.SetValue(isActive.ToString().ToLowerInvariant());
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    private async Task<IActionResult?> EnsureAnalyticsScopeIsActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var isActive = await IsAnalyticsScopeActiveAsync(tenantId, campusId, ct);
+        if (isActive)
+            return null;
+
+        return StatusCode(StatusCodes.Status423Locked, new { message = "Analytics is deactivated for the selected tenant/campus scope." });
     }
 }

@@ -8,56 +8,56 @@ namespace Tabsan.EduSphere.Application.Interfaces;
 public interface IAnalyticsService
 {
     /// <summary>Returns a performance report for a department, or all departments if null.</summary>
-    Task<DepartmentPerformanceReport?> GetPerformanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
+    Task<DepartmentPerformanceReport?> GetPerformanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns an attendance summary report for a department, or all departments if null.</summary>
-    Task<DepartmentAttendanceReport?> GetAttendanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
+    Task<DepartmentAttendanceReport?> GetAttendanceReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns assignment statistics for a department, or all departments if null.</summary>
-    Task<AssignmentStatsReport?> GetAssignmentStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
+    Task<AssignmentStatsReport?> GetAssignmentStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns quiz statistics for a department, or all departments if null.</summary>
-    Task<QuizStatsReport?> GetQuizStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<QuizStatsReport?> GetQuizStatsAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the performance report for a department to a PDF byte array.</summary>
-    Task<byte[]> ExportPerformancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportPerformancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the performance report for a department to an Excel byte array.</summary>
-    Task<byte[]> ExportPerformanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportPerformanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the attendance report for a department to a PDF byte array.</summary>
-    Task<byte[]> ExportAttendancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportAttendancePdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the attendance report for a department to an Excel byte array.</summary>
-    Task<byte[]> ExportAttendanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportAttendanceExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the top performers report for a department to a PDF byte array.</summary>
-    Task<byte[]> ExportTopPerformersPdfAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default);
+    Task<byte[]> ExportTopPerformersPdfAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the top performers report for a department to an Excel byte array.</summary>
-    Task<byte[]> ExportTopPerformersExcelAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default);
+    Task<byte[]> ExportTopPerformersExcelAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the performance trends report for a department to a PDF byte array.</summary>
-    Task<byte[]> ExportPerformanceTrendsPdfAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default);
+    Task<byte[]> ExportPerformanceTrendsPdfAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the performance trends report for a department to an Excel byte array.</summary>
-    Task<byte[]> ExportPerformanceTrendsExcelAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default);
+    Task<byte[]> ExportPerformanceTrendsExcelAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the comparative summary report for a department to a PDF byte array.</summary>
-    Task<byte[]> ExportComparativeSummaryPdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportComparativeSummaryPdfAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Exports the comparative summary report for a department to an Excel byte array.</summary>
-    Task<byte[]> ExportComparativeSummaryExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<byte[]> ExportComparativeSummaryExcelAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns ranked top performers for a scoped analytics context.</summary>
-    Task<TopPerformersReport?> GetTopPerformersAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default);
+    Task<TopPerformersReport?> GetTopPerformersAsync(Guid? departmentId, int? institutionType = null, int take = 10, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns daily performance trends for a scoped analytics context.</summary>
-    Task<PerformanceTrendReport?> GetPerformanceTrendsAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default);
+    Task<PerformanceTrendReport?> GetPerformanceTrendsAsync(Guid? departmentId, int? institutionType = null, int windowDays = 30, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns comparative summary metrics across scoped departments.</summary>
-    Task<ComparativeSummaryReport?> GetComparativeSummaryAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default);
+    Task<ComparativeSummaryReport?> GetComparativeSummaryAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? tenantId = null, Guid? campusId = null);
 
     /// <summary>Returns paid vs unpaid payment status summary for a scoped analytics context.</summary>
-    Task<PaymentStatusReport?> GetPaymentStatusReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null);
+    Task<PaymentStatusReport?> GetPaymentStatusReportAsync(Guid? departmentId, int? institutionType = null, CancellationToken ct = default, Guid? courseId = null, Guid? semesterId = null, Guid? tenantId = null, Guid? campusId = null);
 }

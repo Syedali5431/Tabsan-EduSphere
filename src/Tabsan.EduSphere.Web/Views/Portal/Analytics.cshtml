@@ -15,6 +15,45 @@ else
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form asp-action="Analytics" method="get" class="row g-3 align-items-end" id="analyticsFilterForm">
+                @if (Model.Identity?.IsSuperAdmin == true)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select class="form-select" name="tenantId" id="analyticsTenantId">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                if (Model.SelectedTenantId == t.Id)
+                                {
+                                    <option value="@t.Id" selected>@t.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@t.Id">@t.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId" id="analyticsCampusId">
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                if (Model.SelectedCampusId == c.Id)
+                                {
+                                    <option value="@c.Id" selected>@c.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                }
+
                 <div class="col-md-3">
                     <label class="form-label">Institution</label>
                     <select class="form-select" name="institutionType" id="analyticsInstitutionType">
@@ -113,6 +152,20 @@ else
                     <button type="submit" class="btn btn-primary">Apply Filters</button>
                     <a asp-action="Analytics" class="btn btn-outline-secondary">Reset</a>
                 </div>
+            </form>
+
+            <form asp-action="SetAnalyticsActive" method="post" class="mt-3 d-flex justify-content-end">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                <input type="hidden" name="isActive" value="@(!Model.IsAnalyticsActive)" />
+                <button type="submit" class="btn @(Model.IsAnalyticsActive ? "btn-outline-danger" : "btn-outline-success")">
+                    @(Model.IsAnalyticsActive ? "Deactivate Analytics" : "Activate Analytics")
+                </button>
             </form>
         </div>
     </div>
@@ -384,6 +437,8 @@ else
         (function () {
             var snapshotUrl = '@Url.Action("AnalyticsSnapshot", "Portal")';
             var filterForm = document.getElementById('analyticsFilterForm');
+            var tenantSelect = document.getElementById('analyticsTenantId');
+            var campusSelect = document.getElementById('analyticsCampusId');
             var institutionSelect = document.getElementById('analyticsInstitutionType');
             var departmentSelect = document.getElementById('analyticsDepartmentId');
             var courseSelect = document.getElementById('analyticsCourseId');
@@ -407,11 +462,16 @@ else
             var initialSnapshot = {
                 success: true,
                 isFinanceOnly: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.IsFinanceOnly)),
+                isAnalyticsActive: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.IsAnalyticsActive)),
                 message: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Message)),
                 selectedInstitutionType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedInstitutionType)),
+                selectedTenantId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedTenantId)),
+                selectedCampusId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedCampusId)),
                 selectedDepartmentId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedDepartmentId)),
                 selectedCourseId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedCourseId)),
                 selectedSemesterId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedSemesterId)),
+                tenants: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Tenants)),
+                campuses: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Campuses)),
                 departments: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Departments)),
                 courses: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Courses)),
                 semesters: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Semesters)),
@@ -430,7 +490,7 @@ else
             }
 
             function setLoading(isLoading) {
-                [institutionSelect, departmentSelect, courseSelect, semesterSelect, submitButton].forEach(function (el) {
+                [tenantSelect, campusSelect, institutionSelect, departmentSelect, courseSelect, semesterSelect, submitButton].forEach(function (el) {
                     if (el) el.disabled = isLoading;
                 });
             }
@@ -558,6 +618,25 @@ else
                 ];
                 var c = colors[idx % colors.length];
                 return 'rgba(' + c[0] + ', ' + c[1] + ', ' + c[2] + ', ' + alpha + ')';
+            }
+
+            if (tenantSelect && filterForm) {
+                tenantSelect.addEventListener('change', function () {
+                    clearSelectValue(campusSelect);
+                    clearSelectValue(departmentSelect);
+                    clearSelectValue(courseSelect);
+                    clearSelectValue(semesterSelect);
+                    refreshSnapshot();
+                });
+            }
+
+            if (campusSelect && filterForm) {
+                campusSelect.addEventListener('change', function () {
+                    clearSelectValue(departmentSelect);
+                    clearSelectValue(courseSelect);
+                    clearSelectValue(semesterSelect);
+                    refreshSnapshot();
+                });
             }
 
             if (institutionSelect && filterForm) {
@@ -1187,9 +1266,14 @@ else
                 var isFinanceOnly = !!prop(snapshot, 'isFinanceOnly', 'IsFinanceOnly', false);
 
                 var selectedInstitutionType = prop(snapshot, 'selectedInstitutionType', 'SelectedInstitutionType', null);
+                var selectedTenantId = prop(snapshot, 'selectedTenantId', 'SelectedTenantId', null);
+                var selectedCampusId = prop(snapshot, 'selectedCampusId', 'SelectedCampusId', null);
                 var selectedDepartmentId = prop(snapshot, 'selectedDepartmentId', 'SelectedDepartmentId', null);
                 var selectedCourseId = prop(snapshot, 'selectedCourseId', 'SelectedCourseId', null);
                 var selectedSemesterId = prop(snapshot, 'selectedSemesterId', 'SelectedSemesterId', null);
+
+                setSelectOptions(tenantSelect, prop(snapshot, 'tenants', 'Tenants', []), selectedTenantId, 'All Tenants');
+                setSelectOptions(campusSelect, prop(snapshot, 'campuses', 'Campuses', []), selectedCampusId, 'All Campuses');
 
                 if (institutionSelect) {
                     institutionSelect.value = selectedInstitutionType !== null && selectedInstitutionType !== undefined
@@ -1218,6 +1302,8 @@ else
 
             function buildSnapshotQuery() {
                 var query = new URLSearchParams();
+                if (tenantSelect && tenantSelect.value) query.set('tenantId', tenantSelect.value);
+                if (campusSelect && campusSelect.value) query.set('campusId', campusSelect.value);
                 if (institutionSelect && institutionSelect.value) query.set('institutionType', institutionSelect.value);
                 if (departmentSelect && departmentSelect.value) query.set('departmentId', departmentSelect.value);
                 if (courseSelect && courseSelect.value) query.set('courseId', courseSelect.value);
