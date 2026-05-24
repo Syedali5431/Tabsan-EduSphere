@@ -20,20 +20,22 @@ public interface IEduApiClient
     Task<StudentProfileSummaryItem?> GetMyStudentProfileAsync(CancellationToken ct);
 
     Task<List<LookupItem>> GetDepartmentsAsync(CancellationToken ct);
+        Task<List<LookupItem>> GetDepartmentsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, CancellationToken ct);
     Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, CancellationToken ct);
     Task<List<LookupItem>> GetSemestersAsync(CancellationToken ct);
     Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct);
+    Task<List<FacultyLookupItem>> GetFacultyAsync(Guid? tenantId = null, Guid? campusId = null, Guid? departmentId = null, CancellationToken ct = default);
     Task<List<LookupItem>> GetBuildingsAsync(CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsAsync(CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsByBuildingAsync(Guid buildingId, CancellationToken ct);
 
-    Task<TimetableDetailsItem?> GetTimetableByIdAsync(Guid timetableId, CancellationToken ct);
-    Task<List<TimetableSummaryItem>> GetTimetablesByDepartmentAsync(Guid departmentId, CancellationToken ct);
-    Task<Guid> CreateTimetableAsync(CreateTimetableForm form, CancellationToken ct);
-    Task AddTimetableEntryAsync(AddTimetableEntryForm form, CancellationToken ct);
-    Task PublishTimetableAsync(Guid timetableId, CancellationToken ct);
+    Task<TimetableDetailsItem?> GetTimetableByIdAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<TimetableSummaryItem>> GetTimetablesByDepartmentAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<Guid> CreateTimetableAsync(CreateTimetableForm form, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task AddTimetableEntryAsync(AddTimetableEntryForm form, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task PublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct);
 
     // Buildings
@@ -151,15 +153,19 @@ public interface IEduApiClient
     Task SetCampusActiveAsync(Guid id, bool activate, CancellationToken ct);
 
     // Courses / Offerings
-    Task<List<CourseItem>> GetCourseDetailsAsync(Guid? departmentId, CancellationToken ct);
+    Task<List<CourseItem>> GetCourseDetailsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     // Final-Touches Phase 19 Stage 19.3 — filtered by hasSemesters
     Task<List<CourseItem>> GetCourseDetailsByTypeAsync(bool hasSemesters, CancellationToken ct);
-    Task<List<CourseOfferingItem>> GetCourseOfferingsAsync(Guid? departmentId, CancellationToken ct);
+    Task<List<CourseOfferingItem>> GetCourseOfferingsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task<List<LookupItem>> GetMyOfferingsAsync(CancellationToken ct);
     // Final-Touches Phase 19 Stage 19.1/19.2 — extended create with semester/duration/grading
+    Task CreateCourseAsync(string code, string title, int creditHours, Guid departmentId, bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task CreateCourseAsync(string code, string title, int creditHours, Guid departmentId, bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType, CancellationToken ct);
+    Task CreateOfferingAsync(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task CreateOfferingAsync(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, CancellationToken ct);
+    Task DeactivateCourseAsync(Guid id, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task DeactivateCourseAsync(Guid id, CancellationToken ct);
+    Task DeleteOfferingAsync(Guid id, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task DeleteOfferingAsync(Guid id, CancellationToken ct);
     // Final-Touches Phase 19 Stage 19.4 — per-course grading config
     Task<GradingConfigApiModel?> GetCourseGradingConfigAsync(Guid courseId, CancellationToken ct);
@@ -591,7 +597,20 @@ public class EduApiClient : IEduApiClient
     // â”€â”€ Lookup GETs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public async Task<List<LookupItem>> GetDepartmentsAsync(CancellationToken ct)
-        => await GetAsync<List<LookupItem>>("api/v1/department", ct) ?? new();
+        => await GetDepartmentsAsync(null, null, ct);
+
+    public async Task<List<LookupItem>> GetDepartmentsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0
+            ? "api/v1/department"
+            : $"api/v1/department?{string.Join("&", query)}";
+
+        return await GetAsync<List<LookupItem>>(path, ct) ?? new();
+    }
 
     public async Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, CancellationToken ct)
     {
@@ -629,8 +648,25 @@ public class EduApiClient : IEduApiClient
         return await GetAsync<List<LookupItem>>(path, ct) ?? new();
     }
 
-    public async Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct)
-        => await GetAsync<List<FacultyLookupItem>>("api/v1/timetable/faculty", ct) ?? new();
+    public Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct)
+        => GetFacultyAsync(null, null, null, ct);
+
+    public async Task<List<FacultyLookupItem>> GetFacultyAsync(Guid? tenantId = null, Guid? campusId = null, Guid? departmentId = null, CancellationToken ct = default)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+        if (departmentId.HasValue)
+            queryParts.Add($"departmentId={departmentId.Value}");
+
+        var path = "api/v1/timetable/faculty";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await GetAsync<List<FacultyLookupItem>>(path, ct) ?? new();
+    }
 
     public async Task<List<LookupItem>> GetBuildingsAsync(CancellationToken ct)
         => await GetAsync<List<LookupItem>>("api/v1/building", ct) ?? new();
@@ -643,20 +679,54 @@ public class EduApiClient : IEduApiClient
 
     // â”€â”€ Timetable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    public Task<TimetableDetailsItem?> GetTimetableByIdAsync(Guid timetableId, CancellationToken ct)
-        => GetAsync<TimetableDetailsItem>($"api/v1/timetable/{timetableId}", ct);
-
-    public async Task<List<TimetableSummaryItem>> GetTimetablesByDepartmentAsync(Guid departmentId, CancellationToken ct)
-        => await GetAsync<List<TimetableSummaryItem>>($"api/v1/timetable/department/{departmentId}", ct) ?? new();
-
-    public async Task<Guid> CreateTimetableAsync(CreateTimetableForm form, CancellationToken ct)
+    public Task<TimetableDetailsItem?> GetTimetableByIdAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var result = await PostAsync<CreateTimetableForm, TimetableCreateResponse>("api/v1/timetable", form, ct)
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/timetable/{timetableId}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return GetAsync<TimetableDetailsItem>(path, ct);
+    }
+
+    public async Task<List<TimetableSummaryItem>> GetTimetablesByDepartmentAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/timetable/department/{departmentId}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await GetAsync<List<TimetableSummaryItem>>(path, ct) ?? new();
+    }
+
+    public async Task<Guid> CreateTimetableAsync(CreateTimetableForm form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/timetable";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var result = await PostAsync<CreateTimetableForm, TimetableCreateResponse>(path, form, ct)
             ?? throw new InvalidOperationException("Timetable create API returned no body.");
         return result.Id;
     }
 
-    public async Task AddTimetableEntryAsync(AddTimetableEntryForm form, CancellationToken ct)
+    public async Task AddTimetableEntryAsync(AddTimetableEntryForm form, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new
         {
@@ -671,11 +741,34 @@ public class EduApiClient : IEduApiClient
             form.RoomNumber,
             form.BuildingId
         };
-        await PostAsync<object, object>($"api/v1/timetable/{form.TimetableId}/entries", payload, ct);
+
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/timetable/{form.TimetableId}/entries";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        await PostAsync<object, object>(path, payload, ct);
     }
 
-    public async Task PublishTimetableAsync(Guid timetableId, CancellationToken ct)
-        => await PostAsync<object, object>($"api/v1/timetable/{timetableId}/publish", new { }, ct);
+    public async Task PublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/timetable/{timetableId}/publish";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        await PostAsync<object, object>(path, new { }, ct);
+    }
 
     public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct)
         => await GetAsync<List<TeacherTimetableEntryItem>>("api/v1/timetable/mine/teacher", ct) ?? new();
@@ -1120,6 +1213,12 @@ public class EduApiClient : IEduApiClient
                 identity.InstitutionType = it.GetInt32();
             }
 
+            if (TryGetGuidClaim(root, out var tenantId, "tenant_id", "tenantId", "tid"))
+                identity.TenantId = tenantId;
+
+            if (TryGetGuidClaim(root, out var campusId, "campus_id", "campusId", "cid"))
+                identity.CampusId = campusId;
+
             // Role claim may be emitted as `role` or the standard ClaimTypes.Role URI.
             if (TryReadRoleClaims(root, out var roles))
             {
@@ -1154,6 +1253,21 @@ public class EduApiClient : IEduApiClient
             }
 
             return roles.Count > 0;
+        }
+
+        static bool TryGetGuidClaim(JsonElement root, out Guid value, params string[] propertyNames)
+        {
+            foreach (var propertyName in propertyNames)
+            {
+                if (!root.TryGetProperty(propertyName, out var prop))
+                    continue;
+
+                if (prop.ValueKind == JsonValueKind.String && Guid.TryParse(prop.GetString(), out value))
+                    return true;
+            }
+
+            value = Guid.Empty;
+            return false;
         }
 
         return identity;
@@ -1729,11 +1843,14 @@ public class EduApiClient : IEduApiClient
 
     // ── Courses ───────────────────────────────────────────────────────────────
 
-    public async Task<List<CourseItem>> GetCourseDetailsAsync(Guid? departmentId, CancellationToken ct)
+    public async Task<List<CourseItem>> GetCourseDetailsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/course?departmentId={departmentId.Value}"
-            : "api/v1/course";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? "api/v1/course" : $"api/v1/course?{string.Join("&", query)}";
         var raw = await GetAsync<List<CourseDetailDto>>(path, ct) ?? new();
         return raw.Select(MapCourseItem).ToList();
     }
@@ -1745,11 +1862,14 @@ public class EduApiClient : IEduApiClient
         return raw.Select(MapCourseItem).ToList();
     }
 
-    public async Task<List<CourseOfferingItem>> GetCourseOfferingsAsync(Guid? departmentId, CancellationToken ct)
+    public async Task<List<CourseOfferingItem>> GetCourseOfferingsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/course/offerings?departmentId={departmentId.Value}"
-            : "api/v1/course/offerings";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? "api/v1/course/offerings" : $"api/v1/course/offerings?{string.Join("&", query)}";
         var raw = await GetAsync<List<OfferingApiDto>>(path, ct) ?? new();
         return raw.Select(o => new CourseOfferingItem
         {
@@ -1757,6 +1877,9 @@ public class EduApiClient : IEduApiClient
             CourseId     = o.CourseId,
             SemesterId   = o.SemesterId,
             DepartmentId = o.DepartmentId,
+            TenantId     = o.TenantId,
+            CampusId     = o.CampusId,
+            InstitutionType = o.InstitutionType,
             CourseTitle  = o.CourseTitle ?? "",
             CourseCode   = o.CourseCode ?? "",
             FacultyName  = o.FacultyName ?? "",
@@ -1778,7 +1901,17 @@ public class EduApiClient : IEduApiClient
     }
 
     public Task CreateCourseAsync(string code, string title, int creditHours, Guid departmentId, bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/course", new { code, title, creditHours, departmentId, hasSemesters, totalSemesters, durationValue, durationUnit, gradingType }, ct);
+        => CreateCourseAsync(code, title, creditHours, departmentId, hasSemesters, totalSemesters, durationValue, durationUnit, gradingType, null, null, null, ct);
+
+    public Task CreateCourseAsync(string code, string title, int creditHours, Guid departmentId, bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? "api/v1/course" : $"api/v1/course?{string.Join("&", query)}";
+        return PostAsync<object, object>(path, new { code, title, creditHours, departmentId, hasSemesters, totalSemesters, durationValue, durationUnit, gradingType }, ct);
+    }
 
     // Final-Touches Phase 19 Stage 19.4 — get grading config
     public Task<GradingConfigApiModel?> GetCourseGradingConfigAsync(Guid courseId, CancellationToken ct)
@@ -2045,13 +2178,43 @@ public class EduApiClient : IEduApiClient
             $"api/v1/study-plan/recommendations/{studentProfileId}?plannedSemesterName={Uri.EscapeDataString(plannedSemesterName)}", ct);
 
     public Task CreateOfferingAsync(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/course/offerings", new { courseId, semesterId, maxEnrollment, facultyUserId }, ct);
+        => CreateOfferingAsync(courseId, semesterId, maxEnrollment, facultyUserId, null, null, null, ct);
+
+    public Task CreateOfferingAsync(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? "api/v1/course/offerings" : $"api/v1/course/offerings?{string.Join("&", query)}";
+        return PostAsync<object, object>(path, new { courseId, semesterId, maxEnrollment, facultyUserId }, ct);
+    }
 
     public Task DeactivateCourseAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/course/{id}", ct);
+        => DeactivateCourseAsync(id, null, null, null, ct);
+
+    public Task DeactivateCourseAsync(Guid id, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? $"api/v1/course/{id}" : $"api/v1/course/{id}?{string.Join("&", query)}";
+        return DeleteAsync(path, ct);
+    }
 
     public Task DeleteOfferingAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/course/offerings/{id}", ct);
+        => DeleteOfferingAsync(id, null, null, null, ct);
+
+    public Task DeleteOfferingAsync(Guid id, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        var path = query.Count == 0 ? $"api/v1/course/offerings/{id}" : $"api/v1/course/offerings/{id}?{string.Join("&", query)}";
+        return DeleteAsync(path, ct);
+    }
 
     // ── Phase 22: External Integrations ─────────────────────────────────────────
 
@@ -2125,6 +2288,9 @@ public class EduApiClient : IEduApiClient
         public Guid    Id             { get; set; }
         public string? Title          { get; set; }
         public string? Code           { get; set; }
+        public Guid?   TenantId       { get; set; }
+        public Guid?   CampusId       { get; set; }
+        public int     InstitutionType { get; set; }
         public string? DepartmentName { get; set; }
         public int     CreditHours    { get; set; }
         // Final-Touches Phase 19 Stage 19.1/19.2 — extended fields
@@ -2141,6 +2307,9 @@ public class EduApiClient : IEduApiClient
         Id             = c.Id,
         Title          = c.Title          ?? "",
         Code           = c.Code           ?? "",
+        TenantId       = c.TenantId,
+        CampusId       = c.CampusId,
+        InstitutionType = c.InstitutionType,
         DepartmentName = c.DepartmentName ?? "",
         CreditHours    = c.CreditHours,
         HasSemesters   = c.HasSemesters,
@@ -2156,6 +2325,9 @@ public class EduApiClient : IEduApiClient
         public Guid    CourseId     { get; set; }
         public Guid    SemesterId   { get; set; }
         public Guid    DepartmentId { get; set; }
+        public Guid?   TenantId     { get; set; }
+        public Guid?   CampusId     { get; set; }
+        public int     InstitutionType { get; set; }
         public string? CourseTitle  { get; set; }
         public string? CourseCode   { get; set; }
         public string? FacultyName  { get; set; }

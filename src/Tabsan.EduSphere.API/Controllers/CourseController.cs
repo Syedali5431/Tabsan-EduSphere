@@ -54,18 +54,31 @@ public class CourseController : ControllerBase
 
     // ── GET /api/v1/course ─────────────────────────────────────────────────────
 
-    /// <summary>Returns the course catalogue, optionally filtered by departmentId and/or hasSemesters.</summary>
+    /// <summary>Returns the course catalogue, optionally filtered by department and institution scope.</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Guid? departmentId, [FromQuery] bool? hasSemesters, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] bool? hasSemesters,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
+        var scope = await ResolveEffectiveScopeAsync(departmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
         var courses = await _repo.GetAllAsync(departmentId, hasSemesters, ct);
+        courses = courses
+            .Where(c => ScopeMatches(c.DepartmentId, c.TenantId, c.CampusId, (int)c.InstitutionType, scope))
+            .ToList();
 
         // Issue-Fix Phase 3 Stage 3.1 — Replace Forbid with empty result; faculty sees only their assigned-dept courses.
         if (User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
         {
             var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(GetUserId(), ct);
             if (departmentId.HasValue && !allowedDepartmentIds.Contains(departmentId.Value))
-                return Ok(Array.Empty<object>()); // Not in assigned depts — return empty instead of 403.
+                return Ok(Array.Empty<CourseResponse>()); // Not in assigned depts — return empty instead of 403.
 
             courses = courses.Where(c => allowedDepartmentIds.Contains(c.DepartmentId)).ToList();
         }
@@ -79,23 +92,32 @@ public class CourseController : ControllerBase
             courses = courses.Where(c => allowedDepartmentIds.Contains(c.DepartmentId)).ToList();
         }
 
-        return Ok(courses.Select(c => new
-        {
-            c.Id, c.Title, c.Code, c.CreditHours, c.DepartmentId,
-            DepartmentName = c.Department?.Name ?? "", c.IsActive,
-            c.HasSemesters, c.TotalSemesters, c.DurationValue, c.DurationUnit, c.GradingType, c.CourseType
-        }));
+        return Ok(courses.Select(MapCourseResponse));
     }
 
     // ── GET /api/v1/course/{id} ────────────────────────────────────────────────
 
     /// <summary>Returns a single course definition by its GUID.</summary>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetById(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var c = await _repo.GetByIdAsync(id, ct);
-        return c is null ? NotFound()
-            : Ok(new { c.Id, c.Title, c.Code, c.CreditHours, c.DepartmentId, c.IsActive });
+        if (c is null)
+            return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(c.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(c.DepartmentId, c.TenantId, c.CampusId, (int)c.InstitutionType, scope))
+            return Forbid();
+
+        return Ok(MapCourseResponse(c));
     }
 
     // ── POST /api/v1/course ────────────────────────────────────────────────────
@@ -103,15 +125,26 @@ public class CourseController : ControllerBase
     /// <summary>Adds a new course to the catalogue. Admin and SuperAdmin only.</summary>
     [HttpPost]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> Create([FromBody] CreateCourseRequest request, CancellationToken ct)
+    public async Task<IActionResult> Create(
+        [FromBody] CreateCourseRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
-        if (await _departments.GetByIdAsync(request.DepartmentId, ct) is null)
+        var department = await _departments.GetByIdAsync(request.DepartmentId, ct);
+        if (department is null)
             return BadRequest("Department not found.");
+
+        var scope = await ResolveEffectiveScopeAsync(request.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
 
         if (await _repo.CodeExistsAsync(request.Code, request.DepartmentId, ct))
             return Conflict($"Course code '{request.Code}' already exists in this department.");
 
         var course = new Course(request.Title, request.Code, request.CreditHours, request.DepartmentId);
+        course.SetInstitutionScope(department.InstitutionType, department.TenantId, department.CampusId);
 
         // Final-Touches Phase 19 Stage 19.1/19.2 — apply semester/duration/grading configuration
         if (request.HasSemesters)
@@ -134,10 +167,23 @@ public class CourseController : ControllerBase
     /// <summary>Updates the course title. Admin and SuperAdmin only.</summary>
     [HttpPut("{id:guid}/title")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> UpdateTitle(Guid id, [FromBody] UpdateCourseTitleRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateTitle(
+        Guid id,
+        [FromBody] UpdateCourseTitleRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var course = await _repo.GetByIdAsync(id, ct);
         if (course is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(course.DepartmentId, course.TenantId, course.CampusId, (int)course.InstitutionType, scope))
+            return Forbid();
 
         course.UpdateTitle(request.NewTitle);
         _repo.Update(course);
@@ -150,10 +196,22 @@ public class CourseController : ControllerBase
     /// <summary>Soft-deactivates a course. Admin and SuperAdmin only.</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Deactivate(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var course = await _repo.GetByIdAsync(id, ct);
         if (course is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(course.DepartmentId, course.TenantId, course.CampusId, (int)course.InstitutionType, scope))
+            return Forbid();
 
         course.Deactivate();
         _repo.Update(course);
@@ -168,8 +226,18 @@ public class CourseController : ControllerBase
     // Final-Touches Phase 8 Stage 8.1 — return all offerings when no filter; fix field names to match EduApiClient OfferingApiDto
     /// <summary>Returns all offerings for the given semester or department. Returns all when no filter is provided.</summary>
     [HttpGet("offerings")]
-    public async Task<IActionResult> GetOfferings([FromQuery] Guid? semesterId, [FromQuery] Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> GetOfferings(
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
+        var scope = await ResolveEffectiveScopeAsync(departmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
         IReadOnlyList<CourseOffering> offerings;
         
         if (departmentId.HasValue)
@@ -179,6 +247,10 @@ public class CourseController : ControllerBase
         else
             offerings = await _repo.GetAllOfferingsAsync(ct);
 
+        offerings = offerings
+            .Where(o => ScopeMatches(o.Course.DepartmentId, o.TenantId, o.CampusId, (int)o.InstitutionType, scope))
+            .ToList();
+
         // Issue-Fix Phase 3 Stage 3.1 — Replace Forbid with empty result; faculty sees all offerings in their depts.
         if (User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
         {
@@ -186,7 +258,7 @@ public class CourseController : ControllerBase
             var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
 
             if (departmentId.HasValue && !allowedDepartmentIds.Contains(departmentId.Value))
-                return Ok(Array.Empty<object>()); // Not in assigned depts — return empty instead of 403.
+                return Ok(Array.Empty<CourseOfferingResponse>()); // Not in assigned depts — return empty instead of 403.
 
             offerings = offerings
                 .Where(o => allowedDepartmentIds.Contains(o.Course.DepartmentId))
@@ -206,13 +278,7 @@ public class CourseController : ControllerBase
 
         offerings = await ApplyStudentStreamFilteringAsync(offerings, ct);
 
-        return Ok(offerings.Select(o => new
-        {
-            o.Id, o.CourseId, CourseCode = o.Course.Code, CourseTitle = o.Course.Title,
-            DepartmentId = o.Course.DepartmentId,
-            o.SemesterId, SemesterName = o.Semester.Name, o.FacultyUserId,
-            o.MaxEnrollment, IsActive = o.IsOpen
-        }));
+        return Ok(offerings.Select(MapCourseOfferingResponse));
     }
 
     // ── GET /api/v1/course/offerings/my ───────────────────────────────────────
@@ -243,11 +309,7 @@ public class CourseController : ControllerBase
                 all = all.Where(o => allowedDepartmentIds.Contains(o.Course.DepartmentId)).ToList();
             }
 
-            return Ok(all.Select(o => new
-            {
-                o.Id, CourseTitle = o.Course.Title, SemesterName = o.Semester.Name,
-                o.MaxEnrollment, o.IsOpen
-            }));
+            return Ok(all.Select(MapMyOfferingResponse));
         }
 
         // Issue-Fix Phase 3 Stage 3.2 — Return ALL active offerings in faculty's assigned depts (not just FacultyUserId-matched).
@@ -258,11 +320,7 @@ public class CourseController : ControllerBase
             var allOfferings = await _repo.GetAllOfferingsAsync(ct);
 
             var filtered = allOfferings.Where(o => allowedDepts.Contains(o.Course.DepartmentId));
-            return Ok(filtered.Select(o => new
-            {
-                o.Id, CourseTitle = o.Course.Title, SemesterName = o.Semester.Name,
-                o.MaxEnrollment, o.IsOpen
-            }));
+            return Ok(filtered.Select(MapMyOfferingResponse));
         }
 
         if (role.Equals("Student", StringComparison.OrdinalIgnoreCase))
@@ -280,21 +338,13 @@ public class CourseController : ControllerBase
 
                 offerings = await ApplyStudentStreamFilteringAsync(offerings, ct);
 
-                return Ok(offerings.Select(o => new
-                {
-                    o.Id, CourseTitle = o.Course.Title, SemesterName = o.Semester.Name,
-                    o.MaxEnrollment, o.IsOpen
-                }));
+                return Ok(offerings.Select(MapMyOfferingResponse));
             }
 
             // Keep portal usable if legacy student tokens do not carry studentProfileId.
             var fallback = await _repo.GetAllOfferingsAsync(ct);
             fallback = await ApplyStudentStreamFilteringAsync(fallback, ct);
-            return Ok(fallback.Select(o => new
-            {
-                o.Id, CourseTitle = o.Course.Title, SemesterName = o.Semester.Name,
-                o.MaxEnrollment, o.IsOpen
-            }));
+            return Ok(fallback.Select(MapMyOfferingResponse));
         }
 
         return Forbid();
@@ -307,10 +357,152 @@ public class CourseController : ControllerBase
         return Guid.TryParse(raw, out var id) ? id : Guid.Empty;
     }
 
+    private static CourseResponse MapCourseResponse(Course c)
+        => new(
+            c.Id,
+            c.Title,
+            c.Code,
+            c.CreditHours,
+            c.DepartmentId,
+            c.TenantId,
+            c.CampusId,
+            (int)c.InstitutionType,
+            c.Department?.Name ?? string.Empty,
+            c.IsActive,
+            c.HasSemesters,
+            c.TotalSemesters,
+            c.DurationValue,
+            c.DurationUnit,
+            c.GradingType,
+            (int)c.CourseType);
+
+    private static CourseOfferingResponse MapCourseOfferingResponse(CourseOffering o)
+        => new(
+            o.Id,
+            o.CourseId,
+            o.Course.Code,
+            o.Course.Title,
+            o.Course.DepartmentId,
+            o.TenantId,
+            o.CampusId,
+            (int)o.InstitutionType,
+            o.SemesterId,
+            o.Semester.Name,
+            o.FacultyUserId,
+            o.MaxEnrollment,
+            o.IsOpen);
+
+    private static MyOfferingResponse MapMyOfferingResponse(CourseOffering o)
+        => new(
+            o.Id,
+            o.Course.Title,
+            o.Semester.Name,
+            o.MaxEnrollment,
+            o.IsOpen);
+
     private Guid GetStudentProfileId()
     {
         var raw = User.FindFirst("studentProfileId")?.Value;
         return Guid.TryParse(raw, out var id) ? id : Guid.Empty;
+    }
+
+    private int? GetCurrentInstitutionType()
+    {
+        var raw = User.FindFirst("institutionType")?.Value;
+        return int.TryParse(raw, out var value) ? value : null;
+    }
+
+    private Guid? GetCurrentTenantId()
+    {
+        var raw = User.FindFirstValue("tenantId") ?? User.FindFirstValue("tenant_id") ?? User.FindFirstValue("tid");
+        return Guid.TryParse(raw, out var tenantId) ? tenantId : null;
+    }
+
+    private Guid? GetCurrentCampusId()
+    {
+        var raw = User.FindFirstValue("campusId") ?? User.FindFirstValue("campus_id") ?? User.FindFirstValue("cid");
+        return Guid.TryParse(raw, out var campusId) ? campusId : null;
+    }
+
+    private async Task<(Guid? DepartmentId, Guid? TenantId, Guid? CampusId, int? InstitutionType, IActionResult? Error)> ResolveEffectiveScopeAsync(
+        Guid? requestedDepartmentId,
+        Guid? requestedTenantId,
+        Guid? requestedCampusId,
+        int? requestedInstitutionType,
+        CancellationToken ct)
+    {
+        Guid? effectiveDepartmentId = requestedDepartmentId;
+        Guid? effectiveTenantId = requestedTenantId;
+        Guid? effectiveCampusId = requestedCampusId;
+        int? effectiveInstitutionType = requestedInstitutionType;
+
+        var callerTenantId = GetCurrentTenantId();
+        var callerCampusId = GetCurrentCampusId();
+        var callerInstitutionType = GetCurrentInstitutionType();
+
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            if (callerTenantId.HasValue)
+            {
+                if (requestedTenantId.HasValue && requestedTenantId.Value != callerTenantId.Value)
+                    return (null, null, null, null, Forbid());
+                effectiveTenantId = callerTenantId.Value;
+            }
+
+            if (callerCampusId.HasValue)
+            {
+                if (requestedCampusId.HasValue && requestedCampusId.Value != callerCampusId.Value)
+                    return (null, null, null, null, Forbid());
+                effectiveCampusId = callerCampusId.Value;
+            }
+
+            if (callerInstitutionType.HasValue)
+            {
+                if (requestedInstitutionType.HasValue && requestedInstitutionType.Value != callerInstitutionType.Value)
+                    return (null, null, null, null, Forbid());
+                effectiveInstitutionType = callerInstitutionType.Value;
+            }
+        }
+
+        if (effectiveDepartmentId.HasValue)
+        {
+            var department = await _departments.GetByIdAsync(effectiveDepartmentId.Value, ct);
+            if (department is null)
+                return (null, null, null, null, NotFound(new { message = $"Department {effectiveDepartmentId} not found." }));
+
+            if (effectiveTenantId.HasValue && department.TenantId != effectiveTenantId.Value)
+                return (null, null, null, null, BadRequest(new { message = "Department tenant scope does not match the requested tenant." }));
+
+            if (effectiveCampusId.HasValue && department.CampusId != effectiveCampusId.Value)
+                return (null, null, null, null, BadRequest(new { message = "Department campus scope does not match the requested campus." }));
+
+            if (effectiveInstitutionType.HasValue && (int)department.InstitutionType != effectiveInstitutionType.Value)
+                return (null, null, null, null, BadRequest(new { message = "Department institution scope does not match the requested institution type." }));
+
+            effectiveTenantId ??= department.TenantId;
+            effectiveCampusId ??= department.CampusId;
+            effectiveInstitutionType ??= (int)department.InstitutionType;
+        }
+
+        return (effectiveDepartmentId, effectiveTenantId, effectiveCampusId, effectiveInstitutionType, null);
+    }
+
+    private static bool ScopeMatches(
+        Guid departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        int institutionType,
+        (Guid? DepartmentId, Guid? TenantId, Guid? CampusId, int? InstitutionType, IActionResult? Error) scope)
+    {
+        if (scope.DepartmentId.HasValue && departmentId != scope.DepartmentId.Value)
+            return false;
+        if (scope.TenantId.HasValue && tenantId != scope.TenantId.Value)
+            return false;
+        if (scope.CampusId.HasValue && campusId != scope.CampusId.Value)
+            return false;
+        if (scope.InstitutionType.HasValue && institutionType != scope.InstitutionType.Value)
+            return false;
+        return true;
     }
 
     private async Task<StudentProfile?> ResolveCurrentStudentProfileAsync(CancellationToken ct)
@@ -359,10 +551,22 @@ public class CourseController : ControllerBase
     /// <summary>Soft-deletes a course offering. Admin and SuperAdmin only.</summary>
     [HttpDelete("offerings/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> DeleteOffering(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteOffering(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var offering = await _repo.GetOfferingByIdAsync(id, ct);
         if (offering is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(offering.Course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(offering.Course.DepartmentId, offering.TenantId, offering.CampusId, (int)offering.InstitutionType, scope))
+            return Forbid();
 
         offering.SoftDelete();
         _repo.UpdateOffering(offering);
@@ -375,11 +579,23 @@ public class CourseController : ControllerBase
     /// <summary>Creates a course offering for a semester. Admin and SuperAdmin only.</summary>
     [HttpPost("offerings")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> CreateOffering([FromBody] CreateOfferingRequest request, CancellationToken ct)
+    public async Task<IActionResult> CreateOffering(
+        [FromBody] CreateOfferingRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var course = await _repo.GetByIdAsync(request.CourseId, ct);
         if (course is null)
             return BadRequest("Course not found.");
+
+        var scope = await ResolveEffectiveScopeAsync(course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(course.DepartmentId, course.TenantId, course.CampusId, (int)course.InstitutionType, scope))
+            return Forbid();
 
         if (await _semesters.GetByIdAsync(request.SemesterId, ct) is null)
             return BadRequest("Semester not found.");
@@ -392,6 +608,7 @@ public class CourseController : ControllerBase
         }
 
         var offering = new CourseOffering(request.CourseId, request.SemesterId, request.MaxEnrollment, request.FacultyUserId);
+    offering.SetInstitutionScope(course.InstitutionType, course.TenantId, course.CampusId);
         await _repo.AddOfferingAsync(offering, ct);
         await _repo.SaveChangesAsync(ct);
         return Created($"/api/v1/course/offerings/{offering.Id}", new { offering.Id });
@@ -402,10 +619,23 @@ public class CourseController : ControllerBase
     /// <summary>Assigns or re-assigns faculty to a course offering. Admin and SuperAdmin only.</summary>
     [HttpPut("offerings/{id:guid}/faculty")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> AssignFaculty(Guid id, [FromBody] AssignFacultyRequest request, CancellationToken ct)
+    public async Task<IActionResult> AssignFaculty(
+        Guid id,
+        [FromBody] AssignFacultyRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var offering = await _repo.GetOfferingByIdAsync(id, ct);
         if (offering is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(offering.Course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(offering.Course.DepartmentId, offering.TenantId, offering.CampusId, (int)offering.InstitutionType, scope))
+            return Forbid();
 
         offering.AssignFaculty(request.FacultyUserId);
         _repo.UpdateOffering(offering);
@@ -418,10 +648,23 @@ public class CourseController : ControllerBase
     /// <summary>Updates the maximum enrollment for a course offering. Admin and SuperAdmin only.</summary>
     [HttpPut("offerings/{id:guid}/maxenrollment")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> UpdateMaxEnrollment(Guid id, [FromBody] UpdateMaxEnrollmentRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateMaxEnrollment(
+        Guid id,
+        [FromBody] UpdateMaxEnrollmentRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var offering = await _repo.GetOfferingByIdAsync(id, ct);
         if (offering is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(offering.Course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(offering.Course.DepartmentId, offering.TenantId, offering.CampusId, (int)offering.InstitutionType, scope))
+            return Forbid();
 
         try
         {
@@ -441,10 +684,22 @@ public class CourseController : ControllerBase
     /// <summary>Closes enrollment for a course offering. Admin and SuperAdmin only.</summary>
     [HttpPut("offerings/{id:guid}/close")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> CloseOffering(Guid id, CancellationToken ct)
+    public async Task<IActionResult> CloseOffering(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var offering = await _repo.GetOfferingByIdAsync(id, ct);
         if (offering is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(offering.Course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(offering.Course.DepartmentId, offering.TenantId, offering.CampusId, (int)offering.InstitutionType, scope))
+            return Forbid();
 
         offering.Close();
         _repo.UpdateOffering(offering);
@@ -457,10 +712,22 @@ public class CourseController : ControllerBase
     /// <summary>Re-opens enrollment for a course offering. Admin and SuperAdmin only.</summary>
     [HttpPut("offerings/{id:guid}/reopen")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> ReopenOffering(Guid id, CancellationToken ct)
+    public async Task<IActionResult> ReopenOffering(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
     {
         var offering = await _repo.GetOfferingByIdAsync(id, ct);
         if (offering is null) return NotFound();
+
+        var scope = await ResolveEffectiveScopeAsync(offering.Course.DepartmentId, tenantId, campusId, institutionType, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        if (!ScopeMatches(offering.Course.DepartmentId, offering.TenantId, offering.CampusId, (int)offering.InstitutionType, scope))
+            return Forbid();
 
         offering.Reopen();
         _repo.UpdateOffering(offering);

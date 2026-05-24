@@ -247,7 +247,7 @@ public class PortalController : Controller
     {
         if (sessionIdentity?.IsAdmin == true || sessionIdentity?.IsSuperAdmin == true)
         {
-            var offerings = await _api.GetCourseOfferingsAsync(null, ct);
+            var offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             return offerings.Select(o => new LookupItem
             {
                 Id = o.Id,
@@ -446,13 +446,23 @@ public class PortalController : Controller
     // ── Timetable Admin ─────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> TimetableAdmin(Guid? timetableId, CancellationToken ct)
+    public async Task<IActionResult> TimetableAdmin(
+        Guid? timetableId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        CancellationToken ct)
     {
         ViewData["Title"] = "Manage Timetables";
+        var identity = _api.GetSessionIdentity();
         var vm = new TimetableAdminPageModel
         {
             IsConnected = _api.IsConnected(),
             Connection = _api.GetConnection(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
             Message = TempData["PortalMessage"]?.ToString()
         };
 
@@ -464,25 +474,40 @@ public class PortalController : Controller
 
         try
         {
-            vm.Departments = await _api.GetDepartmentsAsync(ct);
+            if (identity?.IsSuperAdmin == true)
+            {
+                vm.Tenants = await _api.GetTenantsAsync(ct);
+                if (vm.SelectedTenantId.HasValue)
+                    vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
 
-            var selectedDepartment = vm.Connection.DefaultDepartmentId ?? vm.Departments.FirstOrDefault()?.Id;
+                vm.Departments = await _api.GetDepartmentsAsync(vm.SelectedTenantId, vm.SelectedCampusId, ct);
+            }
+            else
+            {
+                vm.Departments = await _api.GetDepartmentsAsync(ct);
+            }
+
+            var selectedDepartment = vm.SelectedDepartmentId;
+            if (!selectedDepartment.HasValue || vm.Departments.All(d => d.Id != selectedDepartment.Value))
+                selectedDepartment = vm.Connection.DefaultDepartmentId ?? vm.Departments.FirstOrDefault()?.Id;
+
+            vm.SelectedDepartmentId = selectedDepartment;
             vm.CreateForm.DepartmentId = selectedDepartment ?? Guid.Empty;
 
             vm.Programs = await _api.GetProgramsAsync(selectedDepartment, ct);
             vm.Semesters = await _api.GetSemestersAsync(ct);
             vm.Courses = await _api.GetCoursesAsync(selectedDepartment, ct);
-            vm.Faculty = await _api.GetFacultyAsync(ct);
+            vm.Faculty = await _api.GetFacultyAsync(vm.SelectedTenantId, vm.SelectedCampusId, selectedDepartment, ct);
             vm.Buildings = await _api.GetBuildingsAsync(ct);
             vm.Rooms = await _api.GetRoomsAsync(ct);
 
             if (selectedDepartment.HasValue)
-                vm.Timetables = await _api.GetTimetablesByDepartmentAsync(selectedDepartment.Value, ct);
+                vm.Timetables = await _api.GetTimetablesByDepartmentAsync(selectedDepartment.Value, vm.SelectedTenantId, vm.SelectedCampusId, ct);
 
             var activeTimetableId = timetableId ?? vm.Timetables.FirstOrDefault()?.Id;
             if (activeTimetableId.HasValue)
             {
-                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, ct);
+                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, vm.SelectedTenantId, vm.SelectedCampusId, ct);
                 vm.EntryForm.TimetableId = activeTimetableId.Value;
             }
         }
@@ -496,28 +521,38 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateTimetable(CreateTimetableForm form, CancellationToken ct)
+    public async Task<IActionResult> CreateTimetable(
+        CreateTimetableForm form,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        CancellationToken ct)
     {
         try
         {
-            var id = await _api.CreateTimetableAsync(form, ct);
+            var id = await _api.CreateTimetableAsync(form, tenantId, campusId, ct);
             TempData["PortalMessage"] = "Timetable created successfully.";
-            return RedirectToAction(nameof(TimetableAdmin), new { timetableId = id });
+            return RedirectToAction(nameof(TimetableAdmin), new { timetableId = id, tenantId, campusId, departmentId = form.DepartmentId });
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = ex.Message;
-            return RedirectToAction(nameof(TimetableAdmin));
+            return RedirectToAction(nameof(TimetableAdmin), new { tenantId, campusId, departmentId });
         }
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddTimetableEntry(AddTimetableEntryForm form, CancellationToken ct)
+    public async Task<IActionResult> AddTimetableEntry(
+        AddTimetableEntryForm form,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        CancellationToken ct)
     {
         try
         {
-            await _api.AddTimetableEntryAsync(form, ct);
+            await _api.AddTimetableEntryAsync(form, tenantId, campusId, ct);
             TempData["PortalMessage"] = "Timetable entry added.";
         }
         catch (Exception ex)
@@ -525,16 +560,21 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(TimetableAdmin), new { timetableId = form.TimetableId });
+        return RedirectToAction(nameof(TimetableAdmin), new { timetableId = form.TimetableId, tenantId, campusId, departmentId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PublishTimetable(Guid timetableId, CancellationToken ct)
+    public async Task<IActionResult> PublishTimetable(
+        Guid timetableId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        CancellationToken ct)
     {
         try
         {
-            await _api.PublishTimetableAsync(timetableId, ct);
+            await _api.PublishTimetableAsync(timetableId, tenantId, campusId, ct);
             TempData["PortalMessage"] = "Timetable published.";
         }
         catch (Exception ex)
@@ -542,7 +582,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(TimetableAdmin), new { timetableId });
+        return RedirectToAction(nameof(TimetableAdmin), new { timetableId, tenantId, campusId, departmentId });
     }
 
     // ── Timetable Student ───────────────────────────────────────────────────
@@ -572,10 +612,10 @@ public class PortalController : Controller
                 return View(vm);
             }
 
-            vm.Timetables = await _api.GetTimetablesByDepartmentAsync(vm.DepartmentId.Value, ct);
+            vm.Timetables = await _api.GetTimetablesByDepartmentAsync(vm.DepartmentId.Value, null, null, ct);
             var activeTimetableId = timetableId ?? vm.Timetables.FirstOrDefault()?.Id;
             if (activeTimetableId.HasValue)
-                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, ct);
+                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, null, null, ct);
         }
         catch (Exception ex)
         {
@@ -1702,20 +1742,46 @@ public class PortalController : Controller
     // ── Courses ────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Courses(Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> Courses(Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         ViewData["Title"] = "Courses & Offerings";
-        var model = new CoursesPageModel { IsConnected = _api.IsConnected(), SelectedDepartmentId = departmentId };
+        var sessionId = _api.GetSessionIdentity();
+        var model = new CoursesPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = sessionId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId
+        };
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
-            model.Departments = await _api.GetDepartmentsAsync(ct);
+            if (sessionId?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+
+                model.Departments = await _api.GetDepartmentsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            }
+            else
+            {
+                model.Departments = await _api.GetDepartmentsAsync(ct);
+            }
+
+            if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
+                model.SelectedDepartmentId = null;
+
             model.Semesters   = await _api.GetSemestersAsync(ct);
             if (sessionId?.IsAdmin == true || sessionId?.IsSuperAdmin == true)
-                model.Faculty = await _api.GetFacultyAsync(ct);
-            model.Courses     = await _api.GetCourseDetailsAsync(departmentId, ct);
-            model.Offerings   = await _api.GetCourseOfferingsAsync(departmentId, ct);
+                model.Faculty = await _api.GetFacultyAsync(model.SelectedTenantId, model.SelectedCampusId, model.SelectedDepartmentId, ct);
+
+            var selectedInstitutionType = model.Departments
+                .FirstOrDefault(d => d.Id == model.SelectedDepartmentId)?.InstitutionType;
+
+            model.Courses = await _api.GetCourseDetailsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
+            model.Offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
         model.Message ??= TempData["PortalMessage"]?.ToString();
@@ -1724,7 +1790,7 @@ public class PortalController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateCourse(
-        string code, string title, int creditHours, Guid departmentId, Guid? filterDepartmentId,
+        string code, string title, int creditHours, Guid departmentId, Guid? filterDepartmentId, Guid? tenantId, Guid? campusId,
         bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType,
         CancellationToken ct)
     {
@@ -1733,12 +1799,13 @@ public class PortalController : Controller
             try
             {
                 await _api.CreateCourseAsync(code, title, creditHours, departmentId,
-                    hasSemesters, totalSemesters, durationValue, durationUnit, gradingType, ct);
+                    hasSemesters, totalSemesters, durationValue, durationUnit, gradingType,
+                    tenantId, campusId, null, ct);
                 TempData["PortalMessage"] = $"Course '{code}' created.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Courses), new { departmentId = filterDepartmentId });
+        return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
     // Final-Touches Phase 19 Stage 19.4 — GradingConfig page (GET)
@@ -1758,7 +1825,7 @@ public class PortalController : Controller
                     model.InstitutionSections = BuildInstitutionGradingSections(profiles);
                 }
 
-                var courses = await _api.GetCourseDetailsAsync(null, ct);
+                var courses = await _api.GetCourseDetailsAsync(null, null, null, null, ct);
                 model.Courses = courses;
                 model.SelectedCourseId = courseId;
                 if (courseId.HasValue)
@@ -1863,36 +1930,36 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateOffering(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> CreateOffering(Guid courseId, Guid semesterId, int maxEnrollment, Guid? facultyUserId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CreateOfferingAsync(courseId, semesterId, maxEnrollment, facultyUserId == Guid.Empty ? null : facultyUserId, ct); TempData["PortalMessage"] = "Course offering created."; }
+            try { await _api.CreateOfferingAsync(courseId, semesterId, maxEnrollment, facultyUserId == Guid.Empty ? null : facultyUserId, tenantId, campusId, null, ct); TempData["PortalMessage"] = "Course offering created."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Courses), new { departmentId });
+        return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeactivateCourse(Guid id, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> DeactivateCourse(Guid id, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeactivateCourseAsync(id, ct); TempData["PortalMessage"] = "Course deactivated."; }
+            try { await _api.DeactivateCourseAsync(id, tenantId, campusId, null, ct); TempData["PortalMessage"] = "Course deactivated."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Courses), new { departmentId });
+        return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteOffering(Guid id, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> DeleteOffering(Guid id, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeleteOfferingAsync(id, ct); TempData["PortalMessage"] = "Offering deleted."; }
+            try { await _api.DeleteOfferingAsync(id, tenantId, campusId, null, ct); TempData["PortalMessage"] = "Offering deleted."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Courses), new { departmentId });
+        return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId });
     }
 
     // ── Assignments ────────────────────────────────────────────────────────
@@ -2637,7 +2704,7 @@ public class PortalController : Controller
         {
             model.Departments = await _api.GetDepartmentsAsync(ct);
             var allSemesters = await _api.GetSemestersAsync(ct);
-            var offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, ct);
+            var offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, null, null, null, ct);
 
             // Constrained roles are auto-scoped to their institute claim for analytics filters.
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
@@ -2661,7 +2728,7 @@ public class PortalController : Controller
                 model.SelectedDepartmentId = null;
                 model.SelectedCourseId = null;
                 model.SelectedSemesterId = null;
-                offerings = await _api.GetCourseOfferingsAsync(null, ct);
+                offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
                 if (model.SelectedInstitutionType.HasValue)
                 {
                     var allowedDepartmentIds = model.Departments.Select(d => d.Id).ToHashSet();
@@ -3102,7 +3169,7 @@ public class PortalController : Controller
             var isAdmin = sessionId?.IsAdmin == true || sessionId?.IsSuperAdmin == true;
 
             // Issue-Fix Phase 3 Stage 3.3 — Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
-            model.Offerings = await _api.GetCourseOfferingsAsync(null, ct);
+            model.Offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
 
             if (isStudent)
             {
@@ -3209,7 +3276,7 @@ public class PortalController : Controller
             var isAdminOnly   = identity?.IsAdmin == true && !identity.IsSuperAdmin;
             model.Semesters    = await _api.GetSemestersAsync(ct);
             model.Departments  = await _api.GetDepartmentsAsync(ct);
-            model.Offerings    = await _api.GetCourseOfferingsAsync(null, ct);
+            model.Offerings    = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             model.Departments  = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
             if (isFacultyOnly && !offeringId.HasValue && (semesterId.HasValue || departmentId.HasValue || studentId.HasValue))
             {
@@ -3249,7 +3316,7 @@ public class PortalController : Controller
             var isAdminOnly   = identity?.IsAdmin == true && !identity.IsSuperAdmin;
             model.Semesters   = await _api.GetSemestersAsync(ct);
             model.Departments = await _api.GetDepartmentsAsync(ct);
-            model.Offerings   = await _api.GetCourseOfferingsAsync(null, ct);
+            model.Offerings   = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
             if (isFacultyOnly && !offeringId.HasValue && (semesterId.HasValue || departmentId.HasValue || studentId.HasValue))
             {
@@ -3289,7 +3356,7 @@ public class PortalController : Controller
             var isAdminOnly   = identity?.IsAdmin == true && !identity.IsSuperAdmin;
             model.Semesters   = await _api.GetSemestersAsync(ct);
             model.Departments = await _api.GetDepartmentsAsync(ct);
-            model.Offerings   = await _api.GetCourseOfferingsAsync(null, ct);
+            model.Offerings   = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
             if (isFacultyOnly && !offeringId.HasValue && (semesterId.HasValue || departmentId.HasValue || studentId.HasValue))
             {
@@ -3329,7 +3396,7 @@ public class PortalController : Controller
             var isAdminOnly   = identity?.IsAdmin == true && !identity.IsSuperAdmin;
             model.Semesters   = await _api.GetSemestersAsync(ct);
             model.Departments = await _api.GetDepartmentsAsync(ct);
-            model.Offerings   = await _api.GetCourseOfferingsAsync(null, ct);
+            model.Offerings   = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
             if (isFacultyOnly && !offeringId.HasValue && (semesterId.HasValue || departmentId.HasValue || studentId.HasValue))
             {
@@ -4209,7 +4276,7 @@ public class PortalController : Controller
             SelectedDepartmentId = departmentId
         };
 
-        var courses = await _api.GetCourseDetailsAsync(departmentId, ct);
+        var courses = await _api.GetCourseDetailsAsync(departmentId, null, null, null, ct);
         model.Courses = courses;
 
         var groups = new List<CoursePrerequisiteGroup>();
