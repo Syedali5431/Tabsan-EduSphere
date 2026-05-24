@@ -27,6 +27,7 @@ public interface IEduApiClient
     Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(Guid? tenantId = null, Guid? campusId = null, Guid? departmentId = null, CancellationToken ct = default);
+    Task<List<LookupItem>> GetBuildingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetBuildingsAsync(CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsAsync(CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsByBuildingAsync(Guid buildingId, CancellationToken ct);
@@ -41,11 +42,16 @@ public interface IEduApiClient
     Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct);
 
     // Buildings
+    Task<List<BuildingItem>> GetAllBuildingsAsync(bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<BuildingItem>> GetAllBuildingsAsync(bool activeOnly, CancellationToken ct);
     Task<BuildingItem?> GetBuildingByIdAsync(Guid id, CancellationToken ct);
+    Task<BuildingItem> CreateBuildingAsync(BuildingFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<BuildingItem> CreateBuildingAsync(BuildingFormModel form, CancellationToken ct);
+    Task<BuildingItem> UpdateBuildingAsync(Guid id, BuildingFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<BuildingItem> UpdateBuildingAsync(Guid id, BuildingFormModel form, CancellationToken ct);
+    Task ActivateBuildingAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task ActivateBuildingAsync(Guid id, CancellationToken ct);
+    Task DeactivateBuildingAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateBuildingAsync(Guid id, CancellationToken ct);
 
     // Rooms
@@ -671,7 +677,22 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<List<LookupItem>> GetBuildingsAsync(CancellationToken ct)
-        => await GetAsync<List<LookupItem>>("api/v1/building", ct) ?? new();
+        => await GetBuildingsAsync(null, null, ct);
+
+    public async Task<List<LookupItem>> GetBuildingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/building";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await GetAsync<List<LookupItem>>(path, ct) ?? new();
+    }
 
     public async Task<List<RoomLookupItem>> GetRoomsAsync(CancellationToken ct)
         => await GetAsync<List<RoomLookupItem>>("api/v1/room", ct) ?? new();
@@ -810,24 +831,95 @@ public class EduApiClient : IEduApiClient
     // â”€â”€ Buildings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public async Task<List<BuildingItem>> GetAllBuildingsAsync(bool activeOnly, CancellationToken ct)
-        => await GetAsync<List<BuildingItem>>($"api/v1/building?activeOnly={activeOnly}", ct) ?? new();
+        => await GetAllBuildingsAsync(activeOnly, null, null, ct);
+
+    public async Task<List<BuildingItem>> GetAllBuildingsAsync(bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string> { $"activeOnly={activeOnly}" };
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        return await GetAsync<List<BuildingItem>>($"api/v1/building?{string.Join("&", queryParts)}", ct) ?? new();
+    }
 
     public Task<BuildingItem?> GetBuildingByIdAsync(Guid id, CancellationToken ct)
         => GetAsync<BuildingItem>($"api/v1/building/{id}", ct);
 
     public async Task<BuildingItem> CreateBuildingAsync(BuildingFormModel form, CancellationToken ct)
-        => await PostAsync<BuildingFormModel, BuildingItem>("api/v1/building", form, ct)
-           ?? throw new InvalidOperationException("Building create returned no body.");
+        => await CreateBuildingAsync(form, null, null, ct);
+
+    public async Task<BuildingItem> CreateBuildingAsync(BuildingFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/building";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await PostAsync<BuildingFormModel, BuildingItem>(path, form, ct)
+               ?? throw new InvalidOperationException("Building create returned no body.");
+    }
 
     public async Task<BuildingItem> UpdateBuildingAsync(Guid id, BuildingFormModel form, CancellationToken ct)
-        => await PutAsync<BuildingFormModel, BuildingItem>($"api/v1/building/{id}", form, ct)
-           ?? throw new InvalidOperationException("Building update returned no body.");
+        => await UpdateBuildingAsync(id, form, null, null, ct);
+
+    public async Task<BuildingItem> UpdateBuildingAsync(Guid id, BuildingFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/building/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await PutAsync<BuildingFormModel, BuildingItem>(path, form, ct)
+               ?? throw new InvalidOperationException("Building update returned no body.");
+    }
 
     public Task ActivateBuildingAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/building/{id}/activate", new { }, ct);
+        => ActivateBuildingAsync(id, null, null, ct);
+
+    public Task ActivateBuildingAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/building/{id}/activate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public Task DeactivateBuildingAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/building/{id}/deactivate", new { }, ct);
+        => DeactivateBuildingAsync(id, null, null, ct);
+
+    public Task DeactivateBuildingAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/building/{id}/deactivate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     // â”€â”€ Rooms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

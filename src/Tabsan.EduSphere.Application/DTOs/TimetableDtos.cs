@@ -7,6 +7,8 @@
 /// <summary>Building catalogue item returned by API.</summary>
 public record BuildingDto(
     Guid   Id,
+    Guid?  TenantId,
+    Guid?  CampusId,
     string Name,
     string Code,
     bool   IsActive

@@ -17,9 +17,11 @@ public class BuildingRoomRepository : IBuildingRoomRepository
 
     // ── Buildings ────────────────────────────────────────────────────────────
 
-    public async Task<IList<Building>> GetAllBuildingsAsync(bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<Building>> GetAllBuildingsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => await _db.Buildings
               .Where(b => !activeOnly || b.IsActive)
+              .Where(b => !tenantId.HasValue || b.TenantId == tenantId.Value)
+              .Where(b => !campusId.HasValue || b.CampusId == campusId.Value)
               .OrderBy(b => b.Name)
               .ToListAsync(ct);
 

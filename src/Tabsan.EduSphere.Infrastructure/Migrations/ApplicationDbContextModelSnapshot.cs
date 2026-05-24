@@ -91,6 +91,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -105,6 +108,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("MaxCreditLoadPerSemester")
                         .ValueGeneratedOnAdd()
@@ -221,9 +227,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("TenantId", "CampusId", "Code")
                         .IsUnique()
-                        .HasDatabaseName("IX_buildings_code");
+                        .HasDatabaseName("IX_buildings_scope_code");
 
                     b.ToTable("buildings", (string)null);
                 });

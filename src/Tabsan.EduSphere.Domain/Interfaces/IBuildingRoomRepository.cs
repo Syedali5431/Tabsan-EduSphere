@@ -11,7 +11,7 @@ public interface IBuildingRoomRepository
     // ── Buildings ────────────────────────────────────────────────────────────
 
     /// <summary>Returns all buildings, optionally filtering to active-only records.</summary>
-    Task<IList<Building>> GetAllBuildingsAsync(bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<Building>> GetAllBuildingsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns a building by ID (with its rooms collection loaded).</summary>
     Task<Building?> GetBuildingByIdAsync(Guid id, CancellationToken ct = default);

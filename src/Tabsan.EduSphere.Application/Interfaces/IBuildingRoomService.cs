@@ -11,13 +11,13 @@ public interface IBuildingRoomService
     // ── Buildings ────────────────────────────────────────────────────────────
 
     /// <summary>Returns all buildings (active-only by default — for dropdown population).</summary>
-    Task<IList<BuildingDto>> GetAllBuildingsAsync(bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<BuildingDto>> GetAllBuildingsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns a single building by ID (with its rooms).</summary>
     Task<BuildingDto> GetBuildingByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>Creates a new building.</summary>
-    Task<BuildingDto> CreateBuildingAsync(CreateBuildingCommand cmd, CancellationToken ct = default);
+    Task<BuildingDto> CreateBuildingAsync(CreateBuildingCommand cmd, Guid? tenantId, Guid? campusId, CancellationToken ct = default);
 
     /// <summary>Updates a building's name and code.</summary>
     Task<BuildingDto> UpdateBuildingAsync(Guid id, UpdateBuildingCommand cmd, CancellationToken ct = default);

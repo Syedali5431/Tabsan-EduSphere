@@ -16,6 +16,39 @@
 }
 else
 {
+    @if (Model.Identity?.IsSuperAdmin == true)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <form asp-action="Buildings" method="get" class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select class="form-select" name="tenantId">
+                            <option value="">All tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId">
+                            <option value="">All campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
     <div class="row g-3">
         <!-- Left: building list -->
         <div class="col-12 col-xl-5">
@@ -36,7 +69,9 @@ else
                                 @foreach (var b in Model.Buildings)
                                 {
                                     <tr class="@(Model.SelectedBuilding?.Id == b.Id ? "table-primary" : "")">
-                                        <td><a asp-action="Buildings" asp-route-selectedId="@b.Id">@b.Name</a></td>
+                                        <td>
+                                            <a asp-action="Buildings" asp-route-selectedId="@b.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId">@b.Name</a>
+                                        </td>
                                         <td>@b.Code</td>
                                         <td>
                                             @if (b.IsActive)
@@ -68,6 +103,8 @@ else
                     <h2 class="h5">Add Building</h2>
                     <form asp-action="CreateBuilding" method="post" class="row g-2">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-7">
                             <label class="form-label">Name</label>
                             <input asp-for="CreateForm.Name" class="form-control" placeholder="e.g. Faculty Block A" required />
@@ -92,6 +129,8 @@ else
                         <form asp-action="UpdateBuilding" method="post" class="row g-2 mb-3">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.SelectedBuilding.Id" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             <div class="col-md-7">
                                 <label class="form-label">Name</label>
                                 <input name="form.Name" class="form-control" value="@Model.EditForm.Name" required />
@@ -110,6 +149,8 @@ else
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.SelectedBuilding.Id" />
                             <input type="hidden" name="activate" value="@(!Model.SelectedBuilding.IsActive)" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             @if (Model.SelectedBuilding.IsActive)
                             {
                                 <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>

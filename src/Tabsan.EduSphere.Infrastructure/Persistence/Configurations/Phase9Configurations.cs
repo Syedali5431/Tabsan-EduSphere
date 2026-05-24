@@ -264,13 +264,19 @@ public class BuildingConfiguration : IEntityTypeConfiguration<Building>
                .IsRequired()
                .HasMaxLength(20);
 
+        builder.Property(b => b.TenantId)
+               .IsRequired(false);
+
+        builder.Property(b => b.CampusId)
+               .IsRequired(false);
+
         builder.Property(b => b.IsActive)
                .IsRequired()
                .HasDefaultValue(true);
 
-        builder.HasIndex(b => b.Code)
+        builder.HasIndex(b => new { b.TenantId, b.CampusId, b.Code })
                .IsUnique()
-               .HasDatabaseName("IX_buildings_code");
+               .HasDatabaseName("IX_buildings_scope_code");
 
         builder.HasMany(b => b.Rooms)
                .WithOne(r => r.Building)

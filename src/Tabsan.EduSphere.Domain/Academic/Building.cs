@@ -8,6 +8,12 @@ namespace Tabsan.EduSphere.Domain.Academic;
 /// </summary>
 public class Building : AuditableEntity
 {
+    /// <summary>Owning tenant scope for this building.</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Owning campus scope for this building.</summary>
+    public Guid? CampusId { get; private set; }
+
     /// <summary>Full building name (e.g. "Computer Science Block").</summary>
     public string Name { get; private set; } = default!;
 
@@ -22,8 +28,10 @@ public class Building : AuditableEntity
 
     private Building() { }
 
-    public Building(string name, string code)
+    public Building(Guid? tenantId, Guid? campusId, string name, string code)
     {
+        TenantId = tenantId;
+        CampusId = campusId;
         Name = name.Trim();
         Code = code.Trim().ToUpperInvariant();
     }

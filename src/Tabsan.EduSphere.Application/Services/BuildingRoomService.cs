@@ -16,9 +16,9 @@ public class BuildingRoomService : IBuildingRoomService
 
     // ── Buildings ────────────────────────────────────────────────────────────
 
-    public async Task<IList<BuildingDto>> GetAllBuildingsAsync(bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<BuildingDto>> GetAllBuildingsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
-        var buildings = await _repo.GetAllBuildingsAsync(activeOnly, ct);
+        var buildings = await _repo.GetAllBuildingsAsync(activeOnly, tenantId, campusId, ct);
         return buildings.Select(MapBuilding).ToList();
     }
 
@@ -29,9 +29,9 @@ public class BuildingRoomService : IBuildingRoomService
         return MapBuilding(b);
     }
 
-    public async Task<BuildingDto> CreateBuildingAsync(CreateBuildingCommand cmd, CancellationToken ct = default)
+    public async Task<BuildingDto> CreateBuildingAsync(CreateBuildingCommand cmd, Guid? tenantId, Guid? campusId, CancellationToken ct = default)
     {
-        var building = new Building(cmd.Name, cmd.Code);
+        var building = new Building(tenantId, campusId, cmd.Name, cmd.Code);
         await _repo.AddBuildingAsync(building, ct);
         await _repo.SaveChangesAsync(ct);
         return MapBuilding(building);
@@ -131,7 +131,7 @@ public class BuildingRoomService : IBuildingRoomService
 
     // ── Mapping ───────────────────────────────────────────────────────────────
 
-    private static BuildingDto MapBuilding(Building b) => new(b.Id, b.Name, b.Code, b.IsActive);
+    private static BuildingDto MapBuilding(Building b) => new(b.Id, b.TenantId, b.CampusId, b.Name, b.Code, b.IsActive);
 
     private static RoomDto MapRoom(Room r) => new(
         r.Id,
