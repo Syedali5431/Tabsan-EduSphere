@@ -11,22 +11,44 @@ public class AcademicProgramRepository : IAcademicProgramRepository
     private readonly ApplicationDbContext _db;
     public AcademicProgramRepository(ApplicationDbContext db) => _db = db;
 
-    /// <summary>Returns all programmes, optionally scoped to a specific department.</summary>
-    public async Task<IReadOnlyList<AcademicProgram>> GetAllAsync(Guid? departmentId = null, CancellationToken ct = default)
+    /// <summary>Returns all programmes, optionally scoped to a specific department and tenant/campus.</summary>
+    public async Task<IReadOnlyList<AcademicProgram>> GetAllAsync(
+        Guid? departmentId = null,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        CancellationToken ct = default)
     {
         var query = _db.AcademicPrograms.Include(p => p.Department).AsQueryable();
         if (departmentId.HasValue)
             query = query.Where(p => p.DepartmentId == departmentId.Value);
+        if (tenantId.HasValue)
+            query = query.Where(p => p.Department.TenantId == tenantId.Value);
+        if (campusId.HasValue)
+            query = query.Where(p => p.Department.CampusId == campusId.Value);
         return await query.OrderBy(p => p.Name).ToListAsync(ct);
     }
 
     /// <summary>Returns the programme with the given ID (with Department loaded), or null.</summary>
-    public Task<AcademicProgram?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => _db.AcademicPrograms.Include(p => p.Department).FirstOrDefaultAsync(p => p.Id == id, ct);
+    public Task<AcademicProgram?> GetByIdAsync(Guid id, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+    {
+        var query = _db.AcademicPrograms.Include(p => p.Department).Where(p => p.Id == id);
+        if (tenantId.HasValue)
+            query = query.Where(p => p.Department.TenantId == tenantId.Value);
+        if (campusId.HasValue)
+            query = query.Where(p => p.Department.CampusId == campusId.Value);
+        return query.FirstOrDefaultAsync(ct);
+    }
 
     /// <summary>Returns true when the uppercase code is already taken inside the given department.</summary>
-    public Task<bool> CodeExistsAsync(string code, Guid departmentId, CancellationToken ct = default)
-        => _db.AcademicPrograms.AnyAsync(p => p.Code == code.ToUpperInvariant() && p.DepartmentId == departmentId, ct);
+    public Task<bool> CodeExistsAsync(string code, Guid departmentId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+    {
+        var query = _db.AcademicPrograms.Where(p => p.Code == code.ToUpperInvariant() && p.DepartmentId == departmentId);
+        if (tenantId.HasValue)
+            query = query.Where(p => p.Department.TenantId == tenantId.Value);
+        if (campusId.HasValue)
+            query = query.Where(p => p.Department.CampusId == campusId.Value);
+        return query.AnyAsync(ct);
+    }
 
     /// <summary>Queues the programme for insertion.</summary>
     public async Task AddAsync(AcademicProgram program, CancellationToken ct = default)

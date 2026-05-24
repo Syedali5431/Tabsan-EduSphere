@@ -568,6 +568,8 @@ public class ProgramItem
     public string Name { get; set; } = "";
     public string Code { get; set; } = "";
     public Guid DepartmentId { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
     public string DepartmentName { get; set; } = "";
     public int TotalSemesters { get; set; }
     public bool IsActive { get; set; }
@@ -577,7 +579,12 @@ public class ProgramsPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<ProgramItem> Programs { get; set; } = new();
 }
@@ -638,6 +645,12 @@ public class UserImportPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public string? GeneratedSampleFileName { get; set; }
     public UserImportResultItem? Result { get; set; }
 }
 
@@ -1108,6 +1121,12 @@ public class ReportCenterPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public bool IsReportsActive { get; set; } = true;
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<ReportCatalogItem> Reports { get; set; } = new();
 }
 

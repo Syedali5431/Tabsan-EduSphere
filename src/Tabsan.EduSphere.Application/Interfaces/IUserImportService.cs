@@ -16,5 +16,10 @@ public interface IUserImportService
     /// (DepartmentId/InstitutionType/PhoneNumber/MobileNumber/CampusAssignments are optional; omit or leave blank when not needed).
     /// Returns a summary with counts of imported, duplicate, and erroneous rows.
     /// </summary>
-    Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, bool strictMode = false, CancellationToken ct = default);
+    Task<UserImportResult> ImportFromCsvAsync(
+        Stream csvStream,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        bool strictMode = false,
+        CancellationToken ct = default);
 }

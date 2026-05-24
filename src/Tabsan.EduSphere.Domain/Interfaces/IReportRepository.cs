@@ -22,6 +22,8 @@ public interface IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -32,6 +34,8 @@ public interface IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -42,6 +46,8 @@ public interface IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -52,6 +58,8 @@ public interface IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -61,6 +69,8 @@ public interface IReportRepository
         Guid? departmentId,
         Guid? programId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -70,6 +80,8 @@ public interface IReportRepository
         Guid? semesterId,
         Guid? departmentId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -79,6 +91,8 @@ public interface IReportRepository
         Guid semesterId,
         Guid? departmentId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -96,6 +110,8 @@ public interface IReportRepository
         Guid? departmentId,
         Guid? courseOfferingId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -105,6 +121,8 @@ public interface IReportRepository
         Guid? departmentId,
         string? status,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default);
 
     /// <summary>

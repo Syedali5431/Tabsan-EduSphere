@@ -15,10 +15,39 @@
 else
 {
     var canManagePrograms = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
+    var isSuperAdmin = Model.Identity?.IsSuperAdmin == true;
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="get" asp-action="Programs" class="row g-2 align-items-end">
+                @if (isSuperAdmin)
+                {
+                    <div class="col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                            }
+                        </select>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                }
                 <div class="col-md-4">
                     <label class="form-label">Filter by Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -40,6 +69,8 @@ else
                 <h2 class="h5 mb-3">Create Program</h2>
                 <form method="post" asp-action="CreateProgram" class="row g-3">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
                     <div class="col-md-3">
                         <label class="form-label">Code</label>
@@ -105,23 +136,28 @@ else
                                         <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? "Active" : "Inactive")</span>
                                     </td>
                                     <td>
-                                        @if (p.IsActive && canManagePrograms)
+                                        @if (canManagePrograms)
                                         {
                                             <div class="d-flex gap-2">
                                                 <form method="post" asp-action="UpdateProgram" class="d-flex gap-2 flex-grow-1">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@p.Id" />
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                     <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
                                                     <input type="text" name="newName" class="form-control form-control-sm" value="@p.Name" required maxlength="128" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary">Rename</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary" @(p.IsActive ? null : "disabled")>Rename</button>
                                                 </form>
                                                 @if (User.IsInRole("SuperAdmin"))
                                                 {
-                                                    <form method="post" asp-action="DeactivateProgram" onsubmit="return confirm('Deactivate this program?');">
+                                                    <form method="post" asp-action="SetProgramActive" onsubmit="return confirm('@(p.IsActive ? "Deactivate" : "Activate") this program?');">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@p.Id" />
+                                                        <input type="hidden" name="activate" value="@(!p.IsActive)" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                                        <button type="submit" class="btn btn-sm @(p.IsActive ? "btn-outline-danger" : "btn-outline-success")">@(p.IsActive ? "Deactivate" : "Activate")</button>
                                                     </form>
                                                 }
                                             </div>

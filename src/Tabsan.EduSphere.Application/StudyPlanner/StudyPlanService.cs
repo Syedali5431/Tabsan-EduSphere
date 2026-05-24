@@ -124,7 +124,7 @@ public sealed class StudyPlanService : IStudyPlanService
         var profile = await _students.GetByIdAsync(plan.StudentProfileId, ct)
             ?? throw new InvalidOperationException("Associated student profile not found.");
 
-        var program = await _programs.GetByIdAsync(profile.ProgramId, ct);
+        var program = await _programs.GetByIdAsync(profile.ProgramId, ct: ct);
         int maxLoad = program?.MaxCreditLoadPerSemester ?? 18;
 
         // Sum credits already in this plan + proposed course
@@ -200,7 +200,7 @@ public sealed class StudyPlanService : IStudyPlanService
         var profile = await _students.GetByIdAsync(studentProfileId, ct)
             ?? throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
 
-        var program = await _programs.GetByIdAsync(profile.ProgramId, ct);
+        var program = await _programs.GetByIdAsync(profile.ProgramId, ct: ct);
         int maxLoad = program?.MaxCreditLoadPerSemester ?? 18;
 
         // 2. Degree rule for the student's programme (required courses)

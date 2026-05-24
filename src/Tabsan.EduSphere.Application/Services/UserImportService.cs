@@ -39,7 +39,12 @@ public class UserImportService : IUserImportService
         _institutionPolicyService = institutionPolicyService;
     }
 
-    public async Task<UserImportResult> ImportFromCsvAsync(Stream csvStream, bool strictMode = false, CancellationToken ct = default)
+    public async Task<UserImportResult> ImportFromCsvAsync(
+        Stream csvStream,
+        Guid? tenantId = null,
+        Guid? campusId = null,
+        bool strictMode = false,
+        CancellationToken ct = default)
     {
         var errors = new List<string>();
         var toImport = new List<User>();
@@ -218,7 +223,9 @@ public class UserImportService : IUserImportService
                 departmentId: departmentId,
                 mustChangePassword: true,   // P4-S2-02: force change on first login
                 institutionType: institutionType,
-                phoneNumber: phoneNumber
+                phoneNumber: phoneNumber,
+                tenantId: tenantId,
+                campusId: campusId
             );
 
             batchUsernames.Add(username);

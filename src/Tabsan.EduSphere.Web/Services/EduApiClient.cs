@@ -22,7 +22,9 @@ public interface IEduApiClient
     Task<List<LookupItem>> GetDepartmentsAsync(CancellationToken ct);
         Task<List<LookupItem>> GetDepartmentsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, CancellationToken ct);
+    Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, CancellationToken ct);
+    Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetSemestersAsync(CancellationToken ct);
     Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct);
@@ -143,8 +145,12 @@ public interface IEduApiClient
     Task<List<DepartmentItem>> GetDepartmentDetailsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<DepartmentItem>> GetDepartmentDetailsAsync(CancellationToken ct);
     Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, CancellationToken ct);
+    Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task UpdateProgramAsync(Guid id, string newName, CancellationToken ct);
+    Task UpdateProgramAsync(Guid id, string newName, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateProgramAsync(Guid id, CancellationToken ct);
+    Task DeactivateProgramAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateProgramAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CreateDepartmentAsync(string name, string code, int institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CreateDepartmentAsync(string name, string code, int institutionType, CancellationToken ct);
     Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -153,7 +159,7 @@ public interface IEduApiClient
     Task ActivateDepartmentAsync(Guid id, CancellationToken ct);
     Task DeactivateDepartmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateDepartmentAsync(Guid id, CancellationToken ct);
-    Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, CancellationToken ct);
+    Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<AdminUserLookupItem>> GetAdminUsersAsync(CancellationToken ct);
     Task<Guid> CreateAdminUserAsync(string username, string? email, string password, int? institutionType, CancellationToken ct);
     Task UpdateAdminUserAsync(Guid userId, string? email, bool isActive, string? newPassword, CancellationToken ct);
@@ -357,6 +363,9 @@ public interface IEduApiClient
     Task<bool> GetEnrollmentScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task ActivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<bool> GetReportsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateReportsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeactivateReportsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Portal / Dashboard Settings
     Task<PortalBrandingWebModel> GetPortalBrandingAsync(CancellationToken ct);
@@ -644,19 +653,31 @@ public class EduApiClient : IEduApiClient
         return await GetAsync<List<LookupItem>>(path, ct) ?? new();
     }
 
-    public async Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, CancellationToken ct)
+    public Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, CancellationToken ct)
+        => GetProgramsAsync(departmentId, null, null, ct);
+
+    public async Task<List<LookupItem>> GetProgramsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/program?departmentId={departmentId.Value}"
-            : "api/v1/program";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0 ? "api/v1/program" : $"api/v1/program?{string.Join("&", query)}";
         return await GetAsync<List<LookupItem>>(path, ct) ?? new();
     }
 
-    public async Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, CancellationToken ct)
+    public Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, CancellationToken ct)
+        => GetProgramDetailsAsync(departmentId, null, null, ct);
+
+    public async Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/program?departmentId={departmentId.Value}"
-            : "api/v1/program";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0 ? "api/v1/program" : $"api/v1/program?{string.Join("&", query)}";
         var raw = await GetAsync<List<ProgramDetailDto>>(path, ct) ?? new();
         return raw.Select(p => new ProgramItem
         {
@@ -664,6 +685,8 @@ public class EduApiClient : IEduApiClient
             Name = p.Name ?? "",
             Code = p.Code ?? "",
             DepartmentId = p.DepartmentId,
+            TenantId = p.TenantId,
+            CampusId = p.CampusId,
             TotalSemesters = p.TotalSemesters,
             IsActive = p.IsActive
         }).ToList();
@@ -1978,6 +2001,8 @@ public class EduApiClient : IEduApiClient
         public string? Name { get; set; }
         public string? Code { get; set; }
         public Guid DepartmentId { get; set; }
+        public Guid? TenantId { get; set; }
+        public Guid? CampusId { get; set; }
         public int TotalSemesters { get; set; }
         public bool IsActive { get; set; }
     }
@@ -2025,13 +2050,73 @@ public class EduApiClient : IEduApiClient
     }
 
     public Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/program", new { name, code, departmentId, totalSemesters }, ct);
+        => CreateProgramAsync(name, code, departmentId, totalSemesters, null, null, ct);
+
+    public Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/program";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { name, code, departmentId, totalSemesters }, ct);
+    }
 
     public Task UpdateProgramAsync(Guid id, string newName, CancellationToken ct)
-        => PutAsync<object, object>($"api/v1/program/{id}", new { name = newName }, ct);
+        => UpdateProgramAsync(id, newName, null, null, ct);
+
+    public Task UpdateProgramAsync(Guid id, string newName, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/program/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PutAsync<object, object>(path, new { name = newName }, ct);
+    }
 
     public Task DeactivateProgramAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/program/{id}", ct);
+        => DeactivateProgramAsync(id, null, null, ct);
+
+    public Task DeactivateProgramAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/program/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return DeleteAsync(path, ct);
+    }
+
+    public Task ActivateProgramAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/program/{id}/activate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, CancellationToken ct)
         => UpdateDepartmentAsync(id, newName, institutionType, null, null, ct);
@@ -2087,15 +2172,25 @@ public class EduApiClient : IEduApiClient
         return PostAsync<object, object>(path, new { }, ct);
     }
 
-    public async Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, CancellationToken ct)
+    public async Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         using var buffer = new MemoryStream();
         await fileStream.CopyToAsync(buffer, ct);
         var fileBytes = buffer.ToArray();
 
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/user-import/csv";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
         using var response = await SendWithAutoRefreshAsync(() =>
         {
-            var request = CreateRequest(HttpMethod.Post, "api/v1/user-import/csv");
+            var request = CreateRequest(HttpMethod.Post, path);
             var content = new MultipartFormDataContent();
             content.Add(new ByteArrayContent(fileBytes), "file", fileName);
             request.Content = content;
@@ -3592,6 +3687,18 @@ public class EduApiClient : IEduApiClient
 
     public Task DeactivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/enrollment/deactivate{BuildEnrollmentScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    public async Task<bool> GetReportsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var response = await GetAsync<EnrollmentScopeStatusApiDto>($"api/v1/reports/status{BuildEnrollmentScopeQuery(tenantId, campusId)}", ct);
+        return response?.IsActive ?? true;
+    }
+
+    public Task ActivateReportsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/reports/activate{BuildEnrollmentScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    public Task DeactivateReportsScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/reports/deactivate{BuildEnrollmentScopeQuery(tenantId, campusId)}", new { }, ct);
 
     private static string BuildEnrollmentScopeQuery(Guid? tenantId, Guid? campusId)
     {

@@ -16,6 +16,58 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <h2 class="h5 mb-3">Import Users From CSV</h2>
+
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <form method="get" asp-action="UserImport" class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tenant</label>
+                                <select class="form-select" name="tenantId" onchange="this.form.submit()">
+                                    <option value="">All Tenants</option>
+                                    @foreach (var tenant in Model.Tenants)
+                                    {
+                                        if (Model.SelectedTenantId == tenant.Id)
+                                        {
+                                            <option value="@tenant.Id" selected>@tenant.Name (@tenant.Code)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@tenant.Id">@tenant.Name (@tenant.Code)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Campus</label>
+                                <select class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                                    <option value="">All Campuses</option>
+                                    @foreach (var campus in Model.Campuses)
+                                    {
+                                        if (Model.SelectedCampusId == campus.Id)
+                                        {
+                                            <option value="@campus.Id" selected>@campus.Name (@campus.Code)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@campus.Id">@campus.Name (@campus.Code)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </form>
+                    }
+
+                    <form asp-action="CreateUserImportSampleCsv" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Create Sample CSV In User Import Sheets</button>
+                        @if (!string.IsNullOrWhiteSpace(Model.GeneratedSampleFileName))
+                        {
+                            <a class="btn btn-link btn-sm" asp-action="DownloadGeneratedUserImportSample" asp-route-fileName="@Model.GeneratedSampleFileName">Download Created Sample</a>
+                        }
+                    </form>
+
                     <div class="alert alert-light border small mb-3">
                         <p class="mb-2"><strong>Use one of the official templates before upload:</strong></p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
@@ -35,6 +87,8 @@
 
                     <form asp-action="ImportUsersCsv" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="mb-3">
                             <label class="form-label" for="csvFile">CSV File</label>
                             <input class="form-control" type="file" id="csvFile" name="csvFile" accept=".csv" required />

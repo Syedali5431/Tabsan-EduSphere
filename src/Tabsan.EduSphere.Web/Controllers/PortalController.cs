@@ -1320,35 +1320,63 @@ public class PortalController : Controller
     // ── User Import ───────────────────────────────────────────────────────
 
     [HttpGet]
-    public IActionResult UserImport()
+    public async Task<IActionResult> UserImport(Guid? tenantId, Guid? campusId, string? generatedSampleFileName, CancellationToken ct)
     {
         ViewData["Title"] = "User Import";
-        var model = new UserImportPageModel { IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new UserImportPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            GeneratedSampleFileName = generatedSampleFileName,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
         if (!model.IsConnected) return View(model);
 
-        var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
             model.Message = "Only Admin or SuperAdmin can import users.";
+
+        if (identity?.IsSuperAdmin == true)
+        {
+            model.Tenants = await _api.GetTenantsAsync(ct);
+            if (model.SelectedTenantId.HasValue)
+                model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+        }
 
         return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ImportUsersCsv(IFormFile? csvFile, CancellationToken ct)
+    public async Task<IActionResult> ImportUsersCsv(IFormFile? csvFile, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "User Import";
-        var model = new UserImportPageModel { IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new UserImportPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId
+        };
         if (!model.IsConnected)
             return View("UserImport", model);
 
-        var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
         {
             model.Message = "Only Admin or SuperAdmin can import users.";
             return View("UserImport", model);
+        }
+
+        if (identity?.IsSuperAdmin == true)
+        {
+            model.Tenants = await _api.GetTenantsAsync(ct);
+            if (model.SelectedTenantId.HasValue)
+                model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
         }
 
         if (csvFile is null || csvFile.Length == 0)
@@ -1366,7 +1394,7 @@ public class PortalController : Controller
         try
         {
             using var stream = csvFile.OpenReadStream();
-            model.Result = await _api.ImportUsersCsvAsync(stream, csvFile.FileName, ct);
+            model.Result = await _api.ImportUsersCsvAsync(stream, csvFile.FileName, tenantId, campusId, ct);
             model.Message = "CSV import completed.";
         }
         catch (Exception ex)
@@ -1375,6 +1403,41 @@ public class PortalController : Controller
         }
 
         return View("UserImport", model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CreateUserImportSampleCsv(Guid? tenantId, Guid? campusId)
+    {
+        var identity = _api.GetSessionIdentity();
+        var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+        if (!canImport)
+            return Forbid();
+
+        if (tenantId.HasValue != campusId.HasValue)
+        {
+            TempData["PortalMessage"] = "TenantId and CampusId must be provided together.";
+            return RedirectToAction(nameof(UserImport), new { tenantId, campusId });
+        }
+
+        var templateRoot = GetUserImportSheetsRoot();
+        Directory.CreateDirectory(templateRoot);
+
+        var fileName = $"user-import-sample-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
+        var filePath = Path.Combine(templateRoot, fileName);
+
+        var lines = new[]
+        {
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments",
+            "admin1,admin1@tabsan.local,Admin One,Admin,,University,+61412345678,",
+            "faculty1,faculty1@tabsan.local,Faculty One,Faculty,{valid-department-guid},University,+61412345679,{campus-guid-1}",
+            "student1,student1@tabsan.local,Student One,Student,{valid-department-guid},School,+61412345680,{campus-guid-1}|{campus-guid-2}"
+        };
+
+        System.IO.File.WriteAllLines(filePath, lines);
+
+        TempData["PortalMessage"] = $"Sample CSV created in User Import Sheets: {fileName}";
+        return RedirectToAction(nameof(UserImport), new { tenantId, campusId, generatedSampleFileName = fileName });
     }
 
     [HttpGet]
@@ -1397,7 +1460,7 @@ public class PortalController : Controller
         if (!allowedFileNames.Contains(fileName))
             return NotFound();
 
-        var templateRoot = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "..", "..", "User Import Sheets"));
+        var templateRoot = GetUserImportSheetsRoot();
         var candidatePath = Path.GetFullPath(Path.Combine(templateRoot, fileName));
         if (!candidatePath.StartsWith(templateRoot, StringComparison.OrdinalIgnoreCase))
             return NotFound();
@@ -1407,6 +1470,33 @@ public class PortalController : Controller
 
         return PhysicalFile(candidatePath, "text/csv", fileName);
     }
+
+    [HttpGet]
+    public IActionResult DownloadGeneratedUserImportSample(string fileName)
+    {
+        var identity = _api.GetSessionIdentity();
+        var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+        if (!canImport)
+            return Forbid();
+
+        if (string.IsNullOrWhiteSpace(fileName) ||
+            !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ||
+            !fileName.StartsWith("user-import-sample-", StringComparison.OrdinalIgnoreCase))
+            return NotFound();
+
+        var templateRoot = GetUserImportSheetsRoot();
+        var candidatePath = Path.GetFullPath(Path.Combine(templateRoot, fileName));
+        if (!candidatePath.StartsWith(templateRoot, StringComparison.OrdinalIgnoreCase))
+            return NotFound();
+
+        if (!System.IO.File.Exists(candidatePath))
+            return NotFound();
+
+        return PhysicalFile(candidatePath, "text/csv", fileName);
+    }
+
+    private string GetUserImportSheetsRoot()
+        => Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "..", "..", "User Import Sheets"));
 
     // ── Departments ────────────────────────────────────────────────────────
 
@@ -1603,23 +1693,50 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Programs(Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> Programs(Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         ViewData["Title"] = "Programs";
-        var model = new ProgramsPageModel { IsConnected = _api.IsConnected(), SelectedDepartmentId = departmentId };
+        var identity = _api.GetSessionIdentity();
+        var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+        var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+        var model = new ProgramsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = effectiveTenantId,
+            SelectedCampusId = effectiveCampusId,
+            SelectedDepartmentId = departmentId
+        };
         if (!model.IsConnected) return View(model);
 
-        var identity = _api.GetSessionIdentity();
         if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
         {
             TempData["PortalMessage"] = "Only Admin or SuperAdmin can manage programs.";
             return RedirectToAction(nameof(Dashboard));
         }
 
+        if (model.SelectedTenantId.HasValue != model.SelectedCampusId.HasValue)
+        {
+            model.Message = "Tenant and campus must be selected together.";
+            return View(model);
+        }
+
         try
         {
-            model.Departments = await _api.GetDepartmentsAsync(ct);
-            var programs = await _api.GetProgramDetailsAsync(departmentId, ct);
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.Departments = await _api.GetDepartmentsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+
+            if (departmentId.HasValue && model.Departments.All(d => d.Id != departmentId.Value))
+                model.SelectedDepartmentId = null;
+
+            var programs = await _api.GetProgramDetailsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, ct);
             var deptMap = model.Departments.ToDictionary(d => d.Id, d => d.Name);
             model.Programs = programs.Select(p =>
             {
@@ -1638,6 +1755,8 @@ public class PortalController : Controller
         string code,
         Guid departmentId,
         int totalSemesters,
+        Guid? tenantId,
+        Guid? campusId,
         Guid? filterDepartmentId,
         CancellationToken ct)
     {
@@ -1652,16 +1771,19 @@ public class PortalController : Controller
         {
             try
             {
-                await _api.CreateProgramAsync(name, code, departmentId, totalSemesters, ct);
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+                await _api.CreateProgramAsync(name, code, departmentId, totalSemesters, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = $"Program '{name}' created.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Programs), new { departmentId = filterDepartmentId });
+        return RedirectToAction(nameof(Programs), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateProgram(Guid id, string newName, Guid? filterDepartmentId, CancellationToken ct)
+    public async Task<IActionResult> UpdateProgram(Guid id, string newName, Guid? tenantId, Guid? campusId, Guid? filterDepartmentId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
@@ -1674,21 +1796,24 @@ public class PortalController : Controller
         {
             try
             {
-                await _api.UpdateProgramAsync(id, newName, ct);
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+                await _api.UpdateProgramAsync(id, newName, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Program updated.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Programs), new { departmentId = filterDepartmentId });
+        return RedirectToAction(nameof(Programs), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeactivateProgram(Guid id, Guid? filterDepartmentId, CancellationToken ct)
+    public async Task<IActionResult> SetProgramActive(Guid id, bool activate, Guid? tenantId, Guid? campusId, Guid? filterDepartmentId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
         {
-            TempData["PortalMessage"] = "Only SuperAdmin can deactivate programs.";
+            TempData["PortalMessage"] = "Only SuperAdmin can change program status.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -1696,12 +1821,23 @@ public class PortalController : Controller
         {
             try
             {
-                await _api.DeactivateProgramAsync(id, ct);
-                TempData["PortalMessage"] = "Program deactivated.";
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+                if (activate)
+                {
+                    await _api.ActivateProgramAsync(id, effectiveTenantId, effectiveCampusId, ct);
+                    TempData["PortalMessage"] = "Program activated.";
+                }
+                else
+                {
+                    await _api.DeactivateProgramAsync(id, effectiveTenantId, effectiveCampusId, ct);
+                    TempData["PortalMessage"] = "Program deactivated.";
+                }
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Programs), new { departmentId = filterDepartmentId });
+        return RedirectToAction(nameof(Programs), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -3456,14 +3592,60 @@ public class PortalController : Controller
     // ── Reports ────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> ReportCenter(CancellationToken ct)
+    public async Task<IActionResult> ReportCenter(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Report Center";
-        var model = new ReportCenterPageModel { IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new ReportCenterPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
         if (!model.IsConnected) return View(model);
-        try { model.Reports = await _api.GetReportCatalogAsync(ct); }
+        try
+        {
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            model.Reports = await _api.GetReportCatalogAsync(ct);
+            if (!model.IsReportsActive)
+                model.Message ??= "Reports are currently deactivated for the selected tenant/campus scope.";
+        }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetReportsActive(bool isActive, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                if (isActive)
+                    await _api.ActivateReportsScopeAsync(tenantId, campusId, ct);
+                else
+                    await _api.DeactivateReportsScopeAsync(tenantId, campusId, ct);
+
+                TempData["PortalMessage"] = isActive
+                    ? "Reports activated for selected scope."
+                    : "Reports deactivated for selected scope.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = ex.Message;
+            }
+        }
+
+        return RedirectToAction(nameof(ReportCenter), new { tenantId, campusId });
     }
 
     [HttpGet]

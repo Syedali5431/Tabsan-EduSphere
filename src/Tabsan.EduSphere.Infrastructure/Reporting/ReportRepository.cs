@@ -47,6 +47,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         var query =
@@ -61,6 +63,8 @@ public sealed class ReportRepository : IReportRepository
                && (courseOfferingId  == null || ar.CourseOfferingId == courseOfferingId)
                && (studentProfileId  == null || ar.StudentProfileId == studentProfileId)
                     && (institutionType   == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId          == null || dep.TenantId == tenantId)
+                    && (campusId          == null || dep.CampusId == campusId)
             select new
             {
                 ar.StudentProfileId,
@@ -103,9 +107,11 @@ public sealed class ReportRepository : IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
-        return await BuildResultQuery(semesterId, courseOfferingId, studentProfileId, null, institutionType)
+        return await BuildResultQuery(semesterId, courseOfferingId, studentProfileId, null, institutionType, tenantId, campusId)
             .ToListAsync(ct);
     }
 
@@ -114,6 +120,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         return await (
@@ -128,6 +136,8 @@ public sealed class ReportRepository : IReportRepository
                && (courseOfferingId == null || a.CourseOfferingId == courseOfferingId)
                && (studentProfileId == null || s.StudentProfileId == studentProfileId)
                     && (institutionType  == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId         == null || dep.TenantId == tenantId)
+                    && (campusId         == null || dep.CampusId == campusId)
             orderby s.SubmittedAt descending
             select new AssignmentReportRow(
                 s.StudentProfileId,
@@ -151,6 +161,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         return await (
@@ -165,6 +177,8 @@ public sealed class ReportRepository : IReportRepository
                && (courseOfferingId == null || q.CourseOfferingId == courseOfferingId)
                && (studentProfileId == null || a.StudentProfileId == studentProfileId)
                     && (institutionType  == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId         == null || dep.TenantId == tenantId)
+                    && (campusId         == null || dep.CampusId == campusId)
             orderby a.StartedAt descending
             select new QuizReportRow(
                 a.StudentProfileId,
@@ -187,9 +201,11 @@ public sealed class ReportRepository : IReportRepository
         Guid semesterId,
         Guid? departmentId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
-        var query = BuildResultQuery(semesterId, null, null, departmentId, institutionType);
+        var query = BuildResultQuery(semesterId, null, null, departmentId, institutionType, tenantId, campusId);
         return await query.ToListAsync(ct);
     }
 
@@ -198,7 +214,9 @@ public sealed class ReportRepository : IReportRepository
         Guid? courseOfferingId,
         Guid? studentProfileId,
         Guid? departmentId,
-        int? institutionType)
+        int? institutionType,
+        Guid? tenantId,
+        Guid? campusId)
     {
         return
             from r   in _db.Results
@@ -212,7 +230,9 @@ public sealed class ReportRepository : IReportRepository
                && (courseOfferingId == null || r.CourseOfferingId  == courseOfferingId)
                && (studentProfileId == null || r.StudentProfileId  == studentProfileId)
                && (departmentId     == null || c.DepartmentId      == departmentId)
-                    && (institutionType  == null || (int)dep.InstitutionType == institutionType)
+                   && (institutionType  == null || (int)dep.InstitutionType == institutionType)
+                   && (tenantId         == null || dep.TenantId == tenantId)
+                   && (campusId         == null || dep.CampusId == campusId)
             orderby u.Username, c.Code
             select new ResultReportRow(
                 r.StudentProfileId,
@@ -235,6 +255,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? departmentId,
         Guid? programId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         return await (
@@ -245,6 +267,8 @@ public sealed class ReportRepository : IReportRepository
             where (departmentId == null || sp.DepartmentId == departmentId)
                && (programId    == null || sp.ProgramId    == programId)
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId        == null || dep.TenantId == tenantId)
+                    && (campusId        == null || dep.CampusId == campusId)
             orderby u.Username
             select new GpaReportRow(
                 sp.Id,
@@ -264,6 +288,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? semesterId,
         Guid? departmentId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         return await (
@@ -274,6 +300,8 @@ public sealed class ReportRepository : IReportRepository
             where (semesterId   == null || co.SemesterId   == semesterId)
                && (departmentId == null || c.DepartmentId  == departmentId)
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId        == null || co.TenantId == tenantId)
+                    && (campusId        == null || co.CampusId == campusId)
             orderby c.Code
             select new EnrollmentReportRow(
                 co.Id,
@@ -347,6 +375,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? departmentId,
         Guid? courseOfferingId,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         var query =
@@ -360,6 +390,8 @@ public sealed class ReportRepository : IReportRepository
             where (courseOfferingId == null || ar.CourseOfferingId == courseOfferingId)
                && (departmentId     == null || c.DepartmentId      == departmentId)
                     && (institutionType  == null || (int)dep.InstitutionType == institutionType)
+                    && (tenantId         == null || dep.TenantId == tenantId)
+                    && (campusId         == null || dep.CampusId == campusId)
             select new
             {
                 ar.StudentProfileId,
@@ -404,6 +436,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? departmentId,
         string? status,
         int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
         CancellationToken ct = default)
     {
         FypProjectStatus? statusFilter = string.IsNullOrWhiteSpace(status)
@@ -420,7 +454,9 @@ public sealed class ReportRepository : IReportRepository
             join sup in _db.Users.DefaultIfEmpty() on p.SupervisorUserId equals sup!.Id into supGroup
             from sup in supGroup.DefaultIfEmpty()
             where (departmentId  == null || p.DepartmentId == departmentId)
-               && (statusFilter  == null || p.Status       == statusFilter)
+                            && (institutionType == null || (int)dep.InstitutionType == institutionType)
+                            && (tenantId        == null || dep.TenantId == tenantId)
+                            && (campusId        == null || dep.CampusId == campusId)
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
             orderby p.CreatedAt descending
             select new FypStatusReportRow(

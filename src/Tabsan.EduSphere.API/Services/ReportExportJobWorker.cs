@@ -53,7 +53,7 @@ public sealed class ReportExportJobWorker : BackgroundService
                     {
                         using var scope = _services.CreateScope();
                         var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
-                        var reportRequest = new ResultSummaryRequest(request.SemesterId, request.DepartmentId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType);
+                        var reportRequest = new ResultSummaryRequest(request.SemesterId, request.DepartmentId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType, null, null);
 
                         switch (request.Format)
                         {

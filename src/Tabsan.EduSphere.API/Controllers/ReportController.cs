@@ -1,12 +1,15 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.API.Services;
 using Tabsan.EduSphere.Application.DTOs.Reports;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Settings;
+using Tabsan.EduSphere.Infrastructure.Persistence;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -25,6 +28,8 @@ public sealed class ReportController : ControllerBase
     private readonly IDepartmentRepository _departments;
     private readonly IAdminAssignmentRepository _adminAssignments;
     private readonly IFacultyAssignmentRepository _facultyAssignments;
+    private readonly IAccessScopeResolver _accessScope;
+    private readonly ApplicationDbContext _db;
     private readonly ReportExportJobQueue _exportQueue;
     private readonly ReportExportJobStore _exportStore;
 
@@ -34,6 +39,8 @@ public sealed class ReportController : ControllerBase
         IDepartmentRepository departments,
         IAdminAssignmentRepository adminAssignments,
         IFacultyAssignmentRepository facultyAssignments,
+        IAccessScopeResolver accessScope,
+        ApplicationDbContext db,
         ReportExportJobQueue exportQueue,
         ReportExportJobStore exportStore)
     {
@@ -42,8 +49,43 @@ public sealed class ReportController : ControllerBase
         _departments = departments;
         _adminAssignments = adminAssignments;
         _facultyAssignments = facultyAssignments;
+        _accessScope = accessScope;
+        _db = db;
         _exportQueue = exportQueue;
         _exportStore = exportStore;
+    }
+
+    [HttpGet("status")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> GetReportsStatus([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scoped = ResolveRequestedScope(tenantId, campusId);
+        if (scoped.ErrorResult is not null) return scoped.ErrorResult;
+
+        var isActive = await IsReportsScopeActiveAsync(scoped.TenantId, scoped.CampusId, ct);
+        return Ok(new { isActive, tenantId = scoped.TenantId, campusId = scoped.CampusId });
+    }
+
+    [HttpPost("activate")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> ActivateReports([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scoped = ResolveRequestedScope(tenantId, campusId);
+        if (scoped.ErrorResult is not null) return scoped.ErrorResult;
+
+        await SetReportsScopeActiveAsync(scoped.TenantId, scoped.CampusId, true, ct);
+        return NoContent();
+    }
+
+    [HttpPost("deactivate")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> DeactivateReports([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
+    {
+        var scoped = ResolveRequestedScope(tenantId, campusId);
+        if (scoped.ErrorResult is not null) return scoped.ErrorResult;
+
+        await SetReportsScopeActiveAsync(scoped.TenantId, scoped.CampusId, false, ct);
+        return NoContent();
     }
 
     // ── Catalog ────────────────────────────────────────────────────────────────
@@ -101,7 +143,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetAttendanceSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -126,7 +168,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAttendanceSummaryExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "attendance-summary.xlsx");
     }
@@ -151,7 +193,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAttendanceSummaryCsvAsync(request, ct);
         return File(bytes, "text/csv", "attendance-summary.csv");
     }
@@ -176,7 +218,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AttendanceSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAttendanceSummaryPdfAsync(request, ct);
         return File(bytes, "application/pdf", "attendance-summary.pdf");
     }
@@ -203,7 +245,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetResultSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -228,7 +270,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportResultSummaryExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "result-summary.xlsx");
     }
@@ -253,7 +295,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportResultSummaryCsvAsync(request, ct);
         return File(bytes, "text/csv", "result-summary.csv");
     }
@@ -278,7 +320,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new ResultSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportResultSummaryPdfAsync(request, ct);
         return File(bytes, "application/pdf", "result-summary.pdf");
     }
@@ -402,7 +444,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetAssignmentSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -427,7 +469,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAssignmentSummaryExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "assignment-summary.xlsx");
     }
@@ -452,7 +494,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAssignmentSummaryCsvAsync(request, ct);
         return File(bytes, "text/csv", "assignment-summary.csv");
     }
@@ -477,7 +519,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new AssignmentSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportAssignmentSummaryPdfAsync(request, ct);
         return File(bytes, "application/pdf", "assignment-summary.pdf");
     }
@@ -504,7 +546,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetQuizSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -529,7 +571,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportQuizSummaryExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "quiz-summary.xlsx");
     }
@@ -554,7 +596,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportQuizSummaryCsvAsync(request, ct);
         return File(bytes, "text/csv", "quiz-summary.csv");
     }
@@ -579,7 +621,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyOfferingScopeAsync(courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType);
+        var request = new QuizSummaryRequest(semesterId, scope.DepartmentId, courseOfferingId, studentProfileId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportQuizSummaryPdfAsync(request, ct);
         return File(bytes, "application/pdf", "quiz-summary.pdf");
     }
@@ -604,7 +646,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType);
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetGpaReportAsync(request, ct);
         return Ok(result);
     }
@@ -627,7 +669,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType);
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var bytes = await _reports.ExportGpaReportExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "gpa-report.xlsx");
     }
@@ -652,7 +694,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType);
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetEnrollmentSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -680,7 +722,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType);
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetSemesterResultsAsync(request, ct);
         return Ok(result);
     }
@@ -739,7 +781,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType);
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetLowAttendanceWarningAsync(request, ct);
         return Ok(result);
     }
@@ -764,7 +806,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType);
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetFypStatusReportAsync(request, ct);
         return Ok(result);
     }
@@ -983,7 +1025,85 @@ public sealed class ReportController : ControllerBase
             }
         }
 
+        var activeCheck = await EnsureReportsScopeIsActiveAsync(GetCurrentTenantId(), GetCurrentCampusId(), ct);
+        if (activeCheck is not null)
+            return (requestedDepartmentId, effectiveInstitutionType, activeCheck);
+
         return (requestedDepartmentId, effectiveInstitutionType, null);
+    }
+
+    private (Guid? TenantId, Guid? CampusId, IActionResult? ErrorResult) ResolveRequestedScope(Guid? requestedTenantId, Guid? requestedCampusId)
+    {
+        var tenantId = requestedTenantId;
+        var campusId = requestedCampusId;
+
+        if (!_accessScope.IsSuperAdmin())
+        {
+            var callerTenantId = _accessScope.GetTenantId();
+            var callerCampusId = _accessScope.GetCampusId();
+
+            if (callerTenantId.HasValue)
+            {
+                if (tenantId.HasValue && tenantId.Value != callerTenantId.Value)
+                    return (null, null, Forbid());
+
+                tenantId = callerTenantId.Value;
+            }
+
+            if (callerCampusId.HasValue)
+            {
+                if (campusId.HasValue && campusId.Value != callerCampusId.Value)
+                    return (null, null, Forbid());
+
+                campusId = callerCampusId.Value;
+            }
+        }
+
+        if (tenantId.HasValue != campusId.HasValue)
+            return (null, null, BadRequest(new { message = "TenantId and CampusId must be provided together." }));
+
+        return (tenantId, campusId, null);
+    }
+
+    private static string GetReportsScopeSettingKey(Guid? tenantId, Guid? campusId)
+        => tenantId.HasValue && campusId.HasValue
+            ? $"reports.active.{tenantId.Value:N}.{campusId.Value:N}"
+            : "reports.active.global";
+
+    private async Task<bool> IsReportsScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var key = GetReportsScopeSettingKey(tenantId, campusId);
+        var setting = await _db.PortalSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (setting is null)
+            return true;
+
+        return bool.TryParse(setting.Value, out var isActive) ? isActive : true;
+    }
+
+    private async Task SetReportsScopeActiveAsync(Guid? tenantId, Guid? campusId, bool isActive, CancellationToken ct)
+    {
+        var key = GetReportsScopeSettingKey(tenantId, campusId);
+        var setting = await _db.PortalSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (setting is null)
+        {
+            setting = new PortalSetting(key, isActive.ToString().ToLowerInvariant());
+            await _db.PortalSettings.AddAsync(setting, ct);
+        }
+        else
+        {
+            setting.SetValue(isActive.ToString().ToLowerInvariant());
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    private async Task<IActionResult?> EnsureReportsScopeIsActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var isActive = await IsReportsScopeActiveAsync(tenantId, campusId, ct);
+        if (isActive)
+            return null;
+
+        return StatusCode(StatusCodes.Status423Locked, new { message = "Reports are deactivated for the selected tenant/campus scope." });
     }
 
     private static bool TryParseFormat(string? format, out ReportExportFormat exportFormat)

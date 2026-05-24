@@ -26,6 +26,60 @@
     }
     else
     {
+        @if (Model.Identity?.IsSuperAdmin == true)
+        {
+            <form method="get" asp-action="ReportCenter" class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label mb-1">Tenant</label>
+                    <select class="form-select" name="tenantId" onchange="this.form.submit()">
+                        <option value="">All Tenants</option>
+                        @foreach (var t in Model.Tenants)
+                        {
+                            if (Model.SelectedTenantId == t.Id)
+                            {
+                                <option value="@t.Id" selected>@t.Name (@t.Code)</option>
+                            }
+                            else
+                            {
+                                <option value="@t.Id">@t.Name (@t.Code)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label mb-1">Campus</label>
+                    <select class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                        <option value="">All Campuses</option>
+                        @foreach (var c in Model.Campuses)
+                        {
+                            if (Model.SelectedCampusId == c.Id)
+                            {
+                                <option value="@c.Id" selected>@c.Name (@c.Code)</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Id">@c.Name (@c.Code)</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </form>
+        }
+
+        <form method="post" asp-action="SetReportsActive" class="mb-3 d-flex justify-content-end">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+            @if (Model.IsReportsActive)
+            {
+                <button type="submit" class="btn btn-outline-danger" name="isActive" value="false">Deactivate Reports for Scope</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-outline-success" name="isActive" value="true">Activate Reports for Scope</button>
+            }
+        </form>
+
         <div class="row g-4">
             @foreach (var report in Model.Reports)
             {
@@ -51,7 +105,7 @@
                     _                                           => ("bi-file-earmark-text", "#")
                 };
                 <div class="col-md-6 col-xl-4">
-                    <a href="@href" class="text-decoration-none">
+                    <a href="@href" class="text-decoration-none @(Model.IsReportsActive ? "" : "disabled")" style="@(Model.IsReportsActive ? "" : "pointer-events:none;opacity:.65;")">
                         <div class="card h-100 shadow-sm border-0 hover-card">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center mb-3">

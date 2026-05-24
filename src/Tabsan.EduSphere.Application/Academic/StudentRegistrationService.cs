@@ -59,7 +59,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         if (await _userRepo.UsernameExistsAsync(request.Username, ct))
             return null;
 
-        var program = await _programRepo.GetByIdAsync(entry.ProgramId, ct);
+        var program = await _programRepo.GetByIdAsync(entry.ProgramId, ct: ct);
         if (program is null) return null;
         if (program.DepartmentId != entry.DepartmentId) return null;
 
@@ -101,7 +101,7 @@ public class StudentRegistrationService : IStudentRegistrationService
         if (await _studentProfileRepo.RegistrationNumberExistsAsync(request.RegistrationNumber, ct))
             throw new InvalidOperationException($"Registration number '{request.RegistrationNumber}' is already in use.");
 
-        var program = await _programRepo.GetByIdAsync(request.ProgramId, ct)
+        var program = await _programRepo.GetByIdAsync(request.ProgramId, ct: ct)
             ?? throw new InvalidOperationException("Academic program was not found.");
 
         if (program.DepartmentId != request.DepartmentId)
