@@ -8,10 +8,19 @@ public interface IAssignmentRepository
     // ── Assignments ───────────────────────────────────────────────────────────
 
     /// <summary>Returns all assignments for the given course offering, ordered by due date.</summary>
-    Task<IReadOnlyList<Assignment>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
+    Task<IReadOnlyList<Assignment>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default);
 
     /// <summary>Returns a single assignment by ID, or null.</summary>
     Task<Assignment?> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Returns a single assignment by ID including inactive (soft-deleted) rows.</summary>
+    Task<Assignment?> GetByIdIncludingInactiveAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Returns tenant/campus scope for a course offering.</summary>
+    Task<(Guid? TenantId, Guid? CampusId)?> GetOfferingScopeAsync(Guid courseOfferingId, CancellationToken ct = default);
+
+    /// <summary>Returns tenant/campus scope for a specific assignment via its course offering.</summary>
+    Task<(Guid? TenantId, Guid? CampusId)?> GetAssignmentScopeAsync(Guid assignmentId, CancellationToken ct = default);
 
     /// <summary>Returns true when the offering already has an assignment with the given title.</summary>
     Task<bool> TitleExistsAsync(Guid courseOfferingId, string title, CancellationToken ct = default);

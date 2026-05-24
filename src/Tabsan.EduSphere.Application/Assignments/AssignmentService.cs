@@ -49,7 +49,8 @@ public class AssignmentService : IAssignmentService
         await _audit.LogAsync(new AuditLog("CreateAssignment", "Assignment", assignment.Id.ToString(),
             actorUserId: createdByUserId), ct);
 
-        return ToResponse(assignment, submissionCount: 0);
+        var scope = await _repo.GetOfferingScopeAsync(assignment.CourseOfferingId, ct);
+        return ToResponse(assignment, submissionCount: 0, scope?.TenantId, scope?.CampusId);
     }
 
     /// <summary>
@@ -88,6 +89,17 @@ public class AssignmentService : IAssignmentService
         try { assignment.Publish(); }
         catch (InvalidOperationException) { return false; }
 
+        _repo.Update(assignment);
+        await _repo.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> ActivateAsync(Guid assignmentId, CancellationToken ct = default)
+    {
+        var assignment = await _repo.GetByIdIncludingInactiveAsync(assignmentId, ct);
+        if (assignment is null || !assignment.IsDeleted) return false;
+
+        assignment.Restore();
         _repo.Update(assignment);
         await _repo.SaveChangesAsync(ct);
         return true;
@@ -132,15 +144,27 @@ public class AssignmentService : IAssignmentService
         return true;
     }
 
-    /// <summary>Returns all assignments for a course offering, including submission counts.</summary>
-    public async Task<IReadOnlyList<AssignmentResponse>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+    public async Task<bool> DeactivateAsync(Guid assignmentId, CancellationToken ct = default)
     {
-        var assignments = await _repo.GetByOfferingAsync(courseOfferingId, ct);
+        var assignment = await _repo.GetByIdAsync(assignmentId, ct);
+        if (assignment is null || assignment.IsDeleted) return false;
+
+        assignment.SoftDelete();
+        _repo.Update(assignment);
+        await _repo.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <summary>Returns all assignments for a course offering, including submission counts.</summary>
+    public async Task<IReadOnlyList<AssignmentResponse>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default)
+    {
+        var assignments = await _repo.GetByOfferingAsync(courseOfferingId, includeInactive, ct);
+        var scope = await _repo.GetOfferingScopeAsync(courseOfferingId, ct);
         var responses = new List<AssignmentResponse>(assignments.Count);
         foreach (var a in assignments)
         {
             var count = await _repo.GetSubmissionCountAsync(a.Id, ct);
-            responses.Add(ToResponse(a, count));
+            responses.Add(ToResponse(a, count, scope?.TenantId, scope?.CampusId));
         }
         return responses;
     }
@@ -151,7 +175,8 @@ public class AssignmentService : IAssignmentService
         var assignment = await _repo.GetByIdAsync(assignmentId, ct);
         if (assignment is null) return null;
         var count = await _repo.GetSubmissionCountAsync(assignmentId, ct);
-        return ToResponse(assignment, count);
+        var scope = await _repo.GetOfferingScopeAsync(assignment.CourseOfferingId, ct);
+        return ToResponse(assignment, count, scope?.TenantId, scope?.CampusId);
     }
 
     // ── Student submission ────────────────────────────────────────────────────
@@ -244,9 +269,9 @@ public class AssignmentService : IAssignmentService
     // ── Mapping helpers ───────────────────────────────────────────────────────
 
     /// <summary>Maps a domain Assignment to an AssignmentResponse DTO.</summary>
-    private static AssignmentResponse ToResponse(Assignment a, int submissionCount) =>
-        new(a.Id, a.CourseOfferingId, a.Title, a.Description,
-            a.DueDate, a.MaxMarks, a.IsPublished, a.PublishedAt, submissionCount);
+    private static AssignmentResponse ToResponse(Assignment a, int submissionCount, Guid? tenantId, Guid? campusId) =>
+        new(a.Id, a.CourseOfferingId, tenantId, campusId, a.Title, a.Description,
+            a.DueDate, a.MaxMarks, !a.IsDeleted, a.IsPublished, a.PublishedAt, submissionCount);
 
     /// <summary>Maps a domain AssignmentSubmission to a SubmissionResponse DTO.</summary>
     private static SubmissionResponse ToSubmissionResponse(AssignmentSubmission s, string assignmentTitle) =>

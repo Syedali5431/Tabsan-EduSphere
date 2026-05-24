@@ -21,10 +21,13 @@ public sealed record UpdateAssignmentRequest(
 public sealed record AssignmentResponse(
     Guid Id,
     Guid CourseOfferingId,
+    Guid? TenantId,
+    Guid? CampusId,
     string Title,
     string? Description,
     DateTime DueDate,
     decimal MaxMarks,
+    bool IsActive,
     bool IsPublished,
     DateTime? PublishedAt,
     int SubmissionCount);

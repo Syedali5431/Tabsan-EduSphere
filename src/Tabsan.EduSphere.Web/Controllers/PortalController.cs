@@ -243,11 +243,11 @@ public class PortalController : Controller
         }
     }
 
-    private async Task<List<LookupItem>> GetOfferingFilterOptionsAsync(SessionIdentity? sessionIdentity, CancellationToken ct)
+    private async Task<List<LookupItem>> GetOfferingFilterOptionsAsync(SessionIdentity? sessionIdentity, CancellationToken ct, Guid? tenantId = null, Guid? campusId = null)
     {
         if (sessionIdentity?.IsAdmin == true || sessionIdentity?.IsSuperAdmin == true)
         {
-            var offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
+            var offerings = await _api.GetCourseOfferingsAsync(null, tenantId, campusId, null, ct);
             return offerings.Select(o => new LookupItem
             {
                 Id = o.Id,
@@ -2071,12 +2071,17 @@ public class PortalController : Controller
     // ── Assignments ────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Assignments(Guid? offeringId, string? semesterName, Guid? selectedAssignmentId, CancellationToken ct)
+    public async Task<IActionResult> Assignments(Guid? offeringId, string? semesterName, Guid? selectedAssignmentId, Guid? tenantId, Guid? campusId, bool includeInactive = false, CancellationToken ct = default)
     {
         ViewData["Title"] = "Assignments";
+        var identity = _api.GetSessionIdentity();
         var model = new AssignmentsPageModel
         {
             IsConnected          = _api.IsConnected(),
+            Identity             = identity,
+            SelectedTenantId     = tenantId,
+            SelectedCampusId     = campusId,
+            IncludeInactive      = includeInactive,
             SelectedOfferingId   = offeringId,
             SelectedSemesterName = semesterName,
             SelectedAssignmentId = selectedAssignmentId,
@@ -2085,21 +2090,28 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
+            var sessionId = identity;
+            if (sessionId?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
             if (sessionId?.IsStudent == true)
             {
-                var allOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+                var allOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct, model.SelectedTenantId, model.SelectedCampusId);
                 model.SemesterOptions = BuildSemesterOptions(allOfferings);
                 model.CourseOfferings = FilterOfferingsBySemester(allOfferings, semesterName);
 
                 if (offeringId.HasValue)
                 {
-                    model.Assignments = await _api.GetAssignmentsByOfferingAsync(offeringId.Value, ct);
+                    model.Assignments = await _api.GetAssignmentsByOfferingAsync(offeringId.Value, false, model.SelectedTenantId, model.SelectedCampusId, ct);
                 }
                 else if (!string.IsNullOrWhiteSpace(semesterName))
                 {
                     var assignmentBatches = await Task.WhenAll(
-                        model.CourseOfferings.Select(o => _api.GetAssignmentsByOfferingAsync(o.Id, ct)));
+                        model.CourseOfferings.Select(o => _api.GetAssignmentsByOfferingAsync(o.Id, false, model.SelectedTenantId, model.SelectedCampusId, ct)));
 
                     model.Assignments = assignmentBatches
                         .SelectMany(a => a)
@@ -2129,16 +2141,16 @@ public class PortalController : Controller
             }
             else if (offeringId.HasValue)
             {
-                model.Assignments = await _api.GetAssignmentsByOfferingAsync(offeringId.Value, ct);
+                model.Assignments = await _api.GetAssignmentsByOfferingAsync(offeringId.Value, model.IncludeInactive, model.SelectedTenantId, model.SelectedCampusId, ct);
                 if (selectedAssignmentId.HasValue)
                     model.Submissions = await _api.GetSubmissionsForAssignmentAsync(selectedAssignmentId.Value, ct);
 
-                model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+                model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct, model.SelectedTenantId, model.SelectedCampusId);
                 model.SemesterOptions = BuildSemesterOptions(model.CourseOfferings);
             }
             else
             {
-                model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+                model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct, model.SelectedTenantId, model.SelectedCampusId);
                 model.SemesterOptions = BuildSemesterOptions(model.CourseOfferings);
             }
         }
@@ -2430,49 +2442,57 @@ public class PortalController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateAssignment(
         Guid offeringId, string title, string? description,
+        Guid? tenantId, Guid? campusId,
         DateTime dueDate, decimal maxMarks, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CreateAssignmentAsync(offeringId, title, description, dueDate, maxMarks, ct); }
+            try { await _api.CreateAssignmentAsync(offeringId, title, description, dueDate, maxMarks, tenantId, campusId, ct); }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Assignments), new { offeringId });
+        return RedirectToAction(nameof(Assignments), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateAssignment(
         Guid id, Guid offeringId, string title, string? description,
+        Guid? tenantId, Guid? campusId,
         DateTime dueDate, decimal maxMarks, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.UpdateAssignmentAsync(id, title, description, dueDate, maxMarks, ct); TempData["PortalMessage"] = "Assignment updated."; }
+            try { await _api.UpdateAssignmentAsync(id, title, description, dueDate, maxMarks, tenantId, campusId, ct); TempData["PortalMessage"] = "Assignment updated."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Assignments), new { offeringId });
+        return RedirectToAction(nameof(Assignments), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PublishAssignment(Guid id, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> PublishAssignment(Guid id, Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.PublishAssignmentAsync(id, ct); }
+            try { await _api.PublishAssignmentAsync(id, tenantId, campusId, ct); }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Assignments), new { offeringId });
+        return RedirectToAction(nameof(Assignments), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAssignment(Guid id, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> SetAssignmentActive(Guid id, bool activate, Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive = true, CancellationToken ct = default)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeleteAssignmentAsync(id, ct); }
+            try
+            {
+                if (activate)
+                    await _api.ActivateAssignmentAsync(id, tenantId, campusId, ct);
+                else
+                    await _api.DeactivateAssignmentAsync(id, tenantId, campusId, ct);
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Assignments), new { offeringId });
+        return RedirectToAction(nameof(Assignments), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

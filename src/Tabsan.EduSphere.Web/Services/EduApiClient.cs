@@ -262,11 +262,17 @@ public interface IEduApiClient
     Task<List<AssignmentItem>> GetMyAssignmentsAsync(CancellationToken ct);
     Task<List<MyAssignmentSubmissionItem>> GetMyAssignmentSubmissionsAsync(CancellationToken ct);
     Task<List<AssignmentItem>> GetAssignmentsByOfferingAsync(Guid offeringId, CancellationToken ct);
+    Task<List<AssignmentItem>> GetAssignmentsByOfferingAsync(Guid offeringId, bool includeInactive, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<SubmissionItem>> GetSubmissionsForAssignmentAsync(Guid assignmentId, CancellationToken ct);
     Task SubmitAssignmentAsync(Guid assignmentId, string? fileUrl, string? textContent, CancellationToken ct);
     Task<Guid> CreateAssignmentAsync(Guid courseOfferingId, string title, string? description, DateTime dueDate, decimal maxMarks, CancellationToken ct);
+    Task<Guid> CreateAssignmentAsync(Guid courseOfferingId, string title, string? description, DateTime dueDate, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task UpdateAssignmentAsync(Guid id, string title, string? description, DateTime dueDate, decimal maxMarks, CancellationToken ct);
+    Task UpdateAssignmentAsync(Guid id, string title, string? description, DateTime dueDate, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task PublishAssignmentAsync(Guid id, CancellationToken ct);
+    Task PublishAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeactivateAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeleteAssignmentAsync(Guid id, CancellationToken ct);
     Task GradeSubmissionAsync(Guid assignmentId, Guid studentProfileId, decimal marksAwarded, string? feedback, CancellationToken ct);
 
@@ -2684,18 +2690,30 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<List<AssignmentItem>> GetAssignmentsByOfferingAsync(Guid offeringId, CancellationToken ct)
+        => await GetAssignmentsByOfferingAsync(offeringId, includeInactive: false, tenantId: null, campusId: null, ct);
+
+    public async Task<List<AssignmentItem>> GetAssignmentsByOfferingAsync(Guid offeringId, bool includeInactive, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<AssignmentApiDto>>($"api/v1/assignment/by-offering/{offeringId}", ct) ?? new();
+        var qs = new List<string> { $"includeInactive={includeInactive.ToString().ToLowerInvariant()}" };
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var raw = await GetAsync<List<AssignmentApiDto>>($"api/v1/assignment/by-offering/{offeringId}?{string.Join("&", qs)}", ct) ?? new();
         return raw.Select(MapAssignment).ToList();
     }
 
     private static AssignmentItem MapAssignment(AssignmentApiDto a) => new()
     {
         Id                  = a.Id,
+        TenantId            = a.TenantId,
+        CampusId            = a.CampusId,
         Title               = a.Title ?? "",
         Description         = a.Description,
         DueDate             = a.DueDate,
         TotalMarks          = a.MaxMarks,
+        IsActive            = a.IsActive,
         IsPublished         = a.IsPublished,
         CourseOfferingTitle = a.CourseOfferingTitle ?? "",
         SubmissionCount     = a.SubmissionCount,
@@ -2707,24 +2725,97 @@ public class EduApiClient : IEduApiClient
 
     public Task<Guid> CreateAssignmentAsync(Guid courseOfferingId, string title, string? description,
         DateTime dueDate, decimal maxMarks, CancellationToken ct)
+        => CreateAssignmentAsync(courseOfferingId, title, description, dueDate, maxMarks, null, null, ct);
+
+    public Task<Guid> CreateAssignmentAsync(Guid courseOfferingId, string title, string? description,
+        DateTime dueDate, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { courseOfferingId, title, description, dueDate, maxMarks };
-        return PostAsync<object, AssignmentCreateResponse>("api/v1/assignment", payload, ct)
+        var qs = new List<string>();
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var path = qs.Count > 0
+            ? $"api/v1/assignment?{string.Join("&", qs)}"
+            : "api/v1/assignment";
+
+        return PostAsync<object, AssignmentCreateResponse>(path, payload, ct)
             .ContinueWith(t => t.Result?.Id ?? Guid.Empty, ct);
     }
 
     public Task UpdateAssignmentAsync(Guid id, string title, string? description,
         DateTime dueDate, decimal maxMarks, CancellationToken ct)
+        => UpdateAssignmentAsync(id, title, description, dueDate, maxMarks, null, null, ct);
+
+    public Task UpdateAssignmentAsync(Guid id, string title, string? description,
+        DateTime dueDate, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { title, description, dueDate, maxMarks };
-        return PutAsync<object, object>($"api/v1/assignment/{id}", payload, ct);
+        var qs = new List<string>();
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var path = qs.Count > 0
+            ? $"api/v1/assignment/{id}?{string.Join("&", qs)}"
+            : $"api/v1/assignment/{id}";
+
+        return PutAsync<object, object>(path, payload, ct);
     }
 
     public Task PublishAssignmentAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/assignment/{id}/publish", new { }, ct);
+        => PublishAssignmentAsync(id, null, null, ct);
+
+    public Task PublishAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var qs = new List<string>();
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var path = qs.Count > 0
+            ? $"api/v1/assignment/{id}/publish?{string.Join("&", qs)}"
+            : $"api/v1/assignment/{id}/publish";
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
+
+    public Task ActivateAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var qs = new List<string>();
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var path = qs.Count > 0
+            ? $"api/v1/assignment/{id}/activate?{string.Join("&", qs)}"
+            : $"api/v1/assignment/{id}/activate";
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
+
+    public Task DeactivateAssignmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var qs = new List<string>();
+        if (tenantId.HasValue)
+            qs.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            qs.Add($"campusId={campusId.Value}");
+
+        var path = qs.Count > 0
+            ? $"api/v1/assignment/{id}/deactivate?{string.Join("&", qs)}"
+            : $"api/v1/assignment/{id}/deactivate";
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public Task DeleteAssignmentAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/assignment/{id}", ct);
+        => DeactivateAssignmentAsync(id, null, null, ct);
 
     public Task GradeSubmissionAsync(Guid assignmentId, Guid studentProfileId, decimal marksAwarded,
         string? feedback, CancellationToken ct)
@@ -2760,11 +2851,14 @@ public class EduApiClient : IEduApiClient
     private sealed class AssignmentApiDto
     {
         public Guid      Id                   { get; set; }
+        public Guid?     TenantId             { get; set; }
+        public Guid?     CampusId             { get; set; }
         public string?   Title                { get; set; }
         public string?   Description          { get; set; }
         public DateTime? DueDate              { get; set; }
         [JsonPropertyName("maxMarks")]
         public decimal   MaxMarks             { get; set; }
+        public bool      IsActive             { get; set; } = true;
         public bool      IsPublished          { get; set; }
         public string?   CourseOfferingTitle  { get; set; }
         public int       SubmissionCount      { get; set; }

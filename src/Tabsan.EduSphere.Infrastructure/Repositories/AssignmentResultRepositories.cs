@@ -15,15 +15,43 @@ public class AssignmentRepository : IAssignmentRepository
     // ── Assignments ───────────────────────────────────────────────────────────
 
     /// <summary>Returns all non-deleted assignments for the offering, ordered by due date ascending.</summary>
-    public async Task<IReadOnlyList<Assignment>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
-        => await _db.Assignments
-                    .Where(a => a.CourseOfferingId == courseOfferingId)
-                    .OrderBy(a => a.DueDate)
-                    .ToListAsync(ct);
+    public async Task<IReadOnlyList<Assignment>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default)
+    {
+        var query = includeInactive
+            ? _db.Assignments.IgnoreQueryFilters()
+            : _db.Assignments;
+
+        return await query
+            .Where(a => a.CourseOfferingId == courseOfferingId)
+            .OrderBy(a => a.DueDate)
+            .ToListAsync(ct);
+    }
 
     /// <summary>Returns the assignment by ID (respecting soft-delete filter), or null.</summary>
     public Task<Assignment?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _db.Assignments.FirstOrDefaultAsync(a => a.Id == id, ct);
+
+    public Task<Assignment?> GetByIdIncludingInactiveAsync(Guid id, CancellationToken ct = default)
+        => _db.Assignments
+              .IgnoreQueryFilters()
+              .FirstOrDefaultAsync(a => a.Id == id, ct);
+
+    public Task<(Guid? TenantId, Guid? CampusId)?> GetOfferingScopeAsync(Guid courseOfferingId, CancellationToken ct = default)
+        => _db.CourseOfferings
+            .Where(o => o.Id == courseOfferingId)
+            .Select(o => ((Guid? TenantId, Guid? CampusId)?)new ValueTuple<Guid?, Guid?>(o.TenantId, o.CampusId))
+            .FirstOrDefaultAsync(ct);
+
+    public Task<(Guid? TenantId, Guid? CampusId)?> GetAssignmentScopeAsync(Guid assignmentId, CancellationToken ct = default)
+        => _db.Assignments
+            .IgnoreQueryFilters()
+            .Where(a => a.Id == assignmentId)
+            .Join(
+                _db.CourseOfferings,
+                a => a.CourseOfferingId,
+                o => o.Id,
+                (_, o) => ((Guid? TenantId, Guid? CampusId)?)new ValueTuple<Guid?, Guid?>(o.TenantId, o.CampusId))
+            .FirstOrDefaultAsync(ct);
 
     /// <summary>Returns true when the offering already has an assignment with the same title.</summary>
     public Task<bool> TitleExistsAsync(Guid courseOfferingId, string title, CancellationToken ct = default)

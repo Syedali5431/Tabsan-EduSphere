@@ -699,10 +699,13 @@ public class CoursesPageModel
 public class AssignmentItem
 {
     public Guid      Id                   { get; set; }
+    public Guid?     TenantId             { get; set; }
+    public Guid?     CampusId             { get; set; }
     public string    Title                { get; set; } = "";
     public string?   Description          { get; set; }
     public DateTime? DueDate              { get; set; }
     public decimal   TotalMarks           { get; set; }
+    public bool      IsActive             { get; set; } = true;
     public bool      IsPublished          { get; set; }
     public string    CourseOfferingTitle  { get; set; } = "";
     public int       SubmissionCount      { get; set; }
@@ -735,6 +738,12 @@ public class AssignmentsPageModel
 {
     public bool   IsConnected          { get; set; }
     public string? Message             { get; set; }
+    public SessionIdentity? Identity   { get; set; }
+    public Guid? SelectedTenantId      { get; set; }
+    public Guid? SelectedCampusId      { get; set; }
+    public bool IncludeInactive        { get; set; }
+    public List<TenantItem> Tenants    { get; set; } = new();
+    public List<CampusItem> Campuses   { get; set; } = new();
     public List<AssignmentItem>  Assignments     { get; set; } = new();
     public List<SubmissionItem>  Submissions     { get; set; } = new();
     public List<LookupItem>      CourseOfferings { get; set; } = new();

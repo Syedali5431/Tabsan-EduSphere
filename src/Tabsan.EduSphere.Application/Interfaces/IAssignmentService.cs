@@ -22,6 +22,9 @@ public interface IAssignmentService
     /// <summary>Publishes an assignment, making it visible to enrolled students.</summary>
     Task<bool> PublishAsync(Guid assignmentId, CancellationToken ct = default);
 
+    /// <summary>Re-activates an inactive assignment.</summary>
+    Task<bool> ActivateAsync(Guid assignmentId, CancellationToken ct = default);
+
     /// <summary>
     /// Retracts a published assignment.
     /// Fails when submissions already exist (returns false).
@@ -31,8 +34,11 @@ public interface IAssignmentService
     /// <summary>Soft-deletes an assignment (only allowed when no submissions exist).</summary>
     Task<bool> DeleteAsync(Guid assignmentId, CancellationToken ct = default);
 
+    /// <summary>Deactivates an assignment without permanently deleting data.</summary>
+    Task<bool> DeactivateAsync(Guid assignmentId, CancellationToken ct = default);
+
     /// <summary>Returns all assignments for a course offering.</summary>
-    Task<IReadOnlyList<AssignmentResponse>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
+    Task<IReadOnlyList<AssignmentResponse>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default);
 
     /// <summary>Returns a single assignment by ID, or null.</summary>
     Task<AssignmentResponse?> GetByIdAsync(Guid assignmentId, CancellationToken ct = default);
