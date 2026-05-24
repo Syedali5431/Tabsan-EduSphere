@@ -45,23 +45,33 @@ public class DepartmentController : ControllerBase
 
     /// <summary>Returns all active departments ordered by name.</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        CancellationToken ct)
     {
-        var depts = await _deptRepo.GetAllAsync(ct);
+        var depts = (await _deptRepo.GetAllAsync(ct)).AsEnumerable();
+
+        if (tenantId.HasValue)
+            depts = depts.Where(d => d.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            depts = depts.Where(d => d.CampusId == campusId.Value);
 
         if (User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
         {
             var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(GetUserId(), ct);
-            depts = depts.Where(d => allowedDepartmentIds.Contains(d.Id)).ToList();
+            if (allowedDepartmentIds.Count > 0)
+                depts = depts.Where(d => allowedDepartmentIds.Contains(d.Id));
         }
 
         if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
         {
             var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(GetUserId(), ct);
-            depts = depts.Where(d => allowedDepartmentIds.Contains(d.Id)).ToList();
+            depts = depts.Where(d => allowedDepartmentIds.Contains(d.Id));
         }
 
-        return Ok(depts.Select(d => new { d.Id, d.Name, d.Code, d.IsActive, d.InstitutionType }));
+        return Ok(depts.Select(d => new { d.Id, d.Name, d.Code, d.IsActive, d.InstitutionType, d.TenantId, d.CampusId }));
     }
 
     // ── GET /api/v1/department/{id} ────────────────────────────────────────────

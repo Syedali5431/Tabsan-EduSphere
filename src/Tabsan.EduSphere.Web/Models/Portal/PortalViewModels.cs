@@ -112,8 +112,16 @@ public class TimetableAdminPageModel
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
     public ApiConnectionModel Connection { get; set; } = new();
+    public SessionIdentity? Identity { get; set; }
     public CreateTimetableForm CreateForm { get; set; } = new();
     public AddTimetableEntryForm EntryForm { get; set; } = new();
+
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
 
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Programs { get; set; } = new();
@@ -211,6 +219,8 @@ public class SessionIdentity
     public string? Email { get; set; }
     public List<string> Roles { get; set; } = new();
     public int? InstitutionType { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
     public bool MustChangePassword { get; set; }
 
     public bool IsAdmin => Roles.Contains("Admin") || Roles.Contains("SuperAdmin");
@@ -609,6 +619,9 @@ public class CourseItem
     public Guid   Id             { get; set; }
     public string Title          { get; set; } = "";
     public string Code           { get; set; } = "";
+    public Guid?  TenantId       { get; set; }
+    public Guid?  CampusId       { get; set; }
+    public int    InstitutionType { get; set; }
     public string DepartmentName { get; set; } = "";
     public int    CreditHours    { get; set; }
     // Final-Touches Phase 19 Stage 19.1/19.2 — extended course fields
@@ -625,6 +638,9 @@ public class CourseOfferingItem
     public Guid   CourseId    { get; set; }
     public Guid   SemesterId  { get; set; }
     public Guid   DepartmentId { get; set; }
+    public Guid?  TenantId    { get; set; }
+    public Guid?  CampusId    { get; set; }
+    public int    InstitutionType { get; set; }
     public string CourseTitle { get; set; } = "";
     public string CourseCode  { get; set; } = "";
     public string FacultyName { get; set; } = "";
@@ -636,11 +652,16 @@ public class CoursesPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
     public List<CourseItem>         Courses     { get; set; } = new();
     public List<CourseOfferingItem> Offerings   { get; set; } = new();
+    public List<TenantItem>         Tenants     { get; set; } = new();
+    public List<CampusItem>         Campuses    { get; set; } = new();
     public List<LookupItem>         Departments { get; set; } = new();
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<FacultyLookupItem>  Faculty     { get; set; } = new();
+    public Guid?  SelectedTenantId { get; set; }
+    public Guid?  SelectedCampusId { get; set; }
     public Guid?  SelectedDepartmentId { get; set; }
 }
 

@@ -1,4 +1,5 @@
 using Tabsan.EduSphere.Domain.Common;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.Domain.Academic;
 
@@ -29,6 +30,15 @@ public class Course : AuditableEntity
 
     /// <summary>FK to the department that owns this course definition.</summary>
     public Guid DepartmentId { get; private set; }
+
+    /// <summary>Optional tenant scope inherited from the owning department.</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Optional campus scope inherited from the owning department.</summary>
+    public Guid? CampusId { get; private set; }
+
+    /// <summary>Institution type inherited from the owning department.</summary>
+    public InstitutionType InstitutionType { get; private set; } = InstitutionType.University;
 
     /// <summary>Navigation to the owning department.</summary>
     public Department Department { get; private set; } = default!;
@@ -66,6 +76,16 @@ public class Course : AuditableEntity
         Code = code.ToUpperInvariant();
         CreditHours = creditHours;
         DepartmentId = departmentId;
+    }
+
+    /// <summary>Aligns the course with the owning department's institution scope.</summary>
+    public void SetInstitutionScope(InstitutionType institutionType, Guid? tenantId, Guid? campusId)
+    {
+        ValidateTenantCampusPair(tenantId, campusId);
+        InstitutionType = institutionType;
+        TenantId = tenantId;
+        CampusId = campusId;
+        Touch();
     }
 
     /// <summary>Updates the course title.</summary>
@@ -127,5 +147,11 @@ public class Course : AuditableEntity
     {
         IsActive = true;
         Touch();
+    }
+
+    private static void ValidateTenantCampusPair(Guid? tenantId, Guid? campusId)
+    {
+        if (tenantId.HasValue != campusId.HasValue)
+            throw new InvalidOperationException("TenantId and CampusId must be provided together.");
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
   Schema creation script for Tabsan EduSphere.
   
   SCRIPT EXECUTION ORDER (IMPORTANT):
@@ -62,7 +62,13 @@ BEGIN
         CONSTRAINT [PK_Tabsan-EduSphere] PRIMARY KEY ([Id])
     );
 
-    CREATE UNIQUE INDEX [IX_Tabsan-EduSphere_DemoKey] ON [Tabsan-EduSphere] ([DemoKey]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_Tabsan-EduSphere_DemoKey' AND [object_id] = OBJECT_ID(N'[Tabsan-EduSphere]'))
+
+    BEGIN
+
+        CREATE UNIQUE INDEX [IX_Tabsan-EduSphere_DemoKey] ON [Tabsan-EduSphere] ([DemoKey]);
+
+    END;
 END;
 GO
 
@@ -235,7 +241,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE INDEX [IX_audit_logs_actor] ON [audit_logs] ([ActorUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_actor' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_actor] ON [audit_logs] ([ActorUserId]);
+    END;
 END;
 GO
 
@@ -244,7 +253,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE INDEX [IX_audit_logs_occurred_at] ON [audit_logs] ([OccurredAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_occurred_at' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_occurred_at] ON [audit_logs] ([OccurredAt]);
+    END;
 END;
 GO
 
@@ -253,7 +265,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_departments_code] ON [departments] ([Code]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_code' AND [object_id] = OBJECT_ID(N'[departments]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_departments_code] ON [departments] ([Code]);
+    END;
 END;
 GO
 
@@ -262,7 +277,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_module_status_module_id] ON [module_status] ([ModuleId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_module_status_module_id' AND [object_id] = OBJECT_ID(N'[module_status]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_module_status_module_id] ON [module_status] ([ModuleId]);
+    END;
 END;
 GO
 
@@ -271,7 +289,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_modules_key] ON [modules] ([Key]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_modules_key' AND [object_id] = OBJECT_ID(N'[modules]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_modules_key] ON [modules] ([Key]);
+    END;
 END;
 GO
 
@@ -280,7 +301,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_roles_name] ON [roles] ([Name]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_roles_name' AND [object_id] = OBJECT_ID(N'[roles]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_roles_name] ON [roles] ([Name]);
+    END;
 END;
 GO
 
@@ -289,7 +313,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_user_sessions_token_hash] ON [user_sessions] ([RefreshTokenHash]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_user_sessions_token_hash' AND [object_id] = OBJECT_ID(N'[user_sessions]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_user_sessions_token_hash] ON [user_sessions] ([RefreshTokenHash]);
+    END;
 END;
 GO
 
@@ -298,7 +325,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE INDEX [IX_user_sessions_user_id] ON [user_sessions] ([UserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_user_sessions_user_id' AND [object_id] = OBJECT_ID(N'[user_sessions]'))
+    BEGIN
+        CREATE INDEX [IX_user_sessions_user_id] ON [user_sessions] ([UserId]);
+    END;
 END;
 GO
 
@@ -307,7 +337,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_users_email] ON [users] ([Email]) WHERE [email] IS NOT NULL');
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_email' AND [object_id] = OBJECT_ID(N'[users]'))
+    BEGIN
+        EXEC(N'CREATE UNIQUE INDEX [IX_users_email] ON [users] ([Email]) WHERE [email] IS NOT NULL');
+    END;
 END;
 GO
 
@@ -316,7 +349,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE INDEX [IX_users_RoleId] ON [users] ([RoleId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_RoleId' AND [object_id] = OBJECT_ID(N'[users]'))
+    BEGIN
+        CREATE INDEX [IX_users_RoleId] ON [users] ([RoleId]);
+    END;
 END;
 GO
 
@@ -325,7 +361,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429002542_InitialCreate'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_users_username] ON [users] ([Username]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_username' AND [object_id] = OBJECT_ID(N'[users]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_users_username] ON [users] ([Username]);
+    END;
 END;
 GO
 
@@ -394,7 +433,10 @@ BEGIN
           AND [object_id] = OBJECT_ID(N'departments')
     )
     BEGIN
-        CREATE INDEX [IX_departments_institution_type] ON [departments] ([InstitutionType]);
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_institution_type' AND [object_id] = OBJECT_ID(N'[departments]'))
+        BEGIN
+            CREATE INDEX [IX_departments_institution_type] ON [departments] ([InstitutionType]);
+        END;
     END;
 END;
 GO
@@ -443,48 +485,72 @@ BEGIN
           AND [object_id] = OBJECT_ID(N'academic_programs')
     )
     BEGIN
-        CREATE UNIQUE INDEX [IX_academic_programs_code_dept] ON [academic_programs] ([Code], [DepartmentId]);
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_programs_code_dept' AND [object_id] = OBJECT_ID(N'[academic_programs]'))
+        BEGIN
+            CREATE UNIQUE INDEX [IX_academic_programs_code_dept] ON [academic_programs] ([Code], [DepartmentId]);
+        END;
     END;
 
     IF OBJECT_ID(N'[academic_programs]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_programs_dept_active' AND [object_id] = OBJECT_ID(N'academic_programs'))
-        CREATE INDEX [IX_academic_programs_dept_active] ON [academic_programs] ([DepartmentId], [IsActive]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_programs_dept_active' AND [object_id] = OBJECT_ID(N'[academic_programs]'))
+        BEGIN
+            CREATE INDEX [IX_academic_programs_dept_active] ON [academic_programs] ([DepartmentId], [IsActive]);
+        END;
     IF OBJECT_ID(N'[courses]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_dept_active' AND [object_id] = OBJECT_ID(N'courses'))
-        CREATE INDEX [IX_courses_dept_active] ON [courses] ([DepartmentId], [IsActive]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_dept_active' AND [object_id] = OBJECT_ID(N'[courses]'))
+        BEGIN
+            CREATE INDEX [IX_courses_dept_active] ON [courses] ([DepartmentId], [IsActive]);
+        END;
     IF OBJECT_ID(N'[course_offerings]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_semester_open' AND [object_id] = OBJECT_ID(N'course_offerings'))
-        CREATE INDEX [IX_course_offerings_semester_open] ON [course_offerings] ([SemesterId], [IsOpen]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_semester_open' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
+        BEGIN
+            CREATE INDEX [IX_course_offerings_semester_open] ON [course_offerings] ([SemesterId], [IsOpen]);
+        END;
     IF OBJECT_ID(N'[course_offerings]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_faculty_open' AND [object_id] = OBJECT_ID(N'course_offerings'))
-        CREATE INDEX [IX_course_offerings_faculty_open] ON [course_offerings] ([FacultyUserId], [IsOpen]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_faculty_open' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
+        BEGIN
+            CREATE INDEX [IX_course_offerings_faculty_open] ON [course_offerings] ([FacultyUserId], [IsOpen]);
+        END;
     IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_dept_status' AND [object_id] = OBJECT_ID(N'student_profiles'))
-        CREATE INDEX [IX_student_profiles_dept_status] ON [student_profiles] ([DepartmentId], [Status]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_dept_status' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+        BEGIN
+            CREATE INDEX [IX_student_profiles_dept_status] ON [student_profiles] ([DepartmentId], [Status]);
+        END;
     IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_program_status' AND [object_id] = OBJECT_ID(N'student_profiles'))
-        CREATE INDEX [IX_student_profiles_program_status] ON [student_profiles] ([ProgramId], [Status]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_program_status' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+        BEGIN
+            CREATE INDEX [IX_student_profiles_program_status] ON [student_profiles] ([ProgramId], [Status]);
+        END;
     IF OBJECT_ID(N'[enrollments]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_offering_status' AND [object_id] = OBJECT_ID(N'enrollments'))
-        CREATE INDEX [IX_enrollments_offering_status] ON [enrollments] ([CourseOfferingId], [Status]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_offering_status' AND [object_id] = OBJECT_ID(N'[enrollments]'))
+        BEGIN
+            CREATE INDEX [IX_enrollments_offering_status] ON [enrollments] ([CourseOfferingId], [Status]);
+        END;
     IF OBJECT_ID(N'[enrollments]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_student_status' AND [object_id] = OBJECT_ID(N'enrollments'))
-        CREATE INDEX [IX_enrollments_student_status] ON [enrollments] ([StudentProfileId], [Status]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_student_status' AND [object_id] = OBJECT_ID(N'[enrollments]'))
+        BEGIN
+            CREATE INDEX [IX_enrollments_student_status] ON [enrollments] ([StudentProfileId], [Status]);
+        END;
     IF OBJECT_ID(N'[faculty_department_assignments]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_faculty_dept_assignments_active_lookup' AND [object_id] = OBJECT_ID(N'faculty_department_assignments'))
-        CREATE INDEX [IX_faculty_dept_assignments_active_lookup] ON [faculty_department_assignments] ([FacultyUserId], [RemovedAt], [DepartmentId]);
-
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_faculty_dept_assignments_active_lookup' AND [object_id] = OBJECT_ID(N'[faculty_department_assignments]'))
+        BEGIN
+            CREATE INDEX [IX_faculty_dept_assignments_active_lookup] ON [faculty_department_assignments] ([FacultyUserId], [RemovedAt], [DepartmentId]);
+        END;
     IF OBJECT_ID(N'[admin_department_assignments]') IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_admin_dept_assignments_active_lookup' AND [object_id] = OBJECT_ID(N'admin_department_assignments'))
-        CREATE INDEX [IX_admin_dept_assignments_active_lookup] ON [admin_department_assignments] ([AdminUserId], [RemovedAt], [DepartmentId]);
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_admin_dept_assignments_active_lookup' AND [object_id] = OBJECT_ID(N'[admin_department_assignments]'))
+        BEGIN
+            CREATE INDEX [IX_admin_dept_assignments_active_lookup] ON [admin_department_assignments] ([AdminUserId], [RemovedAt], [DepartmentId]);
+        END;
 END;
 GO
 
@@ -691,7 +757,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_academic_programs_code] ON [academic_programs] ([Code]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_programs_code' AND [object_id] = OBJECT_ID(N'[academic_programs]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_academic_programs_code] ON [academic_programs] ([Code]);
+    END;
 END;
 GO
 
@@ -700,7 +769,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_academic_programs_DepartmentId] ON [academic_programs] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_programs_DepartmentId' AND [object_id] = OBJECT_ID(N'[academic_programs]'))
+    BEGIN
+        CREATE INDEX [IX_academic_programs_DepartmentId] ON [academic_programs] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -709,7 +781,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_course_offerings_course_semester] ON [course_offerings] ([CourseId], [SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_course_semester' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_course_offerings_course_semester] ON [course_offerings] ([CourseId], [SemesterId]);
+    END;
 END;
 GO
 
@@ -718,7 +793,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_course_offerings_SemesterId] ON [course_offerings] ([SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_SemesterId' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
+    BEGIN
+        CREATE INDEX [IX_course_offerings_SemesterId] ON [course_offerings] ([SemesterId]);
+    END;
 END;
 GO
 
@@ -727,7 +805,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_courses_code_dept] ON [courses] ([Code], [DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_code_dept' AND [object_id] = OBJECT_ID(N'[courses]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_courses_code_dept] ON [courses] ([Code], [DepartmentId]);
+    END;
 END;
 GO
 
@@ -736,7 +817,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_courses_DepartmentId] ON [courses] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_DepartmentId' AND [object_id] = OBJECT_ID(N'[courses]'))
+    BEGIN
+        CREATE INDEX [IX_courses_DepartmentId] ON [courses] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -745,7 +829,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_enrollments_CourseOfferingId] ON [enrollments] ([CourseOfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_CourseOfferingId' AND [object_id] = OBJECT_ID(N'[enrollments]'))
+    BEGIN
+        CREATE INDEX [IX_enrollments_CourseOfferingId] ON [enrollments] ([CourseOfferingId]);
+    END;
 END;
 GO
 
@@ -754,7 +841,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_enrollments_student_offering] ON [enrollments] ([StudentProfileId], [CourseOfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_enrollments_student_offering' AND [object_id] = OBJECT_ID(N'[enrollments]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_enrollments_student_offering] ON [enrollments] ([StudentProfileId], [CourseOfferingId]);
+    END;
 END;
 GO
 
@@ -763,7 +853,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_faculty_department_assignments_DepartmentId] ON [faculty_department_assignments] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_faculty_department_assignments_DepartmentId' AND [object_id] = OBJECT_ID(N'[faculty_department_assignments]'))
+    BEGIN
+        CREATE INDEX [IX_faculty_department_assignments_DepartmentId] ON [faculty_department_assignments] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -772,7 +865,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_faculty_dept_assignments_faculty_dept] ON [faculty_department_assignments] ([FacultyUserId], [DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_faculty_dept_assignments_faculty_dept' AND [object_id] = OBJECT_ID(N'[faculty_department_assignments]'))
+    BEGIN
+        CREATE INDEX [IX_faculty_dept_assignments_faculty_dept] ON [faculty_department_assignments] ([FacultyUserId], [DepartmentId]);
+    END;
 END;
 GO
 
@@ -781,7 +877,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_registration_whitelist_identifier] ON [registration_whitelist] ([IdentifierValue]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_registration_whitelist_identifier' AND [object_id] = OBJECT_ID(N'[registration_whitelist]'))
+    BEGIN
+        CREATE INDEX [IX_registration_whitelist_identifier] ON [registration_whitelist] ([IdentifierValue]);
+    END;
 END;
 GO
 
@@ -790,7 +889,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_student_profiles_DepartmentId] ON [student_profiles] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_DepartmentId' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+    BEGIN
+        CREATE INDEX [IX_student_profiles_DepartmentId] ON [student_profiles] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -799,7 +901,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE INDEX [IX_student_profiles_ProgramId] ON [student_profiles] ([ProgramId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_ProgramId' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+    BEGIN
+        CREATE INDEX [IX_student_profiles_ProgramId] ON [student_profiles] ([ProgramId]);
+    END;
 END;
 GO
 
@@ -808,7 +913,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_student_profiles_reg_no] ON [student_profiles] ([RegistrationNumber]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_reg_no' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_student_profiles_reg_no] ON [student_profiles] ([RegistrationNumber]);
+    END;
 END;
 GO
 
@@ -817,7 +925,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_student_profiles_user_id] ON [student_profiles] ([UserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_profiles_user_id' AND [object_id] = OBJECT_ID(N'[student_profiles]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_student_profiles_user_id] ON [student_profiles] ([UserId]);
+    END;
 END;
 GO
 
@@ -936,7 +1047,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429005740_AssignmentsAndResults'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_assignment_submissions_assignment_student] ON [assignment_submissions] ([AssignmentId], [StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_assignment_submissions_assignment_student' AND [object_id] = OBJECT_ID(N'[assignment_submissions]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_assignment_submissions_assignment_student] ON [assignment_submissions] ([AssignmentId], [StudentProfileId]);
+    END;
 END;
 GO
 
@@ -945,7 +1059,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429005740_AssignmentsAndResults'
 )
 BEGIN
-    CREATE INDEX [IX_assignments_offering_id] ON [assignments] ([CourseOfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_assignments_offering_id' AND [object_id] = OBJECT_ID(N'[assignments]'))
+    BEGIN
+        CREATE INDEX [IX_assignments_offering_id] ON [assignments] ([CourseOfferingId]);
+    END;
 END;
 GO
 
@@ -954,7 +1071,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429005740_AssignmentsAndResults'
 )
 BEGIN
-    CREATE INDEX [IX_results_offering_id] ON [results] ([CourseOfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_results_offering_id' AND [object_id] = OBJECT_ID(N'[results]'))
+    BEGIN
+        CREATE INDEX [IX_results_offering_id] ON [results] ([CourseOfferingId]);
+    END;
 END;
 GO
 
@@ -963,7 +1083,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429005740_AssignmentsAndResults'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_results_student_offering_type] ON [results] ([StudentProfileId], [CourseOfferingId], [ResultType]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_results_student_offering_type' AND [object_id] = OBJECT_ID(N'[results]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_results_student_offering_type] ON [results] ([StudentProfileId], [CourseOfferingId], [ResultType]);
+    END;
 END;
 GO
 
@@ -972,7 +1095,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429005740_AssignmentsAndResults'
 )
 BEGIN
-    CREATE INDEX [IX_transcript_export_logs_student_id] ON [transcript_export_logs] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_transcript_export_logs_student_id' AND [object_id] = OBJECT_ID(N'[transcript_export_logs]'))
+    BEGIN
+        CREATE INDEX [IX_transcript_export_logs_student_id] ON [transcript_export_logs] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -1059,7 +1185,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE INDEX [IX_attendance_offering_date] ON [attendance_records] ([CourseOfferingId], [Date]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_offering_date' AND [object_id] = OBJECT_ID(N'[attendance_records]'))
+    BEGIN
+        CREATE INDEX [IX_attendance_offering_date] ON [attendance_records] ([CourseOfferingId], [Date]);
+    END;
 END;
 GO
 
@@ -1068,7 +1197,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE INDEX [IX_attendance_student_id] ON [attendance_records] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_id' AND [object_id] = OBJECT_ID(N'[attendance_records]'))
+    BEGIN
+        CREATE INDEX [IX_attendance_student_id] ON [attendance_records] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -1077,7 +1209,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_attendance_student_offering_date] ON [attendance_records] ([StudentProfileId], [CourseOfferingId], [Date]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_offering_date' AND [object_id] = OBJECT_ID(N'[attendance_records]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_attendance_student_offering_date] ON [attendance_records] ([StudentProfileId], [CourseOfferingId], [Date]);
+    END;
 END;
 GO
 
@@ -1086,7 +1221,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_notification_recipients_notification_user] ON [notification_recipients] ([NotificationId], [RecipientUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_notification_recipients_notification_user' AND [object_id] = OBJECT_ID(N'[notification_recipients]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_notification_recipients_notification_user] ON [notification_recipients] ([NotificationId], [RecipientUserId]);
+    END;
 END;
 GO
 
@@ -1095,7 +1233,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE INDEX [IX_notification_recipients_user_read] ON [notification_recipients] ([RecipientUserId], [IsRead]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_notification_recipients_user_read' AND [object_id] = OBJECT_ID(N'[notification_recipients]'))
+    BEGIN
+        CREATE INDEX [IX_notification_recipients_user_read] ON [notification_recipients] ([RecipientUserId], [IsRead]);
+    END;
 END;
 GO
 
@@ -1104,7 +1245,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE INDEX [IX_notifications_sender_id] ON [notifications] ([SenderUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_notifications_sender_id' AND [object_id] = OBJECT_ID(N'[notifications]'))
+    BEGIN
+        CREATE INDEX [IX_notifications_sender_id] ON [notifications] ([SenderUserId]);
+    END;
 END;
 GO
 
@@ -1113,7 +1257,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429011542_NotificationsAndAttendance'
 )
 BEGIN
-    CREATE INDEX [IX_notifications_type] ON [notifications] ([Type]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_notifications_type' AND [object_id] = OBJECT_ID(N'[notifications]'))
+    BEGIN
+        CREATE INDEX [IX_notifications_type] ON [notifications] ([Type]);
+    END;
 END;
 GO
 
@@ -1314,7 +1461,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_meetings_FypProjectId_ScheduledAt] ON [fyp_meetings] ([FypProjectId], [ScheduledAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_meetings_FypProjectId_ScheduledAt' AND [object_id] = OBJECT_ID(N'[fyp_meetings]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_meetings_FypProjectId_ScheduledAt] ON [fyp_meetings] ([FypProjectId], [ScheduledAt]);
+    END;
 END;
 GO
 
@@ -1323,7 +1473,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_meetings_OrganiserUserId_Status] ON [fyp_meetings] ([OrganiserUserId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_meetings_OrganiserUserId_Status' AND [object_id] = OBJECT_ID(N'[fyp_meetings]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_meetings_OrganiserUserId_Status] ON [fyp_meetings] ([OrganiserUserId], [Status]);
+    END;
 END;
 GO
 
@@ -1332,7 +1485,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_fyp_panel_members_FypProjectId_UserId_Role] ON [fyp_panel_members] ([FypProjectId], [UserId], [Role]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_panel_members_FypProjectId_UserId_Role' AND [object_id] = OBJECT_ID(N'[fyp_panel_members]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_fyp_panel_members_FypProjectId_UserId_Role] ON [fyp_panel_members] ([FypProjectId], [UserId], [Role]);
+    END;
 END;
 GO
 
@@ -1341,7 +1497,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_panel_members_UserId] ON [fyp_panel_members] ([UserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_panel_members_UserId' AND [object_id] = OBJECT_ID(N'[fyp_panel_members]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_panel_members_UserId] ON [fyp_panel_members] ([UserId]);
+    END;
 END;
 GO
 
@@ -1350,7 +1509,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_projects_DepartmentId_Status] ON [fyp_projects] ([DepartmentId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_projects_DepartmentId_Status' AND [object_id] = OBJECT_ID(N'[fyp_projects]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_projects_DepartmentId_Status] ON [fyp_projects] ([DepartmentId], [Status]);
+    END;
 END;
 GO
 
@@ -1359,7 +1521,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_projects_StudentProfileId] ON [fyp_projects] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_projects_StudentProfileId' AND [object_id] = OBJECT_ID(N'[fyp_projects]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_projects_StudentProfileId] ON [fyp_projects] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -1368,7 +1533,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_fyp_projects_SupervisorUserId] ON [fyp_projects] ([SupervisorUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_fyp_projects_SupervisorUserId' AND [object_id] = OBJECT_ID(N'[fyp_projects]'))
+    BEGIN
+        CREATE INDEX [IX_fyp_projects_SupervisorUserId] ON [fyp_projects] ([SupervisorUserId]);
+    END;
 END;
 GO
 
@@ -1377,7 +1545,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_quiz_answers_QuizAttemptId_QuizQuestionId] ON [quiz_answers] ([QuizAttemptId], [QuizQuestionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_answers_QuizAttemptId_QuizQuestionId' AND [object_id] = OBJECT_ID(N'[quiz_answers]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_quiz_answers_QuizAttemptId_QuizQuestionId] ON [quiz_answers] ([QuizAttemptId], [QuizQuestionId]);
+    END;
 END;
 GO
 
@@ -1386,7 +1557,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_answers_QuizQuestionId] ON [quiz_answers] ([QuizQuestionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_answers_QuizQuestionId' AND [object_id] = OBJECT_ID(N'[quiz_answers]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_answers_QuizQuestionId] ON [quiz_answers] ([QuizQuestionId]);
+    END;
 END;
 GO
 
@@ -1395,7 +1569,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_attempts_QuizId_StudentProfileId_Status] ON [quiz_attempts] ([QuizId], [StudentProfileId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_attempts_QuizId_StudentProfileId_Status' AND [object_id] = OBJECT_ID(N'[quiz_attempts]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_attempts_QuizId_StudentProfileId_Status] ON [quiz_attempts] ([QuizId], [StudentProfileId], [Status]);
+    END;
 END;
 GO
 
@@ -1404,7 +1581,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_attempts_StudentProfileId] ON [quiz_attempts] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_attempts_StudentProfileId' AND [object_id] = OBJECT_ID(N'[quiz_attempts]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_attempts_StudentProfileId] ON [quiz_attempts] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -1413,7 +1593,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_options_QuizQuestionId_OrderIndex] ON [quiz_options] ([QuizQuestionId], [OrderIndex]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_options_QuizQuestionId_OrderIndex' AND [object_id] = OBJECT_ID(N'[quiz_options]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_options_QuizQuestionId_OrderIndex] ON [quiz_options] ([QuizQuestionId], [OrderIndex]);
+    END;
 END;
 GO
 
@@ -1422,7 +1605,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_questions_QuizId_OrderIndex] ON [quiz_questions] ([QuizId], [OrderIndex]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_questions_QuizId_OrderIndex' AND [object_id] = OBJECT_ID(N'[quiz_questions]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_questions_QuizId_OrderIndex] ON [quiz_questions] ([QuizId], [OrderIndex]);
+    END;
 END;
 GO
 
@@ -1431,7 +1617,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_questions_QuizId1] ON [quiz_questions] ([QuizId1]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_questions_QuizId1' AND [object_id] = OBJECT_ID(N'[quiz_questions]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_questions_QuizId1] ON [quiz_questions] ([QuizId1]);
+    END;
 END;
 GO
 
@@ -1440,7 +1629,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quizzes_CourseOfferingId] ON [quizzes] ([CourseOfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quizzes_CourseOfferingId' AND [object_id] = OBJECT_ID(N'[quizzes]'))
+    BEGIN
+        CREATE INDEX [IX_quizzes_CourseOfferingId] ON [quizzes] ([CourseOfferingId]);
+    END;
 END;
 GO
 
@@ -1449,7 +1641,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429013621_QuizzesAndFyp'
 )
 BEGIN
-    CREATE INDEX [IX_quizzes_CourseOfferingId_IsPublished] ON [quizzes] ([CourseOfferingId], [IsPublished]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quizzes_CourseOfferingId_IsPublished' AND [object_id] = OBJECT_ID(N'[quizzes]'))
+    BEGIN
+        CREATE INDEX [IX_quizzes_CourseOfferingId_IsPublished] ON [quizzes] ([CourseOfferingId], [IsPublished]);
+    END;
 END;
 GO
 
@@ -1508,7 +1703,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429035351_AiAndAnalytics'
 )
 BEGIN
-    CREATE INDEX [IX_chat_conversations_UserId] ON [chat_conversations] ([UserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_chat_conversations_UserId' AND [object_id] = OBJECT_ID(N'[chat_conversations]'))
+    BEGIN
+        CREATE INDEX [IX_chat_conversations_UserId] ON [chat_conversations] ([UserId]);
+    END;
 END;
 GO
 
@@ -1517,7 +1715,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429035351_AiAndAnalytics'
 )
 BEGIN
-    CREATE INDEX [IX_chat_conversations_UserId_StartedAt] ON [chat_conversations] ([UserId], [StartedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_chat_conversations_UserId_StartedAt' AND [object_id] = OBJECT_ID(N'[chat_conversations]'))
+    BEGIN
+        CREATE INDEX [IX_chat_conversations_UserId_StartedAt] ON [chat_conversations] ([UserId], [StartedAt]);
+    END;
 END;
 GO
 
@@ -1526,7 +1727,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429035351_AiAndAnalytics'
 )
 BEGIN
-    CREATE INDEX [IX_chat_messages_ConversationId] ON [chat_messages] ([ConversationId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_chat_messages_ConversationId' AND [object_id] = OBJECT_ID(N'[chat_messages]'))
+    BEGIN
+        CREATE INDEX [IX_chat_messages_ConversationId] ON [chat_messages] ([ConversationId]);
+    END;
 END;
 GO
 
@@ -1535,7 +1739,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429035351_AiAndAnalytics'
 )
 BEGIN
-    CREATE INDEX [IX_chat_messages_ConversationId_SentAt] ON [chat_messages] ([ConversationId], [SentAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_chat_messages_ConversationId_SentAt' AND [object_id] = OBJECT_ID(N'[chat_messages]'))
+    BEGIN
+        CREATE INDEX [IX_chat_messages_ConversationId_SentAt] ON [chat_messages] ([ConversationId], [SentAt]);
+    END;
 END;
 GO
 
@@ -1577,7 +1784,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429041941_VerificationKeys'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_consumed_verification_keys_KeyHash] ON [consumed_verification_keys] ([KeyHash]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_consumed_verification_keys_KeyHash' AND [object_id] = OBJECT_ID(N'[consumed_verification_keys]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_consumed_verification_keys_KeyHash] ON [consumed_verification_keys] ([KeyHash]);
+    END;
 END;
 GO
 
@@ -1733,7 +1943,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_acr_requestor_status] ON [admin_change_requests] ([RequestorUserId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_acr_requestor_status' AND [object_id] = OBJECT_ID(N'[admin_change_requests]'))
+    BEGIN
+        CREATE INDEX [ix_acr_requestor_status] ON [admin_change_requests] ([RequestorUserId], [Status]);
+    END;
 END;
 GO
 
@@ -1742,7 +1955,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_acr_requestor_user_id] ON [admin_change_requests] ([RequestorUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_acr_requestor_user_id' AND [object_id] = OBJECT_ID(N'[admin_change_requests]'))
+    BEGIN
+        CREATE INDEX [ix_acr_requestor_user_id] ON [admin_change_requests] ([RequestorUserId]);
+    END;
 END;
 GO
 
@@ -1751,7 +1967,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_acr_status] ON [admin_change_requests] ([Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_acr_status' AND [object_id] = OBJECT_ID(N'[admin_change_requests]'))
+    BEGIN
+        CREATE INDEX [ix_acr_status] ON [admin_change_requests] ([Status]);
+    END;
 END;
 GO
 
@@ -1760,7 +1979,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [IX_admin_change_requests_ReviewedByUserId] ON [admin_change_requests] ([ReviewedByUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_admin_change_requests_ReviewedByUserId' AND [object_id] = OBJECT_ID(N'[admin_change_requests]'))
+    BEGIN
+        CREATE INDEX [IX_admin_change_requests_ReviewedByUserId] ON [admin_change_requests] ([ReviewedByUserId]);
+    END;
 END;
 GO
 
@@ -1769,7 +1991,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [IX_payment_receipts_ConfirmedByUserId] ON [payment_receipts] ([ConfirmedByUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_payment_receipts_ConfirmedByUserId' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [IX_payment_receipts_ConfirmedByUserId] ON [payment_receipts] ([ConfirmedByUserId]);
+    END;
 END;
 GO
 
@@ -1778,7 +2003,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [IX_payment_receipts_CreatedByUserId] ON [payment_receipts] ([CreatedByUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_payment_receipts_CreatedByUserId' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [IX_payment_receipts_CreatedByUserId] ON [payment_receipts] ([CreatedByUserId]);
+    END;
 END;
 GO
 
@@ -1787,7 +2015,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_pr_due_date] ON [payment_receipts] ([DueDate]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_due_date' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_due_date] ON [payment_receipts] ([DueDate]);
+    END;
 END;
 GO
 
@@ -1796,7 +2027,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_pr_status] ON [payment_receipts] ([Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_status' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_status] ON [payment_receipts] ([Status]);
+    END;
 END;
 GO
 
@@ -1805,7 +2039,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_pr_student_profile_id] ON [payment_receipts] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_student_profile_id' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_student_profile_id] ON [payment_receipts] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -1814,7 +2051,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_pr_student_status] ON [payment_receipts] ([StudentProfileId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_student_status' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_student_status] ON [payment_receipts] ([StudentProfileId], [Status]);
+    END;
 END;
 GO
 
@@ -1823,7 +2063,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [IX_teacher_modification_requests_ReviewedByUserId] ON [teacher_modification_requests] ([ReviewedByUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_teacher_modification_requests_ReviewedByUserId' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [IX_teacher_modification_requests_ReviewedByUserId] ON [teacher_modification_requests] ([ReviewedByUserId]);
+    END;
 END;
 GO
 
@@ -1832,7 +2075,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_tmr_modification_type] ON [teacher_modification_requests] ([ModificationType]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_tmr_modification_type' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [ix_tmr_modification_type] ON [teacher_modification_requests] ([ModificationType]);
+    END;
 END;
 GO
 
@@ -1841,7 +2087,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_tmr_record_id] ON [teacher_modification_requests] ([RecordId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_tmr_record_id' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [ix_tmr_record_id] ON [teacher_modification_requests] ([RecordId]);
+    END;
 END;
 GO
 
@@ -1850,7 +2099,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_tmr_status] ON [teacher_modification_requests] ([Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_tmr_status' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [ix_tmr_status] ON [teacher_modification_requests] ([Status]);
+    END;
 END;
 GO
 
@@ -1859,7 +2111,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_tmr_teacher_status] ON [teacher_modification_requests] ([TeacherUserId], [Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_tmr_teacher_status' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [ix_tmr_teacher_status] ON [teacher_modification_requests] ([TeacherUserId], [Status]);
+    END;
 END;
 GO
 
@@ -1868,7 +2123,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429043652_StudentLifecycle'
 )
 BEGIN
-    CREATE INDEX [ix_tmr_teacher_user_id] ON [teacher_modification_requests] ([TeacherUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_tmr_teacher_user_id' AND [object_id] = OBJECT_ID(N'[teacher_modification_requests]'))
+    BEGIN
+        CREATE INDEX [ix_tmr_teacher_user_id] ON [teacher_modification_requests] ([TeacherUserId]);
+    END;
 END;
 GO
 
@@ -1923,7 +2181,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429045706_AccountLockout'
 )
 BEGIN
-    EXEC(N'CREATE INDEX [IX_users_is_locked_out] ON [users] ([IsLockedOut]) WHERE [IsLockedOut] = 1');
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_is_locked_out' AND [object_id] = OBJECT_ID(N'[users]'))
+    BEGIN
+        EXEC(N'CREATE INDEX [IX_users_is_locked_out] ON [users] ([IsLockedOut]) WHERE [IsLockedOut] = 1');
+    END;
 END;
 GO
 
@@ -2062,7 +2323,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_module_role_assignments_unique] ON [module_role_assignments] ([ModuleId], [RoleName]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_module_role_assignments_unique' AND [object_id] = OBJECT_ID(N'[module_role_assignments]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_module_role_assignments_unique] ON [module_role_assignments] ([ModuleId], [RoleName]);
+    END;
 END;
 GO
 
@@ -2071,7 +2335,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_report_definitions_key] ON [report_definitions] ([Key]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_report_definitions_key' AND [object_id] = OBJECT_ID(N'[report_definitions]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_report_definitions_key] ON [report_definitions] ([Key]);
+    END;
 END;
 GO
 
@@ -2080,7 +2347,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_report_role_assignments_unique] ON [report_role_assignments] ([ReportDefinitionId], [RoleName]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_report_role_assignments_unique' AND [object_id] = OBJECT_ID(N'[report_role_assignments]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_report_role_assignments_unique] ON [report_role_assignments] ([ReportDefinitionId], [RoleName]);
+    END;
 END;
 GO
 
@@ -2089,7 +2359,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE INDEX [IX_timetable_entries_timetable_day] ON [timetable_entries] ([TimetableId], [DayOfWeek]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetable_entries_timetable_day' AND [object_id] = OBJECT_ID(N'[timetable_entries]'))
+    BEGIN
+        CREATE INDEX [IX_timetable_entries_timetable_day] ON [timetable_entries] ([TimetableId], [DayOfWeek]);
+    END;
 END;
 GO
 
@@ -2098,7 +2371,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE INDEX [IX_timetables_dept_semester] ON [timetables] ([DepartmentId], [SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetables_dept_semester' AND [object_id] = OBJECT_ID(N'[timetables]'))
+    BEGIN
+        CREATE INDEX [IX_timetables_dept_semester] ON [timetables] ([DepartmentId], [SemesterId]);
+    END;
 END;
 GO
 
@@ -2107,7 +2383,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429223425_Phase9DashboardSettings'
 )
 BEGIN
-    CREATE INDEX [IX_timetables_SemesterId] ON [timetables] ([SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetables_SemesterId' AND [object_id] = OBJECT_ID(N'[timetables]'))
+    BEGIN
+        CREATE INDEX [IX_timetables_SemesterId] ON [timetables] ([SemesterId]);
+    END;
 END;
 GO
 
@@ -2261,7 +2540,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetables_AcademicProgramId] ON [timetables] ([AcademicProgramId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetables_AcademicProgramId' AND [object_id] = OBJECT_ID(N'[timetables]'))
+    BEGIN
+        CREATE INDEX [IX_timetables_AcademicProgramId] ON [timetables] ([AcademicProgramId]);
+    END;
 END;
 GO
 
@@ -2270,7 +2552,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetables_dept_program_semester] ON [timetables] ([DepartmentId], [AcademicProgramId], [SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetables_dept_program_semester' AND [object_id] = OBJECT_ID(N'[timetables]'))
+    BEGIN
+        CREATE INDEX [IX_timetables_dept_program_semester] ON [timetables] ([DepartmentId], [AcademicProgramId], [SemesterId]);
+    END;
 END;
 GO
 
@@ -2279,7 +2564,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetable_entries_BuildingId] ON [timetable_entries] ([BuildingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetable_entries_BuildingId' AND [object_id] = OBJECT_ID(N'[timetable_entries]'))
+    BEGIN
+        CREATE INDEX [IX_timetable_entries_BuildingId] ON [timetable_entries] ([BuildingId]);
+    END;
 END;
 GO
 
@@ -2288,7 +2576,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetable_entries_CourseId] ON [timetable_entries] ([CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetable_entries_CourseId' AND [object_id] = OBJECT_ID(N'[timetable_entries]'))
+    BEGIN
+        CREATE INDEX [IX_timetable_entries_CourseId] ON [timetable_entries] ([CourseId]);
+    END;
 END;
 GO
 
@@ -2297,7 +2588,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetable_entries_faculty_user] ON [timetable_entries] ([FacultyUserId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetable_entries_faculty_user' AND [object_id] = OBJECT_ID(N'[timetable_entries]'))
+    BEGIN
+        CREATE INDEX [IX_timetable_entries_faculty_user] ON [timetable_entries] ([FacultyUserId]);
+    END;
 END;
 GO
 
@@ -2306,7 +2600,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE INDEX [IX_timetable_entries_RoomId] ON [timetable_entries] ([RoomId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_timetable_entries_RoomId' AND [object_id] = OBJECT_ID(N'[timetable_entries]'))
+    BEGIN
+        CREATE INDEX [IX_timetable_entries_RoomId] ON [timetable_entries] ([RoomId]);
+    END;
 END;
 GO
 
@@ -2315,7 +2612,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_buildings_code] ON [buildings] ([Code]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_buildings_code' AND [object_id] = OBJECT_ID(N'[buildings]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_buildings_code] ON [buildings] ([Code]);
+    END;
 END;
 GO
 
@@ -2324,7 +2624,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_rooms_building_number] ON [rooms] ([BuildingId], [Number]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rooms_building_number' AND [object_id] = OBJECT_ID(N'[rooms]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_rooms_building_number] ON [rooms] ([BuildingId], [Number]);
+    END;
 END;
 GO
 
@@ -2438,7 +2741,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430000234_Phase9SidebarSettings'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_sidebar_menu_items_key] ON [sidebar_menu_items] ([Key]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_sidebar_menu_items_key' AND [object_id] = OBJECT_ID(N'[sidebar_menu_items]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_sidebar_menu_items_key] ON [sidebar_menu_items] ([Key]);
+    END;
 END;
 GO
 
@@ -2447,7 +2753,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430000234_Phase9SidebarSettings'
 )
 BEGIN
-    CREATE INDEX [IX_sidebar_menu_items_ParentId] ON [sidebar_menu_items] ([ParentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_sidebar_menu_items_ParentId' AND [object_id] = OBJECT_ID(N'[sidebar_menu_items]'))
+    BEGIN
+        CREATE INDEX [IX_sidebar_menu_items_ParentId] ON [sidebar_menu_items] ([ParentId]);
+    END;
 END;
 GO
 
@@ -2456,7 +2765,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430000234_Phase9SidebarSettings'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_sidebar_menu_role_accesses_item_role] ON [sidebar_menu_role_accesses] ([SidebarMenuItemId], [RoleName]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_sidebar_menu_role_accesses_item_role' AND [object_id] = OBJECT_ID(N'[sidebar_menu_role_accesses]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_sidebar_menu_role_accesses_item_role] ON [sidebar_menu_role_accesses] ([SidebarMenuItemId], [RoleName]);
+    END;
 END;
 GO
 
@@ -2481,7 +2793,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430045628_Phase10PerformanceIndexes'
 )
 BEGIN
-    CREATE INDEX [IX_audit_logs_entity_occurred_at] ON [audit_logs] ([EntityName], [OccurredAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_entity_occurred_at' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_entity_occurred_at] ON [audit_logs] ([EntityName], [OccurredAt]);
+    END;
 END;
 GO
 
@@ -2490,7 +2805,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430045628_Phase10PerformanceIndexes'
 )
 BEGIN
-    CREATE INDEX [IX_assignments_offering_published] ON [assignments] ([CourseOfferingId], [IsPublished]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_assignments_offering_published' AND [object_id] = OBJECT_ID(N'[assignments]'))
+    BEGIN
+        CREATE INDEX [IX_assignments_offering_published] ON [assignments] ([CourseOfferingId], [IsPublished]);
+    END;
 END;
 GO
 
@@ -2547,7 +2865,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430141918_Phase10SecurityTables'
 )
 BEGIN
-    CREATE INDEX [IX_outbound_email_logs_status_attempted] ON [outbound_email_logs] ([Status], [AttemptedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_outbound_email_logs_status_attempted' AND [object_id] = OBJECT_ID(N'[outbound_email_logs]'))
+    BEGIN
+        CREATE INDEX [IX_outbound_email_logs_status_attempted] ON [outbound_email_logs] ([Status], [AttemptedAt]);
+    END;
 END;
 GO
 
@@ -2556,7 +2877,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260430141918_Phase10SecurityTables'
 )
 BEGIN
-    CREATE INDEX [IX_password_history_user_created] ON [password_history] ([UserId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_password_history_user_created' AND [object_id] = OBJECT_ID(N'[password_history]'))
+    BEGIN
+        CREATE INDEX [IX_password_history_user_created] ON [password_history] ([UserId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -2800,7 +3124,10 @@ BEGIN
     WHERE ([d].[parent_object_id] = OBJECT_ID(N'[results]') AND [c].[name] = N'ResultType');
     IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [results] DROP CONSTRAINT [' + @var3 + '];');
     ALTER TABLE [results] ALTER COLUMN [ResultType] nvarchar(100) NOT NULL;
-    CREATE UNIQUE INDEX [IX_results_student_offering_type] ON [results] ([StudentProfileId], [CourseOfferingId], [ResultType]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_results_student_offering_type' AND [object_id] = OBJECT_ID(N'[results]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_results_student_offering_type] ON [results] ([StudentProfileId], [CourseOfferingId], [ResultType]);
+    END;
 END;
 GO
 
@@ -2855,7 +3182,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260502134611_Phase11ResultCalculation'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_gpa_scale_rules_minimum_score] ON [gpa_scale_rules] ([MinimumScore]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_minimum_score' AND [object_id] = OBJECT_ID(N'[gpa_scale_rules]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_gpa_scale_rules_minimum_score] ON [gpa_scale_rules] ([MinimumScore]);
+    END;
 END;
 GO
 
@@ -2864,7 +3194,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260502134611_Phase11ResultCalculation'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_result_component_rules_name] ON [result_component_rules] ([Name]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_name' AND [object_id] = OBJECT_ID(N'[result_component_rules]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_result_component_rules_name] ON [result_component_rules] ([Name]);
+    END;
 END;
 GO
 
@@ -2906,7 +3239,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260503210356_Phase1DashboardBranding'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_portal_settings_key] ON [portal_settings] ([Key]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_portal_settings_key' AND [object_id] = OBJECT_ID(N'[portal_settings]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_portal_settings_key] ON [portal_settings] ([Key]);
+    END;
 END;
 GO
 
@@ -3090,7 +3426,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260506044806_20260506_Phase6AdminDepartmentAssignments'
 )
 BEGIN
-    CREATE INDEX [IX_admin_department_assignments_DepartmentId] ON [admin_department_assignments] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_admin_department_assignments_DepartmentId' AND [object_id] = OBJECT_ID(N'[admin_department_assignments]'))
+    BEGIN
+        CREATE INDEX [IX_admin_department_assignments_DepartmentId] ON [admin_department_assignments] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -3099,7 +3438,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260506044806_20260506_Phase6AdminDepartmentAssignments'
 )
 BEGIN
-    CREATE INDEX [IX_admin_dept_assignments_admin_dept] ON [admin_department_assignments] ([AdminUserId], [DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_admin_dept_assignments_admin_dept' AND [object_id] = OBJECT_ID(N'[admin_department_assignments]'))
+    BEGIN
+        CREATE INDEX [IX_admin_dept_assignments_admin_dept] ON [admin_department_assignments] ([AdminUserId], [DepartmentId]);
+    END;
 END;
 GO
 
@@ -3149,7 +3491,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507044625_20260507_Phase12AcademicCalendar'
 )
 BEGIN
-    CREATE INDEX [IX_academic_deadlines_date_active] ON [academic_deadlines] ([DeadlineDate], [IsActive]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_deadlines_date_active' AND [object_id] = OBJECT_ID(N'[academic_deadlines]'))
+    BEGIN
+        CREATE INDEX [IX_academic_deadlines_date_active] ON [academic_deadlines] ([DeadlineDate], [IsActive]);
+    END;
 END;
 GO
 
@@ -3158,7 +3503,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507044625_20260507_Phase12AcademicCalendar'
 )
 BEGIN
-    CREATE INDEX [IX_academic_deadlines_semester] ON [academic_deadlines] ([SemesterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_academic_deadlines_semester' AND [object_id] = OBJECT_ID(N'[academic_deadlines]'))
+    BEGIN
+        CREATE INDEX [IX_academic_deadlines_semester] ON [academic_deadlines] ([SemesterId]);
+    END;
 END;
 GO
 
@@ -3229,7 +3577,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_ticket_messages_author] ON [support_ticket_messages] ([AuthorId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_ticket_messages_author' AND [object_id] = OBJECT_ID(N'[support_ticket_messages]'))
+    BEGIN
+        CREATE INDEX [IX_support_ticket_messages_author] ON [support_ticket_messages] ([AuthorId]);
+    END;
 END;
 GO
 
@@ -3238,7 +3589,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_ticket_messages_ticket] ON [support_ticket_messages] ([TicketId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_ticket_messages_ticket' AND [object_id] = OBJECT_ID(N'[support_ticket_messages]'))
+    BEGIN
+        CREATE INDEX [IX_support_ticket_messages_ticket] ON [support_ticket_messages] ([TicketId]);
+    END;
 END;
 GO
 
@@ -3247,7 +3601,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_assigned] ON [support_tickets] ([AssignedToId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_assigned' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_assigned] ON [support_tickets] ([AssignedToId]);
+    END;
 END;
 GO
 
@@ -3256,7 +3613,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_department] ON [support_tickets] ([DepartmentId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_department' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_department] ON [support_tickets] ([DepartmentId]);
+    END;
 END;
 GO
 
@@ -3265,7 +3625,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_status] ON [support_tickets] ([Status]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_status' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_status] ON [support_tickets] ([Status]);
+    END;
 END;
 GO
 
@@ -3274,7 +3637,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507055009_Phase14_Helpdesk'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_submitter] ON [support_tickets] ([SubmitterId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_submitter' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_submitter] ON [support_tickets] ([SubmitterId]);
+    END;
 END;
 GO
 
@@ -3349,7 +3715,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507133254_Phase15_EnrollmentRules'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_course_prerequisites_course_prereq] ON [course_prerequisites] ([CourseId], [PrerequisiteCourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_prerequisites_course_prereq' AND [object_id] = OBJECT_ID(N'[course_prerequisites]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_course_prerequisites_course_prereq] ON [course_prerequisites] ([CourseId], [PrerequisiteCourseId]);
+    END;
 END;
 GO
 
@@ -3358,7 +3727,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507133254_Phase15_EnrollmentRules'
 )
 BEGIN
-    CREATE INDEX [IX_course_prerequisites_PrerequisiteCourseId] ON [course_prerequisites] ([PrerequisiteCourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_prerequisites_PrerequisiteCourseId' AND [object_id] = OBJECT_ID(N'[course_prerequisites]'))
+    BEGIN
+        CREATE INDEX [IX_course_prerequisites_PrerequisiteCourseId] ON [course_prerequisites] ([PrerequisiteCourseId]);
+    END;
 END;
 GO
 
@@ -3464,7 +3836,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE INDEX [IX_rubric_criteria_rubric_id] ON [rubric_criteria] ([RubricId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubric_criteria_rubric_id' AND [object_id] = OBJECT_ID(N'[rubric_criteria]'))
+    BEGIN
+        CREATE INDEX [IX_rubric_criteria_rubric_id] ON [rubric_criteria] ([RubricId]);
+    END;
 END;
 GO
 
@@ -3473,7 +3848,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE INDEX [IX_rubric_levels_criterion_id] ON [rubric_levels] ([CriterionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubric_levels_criterion_id' AND [object_id] = OBJECT_ID(N'[rubric_levels]'))
+    BEGIN
+        CREATE INDEX [IX_rubric_levels_criterion_id] ON [rubric_levels] ([CriterionId]);
+    END;
 END;
 GO
 
@@ -3482,7 +3860,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE INDEX [IX_rubric_levels_RubricCriterionId] ON [rubric_levels] ([RubricCriterionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubric_levels_RubricCriterionId' AND [object_id] = OBJECT_ID(N'[rubric_levels]'))
+    BEGIN
+        CREATE INDEX [IX_rubric_levels_RubricCriterionId] ON [rubric_levels] ([RubricCriterionId]);
+    END;
 END;
 GO
 
@@ -3491,7 +3872,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_rubric_student_grades_submission_criterion] ON [rubric_student_grades] ([AssignmentSubmissionId], [RubricCriterionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubric_student_grades_submission_criterion' AND [object_id] = OBJECT_ID(N'[rubric_student_grades]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_rubric_student_grades_submission_criterion] ON [rubric_student_grades] ([AssignmentSubmissionId], [RubricCriterionId]);
+    END;
 END;
 GO
 
@@ -3500,7 +3884,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE INDEX [IX_rubric_student_grades_submission_id] ON [rubric_student_grades] ([AssignmentSubmissionId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubric_student_grades_submission_id' AND [object_id] = OBJECT_ID(N'[rubric_student_grades]'))
+    BEGIN
+        CREATE INDEX [IX_rubric_student_grades_submission_id] ON [rubric_student_grades] ([AssignmentSubmissionId]);
+    END;
 END;
 GO
 
@@ -3509,7 +3896,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507223356_Phase16_FacultyGrading'
 )
 BEGIN
-    CREATE INDEX [IX_rubrics_assignment_active] ON [rubrics] ([AssignmentId], [IsActive]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rubrics_assignment_active' AND [object_id] = OBJECT_ID(N'[rubrics]'))
+    BEGIN
+        CREATE INDEX [IX_rubrics_assignment_active] ON [rubrics] ([AssignmentId], [IsActive]);
+    END;
 END;
 GO
 
@@ -3585,7 +3975,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507231326_Phase17_DegreeAudit'
 )
 BEGIN
-    CREATE INDEX [IX_degree_rule_required_courses_CourseId] ON [degree_rule_required_courses] ([CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_degree_rule_required_courses_CourseId' AND [object_id] = OBJECT_ID(N'[degree_rule_required_courses]'))
+    BEGIN
+        CREATE INDEX [IX_degree_rule_required_courses_CourseId] ON [degree_rule_required_courses] ([CourseId]);
+    END;
 END;
 GO
 
@@ -3594,7 +3987,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507231326_Phase17_DegreeAudit'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_degree_rule_required_courses_rule_course] ON [degree_rule_required_courses] ([DegreeRuleId], [CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_degree_rule_required_courses_rule_course' AND [object_id] = OBJECT_ID(N'[degree_rule_required_courses]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_degree_rule_required_courses_rule_course] ON [degree_rule_required_courses] ([DegreeRuleId], [CourseId]);
+    END;
 END;
 GO
 
@@ -3603,7 +3999,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260507231326_Phase17_DegreeAudit'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_degree_rules_program] ON [degree_rules] ([AcademicProgramId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_degree_rules_program' AND [object_id] = OBJECT_ID(N'[degree_rules]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_degree_rules_program] ON [degree_rules] ([AcademicProgramId]);
+    END;
 END;
 GO
 
@@ -3674,7 +4073,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508003259_Phase18_GraduationWorkflow'
 )
 BEGIN
-    CREATE INDEX [IX_graduation_application_approvals_GraduationApplicationId] ON [graduation_application_approvals] ([GraduationApplicationId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_graduation_application_approvals_GraduationApplicationId' AND [object_id] = OBJECT_ID(N'[graduation_application_approvals]'))
+    BEGIN
+        CREATE INDEX [IX_graduation_application_approvals_GraduationApplicationId] ON [graduation_application_approvals] ([GraduationApplicationId]);
+    END;
 END;
 GO
 
@@ -3683,7 +4085,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508003259_Phase18_GraduationWorkflow'
 )
 BEGIN
-    CREATE INDEX [IX_graduation_applications_StudentProfileId] ON [graduation_applications] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_graduation_applications_StudentProfileId' AND [object_id] = OBJECT_ID(N'[graduation_applications]'))
+    BEGIN
+        CREATE INDEX [IX_graduation_applications_StudentProfileId] ON [graduation_applications] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -3773,7 +4178,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508043559_Phase19_CourseTypeAndGrading'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_course_grading_configs_courseId] ON [course_grading_configs] ([CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_grading_configs_courseId' AND [object_id] = OBJECT_ID(N'[course_grading_configs]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_course_grading_configs_courseId] ON [course_grading_configs] ([CourseId]);
+    END;
 END;
 GO
 
@@ -3912,7 +4320,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508050712_Phase20_LMS'
 )
 BEGIN
-    CREATE INDEX [IX_content_videos_ModuleId] ON [content_videos] ([ModuleId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_content_videos_ModuleId' AND [object_id] = OBJECT_ID(N'[content_videos]'))
+    BEGIN
+        CREATE INDEX [IX_content_videos_ModuleId] ON [content_videos] ([ModuleId]);
+    END;
 END;
 GO
 
@@ -3921,7 +4332,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508050712_Phase20_LMS'
 )
 BEGIN
-    CREATE INDEX [IX_course_announcements_OfferingId] ON [course_announcements] ([OfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_announcements_OfferingId' AND [object_id] = OBJECT_ID(N'[course_announcements]'))
+    BEGIN
+        CREATE INDEX [IX_course_announcements_OfferingId] ON [course_announcements] ([OfferingId]);
+    END;
 END;
 GO
 
@@ -3930,7 +4344,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508050712_Phase20_LMS'
 )
 BEGIN
-    CREATE INDEX [IX_course_content_modules_OfferingId] ON [course_content_modules] ([OfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_content_modules_OfferingId' AND [object_id] = OBJECT_ID(N'[course_content_modules]'))
+    BEGIN
+        CREATE INDEX [IX_course_content_modules_OfferingId] ON [course_content_modules] ([OfferingId]);
+    END;
 END;
 GO
 
@@ -3939,7 +4356,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508050712_Phase20_LMS'
 )
 BEGIN
-    CREATE INDEX [IX_discussion_replies_ThreadId] ON [discussion_replies] ([ThreadId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_replies_ThreadId' AND [object_id] = OBJECT_ID(N'[discussion_replies]'))
+    BEGIN
+        CREATE INDEX [IX_discussion_replies_ThreadId] ON [discussion_replies] ([ThreadId]);
+    END;
 END;
 GO
 
@@ -3948,7 +4368,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508050712_Phase20_LMS'
 )
 BEGIN
-    CREATE INDEX [IX_discussion_threads_OfferingId] ON [discussion_threads] ([OfferingId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_OfferingId' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
+    BEGIN
+        CREATE INDEX [IX_discussion_threads_OfferingId] ON [discussion_threads] ([OfferingId]);
+    END;
 END;
 GO
 
@@ -4025,7 +4448,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508054215_Phase21_StudyPlanner'
 )
 BEGIN
-    CREATE INDEX [IX_study_plan_courses_CourseId] ON [study_plan_courses] ([CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_study_plan_courses_CourseId' AND [object_id] = OBJECT_ID(N'[study_plan_courses]'))
+    BEGIN
+        CREATE INDEX [IX_study_plan_courses_CourseId] ON [study_plan_courses] ([CourseId]);
+    END;
 END;
 GO
 
@@ -4034,7 +4460,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508054215_Phase21_StudyPlanner'
 )
 BEGIN
-    CREATE UNIQUE INDEX [UQ_study_plan_courses_plan_course] ON [study_plan_courses] ([StudyPlanId], [CourseId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'UQ_study_plan_courses_plan_course' AND [object_id] = OBJECT_ID(N'[study_plan_courses]'))
+    BEGIN
+        CREATE UNIQUE INDEX [UQ_study_plan_courses_plan_course] ON [study_plan_courses] ([StudyPlanId], [CourseId]);
+    END;
 END;
 GO
 
@@ -4043,7 +4472,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508054215_Phase21_StudyPlanner'
 )
 BEGIN
-    CREATE INDEX [IX_study_plans_StudentProfileId] ON [study_plans] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_study_plans_StudentProfileId' AND [object_id] = OBJECT_ID(N'[study_plans]'))
+    BEGIN
+        CREATE INDEX [IX_study_plans_StudentProfileId] ON [study_plans] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -4088,7 +4520,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508132355_Phase22_ExternalIntegrations'
 )
 BEGIN
-    CREATE INDEX [IX_accreditation_templates_name] ON [accreditation_templates] ([Name]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_accreditation_templates_name' AND [object_id] = OBJECT_ID(N'[accreditation_templates]'))
+    BEGIN
+        CREATE INDEX [IX_accreditation_templates_name] ON [accreditation_templates] ([Name]);
+    END;
 END;
 GO
 
@@ -4132,7 +4567,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260508152906_Phase25_AcademicEngineUnification'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_institution_grading_profiles_type] ON [institution_grading_profiles] ([InstitutionType]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_institution_grading_profiles_type' AND [object_id] = OBJECT_ID(N'[institution_grading_profiles]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_institution_grading_profiles_type] ON [institution_grading_profiles] ([InstitutionType]);
+    END;
 END;
 GO
 
@@ -4284,7 +4722,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE INDEX [IX_bulk_promotion_batches_status_created] ON [bulk_promotion_batches] ([Status], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_bulk_promotion_batches_status_created' AND [object_id] = OBJECT_ID(N'[bulk_promotion_batches]'))
+    BEGIN
+        CREATE INDEX [IX_bulk_promotion_batches_status_created] ON [bulk_promotion_batches] ([Status], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4293,7 +4734,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE INDEX [IX_bulk_promotion_entries_batch] ON [bulk_promotion_entries] ([BatchId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_bulk_promotion_entries_batch' AND [object_id] = OBJECT_ID(N'[bulk_promotion_entries]'))
+    BEGIN
+        CREATE INDEX [IX_bulk_promotion_entries_batch] ON [bulk_promotion_entries] ([BatchId]);
+    END;
 END;
 GO
 
@@ -4302,7 +4746,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_bulk_promotion_entries_batch_student] ON [bulk_promotion_entries] ([BatchId], [StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_bulk_promotion_entries_batch_student' AND [object_id] = OBJECT_ID(N'[bulk_promotion_entries]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_bulk_promotion_entries_batch_student] ON [bulk_promotion_entries] ([BatchId], [StudentProfileId]);
+    END;
 END;
 GO
 
@@ -4311,7 +4758,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_parent_student_links_parent_student] ON [parent_student_links] ([ParentUserId], [StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_parent_student_links_parent_student' AND [object_id] = OBJECT_ID(N'[parent_student_links]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_parent_student_links_parent_student] ON [parent_student_links] ([ParentUserId], [StudentProfileId]);
+    END;
 END;
 GO
 
@@ -4320,7 +4770,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_school_streams_name] ON [school_streams] ([Name]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_school_streams_name' AND [object_id] = OBJECT_ID(N'[school_streams]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_school_streams_name] ON [school_streams] ([Name]);
+    END;
 END;
 GO
 
@@ -4329,7 +4782,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE INDEX [IX_student_report_cards_student_generated] ON [student_report_cards] ([StudentProfileId], [GeneratedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_report_cards_student_generated' AND [object_id] = OBJECT_ID(N'[student_report_cards]'))
+    BEGIN
+        CREATE INDEX [IX_student_report_cards_student_generated] ON [student_report_cards] ([StudentProfileId], [GeneratedAt]);
+    END;
 END;
 GO
 
@@ -4338,7 +4794,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE INDEX [IX_student_stream_assignments_SchoolStreamId] ON [student_stream_assignments] ([SchoolStreamId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_stream_assignments_SchoolStreamId' AND [object_id] = OBJECT_ID(N'[student_stream_assignments]'))
+    BEGIN
+        CREATE INDEX [IX_student_stream_assignments_SchoolStreamId] ON [student_stream_assignments] ([SchoolStreamId]);
+    END;
 END;
 GO
 
@@ -4347,7 +4806,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509044437_Phase26_SchoolCollegeExpansion'
 )
 BEGIN
-    CREATE UNIQUE INDEX [IX_student_stream_assignments_student] ON [student_stream_assignments] ([StudentProfileId]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_student_stream_assignments_student' AND [object_id] = OBJECT_ID(N'[student_stream_assignments]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_student_stream_assignments_student] ON [student_stream_assignments] ([StudentProfileId]);
+    END;
 END;
 GO
 
@@ -4381,7 +4843,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_user_sessions_user_created_at] ON [user_sessions] ([UserId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_user_sessions_user_created_at' AND [object_id] = OBJECT_ID(N'[user_sessions]'))
+    BEGIN
+        CREATE INDEX [IX_user_sessions_user_created_at] ON [user_sessions] ([UserId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4390,7 +4855,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_assigned_created_at] ON [support_tickets] ([AssignedToId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_assigned_created_at' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_assigned_created_at] ON [support_tickets] ([AssignedToId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4399,7 +4867,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_department_status_created_at] ON [support_tickets] ([DepartmentId], [Status], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_department_status_created_at' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_department_status_created_at] ON [support_tickets] ([DepartmentId], [Status], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4408,7 +4879,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_support_tickets_submitter_created_at] ON [support_tickets] ([SubmitterId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_support_tickets_submitter_created_at' AND [object_id] = OBJECT_ID(N'[support_tickets]'))
+    BEGIN
+        CREATE INDEX [IX_support_tickets_submitter_created_at] ON [support_tickets] ([SubmitterId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4417,7 +4891,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_attempts_quiz_student_started_at] ON [quiz_attempts] ([QuizId], [StudentProfileId], [StartedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_attempts_quiz_student_started_at' AND [object_id] = OBJECT_ID(N'[quiz_attempts]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_attempts_quiz_student_started_at] ON [quiz_attempts] ([QuizId], [StudentProfileId], [StartedAt]);
+    END;
 END;
 GO
 
@@ -4426,7 +4903,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_quiz_attempts_student_started_at] ON [quiz_attempts] ([StudentProfileId], [StartedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_quiz_attempts_student_started_at' AND [object_id] = OBJECT_ID(N'[quiz_attempts]'))
+    BEGIN
+        CREATE INDEX [IX_quiz_attempts_student_started_at] ON [quiz_attempts] ([StudentProfileId], [StartedAt]);
+    END;
 END;
 GO
 
@@ -4435,7 +4915,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [ix_pr_status_due_date] ON [payment_receipts] ([Status], [DueDate]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_status_due_date' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_status_due_date] ON [payment_receipts] ([Status], [DueDate]);
+    END;
 END;
 GO
 
@@ -4444,7 +4927,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [ix_pr_student_created_at] ON [payment_receipts] ([StudentProfileId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_student_created_at' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+    BEGIN
+        CREATE INDEX [ix_pr_student_created_at] ON [payment_receipts] ([StudentProfileId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4453,7 +4939,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_notification_recipients_user_created_at] ON [notification_recipients] ([RecipientUserId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_notification_recipients_user_created_at' AND [object_id] = OBJECT_ID(N'[notification_recipients]'))
+    BEGIN
+        CREATE INDEX [IX_notification_recipients_user_created_at] ON [notification_recipients] ([RecipientUserId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4462,7 +4951,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_graduation_applications_status_created_at] ON [graduation_applications] ([Status], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_graduation_applications_status_created_at' AND [object_id] = OBJECT_ID(N'[graduation_applications]'))
+    BEGIN
+        CREATE INDEX [IX_graduation_applications_status_created_at] ON [graduation_applications] ([Status], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4471,7 +4963,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260509155457_20260510_Phase29_IndexBaseline'
 )
 BEGIN
-    CREATE INDEX [IX_graduation_applications_student_created_at] ON [graduation_applications] ([StudentProfileId], [CreatedAt]);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_graduation_applications_student_created_at' AND [object_id] = OBJECT_ID(N'[graduation_applications]'))
+    BEGIN
+        CREATE INDEX [IX_graduation_applications_student_created_at] ON [graduation_applications] ([StudentProfileId], [CreatedAt]);
+    END;
 END;
 GO
 
@@ -4512,4 +5007,5 @@ GO
 
 COMMIT;
 GO
+
 

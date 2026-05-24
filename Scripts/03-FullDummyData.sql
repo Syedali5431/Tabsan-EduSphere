@@ -92,14 +92,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v4', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v5', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v4',
+    SET [DemoValue] = N'FullDummyData-v5',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -291,6 +291,111 @@ WHERE u.[Username] <> src.[Username]
    OR ISNULL(CAST(u.[DepartmentId] AS NVARCHAR(36)), N'') <> ISNULL(CAST(src.[DepartmentId] AS NVARCHAR(36)), N'')
    OR ISNULL(u.[InstitutionType], -1) <> ISNULL(src.[InstitutionType], -1)
    OR u.[IsActive] = 0;
+
+/* 4.0.1) Ensure each institute department has role coverage users */
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    CONCAT(N'auto.admin.', LOWER(d.[Code])),
+    CONCAT(N'auto.admin.', LOWER(d.[Code]), N'@demo.local'),
+    @PwdHash,
+    @RoleAdmin,
+    d.[Id],
+    d.[InstitutionType],
+    1,
+    NULL,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM @Departments d
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleAdmin
+      AND u.[DepartmentId] = d.[Id]
+      AND u.[IsDeleted] = 0
+);
+
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    CONCAT(N'auto.faculty.', LOWER(d.[Code])),
+    CONCAT(N'auto.faculty.', LOWER(d.[Code]), N'@demo.local'),
+    @PwdHash,
+    @RoleFaculty,
+    d.[Id],
+    d.[InstitutionType],
+    1,
+    NULL,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM @Departments d
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleFaculty
+      AND u.[DepartmentId] = d.[Id]
+      AND u.[IsDeleted] = 0
+);
+
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    CONCAT(N'auto.finance.', LOWER(d.[Code])),
+    CONCAT(N'auto.finance.', LOWER(d.[Code]), N'@demo.local'),
+    @PwdHash,
+    @RoleFinance,
+    d.[Id],
+    d.[InstitutionType],
+    1,
+    NULL,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM @Departments d
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleFinance
+      AND u.[DepartmentId] = d.[Id]
+      AND u.[IsDeleted] = 0
+);
+
+;WITH N AS
+(
+    SELECT TOP (6) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    CONCAT(N'auto.', LOWER(d.[Code]), N'.student.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2)),
+    CONCAT(N'auto.', LOWER(d.[Code]), N'.student.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2), N'@demo.local'),
+    @PwdHash,
+    @RoleStudent,
+    d.[Id],
+    d.[InstitutionType],
+    1,
+    NULL,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM @Departments d
+INNER JOIN N ON 1 = 1
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] u
+    WHERE u.[Username] = CONCAT(N'auto.', LOWER(d.[Code]), N'.student.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2))
+);
 
 IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
 BEGIN
@@ -512,6 +617,46 @@ INNER JOIN @BulkTarget t ON t.DepartmentId = u.[DepartmentId]
 WHERE u.[Username] LIKE N'bulk.%.student.%'
   AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[UserId] = u.[Id]);
 
+/* 5.2) Auto student profiles for department-wide institute users */
+;WITH DepartmentPrograms AS
+(
+    SELECT
+        ap.[DepartmentId],
+        ap.[Id] AS ProgramId,
+        ap.[TotalSemesters],
+        ProgramOrdinal = ROW_NUMBER() OVER (PARTITION BY ap.[DepartmentId] ORDER BY ap.[Code], ap.[Id]),
+        ProgramCount = COUNT(*) OVER (PARTITION BY ap.[DepartmentId])
+    FROM [academic_programs] ap
+), AutoStudents AS
+(
+    SELECT
+        u.[Id] AS UserId,
+        u.[DepartmentId],
+        StudentOrdinal = ROW_NUMBER() OVER (PARTITION BY u.[DepartmentId] ORDER BY u.[Username])
+    FROM [users] u
+    WHERE u.[Username] LIKE N'auto.%.student.%'
+      AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[UserId] = u.[Id])
+)
+INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    s.[UserId],
+    CONCAT(N'AUTO-', d.[Code], N'-', RIGHT(N'0000' + CAST(s.[StudentOrdinal] AS NVARCHAR(10)), 4)),
+    p.[ProgramId],
+    s.[DepartmentId],
+    DATEADD(day, -((s.[StudentOrdinal] * 17) % 480), @Now),
+    CAST(2.20 + ((s.[StudentOrdinal] % 180) / 100.0) AS DECIMAL(4,2)),
+    ((s.[StudentOrdinal] - 1) % CASE WHEN p.[TotalSemesters] > 0 THEN p.[TotalSemesters] ELSE 1 END) + 1,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM AutoStudents s
+INNER JOIN @Departments d ON d.[Id] = s.[DepartmentId]
+INNER JOIN DepartmentPrograms p
+    ON p.[DepartmentId] = s.[DepartmentId]
+   AND p.[ProgramOrdinal] = ((s.[StudentOrdinal] - 1) % p.[ProgramCount]) + 1;
+
 /* 6) Courses - Massive expansion (50+ courses) */
 DECLARE @Courses TABLE (Id UNIQUEIDENTIFIER, DepartmentId UNIQUEIDENTIFIER, Title NVARCHAR(200), Code NVARCHAR(20), CreditHours INT);
 INSERT INTO @Courses VALUES
@@ -637,6 +782,128 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM [timetable_entries] x WHERE x.[Id] = te.[Id]);
 END
 
+/* 6.2) School and college classes across all seeded semesters */
+IF OBJECT_ID(N'[timetables]') IS NOT NULL
+BEGIN
+    ;WITH SemesterBase AS
+    (
+        SELECT
+            s.[Id],
+            s.[StartDate],
+            SemesterOrdinal = ROW_NUMBER() OVER (ORDER BY s.[StartDate], s.[Id])
+        FROM @Semesters s
+    ), ClassPrograms AS
+    (
+        SELECT
+            p.[Id] AS ProgramId,
+            p.[DepartmentId],
+            p.[TotalSemesters],
+            d.[InstitutionType]
+        FROM @Programs p
+        INNER JOIN @Departments d ON d.[Id] = p.[DepartmentId]
+        WHERE d.[InstitutionType] IN (0, 1)
+    )
+    INSERT INTO [timetables] ([Id], [DepartmentId], [AcademicProgramId], [SemesterId], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [EffectiveDate], [SemesterNumber])
+    SELECT
+        NEWID(),
+        cp.[DepartmentId],
+        cp.[ProgramId],
+        sb.[Id],
+        1,
+        @Now,
+        @Now,
+        NULL,
+        0,
+        NULL,
+        CAST(sb.[StartDate] AS DATE),
+        ((sb.[SemesterOrdinal] - 1) % CASE WHEN cp.[TotalSemesters] > 0 THEN cp.[TotalSemesters] ELSE 1 END) + 1
+    FROM ClassPrograms cp
+    CROSS JOIN SemesterBase sb
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [timetables] t
+        WHERE t.[DepartmentId] = cp.[DepartmentId]
+          AND t.[AcademicProgramId] = cp.[ProgramId]
+          AND t.[SemesterId] = sb.[Id]
+    );
+END
+
+IF OBJECT_ID(N'[timetable_entries]') IS NOT NULL
+BEGIN
+    ;WITH ClassPrograms AS
+    (
+        SELECT
+            p.[Id] AS ProgramId,
+            p.[DepartmentId],
+            d.[InstitutionType],
+            d.[Name] AS DepartmentName,
+            c.[Id] AS CourseId,
+            c.[Title] AS CourseTitle,
+            CourseOrdinal = ROW_NUMBER() OVER (PARTITION BY p.[DepartmentId] ORDER BY c.[Code], c.[Id])
+        FROM @Programs p
+        INNER JOIN @Departments d ON d.[Id] = p.[DepartmentId]
+        INNER JOIN [courses] c ON c.[DepartmentId] = p.[DepartmentId]
+        WHERE d.[InstitutionType] IN (0, 1)
+    ), CandidateClassTimetables AS
+    (
+        SELECT
+            t.[Id] AS TimetableId,
+            t.[DepartmentId],
+            t.[SemesterNumber],
+            cp.[InstitutionType],
+            cp.[DepartmentName],
+            cp.[CourseId],
+            cp.[CourseTitle],
+            cp.[CourseOrdinal]
+        FROM [timetables] t
+        INNER JOIN ClassPrograms cp ON cp.[ProgramId] = t.[AcademicProgramId]
+        WHERE cp.[CourseOrdinal] <= 2
+    ), FacultyByDepartment AS
+    (
+        SELECT
+            u.[DepartmentId],
+            u.[Id] AS FacultyUserId,
+            u.[Username],
+            FacultyOrdinal = ROW_NUMBER() OVER (PARTITION BY u.[DepartmentId] ORDER BY u.[Username])
+        FROM [users] u
+        WHERE u.[RoleId] = @RoleFaculty
+          AND u.[IsDeleted] = 0
+    )
+    INSERT INTO [timetable_entries] ([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName], [RoomId], [CreatedAt], [UpdatedAt], [BuildingId], [CourseId], [FacultyUserId])
+    SELECT
+        NEWID(),
+        ct.[TimetableId],
+        CASE WHEN ct.[CourseOrdinal] = 1 THEN 1 ELSE 3 END,
+        CASE WHEN ct.[CourseOrdinal] = 1 THEN CAST('08:30:00' AS TIME) ELSE CAST('10:45:00' AS TIME) END,
+        CASE WHEN ct.[CourseOrdinal] = 1 THEN CAST('10:00:00' AS TIME) ELSE CAST('12:15:00' AS TIME) END,
+        CONCAT(
+            CASE
+                WHEN ct.[InstitutionType] = 0 THEN CONCAT(N'Class ', CAST(8 + ct.[SemesterNumber] AS NVARCHAR(10)))
+                ELSE CONCAT(N'College Semester ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
+            END,
+            N' - ',
+            ct.[CourseTitle]
+        ),
+        CASE WHEN ct.[InstitutionType] = 0 THEN N'S-101' ELSE N'C-101' END,
+        COALESCE(f.[Username], N'auto.faculty'),
+        CASE WHEN ct.[InstitutionType] = 0 THEN CAST('24242424-2424-2424-2424-242424242405' AS UNIQUEIDENTIFIER) ELSE CAST('24242424-2424-2424-2424-242424242403' AS UNIQUEIDENTIFIER) END,
+        @Now,
+        NULL,
+        CASE WHEN ct.[InstitutionType] = 0 THEN CAST('23232323-2323-2323-2323-232323232303' AS UNIQUEIDENTIFIER) ELSE CAST('23232323-2323-2323-2323-232323232302' AS UNIQUEIDENTIFIER) END,
+        ct.[CourseId],
+        f.[FacultyUserId]
+    FROM CandidateClassTimetables ct
+    LEFT JOIN FacultyByDepartment f ON f.[DepartmentId] = ct.[DepartmentId] AND f.[FacultyOrdinal] = 1
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [timetable_entries] te
+        WHERE te.[TimetableId] = ct.[TimetableId]
+          AND te.[CourseId] = ct.[CourseId]
+    );
+END
+
 /* 7) Course offerings (Spring 2026 and beyond) - Massively expanded */
 DECLARE @SpringSemester UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333334';
 DECLARE @FallSemester UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333333';
@@ -672,6 +939,59 @@ INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId],
 SELECT o.Id, o.CourseId, o.SemesterId, o.FacultyUserId, o.MaxEnrollment, 1, @Now, NULL, 0, NULL
 FROM @Offerings o
 WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] x WHERE x.[Id] = o.Id);
+
+/* 7.1) Ensure detailed offering coverage for all semesters and institutes */
+;WITH SemesterBase AS
+(
+    SELECT
+        s.[Id],
+        SemesterOrdinal = ROW_NUMBER() OVER (ORDER BY s.[StartDate], s.[Id])
+    FROM @Semesters s
+), DeptCourses AS
+(
+    SELECT
+        c.[DepartmentId],
+        c.[Id] AS CourseId,
+        CourseOrdinal = ROW_NUMBER() OVER (PARTITION BY c.[DepartmentId] ORDER BY c.[Code], c.[Id])
+    FROM [courses] c
+), DeptFaculty AS
+(
+    SELECT
+        u.[DepartmentId],
+        u.[Id] AS FacultyUserId,
+        FacultyOrdinal = ROW_NUMBER() OVER (PARTITION BY u.[DepartmentId] ORDER BY u.[Username]),
+        FacultyCount = COUNT(*) OVER (PARTITION BY u.[DepartmentId])
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleFaculty
+      AND u.[IsDeleted] = 0
+)
+INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [MaxEnrollment], [IsOpen], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    dc.[CourseId],
+    sb.[Id],
+    df.[FacultyUserId],
+    CASE d.[InstitutionType] WHEN 2 THEN 70 WHEN 1 THEN 55 ELSE 40 END,
+    1,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM @Departments d
+INNER JOIN SemesterBase sb ON 1 = 1
+INNER JOIN DeptCourses dc
+    ON dc.[DepartmentId] = d.[Id]
+   AND dc.[CourseOrdinal] <= CASE d.[InstitutionType] WHEN 2 THEN 3 WHEN 1 THEN 2 ELSE 2 END
+INNER JOIN DeptFaculty df
+    ON df.[DepartmentId] = d.[Id]
+   AND df.[FacultyOrdinal] = ((sb.[SemesterOrdinal] + dc.[CourseOrdinal] - 2) % df.[FacultyCount]) + 1
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [course_offerings] co
+    WHERE co.[CourseId] = dc.[CourseId]
+      AND co.[SemesterId] = sb.[Id]
+);
 
 /* 8) Enrollments - Massive expansion (100+ enrollments) */
 DECLARE @Enrollments TABLE (Id UNIQUEIDENTIFIER, StudentProfileId UNIQUEIDENTIFIER, CourseOfferingId UNIQUEIDENTIFIER, Status NVARCHAR(50));
@@ -756,6 +1076,47 @@ WHERE NOT EXISTS (
     FROM [enrollments] e
     WHERE e.[StudentProfileId] = bs.[StudentProfileId]
       AND e.[CourseOfferingId] = dof.[CourseOfferingId]
+);
+
+/* 8.2) Semester-level enrollment coverage for all departments and semesters */
+;WITH DepartmentStudents AS
+(
+    SELECT
+        sp.[Id] AS StudentProfileId,
+        sp.[DepartmentId],
+        StudentOrdinal = ROW_NUMBER() OVER (PARTITION BY sp.[DepartmentId] ORDER BY sp.[RegistrationNumber], sp.[Id])
+    FROM [student_profiles] sp
+), SemesterOfferings AS
+(
+    SELECT
+        co.[Id] AS CourseOfferingId,
+        c.[DepartmentId],
+        co.[SemesterId],
+        OfferingOrdinal = ROW_NUMBER() OVER (PARTITION BY c.[DepartmentId], co.[SemesterId] ORDER BY co.[Id])
+    FROM [course_offerings] co
+    INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+)
+INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+SELECT
+    NEWID(),
+    ds.[StudentProfileId],
+    so.[CourseOfferingId],
+    DATEADD(day, -((ds.[StudentOrdinal] + so.[OfferingOrdinal]) % 28), @Now),
+    NULL,
+    N'Enrolled',
+    @Now,
+    NULL
+FROM SemesterOfferings so
+INNER JOIN DepartmentStudents ds
+    ON ds.[DepartmentId] = so.[DepartmentId]
+   AND ds.[StudentOrdinal] <= CASE WHEN so.[OfferingOrdinal] = 1 THEN 18 ELSE 12 END
+WHERE so.[OfferingOrdinal] <= 2
+  AND NOT EXISTS
+(
+    SELECT 1
+    FROM [enrollments] e
+    WHERE e.[StudentProfileId] = ds.[StudentProfileId]
+      AND e.[CourseOfferingId] = so.[CourseOfferingId]
 );
 
 /* 9) Assignments - Expanded (20+ assignments) */

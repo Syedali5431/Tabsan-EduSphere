@@ -40,6 +40,49 @@ public sealed record AssignFacultyRequest(Guid FacultyUserId);
 /// <summary>Request body for updating max enrollment for a course offering.</summary>
 public sealed record UpdateMaxEnrollmentRequest(int NewMaxEnrollment);
 
+/// <summary>Response payload for course list and detail endpoints.</summary>
+public sealed record CourseResponse(
+    Guid Id,
+    string Title,
+    string Code,
+    int CreditHours,
+    Guid DepartmentId,
+    Guid? TenantId,
+    Guid? CampusId,
+    int InstitutionType,
+    string DepartmentName,
+    bool IsActive,
+    bool HasSemesters,
+    int? TotalSemesters,
+    int? DurationValue,
+    string? DurationUnit,
+    string GradingType,
+    int CourseType);
+
+/// <summary>Response payload for course offering list endpoints.</summary>
+public sealed record CourseOfferingResponse(
+    Guid Id,
+    Guid CourseId,
+    string CourseCode,
+    string CourseTitle,
+    Guid DepartmentId,
+    Guid? TenantId,
+    Guid? CampusId,
+    int InstitutionType,
+    Guid SemesterId,
+    string SemesterName,
+    Guid? FacultyUserId,
+    int MaxEnrollment,
+    bool IsActive);
+
+/// <summary>Response payload for current user's offerings.</summary>
+public sealed record MyOfferingResponse(
+    Guid Id,
+    string CourseTitle,
+    string SemesterName,
+    int MaxEnrollment,
+    bool IsOpen);
+
 // ── Enrollment DTOs ───────────────────────────────────────────────────────────
 
 /// <summary>Request body for enrolling a student into a course offering.</summary>

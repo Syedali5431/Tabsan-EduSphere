@@ -62,6 +62,7 @@ public sealed class ModuleLicenseEnforcementMiddleware
         ("/api/v1/gradebook", "results"),
         ("/api/v1/result", "results"),
         ("/api/v1/reports", "reports"),
+        ("/api/v1/analytics", "reports"),
         ("/api/analytics", "reports"),
         ("/api/v1/notification", "notifications"),
         ("/api/v1/announcement", "notifications"),

@@ -16,23 +16,105 @@
 }
 else
 {
+    var isSuperAdmin = Model.Identity?.IsSuperAdmin == true;
+
+    if (isSuperAdmin)
+    {
+        <section class="page-section-card card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="section-head mb-3">
+                    <div>
+                        <span class="section-kicker">Scope selection</span>
+                        <h2 class="h5 mb-1">Institution, tenant and campus</h2>
+                        <p class="text-muted mb-0">Courses and offerings now resolve within the same institution scope model used across departments.</p>
+                    </div>
+                </div>
+                <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
+                    <div class="col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select">
+                            <option value="">All Tenants</option>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                if (Model.SelectedTenantId == tenant.Id)
+                                {
+                                    <option value="@tenant.Id" selected>@tenant.Code - @tenant.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@tenant.Id">@tenant.Code - @tenant.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select">
+                            <option value="">All Campuses</option>
+                            @foreach (var campus in Model.Campuses)
+                            {
+                                if (Model.SelectedCampusId == campus.Id)
+                                {
+                                    <option value="@campus.Id" selected>@campus.Code - @campus.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@campus.Id">@campus.Code - @campus.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Department</label>
+                        <select name="departmentId" class="form-select">
+                            <option value="">All Departments</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                if (Model.SelectedDepartmentId == d.Id)
+                                {
+                                    <option value="@d.Id" selected>@d.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@d.Id">@d.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-outline-primary">Apply Scope</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    }
+
     <section class="page-section-card card border-0 shadow-sm mb-3">
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
                     <span class="section-kicker">Course operations</span>
                     <h2 class="h5 mb-1">Courses and active offerings</h2>
-                    <p class="text-muted mb-0">Manage curriculum inventory and semester offerings with department-scoped filtering.</p>
+                    <p class="text-muted mb-0">Manage curriculum inventory and semester offerings with institution-aware scoping.</p>
                 </div>
             </div>
             <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="col-md-4">
                     <label class="form-label">Filter by Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
                         <option value="">All Departments</option>
                         @foreach (var d in Model.Departments)
                         {
-                            <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                            if (Model.SelectedDepartmentId == d.Id)
+                            {
+                                <option value="@d.Id" selected>@d.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@d.Id">@d.Name</option>
+                            }
                         }
                     </select>
                 </div>
@@ -94,6 +176,8 @@ else
                                                     <form asp-action="DeactivateCourse" method="post" class="d-inline">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@c.Id" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                         <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
                                                                 onclick="return confirm('Deactivate @c.Code?')">Off</button>
@@ -156,6 +240,8 @@ else
                                                     <form asp-action="DeleteOffering" method="post" class="d-inline">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@o.Id" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                         <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
                                                                 onclick="return confirm('Delete this offering?')">Del</button>
@@ -180,6 +266,8 @@ else
         <form asp-action="CreateCourse" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Course</h5>
@@ -204,7 +292,14 @@ else
                             <option value="">Select department…</option>
                             @foreach (var d in Model.Departments)
                             {
-                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                                if (Model.SelectedDepartmentId == d.Id)
+                                {
+                                    <option value="@d.Id" selected>@d.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@d.Id">@d.Name</option>
+                                }
                             }
                         </select>
                     </div>
@@ -267,6 +362,8 @@ function toggleCourseType() {
     <div class="modal-dialog">
         <form asp-action="CreateOffering" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
             <div class="modal-content">
                 <div class="modal-header">

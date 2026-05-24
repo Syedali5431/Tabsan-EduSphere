@@ -125,17 +125,30 @@ END
     ON student_profiles (ProgramId, Status);
   END
 
+  DECLARE @EnrollmentStatusType sysname = NULL;
+  DECLARE @EnrollmentStatusMaxLength smallint = NULL;
+
   IF COL_LENGTH('enrollments', 'Status') IS NOT NULL
   BEGIN
-    DECLARE @EnrollmentStatusMaxLength smallint = COL_LENGTH('enrollments', 'Status');
-    IF @EnrollmentStatusMaxLength IS NULL OR @EnrollmentStatusMaxLength < 32
+    SELECT
+      @EnrollmentStatusType = t.[name],
+      @EnrollmentStatusMaxLength = c.[max_length]
+    FROM sys.columns c
+    INNER JOIN sys.types t ON t.[user_type_id] = c.[user_type_id]
+    WHERE c.[object_id] = OBJECT_ID(N'enrollments')
+      AND c.[name] = N'Status';
+
+    IF @EnrollmentStatusType = N'nvarchar' AND @EnrollmentStatusMaxLength > 0 AND @EnrollmentStatusMaxLength < 64
     BEGIN
-      ALTER TABLE enrollments ALTER COLUMN Status nvarchar(32) NOT NULL;
+      ALTER TABLE enrollments ALTER COLUMN Status nvarchar(64) NOT NULL;
+      SET @EnrollmentStatusMaxLength = 128;
     END
   END
 
   IF COL_LENGTH('enrollments', 'CourseOfferingId') IS NOT NULL
   AND COL_LENGTH('enrollments', 'Status') IS NOT NULL
+  AND @EnrollmentStatusType IN (N'nvarchar', N'varchar', N'nchar', N'char')
+  AND @EnrollmentStatusMaxLength > 0
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_enrollments_offering_status' AND object_id = OBJECT_ID('enrollments'))
   BEGIN
     CREATE INDEX IX_enrollments_offering_status
@@ -144,6 +157,8 @@ END
 
   IF COL_LENGTH('enrollments', 'StudentProfileId') IS NOT NULL
   AND COL_LENGTH('enrollments', 'Status') IS NOT NULL
+  AND @EnrollmentStatusType IN (N'nvarchar', N'varchar', N'nchar', N'char')
+  AND @EnrollmentStatusMaxLength > 0
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_enrollments_student_status' AND object_id = OBJECT_ID('enrollments'))
   BEGIN
     CREATE INDEX IX_enrollments_student_status

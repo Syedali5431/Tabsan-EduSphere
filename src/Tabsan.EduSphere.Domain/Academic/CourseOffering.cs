@@ -1,4 +1,5 @@
 using Tabsan.EduSphere.Domain.Common;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.Domain.Academic;
 
@@ -17,6 +18,15 @@ public class CourseOffering : AuditableEntity
 
     /// <summary>FK to the semester this offering is scheduled in.</summary>
     public Guid SemesterId { get; private set; }
+
+    /// <summary>Optional tenant scope inherited from the parent course/department.</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Optional campus scope inherited from the parent course/department.</summary>
+    public Guid? CampusId { get; private set; }
+
+    /// <summary>Institution type inherited from the parent course/department.</summary>
+    public InstitutionType InstitutionType { get; private set; } = InstitutionType.University;
 
     /// <summary>Navigation to the parent semester.</summary>
     public Semester Semester { get; private set; } = default!;
@@ -41,6 +51,16 @@ public class CourseOffering : AuditableEntity
         SemesterId = semesterId;
         MaxEnrollment = maxEnrollment;
         FacultyUserId = facultyUserId;
+    }
+
+    /// <summary>Aligns the offering with its parent course institution scope.</summary>
+    public void SetInstitutionScope(InstitutionType institutionType, Guid? tenantId, Guid? campusId)
+    {
+        ValidateTenantCampusPair(tenantId, campusId);
+        InstitutionType = institutionType;
+        TenantId = tenantId;
+        CampusId = campusId;
+        Touch();
     }
 
     /// <summary>Assigns or reassigns the teaching faculty for this offering.</summary>
@@ -71,5 +91,11 @@ public class CourseOffering : AuditableEntity
             throw new ArgumentOutOfRangeException(nameof(newMax), "Max enrollment must be at least 1.");
         MaxEnrollment = newMax;
         Touch();
+    }
+
+    private static void ValidateTenantCampusPair(Guid? tenantId, Guid? campusId)
+    {
+        if (tenantId.HasValue != campusId.HasValue)
+            throw new InvalidOperationException("TenantId and CampusId must be provided together.");
     }
 }

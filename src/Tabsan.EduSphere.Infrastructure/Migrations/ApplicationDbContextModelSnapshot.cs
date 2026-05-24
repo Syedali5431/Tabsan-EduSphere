@@ -361,6 +361,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int?>("DurationValue")
                         .HasColumnType("int");
 
@@ -382,6 +385,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("InstitutionType")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -391,6 +397,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("TotalSemesters")
                         .HasColumnType("int");
@@ -407,6 +416,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.HasIndex("DepartmentId", "IsActive")
                         .HasDatabaseName("IX_courses_dept_active");
 
+                    b.HasIndex("TenantId", "CampusId", "InstitutionType", "IsActive")
+                        .HasDatabaseName("IX_courses_scope_active");
+
                     b.ToTable("courses", (string)null);
                 });
 
@@ -417,6 +429,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -475,6 +490,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<bool>("IsOpen")
                         .HasColumnType("bit");
 
+                    b.Property<int>("InstitutionType")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaxEnrollment")
                         .HasColumnType("int");
 
@@ -484,6 +502,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<Guid>("SemesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -497,6 +518,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.HasIndex("FacultyUserId", "IsOpen")
                         .HasDatabaseName("IX_course_offerings_faculty_open");
+
+                    b.HasIndex("TenantId", "CampusId", "InstitutionType", "IsOpen")
+                        .HasDatabaseName("IX_course_offerings_scope_open");
 
                     b.HasIndex("SemesterId", "IsOpen")
                         .HasDatabaseName("IX_course_offerings_semester_open");

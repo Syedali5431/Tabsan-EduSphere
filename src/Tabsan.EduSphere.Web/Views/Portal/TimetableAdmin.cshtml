@@ -22,6 +22,73 @@
 }
 else
 {
+    var isSuperAdmin = Model.Identity?.IsSuperAdmin == true;
+
+    if (isSuperAdmin)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Scope Selection</h2>
+                <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select class="form-select" name="tenantId">
+                            <option value="">Select tenant</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                if (Model.SelectedTenantId == t.Id)
+                                {
+                                    <option value="@t.Id" selected>@t.Code - @t.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@t.Id">@t.Code - @t.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId">
+                            <option value="">Select campus</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                if (Model.SelectedCampusId == c.Id)
+                                {
+                                    <option value="@c.Id" selected>@c.Code - @c.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.Id">@c.Code - @c.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Department</label>
+                        <select class="form-select" name="departmentId">
+                            <option value="">Select department</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                if (Model.SelectedDepartmentId == d.Id)
+                                {
+                                    <option value="@d.Id" selected>@d.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@d.Id">@d.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-outline-primary" type="submit">Apply Scope</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
     <div class="row g-3">
         <div class="col-12 col-xl-6">
             <div class="card border-0 shadow-sm h-100">
@@ -29,12 +96,22 @@ else
                     <h2 class="h5">Create Timetable</h2>
                     <form asp-action="CreateTimetable" method="post" class="row g-2">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                         <div class="col-12">
                             <label class="form-label">Department</label>
                             <select class="form-select" name="DepartmentId" required>
                                 @foreach (var d in Model.Departments)
                                 {
-                                    <option value="@d.Id" selected="@(Model.CreateForm.DepartmentId == d.Id)">@d.Name</option>
+                                    if (Model.CreateForm.DepartmentId == d.Id)
+                                    {
+                                        <option value="@d.Id" selected>@d.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
                                 }
                             </select>
                         </div>
@@ -87,7 +164,11 @@ else
                             {
                                 <li class="list-group-item d-flex justify-content-between align-items-start">
                                     <div>
-                                        <a asp-action="TimetableAdmin" asp-route-timetableId="@t.Id">@t.Title</a>
+                                        <a asp-action="TimetableAdmin"
+                                           asp-route-timetableId="@t.Id"
+                                           asp-route-tenantId="@Model.SelectedTenantId"
+                                           asp-route-campusId="@Model.SelectedCampusId"
+                                           asp-route-departmentId="@Model.SelectedDepartmentId">@t.Title</a>
                                         <div class="small text-muted">@t.Id</div>
                                     </div>
                                     <span class="badge @(t.IsPublished ? "bg-success" : "bg-secondary")">@(t.IsPublished ? "Published" : "Draft")</span>
@@ -114,6 +195,9 @@ else
                         <form asp-action="PublishTimetable" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="timetableId" value="@Model.SelectedTimetable.Id" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                             <button class="btn btn-outline-success" type="submit">Publish</button>
                         </form>
                     }
@@ -125,6 +209,9 @@ else
                 <form asp-action="AddTimetableEntry" method="post" class="row g-2 mb-3">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="TimetableId" value="@Model.SelectedTimetable.Id" />
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
 
                     <div class="col-md-2">
                         <label class="form-label">Day</label>

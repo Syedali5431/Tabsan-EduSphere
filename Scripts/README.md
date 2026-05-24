@@ -10,7 +10,7 @@ This folder is intentionally kept DB-focused and now contains only database setu
 | 01 | 01-Schema-Current.sql | Creates/updates current database schema. |
 | 02 | 02-Seed-Core.sql | Seeds core roles, modules, departments, baseline users, and access matrices. |
 | 02A | Seed-Core-Clean.sql | Seeds clean baseline (no dummy/demo rows). |
-| 03 | 03-FullDummyData.sql | Seeds very high-volume dummy/demo data (v4) across School/College/University institutes, including bulk enrollments, attendance, results, and payment receipts. |
+| 03 | 03-FullDummyData.sql | Seeds very high-volume dummy/demo data (v5) across School/College/University institutes, including all-semester offerings/enrollments, school/college class timetables, and institute-wide role users. |
 | 04 | 04-Maintenance-Indexes-And-Views.sql | Adds maintenance indexes and reporting views. |
 | 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path. |
 | 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path. |

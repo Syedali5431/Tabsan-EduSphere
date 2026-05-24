@@ -70,6 +70,9 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.HasIndex(c => new { c.DepartmentId, c.IsActive })
                .HasDatabaseName("IX_courses_dept_active");
 
+        builder.HasIndex(c => new { c.TenantId, c.CampusId, c.InstitutionType, c.IsActive })
+               .HasDatabaseName("IX_courses_scope_active");
+
         builder.HasOne(c => c.Department)
                .WithMany()
                .HasForeignKey(c => c.DepartmentId)
@@ -77,6 +80,10 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
 
         // Final-Touches Phase 17 Stage 17.3 — core/elective classification column
         builder.Property(c => c.CourseType)
+               .IsRequired()
+               .HasConversion<int>();
+
+        builder.Property(c => c.InstitutionType)
                .IsRequired()
                .HasConversion<int>();
 
@@ -121,6 +128,9 @@ public class CourseOfferingConfiguration : IEntityTypeConfiguration<CourseOfferi
         builder.HasIndex(o => new { o.FacultyUserId, o.IsOpen })
                .HasDatabaseName("IX_course_offerings_faculty_open");
 
+        builder.HasIndex(o => new { o.TenantId, o.CampusId, o.InstitutionType, o.IsOpen })
+               .HasDatabaseName("IX_course_offerings_scope_open");
+
         builder.HasOne(o => o.Course)
                .WithMany()
                .HasForeignKey(o => o.CourseId)
@@ -130,6 +140,10 @@ public class CourseOfferingConfiguration : IEntityTypeConfiguration<CourseOfferi
                .WithMany()
                .HasForeignKey(o => o.SemesterId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(o => o.InstitutionType)
+               .IsRequired()
+               .HasConversion<int>();
 
         builder.HasQueryFilter(o => !o.IsDeleted);
     }

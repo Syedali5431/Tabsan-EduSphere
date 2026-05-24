@@ -12,6 +12,7 @@ namespace Tabsan.EduSphere.API.Controllers;
 /// All read endpoints require Admin or Faculty. Export endpoints require Admin or above.
 /// </summary>
 [ApiController]
+[Route("api/v1/analytics")]
 [Route("api/analytics")]
 [Authorize(Policy = "Faculty")]
 public sealed class AnalyticsController : ControllerBase

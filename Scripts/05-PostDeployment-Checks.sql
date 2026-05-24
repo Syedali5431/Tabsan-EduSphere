@@ -508,10 +508,82 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV4' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV5' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v4';
+	AND DemoValue = N'FullDummyData-v5';
+
+SELECT 'DummySeed_CourseOfferingsDistinctSemesterCount' AS [CheckName], COUNT(DISTINCT co.[SemesterId]) AS [Value]
+FROM [course_offerings] co;
+
+SELECT 'DummySeed_SemesterCoverage_AllSemestersHaveOfferings' AS [CheckName],
+	COUNT(1) AS [Value]
+FROM [semesters] s
+WHERE EXISTS (SELECT 1 FROM [course_offerings] co WHERE co.[SemesterId] = s.[Id]);
+
+SELECT 'DummySeed_SchoolClassSemesterCoverageCount' AS [CheckName],
+	COUNT(DISTINCT t.[SemesterId]) AS [Value]
+FROM [timetables] t
+INNER JOIN [departments] d ON d.[Id] = t.[DepartmentId]
+WHERE d.[InstitutionType] = 0;
+
+SELECT 'DummySeed_CollegeClassSemesterCoverageCount' AS [CheckName],
+	COUNT(DISTINCT t.[SemesterId]) AS [Value]
+FROM [timetables] t
+INNER JOIN [departments] d ON d.[Id] = t.[DepartmentId]
+WHERE d.[InstitutionType] = 1;
+
+SELECT 'DummySeed_SchoolClassEntryCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries] te
+WHERE te.[SubjectName] LIKE N'Class %';
+
+SELECT 'DummySeed_CollegeClassEntryCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries] te
+WHERE te.[SubjectName] LIKE N'College Semester %';
+
+SELECT 'DummySeed_DepartmentsMissingAdminUser' AS [CheckName], COUNT(1) AS [Value]
+FROM [departments] d
+WHERE NOT EXISTS
+(
+	SELECT 1
+	FROM [users] u
+	WHERE u.[DepartmentId] = d.[Id]
+	  AND u.[RoleId] = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin')
+	  AND u.[IsDeleted] = 0
+);
+
+SELECT 'DummySeed_DepartmentsMissingFacultyUser' AS [CheckName], COUNT(1) AS [Value]
+FROM [departments] d
+WHERE NOT EXISTS
+(
+	SELECT 1
+	FROM [users] u
+	WHERE u.[DepartmentId] = d.[Id]
+	  AND u.[RoleId] = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Faculty')
+	  AND u.[IsDeleted] = 0
+);
+
+SELECT 'DummySeed_DepartmentsMissingFinanceUser' AS [CheckName], COUNT(1) AS [Value]
+FROM [departments] d
+WHERE NOT EXISTS
+(
+	SELECT 1
+	FROM [users] u
+	WHERE u.[DepartmentId] = d.[Id]
+	  AND u.[RoleId] = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Finance')
+	  AND u.[IsDeleted] = 0
+);
+
+SELECT 'DummySeed_DepartmentsMissingStudentUser' AS [CheckName], COUNT(1) AS [Value]
+FROM [departments] d
+WHERE NOT EXISTS
+(
+	SELECT 1
+	FROM [users] u
+	WHERE u.[DepartmentId] = d.[Id]
+	  AND u.[RoleId] = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Student')
+	  AND u.[IsDeleted] = 0
+);
 
 SELECT 'DummySeed_BulkUsersCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [users]
