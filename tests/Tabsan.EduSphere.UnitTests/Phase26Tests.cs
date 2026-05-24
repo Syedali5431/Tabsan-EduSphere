@@ -844,19 +844,19 @@ file sealed class StubAttendanceService : IAttendanceService
         _items = items;
     }
 
-    public Task<bool> MarkAsync(MarkAttendanceRequest request, Guid markedByUserId, CancellationToken ct = default)
+    public Task<bool> MarkAsync(MarkAttendanceRequest request, Guid markedByUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task<int> BulkMarkAsync(BulkMarkAttendanceRequest request, Guid markedByUserId, CancellationToken ct = default)
+    public Task<int> BulkMarkAsync(BulkMarkAttendanceRequest request, Guid markedByUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task<bool> CorrectAsync(CorrectAttendanceRequest request, Guid correctedByUserId, CancellationToken ct = default)
+    public Task<bool> CorrectAsync(CorrectAttendanceRequest request, Guid correctedByUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task<IReadOnlyList<AttendanceResponse>> GetByOfferingAsync(Guid courseOfferingId, DateTime? from = null, DateTime? to = null, CancellationToken ct = default)
+    public Task<IReadOnlyList<AttendanceResponse>> GetByOfferingAsync(Guid courseOfferingId, DateTime? from = null, DateTime? to = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<AttendanceResponse>>(_items.Where(i => i.CourseOfferingId == courseOfferingId).ToList());
 
-    public Task<IReadOnlyList<AttendanceResponse>> GetByStudentAsync(Guid studentProfileId, Guid? courseOfferingId = null, CancellationToken ct = default)
+    public Task<IReadOnlyList<AttendanceResponse>> GetByStudentAsync(Guid studentProfileId, Guid? courseOfferingId = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
         var q = _items.Where(i => i.StudentProfileId == studentProfileId);
         if (courseOfferingId.HasValue)
@@ -864,10 +864,10 @@ file sealed class StubAttendanceService : IAttendanceService
         return Task.FromResult<IReadOnlyList<AttendanceResponse>>(q.ToList());
     }
 
-    public Task<AttendanceSummaryResponse> GetSummaryAsync(Guid studentProfileId, Guid courseOfferingId, CancellationToken ct = default)
+    public Task<AttendanceSummaryResponse> GetSummaryAsync(Guid studentProfileId, Guid courseOfferingId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task<IReadOnlyList<(Guid StudentProfileId, Guid CourseOfferingId, double AttendancePercent)>> GetBelowThresholdAsync(double thresholdPercent, CancellationToken ct = default)
+    public Task<IReadOnlyList<(Guid StudentProfileId, Guid CourseOfferingId, double AttendancePercent)>> GetBelowThresholdAsync(double thresholdPercent, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 }
 
@@ -880,13 +880,16 @@ file sealed class StubAnnouncementService : IAnnouncementService
         _itemsByOffering = itemsByOffering;
     }
 
-    public Task<List<CourseAnnouncementDto>> GetByOfferingAsync(Guid offeringId, CancellationToken ct = default)
+    public Task<List<CourseAnnouncementDto>> GetByOfferingAsync(Guid offeringId, bool includeInactive = false, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => Task.FromResult(_itemsByOffering.TryGetValue(offeringId, out var items) ? items.ToList() : []);
 
-    public Task<CourseAnnouncementDto> CreateAsync(CreateAnnouncementRequest request, CancellationToken ct = default)
+    public Task<CourseAnnouncementDto> CreateAsync(CreateAnnouncementRequest request, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task DeleteAsync(Guid announcementId, CancellationToken ct = default)
+    public Task SetActiveAsync(Guid announcementId, bool isActive, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => throw new NotSupportedException();
+
+    public Task DeleteAsync(Guid announcementId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
 }
 
@@ -942,7 +945,7 @@ file sealed class StubTimetableService : ITimetableService
     public Task<byte[]> ExportPdfAsync(Guid timetableId, CancellationToken ct = default)
         => throw new NotSupportedException();
 
-    public Task<IList<TeacherTimetableEntryDto>> GetForTeacherAsync(Guid facultyUserId, CancellationToken ct = default)
+    public Task<IList<TeacherTimetableEntryDto>> GetForTeacherAsync(Guid facultyUserId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct = default)
         => throw new NotSupportedException();
 }
 

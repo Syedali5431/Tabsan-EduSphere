@@ -230,7 +230,7 @@ file sealed class StubTimetableRepository : ITimetableRepository
     public void RemoveEntry(TimetableEntry entry) { }
     public Task<TimetableEntry?> GetEntryByIdAsync(Guid entryId, CancellationToken ct = default) => Task.FromResult<TimetableEntry?>(null);
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(0);
-    public Task<IList<TimetableEntry>> GetTeacherEntriesAsync(Guid facultyUserId, CancellationToken ct = default) => Task.FromResult<IList<TimetableEntry>>([]);
+    public Task<IList<TimetableEntry>> GetTeacherEntriesAsync(Guid facultyUserId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct = default) => Task.FromResult<IList<TimetableEntry>>([]);
     public Task<IList<TimetableEntry>> GetEntriesByCourseOfferingAsync(Guid courseId, Guid semesterId, CancellationToken ct = default) => Task.FromResult<IList<TimetableEntry>>([]);
 }
 
