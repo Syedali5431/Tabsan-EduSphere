@@ -17,6 +17,15 @@ public class SidebarMenuController : ControllerBase
 {
     private readonly ISidebarMenuService _service;
     private readonly IModuleEntitlementResolver _moduleEntitlement;
+    private readonly IInstitutionPolicyService _institutionPolicy;
+
+    private static readonly HashSet<string> UniversityOnlyDegreeAuditMenuKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "degree_audit",
+            "graduation_eligibility",
+            "degree_rules"
+        };
 
     private static readonly IReadOnlyDictionary<string, string> MenuModuleKeyMap =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -56,10 +65,14 @@ public class SidebarMenuController : ControllerBase
             ["theme_settings"] = "themes"
         };
 
-    public SidebarMenuController(ISidebarMenuService service, IModuleEntitlementResolver moduleEntitlement)
+    public SidebarMenuController(
+        ISidebarMenuService service,
+        IModuleEntitlementResolver moduleEntitlement,
+        IInstitutionPolicyService institutionPolicy)
     {
         _service = service;
         _moduleEntitlement = moduleEntitlement;
+        _institutionPolicy = institutionPolicy;
     }
 
     // ── GET /api/v1/sidebar-menu/my-visible ───────────────────────────────────
@@ -72,11 +85,13 @@ public class SidebarMenuController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetVisibleForCurrentUser(CancellationToken ct)
     {
+        var policy = await _institutionPolicy.GetPolicyAsync(ct);
+
         if (User.IsInRole("SuperAdmin"))
         {
             var allMenus = await _service.GetTopLevelMenusAsync(ct);
-            // SuperAdmin must always see the full sidebar regardless of module toggles.
-            return Ok(allMenus.OrderBy(m => m.DisplayOrder));
+            var policyFiltered = ApplyInstitutionPolicyFilters(allMenus, policy);
+            return Ok(policyFiltered.OrderBy(m => m.DisplayOrder));
         }
 
         var effectiveRoles = User.Claims
@@ -96,6 +111,7 @@ public class SidebarMenuController : ControllerBase
 
         var topLevel = await _service.GetTopLevelMenusAsync(ct);
         var visible = FilterVisible(topLevel, filteredRoles);
+        visible = ApplyInstitutionPolicyFilters(visible, policy);
         var moduleFilteredVisible = await FilterByModuleActivationAsync(visible, ct);
         return Ok(moduleFilteredVisible);
     }
@@ -236,5 +252,23 @@ public class SidebarMenuController : ControllerBase
             return true;
 
         return await _moduleEntitlement.IsActiveAsync(moduleKey, ct);
+    }
+
+    private static IList<SidebarMenuItemDto> ApplyInstitutionPolicyFilters(
+        IEnumerable<SidebarMenuItemDto> menus,
+        InstitutionPolicySnapshot policy)
+    {
+        var result = new List<SidebarMenuItemDto>();
+
+        foreach (var menu in menus.OrderBy(m => m.DisplayOrder))
+        {
+            if (!policy.IncludeUniversity && UniversityOnlyDegreeAuditMenuKeys.Contains(menu.Key))
+                continue;
+
+            var children = ApplyInstitutionPolicyFilters(menu.SubMenus, policy);
+            result.Add(menu with { SubMenus = children.ToList() });
+        }
+
+        return result;
     }
 }

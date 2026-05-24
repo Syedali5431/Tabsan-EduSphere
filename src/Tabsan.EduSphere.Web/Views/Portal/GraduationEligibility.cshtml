@@ -69,6 +69,23 @@ else
                             <a asp-action="DegreeAudit"
                                asp-route-studentProfileId="@item.StudentProfileId"
                                class="btn btn-sm btn-outline-primary">View Audit</a>
+
+                            @if (item.IsEligible)
+                            {
+                                <form asp-action="GraduationEligibilityGraduate"
+                                      method="post"
+                                      class="d-inline ms-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="studentId" value="@item.StudentProfileId" />
+                                    <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                    <input type="hidden" name="programId" value="@Model.ProgramId" />
+                                    <button type="submit"
+                                            class="btn btn-sm btn-success"
+                                            onclick="return confirm('Graduate this eligible student now?');">
+                                        Graduate
+                                    </button>
+                                </form>
+                            }
                         </td>
                     </tr>
                 }

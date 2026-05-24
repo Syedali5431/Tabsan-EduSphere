@@ -194,6 +194,26 @@ public class PortalController : Controller
         => ex.Message.Contains("status 401", StringComparison.OrdinalIgnoreCase)
            || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase);
 
+    private async Task<(bool Allowed, string Message)> CanUseDegreeAuditAsync(CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+        if (identity is { IsSuperAdmin: false, InstitutionType: not null } && identity.InstitutionType.Value != 0)
+            return (false, "Degree Audit is available only for university institution type.");
+
+        try
+        {
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            if (matrix is not null && !matrix.IncludeUniversity)
+                return (false, "Degree Audit is hidden because University is disabled by the current license policy.");
+        }
+        catch
+        {
+            // API endpoints also enforce this; fail-open in UI when capability matrix cannot be loaded.
+        }
+
+        return (true, string.Empty);
+    }
+
     [HttpGet]
     public IActionResult ForceChangePassword()
     {
@@ -4898,6 +4918,14 @@ public class PortalController : Controller
     public async Task<IActionResult> DegreeAudit(Guid? studentProfileId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var model = new DegreeAuditPageModel();
         try
         {
@@ -4920,6 +4948,14 @@ public class PortalController : Controller
     public async Task<IActionResult> GraduationEligibility(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var model = new EligibilityPageModel { DepartmentId = departmentId, ProgramId = programId };
         try
         {
@@ -4929,10 +4965,47 @@ public class PortalController : Controller
         return View(model);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> GraduationEligibilityGraduate(
+        Guid studentId,
+        Guid? departmentId,
+        Guid? programId,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(GraduationEligibility), new { departmentId, programId });
+        }
+
+        try
+        {
+            await _api.GraduateStudentAsync(studentId, ct);
+            TempData["Message"] = "Student graduated successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Message"] = "Error: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(GraduationEligibility), new { departmentId, programId });
+    }
+
     // Final-Touches Phase 17 Stage 17.2 — SuperAdmin manages degree rules
     public async Task<IActionResult> DegreeRules(CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var model = new DegreeRulesPageModel();
         try
         {
@@ -4948,6 +5021,14 @@ public class PortalController : Controller
     public async Task<IActionResult> DegreeRuleCreate(CreateDegreeRuleWebRequest request, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(DegreeRules));
+        }
+
         try
         {
             await _api.CreateDegreeRuleAsync(request, ct);
@@ -4962,6 +5043,14 @@ public class PortalController : Controller
     public async Task<IActionResult> DegreeRuleDelete(Guid ruleId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["Message"] = access.Message;
+            return RedirectToAction(nameof(DegreeRules));
+        }
+
         try
         {
             await _api.DeleteDegreeRuleAsync(ruleId, ct);
@@ -4976,6 +5065,11 @@ public class PortalController : Controller
     public async Task<IActionResult> CourseSetType(Guid courseId, string courseType, CancellationToken ct)
     {
         if (!_api.IsConnected()) return Json(new { success = false });
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+            return Json(new { success = false, message = access.Message });
+
         try
         {
             await _api.SetCourseTypeAsync(courseId, courseType, ct);

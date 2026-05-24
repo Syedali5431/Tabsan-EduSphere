@@ -12,10 +12,17 @@ public interface IDegreeAuditRepository
     // ── DegreeRule CRUD ───────────────────────────────────────────────────────
 
     /// <summary>Returns the active (non-deleted) degree rule for the given academic program, or null.</summary>
-    Task<DegreeRule?> GetRuleByProgramAsync(Guid academicProgramId, CancellationToken ct = default);
+    Task<DegreeRule?> GetRuleByProgramAsync(
+        Guid academicProgramId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     /// <summary>Returns all degree rules (SuperAdmin view).</summary>
-    Task<IReadOnlyList<DegreeRule>> GetAllRulesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<DegreeRule>> GetAllRulesAsync(
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     /// <summary>Returns the degree rule by its own ID, or null.</summary>
     Task<DegreeRule?> GetRuleByIdAsync(Guid ruleId, CancellationToken ct = default);
@@ -33,7 +40,11 @@ public interface IDegreeAuditRepository
     /// Each row represents one Result that has a GradePoint of at least 1.0 (D grade pass),
     /// joined with CourseOffering → Course for CreditHours and CourseType.
     /// </summary>
-    Task<IReadOnlyList<CreditRow>> GetEarnedCreditsAsync(Guid studentProfileId, CancellationToken ct = default);
+    Task<IReadOnlyList<CreditRow>> GetEarnedCreditsAsync(
+        Guid studentProfileId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     /// <summary>Returns the academic program ID linked to the student's profile, or null.</summary>
     Task<Guid?> GetStudentProgramIdAsync(Guid studentProfileId, CancellationToken ct = default);

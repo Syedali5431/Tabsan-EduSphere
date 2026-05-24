@@ -16,24 +16,45 @@ public class DegreeAuditRepository : IDegreeAuditRepository
 
     // ── DegreeRule CRUD ───────────────────────────────────────────────────────
 
-    public Task<DegreeRule?> GetRuleByProgramAsync(Guid academicProgramId, CancellationToken ct = default)
-        => _db.DegreeRules
-              .Include(r => r.AcademicProgram)
-              .Include(r => r.RequiredCourses)
-                  .ThenInclude(rc => rc.Course)
-              .FirstOrDefaultAsync(r => r.AcademicProgramId == academicProgramId, ct);
+    public Task<DegreeRule?> GetRuleByProgramAsync(
+        Guid academicProgramId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
+    {
+        var query = _db.DegreeRules
+            .Include(r => r.AcademicProgram)
+                .ThenInclude(p => p.Department)
+            .Include(r => r.RequiredCourses)
+                .ThenInclude(rc => rc.Course)
+            .Where(r => r.AcademicProgramId == academicProgramId);
 
-    public async Task<IReadOnlyList<DegreeRule>> GetAllRulesAsync(CancellationToken ct = default)
-        => await _db.DegreeRules
-                    .Include(r => r.AcademicProgram)
-                    .Include(r => r.RequiredCourses)
-                        .ThenInclude(rc => rc.Course)
-                    .OrderBy(r => r.AcademicProgram.Name)
-                    .ToListAsync(ct);
+        query = ApplyTenantCampusScope(query, tenantId, campusId);
+        return query.FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<DegreeRule>> GetAllRulesAsync(
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
+    {
+        var query = _db.DegreeRules
+            .Include(r => r.AcademicProgram)
+                .ThenInclude(p => p.Department)
+            .Include(r => r.RequiredCourses)
+                .ThenInclude(rc => rc.Course)
+            .AsQueryable();
+
+        query = ApplyTenantCampusScope(query, tenantId, campusId);
+        return await query
+            .OrderBy(r => r.AcademicProgram.Name)
+            .ToListAsync(ct);
+    }
 
     public Task<DegreeRule?> GetRuleByIdAsync(Guid ruleId, CancellationToken ct = default)
         => _db.DegreeRules
               .Include(r => r.AcademicProgram)
+                  .ThenInclude(p => p.Department)
               .Include(r => r.RequiredCourses)
                   .ThenInclude(rc => rc.Course)
               .FirstOrDefaultAsync(r => r.Id == ruleId, ct);
@@ -47,7 +68,10 @@ public class DegreeAuditRepository : IDegreeAuditRepository
 
     // Final-Touches Phase 17 Stage 17.1 — join Results → CourseOffering → Course for credit aggregation
     public async Task<IReadOnlyList<CreditRow>> GetEarnedCreditsAsync(
-        Guid studentProfileId, CancellationToken ct = default)
+        Guid studentProfileId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null)
     {
         var rows = await _db.Set<Domain.Assignments.Result>()
             .Where(r => r.StudentProfileId == studentProfileId
@@ -64,6 +88,8 @@ public class DegreeAuditRepository : IDegreeAuditRepository
                 rco => rco.co.CourseId,
                 c   => c.Id,
                 (rco, c) => new { rco.r, rco.co, c })
+            .Where(x => !tenantId.HasValue || x.co.TenantId == tenantId.Value)
+            .Where(x => !campusId.HasValue || x.co.CampusId == campusId.Value)
             .Select(x => new CreditRow(
                 x.co.Id,
                 x.c.Id,
@@ -76,6 +102,20 @@ public class DegreeAuditRepository : IDegreeAuditRepository
             .ToListAsync(ct);
 
         return rows;
+    }
+
+    private static IQueryable<DegreeRule> ApplyTenantCampusScope(
+        IQueryable<DegreeRule> query,
+        Guid? tenantId,
+        Guid? campusId)
+    {
+        if (tenantId.HasValue)
+            query = query.Where(r => r.AcademicProgram.Department.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(r => r.AcademicProgram.Department.CampusId == campusId.Value);
+
+        return query;
     }
 
     public async Task<Guid?> GetStudentProgramIdAsync(Guid studentProfileId, CancellationToken ct = default)

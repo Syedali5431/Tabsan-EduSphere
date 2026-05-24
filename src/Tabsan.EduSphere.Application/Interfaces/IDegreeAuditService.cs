@@ -11,18 +11,34 @@ public interface IDegreeAuditService
 {
     // Final-Touches Phase 17 Stage 17.1 — credit completion audit
     /// <summary>Returns the full credit audit and eligibility check for a student.</summary>
-    Task<DegreeAuditResponse> GetAuditAsync(Guid studentProfileId, CancellationToken ct = default);
+    Task<DegreeAuditResponse> GetAuditAsync(
+        Guid studentProfileId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     // Final-Touches Phase 17 Stage 17.2 — eligibility list for admin
     /// <summary>Returns an eligibility summary list for all students in a department/program.</summary>
-    Task<IReadOnlyList<EligibilityListItem>> GetEligibilityListAsync(Guid? departmentId, Guid? programId, CancellationToken ct = default);
+    Task<IReadOnlyList<EligibilityListItem>> GetEligibilityListAsync(
+        Guid? departmentId,
+        Guid? programId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     // Final-Touches Phase 17 Stage 17.2 — degree rule CRUD
     /// <summary>Returns all degree rules.</summary>
-    Task<IReadOnlyList<DegreeRuleResponse>> GetAllRulesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<DegreeRuleResponse>> GetAllRulesAsync(
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     /// <summary>Returns the degree rule for a specific program, or null.</summary>
-    Task<DegreeRuleResponse?> GetRuleByProgramAsync(Guid programId, CancellationToken ct = default);
+    Task<DegreeRuleResponse?> GetRuleByProgramAsync(
+        Guid programId,
+        CancellationToken ct = default,
+        Guid? tenantId = null,
+        Guid? campusId = null);
 
     /// <summary>Creates a new degree rule for a program.</summary>
     Task<DegreeRuleResponse> CreateRuleAsync(CreateDegreeRuleRequest request, CancellationToken ct = default);

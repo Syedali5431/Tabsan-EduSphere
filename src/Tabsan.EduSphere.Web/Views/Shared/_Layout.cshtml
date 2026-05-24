@@ -93,6 +93,28 @@
             || string.Equals(s.Key, "departments", StringComparison.OrdinalIgnoreCase)));
     var showAiChatLauncher = isConnected && (!useDynamicMenus || hasAiChatMenu || showAdminLinks || hasAdminLikeDynamicMenu);
 
+    var showDegreeAuditSidebar = true;
+    if (isConnected)
+    {
+        if (sessionId is { IsSuperAdmin: false, InstitutionType: not null } && sessionId.InstitutionType.Value != 0)
+        {
+            showDegreeAuditSidebar = false;
+        }
+        else
+        {
+            try
+            {
+                var matrix = await EduApi.GetPortalCapabilityMatrixAsync(CancellationToken.None);
+                if (matrix is not null && !matrix.IncludeUniversity)
+                    showDegreeAuditSidebar = false;
+            }
+            catch
+            {
+                // API-side filtering is authoritative; keep UI resilient on transient failures.
+            }
+        }
+    }
+
     // Load portal branding (university name, initials, subtitle, footer)
     const string BrandingCacheKey = "PortalBrandingCache";
     var branding = new Tabsan.EduSphere.Web.Models.Portal.PortalBrandingWebModel();
@@ -390,6 +412,14 @@
                                     continue;
                                 }
 
+                                if (!showDegreeAuditSidebar
+                                    && (sub.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
+                                        || sub.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
+                                        || sub.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    continue;
+                                }
+
                                 if (isStudent && !canStudentSeeFyp && sub.Key.Equals("fyp", StringComparison.OrdinalIgnoreCase))
                                 {
                                     continue;
@@ -404,6 +434,14 @@
                         else
                         {
                             if (top.Key.Equals("ai_chat", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            if (!showDegreeAuditSidebar
+                                && (top.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
+                                    || top.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
+                                    || top.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
                             {
                                 continue;
                             }
@@ -446,9 +484,6 @@
                         {
                             ("Faculty Related", 2, 2600, "Report Center", "Portal", "ReportCenter"),
                             ("Faculty Related", 2, 2610, "Analytics", "Portal", "Analytics"),
-                            ("Academic Related", 2, 2620, "Degree Audit", "Portal", "DegreeAudit"),
-                            ("Academic Related", 2, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"),
-                            ("Academic Related", 2, 2640, "Degree Rules", "Portal", "DegreeRules"),
                             ("Academic Related", 2, 2650, "Graduation Apply", "Portal", "GraduationApply"),
                             ("Academic Related", 2, 2660, "Graduation Applications", "Portal", "GraduationApplications"),
                             ("Academic Related", 2, 2670, "Grading Config", "Portal", "GradingConfig"),
@@ -469,6 +504,13 @@
                             ("Settings", 5, 2810, "Tenant Management", "Portal", "TenantManagement"),
                             ("Settings", 5, 2820, "Campus Management", "Portal", "CampusManagement")
                         };
+
+                        if (showDegreeAuditSidebar)
+                        {
+                            groupedLinks.Add(("Academic Related", 2, 2620, "Degree Audit", "Portal", "DegreeAudit"));
+                            groupedLinks.Add(("Academic Related", 2, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
+                            groupedLinks.Add(("Academic Related", 2, 2640, "Degree Rules", "Portal", "DegreeRules"));
+                        }
 
                         foreach (var link in superAdminFallbackLinks)
                         {
