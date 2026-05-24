@@ -85,6 +85,8 @@ else if (Model.IsStudent)
                                         <form method="post" asp-action="StudentDropEnrollment" style="display:inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="courseOfferingId" value="@e.CourseOfferingId" />
+                                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                                     onclick="return confirm('Drop @e.CourseCode?')">Drop</button>
                                         </form>
@@ -103,15 +105,21 @@ else if (Model.IsStudent)
         <div class="modal-dialog">
             <form method="post" asp-action="StudentEnroll">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Enroll in a Course</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        @if (!Model.IsEnrollmentActive)
+                        {
+                            <div class="alert alert-warning">Enrollment is deactivated for the selected tenant/campus scope.</div>
+                        }
                         <div class="mb-3">
                             <label class="form-label">Course Offering</label>
-                            <select name="courseOfferingId" class="form-select" required>
+                            <select name="courseOfferingId" class="form-select" required @(Model.IsEnrollmentActive ? null : "disabled")>
                                 <option value="">Select offering…</option>
                                 @foreach (var o in Model.Offerings.Where(o => o.IsActive))
                                 {
@@ -122,7 +130,7 @@ else if (Model.IsStudent)
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Enroll</button>
+                        <button type="submit" class="btn btn-primary" @(Model.IsEnrollmentActive ? null : "disabled")>Enroll</button>
                     </div>
                 </div>
             </form>
@@ -144,6 +152,29 @@ else
                 </div>
             </div>
             <form method="get" asp-action="Enrollments" class="row g-2 align-items-end filter-toolbar">
+                @if (Model.Identity?.IsSuperAdmin == true)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
                 <div class="col-md-6">
                     <label class="form-label">Select Course Offering</label>
                     <select name="offeringId" class="form-select" onchange="this.form.submit()">
@@ -157,12 +188,26 @@ else
                 @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
                     <div class="col-md-auto">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#enrollStudentModal">
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#enrollStudentModal" @(Model.IsEnrollmentActive ? null : "disabled")>
                             Enroll Student
                         </button>
                     </div>
                 }
             </form>
+
+            @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            {
+                <form method="post" asp-action="SetEnrollmentActive" class="mt-3 d-flex justify-content-end">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                    <input type="hidden" name="isActive" value="@(!Model.IsEnrollmentActive)" />
+                    <button type="submit" class="btn @(Model.IsEnrollmentActive ? "btn-outline-danger" : "btn-outline-success") btn-sm">
+                        @(Model.IsEnrollmentActive ? "Deactivate Enrollment" : "Activate Enrollment")
+                    </button>
+                </form>
+            }
         </div>
     </div>
 
@@ -219,8 +264,10 @@ else
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="enrollmentId" value="@e.Id" />
                                                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('Drop this enrollment?')">Drop</button>
+                                                    onclick="return confirm('Drop this enrollment?')" @(Model.IsEnrollmentActive ? null : "disabled")>Drop</button>
                                             </form>
                                         </td>
                                     }
@@ -241,15 +288,21 @@ else
                 <form method="post" asp-action="EnrollStudent">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="courseOfferingId" value="@Model.SelectedOfferingId" />
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Enroll Student</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
+                            @if (!Model.IsEnrollmentActive)
+                            {
+                                <div class="alert alert-warning">Enrollment is deactivated for the selected tenant/campus scope.</div>
+                            }
                             <div class="mb-3">
                                 <label class="form-label">Student</label>
-                                <select name="studentProfileId" class="form-select" required>
+                                <select name="studentProfileId" class="form-select" required @(Model.IsEnrollmentActive ? null : "disabled")>
                                     <option value="">Select student…</option>
                                     @foreach (var s in Model.Students)
                                     {
@@ -260,7 +313,7 @@ else
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Enroll</button>
+                            <button type="submit" class="btn btn-primary" @(Model.IsEnrollmentActive ? null : "disabled")>Enroll</button>
                         </div>
                     </div>
                 </form>

@@ -2181,7 +2181,7 @@ public class PortalController : Controller
             else if (offeringId.HasValue)
             {
                 model.Records = await _api.GetAttendanceByOfferingAsync(offeringId.Value, ct);
-                model.Roster  = await _api.GetEnrollmentRosterAsync(offeringId.Value, ct);
+                model.Roster  = await _api.GetEnrollmentRosterAsync(offeringId.Value, null, null, ct);
             }
 
             model.CourseOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
@@ -2269,7 +2269,7 @@ public class PortalController : Controller
             else if (offeringId.HasValue)
             {
                 model.Results   = await _api.GetResultsByOfferingAsync(offeringId.Value, ct);
-                model.Roster    = await _api.GetEnrollmentRosterAsync(offeringId.Value, ct);
+                model.Roster    = await _api.GetEnrollmentRosterAsync(offeringId.Value, null, null, ct);
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
@@ -3318,27 +3318,48 @@ public class PortalController : Controller
     // Final-Touches Phase 8 Stage 8.1+8.2 — student sees own courses; admin sees offering roster + students list
     // Issue-Fix Phase 3 Stage 3.3 — Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
     [HttpGet]
-    public async Task<IActionResult> Enrollments(Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> Enrollments(Guid? tenantId, Guid? campusId, Guid? offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Enrollments";
         var isStudent = User.IsInRole("Student");
+        var identity = _api.GetSessionIdentity();
         var model = new EnrollmentsPageModel
         {
             IsConnected        = _api.IsConnected(),
             SelectedOfferingId = offeringId,
+            SelectedTenantId   = tenantId,
+            SelectedCampusId   = campusId,
             IsStudent          = isStudent,
+            Identity           = identity,
             Message            = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
-            var isAdmin = sessionId?.IsAdmin == true || sessionId?.IsSuperAdmin == true;
+            var isAdmin = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.IsEnrollmentActive = await _api.GetEnrollmentScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            if (!model.IsEnrollmentActive)
+            {
+                model.Message ??= "Enrollment is currently deactivated for the selected tenant/campus scope.";
+            }
 
             // Issue-Fix Phase 3 Stage 3.3 — Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
-            model.Offerings = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
+            model.Offerings = await _api.GetCourseOfferingsAsync(null, model.SelectedTenantId, model.SelectedCampusId, null, ct);
 
-            if (isStudent)
+            if (!model.IsEnrollmentActive)
+            {
+                if (isStudent)
+                    model.MyCourses = await _api.GetMyEnrollmentsAsync(ct);
+            }
+            else if (isStudent)
             {
                 model.MyCourses = await _api.GetMyEnrollmentsAsync(ct);
             }
@@ -3348,16 +3369,41 @@ public class PortalController : Controller
                     model.Students = await _api.GetStudentsAsync(null, ct);
 
                 if (offeringId.HasValue)
-                    model.Roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, ct);
+                    model.Roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, model.SelectedTenantId, model.SelectedCampusId, ct);
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetEnrollmentActive(bool isActive, Guid? tenantId, Guid? campusId, Guid? offeringId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                if (isActive)
+                    await _api.ActivateEnrollmentScopeAsync(tenantId, campusId, ct);
+                else
+                    await _api.DeactivateEnrollmentScopeAsync(tenantId, campusId, ct);
+
+                TempData["PortalMessage"] = isActive
+                    ? "Enrollment activated for selected scope."
+                    : "Enrollment deactivated for selected scope.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = ex.Message;
+            }
+        }
+
+        return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
+    }
+
     // Final-Touches Phase 8 Stage 8.2 — admin enrolls a student
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> EnrollStudent(Guid studentProfileId, Guid courseOfferingId, CancellationToken ct)
+    public async Task<IActionResult> EnrollStudent(Guid studentProfileId, Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
@@ -3365,12 +3411,12 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "Student enrolled successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Enrollments), new { offeringId = courseOfferingId });
+        return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId = courseOfferingId });
     }
 
     // Final-Touches Phase 8 Stage 8.2 — admin drops any enrollment by ID
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AdminDropEnrollment(Guid enrollmentId, Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> AdminDropEnrollment(Guid enrollmentId, Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
@@ -3378,12 +3424,12 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "Enrollment dropped.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Enrollments), new { offeringId });
+        return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
     }
 
     // Final-Touches Phase 8 Stage 8.2 — student self-enrolls in a course offering
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> StudentEnroll(Guid courseOfferingId, CancellationToken ct)
+    public async Task<IActionResult> StudentEnroll(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
@@ -3391,12 +3437,12 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "Enrolled successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Enrollments));
+        return RedirectToAction(nameof(Enrollments), new { tenantId, campusId });
     }
 
     // Final-Touches Phase 8 Stage 8.2 — student drops their own enrollment
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> StudentDropEnrollment(Guid courseOfferingId, CancellationToken ct)
+    public async Task<IActionResult> StudentDropEnrollment(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
@@ -3404,7 +3450,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "Course dropped.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Enrollments));
+        return RedirectToAction(nameof(Enrollments), new { tenantId, campusId });
     }
 
     // ── Reports ────────────────────────────────────────────────────────────

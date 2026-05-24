@@ -347,13 +347,16 @@ public interface IEduApiClient
     Task SubmitProofAsync(Guid receiptId, string proofNote, CancellationToken ct);
 
     // Enrollments
-    Task<List<EnrollmentRosterItem>> GetEnrollmentRosterAsync(Guid offeringId, CancellationToken ct);
+    Task<List<EnrollmentRosterItem>> GetEnrollmentRosterAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     // Final-Touches Phase 8 Stage 8.1+8.2 — student my-courses, admin enroll/drop, student enroll/drop
     Task<List<MyEnrollmentItem>> GetMyEnrollmentsAsync(CancellationToken ct);
     Task AdminEnrollStudentAsync(Guid studentProfileId, Guid courseOfferingId, CancellationToken ct);
     Task AdminDropEnrollmentAsync(Guid enrollmentId, CancellationToken ct);
     Task StudentEnrollAsync(Guid courseOfferingId, CancellationToken ct);
     Task StudentDropEnrollmentAsync(Guid courseOfferingId, CancellationToken ct);
+    Task<bool> GetEnrollmentScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeactivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Portal / Dashboard Settings
     Task<PortalBrandingWebModel> GetPortalBrandingAsync(CancellationToken ct);
@@ -3535,9 +3538,9 @@ public class EduApiClient : IEduApiClient
 
     // ── Enrollments ───────────────────────────────────────────────────────────
 
-    public async Task<List<EnrollmentRosterItem>> GetEnrollmentRosterAsync(Guid offeringId, CancellationToken ct)
+    public async Task<List<EnrollmentRosterItem>> GetEnrollmentRosterAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<RosterApiDto>>($"api/v1/enrollment/roster/{offeringId}", ct) ?? new();
+        var raw = await GetAsync<List<RosterApiDto>>($"api/v1/enrollment/roster/{offeringId}{BuildEnrollmentScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(r => new EnrollmentRosterItem
         {
             Id                 = r.Id,
@@ -3577,6 +3580,34 @@ public class EduApiClient : IEduApiClient
 
     public async Task StudentDropEnrollmentAsync(Guid courseOfferingId, CancellationToken ct)
         => await DeleteAsync($"api/v1/enrollment/{courseOfferingId}", ct);
+
+    public async Task<bool> GetEnrollmentScopeActiveAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var response = await GetAsync<EnrollmentScopeStatusApiDto>($"api/v1/enrollment/status{BuildEnrollmentScopeQuery(tenantId, campusId)}", ct);
+        return response?.IsActive ?? true;
+    }
+
+    public Task ActivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/enrollment/activate{BuildEnrollmentScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    public Task DeactivateEnrollmentScopeAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/enrollment/deactivate{BuildEnrollmentScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    private static string BuildEnrollmentScopeQuery(Guid? tenantId, Guid? campusId)
+    {
+        var parts = new List<string>();
+        if (tenantId.HasValue)
+            parts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            parts.Add($"campusId={campusId.Value}");
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
+    }
+
+    private sealed class EnrollmentScopeStatusApiDto
+    {
+        public bool IsActive { get; set; }
+    }
 
     private sealed class MyCourseApiDto
     {

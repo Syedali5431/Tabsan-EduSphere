@@ -1079,9 +1079,15 @@ public class EnrollmentsPageModel
     public bool   IsConnected        { get; set; }
     public string? Message           { get; set; }
     public bool   IsStudent          { get; set; }
+    public bool   IsEnrollmentActive { get; set; } = true;
+    public SessionIdentity? Identity { get; set; }
     public List<EnrollmentRosterItem> Roster         { get; set; } = new();
     public List<CourseOfferingItem>   Offerings      { get; set; } = new();
     public Guid?  SelectedOfferingId { get; set; }
+    public Guid?  SelectedTenantId   { get; set; }
+    public Guid?  SelectedCampusId   { get; set; }
+    public List<TenantItem> Tenants  { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<StudentItem>          Students       { get; set; } = new();
     public List<MyEnrollmentItem>     MyCourses      { get; set; } = new();
 }
