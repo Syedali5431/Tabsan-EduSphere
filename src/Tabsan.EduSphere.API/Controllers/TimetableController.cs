@@ -403,15 +403,44 @@ public class TimetableController : ControllerBase
     /// </summary>
     [HttpGet("mine/teacher")]
     [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
-    public async Task<IActionResult> GetMyTeacherTimetable(CancellationToken ct)
+    public async Task<IActionResult> GetMyTeacherTimetable(
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        [FromQuery] bool includeInactive,
+        CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty)
             return Unauthorized(new { message = "User identity could not be resolved." });
 
-        var entries = await _service.GetForTeacherAsync(userId, ct);
+        var scope = await ResolveEffectiveScopeAsync(tenantId, campusId, null, ct);
+        if (scope.Error is not null)
+            return scope.Error;
+
+        // Only admins can include inactive (unpublished) timetables.
+        var canIncludeInactive = includeInactive && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"));
+
+        var entries = await _service.GetForTeacherAsync(userId, scope.TenantId, scope.CampusId, canIncludeInactive, ct);
         return Ok(entries);
     }
+
+    [HttpPost("{id:guid}/activate")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public Task<IActionResult> Activate(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        CancellationToken ct)
+        => Publish(id, tenantId, campusId, ct);
+
+    [HttpPost("{id:guid}/deactivate")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public Task<IActionResult> Deactivate(
+        Guid id,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        CancellationToken ct)
+        => Unpublish(id, tenantId, campusId, ct);
 
     // ── GET /api/v1/timetable/faculty ─────────────────────────────────────────
 

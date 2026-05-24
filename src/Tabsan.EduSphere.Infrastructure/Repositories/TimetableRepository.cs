@@ -68,19 +68,37 @@ public class TimetableRepository : ITimetableRepository
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => _db.SaveChangesAsync(ct);
 
-    public async Task<IList<TimetableEntry>> GetTeacherEntriesAsync(Guid facultyUserId, CancellationToken ct = default)
-        => await _db.TimetableEntries
-              .Include(e => e.Timetable)
-                  .ThenInclude(t => t.AcademicProgram)
-              .Include(e => e.Timetable)
-                  .ThenInclude(t => t.Semester)
-              .Include(e => e.Building)
-              .Include(e => e.Room)
-                  .ThenInclude(r => r!.Building)
-              .Where(e => e.FacultyUserId == facultyUserId && e.Timetable.IsPublished)
-              .OrderBy(e => e.DayOfWeek)
-              .ThenBy(e => e.StartTime)
-              .ToListAsync(ct);
+    public async Task<IList<TimetableEntry>> GetTeacherEntriesAsync(
+        Guid facultyUserId,
+        Guid? tenantId,
+        Guid? campusId,
+        bool includeInactive,
+        CancellationToken ct = default)
+    {
+        var query = _db.TimetableEntries
+            .Include(e => e.Timetable)
+                .ThenInclude(t => t.AcademicProgram)
+            .Include(e => e.Timetable)
+                .ThenInclude(t => t.Semester)
+            .Include(e => e.Building)
+            .Include(e => e.Room)
+                .ThenInclude(r => r!.Building)
+            .Where(e => e.FacultyUserId == facultyUserId);
+
+        if (!includeInactive)
+            query = query.Where(e => e.Timetable.IsPublished);
+
+        if (tenantId.HasValue)
+            query = query.Where(e => e.Timetable.Department.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(e => e.Timetable.Department.CampusId == campusId.Value);
+
+        return await query
+            .OrderBy(e => e.DayOfWeek)
+            .ThenBy(e => e.StartTime)
+            .ToListAsync(ct);
+    }
 
     // Final-Touches Phase 15 Stage 15.2 — GetEntriesByCourseOfferingAsync: timetable clash detection
     /// <summary>

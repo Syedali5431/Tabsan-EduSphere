@@ -53,5 +53,10 @@ public interface ITimetableService
     /// Returns all published timetable slots where the given faculty user is assigned.
     /// Used by the teacher dashboard — filters to only the teacher's own sessions.
     /// </summary>
-    Task<IList<TeacherTimetableEntryDto>> GetForTeacherAsync(Guid facultyUserId, CancellationToken ct = default);
+    Task<IList<TeacherTimetableEntryDto>> GetForTeacherAsync(
+        Guid facultyUserId,
+        Guid? tenantId,
+        Guid? campusId,
+        bool includeInactive,
+        CancellationToken ct = default);
 }

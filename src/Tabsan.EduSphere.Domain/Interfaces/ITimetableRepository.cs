@@ -45,7 +45,12 @@ public interface ITimetableRepository
     /// Loads Timetable (with AcademicProgram, Semester), Room, and Building navigations.
     /// Used by the teacher dashboard view.
     /// </summary>
-    Task<IList<TimetableEntry>> GetTeacherEntriesAsync(Guid facultyUserId, CancellationToken ct = default);
+    Task<IList<TimetableEntry>> GetTeacherEntriesAsync(
+        Guid facultyUserId,
+        Guid? tenantId,
+        Guid? campusId,
+        bool includeInactive,
+        CancellationToken ct = default);
 
     // Final-Touches Phase 15 Stage 15.2 — GetEntriesByCourseOfferingAsync: timetable clash detection
     /// <summary>

@@ -16,6 +16,53 @@
 }
 else
 {
+    var canManage = Model.Identity?.IsAdmin == true || Model.Identity?.IsSuperAdmin == true;
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <form asp-action="TimetableTeacher" method="get" class="row g-2 align-items-end">
+                @if (Model.Identity?.IsSuperAdmin == true)
+                {
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select class="form-select" name="tenantId">
+                            <option value="">All tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId">
+                            <option value="">All campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                @if (canManage)
+                {
+                    <div class="col-12 col-md-3">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) />
+                            <label class="form-check-label" for="includeInactive">Show deactivated</label>
+                        </div>
+                    </div>
+                }
+
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <h2 class="h5 mb-3">Assigned Classes</h2>
@@ -38,6 +85,11 @@ else
                                 <th>Building</th>
                                 <th>Room</th>
                                 <th>Title</th>
+                                <th>Status</th>
+                                @if (canManage)
+                                {
+                                    <th>Actions</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -53,6 +105,36 @@ else
                                     <td>@e.BuildingName</td>
                                     <td>@e.RoomNumber</td>
                                     <td>@e.TimetableTitle</td>
+                                    <td>
+                                        <span class="badge @(e.IsActive ? "bg-success" : "bg-secondary")">@(e.IsActive ? "Active" : "Deactivated")</span>
+                                    </td>
+                                    @if (canManage)
+                                    {
+                                        <td>
+                                            @if (e.IsActive)
+                                            {
+                                                <form asp-action="DeactivateTeacherTimetable" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="timetableId" value="@e.TimetableId" />
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Deactivate</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="ActivateTeacherTimetable" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="timetableId" value="@e.TimetableId" />
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                                </form>
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>

@@ -154,9 +154,13 @@ public class TimetableService : ITimetableService
     // ── Teacher Dashboard ─────────────────────────────────────────────────
 
     public async Task<IList<TeacherTimetableEntryDto>> GetForTeacherAsync(
-        Guid facultyUserId, CancellationToken ct = default)
+        Guid facultyUserId,
+        Guid? tenantId,
+        Guid? campusId,
+        bool includeInactive,
+        CancellationToken ct = default)
     {
-        var entries = await _repo.GetTeacherEntriesAsync(facultyUserId, ct);
+        var entries = await _repo.GetTeacherEntriesAsync(facultyUserId, tenantId, campusId, includeInactive, ct);
         return entries.Select(MapTeacherEntry).ToList();
     }
 
@@ -227,6 +231,7 @@ public class TimetableService : ITimetableService
     );
 
     private static TeacherTimetableEntryDto MapTeacherEntry(TimetableEntry e) => new(
+        e.TimetableId,
         e.Id,
         e.DayOfWeek,
         ((DayOfWeek)e.DayOfWeek).ToString(),
@@ -237,6 +242,7 @@ public class TimetableService : ITimetableService
         e.Timetable?.Semester?.Name ?? string.Empty,
         e.Timetable?.SemesterNumber ?? 0,
         e.SubjectName,
+        e.Timetable?.IsPublished == true,
         e.Building?.Name ?? e.Room?.Building?.Name,
         e.RoomNumber ?? e.Room?.Number
     );

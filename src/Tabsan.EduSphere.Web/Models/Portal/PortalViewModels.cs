@@ -69,6 +69,7 @@ public class TimetableDetailsItem
 
 public class TeacherTimetableEntryItem
 {
+    public Guid TimetableId { get; set; }
     public Guid EntryId { get; set; }
     public string TimetableTitle { get; set; } = string.Empty;
     public int DayOfWeek { get; set; }
@@ -79,6 +80,7 @@ public class TeacherTimetableEntryItem
     public string SemesterName { get; set; } = string.Empty;
     public int SemesterNumber { get; set; }
     public string SubjectName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
     public string? BuildingName { get; set; }
     public string? RoomNumber { get; set; }
 }
@@ -148,6 +150,12 @@ public class TimetableTeacherPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public bool IncludeInactive { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<TeacherTimetableEntryItem> Entries { get; set; } = new();
 }
 

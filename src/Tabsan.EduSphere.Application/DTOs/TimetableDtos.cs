@@ -139,6 +139,7 @@ public record UpsertTimetableEntryCommand(
 /// Shows only the details relevant to the faculty member (no other teachers visible).
 /// </summary>
 public record TeacherTimetableEntryDto(
+    Guid     TimetableId,
     Guid     EntryId,
     int      DayOfWeek,
     string   DayName,
@@ -149,6 +150,7 @@ public record TeacherTimetableEntryDto(
     string   SemesterName,      // e.g. "Fall 2025"
     int      SemesterNumber,
     string   SubjectName,
+    bool     IsActive,
     string?  BuildingName,
     string?  RoomNumber
 );

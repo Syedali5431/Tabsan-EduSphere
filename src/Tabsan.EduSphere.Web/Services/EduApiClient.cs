@@ -36,6 +36,8 @@ public interface IEduApiClient
     Task<Guid> CreateTimetableAsync(CreateTimetableForm form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task AddTimetableEntryAsync(AddTimetableEntryForm form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task PublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task UnpublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct);
     Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct);
 
     // Buildings
@@ -770,8 +772,40 @@ public class EduApiClient : IEduApiClient
         await PostAsync<object, object>(path, new { }, ct);
     }
 
+    public async Task UnpublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/timetable/{timetableId}/unpublish";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        await PostAsync<object, object>(path, new { }, ct);
+    }
+
     public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct)
-        => await GetAsync<List<TeacherTimetableEntryItem>>("api/v1/timetable/mine/teacher", ct) ?? new();
+        => await GetTeacherEntriesAsync(null, null, false, ct);
+
+    public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+        if (includeInactive)
+            queryParts.Add("includeInactive=true");
+
+        var path = "api/v1/timetable/mine/teacher";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await GetAsync<List<TeacherTimetableEntryItem>>(path, ct) ?? new();
+    }
 
     // â”€â”€ Buildings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
