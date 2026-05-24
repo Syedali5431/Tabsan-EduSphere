@@ -838,13 +838,46 @@ public class ResultsPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<ResultItem>              Results  { get; set; } = new();
     public List<LookupItem>              Offerings { get; set; } = new();
     public List<LookupItem>              SemesterOptions { get; set; } = new();
     public List<EnrollmentRosterItem>    Roster    { get; set; } = new();
+    public List<ResultModificationRequestItem> PendingModificationRequests { get; set; } = new();
+    public List<ResultModificationRequestItem> MyModificationRequests { get; set; } = new();
+    public List<ChangeRequestItem> MyRecheckRequests { get; set; } = new();
     public double? Cgpa       { get; set; }
     public Guid?  SelectedOfferingId { get; set; }
+    public Guid?  SelectedTenantId { get; set; }
+    public Guid?  SelectedCampusId { get; set; }
     public string? SelectedSemesterName { get; set; }
+}
+
+public class ResultModificationRequestItem
+{
+    public Guid Id { get; set; }
+    public string ModificationType { get; set; } = string.Empty;
+    public Guid RecordId { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public string ProposedData { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? AdminNotes { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+}
+
+public class ChangeRequestItem
+{
+    public Guid Id { get; set; }
+    public string ChangeDescription { get; set; } = string.Empty;
+    public string NewData { get; set; } = string.Empty;
+    public string? Reason { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? AdminNotes { get; set; }
+    public DateTime? ReviewedAt { get; set; }
 }
 
 // ── Quizzes ───────────────────────────────────────────────────────────────────

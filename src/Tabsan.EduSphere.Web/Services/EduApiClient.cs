@@ -295,11 +295,19 @@ public interface IEduApiClient
     Task CorrectAttendanceAsync(Guid studentProfileId, Guid courseOfferingId, DateTime date, string newStatus, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Results
-    Task<List<ResultItem>> GetMyResultsAsync(CancellationToken ct);
-    Task<List<ResultItem>> GetResultsByOfferingAsync(Guid offeringId, CancellationToken ct);
-    Task CreateResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal marksObtained, decimal maxMarks, CancellationToken ct);
-    Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, CancellationToken ct);
-    Task PublishAllResultsAsync(Guid courseOfferingId, CancellationToken ct);
+    Task<List<ResultItem>> GetMyResultsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<ResultItem>> GetResultsByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CreateResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal marksObtained, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task PublishAllResultsAsync(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<ResultModificationRequestItem> CreateResultModificationRequestAsync(Guid resultId, Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, string reason, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<ResultModificationRequestItem>> GetPendingResultModificationRequestsAsync(CancellationToken ct);
+    Task<List<ResultModificationRequestItem>> GetMyResultModificationRequestsAsync(CancellationToken ct);
+    Task<ResultModificationRequestItem?> GetResultModificationRequestByIdAsync(Guid requestId, CancellationToken ct);
+    Task ApproveResultModificationRequestAsync(Guid requestId, string? notes, CancellationToken ct);
+    Task RejectResultModificationRequestAsync(Guid requestId, string? notes, CancellationToken ct);
+    Task<ChangeRequestItem> CreateResultRecheckRequestAsync(string changeDescription, string newData, string reason, CancellationToken ct);
+    Task<List<ChangeRequestItem>> GetMyResultRecheckRequestsAsync(CancellationToken ct);
 
     // Quizzes
     Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, CancellationToken ct);
@@ -3143,15 +3151,35 @@ public class EduApiClient : IEduApiClient
 
     // ── Results ───────────────────────────────────────────────────────────────
 
-    public async Task<List<ResultItem>> GetMyResultsAsync(CancellationToken ct)
+    public async Task<List<ResultItem>> GetMyResultsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<ResultApiDto>>("api/v1/result/my-results", ct) ?? new();
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/result/my-results";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var raw = await GetAsync<List<ResultApiDto>>(path, ct) ?? new();
         return raw.Select(MapResult).ToList();
     }
 
-    public async Task<List<ResultItem>> GetResultsByOfferingAsync(Guid offeringId, CancellationToken ct)
+    public async Task<List<ResultItem>> GetResultsByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<ResultApiDto>>($"api/v1/result/by-offering/{offeringId}", ct) ?? new();
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/result/by-offering/{offeringId}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var raw = await GetAsync<List<ResultApiDto>>(path, ct) ?? new();
         return raw.Select(MapResult).ToList();
     }
 
@@ -3195,21 +3223,116 @@ public class EduApiClient : IEduApiClient
     // ── Result write methods ──────────────────────────────────────────────────
 
     public Task CreateResultAsync(Guid studentProfileId, Guid courseOfferingId,
-        string resultType, decimal marksObtained, decimal maxMarks, CancellationToken ct)
+        string resultType, decimal marksObtained, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { studentProfileId, courseOfferingId, resultType, marksObtained, maxMarks };
-        return PostAsync<object, object>("api/v1/result", payload, ct);
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/result";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, payload, ct);
     }
 
     public Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType,
-        decimal newMarksObtained, decimal newMaxMarks, CancellationToken ct)
+        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { newMarksObtained, newMaxMarks };
-        return PutAsync<object, object>($"api/v1/result/correct?studentProfileId={studentProfileId}&courseOfferingId={courseOfferingId}&resultType={Uri.EscapeDataString(resultType)}", payload, ct);
+        var queryParts = new List<string>
+        {
+            $"studentProfileId={studentProfileId}",
+            $"courseOfferingId={courseOfferingId}",
+            $"resultType={Uri.EscapeDataString(resultType)}"
+        };
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        return PutAsync<object, object>($"api/v1/result/correct?{string.Join("&", queryParts)}", payload, ct);
     }
 
-    public Task PublishAllResultsAsync(Guid courseOfferingId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/result/publish-all?courseOfferingId={courseOfferingId}", new { }, ct);
+    public Task PublishAllResultsAsync(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string> { $"courseOfferingId={courseOfferingId}" };
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        return PostAsync<object, object>($"api/v1/result/publish-all?{string.Join("&", queryParts)}", new { }, ct);
+    }
+
+    public async Task<ResultModificationRequestItem> CreateResultModificationRequestAsync(
+        Guid resultId,
+        Guid studentProfileId,
+        Guid courseOfferingId,
+        string resultType,
+        decimal newMarksObtained,
+        decimal newMaxMarks,
+        string reason,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        var proposed = new
+        {
+            studentProfileId,
+            courseOfferingId,
+            resultType,
+            newMarksObtained,
+            newMaxMarks,
+            tenantId,
+            campusId
+        };
+
+        var payload = new
+        {
+            modificationType = "Result",
+            recordId = resultId,
+            reason,
+            proposedData = JsonSerializer.Serialize(proposed, _jsonOptions)
+        };
+
+        return await PostAsync<object, ResultModificationRequestItem>("api/v1/modification-requests", payload, ct)
+            ?? throw new InvalidOperationException("Result modification request could not be created.");
+    }
+
+    public async Task<List<ResultModificationRequestItem>> GetPendingResultModificationRequestsAsync(CancellationToken ct)
+        => await GetAsync<List<ResultModificationRequestItem>>("api/v1/modification-requests/pending", ct) ?? new();
+
+    public async Task<List<ResultModificationRequestItem>> GetMyResultModificationRequestsAsync(CancellationToken ct)
+        => await GetAsync<List<ResultModificationRequestItem>>("api/v1/modification-requests/my", ct) ?? new();
+
+    public Task<ResultModificationRequestItem?> GetResultModificationRequestByIdAsync(Guid requestId, CancellationToken ct)
+        => GetAsync<ResultModificationRequestItem>($"api/v1/modification-requests/{requestId}", ct);
+
+    public Task ApproveResultModificationRequestAsync(Guid requestId, string? notes, CancellationToken ct)
+        => PostAsync<string?, object>($"api/v1/modification-requests/{requestId}/approve", notes, ct);
+
+    public Task RejectResultModificationRequestAsync(Guid requestId, string? notes, CancellationToken ct)
+        => PostAsync<string?, object>($"api/v1/modification-requests/{requestId}/reject", notes, ct);
+
+    public async Task<ChangeRequestItem> CreateResultRecheckRequestAsync(string changeDescription, string newData, string reason, CancellationToken ct)
+    {
+        var payload = new
+        {
+            changeDescription,
+            newData,
+            reason
+        };
+
+        return await PostAsync<object, ChangeRequestItem>("api/v1/change-requests", payload, ct)
+            ?? throw new InvalidOperationException("Re-check request could not be created.");
+    }
+
+    public async Task<List<ChangeRequestItem>> GetMyResultRecheckRequestsAsync(CancellationToken ct)
+        => await GetAsync<List<ChangeRequestItem>>("api/v1/change-requests/my", ct) ?? new();
 
     // ── Quizzes ───────────────────────────────────────────────────────────────
 

@@ -2487,26 +2487,40 @@ public class PortalController : Controller
     // ── Results ────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Results(Guid? offeringId, string? semesterName, CancellationToken ct)
+    public async Task<IActionResult> Results(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Results";
+        var identity = _api.GetSessionIdentity();
         var model = new ResultsPageModel
         {
             IsConnected      = _api.IsConnected(),
+            Identity         = identity,
             SelectedOfferingId = offeringId,
             SelectedSemesterName = semesterName,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             Message          = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
-            var allOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
             model.SemesterOptions = BuildSemesterOptions(allOfferings);
             model.Offerings = FilterOfferingsBySemester(allOfferings, semesterName);
-            if (sessionId?.IsStudent == true)
+
+            if (identity?.IsStudent == true)
             {
-                model.Results = await _api.GetMyResultsAsync(ct);
+                model.Results = await _api.GetMyResultsAsync(effectiveTenantId, effectiveCampusId, ct);
 
                 if (offeringId.HasValue)
                 {
@@ -2559,11 +2573,23 @@ public class PortalController : Controller
                         }
                     }
                 }
+
+                model.MyRecheckRequests = await _api.GetMyResultRecheckRequestsAsync(ct);
             }
             else if (offeringId.HasValue)
             {
-                model.Results   = await _api.GetResultsByOfferingAsync(offeringId.Value, ct);
-                model.Roster    = await _api.GetEnrollmentRosterAsync(offeringId.Value, null, null, ct);
+                model.Results   = await _api.GetResultsByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+                model.Roster    = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+            }
+
+            if (identity?.IsFaculty == true)
+            {
+                model.MyModificationRequests = await _api.GetMyResultModificationRequestsAsync(ct);
+            }
+
+            if (identity?.IsAdmin == true || identity?.IsSuperAdmin == true)
+            {
+                model.PendingModificationRequests = await _api.GetPendingResultModificationRequestsAsync(ct);
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
@@ -2854,13 +2880,17 @@ public class PortalController : Controller
     public async Task<IActionResult> CreateResult(
         Guid studentProfileId, Guid offeringId,
         string resultType, decimal marksObtained, decimal maxMarks,
-        bool promote, CancellationToken ct)
+        bool promote, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.CreateResultAsync(studentProfileId, offeringId, resultType, marksObtained, maxMarks, ct);
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+
+                await _api.CreateResultAsync(studentProfileId, offeringId, resultType, marksObtained, maxMarks, effectiveTenantId, effectiveCampusId, ct);
 
                 // Promotion is only offered in the UI for Final result type.
                 // When the checkbox is checked the form sends promote=true;
@@ -2870,45 +2900,203 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId });
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
     }
 
     // Standalone per-row Promote button in the Results table.
     // Reuses the existing POST api/v1/student-lifecycle/{id}/promote endpoint
     // without requiring a new result entry.
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PromoteStudentFromResult(Guid studentProfileId, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> PromoteStudentFromResult(Guid studentProfileId, Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try { await _api.PromoteStudentAsync(studentProfileId, ct); TempData["PortalMessage"] = "Student promoted to next semester."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId });
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectResult(
         Guid studentProfileId, Guid offeringId, string resultType,
-        decimal newMarksObtained, decimal newMaxMarks, CancellationToken ct)
+        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CorrectResultAsync(studentProfileId, offeringId, resultType, newMarksObtained, newMaxMarks, ct); TempData["PortalMessage"] = "Result corrected."; }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+
+                await _api.CorrectResultAsync(studentProfileId, offeringId, resultType, newMarksObtained, newMaxMarks, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Result corrected.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId });
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PublishAllResults(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> PublishAllResults(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.PublishAllResultsAsync(offeringId, ct); TempData["PortalMessage"] = "All results published."; }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.PublishAllResultsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "All results published.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId });
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestResultModification(
+        Guid resultId,
+        Guid studentProfileId,
+        Guid offeringId,
+        string resultType,
+        decimal newMarksObtained,
+        decimal newMaxMarks,
+        string reason,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+
+                await _api.CreateResultModificationRequestAsync(
+                    resultId,
+                    studentProfileId,
+                    offeringId,
+                    resultType,
+                    newMarksObtained,
+                    newMaxMarks,
+                    reason,
+                    effectiveTenantId,
+                    effectiveCampusId,
+                    ct);
+
+                TempData["PortalMessage"] = "Result modification request submitted for Admin/SuperAdmin approval.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveResultModificationRequest(Guid requestId, Guid? offeringId, Guid? tenantId, Guid? campusId, string? notes, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var req = await _api.GetResultModificationRequestByIdAsync(requestId, ct);
+                if (req is null)
+                    throw new InvalidOperationException("Modification request not found.");
+
+                using var doc = System.Text.Json.JsonDocument.Parse(req.ProposedData);
+                var root = doc.RootElement;
+
+                var studentProfileId = root.GetProperty("studentProfileId").GetGuid();
+                var courseOfferingId = root.GetProperty("courseOfferingId").GetGuid();
+                var resultType = root.GetProperty("resultType").GetString() ?? "Final";
+                var newMarksObtained = root.GetProperty("newMarksObtained").GetDecimal();
+                var newMaxMarks = root.GetProperty("newMaxMarks").GetDecimal();
+
+                Guid? requestedTenantId = null;
+                Guid? requestedCampusId = null;
+
+                if (root.TryGetProperty("tenantId", out var tenantNode) && tenantNode.ValueKind == System.Text.Json.JsonValueKind.String)
+                    requestedTenantId = Guid.TryParse(tenantNode.GetString(), out var parsedTenant) ? parsedTenant : null;
+                if (root.TryGetProperty("campusId", out var campusNode) && campusNode.ValueKind == System.Text.Json.JsonValueKind.String)
+                    requestedCampusId = Guid.TryParse(campusNode.GetString(), out var parsedCampus) ? parsedCampus : null;
+
+                await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, requestedTenantId, requestedCampusId, ct);
+                await _api.ApproveResultModificationRequestAsync(requestId, notes, ct);
+                TempData["PortalMessage"] = "Result modification request approved and applied.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectResultModificationRequest(Guid requestId, Guid? offeringId, Guid? tenantId, Guid? campusId, string? notes, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.RejectResultModificationRequestAsync(requestId, notes, ct);
+                TempData["PortalMessage"] = "Result modification request rejected.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestResultRecheck(
+        Guid resultId,
+        Guid offeringId,
+        string resultType,
+        string courseName,
+        string reason,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var newData = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    resultId,
+                    offeringId,
+                    resultType,
+                    courseName,
+                    tenantId,
+                    campusId,
+                    action = "RecheckRequest"
+                });
+
+                var description = $"Result re-check request for {courseName} ({resultType})";
+                await _api.CreateResultRecheckRequestAsync(description, newData, reason, ct);
+                TempData["PortalMessage"] = "Re-check request submitted. Admin/SuperAdmin will review it.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
     }
 
     // ── Quiz write actions ──────────────────────────────────────────────────

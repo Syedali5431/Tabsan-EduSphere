@@ -41,6 +41,35 @@ else
                     </div>
                 </div>
                 <form method="get" asp-action="Results" class="row g-2 align-items-end filter-toolbar">
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
+
                     @if (User.IsInRole("Student") && Model.SemesterOptions.Count > 0)
                     {
                         <div class="col-md-4">
@@ -89,6 +118,8 @@ else
                         <form asp-action="PublishAllResults" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             <button type="submit" class="btn btn-sm btn-success"
                                     onclick="return confirm('Publish all draft results for this offering?')">
                                 Publish All
@@ -119,7 +150,11 @@ else
                                 <th>Published</th>
                                 @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                 {
-                                    <th>Promote</th>
+                                    <th>Actions</th>
+                                }
+                                @if (User.IsInRole("Student"))
+                                {
+                                    <th>Re-check</th>
                                 }
                             </tr>
                         </thead>
@@ -147,7 +182,16 @@ else
                                         <td>
                                             @* Only render the Promote button when a valid StudentProfileId is present.
                                                Rows without a profile ID (e.g., anonymous/test entries) skip this cell. *@
-                                            @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                                            if (User.IsInRole("Faculty"))
+                                            {
+                                                <button type="button" class="btn btn-xs btn-outline-warning btn-sm"
+                                                        data-bs-toggle="modal" data-bs-target="#requestResultModificationModal"
+                                                        data-resultid="@r.Id" data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
+                                                        data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
+                                                    Request Modify
+                                                </button>
+                                            }
+                                            if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                             {
                                                 <button type="button" class="btn btn-xs btn-outline-secondary btn-sm"
                                                         data-bs-toggle="modal" data-bs-target="#correctResultModal"
@@ -163,9 +207,24 @@ else
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="studentProfileId" value="@r.StudentProfileId" />
                                                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                     <button type="submit" class="btn btn-xs btn-outline-primary btn-sm">Promote ↑</button>
                                                 </form>
                                             }
+                                        </td>
+                                    }
+                                    @if (User.IsInRole("Student"))
+                                    {
+                                        <td>
+                                            <button type="button" class="btn btn-xs btn-outline-info btn-sm"
+                                                    data-bs-toggle="modal" data-bs-target="#requestResultRecheckModal"
+                                                    data-resultid="@r.Id"
+                                                    data-offeringid="@r.CourseOfferingId"
+                                                    data-resulttype="@r.ResultType"
+                                                    data-coursename="@($"{r.CourseCode} - {r.CourseName}")">
+                                                Request Re-check
+                                            </button>
                                         </td>
                                     }
                                 </tr>
@@ -186,6 +245,8 @@ else
             <form asp-action="CreateResult" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Enter Result</h5>
@@ -251,6 +312,8 @@ else
                 <input type="hidden" id="correctResult_studentProfileId" name="studentProfileId" />
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                 <input type="hidden" id="correctResult_resultType" name="resultType" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Correct Result</h5>
@@ -278,6 +341,131 @@ else
     </div>
 }
 
+@if (User.IsInRole("Faculty") && Model.SelectedOfferingId.HasValue)
+{
+    <div class="modal fade" id="requestResultModificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form asp-action="RequestResultModification" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="modifyResult_resultId" name="resultId" />
+                <input type="hidden" id="modifyResult_studentProfileId" name="studentProfileId" />
+                <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" id="modifyResult_resultType" name="resultType" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Request Result Modification</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col">
+                                <label class="form-label">Proposed Marks Obtained <span class="text-danger">*</span></label>
+                                <input id="modifyResult_marksObtained" name="newMarksObtained" type="number" step="0.5" min="0" class="form-control" required />
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Proposed Max Marks <span class="text-danger">*</span></label>
+                                <input id="modifyResult_maxMarks" name="newMaxMarks" type="number" step="0.5" min="1" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Reason <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="3" required placeholder="Explain why this result needs modification"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@if (User.IsInRole("Student"))
+{
+    <div class="modal fade" id="requestResultRecheckModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form asp-action="RequestResultRecheck" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="recheck_resultId" name="resultId" />
+                <input type="hidden" id="recheck_offeringId" name="offeringId" />
+                <input type="hidden" id="recheck_resultType" name="resultType" />
+                <input type="hidden" id="recheck_courseName" name="courseName" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Request Result Re-check</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" class="form-control" rows="3" required placeholder="Why should this result be re-checked?"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Re-check Request</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@if ((User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) && Model.PendingModificationRequests.Count > 0)
+{
+    <div class="page-section-card card border-0 shadow-sm mt-3">
+        <div class="card-body">
+            <h3 class="h6">Pending Result Modification Requests (@Model.PendingModificationRequests.Count)</h3>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Reason</th>
+                            <th>Proposed Data</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in Model.PendingModificationRequests)
+                        {
+                            <tr>
+                                <td>@req.Id<br /><small class="text-muted">@req.CreatedAt.ToLocalTime()</small></td>
+                                <td>@req.Reason</td>
+                                <td><code>@req.ProposedData</code></td>
+                                <td>
+                                    <form asp-action="ApproveResultModificationRequest" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="requestId" value="@req.Id" />
+                                        <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="notes" value="Approved from results page" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                    </form>
+                                    <form asp-action="RejectResultModificationRequest" method="post" class="d-inline ms-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="requestId" value="@req.Id" />
+                                        <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="notes" value="Rejected from results page" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
 @section Scripts {
 <script>
 // Toggle the Promote checkbox row so it is only visible when Result Type = "Final".
@@ -292,6 +480,21 @@ document.getElementById('correctResultModal')?.addEventListener('show.bs.modal',
     document.getElementById('correctResult_resultType').value = btn.dataset.resulttype || 'Final';
     document.getElementById('correctResult_marksObtained').value = btn.dataset.marksobtained || '';
     document.getElementById('correctResult_maxMarks').value = btn.dataset.maxmarks || '';
+});
+document.getElementById('requestResultModificationModal')?.addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    document.getElementById('modifyResult_resultId').value = btn.dataset.resultid;
+    document.getElementById('modifyResult_studentProfileId').value = btn.dataset.studentid;
+    document.getElementById('modifyResult_resultType').value = btn.dataset.resulttype || 'Final';
+    document.getElementById('modifyResult_marksObtained').value = btn.dataset.marksobtained || '';
+    document.getElementById('modifyResult_maxMarks').value = btn.dataset.maxmarks || '';
+});
+document.getElementById('requestResultRecheckModal')?.addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    document.getElementById('recheck_resultId').value = btn.dataset.resultid;
+    document.getElementById('recheck_offeringId').value = btn.dataset.offeringid;
+    document.getElementById('recheck_resultType').value = btn.dataset.resulttype || '';
+    document.getElementById('recheck_courseName').value = btn.dataset.coursename || '';
 });
 </script>
 }
