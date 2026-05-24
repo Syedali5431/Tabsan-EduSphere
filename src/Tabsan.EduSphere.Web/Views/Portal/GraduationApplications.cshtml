@@ -3,6 +3,8 @@
 @{
     ViewBag.Title = "Graduation Applications";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAdmin = User.IsInRole("Admin");
+    var isSuperAdmin = User.IsInRole("SuperAdmin");
 }
 
 <div class="container-fluid">
@@ -81,6 +83,27 @@
                                 <td>@(app.HasCertificate ? "Yes" : "—")</td>
                                 <td>
                                     <a href="@Url.Action("GraduationApplicationDetail", "Portal", new { id = app.Id })" class="btn btn-sm btn-outline-primary">View</a>
+                                    @{
+                                        var canQuickApprove = (isAdmin && app.Status == "PendingAdmin")
+                                            || (isSuperAdmin && (app.Status == "PendingAdmin" || app.Status == "PendingFinalApproval"));
+                                    }
+                                    @if (canQuickApprove)
+                                    {
+                                        <form method="post"
+                                              asp-action="GraduationApprove"
+                                              asp-controller="Portal"
+                                              asp-route-id="@app.Id"
+                                              class="d-inline ms-1">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="action" value="approve" />
+                                            <input type="hidden" name="note" value="Approved from applications list." />
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success"
+                                                    onclick="return confirm('Approve this graduation application?');">
+                                                Approve
+                                            </button>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }

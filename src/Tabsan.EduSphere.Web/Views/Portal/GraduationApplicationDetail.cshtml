@@ -5,6 +5,9 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var app = Model.Application;
     var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    var isFacultyRole = User.IsInRole("Faculty");
+    var isAdminRole = User.IsInRole("Admin");
+    var isSuperAdminRole = User.IsInRole("SuperAdmin");
 }
 
 <div class="container-fluid">
@@ -96,11 +99,13 @@
     @* Action Buttons for Staff *@
     @{
         bool canAct = app.Status is not ("Approved" or "Rejected");
-        bool isFaculty   = role == "Faculty"   && app.Status == "PendingFaculty";
-        bool isAdmin     = role is "Admin"     && app.Status == "PendingAdmin";
-        bool isSuperFinal = role == "SuperAdmin" && app.Status == "PendingFinalApproval";
+        bool isFaculty   = isFacultyRole && app.Status == "PendingFaculty";
+        bool isAdmin     = isAdminRole && app.Status == "PendingAdmin";
+        bool isSuperAdminAtAdminStage = isSuperAdminRole && app.Status == "PendingAdmin";
+        bool isSuperFinal = isSuperAdminRole && app.Status == "PendingFinalApproval";
         bool canApprove  = isFaculty || isAdmin || isSuperFinal;
-        bool canReject   = canAct && role is "Faculty" or "Admin" or "SuperAdmin";
+        canApprove = canApprove || isSuperAdminAtAdminStage;
+        bool canReject   = canAct && (isFacultyRole || isAdminRole || isSuperAdminRole);
     }
 
     @if (canApprove)

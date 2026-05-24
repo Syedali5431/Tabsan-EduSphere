@@ -5167,12 +5167,17 @@ public class PortalController : Controller
         var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
         try
         {
+            var detail = await _api.GetGraduationApplicationDetailAsync(id, ct);
+            var status = detail?.Status ?? string.Empty;
+
             if (roleClaim == "Faculty")
                 await _api.FacultyApproveApplicationAsync(id, isApproved, note, ct);
-            else if (roleClaim == "SuperAdmin" && isApproved)
-                await _api.FinalApproveApplicationAsync(id, isApproved, note, ct);
-            else
+            else if (roleClaim == "SuperAdmin" && isApproved && status == "PendingFinalApproval")
+                await _api.FinalApproveApplicationAsync(id, true, note, ct);
+            else if ((roleClaim == "Admin" || roleClaim == "SuperAdmin") && (status == "PendingAdmin" || !isApproved))
                 await _api.AdminApproveApplicationAsync(id, isApproved, note, ct);
+            else
+                throw new InvalidOperationException("You are not allowed to approve this application at its current stage.");
 
             TempData["SuccessMessage"] = isApproved ? "Application approved." : "Application rejected.";
         }
