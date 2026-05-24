@@ -35,11 +35,44 @@
 <div class="card mb-4">
     <div class="card-header">
         @if (Model.Thread.IsPinned) { <span class="badge bg-warning text-dark me-1">Pinned</span> }
+        @if (Model.Thread.IsSolved) { <span class="badge bg-success me-1">Resolved</span> }
         @if (Model.Thread.IsClosed) { <span class="badge bg-secondary me-1">Closed</span> }
         <strong>@Model.Thread.Title</strong>
         <small class="text-muted ms-2">by @Model.Thread.AuthorName on @Model.Thread.CreatedAt.ToString("MMM dd, yyyy")</small>
+        @if (!string.IsNullOrWhiteSpace(Model.Thread.TicketNumber))
+        {
+            <small class="text-muted ms-2">Ticket: @Model.Thread.TicketNumber</small>
+        }
+        @if (Model.Thread.IsSolved && !string.IsNullOrWhiteSpace(Model.Thread.ResolvedByName))
+        {
+            <small class="text-muted ms-2">Resolved by @Model.Thread.ResolvedByName@(Model.Thread.ResolvedAt.HasValue ? $" on {Model.Thread.ResolvedAt.Value:MMM dd, yyyy HH:mm}" : "")</small>
+        }
     </div>
     <div class="card-body">
+        @if (Model.CanModerate)
+        {
+            <div class="mb-3">
+                @if (!Model.Thread.IsSolved)
+                {
+                    <form asp-action="MarkDiscussionSolved" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <button type="submit" class="btn btn-success btn-sm">Mark Resolved</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="MarkDiscussionUnresolved" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Mark Unresolved</button>
+                    </form>
+                }
+            </div>
+        }
+
         @if (!Model.Thread.Replies.Any())
         {
             <p class="text-muted">No replies yet.</p>
@@ -54,14 +87,17 @@
                         <small class="text-muted">@reply.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
                     </div>
                     <p class="mb-1 mt-1">@reply.Body</p>
-                    <form asp-action="DeleteDiscussionReply" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete reply?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="replyId" value="@reply.Id" />
-                        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
-                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                    </form>
+                    @if (Model.CanModerate || (Model.CurrentUserId.HasValue && Model.CurrentUserId.Value == reply.AuthorId))
+                    {
+                        <form asp-action="DeleteDiscussionReply" method="post" class="d-inline"
+                              onsubmit="return confirm('Delete reply?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="replyId" value="@reply.Id" />
+                            <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                        </form>
+                    }
                 </div>
             }
         }
@@ -80,7 +116,7 @@
         }
         else
         {
-            <div class="alert alert-secondary mt-3">This thread is closed.</div>
+            <div class="alert alert-secondary mt-3">This thread is closed/resolved.</div>
         }
     </div>
 </div>

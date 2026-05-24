@@ -2199,10 +2199,15 @@ public class DiscussionThreadItem
 {
     public Guid     Id         { get; set; }
     public Guid     OfferingId { get; set; }
+    public Guid     AuthorId   { get; set; }
     public string   Title      { get; set; } = string.Empty;
     public string   AuthorName { get; set; } = string.Empty;
     public bool     IsPinned   { get; set; }
     public bool     IsClosed   { get; set; }
+    public bool     IsSolved   { get; set; }
+    public string?  ResolvedByName { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string   TicketNumber { get; set; } = string.Empty;
     public int      ReplyCount { get; set; }
     public DateTime CreatedAt  { get; set; }
     public List<DiscussionReplyItem> Replies { get; set; } = new();
@@ -2211,6 +2216,8 @@ public class DiscussionThreadItem
 public class DiscussionPageModel
 {
     public Guid   OfferingId    { get; set; }
+    public Guid?  CurrentUserId { get; set; }
+    public bool   CanModerate   { get; set; }
     public string OfferingTitle { get; set; } = string.Empty;
     public List<DiscussionThreadItem> Threads { get; set; } = new();
     public string? SuccessMessage { get; set; }
@@ -2221,6 +2228,8 @@ public class DiscussionPageModel
 public class DiscussionDetailPageModel
 {
     public Guid                OfferingId { get; set; }
+    public Guid?               CurrentUserId { get; set; }
+    public bool                CanModerate { get; set; }
     public DiscussionThreadItem? Thread   { get; set; }
     public string?             SuccessMessage { get; set; }
     public string?             ErrorMessage   { get; set; }

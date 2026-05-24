@@ -52,6 +52,10 @@ public class DiscussionController : ControllerBase
             var thread = await _discussion.CreateThreadAsync(actualRequest, ct);
             return CreatedAtAction(nameof(GetThread), new { threadId = thread.Id }, thread);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { error = ex.Message });
@@ -145,6 +149,10 @@ public class DiscussionController : ControllerBase
         {
             var reply = await _discussion.AddReplyAsync(actualRequest, ct);
             return Ok(reply);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (InvalidOperationException ex)
         {

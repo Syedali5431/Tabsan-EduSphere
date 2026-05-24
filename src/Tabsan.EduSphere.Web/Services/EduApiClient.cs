@@ -218,6 +218,8 @@ public interface IEduApiClient
     Task SetThreadPinnedAsync(Guid threadId, bool pinned, CancellationToken ct);
     Task CloseDiscussionThreadAsync(Guid threadId, CancellationToken ct);
     Task ReopenDiscussionThreadAsync(Guid threadId, CancellationToken ct);
+    Task MarkDiscussionSolvedAsync(Guid threadId, CancellationToken ct);
+    Task MarkDiscussionUnresolvedAsync(Guid threadId, CancellationToken ct);
     Task DeleteDiscussionThreadAsync(Guid threadId, CancellationToken ct);
     Task<DiscussionReplyApiModel?> AddDiscussionReplyAsync(Guid threadId, Guid authorId, string body, CancellationToken ct);
     Task DeleteDiscussionReplyAsync(Guid replyId, CancellationToken ct);
@@ -2409,6 +2411,12 @@ public class EduApiClient : IEduApiClient
 
     public Task ReopenDiscussionThreadAsync(Guid threadId, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/discussion/thread/{threadId}/reopen", new { }, ct);
+
+    public Task MarkDiscussionSolvedAsync(Guid threadId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/discussion/thread/{threadId}/mark-solved", new { }, ct);
+
+    public Task MarkDiscussionUnresolvedAsync(Guid threadId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/discussion/thread/{threadId}/mark-unresolved", new { }, ct);
 
     public Task DeleteDiscussionThreadAsync(Guid threadId, CancellationToken ct)
         => DeleteAsync($"api/v1/discussion/thread/{threadId}", ct);
@@ -5346,6 +5354,10 @@ public sealed class DiscussionThreadApiModel
     public string   AuthorName { get; set; } = string.Empty;
     public bool     IsPinned   { get; set; }
     public bool     IsClosed   { get; set; }
+    public bool     IsSolved   { get; set; }
+    public string?  ResolvedByName { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string   TicketNumber { get; set; } = string.Empty;
     public int      ReplyCount { get; set; }
     public DateTime CreatedAt  { get; set; }
     public List<DiscussionReplyApiModel> Replies { get; set; } = new();

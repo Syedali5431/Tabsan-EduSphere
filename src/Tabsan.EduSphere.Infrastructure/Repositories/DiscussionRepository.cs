@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Lms;
 using Tabsan.EduSphere.Infrastructure.Persistence;
@@ -12,24 +13,49 @@ namespace Tabsan.EduSphere.Infrastructure.Repositories;
 public sealed class DiscussionRepository : IDiscussionRepository
 {
     private readonly ApplicationDbContext _db;
-    public DiscussionRepository(ApplicationDbContext db) => _db = db;
+    private readonly IAccessScopeResolver? _accessScope;
+
+    public DiscussionRepository(ApplicationDbContext db, IAccessScopeResolver? accessScope = null)
+    {
+        _db = db;
+        _accessScope = accessScope;
+    }
+
+    private IQueryable<DiscussionThread> ApplyTenantCampusScope(IQueryable<DiscussionThread> query)
+    {
+        if (_accessScope?.IsSuperAdmin() == true)
+            return query;
+
+        var tenantId = _accessScope?.GetTenantId();
+        var campusId = _accessScope?.GetCampusId();
+
+        if (!tenantId.HasValue)
+            return query.Where(_ => false);
+
+        var scopedOfferingIds = _db.CourseOfferings
+            .AsNoTracking()
+            .Where(o => o.TenantId == tenantId.Value && (!campusId.HasValue || o.CampusId == campusId.Value))
+            .Select(o => o.Id);
+
+        return query.Where(t => scopedOfferingIds.Contains(t.OfferingId));
+    }
 
     public async Task<IReadOnlyList<DiscussionThread>> GetThreadsByOfferingAsync(
         Guid offeringId, CancellationToken ct = default)
-        => await _db.DiscussionThreads
+        => await ApplyTenantCampusScope(_db.DiscussionThreads)
                     .Where(t => t.OfferingId == offeringId)
                     .OrderByDescending(t => t.IsPinned)
                     .ThenByDescending(t => t.CreatedAt)
                     .ToListAsync(ct);
 
     public async Task<DiscussionThread?> GetThreadByIdAsync(Guid threadId, CancellationToken ct = default)
-        => await _db.DiscussionThreads
+        => await ApplyTenantCampusScope(_db.DiscussionThreads)
                     .Include(t => t.Replies)
                     .FirstOrDefaultAsync(t => t.Id == threadId, ct);
 
     /// <summary>Counts all threads created by a user (identified by username) for ticket number generation.</summary>
     public async Task<int> CountThreadsByAuthorUsernameAsync(string authorUsername, CancellationToken ct = default)
-        => await _db.DiscussionThreads
+        => await ApplyTenantCampusScope(_db.DiscussionThreads)
                     .Join(_db.Users,
                         t => t.AuthorId,
                         u => u.Id,
@@ -47,7 +73,13 @@ public sealed class DiscussionRepository : IDiscussionRepository
         => _db.DiscussionThreads.Remove(thread);
 
     public async Task<DiscussionReply?> GetReplyByIdAsync(Guid replyId, CancellationToken ct = default)
-        => await _db.DiscussionReplies.FirstOrDefaultAsync(r => r.Id == replyId, ct);
+        => await _db.DiscussionReplies
+            .Join(
+                ApplyTenantCampusScope(_db.DiscussionThreads),
+                r => r.ThreadId,
+                t => t.Id,
+                (r, t) => r)
+            .FirstOrDefaultAsync(r => r.Id == replyId, ct);
 
     public async Task AddReplyAsync(DiscussionReply reply, CancellationToken ct = default)
         => await _db.DiscussionReplies.AddAsync(reply, ct);

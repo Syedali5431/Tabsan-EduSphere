@@ -5732,9 +5732,16 @@ public class PortalController : Controller
     public async Task<IActionResult> Discussion(Guid offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Discussion";
+        var session = _api.GetSessionIdentity();
+        var canModerate = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        Guid? currentUserId = Guid.TryParse(callerIdStr, out var parsedUserId) ? parsedUserId : null;
+
         var model = new DiscussionPageModel
         {
             OfferingId     = offeringId,
+            CurrentUserId  = currentUserId,
+            CanModerate    = canModerate,
             IsConnected    = _api.IsConnected(),
             SuccessMessage = TempData["SuccessMessage"]?.ToString(),
             ErrorMessage   = TempData["ErrorMessage"]?.ToString()
@@ -5745,9 +5752,12 @@ public class PortalController : Controller
             var threads = await _api.GetDiscussionThreadsAsync(offeringId, ct);
             model.Threads = threads.Select(t => new DiscussionThreadItem
             {
-                Id = t.Id, OfferingId = t.OfferingId, Title = t.Title,
+                Id = t.Id, OfferingId = t.OfferingId, AuthorId = t.AuthorId, Title = t.Title,
                 AuthorName = t.AuthorName, IsPinned = t.IsPinned,
-                IsClosed = t.IsClosed, ReplyCount = t.ReplyCount, CreatedAt = t.CreatedAt
+                IsClosed = t.IsClosed, IsSolved = t.IsSolved,
+                ResolvedByName = t.ResolvedByName, ResolvedAt = t.ResolvedAt,
+                TicketNumber = t.TicketNumber,
+                ReplyCount = t.ReplyCount, CreatedAt = t.CreatedAt
             }).ToList();
         }
         catch (Exception ex) { model.ErrorMessage = ex.Message; }
@@ -5773,9 +5783,16 @@ public class PortalController : Controller
     public async Task<IActionResult> DiscussionThreadDetail(Guid threadId, Guid offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Thread";
+        var session = _api.GetSessionIdentity();
+        var canModerate = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        Guid? currentUserId = Guid.TryParse(callerIdStr, out var parsedUserId) ? parsedUserId : null;
+
         var model = new DiscussionDetailPageModel
         {
             OfferingId  = offeringId,
+            CurrentUserId = currentUserId,
+            CanModerate = canModerate,
             IsConnected = _api.IsConnected(),
             SuccessMessage = TempData["SuccessMessage"]?.ToString(),
             ErrorMessage   = TempData["ErrorMessage"]?.ToString()
@@ -5790,10 +5807,15 @@ public class PortalController : Controller
                 {
                     Id = t.Id,
                     OfferingId = t.OfferingId,
+                    AuthorId = t.AuthorId,
                     Title = t.Title,
                     AuthorName = t.AuthorName,
                     IsPinned = t.IsPinned,
                     IsClosed = t.IsClosed,
+                    IsSolved = t.IsSolved,
+                    ResolvedByName = t.ResolvedByName,
+                    ResolvedAt = t.ResolvedAt,
+                    TicketNumber = t.TicketNumber,
                     ReplyCount = t.ReplyCount,
                     CreatedAt = t.CreatedAt,
                     Replies = t.Replies.Select(r => new DiscussionReplyItem
@@ -5820,19 +5842,51 @@ public class PortalController : Controller
         {
             try
             {
-                var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (Guid.TryParse(callerIdStr, out var authorId))
-                {
-                    await _api.AddDiscussionReplyAsync(threadId, authorId, body, ct);
-                    TempData["SuccessMessage"] = "Reply posted.";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Unable to resolve the current user.";
-                }
+                await _api.AddDiscussionReplyAsync(threadId, Guid.Empty, body, ct);
+                TempData["SuccessMessage"] = "Reply posted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
+        return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkDiscussionSolved(Guid threadId, Guid offeringId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            var session = _api.GetSessionIdentity();
+            var canModerate = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+            if (!canModerate)
+            {
+                TempData["ErrorMessage"] = "Only Faculty/Admin/SuperAdmin can resolve discussions.";
+                return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
+            }
+
+            try { await _api.MarkDiscussionSolvedAsync(threadId, ct); TempData["SuccessMessage"] = "Discussion marked as resolved."; }
+            catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
+        }
+
+        return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkDiscussionUnresolved(Guid threadId, Guid offeringId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            var session = _api.GetSessionIdentity();
+            var canModerate = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+            if (!canModerate)
+            {
+                TempData["ErrorMessage"] = "Only Faculty/Admin/SuperAdmin can unresolve discussions.";
+                return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
+            }
+
+            try { await _api.MarkDiscussionUnresolvedAsync(threadId, ct); TempData["SuccessMessage"] = "Discussion marked as unresolved."; }
+            catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
+        }
+
         return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
     }
 

@@ -53,6 +53,7 @@ else
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         @if (thread.IsPinned) { <span class="badge bg-warning text-dark me-1">Pinned</span> }
+                        @if (thread.IsSolved) { <span class="badge bg-success me-1">Resolved</span> }
                         @if (thread.IsClosed) { <span class="badge bg-secondary me-1">Closed</span> }
                         <a asp-action="DiscussionThreadDetail"
                            asp-route-threadId="@thread.Id"
@@ -62,14 +63,23 @@ else
                     <small class="text-muted">@thread.CreatedAt.ToString("MMM dd, yyyy")</small>
                 </div>
                 <div class="d-flex justify-content-between mt-1">
-                    <small class="text-muted">by @thread.AuthorName &nbsp;·&nbsp; @thread.ReplyCount replies</small>
-                    <form asp-action="DeleteDiscussionThread" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete this thread?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="threadId" value="@thread.Id" />
-                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                    </form>
+                    <small class="text-muted">
+                        by @thread.AuthorName &nbsp;·&nbsp; @thread.ReplyCount replies
+                        @if (!string.IsNullOrWhiteSpace(thread.TicketNumber))
+                        {
+                            <text>&nbsp;·&nbsp; Ticket: @thread.TicketNumber</text>
+                        }
+                    </small>
+                    @if (Model.CanModerate)
+                    {
+                        <form asp-action="DeleteDiscussionThread" method="post" class="d-inline"
+                              onsubmit="return confirm('Delete this thread?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="threadId" value="@thread.Id" />
+                            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                        </form>
+                    }
                 </div>
             </div>
         }
