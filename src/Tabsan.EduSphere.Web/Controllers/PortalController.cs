@@ -5396,20 +5396,31 @@ public class PortalController : Controller
 
         try
         {
-            model.Departments = await _api.GetDepartmentsAsync(ct);
+            var tenantId = session?.TenantId;
+            var campusId = session?.CampusId;
+
+            model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
 
-            if (departmentId.HasValue)
-            {
-                model.Programs = await _api.GetProgramsAsync(departmentId, ct);
-                model.Courses = await _api.GetCoursesAsync(departmentId, ct);
-            }
+            model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
+            model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+
+            if (academicProgramId.HasValue && !model.Programs.Any(p => p.Id == academicProgramId.Value))
+                academicProgramId = null;
+
+            if (courseId.HasValue && !model.Courses.Any(c => c.Id == courseId.Value))
+                courseId = null;
+
+            model.SelectedAcademicProgramId = academicProgramId;
+            model.SelectedCourseId = courseId;
 
             var materials = await _api.GetCourseMaterialsAsync(
                 departmentId,
                 academicProgramId,
                 semesterId,
                 courseId,
+                tenantId,
+                campusId,
                 activeOnly,
                 ct);
 
@@ -5463,20 +5474,32 @@ public class PortalController : Controller
 
         try
         {
-            model.Departments = await _api.GetDepartmentsAsync(ct);
+            var session = _api.GetSessionIdentity();
+            var tenantId = session?.TenantId;
+            var campusId = session?.CampusId;
+
+            model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
 
-            if (departmentId.HasValue)
-            {
-                model.Programs = await _api.GetProgramsAsync(departmentId, ct);
-                model.Courses = await _api.GetCoursesAsync(departmentId, ct);
-            }
+            model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
+            model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+
+            if (academicProgramId.HasValue && !model.Programs.Any(p => p.Id == academicProgramId.Value))
+                academicProgramId = null;
+
+            if (courseId.HasValue && !model.Courses.Any(c => c.Id == courseId.Value))
+                courseId = null;
+
+            model.SelectedAcademicProgramId = academicProgramId;
+            model.SelectedCourseId = courseId;
 
             var materials = await _api.GetCourseMaterialsAsync(
                 departmentId,
                 academicProgramId,
                 semesterId,
                 courseId,
+                tenantId,
+                campusId,
                 true,
                 ct);
 

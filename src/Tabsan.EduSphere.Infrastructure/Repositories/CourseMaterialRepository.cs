@@ -50,6 +50,8 @@ public sealed class CourseMaterialRepository : ICourseMaterialRepository
         Guid? academicProgramId,
         Guid? semesterId,
         Guid? courseId,
+        Guid? tenantId,
+        Guid? campusId,
         bool activeOnly,
         CancellationToken ct = default)
     {
@@ -69,6 +71,12 @@ public sealed class CourseMaterialRepository : ICourseMaterialRepository
 
         if (courseId.HasValue)
             query = query.Where(m => m.CourseId == courseId.Value);
+
+        if (tenantId.HasValue)
+            query = query.Where(m => m.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(m => m.CampusId == campusId.Value);
 
         if (activeOnly)
             query = query.Where(m => m.IsActive);

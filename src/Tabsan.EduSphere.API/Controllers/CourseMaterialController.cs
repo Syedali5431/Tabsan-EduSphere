@@ -32,10 +32,12 @@ public sealed class CourseMaterialController : ControllerBase
         [FromQuery] Guid? academicProgramId,
         [FromQuery] Guid? semesterId,
         [FromQuery] Guid? courseId,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
         [FromQuery] bool activeOnly = true,
         CancellationToken ct = default)
     {
-        var items = await _materials.GetAllAsync(departmentId, academicProgramId, semesterId, courseId, activeOnly, ct);
+        var items = await _materials.GetAllAsync(departmentId, academicProgramId, semesterId, courseId, tenantId, campusId, activeOnly, ct);
         return Ok(items);
     }
 

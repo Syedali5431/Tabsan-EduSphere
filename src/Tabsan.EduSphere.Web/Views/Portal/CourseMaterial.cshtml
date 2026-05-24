@@ -79,7 +79,8 @@ else
                 </div>
                 <div class="col-md-2">
                     <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" id="activeOnly" name="activeOnly" value="true" checked="@Model.ActiveOnly" onchange="this.form.submit()" />
+                        <input type="hidden" name="activeOnly" value="false" />
+                        <input class="form-check-input" type="checkbox" id="activeOnly" name="activeOnly" value="true" checked="@(Model.ActiveOnly ? "checked" : null)" onchange="this.form.submit()" />
                         <label class="form-check-label" for="activeOnly">Active only</label>
                     </div>
                 </div>
@@ -213,7 +214,8 @@ else
                                                         <div class="form-text">Optional. Uploading replaces the current file path.</div>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@m.IsActive" id="isActive-@m.Id">
+                                                        <input type="hidden" name="isActive" value="false" />
+                                                        <input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@(m.IsActive ? "checked" : null)" id="isActive-@m.Id">
                                                         <label class="form-check-label" for="isActive-@m.Id">Active</label>
                                                     </div>
                                                     <input type="hidden" name="fileName" value="@m.FileName" />

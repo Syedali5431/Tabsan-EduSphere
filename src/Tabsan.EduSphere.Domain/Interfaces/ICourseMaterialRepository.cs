@@ -9,6 +9,8 @@ public interface ICourseMaterialRepository
         Guid? academicProgramId,
         Guid? semesterId,
         Guid? courseId,
+        Guid? tenantId,
+        Guid? campusId,
         bool activeOnly,
         CancellationToken ct = default);
 

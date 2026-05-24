@@ -21,10 +21,12 @@ public sealed class CourseMaterialService : ICourseMaterialService
         Guid? academicProgramId,
         Guid? semesterId,
         Guid? courseId,
+        Guid? tenantId,
+        Guid? campusId,
         bool activeOnly,
         CancellationToken ct = default)
     {
-        var items = await _materials.GetByFiltersAsync(departmentId, academicProgramId, semesterId, courseId, activeOnly, ct);
+        var items = await _materials.GetByFiltersAsync(departmentId, academicProgramId, semesterId, courseId, tenantId, campusId, activeOnly, ct);
         return items.Select(Map).ToList();
     }
 

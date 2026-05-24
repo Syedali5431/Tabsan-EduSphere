@@ -27,6 +27,7 @@ public interface IEduApiClient
     Task<List<ProgramItem>> GetProgramDetailsAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetSemestersAsync(CancellationToken ct);
     Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct);
+    Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct);
     Task<List<FacultyLookupItem>> GetFacultyAsync(Guid? tenantId = null, Guid? campusId = null, Guid? departmentId = null, CancellationToken ct = default);
     Task<List<LookupItem>> GetBuildingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -232,6 +233,8 @@ public interface IEduApiClient
         Guid? academicProgramId,
         Guid? semesterId,
         Guid? courseId,
+        Guid? tenantId,
+        Guid? campusId,
         bool activeOnly,
         CancellationToken ct);
     Task<CourseMaterialApiModel?> GetCourseMaterialByIdAsync(Guid id, CancellationToken ct);
@@ -696,10 +699,19 @@ public class EduApiClient : IEduApiClient
         => await GetAsync<List<LookupItem>>("api/v1/semester", ct) ?? new();
 
     public async Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct)
+        => await GetCoursesAsync(departmentId, null, null, ct);
+
+    public async Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/course?departmentId={departmentId.Value}"
-            : "api/v1/course";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+
+        var path = query.Count == 0
+            ? "api/v1/course"
+            : $"api/v1/course?{string.Join("&", query)}";
+
         return await GetAsync<List<LookupItem>>(path, ct) ?? new();
     }
 
@@ -2425,6 +2437,8 @@ public class EduApiClient : IEduApiClient
         Guid? academicProgramId,
         Guid? semesterId,
         Guid? courseId,
+        Guid? tenantId,
+        Guid? campusId,
         bool activeOnly,
         CancellationToken ct)
     {
@@ -2433,6 +2447,8 @@ public class EduApiClient : IEduApiClient
         if (academicProgramId.HasValue) query.Add($"academicProgramId={academicProgramId.Value}");
         if (semesterId.HasValue) query.Add($"semesterId={semesterId.Value}");
         if (courseId.HasValue) query.Add($"courseId={courseId.Value}");
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
         query.Add($"activeOnly={activeOnly.ToString().ToLowerInvariant()}");
 
         var path = query.Count == 0
