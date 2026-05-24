@@ -16,6 +16,39 @@
 }
 else
 {
+    @if (Model.Identity?.IsSuperAdmin == true)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <form asp-action="Departments" method="get" class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Tenant</label>
+                        <select class="form-select" name="tenantId">
+                            <option value="">All tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId">
+                            <option value="">All campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <h2 class="h5 mb-3">Departments
@@ -81,13 +114,24 @@ else
                                                     data-id="@d.Id" data-name="@d.Name" data-institution-type="@d.InstitutionType">
                                                 Edit
                                             </button>
-                                            @if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && d.IsActive)
+                                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                                             {
-                                                <form asp-action="DeactivateDepartment" method="post" class="d-inline">
+                                                <form asp-action="SetDepartmentActive" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@d.Id" />
-                                                    <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
-                                                            onclick="return confirm('Deactivate @d.Name?')">Deactivate</button>
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="activate" value="@(!d.IsActive)" />
+                                                    @if (d.IsActive)
+                                                    {
+                                                        <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
+                                                                onclick="return confirm('Deactivate @d.Name?')">Deactivate</button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="submit" class="btn btn-xs btn-outline-success btn-sm"
+                                                                onclick="return confirm('Activate @d.Name?')">Activate</button>
+                                                    }
                                                 </form>
                                             }
                                         </td>
@@ -117,6 +161,8 @@ else
                 else
                 {
                     <form asp-action="Departments" method="get" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-6">
                             <label class="form-label">Admin User</label>
                             <select class="form-select" name="selectedAdminUserId" onchange="this.form.submit()">
@@ -170,6 +216,8 @@ else
     <div class="modal-dialog">
         <form asp-action="CreateDepartment" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Department</h5>
@@ -208,6 +256,8 @@ else
         <form asp-action="UpdateDepartment" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" id="edit_deptId" name="id" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Department</h5>

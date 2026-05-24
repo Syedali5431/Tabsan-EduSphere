@@ -530,6 +530,8 @@ public class StudentsPageModel
 public class DepartmentItem
 {
     public Guid   Id       { get; set; }
+    public Guid?  TenantId { get; set; }
+    public Guid?  CampusId { get; set; }
     public string Name     { get; set; } = "";
     public string Code     { get; set; } = "";
     public bool   IsActive { get; set; }
@@ -549,6 +551,11 @@ public class DepartmentsPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<DepartmentItem> Departments { get; set; } = new();
     public List<AdminUserLookupItem> AdminUsers { get; set; } = new();
     public Guid? SelectedAdminUserId { get; set; }

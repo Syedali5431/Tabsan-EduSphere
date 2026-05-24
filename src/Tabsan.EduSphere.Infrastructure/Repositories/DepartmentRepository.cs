@@ -35,9 +35,20 @@ public class DepartmentRepository : IDepartmentRepository
         return query;
     }
 
+    private static IQueryable<Department> ApplyExplicitScope(IQueryable<Department> query, Guid? tenantId, Guid? campusId)
+    {
+        if (tenantId.HasValue)
+            query = query.Where(d => d.TenantId == tenantId.Value);
+
+        if (campusId.HasValue)
+            query = query.Where(d => d.CampusId == campusId.Value);
+
+        return query;
+    }
+
     /// <summary>Returns all non-deleted departments ordered by name.</summary>
-    public async Task<IReadOnlyList<Department>> GetAllAsync(CancellationToken ct = default)
-        => await ApplyTenantCampusScope(_db.Departments)
+    public async Task<IReadOnlyList<Department>> GetAllAsync(Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => await ApplyExplicitScope(ApplyTenantCampusScope(_db.Departments), tenantId, campusId)
             .OrderBy(d => d.Name)
             .ToListAsync(ct);
 
@@ -47,8 +58,8 @@ public class DepartmentRepository : IDepartmentRepository
             .FirstOrDefaultAsync(d => d.Id == id, ct);
 
     /// <summary>Returns true when the code is already in use (case-insensitive).</summary>
-    public Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
-        => ApplyTenantCampusScope(_db.Departments)
+    public Task<bool> CodeExistsAsync(string code, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => ApplyExplicitScope(ApplyTenantCampusScope(_db.Departments), tenantId, campusId)
             .AnyAsync(d => d.Code == code.ToUpperInvariant(), ct);
 
     /// <summary>Queues the department for insertion.</summary>

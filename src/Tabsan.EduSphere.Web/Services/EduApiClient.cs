@@ -140,12 +140,18 @@ public interface IEduApiClient
     Task<List<StudentItem>> GetStudentsAsync(Guid? departmentId, CancellationToken ct);
 
     // Departments
+    Task<List<DepartmentItem>> GetDepartmentDetailsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<DepartmentItem>> GetDepartmentDetailsAsync(CancellationToken ct);
     Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, CancellationToken ct);
     Task UpdateProgramAsync(Guid id, string newName, CancellationToken ct);
     Task DeactivateProgramAsync(Guid id, CancellationToken ct);
+    Task CreateDepartmentAsync(string name, string code, int institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CreateDepartmentAsync(string name, string code, int institutionType, CancellationToken ct);
+    Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, CancellationToken ct);
+    Task ActivateDepartmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ActivateDepartmentAsync(Guid id, CancellationToken ct);
+    Task DeactivateDepartmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateDepartmentAsync(Guid id, CancellationToken ct);
     Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, CancellationToken ct);
     Task<List<AdminUserLookupItem>> GetAdminUsersAsync(CancellationToken ct);
@@ -1852,11 +1858,26 @@ public class EduApiClient : IEduApiClient
     // ── Departments (detail) ──────────────────────────────────────────────────
 
     public async Task<List<DepartmentItem>> GetDepartmentDetailsAsync(CancellationToken ct)
+        => await GetDepartmentDetailsAsync(null, null, ct);
+
+    public async Task<List<DepartmentItem>> GetDepartmentDetailsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<DeptDetailDto>>("api/v1/department", ct) ?? new();
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/department";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var raw = await GetAsync<List<DeptDetailDto>>(path, ct) ?? new();
         return raw.Select(d => new DepartmentItem
         {
             Id = d.Id,
+            TenantId = d.TenantId,
+            CampusId = d.CampusId,
             Name = d.Name ?? "",
             Code = d.Code ?? "",
             IsActive = d.IsActive,
@@ -1914,6 +1935,8 @@ public class EduApiClient : IEduApiClient
     private sealed class DeptDetailDto
     {
         public Guid    Id       { get; set; }
+        public Guid?   TenantId { get; set; }
+        public Guid?   CampusId { get; set; }
         public string? Name     { get; set; }
         public string? Code     { get; set; }
         public bool    IsActive { get; set; }
@@ -1972,7 +1995,22 @@ public class EduApiClient : IEduApiClient
     }
 
     public Task CreateDepartmentAsync(string name, string code, int institutionType, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/department", new { name, code, institutionType }, ct);
+        => CreateDepartmentAsync(name, code, institutionType, null, null, ct);
+
+    public Task CreateDepartmentAsync(string name, string code, int institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/department";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { name, code, institutionType }, ct);
+    }
 
     public Task CreateProgramAsync(string name, string code, Guid departmentId, int totalSemesters, CancellationToken ct)
         => PostAsync<object, object>("api/v1/program", new { name, code, departmentId, totalSemesters }, ct);
@@ -1984,10 +2022,58 @@ public class EduApiClient : IEduApiClient
         => DeleteAsync($"api/v1/program/{id}", ct);
 
     public Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, CancellationToken ct)
-        => PutAsync<object, object>($"api/v1/department/{id}", new { newName, institutionType }, ct);
+        => UpdateDepartmentAsync(id, newName, institutionType, null, null, ct);
+
+    public Task UpdateDepartmentAsync(Guid id, string newName, int? institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/department/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PutAsync<object, object>(path, new { newName, institutionType }, ct);
+    }
+
+    public Task ActivateDepartmentAsync(Guid id, CancellationToken ct)
+        => ActivateDepartmentAsync(id, null, null, ct);
+
+    public Task ActivateDepartmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/department/{id}/activate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public Task DeactivateDepartmentAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/department/{id}", ct);
+        => DeactivateDepartmentAsync(id, null, null, ct);
+
+    public Task DeactivateDepartmentAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/department/{id}/deactivate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public async Task<UserImportResultItem> ImportUsersCsvAsync(Stream fileStream, string fileName, CancellationToken ct)
     {

@@ -1411,16 +1411,29 @@ public class PortalController : Controller
     // ── Departments ────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Departments(Guid? selectedAdminUserId, CancellationToken ct)
+    public async Task<IActionResult> Departments(Guid? selectedAdminUserId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Departments";
-        var model = new DepartmentsPageModel { IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new DepartmentsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId
+        };
         if (!model.IsConnected) return View(model);
         try
         {
-            model.Departments = await _api.GetDepartmentDetailsAsync(ct);
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
 
-            var identity = _api.GetSessionIdentity();
+            model.Departments = await _api.GetDepartmentDetailsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.AdminUsers = (await _api.GetAdminUsersAsync(ct)).Where(a => a.IsActive).ToList();
@@ -1440,36 +1453,43 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateDepartment(string name, string code, int institutionType, CancellationToken ct)
+    public async Task<IActionResult> CreateDepartment(string name, string code, int institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CreateDepartmentAsync(name, code, institutionType, ct); TempData["PortalMessage"] = $"Department '{name}' created."; }
+            try { await _api.CreateDepartmentAsync(name, code, institutionType, tenantId, campusId, ct); TempData["PortalMessage"] = $"Department '{name}' created."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Departments));
+        return RedirectToAction(nameof(Departments), new { tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateDepartment(Guid id, string newName, int? institutionType, CancellationToken ct)
+    public async Task<IActionResult> UpdateDepartment(Guid id, string newName, int? institutionType, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.UpdateDepartmentAsync(id, newName, institutionType, ct); TempData["PortalMessage"] = $"Department updated to '{newName}'."; }
+            try { await _api.UpdateDepartmentAsync(id, newName, institutionType, tenantId, campusId, ct); TempData["PortalMessage"] = $"Department updated to '{newName}'."; }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Departments));
+        return RedirectToAction(nameof(Departments), new { tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeactivateDepartment(Guid id, CancellationToken ct)
+    public async Task<IActionResult> SetDepartmentActive(Guid id, bool activate, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeactivateDepartmentAsync(id, ct); TempData["PortalMessage"] = "Department deactivated."; }
+            try
+            {
+                if (activate)
+                    await _api.ActivateDepartmentAsync(id, tenantId, campusId, ct);
+                else
+                    await _api.DeactivateDepartmentAsync(id, tenantId, campusId, ct);
+                TempData["PortalMessage"] = activate ? "Department activated." : "Department deactivated.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Departments));
+        return RedirectToAction(nameof(Departments), new { tenantId, campusId });
     }
 
     [HttpGet]

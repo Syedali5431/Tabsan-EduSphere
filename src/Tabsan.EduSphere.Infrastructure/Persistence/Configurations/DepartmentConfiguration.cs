@@ -40,10 +40,10 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 
         builder.Property(d => d.RowVersion).IsRowVersion();
 
-        // Unique department code used throughout the system.
-        builder.HasIndex(d => d.Code)
+        // Unique department code within tenant/campus scope.
+        builder.HasIndex(d => new { d.TenantId, d.CampusId, d.Code })
                .IsUnique()
-               .HasDatabaseName("IX_departments_code");
+               .HasDatabaseName("IX_departments_scope_code");
 
         builder.HasIndex(d => d.InstitutionType)
                .HasDatabaseName("IX_departments_institution_type");
