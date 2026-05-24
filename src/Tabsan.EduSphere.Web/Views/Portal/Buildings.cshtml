@@ -84,7 +84,7 @@ else
                                             }
                                         </td>
                                         <td>
-                                            <a asp-action="Rooms" asp-route-buildingId="@b.Id" class="btn btn-outline-secondary btn-sm">Rooms</a>
+                                            <a asp-action="Rooms" asp-route-buildingId="@b.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm">Rooms</a>
                                         </td>
                                     </tr>
                                 }
@@ -161,7 +161,7 @@ else
                             }
                         </form>
 
-                        <a asp-action="Rooms" asp-route-buildingId="@Model.SelectedBuilding.Id" class="btn btn-outline-secondary btn-sm ms-2">Manage Rooms</a>
+                        <a asp-action="Rooms" asp-route-buildingId="@Model.SelectedBuilding.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm ms-2">Manage Rooms</a>
                     </div>
                 </div>
             }

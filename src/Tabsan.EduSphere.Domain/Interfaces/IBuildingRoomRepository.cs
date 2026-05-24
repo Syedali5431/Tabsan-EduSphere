@@ -25,10 +25,10 @@ public interface IBuildingRoomRepository
     // ── Rooms ────────────────────────────────────────────────────────────────
 
     /// <summary>Returns all rooms, optionally filtering to active-only records. Includes building name.</summary>
-    Task<IList<Room>> GetAllRoomsAsync(bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<Room>> GetAllRoomsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns rooms belonging to a specific building.</summary>
-    Task<IList<Room>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<Room>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns a room by ID (with Building navigation loaded).</summary>
     Task<Room?> GetRoomByIdAsync(Guid id, CancellationToken ct = default);

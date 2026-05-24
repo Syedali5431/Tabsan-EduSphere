@@ -55,11 +55,17 @@ public interface IEduApiClient
     Task DeactivateBuildingAsync(Guid id, CancellationToken ct);
 
     // Rooms
+    Task<List<RoomItem>> GetAllRoomsAsync(bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<RoomItem>> GetAllRoomsAsync(bool activeOnly, CancellationToken ct);
+    Task<List<RoomItem>> GetRoomsForBuildingAsync(Guid buildingId, bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<RoomItem>> GetRoomsForBuildingAsync(Guid buildingId, bool activeOnly, CancellationToken ct);
+    Task<RoomItem> CreateRoomAsync(RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<RoomItem> CreateRoomAsync(RoomFormModel form, CancellationToken ct);
+    Task<RoomItem> UpdateRoomAsync(Guid id, RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<RoomItem> UpdateRoomAsync(Guid id, RoomFormModel form, CancellationToken ct);
+    Task ActivateRoomAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task ActivateRoomAsync(Guid id, CancellationToken ct);
+    Task DeactivateRoomAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task DeactivateRoomAsync(Guid id, CancellationToken ct);
 
     // Sidebar Settings
@@ -924,24 +930,106 @@ public class EduApiClient : IEduApiClient
     // â”€â”€ Rooms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public async Task<List<RoomItem>> GetAllRoomsAsync(bool activeOnly, CancellationToken ct)
-        => await GetAsync<List<RoomItem>>($"api/v1/room?activeOnly={activeOnly}", ct) ?? new();
+        => await GetAllRoomsAsync(activeOnly, null, null, ct);
+
+    public async Task<List<RoomItem>> GetAllRoomsAsync(bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string> { $"activeOnly={activeOnly}" };
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        return await GetAsync<List<RoomItem>>($"api/v1/room?{string.Join("&", queryParts)}", ct) ?? new();
+    }
 
     public async Task<List<RoomItem>> GetRoomsForBuildingAsync(Guid buildingId, bool activeOnly, CancellationToken ct)
-        => await GetAsync<List<RoomItem>>($"api/v1/room/building/{buildingId}?activeOnly={activeOnly}", ct) ?? new();
+        => await GetRoomsForBuildingAsync(buildingId, activeOnly, null, null, ct);
+
+    public async Task<List<RoomItem>> GetRoomsForBuildingAsync(Guid buildingId, bool activeOnly, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string> { $"activeOnly={activeOnly}" };
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        return await GetAsync<List<RoomItem>>($"api/v1/room/building/{buildingId}?{string.Join("&", queryParts)}", ct) ?? new();
+    }
 
     public async Task<RoomItem> CreateRoomAsync(RoomFormModel form, CancellationToken ct)
-        => await PostAsync<RoomFormModel, RoomItem>("api/v1/room", form, ct)
-           ?? throw new InvalidOperationException("Room create returned no body.");
+        => await CreateRoomAsync(form, null, null, ct);
+
+    public async Task<RoomItem> CreateRoomAsync(RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/room";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await PostAsync<RoomFormModel, RoomItem>(path, form, ct)
+               ?? throw new InvalidOperationException("Room create returned no body.");
+    }
 
     public async Task<RoomItem> UpdateRoomAsync(Guid id, RoomFormModel form, CancellationToken ct)
-        => await PutAsync<RoomFormModel, RoomItem>($"api/v1/room/{id}", form, ct)
-           ?? throw new InvalidOperationException("Room update returned no body.");
+        => await UpdateRoomAsync(id, form, null, null, ct);
+
+    public async Task<RoomItem> UpdateRoomAsync(Guid id, RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/room/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await PutAsync<RoomFormModel, RoomItem>(path, form, ct)
+               ?? throw new InvalidOperationException("Room update returned no body.");
+    }
 
     public Task ActivateRoomAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/room/{id}/activate", new { }, ct);
+        => ActivateRoomAsync(id, null, null, ct);
+
+    public Task ActivateRoomAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/room/{id}/activate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public Task DeactivateRoomAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/room/{id}/deactivate", new { }, ct);
+        => DeactivateRoomAsync(id, null, null, ct);
+
+    public Task DeactivateRoomAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/room/{id}/deactivate";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     // â”€â”€ HTTP helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

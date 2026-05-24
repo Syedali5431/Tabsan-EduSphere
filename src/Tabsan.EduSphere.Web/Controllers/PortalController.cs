@@ -825,13 +825,17 @@ public class PortalController : Controller
     // ── Rooms ───────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Rooms(Guid? buildingId, Guid? selectedId, CancellationToken ct)
+    public async Task<IActionResult> Rooms(Guid? buildingId, Guid? selectedId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Rooms";
+        var identity = _api.GetSessionIdentity();
         var vm = new RoomsPageModel
         {
             IsConnected = _api.IsConnected(),
             Message = TempData["PortalMessage"]?.ToString(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             SelectedBuildingId = buildingId
         };
 
@@ -843,14 +847,21 @@ public class PortalController : Controller
 
         try
         {
-            vm.Buildings = await _api.GetAllBuildingsAsync(activeOnly: false, ct);
+            if (identity?.IsSuperAdmin == true)
+            {
+                vm.Tenants = await _api.GetTenantsAsync(ct);
+                if (vm.SelectedTenantId.HasValue)
+                    vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
+            }
+
+            vm.Buildings = await _api.GetAllBuildingsAsync(activeOnly: false, vm.SelectedTenantId, vm.SelectedCampusId, ct);
 
             var activeBuildingId = buildingId ?? vm.Buildings.FirstOrDefault()?.Id;
             vm.SelectedBuildingId = activeBuildingId;
 
             if (activeBuildingId.HasValue)
             {
-                vm.Rooms = await _api.GetRoomsForBuildingAsync(activeBuildingId.Value, activeOnly: false, ct);
+                vm.Rooms = await _api.GetRoomsForBuildingAsync(activeBuildingId.Value, activeOnly: false, vm.SelectedTenantId, vm.SelectedCampusId, ct);
                 vm.CreateForm.BuildingId = activeBuildingId.Value;
             }
 
@@ -875,47 +886,47 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateRoom(RoomFormModel form, CancellationToken ct)
+    public async Task<IActionResult> CreateRoom(RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
-            var created = await _api.CreateRoomAsync(form, ct);
+            var created = await _api.CreateRoomAsync(form, tenantId, campusId, ct);
             TempData["PortalMessage"] = $"Room '{created.Number}' created.";
-            return RedirectToAction(nameof(Rooms), new { buildingId = created.BuildingId, selectedId = created.Id });
+            return RedirectToAction(nameof(Rooms), new { buildingId = created.BuildingId, selectedId = created.Id, tenantId, campusId });
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = ex.Message;
-            return RedirectToAction(nameof(Rooms), new { buildingId = form.BuildingId });
+            return RedirectToAction(nameof(Rooms), new { buildingId = form.BuildingId, tenantId, campusId });
         }
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateRoom(Guid id, Guid buildingId, RoomFormModel form, CancellationToken ct)
+    public async Task<IActionResult> UpdateRoom(Guid id, Guid buildingId, RoomFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
-            var updated = await _api.UpdateRoomAsync(id, form, ct);
+            var updated = await _api.UpdateRoomAsync(id, form, tenantId, campusId, ct);
             TempData["PortalMessage"] = $"Room '{updated.Number}' updated.";
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = ex.Message;
         }
-        return RedirectToAction(nameof(Rooms), new { buildingId, selectedId = id });
+        return RedirectToAction(nameof(Rooms), new { buildingId, selectedId = id, tenantId, campusId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetRoomActive(Guid id, Guid buildingId, bool activate, CancellationToken ct)
+    public async Task<IActionResult> SetRoomActive(Guid id, Guid buildingId, bool activate, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         try
         {
             if (activate)
-                await _api.ActivateRoomAsync(id, ct);
+                await _api.ActivateRoomAsync(id, tenantId, campusId, ct);
             else
-                await _api.DeactivateRoomAsync(id, ct);
+                await _api.DeactivateRoomAsync(id, tenantId, campusId, ct);
 
             TempData["PortalMessage"] = activate ? "Room activated." : "Room deactivated.";
         }
@@ -923,7 +934,7 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = ex.Message;
         }
-        return RedirectToAction(nameof(Rooms), new { buildingId, selectedId = id });
+        return RedirectToAction(nameof(Rooms), new { buildingId, selectedId = id, tenantId, campusId });
     }
 
     // ── License Update ─────────────────────────────────────────────────────

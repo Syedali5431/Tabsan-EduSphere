@@ -302,14 +302,20 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
         builder.Property(r => r.Capacity)
                .IsRequired(false);
 
+        builder.Property(r => r.TenantId)
+               .IsRequired(false);
+
+        builder.Property(r => r.CampusId)
+               .IsRequired(false);
+
         builder.Property(r => r.IsActive)
                .IsRequired()
                .HasDefaultValue(true);
 
-        // Unique room number within a building.
-        builder.HasIndex(r => new { r.BuildingId, r.Number })
+        // Unique room number within a building and scope.
+        builder.HasIndex(r => new { r.TenantId, r.CampusId, r.BuildingId, r.Number })
                .IsUnique()
-               .HasDatabaseName("IX_rooms_building_number");
+               .HasDatabaseName("IX_rooms_scope_building_number");
 
         builder.HasOne(r => r.Building)
                .WithMany(b => b.Rooms)

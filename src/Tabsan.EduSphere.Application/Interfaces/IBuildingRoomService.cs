@@ -31,16 +31,16 @@ public interface IBuildingRoomService
     // ── Rooms ────────────────────────────────────────────────────────────────
 
     /// <summary>Returns all rooms across all buildings (active-only by default).</summary>
-    Task<IList<RoomDto>> GetAllRoomsAsync(bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<RoomDto>> GetAllRoomsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns rooms for a specific building.</summary>
-    Task<IList<RoomDto>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, CancellationToken ct = default);
+    Task<IList<RoomDto>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns a single room by ID.</summary>
     Task<RoomDto> GetRoomByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>Creates a new room within a building.</summary>
-    Task<RoomDto> CreateRoomAsync(CreateRoomCommand cmd, CancellationToken ct = default);
+    Task<RoomDto> CreateRoomAsync(CreateRoomCommand cmd, Guid? tenantId, Guid? campusId, CancellationToken ct = default);
 
     /// <summary>Updates a room's number and capacity.</summary>
     Task<RoomDto> UpdateRoomAsync(Guid id, UpdateRoomCommand cmd, CancellationToken ct = default);

@@ -67,15 +67,15 @@ public class BuildingRoomService : IBuildingRoomService
 
     // ── Rooms ────────────────────────────────────────────────────────────────
 
-    public async Task<IList<RoomDto>> GetAllRoomsAsync(bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<RoomDto>> GetAllRoomsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
-        var rooms = await _repo.GetAllRoomsAsync(activeOnly, ct);
+        var rooms = await _repo.GetAllRoomsAsync(activeOnly, tenantId, campusId, ct);
         return rooms.Select(MapRoom).ToList();
     }
 
-    public async Task<IList<RoomDto>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<RoomDto>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
-        var rooms = await _repo.GetRoomsByBuildingAsync(buildingId, activeOnly, ct);
+        var rooms = await _repo.GetRoomsByBuildingAsync(buildingId, activeOnly, tenantId, campusId, ct);
         return rooms.Select(MapRoom).ToList();
     }
 
@@ -86,13 +86,13 @@ public class BuildingRoomService : IBuildingRoomService
         return MapRoom(r);
     }
 
-    public async Task<RoomDto> CreateRoomAsync(CreateRoomCommand cmd, CancellationToken ct = default)
+    public async Task<RoomDto> CreateRoomAsync(CreateRoomCommand cmd, Guid? tenantId, Guid? campusId, CancellationToken ct = default)
     {
         // Validate building exists
         var building = await _repo.GetBuildingByIdAsync(cmd.BuildingId, ct)
             ?? throw new KeyNotFoundException($"Building {cmd.BuildingId} not found.");
 
-        var room = new Room(cmd.BuildingId, cmd.Number, cmd.Capacity);
+        var room = new Room(cmd.BuildingId, cmd.Number, cmd.Capacity, tenantId, campusId);
         await _repo.AddRoomAsync(room, ct);
         await _repo.SaveChangesAsync(ct);
 
@@ -135,6 +135,8 @@ public class BuildingRoomService : IBuildingRoomService
 
     private static RoomDto MapRoom(Room r) => new(
         r.Id,
+        r.TenantId,
+        r.CampusId,
         r.BuildingId,
         r.Building?.Name ?? string.Empty,
         r.Building?.Code ?? string.Empty,

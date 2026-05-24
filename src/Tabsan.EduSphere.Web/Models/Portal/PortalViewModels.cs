@@ -176,6 +176,8 @@ public class BuildingItem
 public class RoomItem
 {
     public Guid Id { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
     public Guid BuildingId { get; set; }
     public string BuildingName { get; set; } = string.Empty;
     public string BuildingCode { get; set; } = string.Empty;
@@ -216,7 +218,12 @@ public class RoomsPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedBuildingId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<BuildingItem> Buildings { get; set; } = new();
     public List<RoomItem> Rooms { get; set; } = new();
     public RoomFormModel CreateForm { get; set; } = new();

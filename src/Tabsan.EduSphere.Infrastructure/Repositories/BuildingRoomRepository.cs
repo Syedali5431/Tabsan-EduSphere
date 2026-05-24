@@ -37,18 +37,22 @@ public class BuildingRoomRepository : IBuildingRoomRepository
 
     // ── Rooms ────────────────────────────────────────────────────────────────
 
-    public async Task<IList<Room>> GetAllRoomsAsync(bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<Room>> GetAllRoomsAsync(bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => await _db.Rooms
               .Include(r => r.Building)
               .Where(r => !activeOnly || r.IsActive)
+              .Where(r => !tenantId.HasValue || r.TenantId == tenantId.Value)
+              .Where(r => !campusId.HasValue || r.CampusId == campusId.Value)
               .OrderBy(r => r.Building.Name)
               .ThenBy(r => r.Number)
               .ToListAsync(ct);
 
-    public async Task<IList<Room>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, CancellationToken ct = default)
+    public async Task<IList<Room>> GetRoomsByBuildingAsync(Guid buildingId, bool activeOnly = true, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
         => await _db.Rooms
               .Include(r => r.Building)
               .Where(r => r.BuildingId == buildingId && (!activeOnly || r.IsActive))
+              .Where(r => !tenantId.HasValue || r.TenantId == tenantId.Value)
+              .Where(r => !campusId.HasValue || r.CampusId == campusId.Value)
               .OrderBy(r => r.Number)
               .ToListAsync(ct);
 

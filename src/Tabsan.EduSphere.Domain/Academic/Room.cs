@@ -8,6 +8,12 @@ namespace Tabsan.EduSphere.Domain.Academic;
 /// </summary>
 public class Room : AuditableEntity
 {
+    /// <summary>Tenant scope for this room (nullable for global/system data).</summary>
+    public Guid? TenantId { get; private set; }
+
+    /// <summary>Campus scope for this room (nullable for global/system data).</summary>
+    public Guid? CampusId { get; private set; }
+
     /// <summary>Room identifier displayed in timetables (e.g. "101", "CS-Lab-2").</summary>
     public string Number { get; private set; } = default!;
 
@@ -25,8 +31,10 @@ public class Room : AuditableEntity
 
     private Room() { }
 
-    public Room(Guid buildingId, string number, int? capacity = null)
+    public Room(Guid buildingId, string number, int? capacity = null, Guid? tenantId = null, Guid? campusId = null)
     {
+        TenantId = tenantId;
+        CampusId = campusId;
         BuildingId = buildingId;
         Number = number.Trim();
         Capacity = capacity;

@@ -29,6 +29,8 @@ public record UpdateBuildingCommand(
 /// <summary>Room catalogue item returned by API (includes parent building info).</summary>
 public record RoomDto(
     Guid   Id,
+    Guid?  TenantId,
+    Guid?  CampusId,
     Guid   BuildingId,
     string BuildingName,
     string BuildingCode,
