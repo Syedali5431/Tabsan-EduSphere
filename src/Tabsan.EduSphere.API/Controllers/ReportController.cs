@@ -772,6 +772,8 @@ public sealed class ReportController : ControllerBase
         [FromQuery] int? institutionType = null,
         CancellationToken ct = default)
     {
+        threshold = 75m;
+
         var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, courseOfferingId, ct);
         if (scope.ErrorResult is not null) return scope.ErrorResult;
 

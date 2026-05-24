@@ -20,6 +20,9 @@ secrets/
 # Runtime log directories
 logs/
 
+# Runtime uploaded files
+src/Tabsan.EduSphere.API/uploads/
+
 # User-specific files
 *.rsuser
 *.suo

@@ -119,7 +119,8 @@ public class AttendanceController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetBelowThreshold([FromQuery] double threshold = 75.0, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
-        var results = await _service.GetBelowThresholdAsync(threshold, tenantId ?? GetCurrentTenantId(), campusId ?? GetCurrentCampusId(), ct);
+        const double fixedThreshold = 75.0;
+        var results = await _service.GetBelowThresholdAsync(fixedThreshold, tenantId ?? GetCurrentTenantId(), campusId ?? GetCurrentCampusId(), ct);
         return Ok(results.Select(x => new
         {
             StudentProfileId    = x.StudentProfileId,
