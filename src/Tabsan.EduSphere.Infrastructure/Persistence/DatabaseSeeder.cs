@@ -297,8 +297,8 @@ public static class DatabaseSeeder
     // ── Sidebar Menu Items ────────────────────────────────────────────────────
 
     /// <summary>
-    /// Seeds the default sidebar navigation structure.
-    /// Idempotent — skipped entirely if any sidebar menu items already exist.
+    /// Seeds and synchronizes the default sidebar navigation structure.
+    /// Idempotent — missing items are added and soft-deleted items are restored.
     /// </summary>
     private static async Task SeedSidebarMenusAsync(ApplicationDbContext db)
     {
@@ -307,8 +307,25 @@ public static class DatabaseSeeder
             string key, string label, string description, int order,
             Guid? parentId = null, bool isSystemMenu = false)
         {
-            var existing = await db.SidebarMenuItems.FirstOrDefaultAsync(x => x.Key == key);
-            if (existing is not null) return existing;
+            var existing = await db.SidebarMenuItems
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Key == key);
+            if (existing is not null)
+            {
+                if (existing.IsDeleted)
+                    existing.Restore();
+
+                if (!string.Equals(existing.Name, label, StringComparison.Ordinal)
+                    || !string.Equals(existing.Purpose, description, StringComparison.Ordinal)
+                    || existing.DisplayOrder != order)
+                {
+                    existing.Update(label, description, order);
+                }
+
+                db.SidebarMenuItems.Update(existing);
+                return existing;
+            }
+
             var item = new SidebarMenuItem(key, label, description, order, parentId: parentId, isSystemMenu: isSystemMenu);
             db.SidebarMenuItems.Add(item);
             return item;
@@ -347,20 +364,27 @@ public static class DatabaseSeeder
         var resultCalculation= await Upsert("result_calculation", "Result Calculation", "Configure GPA scale and assessment weights",      7, isSystemMenu: false);
         var notifications    = await Upsert("notifications",     "Notifications",      "View system and academic notifications",           8);
         var students         = await Upsert("students",          "Students",           "Manage student profiles",                         9);
+        var userImport       = await Upsert("user_import",       "User Import",        "Bulk-import user accounts from CSV",             10);
         var departments      = await Upsert("departments",       "Departments",        "Manage academic departments",                    10);
-        var courses          = await Upsert("courses",           "Courses",            "Manage courses and offerings",                   11);
-        var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  12);
-        var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     13);
-        var results          = await Upsert("results",           "Results",            "View and publish academic results",              14);
-        var quizzes          = await Upsert("quizzes",           "Quizzes",            "Manage and attempt quizzes",                     15);
-        var fyp              = await Upsert("fyp",               "FYP",                "Final Year Projects management",                 16);
-        var analytics        = await Upsert("analytics",         "Analytics",          "Academic analytics and dashboards",              17);
-        var aiChat           = await Upsert("ai_chat",           "AI Chat",            "AI-powered academic assistant",                  18);
-        var studentLifecycle = await Upsert("student_lifecycle", "Student Lifecycle",  "Manage promotions, holds and withdrawals",       19);
-        var payments         = await Upsert("payments",          "Payments",           "Manage and view fee payment records",            20);
-        var enrollments      = await Upsert("enrollments",       "Enrollments",        "Manage course enrollments and rosters",          21);
-        var reportCenter     = await Upsert("report_center",     "Report Center",      "Generate and export academic reports",           22);
-        var generateCertificates = await Upsert("generate_certificates", "Generate Certificates", "Generate degree/transcript documents for graduated university students", 23);
+        var programs         = await Upsert("programs",          "Programs",           "Manage degree programs",                         11);
+        var courses          = await Upsert("courses",           "Courses",            "Manage courses and offerings",                   12);
+        var prerequisites    = await Upsert("prerequisites",     "Prerequisites",      "Configure course prerequisite rules",            13);
+        var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
+        var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
+        var results          = await Upsert("results",           "Results",            "View and publish academic results",              16);
+        var gradebook        = await Upsert("gradebook",         "Gradebook",          "Review and publish gradebook entries",           17);
+        var rubricManage     = await Upsert("rubric_manage",     "Rubric Management",  "Manage grading rubrics",                         18);
+        var quizzes          = await Upsert("quizzes",           "Quizzes",            "Manage and attempt quizzes",                     19);
+        var fyp              = await Upsert("fyp",               "FYP",                "Final Year Projects management",                 20);
+        var analytics        = await Upsert("analytics",         "Analytics",          "Academic analytics and dashboards",              21);
+        var aiChat           = await Upsert("ai_chat",           "AI Chat",            "AI-powered academic assistant",                  22);
+        var studentLifecycle = await Upsert("student_lifecycle", "Student Lifecycle",  "Manage promotions, holds and withdrawals",       23);
+        var helpdesk         = await Upsert("helpdesk",          "Helpdesk",           "Raise and track support issues",                 24);
+        var payments         = await Upsert("payments",          "Payments",           "Manage and view fee payment records",            25);
+        var enrollments      = await Upsert("enrollments",       "Enrollments",        "Manage course enrollments and rosters",          26);
+        var reportCenter     = await Upsert("report_center",     "Report Center",      "Generate and export academic reports",           27);
+        var generateCertificates = await Upsert("generate_certificates", "Generate Certificates", "Generate degree/transcript documents for graduated university students", 28);
+        var adminUsers       = await Upsert("admin_users",       "Admin Users",        "Manage admin accounts and department assignments", 29);
 
         await db.SaveChangesAsync(); // ensure IDs are set before use as parentId
 
@@ -370,10 +394,16 @@ public static class DatabaseSeeder
 
         // ── Sub-menus of System Settings ─────────────────────────────────────
         var reportSettings      = await Upsert("report_settings",      "Report Settings",      "Configure report definitions",        1, parentId: systemSettings.Id, isSystemMenu: true);
+        var moduleComposition   = await Upsert("module_composition",   "Module Composition",   "Manage module activation and role visibility", 2, parentId: systemSettings.Id, isSystemMenu: true);
         var sidebarSettings     = await Upsert("sidebar_settings",     "Sidebar Settings",     "Control sidebar visibility per role", 3, parentId: systemSettings.Id, isSystemMenu: true);
         var themeSettings       = await Upsert("theme_settings",       "Theme Settings",       "Choose the portal colour theme",      4, parentId: systemSettings.Id, isSystemMenu: false);
         var licenseUpdate       = await Upsert("license_update",       "License Update",       "Upload and review the product license", 5, parentId: systemSettings.Id, isSystemMenu: true);
         var dashboardSettings   = await Upsert("dashboard_settings",   "Dashboard Settings",   "Customise portal branding and name",  6, parentId: systemSettings.Id, isSystemMenu: true);
+        var institutionPolicy   = await Upsert("institution_policy",   "Institution Policy",   "Configure enabled institution types", 7, parentId: systemSettings.Id, isSystemMenu: true);
+        var tenantManagement    = await Upsert("tenant_management",    "Tenant Management",    "Manage tenants and activation status", 8, parentId: systemSettings.Id, isSystemMenu: true);
+        var campusManagement    = await Upsert("campus_management",    "Campus Management",    "Manage campuses and activation status", 9, parentId: systemSettings.Id, isSystemMenu: true);
+        var libraryConfig       = await Upsert("library_config",       "Library Config",       "Configure external library integration", 10, parentId: systemSettings.Id, isSystemMenu: true);
+        var accreditation       = await Upsert("accreditation",        "Accreditation",        "Manage accreditation templates and exports", 11, parentId: systemSettings.Id, isSystemMenu: true);
 
         // Remove legacy Module Settings menu if present from older seeds.
         var legacyModuleSettings = await db.SidebarMenuItems
@@ -426,7 +456,20 @@ public static class DatabaseSeeder
         EnsureRoleAccess(resultCalculation.Id, "Student", isAllowed: false);
 
         // System Settings + sub-menus: SuperAdmin only; other roles explicitly false
-        foreach (var id in new[] { systemSettings.Id, reportSettings.Id, sidebarSettings.Id, licenseUpdate.Id, dashboardSettings.Id })
+        foreach (var id in new[]
+        {
+            systemSettings.Id,
+            reportSettings.Id,
+            moduleComposition.Id,
+            sidebarSettings.Id,
+            licenseUpdate.Id,
+            dashboardSettings.Id,
+            institutionPolicy.Id,
+            tenantManagement.Id,
+            campusManagement.Id,
+            libraryConfig.Id,
+            accreditation.Id
+        })
         {
             EnsureRoleAccess(id, "Admin",   isAllowed: false);
             EnsureRoleAccess(id, "Faculty", isAllowed: false);
@@ -446,15 +489,30 @@ public static class DatabaseSeeder
         EnsureRoleAccess(students.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(students.Id, "Student", isAllowed: false);
 
+        // User import: Admin only
+        EnsureRoleAccess(userImport.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(userImport.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(userImport.Id, "Student", isAllowed: false);
+
         // Departments: Admin only
         EnsureRoleAccess(departments.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(departments.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(departments.Id, "Student", isAllowed: false);
 
+        // Programs: Admin only
+        EnsureRoleAccess(programs.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(programs.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(programs.Id, "Student", isAllowed: false);
+
         // Courses: Admin + Faculty
         EnsureRoleAccess(courses.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(courses.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(courses.Id, "Student", isAllowed: false);
+
+        // Prerequisites: Admin only
+        EnsureRoleAccess(prerequisites.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(prerequisites.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(prerequisites.Id, "Student", isAllowed: false);
 
         // Assignments: Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: false);
@@ -469,6 +527,15 @@ public static class DatabaseSeeder
         // Results: Admin + Faculty + Student
         foreach (var role in new[] { "Admin", "Faculty", "Student" })
             EnsureRoleAccess(results.Id, role, isAllowed: true);
+
+        // Gradebook and rubric management: Admin + Faculty
+        EnsureRoleAccess(gradebook.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(gradebook.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(gradebook.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(rubricManage.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(rubricManage.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(rubricManage.Id, "Student", isAllowed: false);
 
         // Quizzes: Faculty + Student
         EnsureRoleAccess(quizzes.Id, "Admin",   isAllowed: false);
@@ -494,6 +561,11 @@ public static class DatabaseSeeder
         EnsureRoleAccess(studentLifecycle.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(studentLifecycle.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(studentLifecycle.Id, "Student", isAllowed: false);
+
+        // Helpdesk: all roles
+        EnsureRoleAccess(helpdesk.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(helpdesk.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(helpdesk.Id, "Student", isAllowed: true);
 
         // Payments: Admin + Student
         EnsureRoleAccess(payments.Id, "Admin",   isAllowed: true);
@@ -526,6 +598,37 @@ public static class DatabaseSeeder
 
         // Theme Settings: allow Finance to personalize theme without broader settings access
         EnsureRoleAccess(themeSettings.Id, "Finance", isAllowed: true);
+
+        // Admin Users and super-admin settings menus are hidden for Finance by default.
+        EnsureRoleAccess(adminUsers.Id, "Finance", isAllowed: false);
+        foreach (var id in new[]
+        {
+            reportSettings.Id,
+            moduleComposition.Id,
+            sidebarSettings.Id,
+            licenseUpdate.Id,
+            dashboardSettings.Id,
+            institutionPolicy.Id,
+            tenantManagement.Id,
+            campusManagement.Id,
+            libraryConfig.Id,
+            accreditation.Id
+        })
+        {
+            EnsureRoleAccess(id, "Finance", isAllowed: false);
+        }
+
+        EnsureRoleAccess(userImport.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(programs.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(prerequisites.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(gradebook.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(rubricManage.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(helpdesk.Id, "Finance", isAllowed: true);
+
+        // Admin Users: SuperAdmin management view only.
+        EnsureRoleAccess(adminUsers.Id, "Admin", isAllowed: false);
+        EnsureRoleAccess(adminUsers.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(adminUsers.Id, "Student", isAllowed: false);
 
         await db.SaveChangesAsync();
     }

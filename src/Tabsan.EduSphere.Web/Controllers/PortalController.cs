@@ -27,6 +27,7 @@ public class PortalController : Controller
         [nameof(Students)] = "students",
         [nameof(UserImport)] = "user_import",
         [nameof(Departments)] = "departments",
+        [nameof(Programs)] = "programs",
         [nameof(TenantManagement)] = "tenant_management",
         [nameof(CampusManagement)] = "campus_management",
         [nameof(AdminUsers)] = "admin_users",
@@ -61,6 +62,7 @@ public class PortalController : Controller
         [nameof(Announcements)] = "announcements",
         [nameof(StudyPlan)] = "study_plan",
         [nameof(LibraryConfig)] = "library_config",
+        [nameof(AccreditationTemplates)] = "accreditation",
         [nameof(InstitutionPolicy)] = "institution_policy"
     };
 
