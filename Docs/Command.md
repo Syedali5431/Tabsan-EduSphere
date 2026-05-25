@@ -1,3 +1,14 @@
+### Certificate Generation Phase 1-4 Implementation Checkpoint (2026-05-25)
+- Implementation Summary:
+  - Added university-gated sidebar menu `generate_certificates` and seeded role access.
+  - Added scoped API controller for graduated-student certificate listing, generation, and document download.
+  - Added Portal page/actions for Tenant/Campus/Department/Course-filtered certificate operations with Admin/SuperAdmin manage permissions and scoped view/download/print access for other permitted roles.
+  - Updated web API client bindings and integration tests to include new menu/API behavior.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded.
+  - Focused integration tests passed: Sidebar + StudentLifecycle suites (26/26).
+  - Documentation synchronization completed: Plan K phase-end summaries, Command checkpoint, and Function-List expansion.
+
 ### Plan K Phase K12 Stage K12.2 Safety Tests (2026-05-25)
 - Implementation Summary:
   - Executed full-solution build validation after integrating Plan K add-on services/controllers.
