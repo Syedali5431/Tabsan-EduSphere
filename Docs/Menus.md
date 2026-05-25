@@ -23,6 +23,9 @@ This document lists dashboard menus and explains what each menu does for end use
 | system_settings | System Settings | SuperAdmin (governed) | Parent menu for platform-level settings and governance controls. |
 | report_settings | Report Settings | SuperAdmin | Control report definitions and role visibility for reports. |
 | sidebar_settings | Sidebar Settings | SuperAdmin | Configure which roles can see each menu/submenu and whether a menu is active. |
+| admin_users | Admin Users | SuperAdmin | Manage platform administrative accounts and privileged-role user lifecycle actions. |
+| tenant_management | Tenant Management | SuperAdmin | Manage tenant identities, tenant-level status, and multi-tenant operational governance. |
+| campus_management | Campus Management | SuperAdmin | Manage campus identities and tenant-campus mapping context for scoped operations. |
 | theme_settings | Theme Settings | Admin, Faculty, Student | Select and apply UI themes and personalization preferences. |
 | license_update | License Update | SuperAdmin | Upload and validate license artifacts, view status and expiry context. |
 | dashboard_settings | Dashboard Settings | SuperAdmin | Configure portal branding such as institution name/logo/subtitle/footer. |
@@ -67,6 +70,9 @@ These keys are supported by dashboard routing and may appear when enabled by mod
 | institution_policy | Portal | Manage institution-type policy and vocabulary behavior. |
 | module_composition | Portal | Manage module composition and module-role exposure alignment. |
 | user_import | Portal | Admin-driven bulk user onboarding through CSV import flow. |
+| admin_users | Portal | Privileged admin account governance and oversight actions. |
+| tenant_management | Portal | Tenant-level governance and operational management controls. |
+| campus_management | Portal | Campus-level governance and operational management controls. |
 | programs / program | Portal | Program management and program-level academic structure controls. |
 
 ## Notes

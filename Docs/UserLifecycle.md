@@ -89,6 +89,14 @@ Common lifecycle actions in student flow:
 - Route and menu visibility are controlled by role permission + module entitlement + sidebar status.
 - SuperAdmin has governance override visibility for protected system settings.
 - Role visibility and permissions can be adjusted without deleting user records.
+- Settings/governance menus (for example Sidebar Settings, Report Settings, Institution Policy, Module Composition, Tenant/Campus Management) are restricted to privileged governance roles.
+- Program and report-center operational visibility is now also tenant/campus scoped, so activation state can differ by organizational scope.
+
+### 7.1 Program and Reporting Scope Lifecycle
+- Program lifecycle actions (create, update, activate, deactivate) are validated against effective tenant/campus scope and department ownership.
+- Report center lifecycle state is explicitly managed through scoped activation/deactivation controls.
+- SuperAdmin can operate across scopes using explicit scope selection; non-superadmin roles operate within claim-derived scope.
+- Scope-aware controls preserve data and workflow continuity while allowing controlled operational disable/enable by tenant/campus.
 
 ### 8. Offboarding and Recovery Stage
 - Soft offboarding is done by deactivation (data preserved, login blocked).

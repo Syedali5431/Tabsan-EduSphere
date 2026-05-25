@@ -1,6 +1,13 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (25 May 2026):
+- Add trainer walkthrough for Program Management in scoped mode (tenant/campus aware for SuperAdmin).
+- Add trainer workflow for program activate/deactivate lifecycle controls.
+- Add trainer workflow for report-center scope activation/deactivation from settings.
+- Add trainer checklist to verify sidebar/settings visibility is role- and module-aligned.
+- Add tenant/campus governance awareness for admin-user, tenant-management, and campus-management settings menus.
+
 Final baseline update (15 May 2026):
 - Phase 38 complete (final separation baseline).
 - Canonical training guide: User Guide/Training Manual.md (Version 1.5).

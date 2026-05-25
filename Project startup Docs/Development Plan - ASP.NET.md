@@ -1,3 +1,16 @@
+## 2026-05-25 Update - Scoped Program and Governance Enhancements
+
+### Implementation sync
+- Added tenant/campus-scoped Program Management flow across API, repository, and portal UI.
+- Added scoped program activation/deactivation controls with department-in-scope validation.
+- Added scoped report center activation status and toggle operations (status/activate/deactivate).
+- Completed sidebar/module governance synchronization so existing environments self-heal role/menu visibility mismatches.
+- Confirmed settings and governance menu expansion for privileged administration (sidebar/report/institution/module/tenant/campus/admin-user controls).
+
+### Documentation impact
+- Align all planning, requirements, menu, and user-operation documents with scope-aware behavior.
+- Ensure function inventory captures newly exposed controller/client/repository operations.
+
 ## 2026-05-21 Update - Plan J Deep Validation Runtime Pass
 
 ### Plan J Deep Validation Runtime Pass

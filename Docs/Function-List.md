@@ -229,17 +229,10 @@
 | TranscriptController.UploadTemplate | Accepts isolated transcript template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
-| TwoFactorSetupService.BeginSetupAsync | Starts 2FA enrollment, persists the protected secret, and returns QR/manual-key payloads. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
-| TwoFactorSetupService.DisableAsync | Disables 2FA after validating the current code against the stored secret. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
-| TwoFactorSetupService.VerifyLoginAsync | Verifies the login hand-off code for the add-on 2FA challenge. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
-| TwoFactorSetupService.VerifySetupAsync | Confirms the initial enrollment code before enabling 2FA. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
 | TwoFactorStateStore.DisableAsync | Clears the stored 2FA secret and disables 2FA for the current user. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
 | TwoFactorStateStore.EnableAsync | Marks 2FA as enabled after the confirmation code has been validated. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
 | TwoFactorStateStore.GetAsync | Returns the current protected 2FA snapshot for a user, or null if the user is missing. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
 | TwoFactorStateStore.SaveSetupAsync | Stores an encrypted 2FA secret for an in-progress setup. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
-| TwoFactorService.BuildProvisioningUri | Builds an authenticator provisioning URI using the configured issuer and TOTP settings. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorService.cs |
-| TwoFactorService.GenerateSecret | Generates a fresh Base32 TOTP secret for the add-on setup flow. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorService.cs |
-| TwoFactorService.ValidateCode | Validates a TOTP code using the configured time-step and drift window. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorService.cs |
 | IEduApiClient.BeginTwoFactorSetupAsync | Fetches the portal-side 2FA setup payload from the API. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | IEduApiClient.DisableTwoFactorAsync | Sends a portal-side 2FA disable request to the API. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | IEduApiClient.VerifyTwoFactorLoginAsync | Sends a portal-side 2FA login challenge verification request to the API. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
@@ -291,4 +284,29 @@
 | EduApiClient.GenerateDegreeCertificateAsync | Calls API endpoint to generate degree certificate for selected graduated student. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.GenerateTranscriptCertificateAsync | Calls API endpoint to generate transcript for selected graduated student. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.DownloadGeneratedCertificateDocumentAsync | Downloads generated certificate/transcript files by document id and requested format. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| ProgramController.GetAll | Returns program list with tenant/campus scope resolution and role-aware scope enforcement. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.GetById | Returns a single program by id under validated tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.Create | Creates a program only when target department is inside resolved tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.Update | Updates a program name under resolved tenant/campus scope and department ownership checks. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.Activate | Activates a program under resolved tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.DeactivateAlias | Backward-compatible deactivate route alias for program status control under scope checks. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.ResolveEffectiveScope | Resolves requested tenant/campus scope against caller claims and superadmin rules. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ProgramController.EnsureDepartmentIsInScopeAsync | Validates department belongs to current tenant/campus scope before program mutations. | src/Tabsan.EduSphere.API/Controllers/ProgramController.cs |
+| ReportController.GetReportsStatus | Returns active/inactive report scope status for requested or claim-derived tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ActivateReports | Activates report center visibility for the resolved tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.DeactivateReports | Deactivates report center visibility for the resolved tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.IsReportsScopeActiveAsync | Evaluates effective report activation state from settings for tenant/campus scope. | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| UserImportController.ResolveEffectiveScope | Resolves user-import tenant/campus scope from claims and requested query values. | src/Tabsan.EduSphere.API/Controllers/UserImportController.cs |
+| IAcademicProgramRepository.SetActiveAsync | Contract for activating/deactivating program entities in scoped workflows. | src/Tabsan.EduSphere.Domain/Interfaces/IAcademicProgramRepository.cs |
+| AcademicProgramRepository.SetActiveAsync | Persists active/inactive program state through repository layer. | src/Tabsan.EduSphere.Infrastructure/Repositories/AcademicRepositories.cs |
+| IEduApiClient.ActivateProgramAsync | Web client contract for activating scoped programs from portal workflows. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ActivateProgramAsync | Calls scoped activate program endpoint from web portal workflows. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.GetReportsScopeActiveAsync | Retrieves report scope activation status for current tenant/campus context. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ActivateReportsScopeAsync | Calls API to activate report scope for tenant/campus context. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.DeactivateReportsScopeAsync | Calls API to deactivate report scope for tenant/campus context. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| PortalController.Programs | Renders scoped programs page with tenant/campus filters and department context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.CreateProgram | Creates scoped program from portal and preserves selected filter context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.UpdateProgram | Updates scoped program name from portal and preserves selected filter context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.SetProgramActive | Toggles program active/inactive state from portal under scope-aware API calls. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.SetReportsActive | Toggles report scope active/inactive state from portal settings surface. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 

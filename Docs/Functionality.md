@@ -220,6 +220,21 @@
 - Validation status: focused unit isolation coverage passed for shared-repository multi-scope access.
 - Status: Phase 33 completed and validated as of 2026-05-14.
 
+### Phase 40 - Scoped Program and Menu Governance Alignment
+- Scope-aware Program Management:
+	- Program APIs and portal workflows now resolve effective tenant/campus scope from claims with superadmin request validation.
+	- Program create/update/activate/deactivate paths enforce department-in-scope checks.
+	- Program management UI supports tenant/campus selection for superadmin and scoped read/write for non-superadmin users.
+- Report Scope Activation Control:
+	- Report center activation status is now tenant/campus scoped with dedicated activate/deactivate/status endpoints.
+	- Portal settings can toggle report scope state through scoped API operations.
+- Sidebar and Module Governance Completion:
+	- Sidebar seed synchronization now self-heals existing environments by updating menu role-access and status mappings.
+	- Sidebar route guarding and module-key mapping were expanded to cover Programs, Rubric Management, Gradebook, Accreditation templates, and related settings paths.
+- User Import Scope Alignment:
+	- User import API resolves effective tenant/campus scope using claim-aware validation for consistent onboarding boundaries.
+- Status: Phase 40 scoped governance updates implemented and documentation-synchronized.
+
 ## Authentication & Authorization
 
 ### User Authentication

@@ -1,3 +1,13 @@
+### 2026-05-25 - Product Requirements Synchronization (Scope-Aware Governance)
+- Program Management requirements now include:
+  - tenant/campus scoped access control,
+  - department ownership validation before create/update,
+  - explicit activate/deactivate lifecycle controls.
+- Reporting requirements now include scoped report-center activation controls by tenant/campus context.
+- Sidebar/settings governance requirements now include complete privileged settings surfaces and route/menu guard consistency.
+- Bulk User Import requirements now include claim-aware effective scope resolution to prevent cross-scope onboarding.
+- Backward compatibility requirement retained: legacy flows remain operational while scoped controls are enforced for current workflows.
+
 ### 2026-05-21 - Plan J Deep Validation Runtime Pass
 - Implementation Summary:
   - Executed deep runtime validation for Plan J to verify end-to-end behavior across core, module, data, and integration workflows.

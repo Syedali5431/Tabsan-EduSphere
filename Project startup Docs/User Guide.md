@@ -1,6 +1,13 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (25 May 2026):
+- Programs page now supports scope-aware filtering for tenant/campus and scoped activation/deactivation workflows.
+- Report Center availability can now be enabled/disabled per tenant/campus scope by authorized governance users.
+- Sidebar visibility now reflects synchronized menu status, role access, and module entitlement rules.
+- Settings/governance navigation now includes complete privileged controls (sidebar/report/institution/module/tenant/campus/admin-user surfaces).
+- Bulk user import guidance updated to emphasize scoped onboarding boundaries.
+
 Final baseline update (15 May 2026):
 - Phase 38 complete (final separation baseline).
 - Canonical user guide: User Guide/User Guide.md (Version 1.5).

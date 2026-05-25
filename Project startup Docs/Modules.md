@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-25 (Scoped Program and Governance Alignment)
+
+### Module impact summary
+- Program Management module now supports tenant/campus-scoped CRUD and activation lifecycle operations.
+- Reporting module now includes tenant/campus-scoped report-center active/inactive control.
+- User Import workflows now consistently enforce effective scope resolution.
+- Sidebar and Settings governance modules were synchronized to include complete privileged controls and role visibility alignment.
+
+### No catalog expansion note
+- No new paid module was introduced in this change set.
+- Changes are behavior/governance upgrades within existing module catalog.
+
 ## Execution Update - 2026-05-21 (Plan J Deep Validation Runtime Pass)
 
 ### Plan J Deep Validation Runtime Pass
