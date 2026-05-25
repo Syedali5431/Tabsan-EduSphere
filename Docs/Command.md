@@ -1,3 +1,142 @@
+### Plan K Phase K12 Stage K12.2 Safety Tests (2026-05-25)
+- Implementation Summary:
+  - Executed full-solution build validation after integrating Plan K add-on services/controllers.
+  - Confirmed additive compilation for template export, template processing, QR generation, document generation, and student/admin endpoints.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded.
+  - Resolved initial OpenXML dependency warning by aligning package version with existing solution constraints.
+
+### Plan K Phase K12 Stage K12.1 Plug-in Integration Notes (2026-05-25)
+- Implementation Summary:
+  - Added Plan K DI registration block in API startup for new add-on services only.
+  - Preserved minimal startup change boundary with isolated Plan K registration section.
+- Validation Summary:
+  - Startup and service registration compile successfully without affecting existing auth/runtime registration paths.
+
+### Plan K Phase K11 Stage K11.2 Admin Isolation Safety (2026-05-25)
+- Implementation Summary:
+  - Kept Plan K implementation confined to new files and additive startup/package updates.
+  - Left existing admin module controllers untouched.
+- Validation Summary:
+  - Changed-file review confirmed no edits to existing admin feature controllers.
+  - Build passed with isolated admin add-on endpoints only.
+
+### Plan K Phase K11 Stage K11.1 Add Separate Admin Controllers and Endpoints (2026-05-25)
+- Implementation Summary:
+  - Added `DegreeController` and `TranscriptController` as new isolated controllers.
+  - Added additive admin routes for template download, generation, and document download.
+- Validation Summary:
+  - Controller compilation and route wiring validated in full solution build.
+
+### Plan K Phase K10 Stage K10.2 Reuse Existing Auth As-Is (2026-05-25)
+- Implementation Summary:
+  - Applied existing authorization patterns on Plan K add-on endpoints without modifying authentication logic.
+  - Used existing user-id claim resolution approach only inside new controllers.
+- Validation Summary:
+  - Build checks confirmed authorization and claim usage compile cleanly.
+  - Existing auth/login pipeline remained unchanged.
+
+### Plan K Phase K10 Stage K10.1 Add Student Endpoints (2026-05-25)
+- Implementation Summary:
+  - Added additive student endpoints:
+    - `GET /student/degree`
+    - `GET /student/transcript`
+  - Scoped responses to Plan K generated artifacts only.
+- Validation Summary:
+  - Endpoint compilation and role attributes validated through full build.
+
+### Plan K Phase K9 Stage K9.2 PDF Fallback Behavior (2026-05-25)
+- Implementation Summary:
+  - Added safe download fallback branch to return `.docx` when PDF conversion output is unavailable.
+  - Preserved generation success regardless of PDF converter availability.
+- Validation Summary:
+  - Build passed with fallback branch in both new controllers.
+  - No existing export module changes were introduced.
+
+### Plan K Phase K8 Stage K8.1 COURSE_TABLE Renderer (2026-05-25)
+- Implementation Summary:
+  - Implemented dynamic transcript table generation in Plan K template processor using OpenXML table builders.
+  - Added required columns: Course Name, Credit Hours, Grade, SGPA/Marks.
+- Validation Summary:
+  - Compile and integration checks confirmed table rendering path is wired into transcript generation flow.
+
+### Plan K Phase K7 Stage K7.3 Output Path Persistence (2026-05-25)
+- Implementation Summary:
+  - Persisted generated artifact paths in Plan K-specific output scope: `Artifacts/PlanK/generated-documents`.
+  - Added additive in-memory document metadata tracking for scaffold stage.
+- Validation Summary:
+  - Build succeeded; storage writes remain scoped to Plan K path only.
+
+### Plan K Phase K7 Stage K7.2 Serial and Issue Date Assignment (2026-05-25)
+- Implementation Summary:
+  - Added serial default generation (`DEG-`/`TRN-` timestamp) and issue-date stamping in request payload mapping.
+- Validation Summary:
+  - Compile validation confirmed serial and issue-date fields are set during generation.
+
+### Plan K Phase K7 Stage K7.1 Add DocumentGenerationService (2026-05-25)
+- Implementation Summary:
+  - Added `DocumentGenerationService` as isolated orchestration layer connecting export, processing, and QR services.
+- Validation Summary:
+  - Build and DI registration checks passed after service integration.
+
+### Plan K Phase K6 Stage K6.2 Insert QR at Token Anchor (2026-05-25)
+- Implementation Summary:
+  - Added verification URL generation and QR artifact production in Plan K generation flow.
+  - Added `{{QR_CODE}}` replacement value path in template processing.
+- Validation Summary:
+  - Full build succeeded with QR generation and replacement path enabled.
+
+### Plan K Phase K6 Stage K6.1 Add QRCodeService (2026-05-25)
+- Implementation Summary:
+  - Added `QRCodeService` using QRCoder in isolated Plan K service scope.
+  - Implemented PNG bytes and Data URL output helpers.
+- Validation Summary:
+  - QRCoder dependency and service compilation validated by full solution build.
+
+### Plan K Phase K5 Stage K5.3 Extension Model Policy (2026-05-25)
+- Implementation Summary:
+  - Added Plan K-specific payload/request records in new add-on files.
+  - Avoided modifications to existing domain/application model files.
+- Validation Summary:
+  - Build checks confirmed extension models integrate cleanly with no legacy model changes.
+
+### Plan K Phase K5 Stage K5.2 Placeholder Replacement Rules (2026-05-25)
+- Implementation Summary:
+  - Implemented required placeholder replacement map for degree/transcript fields and QR token path.
+- Validation Summary:
+  - Build and compile checks confirmed replacement mapping is active in processing pipeline.
+
+### Plan K Phase K5 Stage K5.1 Add TemplateProcessorService (2026-05-25)
+- Implementation Summary:
+  - Added `TemplateProcessorService` using OpenXML for body/header/footer token replacement.
+  - Added dynamic course-table insertion support hook.
+- Validation Summary:
+  - Full solution build succeeded with OpenXML processor integration.
+
+### Plan K Phase K3 Stage K3.3 Add New Admin Export Endpoints (2026-05-25)
+- Implementation Summary:
+  - Added additive template-download endpoints in new controllers for degree/transcript defaults.
+- Validation Summary:
+  - Endpoint and controller compile checks passed with no existing route changes.
+
+### Plan K Phase K3 Stage K3.2 Default Template Assets (Generated) (2026-05-25)
+- Implementation Summary:
+  - Added runtime-generated default `.docx` templates with required placeholders in Plan K export service.
+- Validation Summary:
+  - Template export path compiles and is accessible via additive endpoints.
+
+### Plan K Phase K3 Stage K3.1 Add TemplateExportService (2026-05-25)
+- Implementation Summary:
+  - Added `TemplateExportService` to generate default Degree and Transcript Word templates.
+- Validation Summary:
+  - Build verified add-on export service without impacting existing export/report modules.
+
+### Plan K Phase K1 Stage K1.2 Define Integration Points (2026-05-25)
+- Implementation Summary:
+  - Added additive DI registrations and isolated route/controller integration points for Plan K.
+- Validation Summary:
+  - Full build succeeded with no breakage to existing services/controllers.
+
 ### Plan J Final Closure Checkpoint (2026-05-21)
 - Implementation Summary:
   - Recorded final Plan J closure after documenting all stages from Phase J1 Stage J1.1 through Phase J10 Stage J10.1.

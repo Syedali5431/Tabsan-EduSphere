@@ -2,8 +2,8 @@
 |--------------|--------|----------|
 | AddHealthChecks | Registers database, memory, CPU, network, and error-rate checks for continuous runtime health monitoring. | src/Tabsan.EduSphere.API/Program.cs |
 | AddOpenTelemetry | Publishes ASP.NET Core, HttpClient, runtime, and process metrics and exposes Prometheus scraping support. | src/Tabsan.EduSphere.API/Program.cs |
-| AddResponseCompression | Keeps Brotli/Gzip compression enabled with Fastest level for HTTPS responses. | src/Tabsan.EduSphere.API/Program.cs |
-| AddResponseCompression | Keeps Brotli/Gzip compression enabled with Fastest level for HTTPS responses. | src/Tabsan.EduSphere.Web/Program.cs |
+| AddResponseCompression (API) | Keeps Brotli/Gzip compression enabled with Fastest level for HTTPS responses. | src/Tabsan.EduSphere.API/Program.cs |
+| AddResponseCompression (Web) | Keeps Brotli/Gzip compression enabled with Fastest level for HTTPS responses. | src/Tabsan.EduSphere.Web/Program.cs |
 | AdminUserController.Create | Accepts optional `institutionType`, validates against active policy, persists to user, and returns assignment in response/list payloads. | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
 | AiChatService.GetConversationAsync | Returns a full conversation thread with message history for the requesting user. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
 | AiChatService.GetConversationsAsync | Returns the requesting user's conversation list for the AI chat experience. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
@@ -193,3 +193,32 @@
 | User.SetTenantCampus(tenantId, campusId) | Assigns or clears tenant/campus ownership for user-level scoping without breaking existing identity flows. | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.ValidateTenantCampusPair | Prevents invalid user state by requiring TenantId and CampusId to be set/cleared together. | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | UserRepository.ApplyTenantCampusScope | Applies tenant/campus query filtering for user reads with SuperAdmin bypass. | src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs |
+| DegreeController.Download | Downloads generated degree document and applies `.docx` fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.DownloadDefaultTemplate | Streams default degree `.docx` template from Plan K export service. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.Generate | Triggers Plan K degree document generation workflow for admin users. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.StudentDegree | Returns Plan K generated degree artifacts for the current student route `/student/degree`. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.ResolveCurrentUserId | Resolves current caller user-id from NameIdentifier/sub claims for student artifact filtering. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| TranscriptController.Download | Downloads generated transcript document and applies `.docx` fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.DownloadDefaultTemplate | Streams default transcript `.docx` template from Plan K export service. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.Generate | Triggers Plan K transcript document generation workflow for admin users. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.StudentTranscript | Returns Plan K generated transcript artifacts for the current student route `/student/transcript`. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.ResolveCurrentUserId | Resolves current caller user-id from NameIdentifier/sub claims for student artifact filtering. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with Plan K placeholder contract. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
+| TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with Plan K placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
+| TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
+| QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/PlanK/QRCodeService.cs |
+| QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/PlanK/QRCodeService.cs |
+| TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceInMainBody | Replaces mapped placeholder tokens in main document body text nodes. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceInHeadersAndFooters | Replaces mapped placeholder tokens in header and footer parts. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceCourseTable | Replaces `{{COURSE_TABLE}}` marker with generated OpenXML table or empty-data text. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildCourseTable | Builds transcript course table with required Plan K columns. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildRow | Creates table row instances for course-table header and data rows. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildCell | Creates formatted OpenXML table cell content (with bold header support). | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
+| DocumentGenerationService.GenerateDegreeAsync | Orchestrates Plan K degree generation using export, processing, and QR services. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| DocumentGenerationService.GenerateTranscriptAsync | Orchestrates Plan K transcript generation including course-table population. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| DocumentGenerationService.GetAsync | Returns generated Plan K document metadata by document id. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| DocumentGenerationService.ListByStudentAsync | Lists Plan K generated artifacts for a specific student id. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| DocumentGenerationService.GenerateInternalAsync | Performs shared document generation pipeline, output persistence, and metadata registration. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| DegreeGenerationRequest.ToPayload | Maps degree generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |

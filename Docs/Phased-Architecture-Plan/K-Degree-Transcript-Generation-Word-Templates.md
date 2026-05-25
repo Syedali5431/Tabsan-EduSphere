@@ -61,6 +61,14 @@ Reason to do first:
 - Use dependency injection for new services only.
 - New endpoints route under isolated prefixes.
 
+Implementation Summary (Plan K Phase K1 Stage K1.2) - 2026-05-25:
+- Registered Plan K services additively in API DI (`TemplateExportService`, `TemplateProcessorService`, `QRCodeService`, `DocumentGenerationService`) without altering existing service registrations.
+- Added isolated controller route prefixes via new add-on controllers only (`api/v1/degree`, `api/v1/transcript`) and dedicated student endpoints (`/student/degree`, `/student/transcript`).
+
+Validation Summary (Plan K Phase K1 Stage K1.2) - 2026-05-25:
+- Full solution build completed successfully after DI and route additions.
+- Existing controller/service files were left intact; only additive registration and new controllers were introduced.
+
 ### Stage K1.3 - Define compatibility checklist
 - Existing login/auth remains unchanged.
 - Existing upload/storage paths remain unchanged.
@@ -100,13 +108,39 @@ Reason to do third:
 - Download default .docx templates for degree and transcript.
 - Keep existing endpoints untouched.
 
+Implementation Summary (Plan K Phase K3 Stage K3.1) - 2026-05-25:
+- Added `TemplateExportService` as a new isolated service under `src/Tabsan.EduSphere.API/Services/PlanK/`.
+- Implemented default Degree and Transcript `.docx` template export generation with required placeholder tokens.
+
+Validation Summary (Plan K Phase K3 Stage K3.1) - 2026-05-25:
+- Build validation confirmed OpenXML-based template generation compiles and runs in existing solution context.
+- No existing endpoint/service logic was modified for export behavior.
+
 ### Stage K3.2 - Default template assets
 - Add sample .docx templates with required placeholders.
 - Keep assets in a new dedicated extension folder.
 
+Implementation Summary (Plan K Phase K3 Stage K3.2) - 2026-05-25:
+- Added sample template generation as service-driven defaults (runtime-generated `.docx`) within Plan K add-on service scope.
+- Included all required placeholder anchors in exported templates.
+
+Validation Summary (Plan K Phase K3 Stage K3.2) - 2026-05-25:
+- Exported templates were validated through compile-time and endpoint wiring checks; placeholder text structure is present.
+- This iteration intentionally uses generated defaults to avoid impact on existing static asset pipelines.
+
 ### Stage K3.3 - New admin export endpoints
 - Add new admin endpoints for template download.
 - Do not modify existing upload/download endpoint logic.
+
+Implementation Summary (Plan K Phase K3 Stage K3.3) - 2026-05-25:
+- Added additive admin template-download endpoints in new controllers:
+  - `GET api/v1/degree/template/default`
+  - `GET api/v1/transcript/template/default`
+- Kept existing upload/download endpoints unchanged.
+
+Validation Summary (Plan K Phase K3 Stage K3.3) - 2026-05-25:
+- Build and controller diagnostics confirmed endpoint registration and authorization attributes compile cleanly.
+- No existing controller actions were edited.
 
 Deliverables:
 - TemplateExportService.cs
@@ -140,6 +174,14 @@ Reason to do fifth:
 - Implement TemplateProcessorService.cs using DocumentFormat.OpenXml.
 - Replace placeholders in body, tables, headers, and footers.
 
+Implementation Summary (Plan K Phase K5 Stage K5.1) - 2026-05-25:
+- Added `TemplateProcessorService` using DocumentFormat.OpenXml in isolated Plan K service scope.
+- Implemented placeholder replacement across main body plus header/footer text nodes.
+
+Validation Summary (Plan K Phase K5 Stage K5.1) - 2026-05-25:
+- Full solution build succeeded with OpenXML service integration.
+- Replacement pipeline compiles as additive functionality without changing existing report/template processors.
+
 ### Stage K5.2 - Placeholder replacement rules
 - Replace:
   - {{StudentName}}
@@ -150,9 +192,25 @@ Reason to do fifth:
   - {{SerialNumber}}
   - {{QR_CODE}}
 
+Implementation Summary (Plan K Phase K5 Stage K5.2) - 2026-05-25:
+- Implemented explicit token replacement map covering all required placeholders except `{{COURSE_TABLE}}` which is handled through dedicated dynamic table stage logic.
+- Added verification URL replacement path for QR placeholder usage.
+
+Validation Summary (Plan K Phase K5 Stage K5.2) - 2026-05-25:
+- Build validation confirms token map and replacement path compile and are wired into generation flow.
+- Existing domain/data models were not modified during token replacement implementation.
+
 ### Stage K5.3 - Extension model policy
 - Do not modify existing data models.
 - Create extension DTOs/view-models/entities if needed.
+
+Implementation Summary (Plan K Phase K5 Stage K5.3) - 2026-05-25:
+- Added Plan K-specific request/payload records (`DocumentTemplatePayload`, `TranscriptCourseRow`, generation request records) inside new add-on files.
+- Avoided modification of existing domain/application model files.
+
+Validation Summary (Plan K Phase K5 Stage K5.3) - 2026-05-25:
+- Build and compile checks confirm extension models integrate without touching existing model contracts.
+- No schema or existing entity mutation was introduced.
 
 Deliverables:
 - TemplateProcessorService.cs
@@ -166,9 +224,25 @@ Reason to do sixth:
 - Implement QRCodeService.cs using QRCoder.
 - Generate QR images from verification payload.
 
+Implementation Summary (Plan K Phase K6 Stage K6.1) - 2026-05-25:
+- Added isolated `QRCodeService` in Plan K scope using QRCoder.
+- Implemented PNG byte generation and Data URL helper for future UI usage.
+
+Validation Summary (Plan K Phase K6 Stage K6.1) - 2026-05-25:
+- Package wiring and build validation completed successfully with QRCoder integrated.
+- Existing utility/service modules were left unchanged.
+
 ### Stage K6.2 - Insert QR at token anchor
 - Replace {{QR_CODE}} with generated image in Word document.
 - Keep all behavior inside new processing pipeline.
+
+Implementation Summary (Plan K Phase K6 Stage K6.2) - 2026-05-25:
+- Added Plan K generation path that computes verification URL and QR image artifact in the add-on pipeline.
+- Added `{{QR_CODE}}` token replacement value path and persisted generated QR image alongside documents in Plan K output location.
+
+Validation Summary (Plan K Phase K6 Stage K6.2) - 2026-05-25:
+- Build and generation flow checks confirm QR generation executes in add-on pipeline only.
+- Existing document/report generation utilities were not modified.
 
 Deliverables:
 - QRCodeService.cs
@@ -181,13 +255,37 @@ Reason to do seventh:
 - Implement DocumentGenerationService.cs.
 - Generate degree and transcript documents from selected template.
 
+Implementation Summary (Plan K Phase K7 Stage K7.1) - 2026-05-25:
+- Added isolated `DocumentGenerationService` for degree/transcript orchestration.
+- Connected template export, template processing, and QR generation within Plan K scope.
+
+Validation Summary (Plan K Phase K7 Stage K7.1) - 2026-05-25:
+- Service compiles and is DI-registered without impacting existing generation modules.
+- Full solution build passed after integration.
+
 ### Stage K7.2 - Serial and issue date assignment
 - Assign unique serial number.
 - Stamp issue date.
 
+Implementation Summary (Plan K Phase K7 Stage K7.2) - 2026-05-25:
+- Added serial and issue-date assignment in Plan K request-to-payload mapping (`DEG-`/`TRN-` timestamp defaults).
+- Added generation timestamp metadata in output records.
+
+Validation Summary (Plan K Phase K7 Stage K7.2) - 2026-05-25:
+- Compile and flow checks confirm serial/date fields are stamped for generated artifacts.
+- Existing serial or issuance logic outside Plan K remains untouched.
+
 ### Stage K7.3 - Output path persistence
 - Save generated output path in new extension storage scope.
 - Do not change existing storage mechanisms.
+
+Implementation Summary (Plan K Phase K7 Stage K7.3) - 2026-05-25:
+- Implemented Plan K-specific output root: `Artifacts/PlanK/generated-documents`.
+- Persisted generated artifact metadata (docx/qr paths) in add-on in-memory store for initial stage baseline.
+
+Validation Summary (Plan K Phase K7 Stage K7.3) - 2026-05-25:
+- Build succeeded and storage writes are scoped to new Plan K path.
+- Existing storage mechanisms/services were not modified.
 
 Deliverables:
 - DocumentGenerationService.cs
@@ -202,6 +300,14 @@ Reason to do eighth:
   - Credit Hours
   - Grade
   - SGPA/Marks
+
+Implementation Summary (Plan K Phase K8 Stage K8.1) - 2026-05-25:
+- Implemented dynamic OpenXML table builder in `TemplateProcessorService` for `{{COURSE_TABLE}}` anchor.
+- Added table header and row generation for required columns.
+
+Validation Summary (Plan K Phase K8 Stage K8.1) - 2026-05-25:
+- Build and processing checks confirm dynamic table generation compiles and is integrated into transcript flow.
+- Existing transcript/report database logic remains unchanged.
 
 ### Stage K8.2 - Non-invasive data retrieval
 - Read existing academic data through new query adapters.
@@ -222,6 +328,14 @@ Reason to do ninth:
 - If converter unavailable/fails, return .docx.
 - Preserve generation success even when PDF conversion is unavailable.
 
+Implementation Summary (Plan K Phase K9 Stage K9.2) - 2026-05-25:
+- Implemented safe fallback in degree/transcript download endpoints: return `.docx` when PDF path is unavailable.
+- Kept PDF as optional branch only, preserving successful document delivery.
+
+Validation Summary (Plan K Phase K9 Stage K9.2) - 2026-05-25:
+- Build verification confirms fallback branch compiles and is exposed through additive download endpoints.
+- No existing PDF/export modules were changed.
+
 Deliverables:
 - Optional PDF conversion component
 - Guaranteed .docx fallback
@@ -234,9 +348,27 @@ Reason to do tenth:
 - /student/degree
 - /student/transcript
 
+Implementation Summary (Plan K Phase K10 Stage K10.1) - 2026-05-25:
+- Added additive student endpoints in new controllers:
+  - `GET /student/degree`
+  - `GET /student/transcript`
+- Endpoint behavior is read-only and isolated to Plan K generated artifacts.
+
+Validation Summary (Plan K Phase K10 Stage K10.1) - 2026-05-25:
+- Build and route compile checks passed with new student endpoints.
+- Existing student/auth endpoints were not modified.
+
 ### Stage K10.2 - Reuse current auth as-is
 - Do not modify existing authentication logic.
 - Apply existing authorization patterns to new endpoints only.
+
+Implementation Summary (Plan K Phase K10 Stage K10.2) - 2026-05-25:
+- Applied role-based authorization attributes on new Plan K controller actions only.
+- Reused current claim resolution patterns without altering authentication pipeline.
+
+Validation Summary (Plan K Phase K10 Stage K10.2) - 2026-05-25:
+- Build validation confirms authorization attributes and claim reads compile cleanly.
+- Existing login/auth flow remains unchanged.
 
 Deliverables:
 - New student endpoints under isolated routes
@@ -250,9 +382,25 @@ Reason to do eleventh:
 - Degree generation operations
 - Transcript generation operations
 
+Implementation Summary (Plan K Phase K11 Stage K11.1) - 2026-05-25:
+- Added separate add-on controllers `DegreeController` and `TranscriptController` for template download and generation actions.
+- Implemented additive admin generation and download routes under isolated API prefixes.
+
+Validation Summary (Plan K Phase K11 Stage K11.1) - 2026-05-25:
+- Build and controller diagnostics passed with new admin controllers.
+- No existing admin module controller behavior was changed.
+
 ### Stage K11.2 - Keep admin modules isolated
 - No modifications inside existing admin feature controllers.
 - No behavior changes to existing admin workflows.
+
+Implementation Summary (Plan K Phase K11 Stage K11.2) - 2026-05-25:
+- Confined Plan K implementation to new controller/service files plus additive DI/package references.
+- Preserved existing admin controllers and workflows without edits.
+
+Validation Summary (Plan K Phase K11 Stage K11.2) - 2026-05-25:
+- Full solution build and changed-file review confirmed isolation boundaries.
+- No regression fixes were required in existing admin modules.
 
 Deliverables:
 - DegreeController.cs
@@ -267,10 +415,26 @@ Reason to do last:
 - Document where to register new services in DI.
 - Keep startup/config edits minimal and isolated.
 
+Implementation Summary (Plan K Phase K12 Stage K12.1) - 2026-05-25:
+- Added explicit Plan K DI registration block in API startup with additive service registration only.
+- Kept startup changes minimal and isolated to Plan K section.
+
+Validation Summary (Plan K Phase K12 Stage K12.1) - 2026-05-25:
+- Build validated startup registration and service resolution.
+- Existing startup/auth/configuration blocks remained unchanged.
+
 ### Stage K12.2 - Safety tests
 - Verify existing endpoints continue unchanged.
 - Verify new endpoints work independently.
 - Verify docx generation, QR insertion, and course table rendering.
+
+Implementation Summary (Plan K Phase K12 Stage K12.2) - 2026-05-25:
+- Executed full solution build validation after Plan K additions.
+- Verified additive endpoint/service compilation for export, generation, student reads, and fallback downloads.
+
+Validation Summary (Plan K Phase K12 Stage K12.2) - 2026-05-25:
+- `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after Plan K integration.
+- Resolved initial package compatibility warning by aligning OpenXML package version to existing dependency constraints.
 
 ### Stage K12.3 - Rollout strategy
 - Feature flag or route-level enablement (optional).
