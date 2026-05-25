@@ -148,15 +148,16 @@ else
 
                     <hr class="my-3" />
 
-                    <form asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
+                    <form id="accreditationTemplateUploadForm" asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
                         <label class="form-label fw-semibold small">Upload Template JSON</label>
                         <div class="input-group input-group-sm">
-                            <input type="file" name="templateFile" class="form-control" accept=".json,application/json" required />
+                            <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".json,application/json" required />
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-upload me-1"></i>Upload
                             </button>
                         </div>
                         <div class="form-text">Accepted format: .json (max 1 MB).</div>
+                        <div id="accreditationTemplateUploadValidation" class="invalid-feedback d-block d-none"></div>
                     </form>
                 </div>
             </div>
@@ -262,5 +263,84 @@ else
                 document.getElementById('editIsActive').checked  = btn.dataset.active === 'true';
             });
         });
+
+        const uploadForm = document.getElementById('accreditationTemplateUploadForm');
+        const uploadInput = document.getElementById('accreditationTemplateFileInput');
+        const uploadFeedback = document.getElementById('accreditationTemplateUploadValidation');
+
+        if (uploadForm && uploadInput && uploadFeedback) {
+            let bypassValidation = false;
+
+            const hideValidation = () => {
+                uploadFeedback.textContent = '';
+                uploadFeedback.classList.add('d-none');
+                uploadInput.classList.remove('is-invalid');
+            };
+
+            const showValidation = (message) => {
+                uploadFeedback.textContent = message;
+                uploadFeedback.classList.remove('d-none');
+                uploadInput.classList.add('is-invalid');
+            };
+
+            uploadInput.addEventListener('change', hideValidation);
+
+            uploadForm.addEventListener('submit', async (event) => {
+                if (bypassValidation) {
+                    bypassValidation = false;
+                    return;
+                }
+
+                event.preventDefault();
+                hideValidation();
+
+                const file = uploadInput.files && uploadInput.files.length > 0 ? uploadInput.files[0] : null;
+                if (!file) {
+                    showValidation('Please select a JSON file.');
+                    return;
+                }
+
+                if (!file.name.toLowerCase().endsWith('.json')) {
+                    showValidation('Only .json template files are supported.');
+                    return;
+                }
+
+                if (file.size > 1048576) {
+                    showValidation('Template file is too large. Maximum size is 1 MB.');
+                    return;
+                }
+
+                try {
+                    const text = await file.text();
+                    const parsed = JSON.parse(text);
+                    const payload = parsed && typeof parsed === 'object' && parsed.template
+                        ? parsed.template
+                        : parsed;
+
+                    if (!payload || typeof payload !== 'object') {
+                        showValidation('Invalid template JSON structure.');
+                        return;
+                    }
+
+                    const name = typeof payload.name === 'string' ? payload.name.trim() : '';
+                    if (!name) {
+                        showValidation('Template JSON must include a non-empty Name value.');
+                        return;
+                    }
+
+                    const formatRaw = typeof payload.format === 'string' ? payload.format.trim().toUpperCase() : 'CSV';
+                    if (formatRaw !== 'CSV' && formatRaw !== 'PDF') {
+                        showValidation('Template format must be CSV or PDF.');
+                        return;
+                    }
+                } catch {
+                    showValidation('Invalid JSON file. Please upload a valid accreditation template export.');
+                    return;
+                }
+
+                bypassValidation = true;
+                uploadForm.submit();
+            });
+        }
     </script>
 }
