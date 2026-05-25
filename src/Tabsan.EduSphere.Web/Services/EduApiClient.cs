@@ -310,12 +310,13 @@ public interface IEduApiClient
     Task<List<ChangeRequestItem>> GetMyResultRecheckRequestsAsync(CancellationToken ct);
 
     // Quizzes
-    Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, CancellationToken ct);
+    Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct);
     Task<List<QuizAttemptItem>> GetMyAttemptsAsync(CancellationToken ct);
-    Task<Guid> CreateQuizAsync(Guid courseOfferingId, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, CancellationToken ct);
-    Task UpdateQuizAsync(Guid id, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, CancellationToken ct);
-    Task PublishQuizAsync(Guid id, CancellationToken ct);
-    Task DeleteQuizAsync(Guid id, CancellationToken ct);
+    Task<Guid> CreateQuizAsync(Guid courseOfferingId, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task UpdateQuizAsync(Guid id, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task PublishQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task SetQuizActiveAsync(Guid id, bool activate, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task DeleteQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // FYP
     Task<List<FypProjectItem>> GetMyFypProjectsAsync(CancellationToken ct);
@@ -3336,9 +3337,21 @@ public class EduApiClient : IEduApiClient
 
     // ── Quizzes ───────────────────────────────────────────────────────────────
 
-    public async Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, CancellationToken ct)
+    public async Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
-        var raw = await GetAsync<List<QuizApiDto>>($"api/v1/quiz/by-offering/{offeringId}", ct) ?? new();
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+        if (includeInactive)
+            queryParts.Add("includeInactive=true");
+
+        var path = $"api/v1/quiz/by-offering/{offeringId}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var raw = await GetAsync<List<QuizApiDto>>(path, ct) ?? new();
         return raw.Select(q => new QuizItem
         {
             Id                  = q.Id,
@@ -3400,15 +3413,25 @@ public class EduApiClient : IEduApiClient
     // ── Quiz write methods ────────────────────────────────────────────────────
 
     public Task<Guid> CreateQuizAsync(Guid courseOfferingId, string title, string? instructions,
-        int? timeLimitMinutes, int maxAttempts, CancellationToken ct)
+        int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { courseOfferingId, title, instructions, timeLimitMinutes, maxAttempts };
-        return PostAsync<object, QuizCreateResponse>("api/v1/quiz", payload, ct)
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/quiz";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, QuizCreateResponse>(path, payload, ct)
             .ContinueWith(t => t.Result?.QuizId ?? Guid.Empty, ct);
     }
 
     public Task UpdateQuizAsync(Guid id, string title, string? instructions,
-        int? timeLimitMinutes, int maxAttempts, CancellationToken ct)
+        int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new
         {
@@ -3419,14 +3442,63 @@ public class EduApiClient : IEduApiClient
             availableFrom = (DateTime?)null,
             availableUntil = (DateTime?)null
         };
-        return PutAsync<object, object>($"api/v1/quiz/{id}", payload, ct);
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/quiz/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PutAsync<object, object>(path, payload, ct);
     }
 
-    public Task PublishQuizAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/quiz/{id}/publish", new { }, ct);
+    public Task PublishQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
 
-    public Task DeleteQuizAsync(Guid id, CancellationToken ct)
-        => DeleteAsync($"api/v1/quiz/{id}", ct);
+        var path = $"api/v1/quiz/{id}/publish";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
+
+    public Task SetQuizActiveAsync(Guid id, bool activate, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var basePath = activate ? $"api/v1/quiz/{id}/activate" : $"api/v1/quiz/{id}/deactivate";
+        if (queryParts.Count > 0)
+            basePath += "?" + string.Join("&", queryParts);
+
+        return PostAsync<object, object>(basePath, new { }, ct);
+    }
+
+    public Task DeleteQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/quiz/{id}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return DeleteAsync(path, ct);
+    }
 
     private sealed class QuizCreateResponse { public Guid QuizId { get; set; } }
 

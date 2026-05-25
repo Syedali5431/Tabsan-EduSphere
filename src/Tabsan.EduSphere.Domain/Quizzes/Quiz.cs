@@ -132,6 +132,15 @@ public class Quiz : BaseEntity
     }
 
     /// <summary>
+    /// Reactivates a previously deactivated quiz.
+    /// </summary>
+    public void Activate()
+    {
+        IsActive = true;
+        Touch();
+    }
+
+    /// <summary>
     /// Updates the editable fields of an unpublished quiz.
     /// </summary>
     /// <param name="title">New title.</param>

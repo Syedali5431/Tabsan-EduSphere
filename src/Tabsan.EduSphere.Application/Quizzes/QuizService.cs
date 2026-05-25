@@ -85,6 +85,18 @@ public sealed class QuizService : IQuizService
         return true;
     }
 
+    /// <summary>Reactivates a previously deactivated quiz. Returns false if not found.</summary>
+    public async Task<bool> ActivateAsync(Guid quizId, CancellationToken ct = default)
+    {
+        var quiz = await _repo.GetByIdIncludingInactiveAsync(quizId, ct);
+        if (quiz is null) return false;
+
+        quiz.Activate();
+        _repo.Update(quiz);
+        await _repo.SaveChangesAsync(ct);
+        return true;
+    }
+
     /// <summary>Adds a question (with options) to a quiz and returns the new question ID.</summary>
     public async Task<Guid> AddQuestionAsync(AddQuestionRequest request, CancellationToken ct = default)
     {
@@ -134,9 +146,9 @@ public sealed class QuizService : IQuizService
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns all active quizzes for a course offering.</summary>
-    public async Task<IReadOnlyList<QuizSummaryResponse>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<QuizSummaryResponse>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default)
     {
-        var quizzes = await _repo.GetByOfferingAsync(courseOfferingId, ct);
+        var quizzes = await _repo.GetByOfferingAsync(courseOfferingId, includeInactive, ct);
         return quizzes.Select(ToSummary).ToList();
     }
 

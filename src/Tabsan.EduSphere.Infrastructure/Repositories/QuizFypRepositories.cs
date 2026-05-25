@@ -27,6 +27,12 @@ public sealed class QuizRepository : IQuizRepository
     public Task<Quiz?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _db.Quizzes.FirstOrDefaultAsync(q => q.Id == id, ct);
 
+    /// <summary>Returns a quiz by its ID including inactive rows, or null.</summary>
+    public Task<Quiz?> GetByIdIncludingInactiveAsync(Guid id, CancellationToken ct = default)
+        => _db.Quizzes
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(q => q.Id == id, ct);
+
     /// <summary>Returns a quiz with its questions and options loaded, or null.</summary>
     public Task<Quiz?> GetWithQuestionsAsync(Guid id, CancellationToken ct = default)
         => _db.Quizzes
@@ -34,12 +40,16 @@ public sealed class QuizRepository : IQuizRepository
                   .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
               .FirstOrDefaultAsync(q => q.Id == id, ct);
 
-    /// <summary>Returns all active quizzes for a course offering.</summary>
-    public async Task<IReadOnlyList<Quiz>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
-        => await _db.Quizzes
+    /// <summary>Returns quizzes for a course offering, optionally including inactive rows.</summary>
+    public async Task<IReadOnlyList<Quiz>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default)
+    {
+        var query = includeInactive ? _db.Quizzes.IgnoreQueryFilters() : _db.Quizzes;
+
+        return await query
               .Where(q => q.CourseOfferingId == courseOfferingId)
               .OrderBy(q => q.AvailableFrom)
               .ToListAsync(ct);
+    }
 
     /// <summary>Queues a quiz for insertion.</summary>
     public async Task AddAsync(Quiz quiz, CancellationToken ct = default)

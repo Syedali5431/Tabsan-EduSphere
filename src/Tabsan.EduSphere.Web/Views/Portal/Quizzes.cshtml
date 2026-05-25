@@ -17,6 +17,35 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <form method="get" asp-action="Quizzes" class="row g-2 align-items-end">
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
+
                     @if (User.IsInRole("Student") && Model.SemesterOptions.Count > 0)
                     {
                         <div class="col-md-4">
@@ -40,6 +69,15 @@ else
                             }
                         </select>
                     </div>
+                    @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                    {
+                        <div class="col-md-2">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" checked="@(Model.IncludeInactive ? "checked" : null)" onchange="this.form.submit()" />
+                                <label class="form-check-label" for="includeInactive">Include Inactive</label>
+                            </div>
+                        </div>
+                    }
                 </form>
             </div>
         </div>
@@ -92,8 +130,8 @@ else
                                     }
                                     else
                                     {
-                                        <span class="badge @(q.IsPublished ? "bg-success" : "bg-warning text-dark") mt-2">
-                                            @(q.IsPublished ? "Pending" : "Draft")
+                                        <span class="badge @(!q.IsActive ? "bg-danger" : q.IsPublished ? "bg-success" : "bg-warning text-dark") mt-2">
+                                            @(!q.IsActive ? "Inactive" : q.IsPublished ? "Published" : "Draft")
                                         </span>
                                     }
                                     @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
@@ -111,14 +149,34 @@ else
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@q.Id" />
                                                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                                     <button type="submit" class="btn btn-xs btn-outline-success btn-sm">Publish</button>
                                                 </form>
                                             }
+
+                                            <form asp-action="SetQuizActive" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@q.Id" />
+                                                <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                                <input type="hidden" name="activate" value="@(!q.IsActive)" />
+                                                <button type="submit" class="btn btn-xs @(q.IsActive ? "btn-outline-warning" : "btn-outline-success") btn-sm">
+                                                    @(q.IsActive ? "Deactivate" : "Activate")
+                                                </button>
+                                            </form>
+
                                             <form asp-action="DeleteQuiz" method="post" class="d-inline"
                                                   onsubmit="return confirm('Delete this quiz?')">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@q.Id" />
                                                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                                 <button type="submit" class="btn btn-xs btn-outline-danger btn-sm">Delete</button>
                                             </form>
                                         </div>
@@ -185,6 +243,9 @@ else
             <form asp-action="CreateQuiz" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Create Quiz</h5>

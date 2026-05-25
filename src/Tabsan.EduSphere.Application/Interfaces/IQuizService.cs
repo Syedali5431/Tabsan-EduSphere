@@ -24,6 +24,9 @@ public interface IQuizService
     /// <summary>Soft-deletes a quiz. Returns false if not found.</summary>
     Task<bool> DeactivateAsync(Guid quizId, CancellationToken ct = default);
 
+    /// <summary>Reactivates a previously deactivated quiz. Returns false if not found.</summary>
+    Task<bool> ActivateAsync(Guid quizId, CancellationToken ct = default);
+
     /// <summary>Adds a question (with options) to a quiz. Returns the new question ID.</summary>
     Task<Guid> AddQuestionAsync(AddQuestionRequest request, CancellationToken ct = default);
 
@@ -35,8 +38,8 @@ public interface IQuizService
 
     // ── Queries ───────────────────────────────────────────────────────────────
 
-    /// <summary>Returns all active quizzes for a course offering.</summary>
-    Task<IReadOnlyList<QuizSummaryResponse>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
+    /// <summary>Returns quizzes for a course offering, optionally including inactive rows.</summary>
+    Task<IReadOnlyList<QuizSummaryResponse>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default);
 
     /// <summary>Returns full quiz detail with questions and options. Returns null if not found.</summary>
     Task<QuizDetailResponse?> GetDetailAsync(Guid quizId, CancellationToken ct = default);

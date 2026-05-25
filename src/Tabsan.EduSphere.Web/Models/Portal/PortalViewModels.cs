@@ -915,11 +915,17 @@ public class QuizzesPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<QuizItem>        Quizzes        { get; set; } = new();
     public List<QuizAttemptItem> MyAttempts     { get; set; } = new();
     public List<LookupItem>      CourseOfferings { get; set; } = new();
     public List<LookupItem>      SemesterOptions { get; set; } = new();
     public Guid?  SelectedOfferingId { get; set; }
+    public Guid?  SelectedTenantId { get; set; }
+    public Guid?  SelectedCampusId { get; set; }
+    public bool IncludeInactive { get; set; }
     public string? SelectedSemesterName { get; set; }
 }
 

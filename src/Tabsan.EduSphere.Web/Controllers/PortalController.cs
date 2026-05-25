@@ -2599,30 +2599,44 @@ public class PortalController : Controller
     // ── Quizzes ────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Quizzes(Guid? offeringId, string? semesterName, CancellationToken ct)
+    public async Task<IActionResult> Quizzes(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
         ViewData["Title"] = "Quizzes";
+        var identity = _api.GetSessionIdentity();
         var model = new QuizzesPageModel
         {
             IsConnected      = _api.IsConnected(),
+            Identity         = identity,
             SelectedOfferingId = offeringId,
             SelectedSemesterName = semesterName,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            IncludeInactive = includeInactive,
             Message          = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
-            var allOfferings = await GetOfferingFilterOptionsAsync(sessionId, ct);
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
             model.SemesterOptions = BuildSemesterOptions(allOfferings);
             model.CourseOfferings = FilterOfferingsBySemester(allOfferings, semesterName);
 
             if (offeringId.HasValue)
-                model.Quizzes = await _api.GetQuizzesByOfferingAsync(offeringId.Value, ct);
-            else if (sessionId?.IsStudent == true && !string.IsNullOrWhiteSpace(semesterName))
+                model.Quizzes = await _api.GetQuizzesByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, model.IncludeInactive, ct);
+            else if (identity?.IsStudent == true && !string.IsNullOrWhiteSpace(semesterName))
             {
                 var quizBatches = await Task.WhenAll(
-                    model.CourseOfferings.Select(o => _api.GetQuizzesByOfferingAsync(o.Id, ct)));
+                    model.CourseOfferings.Select(o => _api.GetQuizzesByOfferingAsync(o.Id, effectiveTenantId, effectiveCampusId, false, ct)));
 
                 model.Quizzes = quizBatches
                     .SelectMany(q => q)
@@ -2631,7 +2645,7 @@ public class PortalController : Controller
                     .ToList();
             }
 
-            if (sessionId?.IsStudent == true)
+            if (identity?.IsStudent == true)
                 model.MyAttempts = await _api.GetMyAttemptsAsync(ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
@@ -3104,49 +3118,95 @@ public class PortalController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateQuiz(
         Guid offeringId, string title, string? instructions,
-        int? timeLimitMinutes, int maxAttempts, CancellationToken ct)
+        int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.CreateQuizAsync(offeringId, title, instructions, timeLimitMinutes, maxAttempts, ct); }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.CreateQuizAsync(offeringId, title, instructions, timeLimitMinutes, maxAttempts, effectiveTenantId, effectiveCampusId, ct);
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Quizzes), new { offeringId });
+        return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateQuiz(
         Guid id, Guid offeringId, string title, string? instructions,
-        int? timeLimitMinutes, int maxAttempts, CancellationToken ct)
+        int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.UpdateQuizAsync(id, title, instructions, timeLimitMinutes, maxAttempts, ct); TempData["PortalMessage"] = "Quiz updated."; }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.UpdateQuizAsync(id, title, instructions, timeLimitMinutes, maxAttempts, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Quiz updated.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Quizzes), new { offeringId });
+        return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PublishQuiz(Guid id, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> PublishQuiz(Guid id, Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.PublishQuizAsync(id, ct); }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.PublishQuizAsync(id, effectiveTenantId, effectiveCampusId, ct);
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Quizzes), new { offeringId });
+        return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteQuiz(Guid id, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> SetQuizActive(Guid id, bool activate, Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive = true, CancellationToken ct = default)
     {
         if (_api.IsConnected())
         {
-            try { await _api.DeleteQuizAsync(id, ct); }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.SetQuizActiveAsync(id, activate, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = activate ? "Quiz activated." : "Quiz deactivated.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+        return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteQuiz(Guid id, Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.DeleteQuizAsync(id, effectiveTenantId, effectiveCampusId, ct);
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Quizzes), new { offeringId });
+        return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     // ── FYP write actions ───────────────────────────────────────────────────

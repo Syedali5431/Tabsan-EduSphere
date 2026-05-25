@@ -12,11 +12,14 @@ public interface IQuizRepository
     /// <summary>Returns a quiz by its ID (active only), or null if not found.</summary>
     Task<Quiz?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Returns a quiz by ID including inactive rows, or null if not found.</summary>
+    Task<Quiz?> GetByIdIncludingInactiveAsync(Guid id, CancellationToken ct = default);
+
     /// <summary>Returns a quiz including its questions and options, or null.</summary>
     Task<Quiz?> GetWithQuestionsAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>Returns all active quizzes for a course offering.</summary>
-    Task<IReadOnlyList<Quiz>> GetByOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
+    /// <summary>Returns quizzes for a course offering, optionally including inactive rows.</summary>
+    Task<IReadOnlyList<Quiz>> GetByOfferingAsync(Guid courseOfferingId, bool includeInactive = false, CancellationToken ct = default);
 
     /// <summary>Queues a new quiz for insertion.</summary>
     Task AddAsync(Quiz quiz, CancellationToken ct = default);
