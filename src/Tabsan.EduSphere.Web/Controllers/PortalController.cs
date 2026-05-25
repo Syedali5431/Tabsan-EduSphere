@@ -6899,6 +6899,167 @@ public class PortalController : Controller
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> DownloadAccreditationTemplate(Guid id, CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
+
+        try
+        {
+            var template = await _api.GetAccreditationTemplateAsync(id, ct);
+            if (template == null)
+            {
+                TempData["Error"] = "Template not found.";
+                return RedirectToAction(nameof(AccreditationTemplates));
+            }
+
+            var export = new AccreditationTemplateExportEnvelope
+            {
+                Version = 1,
+                ExportedAtUtc = DateTime.UtcNow,
+                Template = new AccreditationTemplateImportPayload
+                {
+                    Name = template.Name,
+                    Description = template.Description,
+                    Format = template.Format,
+                    FieldMappingsJson = template.FieldMappingsJson,
+                    IsActive = template.IsActive
+                }
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                export,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            return File(bytes, "application/json", $"accreditation-template-{template.Id:N}.json");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(AccreditationTemplates));
+        }
+    }
+
+    [HttpPost]
+    [RequestFormLimits(MultipartBodyLengthLimit = 1048576)]
+    public async Task<IActionResult> UploadAccreditationTemplate(IFormFile? templateFile, CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
+
+        if (templateFile == null || templateFile.Length == 0)
+        {
+            TempData["Error"] = "Please choose a JSON template file to upload.";
+            return RedirectToAction(nameof(AccreditationTemplates));
+        }
+
+        if (!string.Equals(Path.GetExtension(templateFile.FileName), ".json", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Error"] = "Only .json template files are supported.";
+            return RedirectToAction(nameof(AccreditationTemplates));
+        }
+
+        if (templateFile.Length > 1048576)
+        {
+            TempData["Error"] = "Template file is too large. Maximum size is 1 MB.";
+            return RedirectToAction(nameof(AccreditationTemplates));
+        }
+
+        try
+        {
+            string json;
+            using (var stream = templateFile.OpenReadStream())
+            using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+            {
+                json = await reader.ReadToEndAsync();
+            }
+
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            AccreditationTemplateImportPayload? payload = null;
+            var envelope = System.Text.Json.JsonSerializer.Deserialize<AccreditationTemplateExportEnvelope>(json, options);
+            if (envelope?.Template != null)
+            {
+                payload = envelope.Template;
+            }
+
+            payload ??= System.Text.Json.JsonSerializer.Deserialize<AccreditationTemplateImportPayload>(json, options);
+
+            if (payload == null || string.IsNullOrWhiteSpace(payload.Name))
+            {
+                TempData["Error"] = "Invalid template JSON. Required field: Name.";
+                return RedirectToAction(nameof(AccreditationTemplates));
+            }
+
+            var normalizedFormat = payload.Format?.Trim().ToUpperInvariant();
+            if (normalizedFormat != "CSV" && normalizedFormat != "PDF")
+            {
+                TempData["Error"] = "Invalid template format. Use CSV or PDF.";
+                return RedirectToAction(nameof(AccreditationTemplates));
+            }
+
+            var requestedName = payload.Name.Trim();
+            var targetName = requestedName;
+            var existingTemplates = await _api.GetAccreditationTemplatesAsync(ct);
+            var existingNames = new HashSet<string>(
+                existingTemplates.Select(t => t.Name.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (existingNames.Contains(targetName))
+            {
+                var baseName = $"{requestedName} Imported";
+                targetName = $"{baseName} {DateTime.UtcNow:yyyyMMddHHmmss}";
+                var suffix = 1;
+                while (existingNames.Contains(targetName))
+                {
+                    targetName = $"{baseName} {DateTime.UtcNow:yyyyMMddHHmmss}-{suffix}";
+                    suffix++;
+                }
+            }
+
+            await _api.CreateAccreditationTemplateAsync(new CreateAccreditationTemplateForm
+            {
+                Name = targetName,
+                Description = payload.Description?.Trim(),
+                Format = normalizedFormat,
+                FieldMappingsJson = payload.FieldMappingsJson
+            }, ct);
+
+            TempData["Success"] = string.Equals(targetName, requestedName, StringComparison.Ordinal)
+                ? "Accreditation template uploaded successfully."
+                : $"Accreditation template uploaded as '{targetName}' because '{requestedName}' already exists.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            TempData["Error"] = "Invalid JSON file. Please upload a valid accreditation template export.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(AccreditationTemplates));
+    }
+
+    private sealed class AccreditationTemplateExportEnvelope
+    {
+        public int Version { get; set; }
+        public DateTime ExportedAtUtc { get; set; }
+        public AccreditationTemplateImportPayload? Template { get; set; }
+    }
+
+    private sealed class AccreditationTemplateImportPayload
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Format { get; set; } = "CSV";
+        public string? FieldMappingsJson { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
     // ── Phase 23 — Institution Policy ─────────────────────────────────────────
 
     [HttpGet]

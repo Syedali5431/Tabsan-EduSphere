@@ -83,6 +83,12 @@ else
                                             <td>@t.CreatedAt.ToString("dd MMM yyyy")</td>
                                             <td class="text-end">
                                                 <div class="btn-group btn-group-sm">
+                                                    <a asp-action="DownloadAccreditationTemplate" asp-route-id="@t.Id"
+                                                       class="btn btn-outline-secondary btn-sm d-flex align-items-center mb-1"
+                                                       title="Download Template JSON"
+                                                       style="min-width: 120px; justify-content: center;">
+                                                        <i class="bi bi-filetype-json me-1"></i> Template
+                                                    </a>
                                                     <a asp-action="DownloadAccreditationReport" asp-route-id="@t.Id"
                                                        class="btn btn-success btn-sm d-flex align-items-center mb-1"
                                                        title="Download Accreditation Report"
@@ -135,8 +141,23 @@ else
                     <ul class="small text-muted mb-0">
                         <li><strong>Format:</strong> CSV for spreadsheet submission; TXT for plain-text regulatory forms.</li>
                         <li><strong>Field Mappings:</strong> JSON array of section keys to include, e.g. <code>["enrollment","results","faculty"]</code>.</li>
+                        <li><strong>Template Download:</strong> Use the <span class="badge bg-light text-dark border"><i class="bi bi-filetype-json"></i> Template</span> button to export template settings as JSON.</li>
+                        <li><strong>Template Upload:</strong> Upload a previously exported JSON file to create a new template quickly.</li>
                         <li><strong>Download:</strong> Click the <span class="badge bg-success"><i class="bi bi-download"></i> Download</span> button to generate and download the report instantly. If the download fails, you will see an error message.</li>
                     </ul>
+
+                    <hr class="my-3" />
+
+                    <form asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
+                        <label class="form-label fw-semibold small">Upload Template JSON</label>
+                        <div class="input-group input-group-sm">
+                            <input type="file" name="templateFile" class="form-control" accept=".json,application/json" required />
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                        </div>
+                        <div class="form-text">Accepted format: .json (max 1 MB).</div>
+                    </form>
                 </div>
             </div>
         </div>
