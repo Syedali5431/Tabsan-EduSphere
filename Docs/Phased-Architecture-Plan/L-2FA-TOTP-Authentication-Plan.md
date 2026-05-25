@@ -352,3 +352,11 @@ Note:
   - Added focused unit tests for 2FA orchestration and portal-side 2FA setup behavior.
 - Validation Summary:
   - `Tabsan.EduSphere.UnitTests` passes for the 2FA unit slices.
+
+### Phase L10 - Plug-In Integration Guide and Rollout
+- Implementation Summary:
+  - Added the minimal login integration snippet guidance, startup/DI minimalism guidance, and rollback checklist for the add-on 2FA surface.
+  - Preserved the non-breaking plug-in design by keeping the integration points commented and optional.
+- Validation Summary:
+  - The rollout guidance is aligned with the implemented `/api/v1/2fa` surface and the portal-side 2FA flow.
+  - The solution build remains green after the final Plan L documentation pass.

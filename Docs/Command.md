@@ -10,6 +10,14 @@
   - Focused `Tabsan.EduSphere.IntegrationTests` coverage for the live `TwoFactorController` now passes, and the `users.MfaTotpSecret` column was widened to `nvarchar(512)` so encrypted secrets persist successfully.
   - Focused `Tabsan.EduSphere.UnitTests` coverage for `PortalController.TwoFactorSettings` and the 2FA setup entrypoint now passes.
 
+### Plan L Phase L10 Rollout Guidance and Integration Snippet (2026-05-25)
+- Implementation Summary:
+  - Added the minimal login integration snippet, DI/startup minimalism guidance, and rollback checklist for the add-on 2FA rollout.
+  - Kept the guidance additive and non-invasive so existing authentication stays untouched.
+- Validation Summary:
+  - The finalized Plan L rollout guidance matches the implemented API, web, and test surface.
+  - The solution remains build-safe after the final documentation pass.
+
 ### Plan K Phase K12 Stage K12.3 Rollout Strategy (2026-05-25)
 - Implementation Summary:
   - Added default `plan-k.enabled` feature-flag support in the existing feature-flag service.
