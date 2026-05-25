@@ -307,6 +307,7 @@
     // Fetches current user theme from API on every request; falls back to session cache.
     // Sets data-theme on the <html> element so CSS variables apply site-wide.
     const string ThemeCacheKey = "CurrentThemeCache";
+    var themeCacheKey = $"{ThemeCacheKey}:{sessionId?.UserName ?? "anonymous"}";
     var currentTheme = "";
     if (isConnected)
     {
@@ -314,16 +315,16 @@
         {
             var freshTheme = await EduApi.GetCurrentThemeAsync(CancellationToken.None);
             currentTheme = freshTheme ?? "";
-            Context.Session.SetString(ThemeCacheKey, currentTheme);
+            Context.Session.SetString(themeCacheKey, currentTheme);
         }
         catch
         {
-            currentTheme = Context.Session.GetString(ThemeCacheKey) ?? "";
+            currentTheme = Context.Session.GetString(themeCacheKey) ?? "";
         }
     }
     else
     {
-        currentTheme = Context.Session.GetString(ThemeCacheKey) ?? "";
+        currentTheme = Context.Session.GetString(themeCacheKey) ?? "";
     }
 }
 
