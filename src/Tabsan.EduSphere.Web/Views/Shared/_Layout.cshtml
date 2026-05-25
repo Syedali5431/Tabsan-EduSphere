@@ -192,6 +192,7 @@
         // Final-Touches Phase 18 Stage 18.1/18.2 — graduation workflow sidebar links
         "graduation_apply"        => ("Portal", "GraduationApply"),
         "graduation_applications" => ("Portal", "GraduationApplications"),
+        "generate_certificates"   => ("Portal", "GenerateCertificates"),
         // Final-Touches Phase 19 Stage 19.4
         "grading_config" => ("Portal", "GradingConfig"),
         // Final-Touches Phase 20 Stage 20.1/20.2/20.3/20.4 — LMS sidebar links
@@ -276,6 +277,7 @@
         // Final-Touches Phase 18 Stage 18.1/18.2 — graduation workflow groups
         "graduation_apply"        => ("Student Related", 3),
         "graduation_applications" => ("Academic Related", 2),
+        "generate_certificates"   => ("Academic Related", 2),
         "grading_config" => ("Academic Related", 2),
         // Final-Touches Phase 20 Stage 20.1/20.2/20.3/20.4 — LMS groups
         "lms_manage"    => ("Academic Related", 2),
@@ -416,7 +418,8 @@
                                 if (!showDegreeAuditSidebar
                                     && (sub.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
                                         || sub.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
-                                        || sub.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
+                                        || sub.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)
+                                        || sub.Key.Equals("generate_certificates", StringComparison.OrdinalIgnoreCase)))
                                 {
                                     continue;
                                 }
@@ -442,7 +445,8 @@
                             if (!showDegreeAuditSidebar
                                 && (top.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
                                     || top.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
-                                    || top.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
+                                    || top.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)
+                                    || top.Key.Equals("generate_certificates", StringComparison.OrdinalIgnoreCase)))
                             {
                                 continue;
                             }
@@ -511,6 +515,7 @@
                             groupedLinks.Add(("Academic Related", 2, 2620, "Degree Audit", "Portal", "DegreeAudit"));
                             groupedLinks.Add(("Academic Related", 2, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
                             groupedLinks.Add(("Academic Related", 2, 2640, "Degree Rules", "Portal", "DegreeRules"));
+                            groupedLinks.Add(("Academic Related", 2, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
                         }
 
                         foreach (var link in superAdminFallbackLinks)

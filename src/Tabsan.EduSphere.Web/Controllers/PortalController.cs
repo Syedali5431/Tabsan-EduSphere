@@ -53,6 +53,7 @@ public class PortalController : Controller
         [nameof(DegreeRules)] = "degree_rules",
         [nameof(GraduationApply)] = "graduation_apply",
         [nameof(GraduationApplications)] = "graduation_applications",
+        [nameof(GenerateCertificates)] = "generate_certificates",
         [nameof(GradingConfig)] = "grading_config",
         [nameof(LmsManage)] = "lms_manage",
         [nameof(CourseMaterial)] = "course_material",
@@ -89,6 +90,7 @@ public class PortalController : Controller
         "degree_rules",
         "graduation_apply",
         "graduation_applications",
+        "generate_certificates",
         "grading_config",
         "lms_manage",
         "course_material",
@@ -5821,6 +5823,143 @@ public class PortalController : Controller
         }
         catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GenerateCertificates(
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        CancellationToken ct = default)
+    {
+        ViewData["Title"] = "Generate Certificates";
+        var model = new GenerateCertificatesPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = _api.GetSessionIdentity(),
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
+
+        if (!model.IsConnected)
+            return View(model);
+
+        var access = await CanUseDegreeAuditAsync(ct);
+        if (!access.Allowed)
+        {
+            TempData["PortalMessage"] = access.Message;
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        model.CanManage = model.Identity?.IsAdmin == true || model.Identity?.IsSuperAdmin == true;
+
+        if (model.Identity?.IsSuperAdmin == true)
+        {
+            model.Tenants = await _api.GetTenantsAsync(ct);
+            if (tenantId.HasValue)
+                model.Campuses = await _api.GetCampusesAsync(tenantId, ct);
+        }
+
+        model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
+        if (departmentId.HasValue)
+            model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+
+        try
+        {
+            model.Students = await _api.GetGraduatedCertificateStudentsAsync(tenantId, campusId, departmentId, courseId, ct);
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateDegreeCertificate(
+        Guid studentProfileId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
+
+        var identity = _api.GetSessionIdentity();
+        if (identity is null || (!identity.IsAdmin && !identity.IsSuperAdmin))
+        {
+            TempData["PortalMessage"] = "Only Admin and SuperAdmin can generate certificates.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId });
+        }
+
+        try
+        {
+            await _api.GenerateDegreeCertificateAsync(studentProfileId, ct);
+            TempData["PortalMessage"] = "Degree certificate generated.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateTranscriptCertificate(
+        Guid studentProfileId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
+
+        var identity = _api.GetSessionIdentity();
+        if (identity is null || (!identity.IsAdmin && !identity.IsSuperAdmin))
+        {
+            TempData["PortalMessage"] = "Only Admin and SuperAdmin can generate certificates.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId });
+        }
+
+        try
+        {
+            await _api.GenerateTranscriptCertificateAsync(studentProfileId, ct);
+            TempData["PortalMessage"] = "Transcript generated.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadGeneratedCertificateDocument(Guid documentId, string format = "docx", CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
+
+        var bytes = await _api.DownloadGeneratedCertificateDocumentAsync(documentId, format, ct);
+        if (bytes is null)
+            return NotFound();
+
+        var isPdf = string.Equals(format, "pdf", StringComparison.OrdinalIgnoreCase);
+        var fileName = isPdf ? $"certificate_{documentId}.pdf" : $"certificate_{documentId}.docx";
+        var contentType = isPdf
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+        return File(bytes, contentType, fileName);
     }
 
     // ── Phase 20: Learning Management System (LMS) ────────────────────────────

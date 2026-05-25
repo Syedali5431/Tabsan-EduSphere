@@ -305,6 +305,7 @@ public static class DatabaseSeeder
         var payments         = await Upsert("payments",          "Payments",           "Manage and view fee payment records",            20);
         var enrollments      = await Upsert("enrollments",       "Enrollments",        "Manage course enrollments and rosters",          21);
         var reportCenter     = await Upsert("report_center",     "Report Center",      "Generate and export academic reports",           22);
+        var generateCertificates = await Upsert("generate_certificates", "Generate Certificates", "Generate degree/transcript documents for graduated university students", 23);
 
         await db.SaveChangesAsync(); // ensure IDs are set before use as parentId
 
@@ -455,6 +456,12 @@ public static class DatabaseSeeder
         EnsureRoleAccess(reportCenter.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(reportCenter.Id, "Student", isAllowed: true);
         EnsureRoleAccess(reportCenter.Id, "Finance", isAllowed: true);
+
+        // Generate Certificates: Admin + Faculty (view), no student/finance access by default.
+        EnsureRoleAccess(generateCertificates.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(generateCertificates.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(generateCertificates.Id, "Student", isAllowed: false);
+        EnsureRoleAccess(generateCertificates.Id, "Finance", isAllowed: false);
 
         // Analytics: Admin + Faculty + Finance
         EnsureRoleAccess(analytics.Id, "Admin",   isAllowed: true);

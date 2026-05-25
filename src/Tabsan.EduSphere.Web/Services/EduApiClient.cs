@@ -465,6 +465,17 @@ public interface IEduApiClient
     // Final-Touches Phase 18 Stage 18.2 — regenerate certificate
     Task<string?> RegenerateCertificateAsync(Guid applicationId, CancellationToken ct);
 
+    // Generate Certificates
+    Task<List<GraduatedCertificateStudentItem>> GetGraduatedCertificateStudentsAsync(
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        CancellationToken ct);
+    Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct);
+    Task GenerateTranscriptCertificateAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct);
+
     // Final-Touches Phase 21 Stage 21.1/21.2 — Study Planner
     Task<List<StudyPlanApiModel>> GetStudyPlansAsync(Guid studentProfileId, CancellationToken ct);
     Task<List<StudyPlanApiModel>> GetStudyPlansByDepartmentAsync(Guid departmentId, CancellationToken ct);
@@ -1191,6 +1202,43 @@ public class EduApiClient : IEduApiClient
     {
         var raw = await PostAsync<object, System.Collections.Generic.Dictionary<string, string>>($"api/v1/graduation/{applicationId}/regenerate-certificate", new { }, ct);
         return raw?.GetValueOrDefault("path");
+    }
+
+    public async Task<List<GraduatedCertificateStudentItem>> GetGraduatedCertificateStudentsAsync(
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (tenantId.HasValue) parts.Add($"tenantId={tenantId}");
+        if (campusId.HasValue) parts.Add($"campusId={campusId}");
+        if (departmentId.HasValue) parts.Add($"departmentId={departmentId}");
+        if (courseId.HasValue) parts.Add($"courseId={courseId}");
+
+        var path = "api/v1/certificate-generation/graduated-students";
+        if (parts.Count > 0)
+            path += "?" + string.Join("&", parts);
+
+        return await GetAsync<List<GraduatedCertificateStudentItem>>(path, ct) ?? new List<GraduatedCertificateStudentItem>();
+    }
+
+    public Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/degree", new { }, ct);
+
+    public Task GenerateTranscriptCertificateAsync(Guid studentProfileId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/transcript", new { }, ct);
+
+    public async Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct)
+    {
+        var path = $"api/v1/certificate-generation/documents/{documentId}/download?format={Uri.EscapeDataString(string.IsNullOrWhiteSpace(format) ? "docx" : format)}";
+        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
+        using var response = await CreateClient().SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadAsByteArrayAsync(ct);
     }
 
     private static GraduationApplicationWebModel MapGradApp(GraduationApplicationApiDto raw) => new()

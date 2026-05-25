@@ -2178,6 +2178,44 @@ public class GraduationApplicationDetailPageModel
     public string?                              ErrorMessage   { get; set; }
 }
 
+public class GraduatedCertificateStudentItem
+{
+    public Guid StudentProfileId { get; set; }
+    public Guid StudentUserId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string RegistrationNumber { get; set; } = string.Empty;
+    public Guid DepartmentId { get; set; }
+    public string DepartmentName { get; set; } = string.Empty;
+    public Guid ProgramId { get; set; }
+    public string ProgramName { get; set; } = string.Empty;
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
+    public Guid? CourseId { get; set; }
+    public decimal Cgpa { get; set; }
+    public DateTime? GraduatedDate { get; set; }
+    public Guid? LatestDegreeDocumentId { get; set; }
+    public DateTime? LatestDegreeGeneratedAtUtc { get; set; }
+    public Guid? LatestTranscriptDocumentId { get; set; }
+    public DateTime? LatestTranscriptGeneratedAtUtc { get; set; }
+}
+
+public class GenerateCertificatesPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public bool CanManage { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<GraduatedCertificateStudentItem> Students { get; set; } = new();
+}
+
 // ── Phase 19: Advanced Course Creation & Grading Config ───────────────────────
 
 // Final-Touches Phase 19 Stage 19.4 — grade range item for the grading config builder

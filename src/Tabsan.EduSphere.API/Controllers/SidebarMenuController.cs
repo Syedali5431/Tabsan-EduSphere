@@ -24,7 +24,8 @@ public class SidebarMenuController : ControllerBase
         {
             "degree_audit",
             "graduation_eligibility",
-            "degree_rules"
+            "degree_rules",
+            "generate_certificates"
         };
 
     private static readonly IReadOnlyDictionary<string, string> MenuModuleKeyMap =
@@ -38,6 +39,7 @@ public class SidebarMenuController : ControllerBase
             ["graduation_eligibility"] = "courses",
             ["graduation_apply"] = "courses",
             ["graduation_applications"] = "courses",
+            ["generate_certificates"] = "courses",
             ["grading_config"] = "courses",
             ["study_plan"] = "courses",
             ["lms_manage"] = "courses",

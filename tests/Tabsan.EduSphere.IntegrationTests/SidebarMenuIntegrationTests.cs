@@ -174,10 +174,10 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("payments",            keys);
         Assert.Contains("enrollments",         keys);
         Assert.Contains("report_center",       keys);
-        Assert.Equal(29, keys.Count);
+        Assert.Equal(30, keys.Count);
     }
 
-    /// <summary>Admin should see all menus with IsAllowed=true for Admin role (18 total).</summary>
+    /// <summary>Admin should see all menus with IsAllowed=true for Admin role (19 total).</summary>
     [Fact]
     public async Task GetVisible_Admin_ReturnsAdminMenusOnly()
     {
@@ -206,10 +206,10 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("theme_settings",      keys);
         Assert.DoesNotContain("module_settings",   keys); // SuperAdmin only (no visible sub-menus)
         Assert.DoesNotContain("sidebar_settings",  keys); // SuperAdmin only
-        Assert.Equal(18, keys.Count);
+        Assert.Equal(19, keys.Count);
     }
 
-    /// <summary>Faculty should see all menus with IsAllowed=true for Faculty role (16 total).</summary>
+    /// <summary>Faculty should see all menus with IsAllowed=true for Faculty role (17 total).</summary>
     [Fact]
     public async Task GetVisible_Faculty_ReturnsFacultyMenusOnly()
     {
@@ -236,7 +236,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("theme_settings",    keys);
         Assert.DoesNotContain("timetable_admin",   keys);
         Assert.DoesNotContain("module_settings",   keys); // SuperAdmin only
-        Assert.Equal(16, keys.Count);
+        Assert.Equal(17, keys.Count);
     }
 
     /// <summary>Student should see all menus with IsAllowed=true for Student role (13 total).</summary>
@@ -491,7 +491,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         var allMenus = await GetVisibleAsync(superClient);
         var allItems = FlatItems(allMenus).ToList();
 
-        Assert.Equal(29, allItems.Count);
+        Assert.Equal(30, allItems.Count);
 
         foreach (var menu in allItems)
         {
