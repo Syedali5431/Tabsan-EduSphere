@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
 
 namespace Tabsan.EduSphere.Infrastructure.Persistence.Configurations;
@@ -118,3 +119,91 @@ public class TranscriptExportLogConfiguration : IEntityTypeConfiguration<Transcr
         // No soft-delete — logs are append-only for compliance.
     }
 }
+
+    /// <summary>EF Core configuration for AcademicDocumentTemplate.</summary>
+    public class AcademicDocumentTemplateConfiguration : IEntityTypeConfiguration<AcademicDocumentTemplate>
+    {
+        public void Configure(EntityTypeBuilder<AcademicDocumentTemplate> builder)
+        {
+         builder.ToTable("academic_document_templates");
+         builder.HasKey(t => t.Id);
+         builder.Property(t => t.TemplateType).IsRequired().HasConversion<int>();
+         builder.Property(t => t.Name).IsRequired().HasMaxLength(200);
+         builder.Property(t => t.Version).IsRequired().HasMaxLength(50);
+         builder.Property(t => t.StoragePath).HasMaxLength(1000);
+         builder.Property(t => t.FileName).HasMaxLength(260);
+         builder.Property(t => t.ContentType).HasMaxLength(200);
+
+         builder.HasIndex(t => new { t.TemplateType, t.Version })
+             .IsUnique()
+             .HasDatabaseName("IX_academic_document_templates_type_version");
+
+         builder.HasIndex(t => new { t.TemplateType, t.IsActive })
+             .HasDatabaseName("IX_academic_document_templates_type_active");
+        }
+    }
+
+    /// <summary>EF Core configuration for DegreeDocumentRecord.</summary>
+    public class DegreeDocumentRecordConfiguration : IEntityTypeConfiguration<DegreeDocumentRecord>
+    {
+        public void Configure(EntityTypeBuilder<DegreeDocumentRecord> builder)
+        {
+         builder.ToTable("degree_documents");
+         builder.HasKey(d => d.Id);
+         builder.Property(d => d.SerialNumber).IsRequired().HasMaxLength(50);
+         builder.Property(d => d.IssueDate).IsRequired().HasMaxLength(20);
+         builder.Property(d => d.DocxPath).IsRequired().HasMaxLength(1000);
+         builder.Property(d => d.PdfPath).HasMaxLength(1000);
+         builder.Property(d => d.VerificationUrl).IsRequired().HasMaxLength(1000);
+         builder.Property(d => d.RowVersion).IsRowVersion();
+
+         builder.HasOne<StudentProfile>()
+             .WithMany()
+             .HasForeignKey(d => d.StudentProfileId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<AcademicDocumentTemplate>()
+             .WithMany()
+             .HasForeignKey(d => d.AcademicDocumentTemplateId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+         builder.HasIndex(d => d.StudentProfileId)
+             .HasDatabaseName("IX_degree_documents_student_id");
+
+         builder.HasIndex(d => new { d.StudentProfileId, d.GeneratedAtUtc })
+             .HasDatabaseName("IX_degree_documents_student_generated_at");
+        }
+    }
+
+    /// <summary>EF Core configuration for TranscriptDocumentRecord.</summary>
+    public class TranscriptDocumentRecordConfiguration : IEntityTypeConfiguration<TranscriptDocumentRecord>
+    {
+        public void Configure(EntityTypeBuilder<TranscriptDocumentRecord> builder)
+        {
+         builder.ToTable("transcript_documents");
+         builder.HasKey(t => t.Id);
+         builder.Property(t => t.SerialNumber).IsRequired().HasMaxLength(50);
+         builder.Property(t => t.IssueDate).IsRequired().HasMaxLength(20);
+         builder.Property(t => t.DocxPath).IsRequired().HasMaxLength(1000);
+         builder.Property(t => t.PdfPath).HasMaxLength(1000);
+         builder.Property(t => t.VerificationUrl).IsRequired().HasMaxLength(1000);
+         builder.Property(t => t.CourseSnapshotJson).HasMaxLength(8000);
+         builder.Property(t => t.RowVersion).IsRowVersion();
+
+         builder.HasOne<StudentProfile>()
+             .WithMany()
+             .HasForeignKey(t => t.StudentProfileId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+         builder.HasOne<AcademicDocumentTemplate>()
+             .WithMany()
+             .HasForeignKey(t => t.AcademicDocumentTemplateId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+         builder.HasIndex(t => t.StudentProfileId)
+             .HasDatabaseName("IX_transcript_documents_student_id");
+
+         builder.HasIndex(t => new { t.StudentProfileId, t.GeneratedAtUtc })
+             .HasDatabaseName("IX_transcript_documents_student_generated_at");
+        }
+    }

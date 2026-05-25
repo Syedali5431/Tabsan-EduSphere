@@ -107,6 +107,19 @@ Deliverables:
 - New table migrations
 - Isolated persistence mappings
 
+Implementation Summary (Plan K Phase K2) - 2026-05-25:
+- Added additive storage tables for document templates, generated degree documents, and generated transcript documents.
+- Wired EF Core mappings and startup seeding for the new storage layer without changing existing tables.
+- Extended document generation to persist generated records and recover metadata from the database when available.
+
+Validation Summary (Plan K Phase K2) - 2026-05-25:
+- Full solution build succeeded after adding the new storage entities, migration, and persistence hooks.
+- Existing document generation and controller paths remained additive and continued to compile cleanly.
+
+Plan K Phase K2 Completion Summary - 2026-05-25:
+- Phase K2 is implemented in the app with new tables, mappings, seed data, and persistent generated-document records.
+- K4 remains the next incomplete phase because upload endpoint and isolated upload storage are still pending.
+
 ## Phase K3 - Template Export (Safe Addition)
 Reason to do third:
 - Export is the admin entry point and can be added independently.

@@ -206,6 +206,9 @@
 | TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with Plan K placeholder contract. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
 | TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with Plan K placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
 | TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| AcademicDocumentTemplate.Create | Creates isolated storage metadata for degree/transcript templates. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
+| DegreeDocumentRecord.Create | Creates a persisted record for generated degree artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
+| TranscriptDocumentRecord.Create | Creates a persisted record for generated transcript artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
 | QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
@@ -217,9 +220,12 @@
 | TemplateProcessorService.BuildCell | Creates formatted OpenXML table cell content (with bold header support). | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | DocumentGenerationService.GenerateDegreeAsync | Orchestrates Plan K degree generation using export, processing, and QR services. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | DocumentGenerationService.GenerateTranscriptAsync | Orchestrates Plan K transcript generation including course-table population. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
-| DocumentGenerationService.GetAsync | Returns generated Plan K document metadata by document id. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
-| DocumentGenerationService.ListByStudentAsync | Lists Plan K generated artifacts for a specific student id. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.GetAsync | Returns generated Plan K document metadata by document id, including database fallback. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.ListByStudentAsync | Lists Plan K generated artifacts for a specific student id with database-backed recovery. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | DocumentGenerationService.GenerateInternalAsync | Performs shared generation pipeline, invokes optional PDF adapter, persists outputs, and registers metadata. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.PersistGeneratedDocumentAsync | Persists degree/transcript generation records into the new K2 storage tables. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.GetFromDatabaseAsync | Retrieves a generated artifact from persisted K2 storage when it is not cached in memory. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.ListByStudentFromDatabaseAsync | Merges cached and persisted generated artifacts for a student. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | DegreeGenerationRequest.ToPayload | Maps degree generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | IPdfConverterAdapter.TryConvertToPdfAsync | Defines optional PDF conversion adapter contract for Plan K generated documents. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |

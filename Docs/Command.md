@@ -1,3 +1,12 @@
+### Plan K Phase K2 Safe Data Storage Strategy (2026-05-25)
+- Implementation Summary:
+  - Added additive storage tables for document templates, generated degree documents, and generated transcript documents.
+  - Wired EF Core mappings and startup seeding for the new Plan K storage layer.
+  - Updated generation service to persist and reload generated artifact metadata from the database.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after the storage layer integration.
+  - Confirmed the change is additive and leaves existing tables and controller behavior intact.
+
 ### Plan K Phase K9 Stage K9.1 Optional PDF Converter Adapter (2026-05-25)
 - Implementation Summary:
   - Added additive PDF adapter contract and default no-op adapter implementation in Plan K services.

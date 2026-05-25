@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Modules;
@@ -58,6 +59,7 @@ public static class DatabaseSeeder
         await SeedModulesAsync(db);
         var (defaultTenantId, defaultCampusId) = await EnsureDefaultTenantCampusAsync(db);
         await SeedSuperAdminAsync(db, hasher, defaultTenantId, defaultCampusId);
+        await SeedAcademicDocumentTemplatesAsync(db);
         await SeedSidebarMenusAsync(db);
         await SeedReportDefinitionsAsync(db);
         await EnsureTenantCampusBackfillAsync(db, defaultTenantId, defaultCampusId);
@@ -124,6 +126,28 @@ public static class DatabaseSeeder
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(d => d.TenantId, d => d.TenantId ?? defaultTenantId)
                 .SetProperty(d => d.CampusId, d => d.CampusId ?? defaultCampusId));
+    }
+
+    private static async Task SeedAcademicDocumentTemplatesAsync(ApplicationDbContext db)
+    {
+        var existing = await db.AcademicDocumentTemplates
+            .IgnoreQueryFilters()
+            .Select(t => new { t.TemplateType, t.Version })
+            .ToListAsync();
+
+        var seed = new[]
+        {
+            AcademicDocumentTemplate.Create(AcademicDocumentTemplateType.Degree, "Default Degree Template", "default"),
+            AcademicDocumentTemplate.Create(AcademicDocumentTemplateType.Transcript, "Default Transcript Template", "default")
+        };
+
+        foreach (var template in seed)
+        {
+            if (!existing.Any(x => x.TemplateType == template.TemplateType && x.Version == template.Version))
+            {
+                db.AcademicDocumentTemplates.Add(template);
+            }
+        }
     }
 
     // ── Roles ─────────────────────────────────────────────────────────────────

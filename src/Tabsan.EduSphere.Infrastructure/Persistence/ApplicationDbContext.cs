@@ -119,6 +119,14 @@ public class ApplicationDbContext : DbContext
     /// <summary>Audit log of every transcript export request.</summary>
     public DbSet<TranscriptExportLog> TranscriptExportLogs => Set<TranscriptExportLog>();
 
+    // ── Phase 2: Safe Data Storage Strategy ──────────────────────────────────
+    /// <summary>Template metadata for degree/transcript document generation.</summary>
+    public DbSet<AcademicDocumentTemplate> AcademicDocumentTemplates => Set<AcademicDocumentTemplate>();
+    /// <summary>Persisted degree certificate generation records.</summary>
+    public DbSet<DegreeDocumentRecord> DegreeDocuments => Set<DegreeDocumentRecord>();
+    /// <summary>Persisted transcript generation records.</summary>
+    public DbSet<TranscriptDocumentRecord> TranscriptDocuments => Set<TranscriptDocumentRecord>();
+
     // ── Phase 4: Notifications and Attendance ──────────────────────────────────
     /// <summary>Notification headers created by users or the system.</summary>
     public DbSet<Notification> Notifications => Set<Notification>();
