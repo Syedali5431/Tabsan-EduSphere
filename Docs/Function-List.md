@@ -206,9 +206,11 @@
 | TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with Plan K placeholder contract. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
 | TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with Plan K placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
 | TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| DegreeController.UploadTemplate | Accepts isolated degree template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
 | AcademicDocumentTemplate.Create | Creates isolated storage metadata for degree/transcript templates. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
 | DegreeDocumentRecord.Create | Creates a persisted record for generated degree artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
 | TranscriptDocumentRecord.Create | Creates a persisted record for generated transcript artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
+| TranscriptController.UploadTemplate | Accepts isolated transcript template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
@@ -230,6 +232,11 @@
 | TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | IPdfConverterAdapter.TryConvertToPdfAsync | Defines optional PDF conversion adapter contract for Plan K generated documents. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |
 | NoOpPdfConverterAdapter.TryConvertToPdfAsync | Default no-op adapter that returns null to preserve guaranteed `.docx` fallback behavior. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |
+| TemplateUploadService.UploadDegreeTemplateAsync | Validates and stores isolated degree template uploads in the Plan K storage layer. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.UploadTranscriptTemplateAsync | Validates and stores isolated transcript template uploads in the Plan K storage layer. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.UploadAsync | Shared Plan K upload pipeline for `.docx` templates, storage persistence, and metadata creation. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.ValidateDocxAsync | Enforces `.docx`-only validation for isolated template uploads. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.BuildVersion | Builds additive template version metadata for uploaded templates. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
 | CertificateGenerationController.GetGraduatedStudents | Returns university-only graduated students filtered by tenant, campus, department, and course with role scope enforcement. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
 | CertificateGenerationController.GenerateDegreeCertificate | Generates degree certificate document for a scoped graduated student (Admin/SuperAdmin only). | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
 | CertificateGenerationController.GenerateTranscriptCertificate | Generates transcript document for a scoped graduated student (Admin/SuperAdmin only). | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |

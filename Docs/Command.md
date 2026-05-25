@@ -1,3 +1,12 @@
+### Plan K Phase K4 Template Upload (2026-05-25)
+- Implementation Summary:
+  - Added isolated upload endpoints for degree and transcript templates under the Plan K add-on controllers.
+  - Stored uploaded `.docx` files in dedicated Plan K storage categories and persisted template metadata in the new storage tables.
+  - Preserved the existing default-template download flow and kept upload validation separate from other file upload paths.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after the upload endpoints and storage service were added.
+  - `.docx`-only validation is enforced for template upload, so existing upload paths remain unaffected.
+
 ### Plan K Phase K2 Safe Data Storage Strategy (2026-05-25)
 - Implementation Summary:
   - Added additive storage tables for document templates, generated degree documents, and generated transcript documents.

@@ -15,13 +15,16 @@ namespace Tabsan.EduSphere.API.Controllers;
 public class DegreeController : ControllerBase
 {
     private readonly TemplateExportService _templateExportService;
+    private readonly TemplateUploadService _templateUploadService;
     private readonly DocumentGenerationService _documentGenerationService;
 
     public DegreeController(
         TemplateExportService templateExportService,
+        TemplateUploadService templateUploadService,
         DocumentGenerationService documentGenerationService)
     {
         _templateExportService = templateExportService;
+        _templateUploadService = templateUploadService;
         _documentGenerationService = documentGenerationService;
     }
 
@@ -30,6 +33,21 @@ public class DegreeController : ControllerBase
     {
         var template = await _templateExportService.GetDegreeTemplateAsync(ct);
         return File(template.Content, template.ContentType, template.FileName);
+    }
+
+    [HttpPost("template/upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _templateUploadService.UploadDegreeTemplateAsync(file, ct);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("generate")]

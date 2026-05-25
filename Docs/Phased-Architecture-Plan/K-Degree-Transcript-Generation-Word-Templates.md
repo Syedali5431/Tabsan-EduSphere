@@ -195,6 +195,19 @@ Deliverables:
 - New upload endpoint
 - Isolated storage path/table
 
+Implementation Summary (Plan K Phase K4) - 2026-05-25:
+- Added isolated `.docx` upload endpoints for degree and transcript templates.
+- Saved uploaded templates to dedicated Plan K storage categories and persisted template metadata in the new K2 tables.
+- Kept existing default-template export flow unchanged while enabling additive template versioning.
+
+Validation Summary (Plan K Phase K4) - 2026-05-25:
+- Full solution build succeeded after adding the upload service, endpoints, and DI registration.
+- Upload validation is restricted to `.docx` templates and does not affect existing upload flows.
+
+Plan K Phase K4 Completion Summary - 2026-05-25:
+- Phase K4 is implemented in the app with isolated upload endpoints and separate template storage.
+- The next incomplete phase remains K12.3 rollout strategy, which is still pending.
+
 ## Phase K5 - Word Processing Engine (Open XML)
 Reason to do fifth:
 - Document population logic must remain encapsulated in a new service.
