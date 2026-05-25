@@ -369,6 +369,9 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
+            var identity = _api.GetSessionIdentity();
+            model.CanManageModules = identity?.IsSuperAdmin == true;
+
             var context = await _api.GetDashboardCompositionContextAsync(ct);
             if (context is null)
             {
@@ -400,6 +403,30 @@ public class PortalController : Controller
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleCompositionModule(string key, bool activate, CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+        {
+            TempData["Message"] = "Only SuperAdmin can activate or deactivate modules globally.";
+            return RedirectToAction(nameof(ModuleComposition));
+        }
+
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.SetModuleActiveAsync(key, activate, ct);
+                TempData["Message"] = activate ? "Module activated for all users." : "Module deactivated for all users.";
+            }
+            catch (Exception ex) { TempData["Message"] = $"Error: {ex.Message}"; }
+        }
+
+        return RedirectToAction(nameof(ModuleComposition));
     }
 
     // ── Phase 27 — Student Portal Capability Matrix ───────────────────────
@@ -1201,6 +1228,10 @@ public class PortalController : Controller
 
     public async Task<IActionResult> ModuleSettings(CancellationToken ct)
     {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+            return Forbid();
+
         var model = new ModuleSettingsPageModel { IsConnected = _api.IsConnected() };
         if (model.IsConnected)
         {
@@ -1214,6 +1245,10 @@ public class PortalController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleModule(string key, bool activate, CancellationToken ct)
     {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+            return Forbid();
+
         if (_api.IsConnected())
         {
             try { await _api.SetModuleActiveAsync(key, activate, ct); }
@@ -1227,6 +1262,10 @@ public class PortalController : Controller
     public async Task<IActionResult> UpdateModuleRoles(string key, [FromForm] bool adminAllowed,
         [FromForm] bool facultyAllowed, [FromForm] bool studentAllowed, CancellationToken ct)
     {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+            return Forbid();
+
         if (_api.IsConnected())
         {
             try

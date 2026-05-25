@@ -103,6 +103,7 @@
                         <th>Name</th>
                         <th class="text-center">Active</th>
                         <th class="text-center">Accessible (your role)</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -129,6 +130,23 @@
                                 else
                                 {
                                     <i class="bi bi-dash-circle text-secondary"></i>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (Model.CanManageModules)
+                                {
+                                    <form asp-action="ToggleCompositionModule" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="key" value="@m.Key" />
+                                        <input type="hidden" name="activate" value="@(!m.IsActive)" />
+                                        <button type="submit" class="btn btn-sm @(m.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                            @(m.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">SuperAdmin only</span>
                                 }
                             </td>
                         </tr>

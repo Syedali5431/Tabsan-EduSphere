@@ -2450,6 +2450,7 @@ public class RecommendationsPageModel
 public class DashboardCompositionModel
 {
     public bool                              IsConnected   { get; set; }
+    public bool                              CanManageModules { get; set; }
     public string?                           Message       { get; set; }
     public List<ModuleVisibilityItem>        Modules       { get; set; } = new();
     public List<WidgetItem>                  Widgets       { get; set; } = new();
