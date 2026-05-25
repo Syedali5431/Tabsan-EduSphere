@@ -161,14 +161,14 @@ public sealed class DiscussionService : IDiscussionService
         await _repo.SaveChangesAsync(ct);
     }
 
-    public async Task<DiscussionReplyDto> AddReplyAsync(AddReplyRequest request, CancellationToken ct = default)
+    public async Task<DiscussionReplyDto> AddReplyAsync(AddReplyRequest request, bool isFacultyOrAdmin = false, CancellationToken ct = default)
     {
         var thread = await _repo.GetThreadByIdAsync(request.ThreadId, ct);
         if (thread is null)
             throw new InvalidOperationException($"Discussion thread {request.ThreadId} not found.");
         
-        // Check if thread is solved/closed - only allow replies from faculty/admin/original author
-        if (thread.IsSolved && request.AuthorId != thread.AuthorId)
+        // Solved threads stay open for the thread author and faculty/admin moderators.
+        if (thread.IsSolved && request.AuthorId != thread.AuthorId && !isFacultyOrAdmin)
             throw new InvalidOperationException("This discussion has been marked as solved. No further replies are allowed.");
 
         var reply = new DiscussionReply(request.ThreadId, request.AuthorId, request.Body);

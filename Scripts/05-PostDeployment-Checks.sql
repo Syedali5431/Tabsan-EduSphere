@@ -66,6 +66,12 @@ FROM module_status;
 SELECT 'DepartmentCount' AS [CheckName], COUNT(1) AS [Value]
 FROM departments;
 
+SELECT 'TenantCount' AS [CheckName], COUNT(1) AS [Value]
+FROM tenants;
+
+SELECT 'CampusCount' AS [CheckName], COUNT(1) AS [Value]
+FROM campuses;
+
 SELECT 'ProgramCount' AS [CheckName], COUNT(1) AS [Value]
 FROM academic_programs;
 
@@ -158,6 +164,18 @@ SELECT 'UsersInstitutionTypeAssignedCount' AS [CheckName], COUNT(1) AS [Value]
 FROM users
 WHERE InstitutionType IS NOT NULL;
 
+SELECT 'UsersTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'UsersCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'DepartmentsTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('departments', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'DepartmentsCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('departments', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
 SELECT
 	'DepartmentsInstitutionTypeColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('departments', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
@@ -180,6 +198,12 @@ SELECT 'IndexExists_IX_enrollments_student_status' AS [CheckName],
 
 SELECT 'IndexExists_IX_users_active_phone' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_active_phone' AND object_id = OBJECT_ID('users')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_departments_scope_institution' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_scope_institution' AND object_id = OBJECT_ID('departments')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_users_scope_role_department_active' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_scope_role_department_active' AND object_id = OBJECT_ID('users')) THEN 1 ELSE 0 END AS [Value];
 
 SELECT 'MigrationExists_Stage11_DepartmentInstitutionType' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId = '20260513121000_Phase1Stage11DepartmentInstitutionType') THEN 1 ELSE 0 END AS [Value];
@@ -211,6 +235,34 @@ SELECT 'DepartmentInstitutionType_2_University_Count' AS [CheckName],
 	COUNT(1) AS [Value]
 FROM departments
 WHERE InstitutionType = 2;
+
+SELECT 'TenantCampusPairInvalidCount_Departments' AS [CheckName],
+	COUNT(1) AS [Value]
+FROM departments
+WHERE (TenantId IS NULL AND CampusId IS NOT NULL)
+	 OR (TenantId IS NOT NULL AND CampusId IS NULL);
+
+SELECT 'TenantCampusPairInvalidCount_Users' AS [CheckName],
+	COUNT(1) AS [Value]
+FROM users
+WHERE (TenantId IS NULL AND CampusId IS NOT NULL)
+	 OR (TenantId IS NOT NULL AND CampusId IS NULL);
+
+SELECT 'NonSuperAdminUsersWithTenantScopeCount' AS [CheckName],
+	COUNT(1) AS [Value]
+FROM users u
+INNER JOIN roles r ON r.Id = u.RoleId
+WHERE r.[Name] <> N'SuperAdmin'
+	AND u.[IsDeleted] = 0
+	AND u.[TenantId] IS NOT NULL
+	AND u.[CampusId] IS NOT NULL;
+
+SELECT 'SuperAdminUsersScopedCount' AS [CheckName],
+	COUNT(1) AS [Value]
+FROM users u
+INNER JOIN roles r ON r.Id = u.RoleId
+WHERE r.[Name] = N'SuperAdmin'
+	AND (u.[TenantId] IS NOT NULL OR u.[CampusId] IS NOT NULL);
 
 SELECT 'OrphanCount_AcademicPrograms_Department' AS [CheckName],
 	COUNT(1) AS [Value]
@@ -524,10 +576,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV5' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV6' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v5';
+	AND DemoValue = N'FullDummyData-v6';
 
 SELECT 'DummySeed_CourseOfferingsDistinctSemesterCount' AS [CheckName], COUNT(DISTINCT co.[SemesterId]) AS [Value]
 FROM [course_offerings] co;

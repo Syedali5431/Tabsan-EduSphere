@@ -51,6 +51,22 @@ END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 DECLARE @SuperAdminPasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
+DECLARE @DefaultTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+DECLARE @DefaultCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+
+IF OBJECT_ID(N'[tenants]') IS NOT NULL
+BEGIN
+    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @DefaultTenantId, N'DEFAULT', N'Default Tenant', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @DefaultTenantId);
+END;
+
+IF OBJECT_ID(N'[campuses]') IS NOT NULL
+BEGIN
+    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @DefaultCampusId, @DefaultTenantId, N'MAIN', N'Main Campus', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @DefaultCampusId);
+END;
 
 /* 1) Roles (all baseline roles used by the platform) */
 MERGE INTO [roles] AS tgt
@@ -81,6 +97,17 @@ SELECT d.[Id], d.[Name], d.[Code], d.[InstitutionType], 1, @Now, NULL, 0, NULL
 FROM @CoreDepartments d
 WHERE NOT EXISTS (SELECT 1 FROM [departments] x WHERE x.[Id] = d.[Id]);
 
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+BEGIN
+    UPDATE d
+    SET d.[TenantId] = @DefaultTenantId,
+        d.[CampusId] = @DefaultCampusId,
+        d.[UpdatedAt] = @Now
+    FROM [departments] d
+    WHERE d.[Id] IN (SELECT [Id] FROM @CoreDepartments)
+      AND (d.[TenantId] IS NULL OR d.[CampusId] IS NULL);
+END;
+
 /* 3) SuperAdmin user only */
 DECLARE @SuperAdminRoleId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
 DECLARE @SuperAdminUserId UNIQUEIDENTIFIER = CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER);
@@ -108,6 +135,15 @@ SET [Username] = N'superadmin',
     [DeletedAt] = NULL,
     [UpdatedAt] = @Now
 WHERE [Id] = @SuperAdminUserId;
+
+IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [TenantId] = NULL,
+        [CampusId] = NULL,
+        [UpdatedAt] = @Now
+    WHERE [Id] = @SuperAdminUserId;
+END;
 
 IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
 BEGIN
@@ -377,6 +413,46 @@ BEGIN
         VALUES (@AttendanceMenuId, N'Attendance', N'Attendance marking and views', N'attendance', @AcademicId, 2, 1, 0, @Now, NULL, 0, NULL);
     END;
 
+    DECLARE @ProgramsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'programs');
+    IF @ProgramsMenuId IS NULL
+    BEGIN
+        SET @ProgramsMenuId = NEWID();
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (@ProgramsMenuId, N'Programs', N'Program catalog and semester structure management', N'programs', @AcademicId, 3, 1, 0, @Now, NULL, 0, NULL);
+    END;
+
+    DECLARE @SettingsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'settings');
+    IF @SettingsMenuId IS NULL
+    BEGIN
+        SET @SettingsMenuId = NEWID();
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (@SettingsMenuId, N'Settings', N'Platform configuration and governance', N'settings', NULL, 3, 1, 0, @Now, NULL, 0, NULL);
+    END;
+
+    DECLARE @AdminUsersMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'admin_users');
+    IF @AdminUsersMenuId IS NULL
+    BEGIN
+        SET @AdminUsersMenuId = NEWID();
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (@AdminUsersMenuId, N'Admin Users', N'Administrative user lifecycle management', N'admin_users', @SettingsMenuId, 1, 1, 0, @Now, NULL, 0, NULL);
+    END;
+
+    DECLARE @TenantManagementMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'tenant_management');
+    IF @TenantManagementMenuId IS NULL
+    BEGIN
+        SET @TenantManagementMenuId = NEWID();
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (@TenantManagementMenuId, N'Tenant Management', N'Tenant registry and lifecycle operations', N'tenant_management', @SettingsMenuId, 2, 1, 0, @Now, NULL, 0, NULL);
+    END;
+
+    DECLARE @CampusManagementMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'campus_management');
+    IF @CampusManagementMenuId IS NULL
+    BEGIN
+        SET @CampusManagementMenuId = NEWID();
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (@CampusManagementMenuId, N'Campus Management', N'Campus registry and campus-level governance', N'campus_management', @SettingsMenuId, 3, 1, 0, @Now, NULL, 0, NULL);
+    END;
+
     IF OBJECT_ID(N'[sidebar_menu_role_accesses]') IS NOT NULL
     BEGIN
         INSERT INTO [sidebar_menu_role_accesses] ([Id], [SidebarMenuItemId], [RoleName], [IsAllowed], [CreatedAt], [UpdatedAt])
@@ -392,10 +468,20 @@ BEGIN
             (N'courses', N'SuperAdmin', 1),
             (N'courses', N'Admin', 1),
             (N'courses', N'Faculty', 1),
+            (N'programs', N'SuperAdmin', 1),
+            (N'programs', N'Admin', 1),
+            (N'programs', N'Faculty', 1),
             (N'attendance', N'SuperAdmin', 1),
             (N'attendance', N'Admin', 1),
             (N'attendance', N'Faculty', 1),
-            (N'attendance', N'Student', 1)
+            (N'attendance', N'Student', 1),
+            (N'settings', N'SuperAdmin', 1),
+            (N'settings', N'Admin', 1),
+            (N'admin_users', N'SuperAdmin', 1),
+            (N'admin_users', N'Admin', 1),
+            (N'tenant_management', N'SuperAdmin', 1),
+            (N'campus_management', N'SuperAdmin', 1),
+            (N'campus_management', N'Admin', 1)
         ) ra([MenuKey], [RoleName], [IsAllowed]) ON ra.[MenuKey] = m.[Key]
         WHERE NOT EXISTS (
             SELECT 1

@@ -384,6 +384,284 @@ GO
 BEGIN TRANSACTION;
 GO
 
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260525090000_Phase40_TenantCampusScope'
+)
+BEGIN
+    CREATE TABLE [tenants] (
+        [Id] uniqueidentifier NOT NULL,
+        [Code] nvarchar(64) NOT NULL,
+        [Name] nvarchar(200) NOT NULL,
+        [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit),
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [IsDeleted] bit NOT NULL DEFAULT CAST(0 AS bit),
+        [DeletedAt] datetime2 NULL,
+        CONSTRAINT [PK_tenants] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260525090000_Phase40_TenantCampusScope'
+)
+BEGIN
+    CREATE TABLE [campuses] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [Code] nvarchar(64) NOT NULL,
+        [Name] nvarchar(200) NOT NULL,
+        [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit),
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [IsDeleted] bit NOT NULL DEFAULT CAST(0 AS bit),
+        [DeletedAt] datetime2 NULL,
+        CONSTRAINT [PK_campuses] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260525090000_Phase40_TenantCampusScope'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE [name] = N'FK_campuses_tenants_TenantId'
+)
+BEGIN
+    ALTER TABLE [campuses]
+    ADD CONSTRAINT [FK_campuses_tenants_TenantId]
+    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF COL_LENGTH('users', 'TenantId') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [TenantId] uniqueidentifier NULL;
+END;
+GO
+
+IF COL_LENGTH('users', 'CampusId') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [CampusId] uniqueidentifier NULL;
+END;
+GO
+
+IF COL_LENGTH('departments', 'TenantId') IS NULL
+BEGIN
+    ALTER TABLE [departments] ADD [TenantId] uniqueidentifier NULL;
+END;
+GO
+
+IF COL_LENGTH('departments', 'CampusId') IS NULL
+BEGIN
+    ALTER TABLE [departments] ADD [CampusId] uniqueidentifier NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.key_constraints
+    WHERE [name] = N'AK_campuses_Id_TenantId'
+)
+AND OBJECT_ID(N'[campuses]') IS NOT NULL
+BEGIN
+    ALTER TABLE [campuses]
+    ADD CONSTRAINT [AK_campuses_Id_TenantId] UNIQUE ([Id], [TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE [name] = N'CK_users_tenant_campus_pair'
+)
+BEGIN
+    ALTER TABLE [users]
+    ADD CONSTRAINT [CK_users_tenant_campus_pair]
+    CHECK (([TenantId] IS NULL AND [CampusId] IS NULL) OR ([TenantId] IS NOT NULL AND [CampusId] IS NOT NULL));
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE [name] = N'CK_departments_tenant_campus_pair'
+)
+BEGIN
+    ALTER TABLE [departments]
+    ADD CONSTRAINT [CK_departments_tenant_campus_pair]
+    CHECK (([TenantId] IS NULL AND [CampusId] IS NULL) OR ([TenantId] IS NOT NULL AND [CampusId] IS NOT NULL));
+END;
+GO
+
+DECLARE @ScopeNow datetime2 = SYSUTCDATETIME();
+DECLARE @DefaultTenantId uniqueidentifier = 'f1000000-0000-0000-0000-000000000001';
+DECLARE @DefaultCampusId uniqueidentifier = 'f2000000-0000-0000-0000-000000000001';
+
+IF OBJECT_ID(N'[tenants]') IS NOT NULL
+BEGIN
+    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @DefaultTenantId, N'DEFAULT', N'Default Tenant', 1, @ScopeNow, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @DefaultTenantId);
+END;
+
+IF OBJECT_ID(N'[campuses]') IS NOT NULL
+BEGIN
+    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @DefaultCampusId, @DefaultTenantId, N'MAIN', N'Main Campus', 1, @ScopeNow, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @DefaultCampusId);
+END;
+GO
+
+UPDATE [users]
+SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
+    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
+WHERE ([TenantId] IS NULL AND [CampusId] IS NULL)
+  AND [RoleId] <> (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
+GO
+
+UPDATE [users]
+SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
+    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
+WHERE ([TenantId] IS NULL AND [CampusId] IS NOT NULL)
+   OR ([TenantId] IS NOT NULL AND [CampusId] IS NULL);
+GO
+
+UPDATE [departments]
+SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
+    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
+WHERE ([TenantId] IS NULL AND [CampusId] IS NULL)
+   OR ([TenantId] IS NULL AND [CampusId] IS NOT NULL)
+   OR ([TenantId] IS NOT NULL AND [CampusId] IS NULL);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_users_tenants_TenantId')
+BEGIN
+    ALTER TABLE [users]
+    ADD CONSTRAINT [FK_users_tenants_TenantId]
+    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_departments_tenants_TenantId')
+BEGIN
+    ALTER TABLE [departments]
+    ADD CONSTRAINT [FK_departments_tenants_TenantId]
+    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_users_campuses_CampusId_TenantId')
+BEGIN
+    ALTER TABLE [users]
+    ADD CONSTRAINT [FK_users_campuses_CampusId_TenantId]
+    FOREIGN KEY ([CampusId], [TenantId]) REFERENCES [campuses] ([Id], [TenantId]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_departments_campuses_CampusId_TenantId')
+BEGIN
+    ALTER TABLE [departments]
+    ADD CONSTRAINT [FK_departments_campuses_CampusId_TenantId]
+    FOREIGN KEY ([CampusId], [TenantId]) REFERENCES [campuses] ([Id], [TenantId]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_tenants_code' AND [object_id] = OBJECT_ID(N'[tenants]'))
+BEGIN
+    CREATE UNIQUE INDEX [IX_tenants_code] ON [tenants] ([Code]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_campuses_tenant_code' AND [object_id] = OBJECT_ID(N'[campuses]'))
+BEGIN
+    CREATE UNIQUE INDEX [IX_campuses_tenant_code] ON [campuses] ([TenantId], [Code]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_campuses_tenant_id' AND [object_id] = OBJECT_ID(N'[campuses]'))
+BEGIN
+    CREATE INDEX [IX_campuses_tenant_id] ON [campuses] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_tenant_id' AND [object_id] = OBJECT_ID(N'[users]'))
+BEGIN
+    CREATE INDEX [IX_users_tenant_id] ON [users] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_campus_id' AND [object_id] = OBJECT_ID(N'[users]'))
+BEGIN
+    CREATE INDEX [IX_users_campus_id] ON [users] ([CampusId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_tenant_campus_active_role' AND [object_id] = OBJECT_ID(N'[users]'))
+BEGIN
+    CREATE INDEX [IX_users_tenant_campus_active_role] ON [users] ([TenantId], [CampusId], [IsActive], [RoleId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_users_tenant_campus_username' AND [object_id] = OBJECT_ID(N'[users]'))
+BEGIN
+    CREATE INDEX [IX_users_tenant_campus_username] ON [users] ([TenantId], [CampusId], [Username]);
+END;
+GO
+
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_Code' AND [object_id] = OBJECT_ID(N'[departments]'))
+BEGIN
+    DROP INDEX [IX_departments_Code] ON [departments];
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_scope_code' AND [object_id] = OBJECT_ID(N'[departments]'))
+BEGIN
+    CREATE UNIQUE INDEX [IX_departments_scope_code] ON [departments] ([TenantId], [CampusId], [Code]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_tenant_id' AND [object_id] = OBJECT_ID(N'[departments]'))
+BEGIN
+    CREATE INDEX [IX_departments_tenant_id] ON [departments] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_campus_id' AND [object_id] = OBJECT_ID(N'[departments]'))
+BEGIN
+    CREATE INDEX [IX_departments_campus_id] ON [departments] ([CampusId]);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_departments_tenant_campus_name' AND [object_id] = OBJECT_ID(N'[departments]'))
+BEGIN
+    CREATE INDEX [IX_departments_tenant_campus_name] ON [departments] ([TenantId], [CampusId], [Name]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260525090000_Phase40_TenantCampusScope'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260525090000_Phase40_TenantCampusScope', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
 /* Phase 39.3 / 40.1 alignment: ensure MFA + phone columns exist on users */
 IF COL_LENGTH('users', 'MfaIsEnabled') IS NULL
 BEGIN

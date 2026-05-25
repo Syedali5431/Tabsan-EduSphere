@@ -241,6 +241,28 @@ END
     INCLUDE (Id);
   END
 
+  IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_scope_institution' AND object_id = OBJECT_ID('departments'))
+  BEGIN
+    CREATE INDEX IX_departments_scope_institution
+    ON departments (TenantId, CampusId, InstitutionType)
+    INCLUDE (Id, Name, Code);
+  END
+
+  IF COL_LENGTH('users', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('users', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('users', 'RoleId') IS NOT NULL
+  AND COL_LENGTH('users', 'DepartmentId') IS NOT NULL
+  AND COL_LENGTH('users', 'IsActive') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_scope_role_department_active' AND object_id = OBJECT_ID('users'))
+  BEGIN
+    CREATE INDEX IX_users_scope_role_department_active
+    ON users (TenantId, CampusId, RoleId, DepartmentId, IsActive)
+    INCLUDE (Id, Username);
+  END
+
   IF COL_LENGTH('registration_whitelist', 'IdentifierType') IS NOT NULL
   AND COL_LENGTH('registration_whitelist', 'IdentifierValue') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_registration_whitelist_value_department_program' AND object_id = OBJECT_ID('registration_whitelist'))

@@ -145,9 +145,11 @@ public class DiscussionController : ControllerBase
         var callerId = ExtractCallerId();
         if (callerId == Guid.Empty) return Unauthorized();
         var actualRequest = request with { AuthorId = callerId };
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+        var isFacultyOrAdmin = role is "Faculty" or "Admin" or "SuperAdmin";
         try
         {
-            var reply = await _discussion.AddReplyAsync(actualRequest, ct);
+            var reply = await _discussion.AddReplyAsync(actualRequest, isFacultyOrAdmin, ct);
             return Ok(reply);
         }
         catch (UnauthorizedAccessException ex)

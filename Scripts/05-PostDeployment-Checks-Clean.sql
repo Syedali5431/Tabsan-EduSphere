@@ -137,6 +137,50 @@ FROM [departments]
 WHERE [InstitutionType] IN (0, 1, 2)
   AND [IsDeleted] = 0;
 
+IF OBJECT_ID(N'[tenants]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Tenants.DefaultPresent',
+        CASE WHEN COUNT(1) >= 1 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'>=1'
+    FROM [tenants]
+    WHERE [Code] = N'DEFAULT'
+      AND [IsDeleted] = 0;
+END;
+
+IF OBJECT_ID(N'[campuses]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Campuses.DefaultPresent',
+        CASE WHEN COUNT(1) >= 1 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'>=1'
+    FROM [campuses]
+    WHERE [Code] = N'MAIN'
+      AND [IsDeleted] = 0;
+END;
+
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Departments.CoreScopedCount',
+        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'3'
+    FROM [departments]
+    WHERE [Id] IN (
+            '21000000-0000-0000-0000-000000000001',
+            '21000000-0000-0000-0000-000000000002',
+            '21000000-0000-0000-0000-000000000003'
+    )
+      AND [TenantId] IS NOT NULL
+      AND [CampusId] IS NOT NULL;
+END;
+
 /* 4) Modules + status */
 DECLARE @RequiredModules TABLE ([Key] NVARCHAR(50) PRIMARY KEY);
 INSERT INTO @RequiredModules ([Key]) VALUES
@@ -282,14 +326,15 @@ IF OBJECT_ID(N'[sidebar_menu_items]') IS NOT NULL
 BEGIN
     DECLARE @RequiredMenuKeys TABLE ([Key] NVARCHAR(100) PRIMARY KEY);
     INSERT INTO @RequiredMenuKeys ([Key]) VALUES
-    (N'dashboard'), (N'academic'), (N'courses'), (N'attendance');
+    (N'dashboard'), (N'academic'), (N'courses'), (N'attendance'),
+    (N'programs'), (N'settings'), (N'admin_users'), (N'tenant_management'), (N'campus_management');
 
     INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
     SELECT
         N'Sidebar.RequiredMenuItemsPresent',
-        CASE WHEN COUNT(1) = 4 THEN 1 ELSE 0 END,
+        CASE WHEN COUNT(1) = 9 THEN 1 ELSE 0 END,
         CAST(COUNT(1) AS NVARCHAR(20)),
-        N'4'
+        N'9'
     FROM [sidebar_menu_items]
     WHERE [Key] IN (SELECT [Key] FROM @RequiredMenuKeys)
       AND [IsDeleted] = 0;
@@ -299,12 +344,12 @@ BEGIN
         INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
         SELECT
             N'Sidebar.RoleAccessMinimum',
-            CASE WHEN COUNT(1) >= 13 THEN 1 ELSE 0 END,
+            CASE WHEN COUNT(1) >= 23 THEN 1 ELSE 0 END,
             CAST(COUNT(1) AS NVARCHAR(20)),
-            N'13'
+            N'23'
         FROM [sidebar_menu_role_accesses] sra
         INNER JOIN [sidebar_menu_items] smi ON smi.[Id] = sra.[SidebarMenuItemId]
-        WHERE smi.[Key] IN (N'dashboard', N'academic', N'courses', N'attendance')
+        WHERE smi.[Key] IN (N'dashboard', N'academic', N'courses', N'attendance', N'programs', N'settings', N'admin_users', N'tenant_management', N'campus_management')
           AND smi.[IsDeleted] = 0;
     END;
 END;
@@ -317,6 +362,20 @@ BEGIN
         N'Users.ColumnExists.PhoneNumber',
         CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN 0 ELSE 1 END,
         CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.TenantId',
+        CASE WHEN COL_LENGTH('users', 'TenantId') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'TenantId') IS NULL THEN N'0' ELSE N'1' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Users.ColumnExists.CampusId',
+        CASE WHEN COL_LENGTH('users', 'CampusId') IS NULL THEN 0 ELSE 1 END,
+        CASE WHEN COL_LENGTH('users', 'CampusId') IS NULL THEN N'0' ELSE N'1' END,
         N'1';
 
     INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
@@ -351,6 +410,22 @@ BEGIN
         FROM [users]
         WHERE [IsDeleted] = 0
           AND [MfaIsEnabled] = 1;
+    END;
+
+    IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'Users.SuperAdminUnscoped',
+            CASE WHEN COUNT(1) = 1 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'1'
+        FROM [users] u
+        INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
+        WHERE r.[Name] = N'SuperAdmin'
+          AND u.[IsDeleted] = 0
+          AND u.[TenantId] IS NULL
+          AND u.[CampusId] IS NULL;
     END;
 END;
 

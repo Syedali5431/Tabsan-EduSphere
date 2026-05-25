@@ -63,6 +63,42 @@ END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 DECLARE @PwdHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
+DECLARE @UniTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+DECLARE @ColTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER);
+DECLARE @SchTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER);
+DECLARE @UniCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+DECLARE @ColCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER);
+DECLARE @SchCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER);
+
+IF OBJECT_ID(N'[tenants]') IS NOT NULL
+BEGIN
+    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @UniTenantId, N'UNI', N'University Tenant', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @UniTenantId);
+
+    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @ColTenantId, N'COL', N'College Tenant', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @ColTenantId);
+
+    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @SchTenantId, N'SCH', N'School Tenant', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @SchTenantId);
+END;
+
+IF OBJECT_ID(N'[campuses]') IS NOT NULL
+BEGIN
+    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @UniCampusId, @UniTenantId, N'UNI-MAIN', N'University Main Campus', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @UniCampusId);
+
+    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @ColCampusId, @ColTenantId, N'COL-MAIN', N'College Main Campus', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @ColCampusId);
+
+    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @SchCampusId, @SchTenantId, N'SCH-MAIN', N'School Main Campus', 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @SchCampusId);
+END;
 
 DECLARE @RoleSuperAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
 DECLARE @RoleAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin');
@@ -92,14 +128,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v5', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v6', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v5',
+    SET [DemoValue] = N'FullDummyData-v6',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -142,6 +178,28 @@ BEGIN
        OR d.[Code] <> src.[Code]
        OR d.[IsActive] = 0
        OR d.[InstitutionType] <> src.[InstitutionType];
+END;
+
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+BEGIN
+    UPDATE d
+    SET d.[TenantId] = CASE d.[InstitutionType]
+                          WHEN 2 THEN @UniTenantId
+                          WHEN 1 THEN @ColTenantId
+                          ELSE @SchTenantId
+                      END,
+        d.[CampusId] = CASE d.[InstitutionType]
+                          WHEN 2 THEN @UniCampusId
+                          WHEN 1 THEN @ColCampusId
+                          ELSE @SchCampusId
+                      END,
+        d.[UpdatedAt] = @Now
+    FROM [departments] d
+    INNER JOIN @Departments src ON src.[Id] = d.[Id]
+    WHERE d.[TenantId] IS NULL
+       OR d.[CampusId] IS NULL
+       OR d.[TenantId] <> CASE d.[InstitutionType] WHEN 2 THEN @UniTenantId WHEN 1 THEN @ColTenantId ELSE @SchTenantId END
+       OR d.[CampusId] <> CASE d.[InstitutionType] WHEN 2 THEN @UniCampusId WHEN 1 THEN @ColCampusId ELSE @SchCampusId END;
 END;
 
 /* 2) Programs - Expanded across all institution types */
@@ -506,9 +564,9 @@ DECLARE @BulkTarget TABLE
 
 INSERT INTO @BulkTarget (InstitutionCode, InstitutionType, DepartmentId, ProgramId, StudentCount, FacultyCount, AdminCount)
 VALUES
-    (N'UNI', 2, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER), 180, 24, 8),
-    (N'COL', 1, CAST('12222222-2222-2222-2222-222222222221' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222321' AS UNIQUEIDENTIFIER), 140, 18, 6),
-    (N'SCH', 0, CAST('13333333-3333-3333-3333-333333333332' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222432' AS UNIQUEIDENTIFIER), 120, 14, 6);
+    (N'UNI', 2, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER), 320, 40, 12),
+    (N'COL', 1, CAST('12222222-2222-2222-2222-222222222221' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222321' AS UNIQUEIDENTIFIER), 260, 30, 10),
+    (N'SCH', 0, CAST('13333333-3333-3333-3333-333333333332' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222432' AS UNIQUEIDENTIFIER), 220, 24, 10);
 
 ;WITH N AS
 (
@@ -2418,6 +2476,38 @@ BEGIN
     SELECT l.[Id], l.[ParentUserId], l.[StudentProfileId], l.[Relationship], 1, @Now, NULL, 0, NULL
     FROM @ParentStudentLinks l
     WHERE NOT EXISTS (SELECT 1 FROM [parent_student_links] x WHERE x.[Id] = l.[Id]);
+END
+
+IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[TenantId] = CASE d.[InstitutionType]
+                          WHEN 2 THEN @UniTenantId
+                          WHEN 1 THEN @ColTenantId
+                          ELSE @SchTenantId
+                      END,
+        u.[CampusId] = CASE d.[InstitutionType]
+                          WHEN 2 THEN @UniCampusId
+                          WHEN 1 THEN @ColCampusId
+                          ELSE @SchCampusId
+                      END,
+        u.[UpdatedAt] = @Now
+    FROM [users] u
+    INNER JOIN [departments] d ON d.[Id] = u.[DepartmentId]
+    WHERE u.[RoleId] <> @RoleSuperAdmin
+      AND (
+            u.[TenantId] IS NULL
+         OR u.[CampusId] IS NULL
+         OR u.[TenantId] <> CASE d.[InstitutionType] WHEN 2 THEN @UniTenantId WHEN 1 THEN @ColTenantId ELSE @SchTenantId END
+         OR u.[CampusId] <> CASE d.[InstitutionType] WHEN 2 THEN @UniCampusId WHEN 1 THEN @ColCampusId ELSE @SchCampusId END
+      );
+
+    UPDATE [users]
+    SET [TenantId] = NULL,
+        [CampusId] = NULL,
+        [UpdatedAt] = @Now
+    WHERE [RoleId] = @RoleSuperAdmin
+      AND ([TenantId] IS NOT NULL OR [CampusId] IS NOT NULL);
 END
 
 COMMIT TRANSACTION;

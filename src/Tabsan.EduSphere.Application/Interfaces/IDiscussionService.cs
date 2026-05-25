@@ -22,6 +22,6 @@ public interface IDiscussionService
     Task MarkVisibleToAllAsync(Guid threadId, CancellationToken ct = default);
     Task MarkPrivateAsync(Guid threadId, CancellationToken ct = default);
 
-    Task<DiscussionReplyDto> AddReplyAsync(AddReplyRequest request, CancellationToken ct = default);
+    Task<DiscussionReplyDto> AddReplyAsync(AddReplyRequest request, bool isFacultyOrAdmin = false, CancellationToken ct = default);
     Task DeleteReplyAsync(Guid replyId, Guid requesterId, bool isFaculty, CancellationToken ct = default);
 }
