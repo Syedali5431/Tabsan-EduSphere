@@ -5,7 +5,7 @@ using Tabsan.EduSphere.Application.Interfaces;
 namespace Tabsan.EduSphere.API.Services.TwoFactor;
 
 /// <summary>
-/// Core TOTP helper for the Plan L add-on.
+/// Core TOTP helper for the two-factor authentication add-on.
 /// It wraps the shared ITotpService with deployment defaults from AuthSecurityOptions.
 /// </summary>
 public sealed class TwoFactorService

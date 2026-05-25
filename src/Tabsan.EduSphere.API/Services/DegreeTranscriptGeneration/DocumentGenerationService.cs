@@ -101,7 +101,7 @@ public sealed class DocumentGenerationService
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "Plan K PDF conversion adapter failed for {DocxPath}. Falling back to .docx.",
+                "Degree/Transcript PDF conversion adapter failed for {DocxPath}. Falling back to .docx.",
                 docxPath);
             pdfPath = null;
         }
@@ -127,7 +127,7 @@ public sealed class DocumentGenerationService
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "Plan K storage persistence failed for {Type} document {DocumentId}; in-memory and file outputs remain available.",
+                "Degree/Transcript storage persistence failed for {Type} document {DocumentId}; in-memory and file outputs remain available.",
                 type,
                 documentId);
         }

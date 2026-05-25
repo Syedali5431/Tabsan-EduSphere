@@ -7,7 +7,7 @@ using Tabsan.EduSphere.Infrastructure.Persistence;
 namespace Tabsan.EduSphere.Infrastructure.Repositories;
 
 /// <summary>
-/// EF-backed 2FA state store for the Plan L add-on.
+/// EF-backed 2FA state store for the two-factor authentication add-on.
 /// It keeps the implementation isolated from the legacy auth services.
 /// </summary>
 public sealed class TwoFactorStateStore : ITwoFactorStateStore

@@ -35,7 +35,7 @@ public class DegreeController : ControllerBase
     [HttpGet("template/default")]
     public async Task<IActionResult> DownloadDefaultTemplate(CancellationToken ct)
     {
-        var gate = await EnsurePlanKEnabledAsync(ct);
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
             return gate;
 
@@ -47,7 +47,7 @@ public class DegreeController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
     {
-        var gate = await EnsurePlanKEnabledAsync(ct);
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
             return gate;
 
@@ -65,7 +65,7 @@ public class DegreeController : ControllerBase
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] DegreeGenerationRequest request, CancellationToken ct)
     {
-        var gate = await EnsurePlanKEnabledAsync(ct);
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
             return gate;
 
@@ -76,7 +76,7 @@ public class DegreeController : ControllerBase
     [HttpGet("{documentId:guid}/download")]
     public async Task<IActionResult> Download(Guid documentId, [FromQuery] string format = "docx", CancellationToken ct = default)
     {
-        var gate = await EnsurePlanKEnabledAsync(ct);
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
             return gate;
 
@@ -105,7 +105,7 @@ public class DegreeController : ControllerBase
     [Authorize(Roles = "Student,Admin,SuperAdmin")]
     public async Task<IActionResult> StudentDegree(CancellationToken ct)
     {
-        var gate = await EnsurePlanKEnabledAsync(ct);
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
             return gate;
 
@@ -125,12 +125,12 @@ public class DegreeController : ControllerBase
         return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
     }
 
-    private async Task<IActionResult?> EnsurePlanKEnabledAsync(CancellationToken ct)
+    private async Task<IActionResult?> EnsureDegreeTranscriptGenerationEnabledAsync(CancellationToken ct)
     {
-        var flag = await _featureFlags.GetAsync("plan-k.enabled", ct);
+        var flag = await _featureFlags.GetAsync("degree-transcript-generation.enabled", ct);
         if (!flag.IsEnabled)
         {
-            return StatusCode(StatusCodes.Status423Locked, new { message = "Plan K is currently disabled by feature flag." });
+            return StatusCode(StatusCodes.Status423Locked, new { message = "Degree/Transcript generation is currently disabled by feature flag." });
         }
 
         return null;

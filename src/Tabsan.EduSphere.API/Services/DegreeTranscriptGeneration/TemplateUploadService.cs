@@ -7,7 +7,7 @@ namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
 /// Degree/Transcript Generation add-on service: stores uploaded templates in isolated storage.
-/// This service only handles the new Plan K template upload path.
+/// This service only handles the dedicated degree/transcript template upload path.
 /// </summary>
 public sealed class TemplateUploadService
 {

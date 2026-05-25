@@ -1,3 +1,13 @@
+### Degree/Transcript Generation and Two-Factor Naming Alignment (2026-05-25)
+- Implementation Summary:
+  - Replaced plan-labeled runtime naming with functionality-based naming in controllers and service comments/logging.
+  - Renamed rollout gate methods to `EnsureDegreeTranscriptGenerationEnabledAsync` in degree/transcript controllers.
+  - Switched controller gating to `degree-transcript-generation.enabled` and added backward-compatible fallback behavior in feature-flag resolution for legacy `plan-k.enabled` settings.
+  - Updated Function-List entries to remove plan labels and reflect the renamed gating methods.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` passed.
+  - Full automated test sweep passed (`443/443`).
+
 ### Plan L Phase L1-L7 Add-On 2FA Surface (2026-05-25)
 - Implementation Summary:
   - Added a dedicated Plan L 2FA surface with isolated services, a QR generator, and a new `TwoFactorController` under `/api/v1/2fa`.

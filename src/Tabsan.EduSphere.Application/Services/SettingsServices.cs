@@ -627,6 +627,8 @@ public class TenantOperationsService : ITenantOperationsService
 // Final-Touches Phase 30 Stage 30.3 — safe rollout and rollback flag operations.
 public class FeatureFlagService : IFeatureFlagService
 {
+    private const string DegreeTranscriptGenerationFlagKey = "degree-transcript-generation.enabled";
+    private const string LegacyPlanKFlagKey = "plan-k.enabled";
     private const string Prefix = "feature_flag:";
     private const string MetaSuffixDescription = ":description";
     private const string MetaSuffixUpdatedAt = ":updated_at_utc";
@@ -638,7 +640,8 @@ public class FeatureFlagService : IFeatureFlagService
         ["tenant-operations.write"] = true,
         ["integration-gateway.enabled"] = true,
         ["gateway-diagnostics.enabled"] = true,
-        ["plan-k.enabled"] = true
+        [DegreeTranscriptGenerationFlagKey] = true,
+        [LegacyPlanKFlagKey] = true
     };
 
     private readonly ISettingsRepository _repo;
@@ -675,7 +678,17 @@ public class FeatureFlagService : IFeatureFlagService
             throw new ArgumentException("Feature flag key is required.", nameof(key));
 
         var all = await _repo.GetAllPortalSettingsAsync(ct);
-        return ToDto(key.Trim().ToLowerInvariant(), all);
+        var normalized = key.Trim().ToLowerInvariant();
+
+        if (string.Equals(normalized, DegreeTranscriptGenerationFlagKey, StringComparison.OrdinalIgnoreCase)
+            && !all.ContainsKey(WithPrefix(normalized))
+            && all.ContainsKey(WithPrefix(LegacyPlanKFlagKey)))
+        {
+            var legacy = ToDto(LegacyPlanKFlagKey, all);
+            return legacy with { Key = normalized };
+        }
+
+        return ToDto(normalized, all);
     }
 
     public async Task SaveAsync(SaveFeatureFlagCommand command, CancellationToken ct = default)

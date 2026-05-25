@@ -6,7 +6,7 @@ using Tabsan.EduSphere.Application.DTOs.TwoFactor;
 namespace Tabsan.EduSphere.API.Controllers;
 
 /// <summary>
-/// Add-on 2FA controller for the Plan L boundary.
+/// Add-on 2FA controller for the dedicated two-factor authentication boundary.
 /// This surface is intentionally separate from the legacy auth controller.
 /// </summary>
 [ApiController]

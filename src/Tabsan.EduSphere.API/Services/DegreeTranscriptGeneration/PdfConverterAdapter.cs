@@ -1,7 +1,7 @@
 namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
-/// Optional PDF conversion adapter contract for Plan K generated documents.
+/// Optional PDF conversion adapter contract for degree/transcript generated documents.
 /// Returning null preserves the mandatory .docx fallback behavior.
 /// </summary>
 public interface IPdfConverterAdapter
@@ -28,7 +28,7 @@ public sealed class NoOpPdfConverterAdapter : IPdfConverterAdapter
         ct.ThrowIfCancellationRequested();
 
         _logger.LogDebug(
-            "Plan K PDF adapter is using NoOp converter for {DocxPath}; returning null to keep .docx fallback.",
+            "Degree/Transcript PDF adapter is using NoOp converter for {DocxPath}; returning null to keep .docx fallback.",
             docxPath);
 
         return Task.FromResult<string?>(null);

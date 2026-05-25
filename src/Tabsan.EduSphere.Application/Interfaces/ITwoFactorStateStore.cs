@@ -1,7 +1,7 @@
 namespace Tabsan.EduSphere.Application.Interfaces;
 
 /// <summary>
-/// Lightweight 2FA persistence boundary used by the Plan L add-on.
+/// Lightweight 2FA persistence boundary used by the two-factor authentication add-on.
 /// It stores the protected TOTP secret alongside the user's current 2FA state.
 /// </summary>
 public sealed record TwoFactorStateSnapshot(
