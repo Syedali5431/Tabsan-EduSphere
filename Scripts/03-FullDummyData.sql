@@ -1657,7 +1657,8 @@ BEGIN
     INSERT INTO [graduation_application_approvals] ([Id], [GraduationApplicationId], [Stage], [ApproverUserId], [IsApproved], [Note], [ActedAt], [CreatedAt], [UpdatedAt])
     SELECT a.[Id], a.[GraduationApplicationId], a.[Stage], a.[ApproverUserId], a.[IsApproved], a.[Note], a.[ActedAt], @Now, NULL
     FROM @GraduationApprovals a
-    WHERE NOT EXISTS (SELECT 1 FROM [graduation_application_approvals] x WHERE x.[Id] = a.[Id]);
+        WHERE EXISTS (SELECT 1 FROM [graduation_applications] ga WHERE ga.[Id] = a.[GraduationApplicationId])
+            AND NOT EXISTS (SELECT 1 FROM [graduation_application_approvals] x WHERE x.[Id] = a.[Id]);
 END
 
 IF OBJECT_ID(N'[student_report_cards]') IS NOT NULL
