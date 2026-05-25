@@ -1,332 +1,283 @@
-# Plan L - Two-Factor Authentication (2FA) with TOTP for ASP.NET Core
+# Plan L - Safe Add-On 2FA (TOTP) for Existing ASP.NET Core Application
 
 ## Objective
-Implement production-ready Two-Factor Authentication (2FA) using TOTP (Google Authenticator / Authy compatible) in the existing ASP.NET Core web application, with clean architecture boundaries, secure key handling, and login flow integration.
+Add secure TOTP-based Two-Factor Authentication (Google Authenticator / Authy compatible) as a plug-in extension to the existing ASP.NET Core application without breaking existing authentication or modules.
 
-## Scope Summary
-This plan covers:
-- User enable/disable 2FA from account settings
-- Per-user secret generation and secure storage
-- QR code generation plus manual key fallback
-- RFC 6238 TOTP verification flow
-- Login pipeline split into password step and TOTP step
-- Time drift allowance and brute-force attempt controls
-- Service/controller/UI/test deliverables
-- Dependency injection and secure coding best practices
+## Mandatory Safety Rules
+- Do not modify or remove existing authentication logic.
+- Do not overwrite existing controllers/services.
+- Only add new services, classes, and endpoints.
+- Keep implementation modular, isolated, and plug-and-play.
+- Follow existing project structure and coding style.
+- Clearly comment where integration with existing login flow is required.
 
-## Standards and Libraries
-- TOTP library: Otp.NET
-- QR generation: QRCoder
-- Standard: RFC 6238 TOTP
+## Core Functionality
+Implement RFC 6238 TOTP flow:
+- Users can enable/disable 2FA.
+- Use shared secret and time-based OTP.
+- Compatible with Google Authenticator and Authy.
 
-## Data Contract Requirements
-Per user store:
-- TwoFactorEnabled (bool)
-- TwoFactorSecretKey (encrypted string)
+## Required Libraries
+- Otp.NET for TOTP generation/validation.
+- QRCoder for QR generation.
 
-Recommended additional fields for security and operations:
-- TwoFactorEnabledAtUtc (datetime, nullable)
-- TwoFactorFailedAttempts (int)
-- TwoFactorLockoutEndUtc (datetime, nullable)
-- TwoFactorRecoveryUpdatedAtUtc (datetime, nullable)
+## Database Safety Rules
+- Do not modify existing tables unless necessary.
+- If needed, extend user table minimally or create separate extension table.
+- Required stored fields:
+  - TwoFactorEnabled (bool)
+  - TwoFactorSecretKey (encrypted string)
 
-## Phase L1 - Architecture Baseline and Security Design
+## New Files Only (Output Contract)
+Plan L implementation must primarily produce these new files:
+- TwoFactorService.cs
+- QRCodeService.cs
+- TwoFactorSetupService.cs
+- TwoFactorController.cs
+
+Optional additional new files are allowed only for safe isolation:
+- DTO/request/response models
+- repository interface/implementation for 2FA extension state
+- options/config classes
+- test files
+
+## Phase L1 - Extension Boundary and Non-Breaking Design
 Reason to do first:
-- 2FA impacts identity, persistence, UI, and auth flow. Design alignment is required before implementation.
+- Prevent regressions in existing authentication flow.
 
-### Stage L1.1 - Define clean architecture boundaries
-- Domain: user security state and invariants
-- Application: 2FA services and use cases
-- Infrastructure: encryption provider, OTP/QR adapters
-- Web/API: controller endpoints and UI pages
+### Stage L1.1 - Define add-only architecture
+- New 2FA services live in isolated extension namespace/folder.
+- Existing auth controllers/services remain untouched.
 
-### Stage L1.2 - Define threat model and controls
-- Protect secret at rest (encryption)
-- Prevent brute-force via failed attempt throttling
-- Enforce session-bound pending 2FA state before full sign-in
-- Avoid logging secrets, OTP codes, or otpauth URLs
+### Stage L1.2 - Define safe integration seam
+- Existing login remains Step 1 (username/password).
+- Add a lightweight hand-off to 2FA challenge only when enabled.
 
-### Stage L1.3 - Define DI and configuration contracts
-- ITwoFactorService
-- ISecretProtectionService
-- IQRCodeService
-- ILoginChallengeService
-- Settings for issuer name, OTP digits, step window, lockout thresholds
+### Stage L1.3 - Define DI contracts
+- Register only new services:
+  - TwoFactorService
+  - QRCodeService
+  - TwoFactorSetupService
 
-Deliverables for Phase L1:
-- Security architecture note
-- Service interfaces and options model
-- Threat-control checklist
+Deliverables:
+- Add-only architecture note
+- Integration seam checklist
 
-## Phase L2 - Domain and Database Preparation
+## Phase L2 - Data and Persistence Safety
 Reason to do second:
-- User model and persistence must exist before services and flow integration.
+- 2FA state storage must be secure and isolated before endpoint work.
 
-### Stage L2.1 - Extend user domain model
-- Add required fields:
-  - TwoFactorEnabled
-  - TwoFactorSecretKey (encrypted payload)
-- Add guard methods:
-  - EnableTwoFactor(secret)
-  - DisableTwoFactor()
-  - RegisterFailedTwoFactorAttempt()
-  - ResetTwoFactorFailures()
+### Stage L2.1 - Minimal schema strategy
+- Preferred: add nullable fields to user record only if required.
+- Alternative: add dedicated 2FA extension table keyed by user id.
 
-### Stage L2.2 - Persistence mapping and migration
-- Add EF model mappings and migration scripts
-- Set secure defaults:
-  - TwoFactorEnabled default false
-  - Secret key nullable until setup complete
-- Add index considerations for lockout queries if needed
+### Stage L2.2 - Secure storage policy
+- Store secret encrypted at rest.
+- Never return plaintext secret in API response.
 
-### Stage L2.3 - Backward compatibility
-- Existing users continue normal login until they opt in
-- No forced 2FA rollout unless feature flag says otherwise
+### Stage L2.3 - Additive migration policy
+- Additive migrations only.
+- No destructive changes to existing auth tables.
 
-Deliverables for Phase L2:
-- Updated user entity and mappings
-- Database migration
-- Rollback-safe migration notes
+Deliverables:
+- Safe schema update plan
+- Encryption-at-rest policy
 
-## Phase L3 - Secret Generation and Secure Storage
+## Phase L3 - New Service Implementation (No Merges)
 Reason to do third:
-- Secure key lifecycle is foundational for all 2FA operations.
+- Core functionality should be encapsulated in dedicated services.
 
-### Stage L3.1 - Secret generation service
-- Generate random high-entropy secret bytes
-- Encode manual key in Base32 for authenticator apps
+### Stage L3.1 - TwoFactorService
+- Generate secret key.
+- Validate TOTP codes using Otp.NET.
+- Allow time drift window (±30 seconds / ±1 step).
 
-### Stage L3.2 - Encryption at rest
-- Encrypt secret before database write
-- Decrypt only when validating code
-- Use existing key management strategy (e.g., ASP.NET Core Data Protection or managed key vault abstraction)
+### Stage L3.2 - QRCodeService
+- Generate QR image with QRCoder.
+- No integration into existing utility classes.
 
-### Stage L3.3 - Secret handling controls
-- No plaintext storage in DB
-- No plaintext exposure in logs
-- Clear in-memory buffers where practical
+### Stage L3.3 - TwoFactorSetupService
+- Build setup payload:
+  - QR code image/data
+  - manual key
+  - otpauth URI
+- Keep setup orchestration separate from existing auth service.
 
-Deliverables for Phase L3:
-- Secret generation implementation
-- Secret protection implementation
-- Secure storage policy documentation
+Deliverables:
+- TwoFactorService.cs
+- QRCodeService.cs
+- TwoFactorSetupService.cs
 
-## Phase L4 - QR Code and Setup UX
+## Phase L4 - Enable 2FA Setup Flow
 Reason to do fourth:
-- User onboarding needs scan + manual fallback prior to enabling 2FA.
+- User onboarding must be complete before login challenge can be enforced.
 
-### Stage L4.1 - otpauth URI generation
-- Build URI: otpauth://totp/{Issuer}:{Username}?secret={Base32}&issuer={Issuer}&digits=6&period=30
-- Ensure issuer and account labels are URL-safe
+### Stage L4.1 - Start setup
+- User chooses Enable 2FA.
+- System generates secret and QR payload:
+  - otpauth://totp/{AppName}:{Email}?secret={Key}&issuer={AppName}
 
-### Stage L4.2 - QR code rendering
-- Generate QR image with QRCoder
-- Return as PNG or data URL for page rendering
+### Stage L4.2 - Show QR + manual key
+- Return minimal UI/API setup response.
+- Include fallback manual key for authenticator app entry.
 
-### Stage L4.3 - Manual key fallback
-- Show Base32 manual key on setup page
-- Add copy UI support and guidance for Google Authenticator/Authy
+### Stage L4.3 - Confirm setup
+- User submits first TOTP code.
+- If valid:
+  - persist encrypted secret
+  - set TwoFactorEnabled = true
 
-Deliverables for Phase L4:
-- QRCode service adapter
-- Setup view model with QR + manual key
-- Setup page sample UI
+Deliverables:
+- Setup and confirm flow via new controller endpoints
 
-## Phase L5 - TOTP Validation Engine (RFC 6238)
+## Phase L5 - Login Flow Extension (Keep Existing Login Intact)
 Reason to do fifth:
-- Verification behavior must be deterministic and secure before login integration.
+- Must add 2FA challenge without heavy login refactor.
 
-### Stage L5.1 - Build TwoFactor service
-- Generate setup payload (secret + manual key + QR URI)
-- Validate TOTP using Otp.NET
-- Use time-step window allowing drift ±1 step
+### Stage L5.1 - Step 1 unchanged
+- Keep current username/password validation intact.
 
-### Stage L5.2 - Confirmation workflow
-- Enable setup starts in pending mode
-- User must submit valid first code to confirm setup
-- Only then set TwoFactorEnabled true
+### Stage L5.2 - Conditional 2FA challenge
+- If TwoFactorEnabled true:
+  - redirect to /2fa-verify flow/page
 
-### Stage L5.3 - Disable workflow
-- Require password re-check or current TOTP before disable
-- Clear encrypted secret and reset attempt counters
+### Stage L5.3 - Complete login on valid TOTP
+- User submits TOTP.
+- Validate using TwoFactorService.
+- If valid: complete existing login finalization path.
+- If invalid: show error and increment retry count.
 
-Deliverables for Phase L5:
-- TwoFactor service class
-- Setup confirm/disable logic
-- Validation policy configuration
+Deliverables:
+- Minimal login extension hook (commented integration points only)
 
-## Phase L6 - Login Flow Integration
+## Phase L6 - Security Controls and Abuse Protection
 Reason to do sixth:
-- Core auth behavior must include 2-step verification for enabled users.
+- 2FA must be secure against common misuse patterns.
 
-### Stage L6.1 - Step 1 username/password
-- Validate credentials as existing flow
-- If 2FA disabled: complete login
-- If 2FA enabled: create pending challenge state and redirect to code entry
+### Stage L6.1 - Drift handling
+- Accept valid tokens within ±1 step.
 
-### Stage L6.2 - Step 2 TOTP challenge
-- Prompt for 6-digit code
-- Validate against decrypted user secret
-- On success: complete sign-in and clear pending challenge
+### Stage L6.2 - Retry limiting
+- Basic failed-attempt protection for setup/login verification.
+- Temporary block or throttling after threshold.
 
-### Stage L6.3 - Failed-attempt controls
-- Increment failed 2FA attempts on invalid code
-- Lock out challenge after threshold (basic brute-force protection)
-- Return generic error messages to avoid information leakage
+### Stage L6.3 - Secret hygiene
+- Encrypt before save.
+- Do not expose secrets in logs or API responses.
 
-Deliverables for Phase L6:
-- Login challenge state manager
-- Updated login controller/page flow
-- 2FA verification endpoint/page
+Deliverables:
+- Retry limit policy
+- Secret exposure prevention checklist
 
-## Phase L7 - Account Settings and Endpoints/UI
+## Phase L7 - New Controller and Endpoints (Add-Only)
 Reason to do seventh:
-- Users/admin need complete operational controls after core flow is integrated.
+- Endpoint surface must be isolated from existing controllers.
 
-### Stage L7.1 - Enable 2FA endpoint/page
-- Start setup and return QR + manual key
-- Accept initial verification code for confirmation
+### Stage L7.1 - Add TwoFactorController
+- Create new TwoFactorController.cs only.
 
-### Stage L7.2 - Disable 2FA endpoint/page
-- Confirm user intent and authentication proof
-- Disable and purge secret material
+### Stage L7.2 - Add required endpoints
+- GET /2fa/setup
+- POST /2fa/verify
+- POST /2fa/disable
+- POST /2fa/login-verify
 
-### Stage L7.3 - Login verification endpoint/page
-- Handle code submission for pending login challenge
-- Handle lockout timer feedback
+### Stage L7.3 - Non-interference guarantees
+- Do not modify existing controller methods.
+- Use separate route group and DTOs.
 
-Minimum UI artifacts:
-- Account security page with 2FA status and actions
-- Setup page showing QR image and manual key
-- Login step-2 page for OTP entry
+Deliverables:
+- TwoFactorController.cs
+- New request/response contracts
 
-Deliverables for Phase L7:
-- Endpoints or Razor Pages for enable/verify/disable/login-step
-- Basic UI examples with validation messages
-
-## Phase L8 - Middleware and Auth Pipeline Hardening
+## Phase L8 - UI / Frontend Support (Minimal and Safe)
 Reason to do eighth:
-- Ensure partial authentication states cannot access protected resources.
+- Provide user operability without breaking current UX.
 
-### Stage L8.1 - Pending-2FA session policy
-- Pending users are not treated as fully authenticated
-- Block sensitive routes until challenge success
+### Stage L8.1 - Setup display
+- Minimal QR display page/response.
+- Manual key shown as fallback.
 
-### Stage L8.2 - Cookie/token claims update
-- Add claim flag when 2FA verified for the session
-- Regenerate auth cookie on final sign-in
+### Stage L8.2 - Code input and error handling
+- Minimal code entry form for setup verify and login verify.
+- Friendly error messages without secret leakage.
 
-### Stage L8.3 - Security events and auditing
-- Audit events for:
-  - 2FA enable started
-  - 2FA confirmed enabled
-  - 2FA disabled
-  - 2FA login success/failure
-  - lockout triggered
+### Stage L8.3 - Disable flow UX
+- Minimal disable action with confirmation.
 
-Deliverables for Phase L8:
-- Middleware/login-pipeline integration
-- Session and claims hardening
-- Audit integration points
+Deliverables:
+- Basic non-breaking UI/API examples
 
-## Phase L9 - Testing Strategy and Quality Gates
+## Phase L9 - Unit Tests (Additive)
 Reason to do ninth:
-- 2FA is security-sensitive and must be verified with deterministic tests.
+- Validate correctness without touching existing test baselines.
 
-### Stage L9.1 - Unit tests for secret generation
-- Generates non-empty secret
-- Meets minimum entropy/length expectations
-- Encodes manual key correctly
+### Stage L9.1 - Secret generation test
+- Non-empty secret generated.
+- Format suitable for authenticator setup.
 
-### Stage L9.2 - Unit tests for TOTP validation
-- Valid code accepted in current time step
-- Valid code accepted with ±1 drift window
-- Invalid/expired code rejected
+### Stage L9.2 - Valid code test
+- Known valid TOTP accepted by validation logic.
 
-### Stage L9.3 - Integration tests for login flow
-- 2FA-disabled user logs in directly
-- 2FA-enabled user requires second step
-- Lockout threshold enforced after repeated failures
+### Stage L9.3 - Invalid code test
+- Incorrect/expired code rejected.
 
-Deliverables for Phase L9:
-- Unit test suites
-- Integration test scenarios
-- Security test checklist
+Deliverables:
+- Unit tests for:
+  - Generate secret
+  - Validate valid code
+  - Reject invalid code
 
-## Phase L10 - Deployment, Rollout, and Operations
+## Phase L10 - Plug-In Integration Guide and Rollout
 Reason to do last:
-- Controlled rollout and recovery are required for security features.
+- Ensure safe adoption in existing system with low risk.
 
-### Stage L10.1 - Feature flags and rollout
-- Add configurable feature toggle for 2FA module
-- Optional phased rollout by role or tenant
+### Stage L10.1 - Integration snippet guidance
+- Provide example snippet that extends login flow minimally:
+  - after password check, if 2FA enabled then redirect to /2fa-verify
+- Add comments indicating exact plug-in insertion point.
 
-### Stage L10.2 - Operational dashboards and alerts
-- Track 2FA adoption rate
-- Track failed challenge rate and lockouts
+### Stage L10.2 - Startup/DI minimalism
+- Register new services only.
+- Avoid large startup/auth refactors.
 
-### Stage L10.3 - Support and recovery flows
-- Administrative unlock path for locked users
-- Recovery guidance for device loss (future recovery codes optional stage)
+### Stage L10.3 - Rollback safety
+- Disable only new routes/services if rollback needed.
+- Existing authentication continues unaffected.
 
-Deliverables for Phase L10:
-- Rollout plan
-- Operational monitoring notes
-- Support runbook
+Deliverables:
+- Safe integration snippet
+- Rollback checklist
 
-## Required Code Deliverables (Implementation Blueprint)
-Services:
-- TwoFactorService (TOTP generation/validation)
-- SecretProtectionService (encrypt/decrypt)
-- QRCodeService (QR generation)
-- LoginChallengeService (pending challenge state)
+## Endpoint Contract (New Only)
+TwoFactorController endpoints:
+- GET /2fa/setup -> generate QR + manual key payload
+- POST /2fa/verify -> verify setup code and enable 2FA
+- POST /2fa/disable -> disable 2FA and clear secret
+- POST /2fa/login-verify -> verify login TOTP challenge
 
-Web/API endpoints or Razor Pages:
-- Enable 2FA
-- Verify and confirm setup
-- Disable 2FA
-- Login verification step
+## Example Login Flow Integration Snippet (Plan Guidance)
+Pseudo-flow for minimal extension:
+1. Existing username/password validation runs unchanged.
+2. If user.TwoFactorEnabled is false, complete login as normal.
+3. If user.TwoFactorEnabled is true, store pending login context and redirect to /2fa-verify.
+4. /2fa/login-verify validates OTP with TwoFactorService.
+5. On valid OTP, continue existing login completion path.
 
-UI examples:
-- Account settings 2FA panel
-- Setup page (QR + manual key)
-- Login challenge page
+Note:
+- This snippet is guidance for safe plug-in integration points.
+- It does not replace existing authentication implementation.
 
-Integration:
-- Login flow modification for 2-step process
-- Middleware/auth pipeline support for pending 2FA state
-
-Testing:
-- Secret generation unit tests
-- TOTP validation unit tests
-
-## Reference Sequence Flow
-1. User logs in with username/password.
-2. System validates credentials.
-3. If 2FA not enabled, sign in complete.
-4. If 2FA enabled, store pending challenge and show code page.
-5. User submits TOTP.
-6. System validates code with drift window ±1.
-7. On success, full login completes and pending state clears.
-8. On failure, attempt count increments and lockout policy may trigger.
-
-## Best-Practice Checklist
-- No plaintext secret storage
-- No OTP/secret in logs
-- Strong random secret generation
-- Time drift tolerance configured and tested
-- Brute-force controls and lockout in place
-- Clean architecture boundaries maintained
-- DI registration for all services
-- Unit and integration tests included
-
-## Definition of Done (Plan L)
-- Users can enable and disable 2FA from account settings.
-- System generates and securely stores unique per-user secret.
-- QR + manual key setup works with Google Authenticator/Authy.
-- Login is split into credential step and TOTP step for enabled users.
-- TOTP validation follows RFC 6238 with ±1 step drift support.
-- Failed-attempt lockout protection is implemented.
-- Endpoints/pages and basic UI are available for full 2FA lifecycle.
-- Unit tests for secret generation and TOTP validation pass.
-- Security and audit expectations are documented and implemented.
+## Definition of Done (Updated Plan L)
+- 2FA is added as modular extension, without breaking existing authentication.
+- Existing controllers/services remain intact.
+- New files are created for:
+  - TwoFactorService.cs
+  - QRCodeService.cs
+  - TwoFactorSetupService.cs
+  - TwoFactorController.cs
+- Users can enable, verify, disable, and login-verify 2FA using new endpoints.
+- Secrets are encrypted and never exposed in API output.
+- Drift window and retry protection are implemented.
+- Unit tests cover secret generation and valid/invalid TOTP validation.
+- Integration guidance includes clearly commented plug-in insertion points.
