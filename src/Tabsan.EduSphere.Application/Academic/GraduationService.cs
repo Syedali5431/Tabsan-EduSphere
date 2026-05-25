@@ -255,7 +255,14 @@ public class GraduationService : IGraduationService
 
         app.FinalApprove(approverUserId, request.Note);
         _repo.Update(app);
-        await _repo.SaveChangesAsync(ct);
+        try
+        {
+            await _repo.SaveChangesAsync(ct);
+        }
+        catch (Exception ex) when (string.Equals(ex.GetType().Name, "DbUpdateConcurrencyException", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("This graduation application was modified by another user. Refresh and try again.");
+        }
 
         // Final-Touches Phase 18 Stage 18.2 — generate certificate
         await GenerateCertificateAsync(applicationId, ct);
@@ -303,7 +310,14 @@ public class GraduationService : IGraduationService
     {
         app.Reject(approverUserId, stage, note);
         _repo.Update(app);
-        await _repo.SaveChangesAsync(ct);
+        try
+        {
+            await _repo.SaveChangesAsync(ct);
+        }
+        catch (Exception ex) when (string.Equals(ex.GetType().Name, "DbUpdateConcurrencyException", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("This graduation application was modified by another user. Refresh and try again.");
+        }
 
         // Final-Touches Phase 18 Stage 18.1 — notify student of rejection
         var student = await _lifecycleRepo.GetByIdAsync(app.StudentProfileId, ct);

@@ -171,36 +171,32 @@ public sealed class FypRepository : IFypRepository
               .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     /// <summary>Returns all projects for a student.</summary>
-    public Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
-        => BuildScopedProjectQuery(tenantId, campusId)
+    public async Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => await BuildScopedProjectQuery(tenantId, campusId)
             .Where(p => p.StudentProfileId == studentProfileId)
             .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync(ct)
-            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+            .ToListAsync(ct);
 
     /// <summary>Returns all projects in a department, optionally filtered by status.</summary>
-    public Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
-        => BuildScopedProjectQuery(tenantId, campusId)
+    public async Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => await BuildScopedProjectQuery(tenantId, campusId)
             .Where(p => p.DepartmentId == departmentId && (status == null || p.Status == status))
             .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync(ct)
-            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+            .ToListAsync(ct);
 
     /// <summary>Returns all projects across all departments, optionally filtered by status.</summary>
-    public Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
-        => BuildScopedProjectQuery(tenantId, campusId)
+    public async Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => await BuildScopedProjectQuery(tenantId, campusId)
             .Where(p => status == null || p.Status == status)
             .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync(ct)
-            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+            .ToListAsync(ct);
 
     /// <summary>Returns all projects supervised by a specific faculty user.</summary>
-    public Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
-        => BuildScopedProjectQuery(tenantId, campusId)
+    public async Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => await BuildScopedProjectQuery(tenantId, campusId)
             .Where(p => p.SupervisorUserId == supervisorUserId)
             .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
-            .ToListAsync(ct)
-            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+            .ToListAsync(ct);
 
     /// <summary>Returns student eligibility and scope details for FYP validation.</summary>
     public async Task<FypStudentEligibility?> GetStudentEligibilityAsync(Guid studentProfileId, CancellationToken ct = default)

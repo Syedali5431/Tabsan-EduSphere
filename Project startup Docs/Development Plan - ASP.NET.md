@@ -1,3 +1,14 @@
+## 2026-05-26 Update - Runtime Hardening and Governance Completion
+
+### Implementation sync
+- Delivered runtime hardening for announcement posting, LMS content-module creation, graduation approval/reject conflict handling, and FYP read-path async stability.
+- Added backward-compatible FYP panel-role enum aliases for legacy database values (`Internal`/`External`) to prevent runtime conversion failures.
+- Completed explicit settings/governance coverage for report settings, sidebar settings, dashboard settings, license update, institution policy, module composition, tenant management, campus management, and admin users.
+
+### Validation and documentation intent
+- Keep API and portal behavior aligned on validation failures (return controlled bad-request/business error responses instead of generic 500s).
+- Preserve tenant/campus scope isolation and role-governed menu/report activation workflows.
+
 ## 2026-05-25 Update - Scoped Program and Governance Enhancements
 
 ### Implementation sync

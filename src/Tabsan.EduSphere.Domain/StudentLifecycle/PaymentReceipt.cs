@@ -102,6 +102,14 @@ public class PaymentReceipt : AuditableEntity
     /// <summary>Finance confirms payment received, marking the receipt as Paid (final state).</summary>
     public void ConfirmPayment(Guid confirmedByUserId, string? notes = null)
     {
+        if (Status == PaymentReceiptStatus.Paid)
+        {
+            if (!string.IsNullOrWhiteSpace(notes))
+                Notes = notes;
+            Touch();
+            return;
+        }
+
         if (Status != PaymentReceiptStatus.Submitted && Status != PaymentReceiptStatus.Pending)
             throw new InvalidOperationException("Only Pending or Submitted receipts can be confirmed as Paid.");
 

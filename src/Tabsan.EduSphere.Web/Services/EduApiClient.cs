@@ -37,6 +37,7 @@ public interface IEduApiClient
     Task<List<LookupItem>> GetBuildingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<LookupItem>> GetBuildingsAsync(CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsAsync(CancellationToken ct);
+    Task<List<RoomLookupItem>> GetRoomsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<RoomLookupItem>> GetRoomsByBuildingAsync(Guid buildingId, CancellationToken ct);
 
     Task<TimetableDetailsItem?> GetTimetableByIdAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -798,7 +799,22 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<List<RoomLookupItem>> GetRoomsAsync(CancellationToken ct)
-        => await GetAsync<List<RoomLookupItem>>("api/v1/room", ct) ?? new();
+        => await GetRoomsAsync(null, null, ct);
+
+    public async Task<List<RoomLookupItem>> GetRoomsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = "api/v1/room";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        return await GetAsync<List<RoomLookupItem>>(path, ct) ?? new();
+    }
 
     public async Task<List<RoomLookupItem>> GetRoomsByBuildingAsync(Guid buildingId, CancellationToken ct)
         => await GetAsync<List<RoomLookupItem>>($"api/v1/room/building/{buildingId}", ct) ?? new();

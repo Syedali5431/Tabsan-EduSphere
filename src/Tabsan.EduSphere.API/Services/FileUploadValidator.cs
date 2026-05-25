@@ -11,7 +11,7 @@ public static class FileUploadValidator
 
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"
+        ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv", ".txt", ".rtf", ".odt", ".ods", ".odp"
     };
 
     private static readonly HashSet<string> AllowedLogoExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -27,7 +27,17 @@ public static class FileUploadValidator
             [".jpeg"] = ["image/jpeg"],
             [".png"]  = ["image/png"],
             [".doc"]  = ["application/msword"],
-            [".docx"] = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+            [".docx"] = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+            [".xls"]  = ["application/vnd.ms-excel"],
+            [".xlsx"] = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+            [".ppt"]  = ["application/vnd.ms-powerpoint"],
+            [".pptx"] = ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
+            [".csv"]  = ["text/csv", "application/csv", "application/vnd.ms-excel"],
+            [".txt"]  = ["text/plain"],
+            [".rtf"]  = ["application/rtf", "text/rtf"],
+            [".odt"]  = ["application/vnd.oasis.opendocument.text"],
+            [".ods"]  = ["application/vnd.oasis.opendocument.spreadsheet"],
+            [".odp"]  = ["application/vnd.oasis.opendocument.presentation"]
         };
 
     private static readonly Dictionary<string, string[]> AllowedLogoMimeTypes =
@@ -93,10 +103,12 @@ public static class FileUploadValidator
         if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
             return $"File type '{ext}' is not permitted. Allowed: {string.Join(", ", allowedExtensions)}.";
 
-        if (allowedMimes.TryGetValue(ext, out var mimes) &&
-            !mimes.Any(m => file.ContentType.StartsWith(m, StringComparison.OrdinalIgnoreCase)))
+        var contentType = file.ContentType?.Trim() ?? string.Empty;
+        if (allowedMimes.TryGetValue(ext, out var mimes)
+            && !string.IsNullOrWhiteSpace(contentType)
+            && !mimes.Any(m => contentType.StartsWith(m, StringComparison.OrdinalIgnoreCase)))
         {
-            return $"MIME type '{file.ContentType}' does not match the file extension '{ext}'.";
+            return $"MIME type '{contentType}' does not match the file extension '{ext}'.";
         }
 
         if (magicMap.TryGetValue(ext, out var magicOptions))

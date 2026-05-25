@@ -75,6 +75,22 @@ These keys are supported by dashboard routing and may appear when enabled by mod
 | campus_management | Portal | Campus-level governance and operational management controls. |
 | programs / program | Portal | Program management and program-level academic structure controls. |
 
+## Settings and Governance Menus (Explicit Coverage)
+
+| Menu Key | Display Name | Purpose |
+|---|---|---|
+| system_settings | System Settings | Parent governance container for privileged platform controls. |
+| report_settings | Report Settings | Controls report definitions, role mappings, and report center access governance. |
+| sidebar_settings | Sidebar Settings | Manages sidebar role visibility and active/inactive state for menus/submenus. |
+| dashboard_settings | Dashboard Settings | Maintains branding profile (name, logo, subtitle, footer, contact surface). |
+| license_update | License Update | Upload/validate license artifacts and activate institution/module scope. |
+| institution_policy | Institution Policy | Governs School/College/University mode behavior and vocabulary mapping. |
+| module_composition | Module Composition | Controls module exposure and dashboard composition alignment by role/policy. |
+| theme_settings | Theme Settings | Manages visual theme selection and personalization baseline. |
+| admin_users | Admin Users | Privileged administrative account lifecycle and role-governance operations. |
+| tenant_management | Tenant Management | Tenant-level identity, status, and scoped operational governance controls. |
+| campus_management | Campus Management | Campus-level scope mapping and campus operational governance controls. |
+
 ## Notes
 - Final visible menus are the intersection of role permission, menu active status, module entitlement, and route authorization.
 - If a user reports a missing menu, validate: role assignment, module status, sidebar status, and role-access mapping for the menu key.

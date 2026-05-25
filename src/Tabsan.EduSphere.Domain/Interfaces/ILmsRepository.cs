@@ -14,6 +14,7 @@ public interface ILmsRepository
 
     /// <summary>Returns a single module including its videos.</summary>
     Task<CourseContentModule?> GetModuleByIdAsync(Guid moduleId, CancellationToken ct = default);
+    Task<bool> CourseOfferingExistsAsync(Guid offeringId, CancellationToken ct = default);
 
     Task AddModuleAsync(CourseContentModule module, CancellationToken ct = default);
     void UpdateModule(CourseContentModule module);

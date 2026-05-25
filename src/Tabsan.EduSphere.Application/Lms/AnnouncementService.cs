@@ -59,7 +59,7 @@ public sealed class AnnouncementService : IAnnouncementService
     {
         var (effectiveTenantId, effectiveCampusId) = ResolveScope(tenantId, campusId);
 
-        if (!request.OfferingId.HasValue)
+        if (!request.OfferingId.HasValue || request.OfferingId.Value == Guid.Empty)
             throw new InvalidOperationException("Announcement offering is required.");
 
         var offering = await _courses.GetOfferingByIdAsync(request.OfferingId.Value, ct)

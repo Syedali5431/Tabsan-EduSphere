@@ -2478,6 +2478,106 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM [parent_student_links] x WHERE x.[Id] = l.[Id]);
 END
 
+/* 18) Additional semester saturation seed (class/semester logical coverage) */
+IF OBJECT_ID(N'[enrollments]') IS NOT NULL
+BEGIN
+    ;WITH InstitutionStudents AS (
+        SELECT sp.[Id] AS StudentProfileId,
+               u.[InstitutionType],
+               ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
+        FROM [student_profiles] sp
+        INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+        WHERE u.[IsDeleted] = 0
+    ), RankedOfferings AS (
+        SELECT co.[Id] AS CourseOfferingId,
+               c.[DepartmentId],
+               d.[InstitutionType],
+               co.[SemesterId],
+               ROW_NUMBER() OVER (
+                   PARTITION BY d.[InstitutionType], co.[SemesterId]
+                   ORDER BY c.[Code], co.[Id]
+               ) AS OfferingRn
+        FROM [course_offerings] co
+        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+        INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+        WHERE co.[IsDeleted] = 0
+    )
+    INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+    SELECT NEWID(), s.[StudentProfileId], o.[CourseOfferingId], @Now, NULL, N'Enrolled', @Now, NULL
+    FROM InstitutionStudents s
+    INNER JOIN RankedOfferings o
+        ON o.[InstitutionType] = s.[InstitutionType]
+       AND o.[OfferingRn] <= 2
+    WHERE s.[StudentRn] <= 180
+      AND NOT EXISTS (
+          SELECT 1
+          FROM [enrollments] e
+          WHERE e.[StudentProfileId] = s.[StudentProfileId]
+            AND e.[CourseOfferingId] = o.[CourseOfferingId]
+      );
+END
+
+IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+BEGIN
+    DECLARE @FinanceUniUserId2 UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.uni.1');
+    DECLARE @FinanceColUserId2 UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.col.1');
+    DECLARE @FinanceSchUserId2 UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.sch.1');
+
+    ;WITH StudentScope AS (
+        SELECT sp.[Id] AS StudentProfileId,
+               u.[InstitutionType],
+               ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
+        FROM [student_profiles] sp
+        INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+        WHERE u.[IsDeleted] = 0
+    ), SemesterScope AS (
+        SELECT s.[Id], s.[Name], s.[StartDate], ROW_NUMBER() OVER (ORDER BY s.[StartDate], s.[Id]) AS SemesterRn
+        FROM [semesters] s
+    )
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        st.[StudentProfileId],
+        CASE st.[InstitutionType]
+            WHEN 2 THEN COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
+            WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
+            ELSE COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
+        END,
+        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN 0 ELSE 1 END,
+        CASE st.[InstitutionType]
+            WHEN 2 THEN CAST(15500 + (sm.[SemesterRn] * 150) AS DECIMAL(10,2))
+            WHEN 1 THEN CAST(12200 + (sm.[SemesterRn] * 120) AS DECIMAL(10,2))
+            ELSE CAST(9300 + (sm.[SemesterRn] * 90) AS DECIMAL(10,2))
+        END,
+        CONCAT(N'Semester Fee - ', sm.[Name]),
+        DATEADD(day, 18, sm.[StartDate]),
+        NULL,
+        NULL,
+        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN NULL ELSE
+            CASE st.[InstitutionType]
+                WHEN 2 THEN COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
+                WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
+                ELSE COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
+            END
+        END,
+        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN NULL ELSE DATEADD(day, 2, sm.[StartDate]) END,
+        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN N'Pending semester payment proof.' ELSE N'Confirmed semester-cycle seed payment.' END,
+        @Now,
+        @Now,
+        0,
+        NULL
+    FROM StudentScope st
+    CROSS JOIN SemesterScope sm
+    WHERE st.[StudentRn] <= 180
+      AND sm.[SemesterRn] <= 8
+      AND NOT EXISTS (
+          SELECT 1
+          FROM [payment_receipts] pr
+          WHERE pr.[StudentProfileId] = st.[StudentProfileId]
+            AND pr.[Description] = CONCAT(N'Semester Fee - ', sm.[Name])
+      );
+END
+
 IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
 BEGIN
     UPDATE u

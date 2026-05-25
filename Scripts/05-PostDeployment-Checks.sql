@@ -686,6 +686,14 @@ INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
 INNER JOIN [users] u ON u.[Id] = sp.[UserId]
 WHERE u.[Username] LIKE N'bulk.%.student.%';
 
+SELECT 'DummySeed_SemesterCyclePaymentReceiptCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [payment_receipts]
+WHERE [Description] LIKE N'Semester Fee - %';
+
+SELECT 'DummySeed_FypPanelLegacyRoleRowsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_panel_members]
+WHERE [Role] IN (N'Internal', N'External');
+
 SELECT TOP 20 [MigrationId], [ProductVersion]
 FROM __EFMigrationsHistory
 ORDER BY [MigrationId] DESC;

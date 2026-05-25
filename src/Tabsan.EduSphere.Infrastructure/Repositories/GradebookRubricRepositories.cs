@@ -33,11 +33,12 @@ public class GradebookRepository : IGradebookRepository
             .Join(_db.Users,
                   sp  => sp.UserId,
                   u   => u.Id,
-                  (sp, u) => new GradebookStudentInfo(
-                      sp.Id,
-                      sp.RegistrationNumber,
-                      u.Username))
+                (sp, u) => new { sp.Id, sp.RegistrationNumber, u.Username })
             .OrderBy(r => r.RegistrationNumber)
+            .Select(r => new GradebookStudentInfo(
+                r.Id,
+                r.RegistrationNumber,
+                r.Username))
             .ToListAsync(ct);
 
         return rows;

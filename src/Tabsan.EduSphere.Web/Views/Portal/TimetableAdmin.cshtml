@@ -23,6 +23,7 @@
 else
 {
     var isSuperAdmin = Model.Identity?.IsSuperAdmin == true;
+    var scopeReady = !isSuperAdmin || (Model.SelectedTenantId.HasValue && Model.SelectedCampusId.HasValue);
 
     if (isSuperAdmin)
     {
@@ -32,7 +33,7 @@ else
                 <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end">
                     <div class="col-12 col-md-4">
                         <label class="form-label">Tenant</label>
-                        <select class="form-select" name="tenantId">
+                        <select class="form-select" name="tenantId" onchange="this.form.submit()">
                             <option value="">Select tenant</option>
                             @foreach (var t in Model.Tenants)
                             {
@@ -49,7 +50,7 @@ else
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label">Campus</label>
-                        <select class="form-select" name="campusId">
+                        <select class="form-select" name="campusId" onchange="this.form.submit()">
                             <option value="">Select campus</option>
                             @foreach (var c in Model.Campuses)
                             {
@@ -66,7 +67,7 @@ else
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label">Department</label>
-                        <select class="form-select" name="departmentId">
+                        <select class="form-select" name="departmentId" onchange="this.form.submit()">
                             <option value="">Select department</option>
                             @foreach (var d in Model.Departments)
                             {
@@ -83,9 +84,17 @@ else
                     </div>
                     <div class="col-12">
                         <button class="btn btn-outline-primary" type="submit">Apply Scope</button>
+                        <a asp-action="TimetableAdmin" class="btn btn-outline-secondary">Clear</a>
                     </div>
                 </form>
             </div>
+        </div>
+    }
+
+    if (isSuperAdmin && !scopeReady)
+    {
+        <div class="alert alert-warning">
+            Select both tenant and campus in Scope Selection before creating or updating timetable entries.
         </div>
     }
 
@@ -94,6 +103,78 @@ else
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h5">Create Timetable</h2>
+
+                    <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end mb-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Tenant</label>
+                            <select class="form-select" name="tenantId" onchange="this.form.submit()">
+                                <option value="">Select tenant</option>
+                                @if (Model.Tenants.Count == 0 && Model.SelectedTenantId.HasValue)
+                                {
+                                    <option value="@Model.SelectedTenantId" selected>@Model.SelectedTenantId</option>
+                                }
+                                else
+                                {
+                                    @foreach (var t in Model.Tenants)
+                                    {
+                                        if (Model.SelectedTenantId == t.Id)
+                                        {
+                                            <option value="@t.Id" selected>@t.Code - @t.Name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@t.Id">@t.Code - @t.Name</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">Select campus</option>
+                                @if (Model.Campuses.Count == 0 && Model.SelectedCampusId.HasValue)
+                                {
+                                    <option value="@Model.SelectedCampusId" selected>@Model.SelectedCampusId</option>
+                                }
+                                else
+                                {
+                                    @foreach (var c in Model.Campuses)
+                                    {
+                                        if (Model.SelectedCampusId == c.Id)
+                                        {
+                                            <option value="@c.Id" selected>@c.Code - @c.Name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@c.Id">@c.Code - @c.Name</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Institute</label>
+                            <select class="form-select" name="departmentId" onchange="this.form.submit()">
+                                <option value="">Select institute</option>
+                                @foreach (var d in Model.Departments)
+                                {
+                                    if (Model.SelectedDepartmentId == d.Id)
+                                    {
+                                        <option value="@d.Id" selected>@d.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-outline-primary" type="submit">Apply Scope</button>
+                        </div>
+                    </form>
+
                     <form asp-action="CreateTimetable" method="post" class="row g-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
@@ -142,7 +223,7 @@ else
                             <input class="form-control" type="date" name="EffectiveDate" value="@Model.CreateForm.EffectiveDate.ToString("yyyy-MM-dd")" required />
                         </div>
                         <div class="col-12">
-                            <button class="btn btn-primary" type="submit">Create Timetable</button>
+                            <button class="btn btn-primary" type="submit" disabled="@(!scopeReady)">Create Timetable</button>
                         </div>
                     </form>
                 </div>
@@ -282,7 +363,7 @@ else
                         <input class="form-control" type="text" name="RoomNumber" />
                     </div>
                     <div class="col-12">
-                        <button class="btn btn-primary" type="submit">Add Entry</button>
+                        <button class="btn btn-primary" type="submit" disabled="@(!scopeReady)">Add Entry</button>
                     </div>
                 </form>
 

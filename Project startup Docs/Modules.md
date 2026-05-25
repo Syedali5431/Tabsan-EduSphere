@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-26 (Runtime Hardening + Governance Completion)
+
+### Module impact summary
+- No new paid module introduced; updates are reliability and governance upgrades in existing modules.
+- LMS, Announcements, Graduation, and FYP workflows received runtime hardening to prevent unhandled exception surfaces.
+- FYP panel-role compatibility now supports legacy seed/database role values (`Internal`/`External`) through alias handling.
+- Settings/governance module surfaces are now explicitly complete for privileged operations (report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user controls).
+
+### Module catalog note
+- Module catalog, entitlement matrix, and package pricing remain unchanged in this update.
+
 ## Execution Update - 2026-05-25 (Scoped Program and Governance Alignment)
 
 ### Module impact summary

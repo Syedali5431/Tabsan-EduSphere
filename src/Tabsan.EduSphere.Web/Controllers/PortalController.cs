@@ -531,17 +531,41 @@ public class PortalController : Controller
 
         try
         {
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? vm.SelectedTenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? vm.SelectedCampusId : identity?.CampusId;
+
+            // Keep selected scope in sync with effective scope so filters stay visible for constrained roles.
+            vm.SelectedTenantId ??= effectiveTenantId;
+            vm.SelectedCampusId ??= effectiveCampusId;
+
             if (identity?.IsSuperAdmin == true)
             {
                 vm.Tenants = await _api.GetTenantsAsync(ct);
                 if (vm.SelectedTenantId.HasValue)
                     vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
 
-                vm.Departments = await _api.GetDepartmentsAsync(vm.SelectedTenantId, vm.SelectedCampusId, ct);
+                vm.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
             else
             {
-                vm.Departments = await _api.GetDepartmentsAsync(ct);
+                // Best-effort list loading so tenant/campus controls can still render for non-superadmin users.
+                try
+                {
+                    vm.Tenants = await _api.GetTenantsAsync(ct);
+                    if (vm.SelectedTenantId.HasValue)
+                    {
+                        vm.Tenants = vm.Tenants.Where(t => t.Id == vm.SelectedTenantId.Value).ToList();
+                        vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
+                        if (vm.SelectedCampusId.HasValue)
+                            vm.Campuses = vm.Campuses.Where(c => c.Id == vm.SelectedCampusId.Value).ToList();
+                    }
+                }
+                catch
+                {
+                    // Keep page functional even if constrained users cannot read tenant/campus catalog endpoints.
+                }
+
+                vm.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
 
             var selectedDepartment = vm.SelectedDepartmentId;
@@ -551,20 +575,20 @@ public class PortalController : Controller
             vm.SelectedDepartmentId = selectedDepartment;
             vm.CreateForm.DepartmentId = selectedDepartment ?? Guid.Empty;
 
-            vm.Programs = await _api.GetProgramsAsync(selectedDepartment, ct);
+            vm.Programs = await _api.GetProgramsAsync(selectedDepartment, effectiveTenantId, effectiveCampusId, ct);
             vm.Semesters = await _api.GetSemestersAsync(ct);
-            vm.Courses = await _api.GetCoursesAsync(selectedDepartment, ct);
-            vm.Faculty = await _api.GetFacultyAsync(vm.SelectedTenantId, vm.SelectedCampusId, selectedDepartment, ct);
-            vm.Buildings = await _api.GetBuildingsAsync(vm.SelectedTenantId, vm.SelectedCampusId, ct);
-            vm.Rooms = await _api.GetRoomsAsync(ct);
+            vm.Courses = await _api.GetCoursesAsync(selectedDepartment, effectiveTenantId, effectiveCampusId, ct);
+            vm.Faculty = await _api.GetFacultyAsync(effectiveTenantId, effectiveCampusId, selectedDepartment, ct);
+            vm.Buildings = await _api.GetBuildingsAsync(effectiveTenantId, effectiveCampusId, ct);
+            vm.Rooms = await _api.GetRoomsAsync(effectiveTenantId, effectiveCampusId, ct);
 
             if (selectedDepartment.HasValue)
-                vm.Timetables = await _api.GetTimetablesByDepartmentAsync(selectedDepartment.Value, vm.SelectedTenantId, vm.SelectedCampusId, ct);
+                vm.Timetables = await _api.GetTimetablesByDepartmentAsync(selectedDepartment.Value, effectiveTenantId, effectiveCampusId, ct);
 
             var activeTimetableId = timetableId ?? vm.Timetables.FirstOrDefault()?.Id;
             if (activeTimetableId.HasValue)
             {
-                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, vm.SelectedTenantId, vm.SelectedCampusId, ct);
+                vm.SelectedTimetable = await _api.GetTimetableByIdAsync(activeTimetableId.Value, effectiveTenantId, effectiveCampusId, ct);
                 vm.EntryForm.TimetableId = activeTimetableId.Value;
             }
         }
@@ -1358,7 +1382,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return StatusCode(403);
 
         var model = new ModuleSettingsPageModel { IsConnected = _api.IsConnected() };
         if (model.IsConnected)
@@ -1375,7 +1399,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return StatusCode(403);
 
         if (_api.IsConnected())
         {
@@ -1392,7 +1416,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return StatusCode(403);
 
         if (_api.IsConnected())
         {
@@ -1696,7 +1720,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return StatusCode(403);
 
         if (tenantId.HasValue != campusId.HasValue)
         {
@@ -1730,7 +1754,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return StatusCode(403);
 
         if (string.IsNullOrWhiteSpace(fileName))
             return NotFound();
@@ -1761,7 +1785,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return StatusCode(403);
 
         if (string.IsNullOrWhiteSpace(fileName) ||
             !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ||
@@ -5131,7 +5155,7 @@ public class PortalController : Controller
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
         var identity = _api.GetSessionIdentity();
         if (identity is null || (!identity.IsAdmin && !identity.IsSuperAdmin))
-            return Forbid();
+            return StatusCode(403);
 
         var model = new AcademicDeadlinesPageModel
         {
@@ -6818,6 +6842,9 @@ public class PortalController : Controller
         {
             try
             {
+                if (offeringId == Guid.Empty)
+                    throw new InvalidOperationException("Please select a valid course offering before posting an announcement.");
+
                 if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
                     throw new InvalidOperationException("Title and body are required.");
 

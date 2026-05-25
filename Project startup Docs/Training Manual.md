@@ -1,6 +1,13 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (26 May 2026):
+- Add trainer walkthrough for runtime-safe announcement posting (invalid offering returns controlled validation feedback).
+- Add trainer walkthrough for LMS content-module creation validation and save-stage offering integrity guard.
+- Add trainer scenario for graduation approval/reject concurrency conflict handling and safe operator retry flow.
+- Add trainer note on FYP legacy panel-role compatibility (`Internal`/`External`) during data migration demos.
+- Add trainer verification for complete settings/governance menu catalog including report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user.
+
 Training synchronization update (25 May 2026):
 - Add trainer walkthrough for Program Management in scoped mode (tenant/campus aware for SuperAdmin).
 - Add trainer workflow for program activate/deactivate lifecycle controls.

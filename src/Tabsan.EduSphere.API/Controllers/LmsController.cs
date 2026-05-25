@@ -46,8 +46,15 @@ public class LmsController : ControllerBase
     [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
     public async Task<IActionResult> CreateModule([FromBody] CreateModuleRequest request, CancellationToken ct = default)
     {
-        var module = await _lms.CreateModuleAsync(request, ct);
-        return CreatedAtAction(nameof(GetModule), new { moduleId = module.Id }, module);
+        try
+        {
+            var module = await _lms.CreateModuleAsync(request, ct);
+            return CreatedAtAction(nameof(GetModule), new { moduleId = module.Id }, module);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>Updates a content module's title, week, and body. Faculty/Admin/SuperAdmin only.</summary>

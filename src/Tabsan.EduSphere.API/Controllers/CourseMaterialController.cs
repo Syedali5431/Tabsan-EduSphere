@@ -80,6 +80,9 @@ public sealed class CourseMaterialController : ControllerBase
             return BadRequest(new { message = uploadError });
 
         var extension = Path.GetExtension(file.FileName);
+        var contentType = string.IsNullOrWhiteSpace(file.ContentType)
+            ? ResolveContentTypeFromExtension(extension)
+            : file.ContentType;
 
         var category = BuildScopedStorageCategory();
 
@@ -88,7 +91,7 @@ public sealed class CourseMaterialController : ControllerBase
             stream,
             category,
             extension,
-            file.ContentType,
+            contentType,
             file.FileName,
             ct);
 
@@ -149,4 +152,20 @@ public sealed class CourseMaterialController : ControllerBase
 
         throw new UnauthorizedAccessException("A valid tenant and campus scope is required for material upload.");
     }
+
+    private static string ResolveContentTypeFromExtension(string extension)
+        => extension.ToLowerInvariant() switch
+        {
+            ".pdf" => "application/pdf",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".csv" => "text/csv",
+            ".txt" => "text/plain",
+            ".rtf" => "application/rtf",
+            _ => "application/octet-stream"
+        };
 }

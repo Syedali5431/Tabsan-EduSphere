@@ -34,9 +34,27 @@ public sealed class LmsService : ILmsService
     public async Task<CourseContentModuleDto> CreateModuleAsync(
         CreateModuleRequest request, CancellationToken ct = default)
     {
+        if (request.OfferingId == Guid.Empty)
+            throw new InvalidOperationException("OfferingId is required.");
+
+        var offeringExists = await _repo.CourseOfferingExistsAsync(request.OfferingId, ct);
+        if (!offeringExists)
+            throw new InvalidOperationException($"Course offering {request.OfferingId} not found.");
+
         var module = new CourseContentModule(request.OfferingId, request.Title, request.WeekNumber, request.Body);
         await _repo.AddModuleAsync(module, ct);
-        await _repo.SaveChangesAsync(ct);
+        try
+        {
+            await _repo.SaveChangesAsync(ct);
+        }
+        catch (Exception ex) when (string.Equals(ex.GetType().Name, "DbUpdateException", StringComparison.Ordinal))
+        {
+            if (ex.InnerException?.Message.Contains("FK_course_content_modules_course_offerings_OfferingId", StringComparison.OrdinalIgnoreCase) == true)
+                throw new InvalidOperationException($"Course offering {request.OfferingId} not found.");
+
+            throw;
+        }
+
         return MapModule(module);
     }
 

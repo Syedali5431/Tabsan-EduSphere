@@ -103,6 +103,14 @@ Common lifecycle actions in student flow:
 - Reactivation restores operational access without recreating account data.
 - Password reset and forced change can be used for secure account recovery.
 
+## 9. Runtime and Compatibility Safeguards (2026-05-26)
+
+- Graduation lifecycle rejection/approval endpoints now surface controlled concurrency conflict feedback instead of unhandled failures.
+- LMS lifecycle content-module creation now returns deterministic validation feedback for invalid or missing offering context.
+- Announcement lifecycle now rejects invalid offering references with user-safe bad-request messaging across API/portal surface.
+- FYP lifecycle now accepts legacy panel role values (`Internal`/`External`) through compatibility aliases to avoid migration-time enum failures.
+- FYP repository lifecycle read paths now avoid continuation-based asynchronous execution patterns that can trigger DbContext multi-operation runtime errors.
+
 ## Role-to-Lifecycle Responsibility Matrix
 
 | Lifecycle Phase | SuperAdmin | Admin | Faculty | Student |

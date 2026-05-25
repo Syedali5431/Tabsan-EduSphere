@@ -10,6 +10,13 @@
 
 ## 0. Training Updates (May 2026)
 
+### Runtime Stability and Compatibility (26 May 2026)
+- Include trainer scenario for announcement posting with invalid offering selection and expected controlled validation error behavior.
+- Include trainer scenario for LMS content-module creation offering integrity failures and expected safe error handling.
+- Include trainer scenario for graduation approval/reject concurrency conflicts and recommended retry workflow.
+- Include trainer note for FYP panel-role backward compatibility (`Internal`/`External`) when validating legacy seeded data.
+- Include settings governance walkthrough covering report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user menus.
+
 ### Final Documentation Synchronization (Post Phase 38 Execute)
 - Trainer-facing baseline now references final execute-mode publish-separation behavior.
 - Training delivery should include where to find final package evidence and separated deliverables:

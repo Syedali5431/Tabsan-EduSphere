@@ -31,6 +31,11 @@ public sealed class LmsRepository : ILmsRepository
                     .Include(m => m.Videos)
                     .FirstOrDefaultAsync(m => m.Id == moduleId, ct);
 
+    public Task<bool> CourseOfferingExistsAsync(Guid offeringId, CancellationToken ct = default)
+        => _db.CourseOfferings
+            .AsNoTracking()
+            .AnyAsync(o => o.Id == offeringId && !o.IsDeleted, ct);
+
     public async Task AddModuleAsync(CourseContentModule module, CancellationToken ct = default)
         => await _db.CourseContentModules.AddAsync(module, ct);
 

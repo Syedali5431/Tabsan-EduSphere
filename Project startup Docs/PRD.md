@@ -1,3 +1,10 @@
+### 2026-05-26 - Product Requirements Synchronization (Runtime Safety and Backward Compatibility)
+- Announcement requirement clarified: invalid offering references must return controlled validation errors instead of unhandled server failures.
+- LMS requirement clarified: content-module creation must fail safely when offering linkage is invalid or stale.
+- Graduation requirement clarified: concurrent approval/rejection edits must return deterministic conflict messaging.
+- FYP requirement clarified: legacy panel-role values remain acceptable via backward-compatible enum mapping.
+- FYP repository requirement clarified: async read behavior must avoid continuation patterns that risk DbContext parallel-operation runtime faults.
+
 ### 2026-05-25 - Product Requirements Synchronization (Scope-Aware Governance)
 - Program Management requirements now include:
   - tenant/campus scoped access control,

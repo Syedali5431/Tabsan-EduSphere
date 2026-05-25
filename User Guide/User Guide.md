@@ -10,6 +10,13 @@
 
 ## 0. What’s New (May 2026)
 
+### Runtime Stability and Compatibility (26 May 2026)
+- Announcement creation now returns clear validation feedback when offering selection is invalid or missing.
+- LMS module creation now fails safely with user-readable feedback when course-offering linkage is invalid.
+- Graduation approval/reject flows now return deterministic conflict feedback when concurrent updates occur.
+- FYP panel member data remains compatible with legacy role values (`Internal`/`External`).
+- Settings/governance coverage includes full privileged menus: report settings, sidebar settings, dashboard settings, license update, institution policy, module composition, tenant management, campus management, and admin users.
+
 ### Final Documentation Synchronization (Post Phase 38 Execute)
 - User documentation baseline has been synchronized to the final execute-mode release closure.
 - Runtime app, license app, and non-runtime assets now follow separated packaging and distribution workflows.

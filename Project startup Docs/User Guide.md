@@ -1,6 +1,13 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (26 May 2026):
+- Announcement create flow now shows controlled validation feedback when offering context is invalid or missing.
+- LMS module create flow now returns user-safe validation feedback for offering integrity failures.
+- Graduation workflows now show deterministic conflict feedback during concurrent approval/reject operations.
+- FYP views remain compatible with legacy panel-role values (`Internal`/`External`) in existing data sets.
+- Settings and governance navigation checklist now explicitly includes report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user menus.
+
 User guide synchronization update (25 May 2026):
 - Programs page now supports scope-aware filtering for tenant/campus and scoped activation/deactivation workflows.
 - Report Center availability can now be enabled/disabled per tenant/campus scope by authorized governance users.

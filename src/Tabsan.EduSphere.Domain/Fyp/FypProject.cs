@@ -36,7 +36,13 @@ public enum FypPanelRole
     CoSupervisor = 2,
 
     /// <summary>External or internal examiner evaluating the final submission.</summary>
-    Examiner = 3
+    Examiner = 3,
+
+    /// <summary>Backward-compatible alias used by legacy seeded data.</summary>
+    Internal = Examiner,
+
+    /// <summary>Backward-compatible alias used by legacy seeded data.</summary>
+    External = Examiner
 }
 
 /// <summary>

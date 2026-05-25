@@ -209,6 +209,20 @@ SELECT
 FROM [modules]
 WHERE [Key] IN (N'ai-chat', N'theming', N'advanced-audit');
 
+/* 4.1) Clean path must not contain full demo dataset marker */
+IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'CleanBaseline.FullDummyDatasetMarkerAbsent',
+        CASE WHEN COUNT(1) = 0 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'0'
+    FROM [Tabsan-EduSphere]
+    WHERE [DemoKey] = N'DemoDatasetVersion'
+      AND [DemoValue] = N'FullDummyData-v6';
+END;
+
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT
     N'ModuleStatus.RequiredCoverage',

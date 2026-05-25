@@ -22,7 +22,8 @@ Run scripts in this exact order.
 - `01-Schema-Current.sql` must run from `master` because it creates/ensures database context.
 - Other scripts run against `Tabsan-EduSphere` database.
 - Seeded user password in both core and dummy seed scripts: `EduSphere147`.
-- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v5`.
+- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v6`.
+- Script 03 includes high-volume semester saturation for enrollments and semester-cycle payment receipts across School/College/University data scopes.
 - If legacy objects were accidentally created in `master`, run `00-Cleanup-Master-Mistake.sql` once before step 1.
 
 ## Example Commands

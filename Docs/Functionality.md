@@ -4,6 +4,15 @@
 **Version**: Phase 33 (Current)  
 **Last Updated**: May 2026
 
+## Runtime Stability Update (2026-05-26)
+
+- Announcement posting now performs strict offering validation and returns controlled bad-request responses for invalid/empty offering selections.
+- LMS module creation now includes save-stage FK safety handling to prevent unhandled SQL constraint exceptions.
+- Graduation rejection/approval flows now return deterministic conflict messaging for concurrent edits.
+- FYP listing reliability improved by removing continuation-based query patterns that could trigger DbContext parallel-operation faults.
+- FYP panel-role compatibility expanded to accept legacy database role values (`Internal`/`External`) through safe enum aliases.
+- Program/report/menu scope governance remains tenant/campus aware, with role + scope consistency preserved across portal and API paths.
+
 ---
 
 ## Table of Contents

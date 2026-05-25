@@ -43,11 +43,29 @@ public class AnnouncementController : ControllerBase
         [FromQuery] Guid? campusId = null,
         CancellationToken ct = default)
     {
+        if (!request.OfferingId.HasValue || request.OfferingId.Value == Guid.Empty)
+            return BadRequest(new { message = "OfferingId is required." });
+
         var idStr    = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
         if (!Guid.TryParse(idStr, out var authorId)) return Unauthorized();
         var actualRequest = request with { AuthorId = authorId };
-        var item = await _announcements.CreateAsync(actualRequest, tenantId, campusId, ct);
-        return Ok(item);
+        try
+        {
+            var item = await _announcements.CreateAsync(actualRequest, tenantId, campusId, ct);
+            return Ok(item);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>Activates/deactivates an announcement. Faculty/Admin/SuperAdmin only.</summary>
