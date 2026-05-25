@@ -371,6 +371,14 @@ Reason to do ninth:
 - Add new conversion adapter service (add-only).
 - No changes to existing export modules.
 
+Implementation Summary (Plan K Phase K9 Stage K9.1) - 2026-05-25:
+- Added optional PDF conversion adapter contract (`IPdfConverterAdapter`) and default no-op implementation (`NoOpPdfConverterAdapter`) in Plan K service scope.
+- Wired the adapter additively into `DocumentGenerationService` so PDF conversion is attempted through adapter only.
+
+Validation Summary (Plan K Phase K9 Stage K9.1) - 2026-05-25:
+- Full solution build succeeded with adapter integration and DI registration.
+- Adapter failure/absence path is isolated and non-breaking, preserving existing generation behavior.
+
 ### Stage K9.2 - Fallback behavior
 - If converter unavailable/fails, return .docx.
 - Preserve generation success even when PDF conversion is unavailable.
@@ -388,10 +396,12 @@ Deliverables:
 - Guaranteed .docx fallback
 
 Implementation Summary (Plan K Phase K9 Completion) - 2026-05-25:
-- Completed guaranteed `.docx` fallback behavior for degree/transcript downloads when PDF is unavailable.
+- Completed optional PDF adapter integration (K9.1) with safe no-op default implementation.
+- Completed guaranteed `.docx` fallback behavior for degree/transcript downloads when PDF is unavailable (K9.2).
 
 Validation Summary (Plan K Phase K9 Completion) - 2026-05-25:
-- Fallback branch validated through successful build and controller path checks.
+- Build validation passed with adapter DI wiring and generation pipeline integration.
+- Fallback branch remains validated through controller path checks.
 - Existing export modules remained untouched.
 
 ## Phase K10 - New Student Endpoints (No Auth Changes)

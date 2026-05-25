@@ -11,6 +11,7 @@ public sealed class DocumentGenerationService
     private readonly TemplateExportService _templateExport;
     private readonly TemplateProcessorService _templateProcessor;
     private readonly QRCodeService _qrCodeService;
+    private readonly IPdfConverterAdapter _pdfConverterAdapter;
     private readonly ILogger<DocumentGenerationService> _logger;
     private readonly ConcurrentDictionary<Guid, GeneratedDocumentInfo> _documents = new();
 
@@ -18,11 +19,13 @@ public sealed class DocumentGenerationService
         TemplateExportService templateExport,
         TemplateProcessorService templateProcessor,
         QRCodeService qrCodeService,
+        IPdfConverterAdapter pdfConverterAdapter,
         ILogger<DocumentGenerationService> logger)
     {
         _templateExport = templateExport;
         _templateProcessor = templateProcessor;
         _qrCodeService = qrCodeService;
+        _pdfConverterAdapter = pdfConverterAdapter;
         _logger = logger;
     }
 
@@ -83,8 +86,18 @@ public sealed class DocumentGenerationService
         var qrPath = Path.Combine(outputRoot, $"{baseName}.qr.png");
         await File.WriteAllBytesAsync(qrPath, qrBytes, ct);
 
-        // Safe fallback policy: PDF is optional and unavailable until an explicit converter adapter is plugged in.
         string? pdfPath = null;
+        try
+        {
+            pdfPath = await _pdfConverterAdapter.TryConvertToPdfAsync(docxPath, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Plan K PDF conversion adapter failed for {DocxPath}. Falling back to .docx.",
+                docxPath);
+            pdfPath = null;
+        }
 
         var info = new GeneratedDocumentInfo(
             DocumentId: documentId,

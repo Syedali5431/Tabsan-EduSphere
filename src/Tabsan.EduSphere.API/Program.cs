@@ -515,6 +515,7 @@ builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.ILibraryS
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateExportService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateProcessorService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.QRCodeService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.IPdfConverterAdapter, Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.NoOpPdfConverterAdapter>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.DocumentGenerationService>();
 // ── Phase 23: Core Policy Foundation ────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IInstitutionPolicyService, Tabsan.EduSphere.Application.Services.InstitutionPolicyService>();

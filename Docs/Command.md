@@ -1,3 +1,12 @@
+### Plan K Phase K9 Stage K9.1 Optional PDF Converter Adapter (2026-05-25)
+- Implementation Summary:
+  - Added additive PDF adapter contract and default no-op adapter implementation in Plan K services.
+  - Integrated adapter invocation in Plan K generation pipeline without modifying legacy export modules.
+  - Preserved existing `.docx` fallback behavior by design when adapter returns null or throws.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after adapter wiring.
+  - Verified non-breaking behavior: PDF remains optional and generation success is preserved.
+
 ### Certificate Generation Phase 1-4 Implementation Checkpoint (2026-05-25)
 - Implementation Summary:
   - Added university-gated sidebar menu `generate_certificates` and seeded role access.
