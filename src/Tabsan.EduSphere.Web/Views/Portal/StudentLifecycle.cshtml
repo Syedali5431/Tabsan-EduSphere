@@ -15,6 +15,29 @@ else
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="get" asp-action="StudentLifecycle" class="row g-2 align-items-end">
+                @if (Model.Identity?.IsSuperAdmin == true)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
                 <div class="col-md-4">
                     <label class="form-label">Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -84,6 +107,8 @@ else
                                         <form asp-action="GraduateStudent" method="post" class="d-inline">
                                             <input type="hidden" name="studentId" value="@s.Id" />
                                             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                             <button type="submit" class="btn btn-success btn-sm"
                                                     onclick="return confirm('Graduate this student?')">
                                                 Graduate
@@ -121,6 +146,8 @@ else
                                         <form asp-action="PromoteStudent" method="post" class="d-inline">
                                             <input type="hidden" name="studentId" value="@s.Id" />
                                             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                             <input type="hidden" name="semester" value="@Model.SelectedSemester" />
                                             <button type="submit" class="btn btn-outline-primary btn-sm"
                                                     onclick="return confirm('Promote this student?')">

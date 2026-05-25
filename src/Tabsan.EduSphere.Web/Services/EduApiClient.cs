@@ -350,12 +350,12 @@ public interface IEduApiClient
     Task<AiChatSendResultItem?> SendChatMessageAsync(Guid? conversationId, string message, CancellationToken ct);
 
     // Student Lifecycle
-    Task<List<GraduationCandidateItem>> GetGraduationCandidatesAsync(Guid departmentId, CancellationToken ct);
-    Task GraduateStudentAsync(Guid studentId, CancellationToken ct);
-    Task GraduateStudentsBatchAsync(List<Guid> studentIds, CancellationToken ct);
-    Task<List<StudentItem>> GetStudentsByAcademicLevelAsync(Guid departmentId, int levelNumber, CancellationToken ct);
-    Task<List<StudentItem>> GetStudentsBySemesterAsync(Guid departmentId, int semesterNumber, CancellationToken ct);
-    Task PromoteStudentAsync(Guid studentId, CancellationToken ct);
+    Task<List<GraduationCandidateItem>> GetGraduationCandidatesAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task GraduateStudentAsync(Guid studentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task GraduateStudentsBatchAsync(List<Guid> studentIds, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<StudentItem>> GetStudentsByAcademicLevelAsync(Guid departmentId, int levelNumber, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<StudentItem>> GetStudentsBySemesterAsync(Guid departmentId, int semesterNumber, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task PromoteStudentAsync(Guid studentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Payments
     Task<PaymentReceiptPageItem> GetPaymentsByStudentAsync(Guid studentId, int page, int pageSize, CancellationToken ct);
@@ -3795,9 +3795,9 @@ public class EduApiClient : IEduApiClient
 
     // ── Student Lifecycle ─────────────────────────────────────────────────────
 
-    public async Task<List<GraduationCandidateItem>> GetGraduationCandidatesAsync(Guid departmentId, CancellationToken ct)
+    public async Task<List<GraduationCandidateItem>> GetGraduationCandidatesAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<GradCandidateApiDto>>($"api/v1/student-lifecycle/graduation-candidates/{departmentId}", ct) ?? new();
+        var raw = await GetAsync<List<GradCandidateApiDto>>($"api/v1/student-lifecycle/graduation-candidates/{departmentId}{BuildStudentLifecycleScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(g => new GraduationCandidateItem
         {
             Id                 = g.Id,
@@ -3809,23 +3809,34 @@ public class EduApiClient : IEduApiClient
         }).ToList();
     }
 
-    public Task GraduateStudentAsync(Guid studentId, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/student-lifecycle/graduate", new { studentProfileId = studentId }, ct);
+    public Task GraduateStudentAsync(Guid studentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/student-lifecycle/graduate{BuildStudentLifecycleScopeQuery(tenantId, campusId)}", new { studentProfileId = studentId }, ct);
 
-    public Task GraduateStudentsBatchAsync(List<Guid> studentIds, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/student-lifecycle/graduate/batch", new { studentProfileIds = studentIds }, ct);
+    public Task GraduateStudentsBatchAsync(List<Guid> studentIds, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/student-lifecycle/graduate/batch{BuildStudentLifecycleScopeQuery(tenantId, campusId)}", new { studentProfileIds = studentIds }, ct);
 
-    public async Task<List<StudentItem>> GetStudentsByAcademicLevelAsync(Guid departmentId, int levelNumber, CancellationToken ct)
+    public async Task<List<StudentItem>> GetStudentsByAcademicLevelAsync(Guid departmentId, int levelNumber, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<StudentApiDto>>($"api/v1/student-lifecycle/academic-level-students/{departmentId}/{levelNumber}", ct) ?? new();
+        var raw = await GetAsync<List<StudentApiDto>>($"api/v1/student-lifecycle/academic-level-students/{departmentId}/{levelNumber}{BuildStudentLifecycleScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(MapStudent).ToList();
     }
 
-    public Task<List<StudentItem>> GetStudentsBySemesterAsync(Guid departmentId, int semesterNumber, CancellationToken ct)
-        => GetStudentsByAcademicLevelAsync(departmentId, semesterNumber, ct);
+    public Task<List<StudentItem>> GetStudentsBySemesterAsync(Guid departmentId, int semesterNumber, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => GetStudentsByAcademicLevelAsync(departmentId, semesterNumber, tenantId, campusId, ct);
 
-    public Task PromoteStudentAsync(Guid studentId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/student-lifecycle/{studentId}/promote", new { }, ct);
+    public Task PromoteStudentAsync(Guid studentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/student-lifecycle/{studentId}/promote{BuildStudentLifecycleScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    private static string BuildStudentLifecycleScopeQuery(Guid? tenantId, Guid? campusId)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue)
+            query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            query.Add($"campusId={campusId.Value}");
+
+        return query.Count == 0 ? string.Empty : $"?{string.Join("&", query)}";
+    }
 
     private sealed class GradCandidateApiDto
     {

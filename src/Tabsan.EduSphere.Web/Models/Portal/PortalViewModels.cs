@@ -1066,10 +1066,15 @@ public class StudentLifecyclePageModel
 {
     public bool   IsConnected          { get; set; }
     public string? Message             { get; set; }
+    public SessionIdentity? Identity   { get; set; }
+    public List<TenantItem> Tenants    { get; set; } = new();
+    public List<CampusItem> Campuses   { get; set; } = new();
     public string PeriodLabel          { get; set; } = "Semester";
     public List<GraduationCandidateItem> GraduationCandidates { get; set; } = new();
     public List<StudentItem>             StudentsBySemester   { get; set; } = new();
     public List<LookupItem>              Departments          { get; set; } = new();
+    public Guid?  SelectedTenantId      { get; set; }
+    public Guid?  SelectedCampusId      { get; set; }
     public Guid?  SelectedDepartmentId  { get; set; }
     public int    SelectedSemester      { get; set; } = 1;
 }

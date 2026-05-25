@@ -2935,7 +2935,7 @@ public class PortalController : Controller
                 // When the checkbox is checked the form sends promote=true;
                 // unchecked checkboxes send nothing, so promote defaults to false.
                 if (promote)
-                    await _api.PromoteStudentAsync(studentProfileId, ct);
+                    await _api.PromoteStudentAsync(studentProfileId, effectiveTenantId, effectiveCampusId, ct);
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
@@ -2950,7 +2950,14 @@ public class PortalController : Controller
     {
         if (_api.IsConnected())
         {
-            try { await _api.PromoteStudentAsync(studentProfileId, ct); TempData["PortalMessage"] = "Student promoted to next semester."; }
+            try
+            {
+                var sessionId = _api.GetSessionIdentity();
+                var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+                var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+                await _api.PromoteStudentAsync(studentProfileId, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Student promoted to next semester.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
         return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
@@ -3779,13 +3786,18 @@ public class PortalController : Controller
     // ── Student Lifecycle ──────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> StudentLifecycle(Guid? departmentId, int semester = 1, CancellationToken ct = default)
+    public async Task<IActionResult> StudentLifecycle(Guid? departmentId, Guid? tenantId, Guid? campusId, int semester = 1, CancellationToken ct = default)
     {
         ViewData["Title"] = "Student Lifecycle";
         var identity = _api.GetSessionIdentity();
+        var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+        var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
         var model = new StudentLifecyclePageModel
         {
             IsConnected         = _api.IsConnected(),
+            Identity            = identity,
+            SelectedTenantId    = tenantId,
+            SelectedCampusId    = campusId,
             SelectedDepartmentId = departmentId,
             SelectedSemester    = semester,
             PeriodLabel         = "Semester",
@@ -3796,7 +3808,15 @@ public class PortalController : Controller
         {
             var vocabulary = await _api.GetVocabularyAsync(ct);
             model.PeriodLabel = vocabulary?.PeriodLabel ?? "Semester";
-            model.Departments = await _api.GetDepartmentsAsync(ct);
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
 
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
             {
@@ -3815,8 +3835,8 @@ public class PortalController : Controller
             {
                 if (model.Departments.Any(d => d.Id == departmentId.Value))
                 {
-                    model.GraduationCandidates = await _api.GetGraduationCandidatesAsync(departmentId.Value, ct);
-                    model.StudentsBySemester   = await _api.GetStudentsByAcademicLevelAsync(departmentId.Value, semester, ct);
+                    model.GraduationCandidates = await _api.GetGraduationCandidatesAsync(departmentId.Value, effectiveTenantId, effectiveCampusId, ct);
+                    model.StudentsBySemester   = await _api.GetStudentsByAcademicLevelAsync(departmentId.Value, semester, effectiveTenantId, effectiveCampusId, ct);
                 }
             }
         }
@@ -3825,25 +3845,39 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> GraduateStudent(Guid studentId, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> GraduateStudent(Guid studentId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.GraduateStudentAsync(studentId, ct); TempData["PortalMessage"] = "Student graduated."; }
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.GraduateStudentAsync(studentId, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Student graduated.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(StudentLifecycle), new { departmentId });
+        return RedirectToAction(nameof(StudentLifecycle), new { departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PromoteStudent(Guid studentId, Guid? departmentId, int semester, CancellationToken ct)
+    public async Task<IActionResult> PromoteStudent(Guid studentId, Guid? departmentId, Guid? tenantId, Guid? campusId, int semester, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
-            try { await _api.PromoteStudentAsync(studentId, ct); TempData["PortalMessage"] = "Student promoted to the next academic level."; }
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.PromoteStudentAsync(studentId, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Student promoted to the next academic level.";
+            }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(StudentLifecycle), new { departmentId, semester });
+        return RedirectToAction(nameof(StudentLifecycle), new { departmentId, tenantId, campusId, semester });
     }
 
     // ── Payments ───────────────────────────────────────────────────────────
@@ -5484,7 +5518,7 @@ public class PortalController : Controller
 
         try
         {
-            await _api.GraduateStudentAsync(studentId, ct);
+            await _api.GraduateStudentAsync(studentId, null, null, ct);
             TempData["Message"] = "Student graduated successfully.";
         }
         catch (Exception ex)
