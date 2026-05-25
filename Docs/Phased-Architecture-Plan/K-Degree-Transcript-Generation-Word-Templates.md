@@ -1,22 +1,39 @@
-# Plan K - Degree and Transcript Generation Using Word Templates (.docx)
+# Plan K - Safe Add-On Degree and Transcript Generation Module (.docx Templates)
 
 ## Objective
-Build a production-ready Degree and Transcript Generation Module for the ASP.NET Core solution using Word template workflow:
-- Admin downloads default templates, edits in Word, and uploads updated templates
-- System populates templates with student academic data
-- Documents can be generated as .docx and exported to PDF when conversion is available
-- Student and Admin workflows remain auditable, secure, and version-controlled
+Add a Degree and Transcript generation feature to the existing ASP.NET Core system as an isolated extension, without breaking or modifying existing functionality.
 
-## Architecture and Design Principles
-- Follow existing clean architecture boundaries (Domain, Application, Infrastructure, API/Web)
-- Use dependency injection for all document/template/QR services
-- Keep template processing and generation logic in Application services
-- Keep storage, OpenXML, QR, and PDF conversion adapters in Infrastructure
-- Keep controllers thin and orchestration-focused
-- Ensure all critical actions produce audit events
+Core workflow:
+- Admin downloads a template
+- Admin edits template in Word
+- Admin uploads template
+- System fills template with student data and generates documents
 
-## Placeholder Contract (Template Token Standard)
-Required placeholders for default templates:
+## Mandatory Safety Rules
+- Do not modify or overwrite existing services/controllers.
+- Only add new classes, services, endpoints, and optional new tables.
+- Keep feature modular and plug-and-play.
+- Avoid large refactors.
+- Avoid significant startup/auth/config changes.
+- Follow existing project structure and coding style.
+
+## New Files Only (Output Contract)
+The implementation for Plan K must be delivered as new code files only:
+- TemplateExportService.cs
+- TemplateProcessorService.cs
+- QRCodeService.cs
+- DocumentGenerationService.cs
+- DegreeController.cs
+- TranscriptController.cs
+
+Optional supporting new files are allowed only when necessary for isolation:
+- new DTO files
+- new repository interfaces/implementations
+- new extension entity/table mappings
+- new options/config classes
+
+## Placeholder Contract (Token Standard)
+Required placeholders:
 - {{StudentName}}
 - {{FatherName}}
 - {{DegreeTitle}}
@@ -26,367 +43,267 @@ Required placeholders for default templates:
 - {{QR_CODE}}
 - {{COURSE_TABLE}}
 
-Token behavior contract:
-- Text tokens replaced across body, tables, headers, and footers
-- {{QR_CODE}} replaced with generated QR image
-- {{COURSE_TABLE}} replaced by generated transcript row table (only for transcript template)
-- Unknown placeholders preserved (non-breaking behavior)
+Token behavior:
+- Replace text tokens in paragraphs, tables, headers, and footers.
+- Replace {{QR_CODE}} with generated QR image.
+- Replace {{COURSE_TABLE}} with generated transcript rows.
+- Keep unknown tokens untouched to avoid breaking custom templates.
 
-## Phase K1 - Domain and Data Contract Baseline
+## Phase K1 - Extension Boundary and Compatibility Guardrails
 Reason to do first:
-- All services/controllers depend on stable entities and contracts.
+- Prevent accidental impact on existing modules.
 
-### Stage K1.1 - Add domain models
-- Add or extend domain entities:
-  - Templates
-  - TemplateVersions
-  - Degrees
-  - Transcripts
-  - Students (reuse existing if available)
-  - AuditLogs (reuse existing if available)
-- Define relationships and invariants:
-  - One template -> many versions
-  - One generated document -> immutable serial number
-  - Lock/approval state cannot be modified by student operations
+### Stage K1.1 - Define non-invasive module boundary
+- Add a separate Degree/Transcript extension namespace/folder set.
+- No edits to existing controller methods and existing endpoint contracts.
 
-### Stage K1.2 - Add application DTO contracts
-- Add request/response DTOs for:
-  - Template export/download
-  - Template upload/version create
-  - Degree generate
-  - Transcript generate
-  - Admin approve/lock/regenerate
-  - Student view/download/print operations
+### Stage K1.2 - Define integration points
+- Use dependency injection for new services only.
+- New endpoints route under isolated prefixes.
 
-### Stage K1.3 - Add repository interfaces
-- Add repository abstractions for templates, template versions, generated docs, and serial tracking.
-- Define query methods for latest active version lookup and historical version retrieval.
+### Stage K1.3 - Define compatibility checklist
+- Existing login/auth remains unchanged.
+- Existing upload/storage paths remain unchanged.
+- Existing database logic remains unchanged.
 
-## Phase K2 - Database and Migration Setup
+Deliverables:
+- Extension boundary document
+- Compatibility checklist
+
+## Phase K2 - Safe Data Storage Strategy (New Tables Only)
 Reason to do second:
-- Storage model must exist before controller and service flows are wired.
+- Data isolation is required before service/controller implementation.
 
-### Stage K2.1 - Persistence mappings
-- Add EF mappings and indexes:
-  - Template key and type index (Degree/Transcript)
-  - Version index by template and created date
-  - Unique serial number index for generated documents
-  - Student-document index for portal retrieval
+### Stage K2.1 - Create separate tables (if required)
+- Templates
+- Degrees
+- Transcripts
 
-### Stage K2.2 - Migration scripts
-- Add migrations for new tables/columns and constraints.
-- Include safe defaults and backward-compatible nullable transitions where needed.
+### Stage K2.2 - Add minimal schema only
+- Keep schema independent from existing tables.
+- Use foreign-key references only where required for student linking.
 
-### Stage K2.3 - Seed defaults
-- Seed default template metadata for:
-  - Degree Certificate
-  - Transcript
-- Mark seeded version as active version 1.
+### Stage K2.3 - Migration safety
+- Add additive migrations only.
+- No destructive/altering changes to existing tables unless absolutely necessary.
 
-## Phase K3 - Template Export Feature (Admin Download)
+Deliverables:
+- New table migrations
+- Isolated persistence mappings
+
+## Phase K3 - Template Export (Safe Addition)
 Reason to do third:
-- Export is core admin bootstrap for editable Word templates.
+- Export is the admin entry point and can be added independently.
 
-### Stage K3.1 - Build TemplateExportService
-- Add TemplateExportService in Application layer.
-- Provide use-cases to return default .docx template bytes by template type.
-- If admin has uploaded active template, export that active version; otherwise fallback to system default.
+### Stage K3.1 - Add TemplateExportService
+- Implement TemplateExportService.cs as a new service.
+- Download default .docx templates for degree and transcript.
+- Keep existing endpoints untouched.
 
-### Stage K3.2 - Provide default sample .docx templates
-- Add default templates in Infrastructure assets:
-  - Degree Certificate sample
-  - Transcript sample
-- Ensure placeholders are present in readable locations and formatting is print-friendly.
+### Stage K3.2 - Default template assets
+- Add sample .docx templates with required placeholders.
+- Keep assets in a new dedicated extension folder.
 
-### Stage K3.3 - Add template download endpoints
-- Add Template controller endpoints for admin:
-  - DownloadDegreeTemplate
-  - DownloadTranscriptTemplate
-- Enforce role access: Admin/SuperAdmin only.
+### Stage K3.3 - New admin export endpoints
+- Add new admin endpoints for template download.
+- Do not modify existing upload/download endpoint logic.
 
-Deliverables for Stage K3:
-- TemplateExportService
-- TemplateController download actions
-- Two default .docx sample templates
+Deliverables:
+- TemplateExportService.cs
+- New admin export endpoints
 
-## Phase K4 - Template Upload and Versioning
+## Phase K4 - Template Upload (Isolated Endpoint)
 Reason to do fourth:
-- Upload/version governance is required before generation can rely on custom templates.
+- Upload must be independent from all existing upload flows.
 
-### Stage K4.1 - Add secure upload pipeline
-- Allow .docx upload only
-- Validate MIME and extension
-- Size limits and antivirus hook point (if available)
-- Store file in secure storage path or DB blob abstraction
+### Stage K4.1 - Add new upload endpoint
+- Add new endpoint only for degree/transcript templates.
+- Accept .docx only, validate extension/content type/size.
 
-### Stage K4.2 - Implement template versioning
-- Every upload creates new TemplateVersion record
-- Keep historical versions immutable
-- Allow active version switch with audit trail
+### Stage K4.2 - Separate storage target
+- Save uploaded templates to new folder or new table/blob model.
+- Do not reuse/modify existing storage logic.
 
-### Stage K4.3 - Add upload endpoints
-- Add Template controller actions:
-  - UploadDegreeTemplate
-  - UploadTranscriptTemplate
-  - ListTemplateVersions
-  - ActivateTemplateVersion
+### Stage K4.3 - Versioning as additive metadata
+- Keep template versions inside new template storage scope.
+- No impact to existing versioning modules.
 
-Deliverables for Stage K4:
-- Upload + storage adapter
-- Versioning workflow
-- Admin API/Web endpoints
+Deliverables:
+- New upload endpoint
+- Isolated storage path/table
 
-## Phase K5 - Word Template Processing Engine (Open XML)
+## Phase K5 - Word Processing Engine (Open XML)
 Reason to do fifth:
-- Core document generation depends on robust token replacement across Word structures.
+- Document population logic must remain encapsulated in a new service.
 
-### Stage K5.1 - Build TemplateProcessorService
-- Use DocumentFormat.OpenXml
-- Replace placeholders in:
-  - Paragraph runs
-  - Table cells
-  - Headers
-  - Footers
-- Support safe replacement when token text spans multiple runs.
+### Stage K5.1 - Add TemplateProcessorService
+- Implement TemplateProcessorService.cs using DocumentFormat.OpenXml.
+- Replace placeholders in body, tables, headers, and footers.
 
-### Stage K5.2 - Dynamic section handling
-- Resolve {{COURSE_TABLE}} insertion anchor for transcript template.
-- Resolve {{QR_CODE}} insertion anchor for both document types.
+### Stage K5.2 - Placeholder replacement rules
+- Replace:
+  - {{StudentName}}
+  - {{FatherName}}
+  - {{DegreeTitle}}
+  - {{CGPA}}
+  - {{IssueDate}}
+  - {{SerialNumber}}
+  - {{QR_CODE}}
 
-### Stage K5.3 - Error handling strategy
-- If required token missing, return validation warning profile to admin.
-- Keep generation fail-fast for hard-required fields (serial, student identity, issue date).
+### Stage K5.3 - Extension model policy
+- Do not modify existing data models.
+- Create extension DTOs/view-models/entities if needed.
 
-Deliverables for Stage K5:
-- TemplateProcessorService
-- OpenXML token replacement utility set
-- Validation diagnostics for templates
+Deliverables:
+- TemplateProcessorService.cs
+- Additive extension DTO/model set
 
-## Phase K6 - Dynamic Transcript Table Generation
+## Phase K6 - QR Code Support (Separate Utility)
 Reason to do sixth:
-- Transcript output requires row-based academic data rendering.
+- QR logic should be standalone and non-invasive.
 
-### Stage K6.1 - Build course table model mapper
-- Map student transcript rows to:
+### Stage K6.1 - Add QRCodeService
+- Implement QRCodeService.cs using QRCoder.
+- Generate QR images from verification payload.
+
+### Stage K6.2 - Insert QR at token anchor
+- Replace {{QR_CODE}} with generated image in Word document.
+- Keep all behavior inside new processing pipeline.
+
+Deliverables:
+- QRCodeService.cs
+
+## Phase K7 - Document Generation Orchestration
+Reason to do seventh:
+- Generation orchestration depends on export/upload/processing services.
+
+### Stage K7.1 - Add DocumentGenerationService
+- Implement DocumentGenerationService.cs.
+- Generate degree and transcript documents from selected template.
+
+### Stage K7.2 - Serial and issue date assignment
+- Assign unique serial number.
+- Stamp issue date.
+
+### Stage K7.3 - Output path persistence
+- Save generated output path in new extension storage scope.
+- Do not change existing storage mechanisms.
+
+Deliverables:
+- DocumentGenerationService.cs
+
+## Phase K8 - Transcript Dynamic Table Support
+Reason to do eighth:
+- Transcript table generation is a specialized extension behavior.
+
+### Stage K8.1 - Build {{COURSE_TABLE}} renderer
+- Insert dynamic rows for:
   - Course Name
   - Credit Hours
   - Grade
   - SGPA/Marks
 
-### Stage K6.2 - Inject table into document
-- Replace {{COURSE_TABLE}} token location with generated OpenXML table
-- Apply consistent style, borders, alignment, and header row emphasis
+### Stage K8.2 - Non-invasive data retrieval
+- Read existing academic data through new query adapters.
+- Do not modify existing DB/business logic paths.
 
-### Stage K6.3 - Totals and summaries
-- Add optional SGPA/CGPA summary section under table
-- Ensure pagination remains readable for long transcripts
+Deliverables:
+- COURSE_TABLE generation support in TemplateProcessorService
 
-Deliverables for Stage K6:
-- Transcript table builder
-- Style presets for generated table
-
-## Phase K7 - QR Code Integration
-Reason to do seventh:
-- Verification metadata must be embedded before final output is persisted.
-
-### Stage K7.1 - Build QRCodeService
-- Use QRCoder to generate PNG byte payload
-- Encode verification payload (document id/serial/verification URL)
-
-### Stage K7.2 - Insert QR into document
-- Replace {{QR_CODE}} token with embedded image in Word document
-- Support configurable image dimensions
-
-### Stage K7.3 - Verification endpoint readiness
-- Add verification endpoint contract used by QR payload
-- Return minimal public verification metadata only
-
-Deliverables for Stage K7:
-- QRCodeService
-- QR insertion utility in TemplateProcessorService
-- Verification contract endpoint
-
-## Phase K8 - Degree/Transcript Generation Workflow
-Reason to do eighth:
-- With templates, OpenXML, table, and QR ready, full generation can be orchestrated.
-
-### Stage K8.1 - Build DocumentGenerationService
-- Generate document from selected active template version
-- Assign unique serial number
-- Set issue date
-- Replace placeholders and embed dynamic content
-
-### Stage K8.2 - Persist generated artifact metadata
-- Save generated file path/storage id
-- Save generation metadata:
-  - StudentId
-  - TemplateVersionId
-  - SerialNumber
-  - IssueDate
-  - Status (Draft/Approved/Locked)
-
-### Stage K8.3 - Controller endpoints
-- Add Degree controller endpoints:
-  - GenerateDegree
-  - GetDegree
-  - DownloadDegreeDocx
-  - DownloadDegreePdf
-- Add Transcript controller endpoints:
-  - GenerateTranscript
-  - GetTranscript
-  - DownloadTranscriptDocx
-  - DownloadTranscriptPdf
-
-Deliverables for Stage K8:
-- DocumentGenerationService
-- DegreeController
-- TranscriptController
-
-## Phase K9 - PDF Export and Fallback Policy
+## Phase K9 - PDF Export with Fallback
 Reason to do ninth:
-- Download format requirement includes PDF where available with safe fallback.
+- PDF is optional and should not block document delivery.
 
-### Stage K9.1 - PDF conversion adapter
-- Add IPdfConversionService abstraction and Infrastructure implementation.
-- Supported path:
-  - Convert generated .docx to PDF when converter is available
+### Stage K9.1 - Optional PDF converter adapter
+- Add new conversion adapter service (add-only).
+- No changes to existing export modules.
 
 ### Stage K9.2 - Fallback behavior
-- If conversion unavailable/fails:
-  - return .docx download
-  - include explicit response message/metadata indicating fallback
+- If converter unavailable/fails, return .docx.
+- Preserve generation success even when PDF conversion is unavailable.
 
-### Stage K9.3 - Operational controls
-- Feature flag for PDF conversion engine availability
-- Telemetry for conversion success/failure rate
+Deliverables:
+- Optional PDF conversion component
+- Guaranteed .docx fallback
 
-Deliverables for Stage K9:
-- PDF conversion service
-- Fallback policy implementation
-
-## Phase K10 - Student Portal Experience
+## Phase K10 - New Student Endpoints (No Auth Changes)
 Reason to do tenth:
-- Student consumption must be controlled and distinct from admin workflows.
+- Student access must be additive and isolated.
 
-### Stage K10.1 - Student document list and view
-- Add portal views/endpoints to list student degree/transcript documents
-- Enforce ownership checks (student can access own documents only)
+### Stage K10.1 - Add student endpoints only
+- /student/degree
+- /student/transcript
 
-### Stage K10.2 - Download and print controls
-- Allow PDF download (or docx fallback)
-- Print mode adds watermark:
-  - Student Copy / Unofficial
+### Stage K10.2 - Reuse current auth as-is
+- Do not modify existing authentication logic.
+- Apply existing authorization patterns to new endpoints only.
 
-### Stage K10.3 - UI and UX safeguards
-- Show approval/lock status to student
-- Hide admin-only actions from portal
+Deliverables:
+- New student endpoints under isolated routes
 
-Deliverables for Stage K10:
-- Student portal document screens
-- Watermark print support
-
-## Phase K11 - Admin Governance and Audit Controls
+## Phase K11 - New Admin Endpoints (Isolated Controls)
 Reason to do eleventh:
-- Approval, locking, and regeneration require strict governance.
+- Admin actions should not interfere with current admin modules.
 
-### Stage K11.1 - Admin actions
-- Approve document
-- Lock document
-- Re-generate document (new version while preserving prior history)
+### Stage K11.1 - Add separate admin controllers/endpoints
+- Template export/upload operations
+- Degree generation operations
+- Transcript generation operations
 
-### Stage K11.2 - Concurrency and integrity
-- Prevent edits after lock
-- Add optimistic concurrency token for admin updates
+### Stage K11.2 - Keep admin modules isolated
+- No modifications inside existing admin feature controllers.
+- No behavior changes to existing admin workflows.
 
-### Stage K11.3 - Audit logs
-- Log upload/version activation/generation/approval/lock/regenerate/download events
-- Capture actor, timestamp, operation, and target ids
+Deliverables:
+- DegreeController.cs
+- TranscriptController.cs
+- Additive admin routes
 
-Deliverables for Stage K11:
-- Admin governance endpoints/actions
-- Audit instrumentation
-
-## Phase K12 - Testing, Hardening, and Release
+## Phase K12 - Plug-and-Play Integration, Testing, and Release
 Reason to do last:
-- Module is document-critical and requires full validation before production rollout.
+- Validate extension safely before enabling in production.
 
-### Stage K12.1 - Automated testing
-- Unit tests for token replacement, table generation, QR insertion, serial generation
-- Integration tests for end-to-end generation and download
-- Contract tests for controller responses and fallback behavior
+### Stage K12.1 - Plug-in integration notes
+- Document where to register new services in DI.
+- Keep startup/config edits minimal and isolated.
 
-### Stage K12.2 - Security and performance checks
-- Upload validation and path traversal checks
-- Role authorization checks
-- Load/performance test for batch generation scenarios
+### Stage K12.2 - Safety tests
+- Verify existing endpoints continue unchanged.
+- Verify new endpoints work independently.
+- Verify docx generation, QR insertion, and course table rendering.
 
-### Stage K12.3 - Release and rollback
-- Feature-flag rollout plan
-- Operational runbook for template storage and PDF converter outage fallback
-- Rollback strategy for template version activation
+### Stage K12.3 - Rollout strategy
+- Feature flag or route-level enablement (optional).
+- Rollback by disabling new extension routes/services only.
 
-Deliverables for Stage K12:
-- Test suite coverage
-- Release checklist and rollback runbook
+Deliverables:
+- Integration guide
+- Safety validation checklist
 
-## Required Services and Controllers (Implementation Scope)
-Application Services:
-- TemplateExportService
-- TemplateProcessorService
-- QRCodeService
-- DocumentGenerationService
+## Safe Integration Blueprint (How to Plug In Without Breaking Existing System)
+- Register only the new services in DI:
+  - TemplateExportService
+  - TemplateProcessorService
+  - QRCodeService
+  - DocumentGenerationService
+- Add only new controller route maps for DegreeController and TranscriptController.
+- Keep existing services/controllers untouched.
+- Keep storage paths and tables for this module separate.
 
-Controllers:
-- TemplateController
-- DegreeController
-- TranscriptController
-
-Supporting abstractions:
-- ITemplateRepository / ITemplateVersionRepository
-- IDegreeRepository / ITranscriptRepository
-- ISerialNumberService
-- ITemplateStorageService
-- IPdfConversionService
-- IAuditService integration hooks
-
-## Sample Template Text Structures (Authoring Guide)
-Degree template structure (logical text layout):
-- Header: Institution Name / Logo
-- Title: Degree Certificate
-- Body:
-  - This certifies that {{StudentName}} son/daughter of {{FatherName}}
-  - has successfully completed the requirements for {{DegreeTitle}}
-  - with cumulative grade point average {{CGPA}}
-- Meta line:
-  - Issued on {{IssueDate}}
-  - Serial No: {{SerialNumber}}
-- Verification block:
-  - QR: {{QR_CODE}}
-- Footer: Registrar signature block
-
-Transcript template structure (logical text layout):
-- Header: Institution Name / Transcript Title
-- Student block:
-  - Name: {{StudentName}}
-  - Father Name: {{FatherName}}
-  - Degree Program: {{DegreeTitle}}
-- Academic table anchor:
-  - {{COURSE_TABLE}}
-- Summary:
-  - CGPA: {{CGPA}}
-  - Issue Date: {{IssueDate}}
-  - Serial Number: {{SerialNumber}}
-- Verification:
-  - {{QR_CODE}}
-
-## Definition of Done (Plan K)
-- Admin can download default .docx templates for degree and transcript.
-- Admin can upload updated .docx templates with version history.
-- Placeholders are replaced correctly in body, tables, headers, and footers.
-- Transcript course table is generated dynamically at {{COURSE_TABLE}} anchor.
-- QR is generated and inserted at {{QR_CODE}} anchor.
-- Degree/transcript generation persists metadata and storage location.
-- PDF export works when available; .docx fallback is automatic when not.
-- Student portal supports view/download/print with Student Copy / Unofficial watermark.
-- Admin approval, lock, and regenerate flows are implemented and audited.
-- Automated tests and release runbook are completed.
+## Definition of Done (Updated Plan K)
+- Plan K guarantees add-only implementation with no destructive changes to existing modules.
+- All required new files are created as separate artifacts:
+  - TemplateExportService.cs
+  - TemplateProcessorService.cs
+  - QRCodeService.cs
+  - DocumentGenerationService.cs
+  - DegreeController.cs
+  - TranscriptController.cs
+- Admin can download and upload templates through new isolated endpoints.
+- System generates degree/transcript .docx from templates using placeholder replacement.
+- {{COURSE_TABLE}} and {{QR_CODE}} are supported via modular services.
+- PDF conversion is optional with guaranteed .docx fallback.
+- Student access is available via new endpoints:
+  - /student/degree
+  - /student/transcript
+- Existing codepaths, auth flow, and storage logic remain unaffected.
