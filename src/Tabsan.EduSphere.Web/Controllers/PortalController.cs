@@ -3884,13 +3884,19 @@ public class PortalController : Controller
     // Final-Touches Phase 7 — admin all-receipts view + student own receipts
 
     [HttpGet]
-    public async Task<IActionResult> Payments(Guid? studentId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> Payments(Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         ViewData["Title"] = "Payments";
+        var identity = _api.GetSessionIdentity();
+        var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+        var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
         var model = new PaymentsPageModel
         {
             IsConnected       = _api.IsConnected(),
+            Identity          = identity,
             SelectedStudentId = studentId,
+            SelectedTenantId  = effectiveTenantId,
+            SelectedCampusId  = effectiveCampusId,
             Page = page < 1 ? 1 : page,
             Message           = TempData["PortalMessage"]?.ToString()
         };
@@ -3898,7 +3904,6 @@ public class PortalController : Controller
         try
         {
             // Student role: load their own receipts via JWT
-            var identity = _api.GetSessionIdentity();
             if (identity?.IsStudent == true)
             {
                 var pageResult = await _api.GetMyPaymentsAsync(model.Page, model.PageSize, ct);
@@ -3909,13 +3914,20 @@ public class PortalController : Controller
             }
             else
             {
+                if (identity?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (model.SelectedTenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+                }
+
                 model.Students = await _api.GetStudentsAsync(null, ct);
                 // Admin / Finance: load paged receipts and optionally filter by student
                 PaymentReceiptPageItem pageResult;
                 if (studentId.HasValue)
-                    pageResult = await _api.GetPaymentsByStudentAsync(studentId.Value, model.Page, model.PageSize, ct);
+                    pageResult = await _api.GetPaymentsByStudentAsync(studentId.Value, model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, ct);
                 else
-                    pageResult = await _api.GetAllPaymentsAsync(model.Page, model.PageSize, ct);
+                    pageResult = await _api.GetAllPaymentsAsync(model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, ct);
 
                 model.Payments = pageResult.Items;
                 model.TotalCount = pageResult.TotalCount;
@@ -3930,71 +3942,86 @@ public class PortalController : Controller
     // Final-Touches Phase 7 Stage 7.2 — create receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreatePayment(CreatePaymentForm form, CancellationToken ct)
+    public async Task<IActionResult> CreatePayment(CreatePaymentForm form, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         try
         {
-            await _api.CreatePaymentAsync(form.StudentProfileId, form.Amount, form.Description, form.DueDate, ct);
+            var identity = _api.GetSessionIdentity();
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+            await _api.CreatePaymentAsync(form.StudentProfileId, form.Amount, form.Description, form.DueDate, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt created successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments));
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — edit receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, CancellationToken ct)
+    public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         try
         {
-            await _api.UpdatePaymentAsync(receiptId, amount, description, dueDate, notes, ct);
+            var identity = _api.GetSessionIdentity();
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+            await _api.UpdatePaymentAsync(receiptId, amount, description, dueDate, notes, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt updated successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments));
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — confirm payment (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConfirmPayment(Guid receiptId, CancellationToken ct)
+    public async Task<IActionResult> ConfirmPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         try
         {
-            await _api.ConfirmPaymentAsync(receiptId, ct);
+            var identity = _api.GetSessionIdentity();
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+            await _api.ConfirmPaymentAsync(receiptId, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Payment confirmed.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments));
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — cancel receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CancelPayment(Guid receiptId, CancellationToken ct)
+    public async Task<IActionResult> CancelPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         try
         {
-            await _api.CancelPaymentAsync(receiptId, ct);
+            var identity = _api.GetSessionIdentity();
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+            await _api.CancelPaymentAsync(receiptId, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt cancelled.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments));
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
     // Final-Touches Phase 7 Stage 7.3 — student marks receipt as submitted
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, CancellationToken ct)
+    public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
     {
         try
         {
-            await _api.SubmitProofAsync(receiptId, proofNote, ct);
+            var identity = _api.GetSessionIdentity();
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+            await _api.SubmitProofAsync(receiptId, proofNote, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Proof of payment submitted.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments));
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
     // ── Enrollments ────────────────────────────────────────────────────────

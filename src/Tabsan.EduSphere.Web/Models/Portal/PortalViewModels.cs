@@ -1119,14 +1119,19 @@ public class PaymentsPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
     public List<PaymentReceiptItem> Payments    { get; set; } = new();
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public int TotalCount { get; set; }
     public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
     public List<LookupItem>         Departments { get; set; } = new();
+    public List<TenantItem> Tenants  { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<StudentItem>         Students    { get; set; } = new();
     public Guid?  SelectedStudentId { get; set; }
+    public Guid?  SelectedTenantId { get; set; }
+    public Guid?  SelectedCampusId { get; set; }
     public CreatePaymentForm CreateForm { get; set; } = new();
 }
 

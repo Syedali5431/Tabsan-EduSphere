@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.API.Services;
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Domain.Enums;
+using Tabsan.EduSphere.Infrastructure.Persistence;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -20,11 +23,19 @@ public class PaymentReceiptController : ControllerBase
 {
     private readonly IStudentLifecycleService _service;
     private readonly IMediaStorageService _mediaStorage;
+    private readonly IAccessScopeResolver _accessScope;
+    private readonly ApplicationDbContext _db;
 
-    public PaymentReceiptController(IStudentLifecycleService service, IMediaStorageService mediaStorage)
+    public PaymentReceiptController(
+        IStudentLifecycleService service,
+        IMediaStorageService mediaStorage,
+        IAccessScopeResolver accessScope,
+        ApplicationDbContext db)
     {
         _service = service;
         _mediaStorage = mediaStorage;
+        _accessScope = accessScope;
+        _db = db;
     }
 
     private Guid GetUserId()
@@ -39,10 +50,14 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Finance creates a new payment receipt for a student.</summary>
     [HttpPost]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> Create([FromBody] CreatePaymentReceiptCommand cmd, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreatePaymentReceiptCommand cmd, [FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty) return Forbid();
+
+        var scope = await EnforceStudentScopeAsync(cmd.StudentProfileId, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
 
         var receipt = await _service.CreatePaymentReceiptAsync(userId, cmd, ct);
         return CreatedAtAction(nameof(GetById), new { id = receipt.Id }, receipt);
@@ -53,10 +68,14 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Finance edits an actionable receipt before it is finalized.</summary>
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentReceiptCommand cmd, CancellationToken ct)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentReceiptCommand cmd, [FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty) return Forbid();
+
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
 
         try
         {
@@ -91,8 +110,18 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Returns a paged set of payment receipts across all students. Admin / Finance only.</summary>
     [HttpGet]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scopeValidation = ValidateRequestedScopePair(tenantId, campusId);
+        if (scopeValidation is not null)
+            return scopeValidation;
+
+        if (_accessScope.IsSuperAdmin() && tenantId.HasValue && campusId.HasValue)
+        {
+            var scopedPage = await GetScopedReceiptsPageAsync(page, pageSize, tenantId, campusId, studentProfileId: null, onlyActive: false, ct);
+            return Ok(scopedPage);
+        }
+
         var receipts = await _service.GetAllReceiptsAsync(page, pageSize, ct);
         return Ok(receipts);
     }
@@ -115,8 +144,18 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Returns all active (non-cancelled) receipts for a student. Admin or Finance only.</summary>
     [HttpGet("student/{studentProfileId:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> GetByStudent(Guid studentProfileId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<IActionResult> GetByStudent(Guid studentProfileId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scope = await EnforceStudentScopeAsync(studentProfileId, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
+
+        if (_accessScope.IsSuperAdmin() && tenantId.HasValue && campusId.HasValue)
+        {
+            var scopedPage = await GetScopedReceiptsPageAsync(page, pageSize, tenantId, campusId, studentProfileId, onlyActive: true, ct);
+            return Ok(scopedPage);
+        }
+
         var receipts = await _service.GetActiveReceiptsByStudentAsync(studentProfileId, page, pageSize, ct);
         return Ok(receipts);
     }
@@ -136,8 +175,12 @@ public class PaymentReceiptController : ControllerBase
 
     /// <summary>Returns full fee status for a student (paid + unpaid summary).</summary>
     [HttpGet("student/{studentProfileId:guid}/fee-status")]
-    public async Task<IActionResult> GetFeeStatus(Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> GetFeeStatus(Guid studentProfileId, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scope = await EnforceStudentScopeAsync(studentProfileId, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
+
         var status = await _service.GetStudentFeeStatusAsync(studentProfileId, ct);
         return Ok(status);
     }
@@ -146,8 +189,12 @@ public class PaymentReceiptController : ControllerBase
 
     /// <summary>Returns a specific payment receipt by ID.</summary>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetById(Guid id, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
+
         var receipt = await _service.GetPaymentReceiptByIdAsync(id, ct);
         if (receipt is null) return NotFound();
         return Ok(receipt);
@@ -159,8 +206,12 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Student marks a receipt as Submitted, providing a text reference as proof (e.g., transaction ID).</summary>
     [HttpPost("{id:guid}/mark-submitted")]
     [Authorize(Roles = "Student")]
-    public async Task<IActionResult> MarkSubmitted(Guid id, [FromBody] string proofNote, CancellationToken ct)
+    public async Task<IActionResult> MarkSubmitted(Guid id, [FromBody] string proofNote, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
+
         if (string.IsNullOrWhiteSpace(proofNote))
             return BadRequest(new { message = "Proof note cannot be empty." });
 
@@ -187,8 +238,12 @@ public class PaymentReceiptController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/submit-proof")]
     [Authorize(Roles = "Student")]
-    public async Task<IActionResult> SubmitProof(Guid id, IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> SubmitProof(Guid id, IFormFile file, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
+
         // Final-Touches Phase 28 Stage 28.3 — route payment proof uploads through the storage abstraction.
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded." });
@@ -227,10 +282,14 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Finance confirms payment received. Sets receipt status to Paid (final state).</summary>
     [HttpPost("{id:guid}/confirm")]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> ConfirmPayment(Guid id, [FromBody] string? notes, CancellationToken ct)
+    public async Task<IActionResult> ConfirmPayment(Guid id, [FromBody] string? notes, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty) return Forbid();
+
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
 
         try
         {
@@ -252,10 +311,14 @@ public class PaymentReceiptController : ControllerBase
     /// <summary>Finance cancels a receipt (e.g., issued in error). Record is permanently preserved.</summary>
     [HttpPost("{id:guid}/cancel")]
     [Authorize(Roles = "SuperAdmin,Admin,Finance")]
-    public async Task<IActionResult> Cancel(Guid id, [FromBody] string? reason, CancellationToken ct)
+    public async Task<IActionResult> Cancel(Guid id, [FromBody] string? reason, [FromQuery] Guid? tenantId = null, [FromQuery] Guid? campusId = null, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty) return Forbid();
+
+        var scope = await EnforceReceiptScopeAsync(id, tenantId, campusId, ct);
+        if (scope is not null)
+            return scope;
 
         try
         {
@@ -266,5 +329,134 @@ public class PaymentReceiptController : ControllerBase
         {
             return NotFound(new { message = e.Message });
         }
+    }
+
+    private IActionResult? ValidateRequestedScopePair(Guid? requestedTenantId, Guid? requestedCampusId)
+    {
+        if (requestedTenantId.HasValue != requestedCampusId.HasValue)
+            return BadRequest(new { message = "TenantId and CampusId must be provided together." });
+
+        return null;
+    }
+
+    private async Task<IActionResult?> EnforceStudentScopeAsync(Guid studentProfileId, Guid? requestedTenantId, Guid? requestedCampusId, CancellationToken ct)
+    {
+        var pairValidation = ValidateRequestedScopePair(requestedTenantId, requestedCampusId);
+        if (pairValidation is not null)
+            return pairValidation;
+
+        var studentScope = await _db.StudentProfiles
+            .AsNoTracking()
+            .Where(s => s.Id == studentProfileId)
+            .Join(
+                _db.Departments.AsNoTracking(),
+                s => s.DepartmentId,
+                d => d.Id,
+                (s, d) => new { d.TenantId, d.CampusId })
+            .FirstOrDefaultAsync(ct);
+
+        if (studentScope is null)
+            return NotFound(new { message = $"Student profile {studentProfileId} not found." });
+
+        return EnforceResolvedScope(studentScope.TenantId, studentScope.CampusId, requestedTenantId, requestedCampusId);
+    }
+
+    private async Task<IActionResult?> EnforceReceiptScopeAsync(Guid receiptId, Guid? requestedTenantId, Guid? requestedCampusId, CancellationToken ct)
+    {
+        var pairValidation = ValidateRequestedScopePair(requestedTenantId, requestedCampusId);
+        if (pairValidation is not null)
+            return pairValidation;
+
+        var receiptScope = await _db.PaymentReceipts
+            .AsNoTracking()
+            .Where(r => r.Id == receiptId)
+            .Join(
+                _db.StudentProfiles.AsNoTracking(),
+                r => r.StudentProfileId,
+                s => s.Id,
+                (r, s) => new { s.DepartmentId })
+            .Join(
+                _db.Departments.AsNoTracking(),
+                rs => rs.DepartmentId,
+                d => d.Id,
+                (rs, d) => new { d.TenantId, d.CampusId })
+            .FirstOrDefaultAsync(ct);
+
+        if (receiptScope is null)
+            return NotFound(new { message = $"Receipt {receiptId} not found." });
+
+        return EnforceResolvedScope(receiptScope.TenantId, receiptScope.CampusId, requestedTenantId, requestedCampusId);
+    }
+
+    private IActionResult? EnforceResolvedScope(Guid? entityTenantId, Guid? entityCampusId, Guid? requestedTenantId, Guid? requestedCampusId)
+    {
+        if (_accessScope.IsSuperAdmin())
+        {
+            if (requestedTenantId.HasValue && entityTenantId != requestedTenantId.Value)
+                return Forbid();
+            if (requestedCampusId.HasValue && entityCampusId != requestedCampusId.Value)
+                return Forbid();
+            return null;
+        }
+
+        var callerTenantId = _accessScope.GetTenantId();
+        var callerCampusId = _accessScope.GetCampusId();
+
+        if (callerTenantId.HasValue && entityTenantId != callerTenantId.Value)
+            return Forbid();
+        if (callerCampusId.HasValue && entityCampusId != callerCampusId.Value)
+            return Forbid();
+
+        if (requestedTenantId.HasValue && entityTenantId != requestedTenantId.Value)
+            return Forbid();
+        if (requestedCampusId.HasValue && entityCampusId != requestedCampusId.Value)
+            return Forbid();
+
+        return null;
+    }
+
+    private async Task<PaymentReceiptPageDto> GetScopedReceiptsPageAsync(
+        int page,
+        int pageSize,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? studentProfileId,
+        bool onlyActive,
+        CancellationToken ct)
+    {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = Math.Clamp(pageSize, 10, 100);
+        var skip = (normalizedPage - 1) * normalizedPageSize;
+
+        var query =
+            from r in _db.PaymentReceipts.AsNoTracking()
+            join s in _db.StudentProfiles.AsNoTracking() on r.StudentProfileId equals s.Id
+            join d in _db.Departments.AsNoTracking() on s.DepartmentId equals d.Id
+            where (!tenantId.HasValue || d.TenantId == tenantId.Value)
+                  && (!campusId.HasValue || d.CampusId == campusId.Value)
+                  && (!studentProfileId.HasValue || r.StudentProfileId == studentProfileId.Value)
+            select r;
+
+        if (onlyActive)
+            query = query.Where(r => r.Status != PaymentReceiptStatus.Cancelled);
+
+        var totalCount = await query.CountAsync(ct);
+        var ids = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .ThenByDescending(r => r.Id)
+            .Skip(skip)
+            .Take(normalizedPageSize)
+            .Select(r => r.Id)
+            .ToListAsync(ct);
+
+        var items = new List<PaymentReceiptDto>(ids.Count);
+        foreach (var id in ids)
+        {
+            var receipt = await _service.GetPaymentReceiptByIdAsync(id, ct);
+            if (receipt is not null)
+                items.Add(receipt);
+        }
+
+        return new PaymentReceiptPageDto(items, normalizedPage, normalizedPageSize, totalCount);
     }
 }
