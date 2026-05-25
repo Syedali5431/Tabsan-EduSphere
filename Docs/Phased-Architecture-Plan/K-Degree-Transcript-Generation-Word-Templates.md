@@ -109,7 +109,7 @@ Reason to do third:
 - Keep existing endpoints untouched.
 
 Implementation Summary (Plan K Phase K3 Stage K3.1) - 2026-05-25:
-- Added `TemplateExportService` as a new isolated service under `src/Tabsan.EduSphere.API/Services/PlanK/`.
+- Added `TemplateExportService` as a new isolated service under `src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/`.
 - Implemented default Degree and Transcript `.docx` template export generation with required placeholder tokens.
 
 Validation Summary (Plan K Phase K3 Stage K3.1) - 2026-05-25:
@@ -280,7 +280,7 @@ Validation Summary (Plan K Phase K7 Stage K7.2) - 2026-05-25:
 - Do not change existing storage mechanisms.
 
 Implementation Summary (Plan K Phase K7 Stage K7.3) - 2026-05-25:
-- Implemented Plan K-specific output root: `Artifacts/PlanK/generated-documents`.
+- Implemented Plan K-specific output root: `Artifacts/Degree-Transcript-Generation/generated-documents`.
 - Persisted generated artifact metadata (docx/qr paths) in add-on in-memory store for initial stage baseline.
 
 Validation Summary (Plan K Phase K7 Stage K7.3) - 2026-05-25:
@@ -471,3 +471,4 @@ Deliverables:
   - /student/degree
   - /student/transcript
 - Existing codepaths, auth flow, and storage logic remain unaffected.
+

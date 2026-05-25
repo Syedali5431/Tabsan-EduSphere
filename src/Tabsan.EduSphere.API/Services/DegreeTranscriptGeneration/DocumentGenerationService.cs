@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 
-namespace Tabsan.EduSphere.API.Services.PlanK;
+namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
-/// Plan K add-on service: orchestrates degree/transcript generation in an isolated pipeline.
+/// Degree/Transcript Generation add-on service: orchestrates document generation in an isolated pipeline.
 /// This service intentionally does not alter existing generation/storage services.
 /// </summary>
 public sealed class DocumentGenerationService
@@ -73,7 +73,7 @@ public sealed class DocumentGenerationService
         var finalPayload = payload with { VerificationUrl = verificationUrl };
         var processed = _templateProcessor.PopulateTemplate(template.Content, finalPayload, courses);
 
-        var outputRoot = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "PlanK", "generated-documents");
+        var outputRoot = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "Degree-Transcript-Generation", "generated-documents");
         Directory.CreateDirectory(outputRoot);
 
         var baseName = $"{type.ToString().ToLowerInvariant()}-{serial}-{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -99,7 +99,7 @@ public sealed class DocumentGenerationService
             VerificationUrl: verificationUrl);
 
         _documents[documentId] = info;
-        _logger.LogInformation("PlanK generated {Type} document {DocumentId} for Student {StudentId}", type, documentId, studentId);
+        _logger.LogInformation("DegreeTranscriptGeneration generated {Type} document {DocumentId} for Student {StudentId}", type, documentId, studentId);
         return info;
     }
 }

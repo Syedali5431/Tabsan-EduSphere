@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tabsan.EduSphere.API.Services.PlanK;
+using Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
 /// <summary>
-/// Plan K add-on controller: isolated transcript template download and transcript generation endpoints.
+/// Degree/Transcript Generation add-on controller: isolated transcript template download and generation endpoints.
 /// Existing controllers and authentication flow remain unchanged.
 /// </summary>
 [ApiController]
@@ -62,7 +62,7 @@ public class TranscriptController : ControllerBase
             Path.GetFileName(doc.DocxPath));
     }
 
-    // Required by Plan K: additive student endpoint only.
+    // Required by Degree/Transcript Generation add-on: additive student endpoint only.
     [HttpGet("/student/transcript")]
     [Authorize(Roles = "Student,Admin,SuperAdmin")]
     public async Task<IActionResult> StudentTranscript(CancellationToken ct)

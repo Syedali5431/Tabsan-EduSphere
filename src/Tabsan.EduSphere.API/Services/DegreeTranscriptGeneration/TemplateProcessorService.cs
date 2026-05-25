@@ -2,10 +2,10 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace Tabsan.EduSphere.API.Services.PlanK;
+namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
-/// Plan K add-on service: performs placeholder replacement in .docx templates.
+/// Degree/Transcript Generation add-on service: performs placeholder replacement in .docx templates.
 /// Uses Open XML SDK and remains fully isolated from existing report/template flows.
 /// </summary>
 public sealed class TemplateProcessorService

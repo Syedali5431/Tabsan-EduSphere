@@ -1,4 +1,4 @@
-﻿| Function Name | Purpose | Location |
+| Function Name | Purpose | Location |
 |--------------|--------|----------|
 | AddHealthChecks | Registers database, memory, CPU, network, and error-rate checks for continuous runtime health monitoring. | src/Tabsan.EduSphere.API/Program.cs |
 | AddOpenTelemetry | Publishes ASP.NET Core, HttpClient, runtime, and process metrics and exposes Prometheus scraping support. | src/Tabsan.EduSphere.API/Program.cs |
@@ -203,22 +203,23 @@
 | TranscriptController.Generate | Triggers Plan K transcript document generation workflow for admin users. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TranscriptController.StudentTranscript | Returns Plan K generated transcript artifacts for the current student route `/student/transcript`. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TranscriptController.ResolveCurrentUserId | Resolves current caller user-id from NameIdentifier/sub claims for student artifact filtering. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
-| TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with Plan K placeholder contract. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
-| TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with Plan K placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
-| TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateExportService.cs |
-| QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/PlanK/QRCodeService.cs |
-| QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/PlanK/QRCodeService.cs |
-| TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.ReplaceInMainBody | Replaces mapped placeholder tokens in main document body text nodes. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.ReplaceInHeadersAndFooters | Replaces mapped placeholder tokens in header and footer parts. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.ReplaceCourseTable | Replaces `{{COURSE_TABLE}}` marker with generated OpenXML table or empty-data text. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.BuildCourseTable | Builds transcript course table with required Plan K columns. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.BuildRow | Creates table row instances for course-table header and data rows. | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| TemplateProcessorService.BuildCell | Creates formatted OpenXML table cell content (with bold header support). | src/Tabsan.EduSphere.API/Services/PlanK/TemplateProcessorService.cs |
-| DocumentGenerationService.GenerateDegreeAsync | Orchestrates Plan K degree generation using export, processing, and QR services. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| DocumentGenerationService.GenerateTranscriptAsync | Orchestrates Plan K transcript generation including course-table population. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| DocumentGenerationService.GetAsync | Returns generated Plan K document metadata by document id. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| DocumentGenerationService.ListByStudentAsync | Lists Plan K generated artifacts for a specific student id. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| DocumentGenerationService.GenerateInternalAsync | Performs shared document generation pipeline, output persistence, and metadata registration. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| DegreeGenerationRequest.ToPayload | Maps degree generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
-| TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/PlanK/DocumentGenerationService.cs |
+| TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with Plan K placeholder contract. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with Plan K placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
+| QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
+| TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceInMainBody | Replaces mapped placeholder tokens in main document body text nodes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceInHeadersAndFooters | Replaces mapped placeholder tokens in header and footer parts. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceCourseTable | Replaces `{{COURSE_TABLE}}` marker with generated OpenXML table or empty-data text. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildCourseTable | Builds transcript course table with required Plan K columns. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildRow | Creates table row instances for course-table header and data rows. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.BuildCell | Creates formatted OpenXML table cell content (with bold header support). | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| DocumentGenerationService.GenerateDegreeAsync | Orchestrates Plan K degree generation using export, processing, and QR services. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.GenerateTranscriptAsync | Orchestrates Plan K transcript generation including course-table population. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.GetAsync | Returns generated Plan K document metadata by document id. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.ListByStudentAsync | Lists Plan K generated artifacts for a specific student id. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DocumentGenerationService.GenerateInternalAsync | Performs shared document generation pipeline, output persistence, and metadata registration. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| DegreeGenerationRequest.ToPayload | Maps degree generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+| TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to Plan K template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
+

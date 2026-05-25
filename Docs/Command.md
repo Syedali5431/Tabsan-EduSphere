@@ -62,7 +62,7 @@
 
 ### Plan K Phase K7 Stage K7.3 Output Path Persistence (2026-05-25)
 - Implementation Summary:
-  - Persisted generated artifact paths in Plan K-specific output scope: `Artifacts/PlanK/generated-documents`.
+  - Persisted generated artifact paths in Plan K-specific output scope: `Artifacts/Degree-Transcript-Generation/generated-documents`.
   - Added additive in-memory document metadata tracking for scaffold stage.
 - Validation Summary:
   - Build succeeded; storage writes remain scoped to Plan K path only.
@@ -6680,3 +6680,4 @@ git push origin main
 |-------|-------------|-------|
 | 24.1 | Module Registry — static compile-time catalogue (key, roles, institution types, license gate) + registry service combining live activation with policy snapshot | `Domain/Modules/ModuleDescriptor.cs`, `Application/Modules/ModuleRegistry.cs`, `Application/Interfaces/IModuleRegistryService.cs`, `Application/Modules/ModuleRegistryService.cs`, `API/Controllers/ModuleRegistryController.cs` |
 | 24.2 | Dynamic Labels — institution-mode-aware vocabulary (Semester↔Grade↔Year, GPA/CGPA↔Percentage
+

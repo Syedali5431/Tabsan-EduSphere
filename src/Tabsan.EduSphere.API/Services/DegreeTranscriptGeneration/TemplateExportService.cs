@@ -3,10 +3,10 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace Tabsan.EduSphere.API.Services.PlanK;
+namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
-/// Plan K add-on service: exports default Degree/Transcript Word templates.
+/// Degree/Transcript Generation add-on service: exports default Word templates.
 /// This service is isolated and does not alter existing template/export modules.
 /// </summary>
 public sealed class TemplateExportService

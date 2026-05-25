@@ -511,11 +511,11 @@ builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IStudyPlanSer
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.IAccreditationRepository, Tabsan.EduSphere.Infrastructure.Repositories.AccreditationRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IAccreditationService, Tabsan.EduSphere.Application.Services.AccreditationService>();
 builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.ILibraryService, Tabsan.EduSphere.Application.Services.LibraryService>();
-// ── Plan K: Degree/Transcript modular add-on services (isolated, add-only) ───
-builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.PlanK.TemplateExportService>();
-builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.PlanK.TemplateProcessorService>();
-builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.PlanK.QRCodeService>();
-builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.PlanK.DocumentGenerationService>();
+// ── Degree/Transcript Generation: modular add-on services (isolated, add-only) ───
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateExportService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateProcessorService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.QRCodeService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.DocumentGenerationService>();
 // ── Phase 23: Core Policy Foundation ────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IInstitutionPolicyService, Tabsan.EduSphere.Application.Services.InstitutionPolicyService>();
 // ── Phase 24: Dynamic Module and UI Composition ───────────────────────────────

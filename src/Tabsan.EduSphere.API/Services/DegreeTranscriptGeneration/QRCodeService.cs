@@ -1,9 +1,9 @@
 using QRCoder;
 
-namespace Tabsan.EduSphere.API.Services.PlanK;
+namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 /// <summary>
-/// Plan K add-on service: generates QR image payloads for verification links.
+/// Degree/Transcript Generation add-on service: generates QR image payloads for verification links.
 /// This service is isolated and does not interfere with existing utilities.
 /// </summary>
 public sealed class QRCodeService
