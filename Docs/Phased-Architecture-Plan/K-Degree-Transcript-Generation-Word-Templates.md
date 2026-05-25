@@ -545,17 +545,26 @@ Validation Summary (Plan K Phase K12 Stage K12.2) - 2026-05-25:
 - Feature flag or route-level enablement (optional).
 - Rollback by disabling new extension routes/services only.
 
+Implementation Summary (Plan K Phase K12 Stage K12.3) - 2026-05-25:
+- Added a default `plan-k.enabled` feature flag and gated the Plan K controller surface behind it.
+- Kept rollout control additive, with disable/rollback behavior handled through the existing feature-flag service.
+
+Validation Summary (Plan K Phase K12 Stage K12.3) - 2026-05-25:
+- Full solution build succeeded after wiring the Plan K flag gate into the new controllers.
+- Plan K endpoints now fail closed with 423 Locked when the rollout flag is disabled.
+
 Deliverables:
 - Integration guide
 - Safety validation checklist
 
-Implementation Summary (Plan K Phase K12 Partial Completion) - 2026-05-25:
-- Completed Stage K12.1 integration-note wiring and Stage K12.2 safety validation execution.
-- Stage K12.3 rollout strategy remains pending and intentionally unimplemented in this cycle.
+Implementation Summary (Plan K Phase K12 Completion) - 2026-05-25:
+- Completed Stage K12.1 integration-note wiring, Stage K12.2 safety validation execution, and Stage K12.3 rollout gating.
+- Plan K controller surface is now switchable through the `plan-k.enabled` feature flag.
 
-Validation Summary (Plan K Phase K12 Partial Completion) - 2026-05-25:
+Validation Summary (Plan K Phase K12 Completion) - 2026-05-25:
 - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after integration.
 - Compatibility warning resolved by dependency alignment without breaking add-only boundaries.
+- Rollout gate now blocks Plan K routes with 423 Locked when disabled.
 
 ## Safe Integration Blueprint (How to Plug In Without Breaking Existing System)
 - Register only the new services in DI:

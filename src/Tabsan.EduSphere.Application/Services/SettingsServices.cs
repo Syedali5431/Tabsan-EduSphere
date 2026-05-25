@@ -637,7 +637,8 @@ public class FeatureFlagService : IFeatureFlagService
     {
         ["tenant-operations.write"] = true,
         ["integration-gateway.enabled"] = true,
-        ["gateway-diagnostics.enabled"] = true
+        ["gateway-diagnostics.enabled"] = true,
+        ["plan-k.enabled"] = true
     };
 
     private readonly ISettingsRepository _repo;

@@ -213,6 +213,8 @@
 | TranscriptController.UploadTemplate | Accepts isolated transcript template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
+| DegreeController.EnsurePlanKEnabledAsync | Checks the Plan K rollout flag before allowing degree controller actions. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| TranscriptController.EnsurePlanKEnabledAsync | Checks the Plan K rollout flag before allowing transcript controller actions. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TemplateProcessorService.PopulateTemplate | Applies Plan K placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.ReplaceInMainBody | Replaces mapped placeholder tokens in main document body text nodes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.ReplaceInHeadersAndFooters | Replaces mapped placeholder tokens in header and footer parts. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |

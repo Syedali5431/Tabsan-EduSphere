@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
 namespace Tabsan.EduSphere.API.Controllers;
@@ -17,20 +18,27 @@ public class DegreeController : ControllerBase
     private readonly TemplateExportService _templateExportService;
     private readonly TemplateUploadService _templateUploadService;
     private readonly DocumentGenerationService _documentGenerationService;
+    private readonly IFeatureFlagService _featureFlags;
 
     public DegreeController(
         TemplateExportService templateExportService,
         TemplateUploadService templateUploadService,
-        DocumentGenerationService documentGenerationService)
+        DocumentGenerationService documentGenerationService,
+        IFeatureFlagService featureFlags)
     {
         _templateExportService = templateExportService;
         _templateUploadService = templateUploadService;
         _documentGenerationService = documentGenerationService;
+        _featureFlags = featureFlags;
     }
 
     [HttpGet("template/default")]
     public async Task<IActionResult> DownloadDefaultTemplate(CancellationToken ct)
     {
+        var gate = await EnsurePlanKEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
         var template = await _templateExportService.GetDegreeTemplateAsync(ct);
         return File(template.Content, template.ContentType, template.FileName);
     }
@@ -39,6 +47,10 @@ public class DegreeController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
     {
+        var gate = await EnsurePlanKEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
         try
         {
             var result = await _templateUploadService.UploadDegreeTemplateAsync(file, ct);
@@ -53,6 +65,10 @@ public class DegreeController : ControllerBase
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] DegreeGenerationRequest request, CancellationToken ct)
     {
+        var gate = await EnsurePlanKEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
         var document = await _documentGenerationService.GenerateDegreeAsync(request, ct);
         return Ok(document);
     }
@@ -60,6 +76,10 @@ public class DegreeController : ControllerBase
     [HttpGet("{documentId:guid}/download")]
     public async Task<IActionResult> Download(Guid documentId, [FromQuery] string format = "docx", CancellationToken ct = default)
     {
+        var gate = await EnsurePlanKEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
         var doc = await _documentGenerationService.GetAsync(documentId, ct);
         if (doc is null || !System.IO.File.Exists(doc.DocxPath))
         {
@@ -85,6 +105,10 @@ public class DegreeController : ControllerBase
     [Authorize(Roles = "Student,Admin,SuperAdmin")]
     public async Task<IActionResult> StudentDegree(CancellationToken ct)
     {
+        var gate = await EnsurePlanKEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
         var userId = ResolveCurrentUserId();
         if (userId == Guid.Empty)
         {
@@ -99,5 +123,16 @@ public class DegreeController : ControllerBase
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
         return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+    }
+
+    private async Task<IActionResult?> EnsurePlanKEnabledAsync(CancellationToken ct)
+    {
+        var flag = await _featureFlags.GetAsync("plan-k.enabled", ct);
+        if (!flag.IsEnabled)
+        {
+            return StatusCode(StatusCodes.Status423Locked, new { message = "Plan K is currently disabled by feature flag." });
+        }
+
+        return null;
     }
 }

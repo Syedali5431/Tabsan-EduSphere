@@ -1,3 +1,12 @@
+### Plan K Phase K12 Stage K12.3 Rollout Strategy (2026-05-25)
+- Implementation Summary:
+  - Added default `plan-k.enabled` feature-flag support in the existing feature-flag service.
+  - Gated the new Plan K degree/transcript controllers behind the rollout flag so the surface can be disabled without code changes.
+  - Preserved all prior add-only boundaries while making the Plan K routes fail closed with 423 Locked when disabled.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after adding the rollout gate.
+  - Plan K rollout can now be toggled using the existing feature-flag admin surface.
+
 ### Plan K Phase K4 Template Upload (2026-05-25)
 - Implementation Summary:
   - Added isolated upload endpoints for degree and transcript templates under the Plan K add-on controllers.
