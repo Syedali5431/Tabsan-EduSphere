@@ -2,6 +2,15 @@ using Tabsan.EduSphere.Domain.Fyp;
 
 namespace Tabsan.EduSphere.Domain.Interfaces;
 
+public sealed record FypStudentEligibility(
+    Guid StudentProfileId,
+    Guid DepartmentId,
+    bool IsUniversity,
+    int CurrentSemesterNumber,
+    int TotalSemesters,
+    Guid? TenantId,
+    Guid? CampusId);
+
 /// <summary>
 /// Repository contract for FYP project, panel, and meeting management.
 /// </summary>
@@ -16,16 +25,28 @@ public interface IFypRepository
     Task<FypProject?> GetWithDetailsAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>Returns all projects for a student.</summary>
-    Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns all projects in a department, optionally filtered by status.</summary>
-    Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns all projects across all departments, optionally filtered by status.</summary>
-    Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns all projects supervised by a specific faculty user.</summary>
-    Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
+
+    /// <summary>Returns eligibility and scope details for a student FYP workflow, or null if student does not exist.</summary>
+    Task<FypStudentEligibility?> GetStudentEligibilityAsync(Guid studentProfileId, CancellationToken ct = default);
+
+    /// <summary>Returns tenant/campus scope for a project, or null when project does not exist.</summary>
+    Task<(Guid? TenantId, Guid? CampusId)?> GetProjectScopeAsync(Guid projectId, CancellationToken ct = default);
+
+    /// <summary>Returns tenant/campus scope for a department, or null when department does not exist.</summary>
+    Task<(Guid? TenantId, Guid? CampusId)?> GetDepartmentScopeAsync(Guid departmentId, CancellationToken ct = default);
+
+    /// <summary>Returns tenant/campus scope for a student profile, or null when student does not exist.</summary>
+    Task<(Guid? TenantId, Guid? CampusId)?> GetStudentScopeAsync(Guid studentProfileId, CancellationToken ct = default);
 
     /// <summary>Queues a new project for insertion.</summary>
     Task AddAsync(FypProject project, CancellationToken ct = default);

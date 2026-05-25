@@ -21,9 +21,11 @@ public sealed class FypService : IFypService
     /// <summary>Submits a new FYP project proposal. Returns the project ID.</summary>
     public async Task<Guid> ProposeAsync(ProposeProjectRequest request, Guid studentProfileId, CancellationToken ct = default)
     {
+        var eligibility = await EnsureStudentEligibilityAsync(studentProfileId, request.DepartmentId, ct);
+
         var project = new FypProject(
             studentProfileId,
-            request.DepartmentId,
+            eligibility.DepartmentId,
             request.Title,
             request.Description);
 
@@ -35,9 +37,11 @@ public sealed class FypService : IFypService
     /// <summary>Creates a new FYP project directly for a student. Returns the project ID.</summary>
     public async Task<Guid> CreateForStudentAsync(CreateProjectForStudentRequest request, CancellationToken ct = default)
     {
+        var eligibility = await EnsureStudentEligibilityAsync(request.StudentProfileId, request.DepartmentId, ct);
+
         var project = new FypProject(
             request.StudentProfileId,
-            request.DepartmentId,
+            eligibility.DepartmentId,
             request.Title,
             request.Description);
 
@@ -136,41 +140,53 @@ public sealed class FypService : IFypService
         return new ApproveCompletionResponse(isCompleted, approvedCount, requiredApprovers.Count);
     }
 
+    /// <summary>Enters or updates the final result for a completed project.</summary>
+    public async Task<bool> EnterResultAsync(Guid projectId, EnterFypResultRequest request, CancellationToken ct = default)
+    {
+        var project = await _repo.GetByIdAsync(projectId, ct);
+        if (project is null) return false;
+
+        project.SetFinalResult(request.Result);
+        _repo.Update(project);
+        await _repo.SaveChangesAsync(ct);
+        return true;
+    }
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns all FYP projects for a student.</summary>
-    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetByStudentAsync(Guid studentProfileId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
-        var projects = await _repo.GetByStudentAsync(studentProfileId, ct);
+        var projects = await _repo.GetByStudentAsync(studentProfileId, tenantId, campusId, ct);
         return projects.Select(ToSummary).ToList();
     }
 
     /// <summary>Returns projects in a department, optionally filtered by status string.</summary>
-    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetByDepartmentAsync(Guid departmentId, string? status = null, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetByDepartmentAsync(Guid departmentId, string? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
         FypProjectStatus? statusEnum = null;
         if (status is not null && Enum.TryParse<FypProjectStatus>(status, ignoreCase: true, out var parsed))
             statusEnum = parsed;
 
-        var projects = await _repo.GetByDepartmentAsync(departmentId, statusEnum, ct);
+        var projects = await _repo.GetByDepartmentAsync(departmentId, statusEnum, tenantId, campusId, ct);
         return projects.Select(ToSummary).ToList();
     }
 
     /// <summary>Returns all projects across all departments, optionally filtered by status string.</summary>
-    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetAllAsync(string? status = null, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetAllAsync(string? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
         FypProjectStatus? statusEnum = null;
         if (status is not null && Enum.TryParse<FypProjectStatus>(status, ignoreCase: true, out var parsed))
             statusEnum = parsed;
 
-        var projects = await _repo.GetAllAsync(statusEnum, ct);
+        var projects = await _repo.GetAllAsync(statusEnum, tenantId, campusId, ct);
         return projects.Select(ToSummary).ToList();
     }
 
     /// <summary>Returns projects supervised by a faculty user.</summary>
-    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetBySupervisorAsync(Guid supervisorUserId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FypProjectSummaryResponse>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
     {
-        var projects = await _repo.GetBySupervisorAsync(supervisorUserId, ct);
+        var projects = await _repo.GetBySupervisorAsync(supervisorUserId, tenantId, campusId, ct);
         return projects.Select(ToSummary).ToList();
     }
 
@@ -281,7 +297,7 @@ public sealed class FypService : IFypService
     /// <summary>Maps a <see cref="FypProject"/> to a <see cref="FypProjectSummaryResponse"/>.</summary>
     private static FypProjectSummaryResponse ToSummary(FypProject p) => new(
         p.Id, p.StudentProfileId, p.DepartmentId, p.Title,
-        p.Status.ToString(), p.SupervisorUserId,
+        p.Status.ToString(), p.GetFinalResult(), p.SupervisorUserId,
         p.IsCompletionRequested,
         p.GetCompletionApprovedUserIds().Count,
         BuildRequiredApproverIds(p).Count,
@@ -290,7 +306,7 @@ public sealed class FypService : IFypService
     /// <summary>Maps a <see cref="FypProject"/> (with details loaded) to a <see cref="FypProjectDetailResponse"/>.</summary>
     private static FypProjectDetailResponse ToDetail(FypProject p) => new(
         p.Id, p.StudentProfileId, p.DepartmentId, p.Title, p.Description,
-        p.Status.ToString(), p.SupervisorUserId, p.CoordinatorRemarks,
+        p.Status.ToString(), p.GetFinalResult(), p.SupervisorUserId, p.CoordinatorRemarks,
         p.PanelMembers.Select(m => new PanelMemberResponse(m.Id, m.UserId, m.Role.ToString())).ToList(),
         p.Meetings.Select(ToMeetingResponse).ToList());
 
@@ -309,5 +325,22 @@ public sealed class FypService : IFypService
             ids.Add(panelUserId);
 
         return ids.ToList();
+    }
+
+    private async Task<FypStudentEligibility> EnsureStudentEligibilityAsync(Guid studentProfileId, Guid requestedDepartmentId, CancellationToken ct)
+    {
+        var eligibility = await _repo.GetStudentEligibilityAsync(studentProfileId, ct)
+            ?? throw new InvalidOperationException("Student profile not found.");
+
+        if (eligibility.DepartmentId != requestedDepartmentId)
+            throw new InvalidOperationException("Student does not belong to the selected department.");
+
+        if (!eligibility.IsUniversity)
+            throw new InvalidOperationException("FYP is available for University students only.");
+
+        if (eligibility.TotalSemesters <= 0 || eligibility.CurrentSemesterNumber != eligibility.TotalSemesters)
+            throw new InvalidOperationException("FYP is available only in the student's last semester.");
+
+        return eligibility;
     }
 }

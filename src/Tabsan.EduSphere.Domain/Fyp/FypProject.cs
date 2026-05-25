@@ -217,8 +217,27 @@ public class FypProject : BaseEntity
         return false;
     }
 
+    /// <summary>
+    /// Sets or updates the final result for a completed project.
+    /// </summary>
+    public void SetFinalResult(string result)
+    {
+        if (Status != FypProjectStatus.Completed)
+            throw new InvalidOperationException("Result can only be entered after the project is completed.");
+
+        if (string.IsNullOrWhiteSpace(result))
+            throw new InvalidOperationException("Result is required.");
+
+        CoordinatorRemarks = result.Trim();
+        Touch();
+    }
+
     /// <summary>Returns faculty user IDs that already approved completion.</summary>
     public IReadOnlyCollection<Guid> GetCompletionApprovedUserIds() => ParseApprovalUserIds();
+
+    /// <summary>Returns the final entered result once the project is completed.</summary>
+    public string? GetFinalResult()
+        => Status == FypProjectStatus.Completed ? CoordinatorRemarks : null;
 
     private HashSet<Guid> ParseApprovalUserIds()
     {

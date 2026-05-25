@@ -32,6 +32,10 @@ public record RejectProjectRequest(
 public record AssignSupervisorRequest(
     Guid SupervisorUserId);
 
+/// <summary>Request to enter/update the final result of a completed FYP project.</summary>
+public record EnterFypResultRequest(
+    string Result);
+
 /// <summary>Response after a faculty completion approval submission.</summary>
 public record ApproveCompletionResponse(
     bool IsCompleted,
@@ -73,6 +77,7 @@ public record FypProjectSummaryResponse(
     Guid DepartmentId,
     string Title,
     string Status,
+    string? FinalResult,
     Guid? SupervisorUserId,
     bool IsCompletionRequested,
     int CompletionApprovalCount,
@@ -87,6 +92,7 @@ public record FypProjectDetailResponse(
     string Title,
     string Description,
     string Status,
+    string? FinalResult,
     Guid? SupervisorUserId,
     string? CoordinatorRemarks,
     IReadOnlyList<PanelMemberResponse> PanelMembers,

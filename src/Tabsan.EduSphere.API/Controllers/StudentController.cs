@@ -71,7 +71,11 @@ public class StudentController : ControllerBase
         {
             profile.Id, profile.RegistrationNumber, profile.ProgramId,
             ProgramName = profile.Program?.Name,
+            TotalSemesters = profile.Program?.TotalSemesters ?? 0,
             profile.DepartmentId, DeptName = profile.Department?.Name,
+            InstitutionType = (int)(profile.Department?.InstitutionType ?? Domain.Enums.InstitutionType.University),
+            TenantId = profile.Department?.TenantId,
+            CampusId = profile.Department?.CampusId,
             profile.AdmissionDate, profile.Cgpa, profile.CurrentSemesterNumber
         });
     }

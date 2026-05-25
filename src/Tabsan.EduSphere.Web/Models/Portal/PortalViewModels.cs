@@ -325,6 +325,10 @@ public class StudentProfileSummaryItem
     public Guid DepartmentId { get; set; }
     public string DepartmentName { get; set; } = "";
     public int CurrentSemesterNumber { get; set; }
+    public int TotalSemesters { get; set; }
+    public int InstitutionType { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
 }
 
 // ── Sidebar Settings ──────────────────────────────────────────────────────────
@@ -940,6 +944,7 @@ public class FypProjectItem
     public string StudentName    { get; set; } = "";
     public string? SupervisorName{ get; set; }
     public string DepartmentName { get; set; } = "";
+    public string? FinalResult { get; set; }
     public int    MeetingCount   { get; set; }
     public bool   IsCompletionRequested { get; set; }
     public int    CompletionApprovalCount { get; set; }
@@ -962,11 +967,16 @@ public class FypPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
     public List<FypProjectItem>    Projects         { get; set; } = new();
     public List<FypMeetingItem>    UpcomingMeetings { get; set; } = new();
+    public List<TenantItem>        Tenants          { get; set; } = new();
+    public List<CampusItem>        Campuses         { get; set; } = new();
     public List<LookupItem>        Departments      { get; set; } = new();
     public List<FacultyLookupItem> Faculty          { get; set; } = new();
     public List<StudentItem>       Students         { get; set; } = new();
+    public Guid?  SelectedTenantId { get; set; }
+    public Guid?  SelectedCampusId { get; set; }
     public Guid?  SelectedDepartmentId { get; set; }
 }
 

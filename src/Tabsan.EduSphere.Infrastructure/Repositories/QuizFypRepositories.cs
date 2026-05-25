@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Fyp;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Quizzes;
@@ -170,40 +171,106 @@ public sealed class FypRepository : IFypRepository
               .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     /// <summary>Returns all projects for a student.</summary>
-    public Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, CancellationToken ct = default)
-        => _db.FypProjects
-              .Include(p => p.PanelMembers)
-              .Where(p => p.StudentProfileId == studentProfileId)
-              .OrderByDescending(p => p.CreatedAt)
-              .ToListAsync(ct)
-              .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+    public Task<IReadOnlyList<FypProject>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => BuildScopedProjectQuery(tenantId, campusId)
+            .Where(p => p.StudentProfileId == studentProfileId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(ct)
+            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
 
     /// <summary>Returns all projects in a department, optionally filtered by status.</summary>
-    public Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, CancellationToken ct = default)
-        => _db.FypProjects
-              .Include(p => p.PanelMembers)
-              .Where(p => p.DepartmentId == departmentId && (status == null || p.Status == status))
-              .OrderByDescending(p => p.CreatedAt)
-              .ToListAsync(ct)
-              .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+    public Task<IReadOnlyList<FypProject>> GetByDepartmentAsync(Guid departmentId, FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => BuildScopedProjectQuery(tenantId, campusId)
+            .Where(p => p.DepartmentId == departmentId && (status == null || p.Status == status))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(ct)
+            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
 
     /// <summary>Returns all projects across all departments, optionally filtered by status.</summary>
-    public Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, CancellationToken ct = default)
-        => _db.FypProjects
-              .Include(p => p.PanelMembers)
-              .Where(p => status == null || p.Status == status)
-              .OrderByDescending(p => p.CreatedAt)
-              .ToListAsync(ct)
-              .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+    public Task<IReadOnlyList<FypProject>> GetAllAsync(FypProjectStatus? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => BuildScopedProjectQuery(tenantId, campusId)
+            .Where(p => status == null || p.Status == status)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(ct)
+            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
 
     /// <summary>Returns all projects supervised by a specific faculty user.</summary>
-    public Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, CancellationToken ct = default)
-        => _db.FypProjects
-              .Include(p => p.PanelMembers)
-              .Where(p => p.SupervisorUserId == supervisorUserId)
-              .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
-              .ToListAsync(ct)
-              .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+    public Task<IReadOnlyList<FypProject>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)
+        => BuildScopedProjectQuery(tenantId, campusId)
+            .Where(p => p.SupervisorUserId == supervisorUserId)
+            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+            .ToListAsync(ct)
+            .ContinueWith<IReadOnlyList<FypProject>>(t => t.Result, ct);
+
+    /// <summary>Returns student eligibility and scope details for FYP validation.</summary>
+    public async Task<FypStudentEligibility?> GetStudentEligibilityAsync(Guid studentProfileId, CancellationToken ct = default)
+    {
+        return await _db.StudentProfiles
+            .AsNoTracking()
+            .Where(sp => sp.Id == studentProfileId)
+            .Join(
+                _db.Departments.AsNoTracking(),
+                sp => sp.DepartmentId,
+                d => d.Id,
+                (sp, d) => new { sp, d })
+            .Join(
+                _db.AcademicPrograms.AsNoTracking(),
+                x => x.sp.ProgramId,
+                p => p.Id,
+                (x, p) => new FypStudentEligibility(
+                    x.sp.Id,
+                    x.sp.DepartmentId,
+                    x.d.InstitutionType == InstitutionType.University,
+                    x.sp.CurrentSemesterNumber,
+                    p.TotalSemesters,
+                    x.d.TenantId,
+                    x.d.CampusId))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    /// <summary>Returns tenant/campus scope for a project.</summary>
+    public async Task<(Guid? TenantId, Guid? CampusId)?> GetProjectScopeAsync(Guid projectId, CancellationToken ct = default)
+    {
+        var scope = await _db.FypProjects
+            .AsNoTracking()
+            .Where(p => p.Id == projectId)
+            .Join(
+                _db.Departments.AsNoTracking(),
+                p => p.DepartmentId,
+                d => d.Id,
+                (_, d) => new { d.TenantId, d.CampusId })
+            .FirstOrDefaultAsync(ct);
+
+        return scope is null ? null : (scope.TenantId, scope.CampusId);
+    }
+
+    /// <summary>Returns tenant/campus scope for a department.</summary>
+    public async Task<(Guid? TenantId, Guid? CampusId)?> GetDepartmentScopeAsync(Guid departmentId, CancellationToken ct = default)
+    {
+        var scope = await _db.Departments
+            .AsNoTracking()
+            .Where(d => d.Id == departmentId)
+            .Select(d => new { d.TenantId, d.CampusId })
+            .FirstOrDefaultAsync(ct);
+
+        return scope is null ? null : (scope.TenantId, scope.CampusId);
+    }
+
+    /// <summary>Returns tenant/campus scope for a student profile.</summary>
+    public async Task<(Guid? TenantId, Guid? CampusId)?> GetStudentScopeAsync(Guid studentProfileId, CancellationToken ct = default)
+    {
+        var scope = await _db.StudentProfiles
+            .AsNoTracking()
+            .Where(sp => sp.Id == studentProfileId)
+            .Join(
+                _db.Departments.AsNoTracking(),
+                sp => sp.DepartmentId,
+                d => d.Id,
+                (_, d) => new { d.TenantId, d.CampusId })
+            .FirstOrDefaultAsync(ct);
+
+        return scope is null ? null : (scope.TenantId, scope.CampusId);
+    }
 
     /// <summary>Queues a new project for insertion.</summary>
     public async Task AddAsync(FypProject project, CancellationToken ct = default)
@@ -270,4 +337,24 @@ public sealed class FypRepository : IFypRepository
     /// <summary>Commits all pending changes.</summary>
     public Task SaveChangesAsync(CancellationToken ct = default)
         => _db.SaveChangesAsync(ct);
+
+    private IQueryable<FypProject> BuildScopedProjectQuery(Guid? tenantId, Guid? campusId)
+    {
+        var query = _db.FypProjects
+            .Include(p => p.PanelMembers)
+            .AsQueryable();
+
+        if (tenantId.HasValue || campusId.HasValue)
+        {
+            var scopedDepartmentIds = _db.Departments
+                .AsNoTracking()
+                .Where(d => (!tenantId.HasValue || d.TenantId == tenantId.Value)
+                         && (!campusId.HasValue || d.CampusId == campusId.Value))
+                .Select(d => d.Id);
+
+            query = query.Where(p => scopedDepartmentIds.Contains(p.DepartmentId));
+        }
+
+        return query;
+    }
 }

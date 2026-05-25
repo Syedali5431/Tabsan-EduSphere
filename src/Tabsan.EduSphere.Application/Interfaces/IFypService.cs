@@ -37,19 +37,22 @@ public interface IFypService
     /// <summary>Assigned faculty approves completion review for a project. Returns null if project is not found.</summary>
     Task<ApproveCompletionResponse?> ApproveCompletionAsync(Guid projectId, Guid facultyUserId, CancellationToken ct = default);
 
+    /// <summary>Enters or updates the final result for a completed project. Returns false if not found.</summary>
+    Task<bool> EnterResultAsync(Guid projectId, EnterFypResultRequest request, CancellationToken ct = default);
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns all FYP projects for a student.</summary>
-    Task<IReadOnlyList<FypProjectSummaryResponse>> GetByStudentAsync(Guid studentProfileId, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProjectSummaryResponse>> GetByStudentAsync(Guid studentProfileId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns projects in a department, optionally filtered by status string.</summary>
-    Task<IReadOnlyList<FypProjectSummaryResponse>> GetByDepartmentAsync(Guid departmentId, string? status = null, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProjectSummaryResponse>> GetByDepartmentAsync(Guid departmentId, string? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns all projects across all departments, optionally filtered by status string.</summary>
-    Task<IReadOnlyList<FypProjectSummaryResponse>> GetAllAsync(string? status = null, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProjectSummaryResponse>> GetAllAsync(string? status = null, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns projects supervised by a faculty user.</summary>
-    Task<IReadOnlyList<FypProjectSummaryResponse>> GetBySupervisorAsync(Guid supervisorUserId, CancellationToken ct = default);
+    Task<IReadOnlyList<FypProjectSummaryResponse>> GetBySupervisorAsync(Guid supervisorUserId, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);
 
     /// <summary>Returns full project detail with panel members and meeting history. Returns null if not found.</summary>
     Task<FypProjectDetailResponse?> GetDetailAsync(Guid projectId, CancellationToken ct = default);

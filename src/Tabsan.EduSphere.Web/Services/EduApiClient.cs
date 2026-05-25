@@ -319,20 +319,21 @@ public interface IEduApiClient
     Task DeleteQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // FYP
-    Task<List<FypProjectItem>> GetMyFypProjectsAsync(CancellationToken ct);
-    Task<List<FypProjectItem>> GetAllFypProjectsAsync(CancellationToken ct);
-    Task<List<FypProjectItem>> GetFypByDepartmentAsync(Guid departmentId, CancellationToken ct);
-    Task<List<FypProjectItem>> GetMySupervisedProjectsAsync(CancellationToken ct);
-    Task<List<FypMeetingItem>> GetUpcomingMeetingsAsync(CancellationToken ct);
-    Task<Guid> ProposeFypProjectAsync(Guid departmentId, string title, string description, CancellationToken ct);
-    Task<Guid> CreateFypProjectAsync(Guid studentProfileId, Guid departmentId, string title, string description, CancellationToken ct);
-    Task UpdateFypProjectAsync(Guid id, string title, string description, CancellationToken ct);
-    Task ApproveFypProjectAsync(Guid id, string? remarks, CancellationToken ct);
-    Task RejectFypProjectAsync(Guid id, string remarks, CancellationToken ct);
-    Task AssignFypSupervisorAsync(Guid id, Guid supervisorUserId, CancellationToken ct);
-    Task CompleteFypProjectAsync(Guid id, CancellationToken ct);
-    Task RequestFypCompletionAsync(Guid id, CancellationToken ct);
-    Task ApproveFypCompletionAsync(Guid id, CancellationToken ct);
+    Task<List<FypProjectItem>> GetMyFypProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<FypProjectItem>> GetAllFypProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<FypProjectItem>> GetFypByDepartmentAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<FypProjectItem>> GetMySupervisedProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<List<FypMeetingItem>> GetUpcomingMeetingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<Guid> ProposeFypProjectAsync(Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<Guid> CreateFypProjectAsync(Guid studentProfileId, Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task UpdateFypProjectAsync(Guid id, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ApproveFypProjectAsync(Guid id, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task RejectFypProjectAsync(Guid id, string remarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task AssignFypSupervisorAsync(Guid id, Guid supervisorUserId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CompleteFypProjectAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task EnterFypResultAsync(Guid id, string result, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task RequestFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task ApproveFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Analytics — Final-Touches Phase 6 Stage 6.2: typed return instead of raw JSON strings
     Task<DepartmentPerformanceReport?> GetPerformanceAnalyticsAsync(Guid? departmentId, int? institutionType, Guid? courseId, Guid? semesterId, Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -643,7 +644,11 @@ public class EduApiClient : IEduApiClient
             Id = raw.Id,
             DepartmentId = raw.DepartmentId,
             DepartmentName = raw.DeptName ?? "",
-            CurrentSemesterNumber = raw.CurrentSemesterNumber
+            CurrentSemesterNumber = raw.CurrentSemesterNumber,
+            TotalSemesters = raw.TotalSemesters,
+            InstitutionType = raw.InstitutionType,
+            TenantId = raw.TenantId,
+            CampusId = raw.CampusId
         };
     }
 
@@ -2824,6 +2829,10 @@ public class EduApiClient : IEduApiClient
         public Guid DepartmentId { get; set; }
         public string? DeptName { get; set; }
         public int CurrentSemesterNumber { get; set; }
+        public int TotalSemesters { get; set; }
+        public int InstitutionType { get; set; }
+        public Guid? TenantId { get; set; }
+        public Guid? CampusId { get; set; }
     }
 
     // ── Assignments ───────────────────────────────────────────────────────────
@@ -3504,33 +3513,33 @@ public class EduApiClient : IEduApiClient
 
     // ── FYP ───────────────────────────────────────────────────────────────────
 
-    public async Task<List<FypProjectItem>> GetMyFypProjectsAsync(CancellationToken ct)
+    public async Task<List<FypProjectItem>> GetMyFypProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<FypApiDto>>("api/v1/fyp/my-projects", ct) ?? new();
+        var raw = await GetAsync<List<FypApiDto>>($"api/v1/fyp/my-projects{BuildFypScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(MapFyp).ToList();
     }
 
-    public async Task<List<FypProjectItem>> GetAllFypProjectsAsync(CancellationToken ct)
+    public async Task<List<FypProjectItem>> GetAllFypProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<FypApiDto>>("api/v1/fyp/all", ct) ?? new();
+        var raw = await GetAsync<List<FypApiDto>>($"api/v1/fyp/all{BuildFypScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(MapFyp).ToList();
     }
 
-    public async Task<List<FypProjectItem>> GetFypByDepartmentAsync(Guid departmentId, CancellationToken ct)
+    public async Task<List<FypProjectItem>> GetFypByDepartmentAsync(Guid departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<FypApiDto>>($"api/v1/fyp/by-department/{departmentId}", ct) ?? new();
+        var raw = await GetAsync<List<FypApiDto>>($"api/v1/fyp/by-department/{departmentId}{BuildFypScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(MapFyp).ToList();
     }
 
-    public async Task<List<FypProjectItem>> GetMySupervisedProjectsAsync(CancellationToken ct)
+    public async Task<List<FypProjectItem>> GetMySupervisedProjectsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<FypApiDto>>("api/v1/fyp/my-supervised", ct) ?? new();
+        var raw = await GetAsync<List<FypApiDto>>($"api/v1/fyp/my-supervised{BuildFypScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(MapFyp).ToList();
     }
 
-    public async Task<List<FypMeetingItem>> GetUpcomingMeetingsAsync(CancellationToken ct)
+    public async Task<List<FypMeetingItem>> GetUpcomingMeetingsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var raw = await GetAsync<List<FypMeetingApiDto>>("api/v1/fyp/meeting/upcoming", ct) ?? new();
+        var raw = await GetAsync<List<FypMeetingApiDto>>($"api/v1/fyp/meeting/upcoming{BuildFypScopeQuery(tenantId, campusId)}", ct) ?? new();
         return raw.Select(m => new FypMeetingItem
         {
             Id           = m.Id,
@@ -3545,40 +3554,43 @@ public class EduApiClient : IEduApiClient
 
     // ── FYP write methods ─────────────────────────────────────────────────────
 
-    public Task<Guid> ProposeFypProjectAsync(Guid departmentId, string title, string description, CancellationToken ct)
+    public Task<Guid> ProposeFypProjectAsync(Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { departmentId, title, description };
-        return PostAsync<object, FypCreateResponse>("api/v1/fyp", payload, ct)
+        return PostAsync<object, FypCreateResponse>($"api/v1/fyp{BuildFypScopeQuery(tenantId, campusId)}", payload, ct)
             .ContinueWith(t => t.Result?.ProjectId ?? Guid.Empty, ct);
     }
 
-    public Task<Guid> CreateFypProjectAsync(Guid studentProfileId, Guid departmentId, string title, string description, CancellationToken ct)
+    public Task<Guid> CreateFypProjectAsync(Guid studentProfileId, Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var payload = new { studentProfileId, departmentId, title, description };
-        return PostAsync<object, FypCreateResponse>("api/v1/fyp/admin-create", payload, ct)
+        return PostAsync<object, FypCreateResponse>($"api/v1/fyp/admin-create{BuildFypScopeQuery(tenantId, campusId)}", payload, ct)
             .ContinueWith(t => t.Result?.ProjectId ?? Guid.Empty, ct);
     }
 
-    public Task UpdateFypProjectAsync(Guid id, string title, string description, CancellationToken ct)
-        => PutAsync<object, object>($"api/v1/fyp/{id}", new { title, description }, ct);
+    public Task UpdateFypProjectAsync(Guid id, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/fyp/{id}{BuildFypScopeQuery(tenantId, campusId)}", new { title, description }, ct);
 
-    public Task ApproveFypProjectAsync(Guid id, string? remarks, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/approve", new { remarks }, ct);
+    public Task ApproveFypProjectAsync(Guid id, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/approve{BuildFypScopeQuery(tenantId, campusId)}", new { remarks }, ct);
 
-    public Task RejectFypProjectAsync(Guid id, string remarks, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/reject", new { remarks }, ct);
+    public Task RejectFypProjectAsync(Guid id, string remarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/reject{BuildFypScopeQuery(tenantId, campusId)}", new { remarks }, ct);
 
-    public Task AssignFypSupervisorAsync(Guid id, Guid supervisorUserId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/assign-supervisor", new { supervisorUserId }, ct);
+    public Task AssignFypSupervisorAsync(Guid id, Guid supervisorUserId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/assign-supervisor{BuildFypScopeQuery(tenantId, campusId)}", new { supervisorUserId }, ct);
 
-    public Task CompleteFypProjectAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/complete", new { }, ct);
+    public Task CompleteFypProjectAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/complete{BuildFypScopeQuery(tenantId, campusId)}", new { }, ct);
 
-    public Task RequestFypCompletionAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/request-completion", new { }, ct);
+    public Task EnterFypResultAsync(Guid id, string result, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/result{BuildFypScopeQuery(tenantId, campusId)}", new { result }, ct);
 
-    public Task ApproveFypCompletionAsync(Guid id, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/approve-completion", new { }, ct);
+    public Task RequestFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/request-completion{BuildFypScopeQuery(tenantId, campusId)}", new { }, ct);
+
+    public Task ApproveFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/approve-completion{BuildFypScopeQuery(tenantId, campusId)}", new { }, ct);
 
     private sealed class FypCreateResponse { public Guid ProjectId { get; set; } }
 
@@ -3588,6 +3600,7 @@ public class EduApiClient : IEduApiClient
         Title          = f.Title ?? "",
         Description    = f.Description,
         Status         = f.Status ?? "",
+        FinalResult    = f.FinalResult,
         StudentName    = f.StudentName ?? "",
         SupervisorName = f.SupervisorName,
         DepartmentName = f.DepartmentName ?? "",
@@ -3605,6 +3618,7 @@ public class EduApiClient : IEduApiClient
         public string? Title          { get; set; }
         public string? Description    { get; set; }
         public string? Status         { get; set; }
+        public string? FinalResult    { get; set; }
         public string? StudentName    { get; set; }
         public string? SupervisorName { get; set; }
         public string? DepartmentName { get; set; }
@@ -3613,6 +3627,17 @@ public class EduApiClient : IEduApiClient
         public int     CompletionApprovalCount { get; set; }
         public int     RequiredApprovalCount { get; set; }
         public List<Guid>? CompletionApprovedByUserIds { get; set; }
+    }
+
+    private static string BuildFypScopeQuery(Guid? tenantId, Guid? campusId)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue)
+            query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            query.Add($"campusId={campusId.Value}");
+
+        return query.Count == 0 ? string.Empty : $"?{string.Join("&", query)}";
     }
 
     private sealed class FypMeetingApiDto

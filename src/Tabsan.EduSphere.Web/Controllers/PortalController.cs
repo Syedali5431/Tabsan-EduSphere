@@ -2541,7 +2541,7 @@ public class PortalController : Controller
                 // Represent it as a published synthetic result row when no offering filter is active.
                 if (!offeringId.HasValue)
                 {
-                    var myProjects = await _api.GetMyFypProjectsAsync(ct);
+                    var myProjects = await _api.GetMyFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
                     var completedFyp = myProjects.FirstOrDefault(p => string.Equals(p.Status, "Completed", StringComparison.OrdinalIgnoreCase));
                     if (completedFyp is not null)
                     {
@@ -2563,7 +2563,7 @@ public class PortalController : Controller
                                     CourseCode = "FYP",
                                     MarksObtained = null,
                                     TotalMarks = 0,
-                                    LetterGrade = "Completed",
+                                    LetterGrade = string.IsNullOrWhiteSpace(completedFyp.FinalResult) ? "Completed" : completedFyp.FinalResult,
                                     IsPublished = true,
                                     SemesterName = "Semester 8",
                                     StudentName = completedFyp.StudentName,
@@ -2655,36 +2655,61 @@ public class PortalController : Controller
     // ── FYP ────────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Fyp(Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> Fyp(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "FYP Management";
+        var identity = _api.GetSessionIdentity();
+        var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+        var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
         var model = new FypPageModel
         {
             IsConnected         = _api.IsConnected(),
+            Identity            = identity,
+            SelectedTenantId    = tenantId,
+            SelectedCampusId    = campusId,
             SelectedDepartmentId = departmentId,
             Message             = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
         {
-            var sessionId = _api.GetSessionIdentity();
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            var sessionId = identity;
             if (sessionId?.IsStudent == true)
             {
                 var profile = await _api.GetMyStudentProfileAsync(ct);
-                if ((profile?.CurrentSemesterNumber ?? 0) < 8)
+                if (profile is null)
                 {
-                    TempData["PortalMessage"] = "FYP becomes available from semester 8.";
+                    TempData["PortalMessage"] = "Student profile not found.";
                     return RedirectToAction(nameof(Dashboard));
                 }
 
-                model.Projects = await _api.GetMyFypProjectsAsync(ct);
+                if (profile.InstitutionType != 0)
+                {
+                    TempData["PortalMessage"] = "FYP is available for University students only.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
+                if (profile.TotalSemesters <= 0 || profile.CurrentSemesterNumber != profile.TotalSemesters)
+                {
+                    TempData["PortalMessage"] = $"FYP is available only in last semester (Semester {profile.TotalSemesters}).";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
+                model.Projects = await _api.GetMyFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
             // Issue-Fix Phase 3 Stage 3.8 — Faculty FYP workflow: load supervised projects + student list for FYP creation.
             else if (sessionId?.IsFaculty == true)
             {
-                model.Departments = await _api.GetDepartmentsAsync(ct);
-                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(ct);
-                model.Projects = await _api.GetMySupervisedProjectsAsync(ct);
+                model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(effectiveTenantId, effectiveCampusId, ct);
+                model.Projects = await _api.GetMySupervisedProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
 
                 // Load students so faculty can create an FYP record for a student.
                 var deptToLoad = departmentId ?? model.Departments.FirstOrDefault()?.Id;
@@ -2693,19 +2718,19 @@ public class PortalController : Controller
             }
             else if (departmentId.HasValue)
             {
-                model.Departments = await _api.GetDepartmentsAsync(ct);
+                model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
                 model.Faculty = await _api.GetFacultyAsync(ct);
                 model.Students = await _api.GetStudentsAsync(departmentId, ct);
-                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(ct);
-                model.Projects = await _api.GetFypByDepartmentAsync(departmentId.Value, ct);
+                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(effectiveTenantId, effectiveCampusId, ct);
+                model.Projects = await _api.GetFypByDepartmentAsync(departmentId.Value, effectiveTenantId, effectiveCampusId, ct);
             }
             else if (sessionId?.IsAdmin == true || sessionId?.IsSuperAdmin == true)
             {
-                model.Departments = await _api.GetDepartmentsAsync(ct);
+                model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
                 model.Faculty = await _api.GetFacultyAsync(ct);
                 model.Students = await _api.GetStudentsAsync(null, ct);
-                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(ct);
-                model.Projects = await _api.GetAllFypProjectsAsync(ct);
+                model.UpcomingMeetings = await _api.GetUpcomingMeetingsAsync(effectiveTenantId, effectiveCampusId, ct);
+                model.Projects = await _api.GetAllFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
@@ -3213,113 +3238,185 @@ public class PortalController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ProposeFypProject(
-        Guid departmentId, string title, string description, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.ProposeFypProjectAsync(departmentId, title, description, ct); }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp));
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateFypProject(
-        Guid studentProfileId, Guid departmentId, string title, string description, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.CreateFypProjectAsync(studentProfileId, departmentId, title, description, ct); TempData["PortalMessage"] = "FYP project created."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateFypProject(Guid id, Guid? departmentId, string title, string description, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.UpdateFypProjectAsync(id, title, description, ct); TempData["PortalMessage"] = "FYP project updated."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApproveFypProject(Guid id, string? remarks, Guid? departmentId, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.ApproveFypProjectAsync(id, remarks, ct); TempData["PortalMessage"] = "Project approved."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> RejectFypProject(Guid id, string remarks, Guid? departmentId, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.RejectFypProjectAsync(id, remarks, ct); TempData["PortalMessage"] = "Project rejected."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AssignFypSupervisor(Guid id, Guid supervisorUserId, Guid? departmentId, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.AssignFypSupervisorAsync(id, supervisorUserId, ct); TempData["PortalMessage"] = "Supervisor assigned."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CompleteFypProject(Guid id, Guid? departmentId, CancellationToken ct)
-    {
-        if (_api.IsConnected())
-        {
-            try { await _api.CompleteFypProjectAsync(id, ct); TempData["PortalMessage"] = "Project marked as complete."; }
-            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
-        }
-        return RedirectToAction(nameof(Fyp), new { departmentId });
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> RequestFypCompletion(Guid id, Guid? departmentId, CancellationToken ct)
+        Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.RequestFypCompletionAsync(id, ct);
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.ProposeFypProjectAsync(departmentId, title, description, effectiveTenantId, effectiveCampusId, ct);
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateFypProject(
+        Guid studentProfileId, Guid departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.CreateFypProjectAsync(studentProfileId, departmentId, title, description, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "FYP project created.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateFypProject(Guid id, Guid? departmentId, string title, string description, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.UpdateFypProjectAsync(id, title, description, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "FYP project updated.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveFypProject(Guid id, string? remarks, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.ApproveFypProjectAsync(id, remarks, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Project approved.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectFypProject(Guid id, string remarks, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.RejectFypProjectAsync(id, remarks, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Project rejected.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignFypSupervisor(Guid id, Guid supervisorUserId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.AssignFypSupervisorAsync(id, supervisorUserId, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Supervisor assigned.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CompleteFypProject(Guid id, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.CompleteFypProjectAsync(id, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "Project marked as complete.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnterFypResult(Guid id, Guid? departmentId, string result, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.EnterFypResultAsync(id, result, effectiveTenantId, effectiveCampusId, ct);
+                TempData["PortalMessage"] = "FYP result saved.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
+        }
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestFypCompletion(Guid id, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.RequestFypCompletionAsync(id, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Completion request sent to assigned faculty for approvals.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
 
-        return RedirectToAction(nameof(Fyp), new { departmentId });
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApproveFypCompletion(Guid id, Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> ApproveFypCompletion(Guid id, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.ApproveFypCompletionAsync(id, ct);
+                var identity = _api.GetSessionIdentity();
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+                await _api.ApproveFypCompletionAsync(id, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Completion approval submitted.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
 
-        return RedirectToAction(nameof(Fyp), new { departmentId });
+        return RedirectToAction(nameof(Fyp), new { departmentId, tenantId, campusId });
     }
 
     [HttpGet]
