@@ -4788,7 +4788,7 @@ public class EduApiClient : IEduApiClient
             UniversityName   = raw?.UniversityName   ?? "Tabsan EduSphere",
             PortalSubtitle   = raw?.PortalSubtitle   ?? "Campus Portal",
             FooterText       = raw?.FooterText       ?? "© 2026 Tabsan EduSphere",
-            LogoImage        = raw?.LogoImage,
+            LogoImage        = NormalizeApiAssetUrl(raw?.LogoImage),
             PrivacyPolicyUrl = raw?.PrivacyPolicyUrl,
             PrivacyPolicyContent = raw?.PrivacyPolicyContent,
             FontFamily       = raw?.FontFamily,
@@ -4815,14 +4815,21 @@ public class EduApiClient : IEduApiClient
     public async Task<string?> UploadLogoAsync(Stream fileStream, string fileName, CancellationToken ct)
     {
         using var content = new MultipartFormDataContent();
-        content.Add(new StreamContent(fileStream), "file", fileName);
+        var fileContent = new StreamContent(fileStream);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(ResolveUploadContentType(fileName));
+        content.Add(fileContent, "file", fileName);
         using var request  = CreateRequest(HttpMethod.Post, "api/v1/portal-settings/logo");
         request.Content    = content;
         using var response = await CreateClient().SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode)
+            throw BuildException(response.StatusCode, body);
+
         var json = JsonSerializer.Deserialize<System.Text.Json.JsonElement>(body, _jsonOptions);
-        return json.TryGetProperty("url", out var urlProp) ? NormalizeApiAssetUrl(urlProp.GetString()) : null;
+        if (!json.TryGetProperty("url", out var urlProp))
+            throw new InvalidOperationException("Logo upload succeeded but no logo URL was returned by the API.");
+
+        return NormalizeApiAssetUrl(urlProp.GetString());
     }
 
     private string? NormalizeApiAssetUrl(string? rawUrl)
@@ -4834,6 +4841,21 @@ public class EduApiClient : IEduApiClient
         if (string.IsNullOrWhiteSpace(baseUrl)) return rawUrl;
 
         return rawUrl.StartsWith('/') ? $"{baseUrl}{rawUrl}" : $"{baseUrl}/{rawUrl}";
+    }
+
+    private static string ResolveUploadContentType(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext switch
+        {
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".svg" => "image/svg+xml",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 
     private sealed class PortalBrandingApiDto
