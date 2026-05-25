@@ -59,6 +59,7 @@ public class Phase31Stage2SecurityHardeningTests
             "AuthController.Refresh",
             "AuthController.SecurityProfile",
             "PortalSettingsController.GetLogoFile",
+            "TwoFactorController.LoginVerify",
             "StudentController.SelfRegister"
         };
 

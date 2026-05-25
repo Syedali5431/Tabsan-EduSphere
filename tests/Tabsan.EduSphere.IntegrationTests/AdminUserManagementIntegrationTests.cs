@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tabsan.EduSphere.Domain.Identity;
+using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
 
@@ -27,6 +29,16 @@ public class AdminUserManagementIntegrationTests
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(role, userId));
         return client;
+    }
+
+    private async Task<(Guid TenantId, Guid CampusId)> GetDefaultTenantCampusAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var tenant = await db.Tenants.FirstAsync(t => t.Code == "DEFAULT");
+        var campus = await db.Campuses.FirstAsync(c => c.TenantId == tenant.Id && c.Code == "MAIN");
+        return (tenant.Id, campus.Id);
     }
 
     private static async Task<InstitutionPolicySnapshot> GetPolicySnapshotAsync(HttpClient client)
@@ -99,6 +111,7 @@ public class AdminUserManagementIntegrationTests
     public async Task AdminUser_CreateUpdate_AndDepartmentAssignmentRoundTrip_Works()
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000010");
+        var (tenantId, campusId) = await GetDefaultTenantCampusAsync();
 
         await ExecuteWithPolicyAsync(client, includeSchool: false, includeCollege: false, includeUniversity: true, async () =>
         {
@@ -133,7 +146,7 @@ public class AdminUserManagementIntegrationTests
             else
             {
                 var suffix = Guid.NewGuid().ToString("N")[..6];
-                var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+                var createDepartmentResponse = await client.PostAsJsonAsync($"api/v1/department?tenantId={tenantId}&campusId={campusId}", new
                 {
                     name = $"Integration Dept {suffix}",
                     code = $"INT{suffix}",
@@ -199,6 +212,7 @@ public class AdminUserManagementIntegrationTests
     public async Task Department_FacultyAssignmentRoundTrip_WithSuperAdmin_Works()
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000012");
+        var (tenantId, campusId) = await GetDefaultTenantCampusAsync();
 
         var deptsResponse = await client.GetAsync("api/v1/department");
         Assert.Equal(HttpStatusCode.OK, deptsResponse.StatusCode);
@@ -212,7 +226,7 @@ public class AdminUserManagementIntegrationTests
         else
         {
             var suffix = Guid.NewGuid().ToString("N")[..6];
-            var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+            var createDepartmentResponse = await client.PostAsJsonAsync($"api/v1/department?tenantId={tenantId}&campusId={campusId}", new
             {
                 name = $"Faculty Integration Dept {suffix}",
                 code = $"FID{suffix}",
@@ -267,6 +281,7 @@ public class AdminUserManagementIntegrationTests
     public async Task Department_AdminAssignment_WithInstitutionMismatch_ReturnsBadRequest()
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000013");
+        var (tenantId, campusId) = await GetDefaultTenantCampusAsync();
 
         await ExecuteWithPolicyAsync(client, includeSchool: true, includeCollege: true, includeUniversity: true, async () =>
         {
@@ -286,7 +301,7 @@ public class AdminUserManagementIntegrationTests
             var adminUserId = createDoc.RootElement.GetProperty("id").GetGuid();
 
             var suffix = Guid.NewGuid().ToString("N")[..6];
-            var createDepartmentResponse = await client.PostAsJsonAsync("api/v1/department", new
+            var createDepartmentResponse = await client.PostAsJsonAsync($"api/v1/department?tenantId={tenantId}&campusId={campusId}", new
             {
                 name = $"College Dept {suffix}",
                 code = $"COL{suffix}",
@@ -310,6 +325,7 @@ public class AdminUserManagementIntegrationTests
     public async Task DepartmentAndCourse_Crud_WorksAcrossAllInstitutionTypes_WhenPolicyEnablesAll()
     {
         using var client = CreateClient("SuperAdmin", "00000000-0000-0000-0000-000000000014");
+        var (tenantId, campusId) = await GetDefaultTenantCampusAsync();
 
         var originalPolicy = await GetPolicySnapshotAsync(client);
 
@@ -321,7 +337,7 @@ public class AdminUserManagementIntegrationTests
             async Task<Guid> CreateDepartmentAsync(string prefix, int institutionType)
             {
                 var suffix = Guid.NewGuid().ToString("N")[..6];
-                var response = await client.PostAsJsonAsync("api/v1/department", new
+                var response = await client.PostAsJsonAsync($"api/v1/department?tenantId={tenantId}&campusId={campusId}", new
                 {
                     name = $"{prefix} Dept {suffix}",
                     code = $"{prefix[..Math.Min(3, prefix.Length)].ToUpperInvariant()}{suffix}",
@@ -336,7 +352,7 @@ public class AdminUserManagementIntegrationTests
             async Task<Guid> CreateCourseAsync(Guid departmentId, string prefix)
             {
                 var suffix = Guid.NewGuid().ToString("N")[..6];
-                var response = await client.PostAsJsonAsync("api/v1/course", new
+                var response = await client.PostAsJsonAsync($"api/v1/course?tenantId={tenantId}&campusId={campusId}", new
                 {
                     title = $"{prefix} Course {suffix}",
                     code = $"{prefix[..Math.Min(3, prefix.Length)].ToUpperInvariant()}{suffix}",
