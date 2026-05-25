@@ -216,3 +216,10 @@ Use this weekly:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Student-facing access behavior remains role-safe, with stronger tenant and campus scoped governance in shared environments.
+- Menu visibility consistency was improved by synchronized sidebar governance and module entitlement checks.
+- If a student menu appears missing, support teams should verify role, active module state, and tenant/campus scope mapping before raising incidents.
+

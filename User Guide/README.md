@@ -56,3 +56,11 @@ Repository Sync Note (15 May 2026):
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Program management is now tenant and campus scoped with explicit activate/deactivate controls.
+- Report Center availability can now be toggled per tenant and campus scope by authorized governance users.
+- Sidebar governance synchronization now self-heals role/menu visibility mappings in existing environments.
+- Settings and governance coverage now explicitly includes Sidebar Settings, Report Settings, Institution Policy, Module Composition, Admin Users, Tenant Management, and Campus Management surfaces.
+- User import operations now follow claim-aware tenant and campus scope resolution for safer onboarding boundaries.

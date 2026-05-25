@@ -209,3 +209,12 @@ Each participant should:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Add training walkthrough for tenant and campus scoped Program Management, including activate and deactivate operations.
+- Add training walkthrough for scoped Report Center activation and deactivation in governance settings.
+- Include troubleshooting drill for sidebar visibility mismatches using role, module, and tenant/campus scope validation.
+- Include governance awareness module for Admin Users, Tenant Management, and Campus Management settings surfaces.
+- Reinforce user-import training to cover claim-aware tenant/campus boundaries in bulk onboarding.
+

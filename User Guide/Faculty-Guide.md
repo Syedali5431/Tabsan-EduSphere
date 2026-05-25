@@ -257,3 +257,11 @@ Use high-contrast or readable themes when reviewing long grading sessions.
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Program and report access boundaries are now more explicitly tenant and campus scoped in shared multi-campus deployments.
+- Report Center visibility can now differ per tenant and campus activation state, even when role permissions are unchanged.
+- Sidebar visibility consistency was improved through synchronized menu governance, reducing mismatches between visible menus and allowed routes.
+- Faculty should report missing menu items with role, department, tenant, and campus context so governance troubleshooting is accurate.
+

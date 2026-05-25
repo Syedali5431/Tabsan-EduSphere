@@ -222,3 +222,12 @@ Common parity-scope signals to record:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Program management governance now includes tenant and campus scoped create, update, activate, and deactivate controls.
+- Report Center activation status is now managed per tenant and campus scope with explicit activate/deactivate operations.
+- Sidebar governance synchronization now self-heals role-access and active-status mappings in existing environments.
+- Settings governance catalog now explicitly includes Admin Users, Tenant Management, and Campus Management alongside Sidebar Settings, Report Settings, Institution Policy, and Module Composition.
+- User import governance now enforces claim-aware effective scope resolution to prevent cross-scope onboarding mistakes.
+

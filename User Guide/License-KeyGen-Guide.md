@@ -170,3 +170,10 @@ After issuing a license:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Licensing operations should now be validated with tenant and campus scoped governance behaviors in mind for shared deployments.
+- SuperAdmin post-license verification should include scoped Program and Report Center behavior checks by tenant/campus context.
+- Continue strict key handling while expanding validation checklists to include scope-aware access and settings governance surfaces.
+

@@ -255,3 +255,11 @@ Finance users cannot:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Phase 40.3 Scoped Governance Update (2026-05-25)
+
+- Programs now run with tenant and campus scoped visibility and operations, including explicit activate/deactivate controls.
+- SuperAdmin can apply scope selection for cross-scope program and report operations; other roles remain claim-scoped.
+- Report Center state can be activated or deactivated per tenant and campus scope through settings governance.
+- Sidebar visibility now reflects synchronized role access, active status, and module entitlement alignment, including settings-governance menu surfaces.
+- User import and onboarding flows now enforce effective tenant and campus scope boundaries in bulk onboarding scenarios.
