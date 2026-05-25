@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.DataProtection;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Application.Auth;
 using Tabsan.EduSphere.Application.Interfaces;
@@ -37,6 +38,7 @@ using Tabsan.EduSphere.Application.Services;
 using Tabsan.EduSphere.Infrastructure.Exporters;
 using Tabsan.EduSphere.Infrastructure.Integrations;
 using Tabsan.EduSphere.API.Services;
+using Tabsan.EduSphere.API.Services.TwoFactor;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -319,6 +321,11 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<TokenService>(); // also registered directly for AuthController resolving
 builder.Services.AddScoped<IPasswordHasher, Argon2idPasswordHasher>();
 builder.Services.AddScoped<ITotpService, TotpService>();
+builder.Services.AddDataProtection().SetApplicationName("Tabsan.EduSphere.API");
+builder.Services.AddScoped<ITwoFactorStateStore, TwoFactorStateStore>();
+builder.Services.AddScoped<TwoFactorService>();
+builder.Services.AddScoped<QRCodeService>();
+builder.Services.AddScoped<TwoFactorSetupService>();
 builder.Services.AddScoped<LicenseValidationService>();
 
 // ── Module entitlement ──────────────────────────────────────────────────────────

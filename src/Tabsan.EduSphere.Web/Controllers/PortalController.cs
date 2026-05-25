@@ -216,6 +216,12 @@ public class PortalController : Controller
         return (true, string.Empty);
     }
 
+    private Guid? GetCurrentUserId()
+    {
+        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(callerIdStr, out var parsedUserId) ? parsedUserId : null;
+    }
+
     [HttpGet]
     public IActionResult ForceChangePassword()
     {
@@ -1150,6 +1156,124 @@ public class PortalController : Controller
             catch (Exception ex) { model.Message = $"Error loading theme: {ex.Message}"; }
         }
         return View(model);
+    }
+
+    // ── Two-Factor Authentication Settings ──────────────────────────────────
+
+    public IActionResult TwoFactorSettings()
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        return View(new TwoFactorSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            CurrentUserId = GetCurrentUserId()
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BeginTwoFactorSetup(CancellationToken ct)
+    {
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        if (!model.IsConnected)
+            return RedirectToAction("Index", "Login");
+
+        try
+        {
+            var setup = await _api.BeginTwoFactorSetupAsync(ct);
+            if (setup is null)
+            {
+                model.Message = "Unable to start 2FA setup.";
+            }
+            else
+            {
+                model.TwoFactorEnabled = setup.TwoFactorEnabled;
+                model.Issuer = setup.Issuer;
+                model.AccountName = setup.AccountName;
+                model.ManualKey = setup.ManualKey;
+                model.ProvisioningUri = setup.ProvisioningUri;
+                model.QrCodeDataUrl = setup.QrCodeDataUrl;
+                model.Message = "2FA setup started. Scan the QR code or enter the manual key in your authenticator app.";
+            }
+        }
+        catch (Exception ex)
+        {
+            model.Message = $"Error starting 2FA setup: {ex.Message}";
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyTwoFactorSetup(string code, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        try
+        {
+            var result = await _api.VerifyTwoFactorSetupAsync(code, ct);
+            TempData["Message"] = result?.Success == true
+                ? "2FA setup verified and enabled."
+                : result?.Message ?? "Unable to verify 2FA setup.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Message"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(TwoFactorSettings));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DisableTwoFactor(string code, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        try
+        {
+            var result = await _api.DisableTwoFactorAsync(code, ct);
+            TempData["Message"] = result?.Success == true
+                ? "2FA disabled."
+                : result?.Message ?? "Unable to disable 2FA.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Message"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(TwoFactorSettings));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestTwoFactorLogin(string code, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        if (!_api.IsConnected() || userId is null)
+            return RedirectToAction("Index", "Login");
+
+        try
+        {
+            var result = await _api.VerifyTwoFactorLoginAsync(userId.Value, code, ct);
+            TempData["Message"] = result?.Success == true
+                ? "2FA login challenge accepted."
+                : result?.Message ?? "Unable to verify the login challenge.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Message"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(TwoFactorSettings));
     }
 
     [HttpPost]

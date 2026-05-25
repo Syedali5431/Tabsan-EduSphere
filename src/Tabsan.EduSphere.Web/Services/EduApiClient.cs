@@ -17,6 +17,10 @@ public interface IEduApiClient
     void SaveConnection(ApiConnectionModel model);
     SessionIdentity? GetSessionIdentity();
     Task ForceChangePasswordAsync(string newPassword, CancellationToken ct);
+    Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct);
+    Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct);
+    Task<TwoFactorOperationResultApiModel?> DisableTwoFactorAsync(string code, CancellationToken ct);
+    Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorLoginAsync(Guid userId, string code, CancellationToken ct);
     Task<StudentProfileSummaryItem?> GetMyStudentProfileAsync(CancellationToken ct);
 
     Task<List<LookupItem>> GetDepartmentsAsync(CancellationToken ct);
@@ -665,6 +669,18 @@ public class EduApiClient : IEduApiClient
 
     public Task ForceChangePasswordAsync(string newPassword, CancellationToken ct)
         => PostAsync<object, object>("api/v1/auth/force-change-password", new { newPassword }, ct);
+
+    public Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
+        => PostAsync<object, TwoFactorSetupApiModel>("api/v1/2fa/setup", new { }, ct);
+
+    public Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct)
+        => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/verify", new { code }, ct);
+
+    public Task<TwoFactorOperationResultApiModel?> DisableTwoFactorAsync(string code, CancellationToken ct)
+        => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/disable", new { code }, ct);
+
+    public Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorLoginAsync(Guid userId, string code, CancellationToken ct)
+        => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/login-verify", new { userId, code }, ct);
 
     // â”€â”€ Lookup GETs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

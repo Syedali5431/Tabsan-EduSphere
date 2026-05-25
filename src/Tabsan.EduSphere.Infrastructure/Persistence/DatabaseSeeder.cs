@@ -130,6 +130,9 @@ public static class DatabaseSeeder
 
     private static async Task SeedAcademicDocumentTemplatesAsync(ApplicationDbContext db)
     {
+        if (!await TableExistsAsync(db, "academic_document_templates"))
+            return;
+
         var existing = await db.AcademicDocumentTemplates
             .IgnoreQueryFilters()
             .Select(t => new { t.TemplateType, t.Version })
@@ -147,6 +150,34 @@ public static class DatabaseSeeder
             {
                 db.AcademicDocumentTemplates.Add(template);
             }
+        }
+    }
+
+    private static async Task<bool> TableExistsAsync(ApplicationDbContext db, string tableName)
+    {
+        var connection = db.Database.GetDbConnection();
+        var shouldClose = connection.State != System.Data.ConnectionState.Open;
+
+        if (shouldClose)
+            await connection.OpenAsync();
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT CASE WHEN OBJECT_ID(@tableName, 'U') IS NULL THEN 0 ELSE 1 END";
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@tableName";
+            parameter.Value = tableName;
+            command.Parameters.Add(parameter);
+
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result) == 1;
+        }
+        finally
+        {
+            if (shouldClose)
+                await connection.CloseAsync();
         }
     }
 

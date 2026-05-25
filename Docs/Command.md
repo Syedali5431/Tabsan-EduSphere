@@ -1,3 +1,15 @@
+### Plan L Phase L1-L7 Add-On 2FA Surface (2026-05-25)
+- Implementation Summary:
+  - Added a dedicated Plan L 2FA surface with isolated services, a QR generator, and a new `TwoFactorController` under `/api/v1/2fa`.
+  - Wired an EF-backed `ITwoFactorStateStore` plus startup `AddDataProtection` registration so the 2FA secret is protected at rest before confirm/disable/login-verify operations.
+  - Kept the legacy auth controller/service untouched and added a commented login hand-off insertion point inside the new controller instead.
+- Validation Summary:
+  - `dotnet build Tabsan.EduSphere.sln -v minimal` succeeded after the new add-on files and DI registrations were added.
+  - The add-on is additive and compile-safe; Plan L UI/test hardening remains the next stage of follow-up work.
+  - Focused `Tabsan.EduSphere.UnitTests` coverage for `TwoFactorSetupService` now passes, including setup, verify, disable, and login verification flows.
+  - Focused `Tabsan.EduSphere.IntegrationTests` coverage for the live `TwoFactorController` now passes, and the `users.MfaTotpSecret` column was widened to `nvarchar(512)` so encrypted secrets persist successfully.
+  - Focused `Tabsan.EduSphere.UnitTests` coverage for `PortalController.TwoFactorSettings` and the 2FA setup entrypoint now passes.
+
 ### Plan K Phase K12 Stage K12.3 Rollout Strategy (2026-05-25)
 - Implementation Summary:
   - Added default `plan-k.enabled` feature-flag support in the existing feature-flag service.

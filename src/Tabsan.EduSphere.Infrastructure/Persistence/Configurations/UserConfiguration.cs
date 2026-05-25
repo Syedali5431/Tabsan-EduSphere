@@ -119,7 +119,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .HasDefaultValue(false);
 
         builder.Property(u => u.MfaTotpSecret)
-               .HasMaxLength(128)
+               .HasMaxLength(512)
                .IsRequired(false);
 
         builder.Property(u => u.MfaRecoveryCodesHashJson)

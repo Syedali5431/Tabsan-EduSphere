@@ -266,6 +266,19 @@ public class ForceChangePasswordPageModel
     public string? Message { get; set; }
 }
 
+public class TwoFactorSettingsPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public Guid? CurrentUserId { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+    public string? Issuer { get; set; }
+    public string? AccountName { get; set; }
+    public string? ManualKey { get; set; }
+    public string? ProvisioningUri { get; set; }
+    public string? QrCodeDataUrl { get; set; }
+}
+
 // =============================================================================
 // Phase 22: External Integrations
 // =============================================================================

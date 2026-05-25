@@ -3,6 +3,15 @@
 ## Objective
 Add secure TOTP-based Two-Factor Authentication (Google Authenticator / Authy compatible) as a plug-in extension to the existing ASP.NET Core application without breaking existing authentication or modules.
 
+## Implementation Checkpoint
+- The codebase now contains an isolated add-on 2FA surface under `src/Tabsan.EduSphere.API/Services/TwoFactor/` plus `src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs`.
+- A dedicated EF-backed 2FA state store is wired through `ITwoFactorStateStore` so the legacy auth controllers remain untouched.
+- The add-on exposes setup, verify, disable, and login-verify endpoints, with a commented plug-in insertion point for the existing password-first login flow.
+- The current implementation is additive and builds successfully; the remaining work in this plan is now primarily rollout, UI, and test hardening.
+- Focused unit coverage now exists for the new 2FA orchestration service, including setup, verify, disable, and login verification flows.
+- Integration coverage now passes for the live `/api/v1/2fa` endpoints, and the MFA secret column has been widened to safely store protected secrets at rest.
+- Portal-side unit coverage now exists for the new 2FA settings page and setup entrypoint, so the Web shell is covered as well.
+
 ## Mandatory Safety Rules
 - Do not modify or remove existing authentication logic.
 - Do not overwrite existing controllers/services.
@@ -281,3 +290,65 @@ Note:
 - Drift window and retry protection are implemented.
 - Unit tests cover secret generation and valid/invalid TOTP validation.
 - Integration guidance includes clearly commented plug-in insertion points.
+
+## Completed Phase Summaries
+
+### Phase L1 - Extension Boundary and Non-Breaking Design
+- Implementation Summary:
+  - Introduced an isolated 2FA extension boundary under dedicated API service and controller folders without altering the legacy auth controller path.
+  - Registered only the new 2FA services in startup so the feature remains additive and plug-and-play.
+- Validation Summary:
+  - Full solution build succeeds with the 2FA boundary in place.
+  - Existing authentication code paths remain untouched.
+
+### Phase L2 - Data and Persistence Safety
+- Implementation Summary:
+  - Added protected-at-rest storage for the 2FA secret and widened the user MFA secret column to hold encrypted payloads safely.
+  - Kept the persistence change additive and limited to the 2FA fields.
+- Validation Summary:
+  - Integration tests now persist and retrieve 2FA state successfully.
+  - Build remains green after the schema change and migration.
+
+### Phase L3 - New Service Implementation
+- Implementation Summary:
+  - Added the isolated TOTP, QR, and orchestration services for setup, verification, disable, and login verification flows.
+  - Kept all 2FA logic separate from the legacy auth service.
+- Validation Summary:
+  - Focused unit tests for the 2FA orchestration service pass.
+  - Full solution build succeeds.
+
+### Phase L4 - Enable 2FA Setup Flow
+- Implementation Summary:
+  - Added the setup entrypoint and confirmation flow that returns QR/manual-key payloads and enables 2FA after code validation.
+- Validation Summary:
+  - API integration tests confirm setup payload generation and code verification.
+
+### Phase L5 - Login Flow Extension
+- Implementation Summary:
+  - Added the isolated login-verify hand-off endpoint without refactoring the legacy password-first login flow.
+- Validation Summary:
+  - API integration tests confirm login-verify accepts valid TOTP codes and rejects invalid ones.
+
+### Phase L6 - Security Controls and Abuse Protection
+- Implementation Summary:
+  - Stored secrets via Data Protection and kept the secret out of API responses after setup starts.
+- Validation Summary:
+  - Integration tests verify the secret persists encrypted and the application build remains stable.
+
+### Phase L7 - New Controller and Endpoints
+- Implementation Summary:
+  - Added the dedicated `TwoFactorController` with `/api/v1/2fa/setup`, `/verify`, `/disable`, and `/login-verify` endpoints.
+- Validation Summary:
+  - Live API integration tests pass for the full 2FA controller surface.
+
+### Phase L8 - UI / Frontend Support
+- Implementation Summary:
+  - Added the portal 2FA settings page, the profile/menu navigation links, and the web client methods to drive the new endpoints.
+- Validation Summary:
+  - Portal controller unit tests pass for the 2FA settings and setup entrypoint.
+
+### Phase L9 - Unit Tests
+- Implementation Summary:
+  - Added focused unit tests for 2FA orchestration and portal-side 2FA setup behavior.
+- Validation Summary:
+  - `Tabsan.EduSphere.UnitTests` passes for the 2FA unit slices.
