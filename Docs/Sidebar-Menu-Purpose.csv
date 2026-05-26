@@ -10,6 +10,7 @@ Core,notifications,Notifications,View inbox notifications with delivery and read
 Core,students,Students,Manage and view student profile and lifecycle records,Add Edit View Deactivate override,Add Edit View Deactivate,View,No Access,Faculty typically scoped view
 Core,departments,Departments,Manage departments and department-scoped setup,Add Edit View Deactivate override,Add Edit View Deactivate,View,No Access,Academic structure
 Core,courses,Courses,Manage course masters and offerings by level and scope,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View scoped,No Access,Scope and assignment aware
+Core,generate_certificates,Generate Certificates,University degree and transcript generation plus school and college additional certificate operations,Add Edit View Deactivate override,Add Edit View Deactivate,View scoped,View own documents,Institution and license scoped behavior
 Core,assignments,Assignments,Create grade and submit coursework,Add Edit View Deactivate override,View,Add Edit View Deactivate,View Submit,Student is submission only
 Core,attendance,Attendance,Record and track attendance and warnings,Add Edit View Deactivate override,View,Add Edit View Deactivate,View,Student is view only
 Core,results,Results,Enter publish and review results with transcript surfaces,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View scoped,View,Student is view only
@@ -43,6 +44,7 @@ Feature,graduation_apply,Graduation Apply,Student graduation application workflo
 Feature,graduation_applications,Graduation Applications,Review queue for graduation applications,View Approve Reject override,View Approve Reject,View Approve Reject stage based,No Access,Module and role dependent
 Feature,grading_config,Grading Config,Configure institution grading profile and thresholds,Add Edit View Deactivate override,Add Edit View Deactivate,View,No Access,Module and role dependent
 Feature,lms_manage,LMS Manage,Manage LMS integration and content module governance,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View Deactivate,No Access,Module and role dependent
+Feature,course_material,Course Material,Manage and consume course material uploads and links with scoped access,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View Deactivate,View Download,Module and role dependent
 Feature,discussion,Discussion,Course discussion boards and thread collaboration,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View Deactivate,Add Edit View own posts,Module and role dependent
 Feature,announcements,Announcements,Publish and consume institutional course announcements,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View assigned,View,Module and scope dependent
 Feature,study_plan,Study Plan,Student study planning with advisor review lifecycle,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View advisor scope,Add Edit View own plan,Module and role dependent

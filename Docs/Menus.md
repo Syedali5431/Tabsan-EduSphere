@@ -34,6 +34,7 @@ This document lists dashboard menus and explains what each menu does for end use
 | students | Students | Admin, Faculty | Manage and view student profile and lifecycle-related records. |
 | departments | Departments | Admin | Manage departments and department-scoped academic setup. |
 | courses | Courses | Admin, Faculty | Manage course masters and course offerings by academic level. |
+| generate_certificates | Generate Certificates | Admin, Faculty, Student | University: generate degree/transcript for scoped students; School/College: manage additional student certificates upload/view/download. |
 | assignments | Assignments | Faculty, Student | Faculty creates/grades assignments; students view and submit assignments. |
 | attendance | Attendance | Faculty, Student | Faculty records attendance; students view attendance and warnings. |
 | results | Results | Admin, Faculty, Student | Enter/publish/view results and access transcript-related outputs. |
@@ -62,6 +63,7 @@ These keys are supported by dashboard routing and may appear when enabled by mod
 | graduation_applications | Portal | Admin/faculty review queue for graduation applications. |
 | grading_config | Portal | Configure grading policy and institution-level grading behavior. |
 | lms_manage | Portal | Manage LMS integration and LMS configuration hooks. |
+| course_material | Portal | Manage and consume course material uploads/links with scoped visibility. |
 | discussion | Portal | Course discussion boards and collaboration threads. |
 | announcements | Portal | Publish and consume institutional/course announcements. |
 | study_plan | Portal | Student study planning with advisor review lifecycle. |
@@ -94,3 +96,4 @@ These keys are supported by dashboard routing and may appear when enabled by mod
 ## Notes
 - Final visible menus are the intersection of role permission, menu active status, module entitlement, and route authorization.
 - If a user reports a missing menu, validate: role assignment, module status, sidebar status, and role-access mapping for the menu key.
+- Settings and governance coverage is explicit and complete for: report settings, sidebar settings, dashboard settings, license update, institution policy, module composition, admin users, tenant management, and campus management.

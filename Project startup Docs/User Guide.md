@@ -7,6 +7,11 @@ User guide synchronization update (26 May 2026):
 - Graduation workflows now show deterministic conflict feedback during concurrent approval/reject operations.
 - FYP views remain compatible with legacy panel-role values (`Internal`/`External`) in existing data sets.
 - Settings and governance navigation checklist now explicitly includes report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user menus.
+- Certificate workflow is institution-aware:
+   - University users can generate degree (graduation-ready) and period-scoped transcript documents.
+   - School/College users can manage additional student certificates (upload/list/download) under authorized roles.
+- Degree/transcript actions are hidden when university mode is disabled in active license/policy.
+- Period filter wording is now dynamic: `Class` in university context, `Semester` in non-university context.
 
 User guide synchronization update (25 May 2026):
 - Programs page now supports scope-aware filtering for tenant/campus and scoped activation/deactivation workflows.

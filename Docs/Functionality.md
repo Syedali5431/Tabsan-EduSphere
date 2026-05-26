@@ -13,6 +13,21 @@
 - FYP panel-role compatibility expanded to accept legacy database role values (`Internal`/`External`) through safe enum aliases.
 - Program/report/menu scope governance remains tenant/campus aware, with role + scope consistency preserved across portal and API paths.
 
+## Certificate Workflow Update (2026-05-26)
+
+- University behavior:
+	- Degree generation remains university-only and requires graduate/pass context.
+	- Transcript generation supports period-based output (class/semester scoped by selected filter).
+- School/College behavior:
+	- Admin/SuperAdmin can upload multiple additional student certificates.
+	- Students can view and download their own uploaded additional certificates.
+- License and policy behavior:
+	- Degree/transcript actions are hidden when University is disabled in active policy/license matrix.
+- Filter behavior:
+	- Period filter label switches by institution context (`Class` for University; `Semester` for non-university).
+- Scope behavior:
+	- Certificate listing/upload/download operations enforce tenant/campus and role-based scope checks.
+
 ---
 
 ## Table of Contents

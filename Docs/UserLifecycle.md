@@ -111,6 +111,19 @@ Common lifecycle actions in student flow:
 - FYP lifecycle now accepts legacy panel role values (`Internal`/`External`) through compatibility aliases to avoid migration-time enum failures.
 - FYP repository lifecycle read paths now avoid continuation-based asynchronous execution patterns that can trigger DbContext multi-operation runtime errors.
 
+## 10. Certificate Lifecycle by Institution (2026-05-26)
+
+- University certificate lifecycle:
+  - Degree generation is restricted to university scope and graduate/pass-ready students.
+  - Transcript generation is available with class/semester contextual filtering.
+- School and College certificate lifecycle:
+  - Admin/SuperAdmin can upload multiple additional certificates per student.
+  - Student can view and download own uploaded additional certificates.
+- License and policy controls:
+  - Degree/transcript actions are hidden when university mode is disabled by active policy/license.
+- Scope and access controls:
+  - Certificate operations follow tenant/campus and role assignment boundaries for manage/read access.
+
 ## Role-to-Lifecycle Responsibility Matrix
 
 | Lifecycle Phase | SuperAdmin | Admin | Faculty | Student |

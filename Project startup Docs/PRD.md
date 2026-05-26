@@ -5,6 +5,20 @@
 - FYP requirement clarified: legacy panel-role values remain acceptable via backward-compatible enum mapping.
 - FYP repository requirement clarified: async read behavior must avoid continuation patterns that risk DbContext parallel-operation runtime faults.
 
+### 2026-05-26 - Product Requirements Synchronization (Institution-Aware Certificates)
+- University requirement:
+  - Degree generation must be available only in university scope and only for graduation-ready students.
+  - Transcript generation must support period-specific generation using class/semester context.
+- School/College requirement:
+  - Admin/SuperAdmin must be able to upload multiple additional certificates per student.
+  - Students must be able to view and download their own uploaded additional certificates.
+- License requirement:
+  - Degree/transcript options must be hidden when university mode is disabled by active policy/license.
+- Filter UX requirement:
+  - Period selector wording must switch to `Class` for university and `Semester` for non-university contexts.
+- Scope and authorization requirement:
+  - Listing/upload/download operations for certificates must enforce tenant/campus and role-based boundaries.
+
 ### 2026-05-25 - Product Requirements Synchronization (Scope-Aware Governance)
 - Program Management requirements now include:
   - tenant/campus scoped access control,

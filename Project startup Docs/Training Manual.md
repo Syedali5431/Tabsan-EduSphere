@@ -7,6 +7,11 @@ Training synchronization update (26 May 2026):
 - Add trainer scenario for graduation approval/reject concurrency conflict handling and safe operator retry flow.
 - Add trainer note on FYP legacy panel-role compatibility (`Internal`/`External`) during data migration demos.
 - Add trainer verification for complete settings/governance menu catalog including report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user.
+- Add trainer workflow for institution-aware Generate Certificates behavior:
+	- University: degree generation for graduation-ready students, transcript generation with class/semester filter.
+	- School/College: upload multiple additional student certificates and verify student download visibility.
+- Add trainer check for license-governed visibility: degree/transcript actions hidden when university mode is disabled.
+- Add trainer check for period-label switch: `Class` in university context and `Semester` in non-university context.
 
 Training synchronization update (25 May 2026):
 - Add trainer walkthrough for Program Management in scoped mode (tenant/campus aware for SuperAdmin).

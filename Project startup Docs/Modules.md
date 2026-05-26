@@ -9,6 +9,21 @@
 ### Module catalog note
 - Module catalog, entitlement matrix, and package pricing remain unchanged in this update.
 
+## Execution Update - 2026-05-26 (Institution-Aware Certificate Workflow)
+
+### Module impact summary
+- Certificate Generation module:
+  - University path supports degree and period-scoped transcript generation.
+  - School/College path supports additional certificate upload/list/download per student.
+- Settings and governance visibility:
+  - Settings catalog remains complete and explicitly includes system/report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user controls.
+- Filter behavior impact:
+  - Certificate UI period selector uses institution-aware terminology (`Class` vs `Semester`).
+
+### No catalog expansion note
+- No new paid module introduced.
+- This update extends behavior inside existing certificate and governance modules only.
+
 ## Execution Update - 2026-05-25 (Scoped Program and Governance Alignment)
 
 ### Module impact summary

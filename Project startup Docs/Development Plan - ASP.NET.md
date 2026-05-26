@@ -9,6 +9,23 @@
 - Keep API and portal behavior aligned on validation failures (return controlled bad-request/business error responses instead of generic 500s).
 - Preserve tenant/campus scope isolation and role-governed menu/report activation workflows.
 
+## 2026-05-26 Update - Institution-Aware Certificate and Filter Workflow
+
+### Implementation sync
+- University scope:
+  - Degree generation remains university-only and aligned with graduate/pass lifecycle.
+  - Transcript generation now supports class/semester scoped generation using selected period filter.
+- School and College scope:
+  - Added additional certificate upload/list/download workflow for Admin/SuperAdmin and Student consumption.
+- License-aware behavior:
+  - Degree/transcript UI actions are hidden when university mode is disabled in policy/license matrix.
+- Filter vocabulary behavior:
+  - Period filter labeling switches to `Class` for university and `Semester` for non-university contexts.
+
+### Validation intent
+- Keep all certificate operations tenant/campus scoped and role-authorized.
+- Preserve backward compatibility of existing graduation and transcript surfaces.
+
 ## 2026-05-25 Update - Scoped Program and Governance Enhancements
 
 ### Implementation sync

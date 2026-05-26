@@ -315,4 +315,21 @@
 | PortalController.UpdateProgram | Updates scoped program name from portal and preserves selected filter context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.SetProgramActive | Toggles program active/inactive state from portal under scope-aware API calls. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.SetReportsActive | Toggles report scope active/inactive state from portal settings surface. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| CertificateGenerationController.GetAdditionalCertificates | Returns non-university additional certificate metadata for a scoped student with role-aware access checks. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| CertificateGenerationController.UploadAdditionalCertificate | Uploads additional student certificate files for school/college scope with admin/superadmin authorization and tenant/campus checks. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| CertificateGenerationController.DownloadAdditionalCertificate | Downloads previously uploaded additional student certificate files under scoped authorization checks. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| CertificateGenerationController.BuildTranscriptRowsAsync(..., semesterId, ...) | Builds transcript rows filtered by class/semester context for university transcript generation. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| CertificateGenerationController.GetNonUniversityStudentForAdminManagementAsync | Validates school/college admin management scope for additional certificate upload operations. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| CertificateGenerationController.HasAdditionalCertificateReadScopeAsync | Enforces scoped read permissions for additional school/college certificates across Admin, Faculty, and Student users. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
+| PortalController.IsUniversityInstitutionType | Resolves institution type into university/non-university behavior for certificate workflow gating. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ResolvePeriodFilterLabel | Resolves dynamic period label (`Class` for university, `Semester` otherwise) for certificate filters. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ResolveCertificateInstitutionType | Resolves effective institution scope from selected department or identity for certificate page behavior. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.UploadStudentAdditionalCertificate | Uploads school/college additional certificates from portal with preserved tenant/campus/department/course filter context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.DownloadStudentAdditionalCertificate | Downloads uploaded school/college additional certificates from portal. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| IEduApiClient.GetStudentAdditionalCertificatesAsync | Client contract for listing additional certificates uploaded for a student profile. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.UploadStudentAdditionalCertificateAsync | Client contract for uploading additional school/college certificate files per student profile. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.DownloadStudentAdditionalCertificateAsync | Client contract for downloading uploaded additional certificate files. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.GetStudentAdditionalCertificatesAsync | Calls API endpoint to retrieve additional school/college certificate metadata per student profile. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.UploadStudentAdditionalCertificateAsync | Uploads additional school/college certificate files through multipart API endpoint. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.DownloadStudentAdditionalCertificateAsync | Downloads additional school/college certificate files by document id. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 
