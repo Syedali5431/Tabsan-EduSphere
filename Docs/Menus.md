@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-26 Synchronization Summary
+
+- Menu catalog is synchronized with current institution-aware workflows, including certificate and result-calculation governance surfaces.
+- Settings/governance menus are explicitly complete: system/report/sidebar/dashboard/license/policy/module/theme/admin-user/tenant/campus.
+- Validation note: sidebar runtime remains stable; pending test drift is limited to expected-count assertions that require matrix-based updates.
+
 ## Purpose
 This document lists dashboard menus and explains what each menu does for end users.
 

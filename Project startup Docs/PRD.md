@@ -1,3 +1,13 @@
+### 2026-05-26 - PRD Synchronization (Validation Snapshot + Functional Baseline)
+- Validation snapshot:
+  - Build and runtime startup checks passed.
+  - Current suite snapshot is `438 passed / 5 failed` with failures isolated to sidebar assertion drift.
+- Requirements baseline synchronized:
+  - Institution-aware result calculation rule management by institution type.
+  - Institution-aware certificate workflows (university degree/transcript; school/college additional certificates).
+  - Complete governance settings surface for report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user menus.
+  - Portal 2FA operational settings workflows (setup/verify/disable/test) retained and required.
+
 ### 2026-05-26 - Product Requirements Synchronization (Runtime Safety and Backward Compatibility)
 - Announcement requirement clarified: invalid offering references must return controlled validation errors instead of unhandled server failures.
 - LMS requirement clarified: content-module creation must fail safely when offering linkage is invalid or stale.

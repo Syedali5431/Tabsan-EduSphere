@@ -1,3 +1,16 @@
+## Execution Update - 2026-05-26 (Synchronized Module Behavior and Validation)
+
+### Validation status snapshot
+- Build/runtime validation is healthy.
+- Latest test snapshot: `438 passed / 5 failed`.
+- Open defects are currently limited to sidebar expected-count assertion drift; functional runtime behavior is stable.
+
+### Module behavior alignment
+- Result Calculation behavior is institution-aware for scoped rule retrieval and replacement.
+- Certificate module behavior is institution-aware for university degree/transcript and school/college additional certificates.
+- Governance/settings module surface is complete and synchronized for privileged management menus.
+- No new paid module introduced; updates are inside existing module catalog.
+
 ## Execution Update - 2026-05-26 (Runtime Hardening + Governance Completion)
 
 ### Module impact summary

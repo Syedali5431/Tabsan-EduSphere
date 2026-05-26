@@ -1,6 +1,11 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (26 May 2026 - validation snapshot):
+- Build/runtime validation remains healthy.
+- Current test snapshot is `438 passed / 5 failed`; outstanding failures are sidebar expected-count drift and do not change trainer workflow semantics.
+- Training checklist should continue to use full settings/governance navigation coverage and institution-aware certificate/result-calculation demonstrations.
+
 Training synchronization update (26 May 2026):
 - Add trainer walkthrough for runtime-safe announcement posting (invalid offering returns controlled validation feedback).
 - Add trainer walkthrough for LMS content-module creation validation and save-stage offering integrity guard.

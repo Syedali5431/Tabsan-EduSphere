@@ -1,6 +1,11 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (26 May 2026 - validation snapshot):
+- Build/runtime validation remains healthy.
+- Current test snapshot is `438 passed / 5 failed`; remaining failures are sidebar role/menu expected-count drift.
+- Functional guidance remains aligned to institution-aware certificates, institution-aware result-calculation governance, complete settings menus, and operational portal 2FA flows.
+
 User guide synchronization update (26 May 2026):
 - Announcement create flow now shows controlled validation feedback when offering context is invalid or missing.
 - LMS module create flow now returns user-safe validation feedback for offering integrity failures.

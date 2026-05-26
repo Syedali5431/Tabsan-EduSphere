@@ -1,3 +1,19 @@
+## 2026-05-26 Synchronization - Current Functionality and Validation Snapshot
+
+### Current build and validation state
+- Solution build validation: passed.
+- Runtime startup smoke: passed.
+- Test snapshot: `438 passed / 5 failed`.
+- Remaining failures are sidebar role/menu expected-count drift and are tracked for matrix-based assertion hardening.
+
+### Delivered functionality alignment
+- Institution-aware result-calculation settings are now scoped for School/College/University rule sets.
+- Certificate workflows are synchronized by institution mode:
+  - University: degree + transcript generation.
+  - School/College: additional certificate upload/list/download.
+- Portal 2FA settings flow remains active (setup/verify/disable/test).
+- Governance/settings coverage remains complete for report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user controls.
+
 ## 2026-05-26 Update - Runtime Hardening and Governance Completion
 
 ### Implementation sync

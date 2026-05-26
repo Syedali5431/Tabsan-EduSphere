@@ -4,6 +4,20 @@
 **Version**: Phase 33 (Current)  
 **Last Updated**: May 2026
 
+## Full Validation Snapshot (2026-05-26)
+
+- Build validation: passed (Debug + Release checks).
+- Runtime smoke validation: passed for API/Web startup.
+- Test snapshot: `438 passed / 5 failed`.
+- Open gap: remaining failures are sidebar role/menu expected-count drift and are tracked for matrix-based test hardening.
+
+## Functionality Synchronization Summary (2026-05-26)
+
+- Institution-aware result calculation settings are active for School/College/University with scoped GPA/component-rule persistence.
+- Certificate behavior is institution-aware: university degree/transcript generation and school/college additional certificate management.
+- Portal 2FA flow remains fully operational in settings (setup, verify, disable, and test login hand-off).
+- Settings/governance coverage is synchronized across report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user controls.
+
 ## Runtime Stability Update (2026-05-26)
 
 - Announcement posting now performs strict offering validation and returns controlled bad-request responses for invalid/empty offering selections.

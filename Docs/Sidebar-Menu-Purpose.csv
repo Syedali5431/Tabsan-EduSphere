@@ -29,6 +29,7 @@ Settings,dashboard_settings,Dashboard Settings,Maintain branding and portal iden
 Settings,license_update,License Update,Upload validate and activate license scope,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
 Settings,institution_policy,Institution Policy,Control School College University policy and vocabulary,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
 Settings,module_composition,Module Composition,Control module exposure and dashboard composition,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
+Settings,result_calculation,Result Calculation,Configure institution-scoped GPA and component rules for result calculation behavior,Add Edit View Deactivate override,Add Edit View scoped,No Access,No Access,Scoped governance by institution mode
 Settings,theme_settings,Theme Settings,Apply and manage visual theme preferences,Add Edit View Deactivate override,Edit View own scope,Edit View own scope,Edit View own scope,Personalization
 Settings,admin_users,Admin Users,Manage privileged admin account lifecycle,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance
 Settings,tenant_management,Tenant Management,Manage tenant entities and tenant operational state,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance

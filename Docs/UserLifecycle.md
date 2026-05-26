@@ -1,5 +1,14 @@
 # Tabsan EduSphere User Lifecycle
 
+## 2026-05-26 Lifecycle Synchronization Summary
+
+- Governance lifecycle includes institution-aware result-calculation control (GPA/component rules) under privileged settings access.
+- Certificate lifecycle is explicitly institution-aware:
+  - University: degree + transcript generation by graduation/pass and period scope.
+  - School/College: additional certificate upload/list/download lifecycle.
+- Authentication lifecycle retains operational portal 2FA setup/verify/disable/test flows for user-level security hardening.
+- Validation snapshot is synchronized: build/runtime healthy, with remaining known sidebar assertion drift tracked for test-matrix refactor.
+
 ## Purpose
 This document describes the full lifecycle of platform roles, including each role's purpose, what it does, and how user/account states evolve from onboarding to offboarding.
 
