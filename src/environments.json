@@ -1,8 +1,16 @@
 {
   "Environments": {
+    "Development": {
+      "AppConnectionString": "http://localhost:5181",
+      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb;Trusted_Connection=True;TrustServerCertificate=True;"
+    },
     "LocalHost": {
       "AppConnectionString": "http://localhost:5181",
       "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb;Trusted_Connection=True;TrustServerCertificate=True;"
+    },
+    "Production": {
+      "AppConnectionString": "https://api.example.com",
+      "DatabaseConnectionString": "Server=tcp:cloud-sql.example.com,1433;Database=TabsanEduSphereDb;Encrypt=True;TrustServerCertificate=False;"
     },
     "Cloud": {
       "AppConnectionString": "https://api.example.com",
@@ -29,7 +37,7 @@
       "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb_Testing;Trusted_Connection=True;TrustServerCertificate=True;"
     }
   },
-  "DefaultEnvironment": "LocalHost",
+  "DefaultEnvironment": "Development",
   "EnvironmentHostMap": {
     "staging-host": "Staging",
     "prod-host": "Cloud",

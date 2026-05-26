@@ -696,7 +696,10 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("AppSett
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseResponseCompression();
 // Final-Touches Phase 9 Stage 9.2 — capture rolling request timings for p50/p95/p99 SLO summaries.
 app.Use(async (context, next) =>

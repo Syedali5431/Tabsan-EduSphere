@@ -224,6 +224,10 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseRouting();
 
 app.UseAuthentication();

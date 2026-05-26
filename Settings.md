@@ -4,7 +4,9 @@
 This project now supports a multi-environment configuration model using a single JSON matrix in src/environments.json.
 
 Supported environments:
+- Development
 - LocalHost
+- Production
 - Cloud
 - Staging
 - Docker
@@ -80,6 +82,14 @@ You can also override via environment variables:
 - ASPNETCORE_ENVIRONMENT=Production
 - EDUSPHERE_DB_CONNECTION=Server=db;Database=TabsanEduSphereDb;User Id=sa;Password=***;
 - EDUSPHERE_APP_CONNECTION=https://api.example.com
+
+## Startup Configuration Validation Checklist
+- Ensure `src/environments.json` includes canonical profiles: Development, Testing, Production.
+- Ensure each environment profile contains both `AppConnectionString` and `DatabaseConnectionString`.
+- Keep `DefaultEnvironment` aligned to a valid profile name (recommended: Development).
+- Keep secrets out of `src/environments.json`; inject sensitive values through environment variables or secret stores.
+- For integration tests, ensure the test host can load `src/environments.json` from the workspace root.
+- Review startup logs to confirm environment detection source is expected and warnings are absent.
 
 ## Security Best Practices
 - Do not commit real credentials or secrets into JSON files.

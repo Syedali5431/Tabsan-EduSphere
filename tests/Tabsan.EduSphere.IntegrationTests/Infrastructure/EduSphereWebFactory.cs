@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tabsan.EduSphere.Domain.Modules;
@@ -26,6 +27,15 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
 
     private const string TestConnectionString =
         $@"Server=(localdb)\mssqllocaldb;Database={TestDbName};Trusted_Connection=True;MultipleActiveResultSets=true";
+
+    public EduSphereWebFactory()
+    {
+        var sharedEnvironmentsFile = TryResolveSharedEnvironmentsFile();
+        if (!string.IsNullOrWhiteSpace(sharedEnvironmentsFile))
+        {
+            Environment.SetEnvironmentVariable("EDUSPHERE_ENVIRONMENTS_FILE", sharedEnvironmentsFile);
+        }
+    }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -121,6 +131,16 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
     {
         builder.UseEnvironment("Testing");
 
+        builder.ConfigureAppConfiguration((_, config) =>
+        {
+            var sharedEnvironmentsFile = TryResolveSharedEnvironmentsFile();
+            if (!string.IsNullOrWhiteSpace(sharedEnvironmentsFile))
+            {
+                Environment.SetEnvironmentVariable("EDUSPHERE_ENVIRONMENTS_FILE", sharedEnvironmentsFile);
+                config.AddJsonFile(sharedEnvironmentsFile, optional: true, reloadOnChange: false);
+            }
+        });
+
         builder.ConfigureServices(services =>
         {
             // Swap out the production DbContext options for the test database.
@@ -142,5 +162,22 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
             foreach (var d in hosted)
                 services.Remove(d);
         });
+    }
+
+    private static string? TryResolveSharedEnvironmentsFile()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            var candidate = Path.Combine(current.FullName, "src", "environments.json");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
     }
 }
