@@ -143,7 +143,38 @@ jobs:
             --verbosity normal
 
       - name: Test
-        run: dotnet test Tabsan.EduSphere.sln --configuration Release --no-build --verbosity normal
+        run: |
+          dotnet test Tabsan.EduSphere.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --results-directory TestResults \
+            --logger "trx"
+
+      - name: Generate module health summary
+        if: always()
+        shell: pwsh
+        run: |
+          ./tools/ci/Generate-TestModuleSummary.ps1 \
+            -ResultsDirectory "TestResults" \
+            -OutputMarkdown "test-module-summary.md" \
+            -OutputJson "test-module-summary.json"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-trx
+          path: TestResults
+
+      - name: Upload module health summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-module-health-summary
+          path: |
+            test-module-summary.md
+            test-module-summary.json
 
       - name: Vulnerability scan
         run: |
