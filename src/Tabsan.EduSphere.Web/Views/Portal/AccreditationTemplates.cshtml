@@ -85,15 +85,9 @@ else
                                                 <div class="btn-group btn-group-sm">
                                                     <a asp-action="DownloadAccreditationTemplate" asp-route-id="@t.Id"
                                                        class="btn btn-outline-secondary btn-sm d-flex align-items-center mb-1"
-                                                       title="Download Template JSON"
+                                                       title="Download Template File"
                                                        style="min-width: 120px; justify-content: center;">
-                                                        <i class="bi bi-filetype-json me-1"></i> Template
-                                                    </a>
-                                                    <a asp-action="DownloadAccreditationReport" asp-route-id="@t.Id"
-                                                       class="btn btn-success btn-sm d-flex align-items-center mb-1"
-                                                       title="Download Accreditation Report"
-                                                       style="min-width: 120px; justify-content: center;">
-                                                        <i class="bi bi-download me-1"></i> Download
+                                                        <i class="bi bi-download me-1"></i> Template
                                                     </a>
                                                     <button class="btn btn-primary btn-sm edit-btn d-flex align-items-center mb-1"
                                                             data-id="@t.Id"
@@ -140,23 +134,22 @@ else
                     </p>
                     <ul class="small text-muted mb-0">
                         <li><strong>Format:</strong> CSV for spreadsheet submission; TXT for plain-text regulatory forms.</li>
-                        <li><strong>Field Mappings:</strong> JSON array of section keys to include, e.g. <code>["enrollment","results","faculty"]</code>.</li>
-                        <li><strong>Template Download:</strong> Use the <span class="badge bg-light text-dark border"><i class="bi bi-filetype-json"></i> Template</span> button to export template settings as JSON.</li>
-                        <li><strong>Template Upload:</strong> Upload a previously exported JSON file to create a new template quickly.</li>
-                        <li><strong>Download:</strong> Click the <span class="badge bg-success"><i class="bi bi-download"></i> Download</span> button to generate and download the report instantly. If the download fails, you will see an error message.</li>
+                        <li><strong>Field Mappings:</strong> Add plain values separated by commas (for example: enrollment,results,faculty).</li>
+                        <li><strong>Template Download:</strong> Use the <span class="badge bg-light text-dark border"><i class="bi bi-download"></i> Template</span> button to download a simple text template file.</li>
+                        <li><strong>Template Upload:</strong> Upload a simple .txt or .csv template file to create a template quickly.</li>
                     </ul>
 
                     <hr class="my-3" />
 
                     <form id="accreditationTemplateUploadForm" asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
-                        <label class="form-label fw-semibold small">Upload Template JSON</label>
+                        <label class="form-label fw-semibold small">Upload Template File</label>
                         <div class="input-group input-group-sm">
-                            <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".json,application/json" required />
+                            <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".txt,.csv,text/plain,text/csv" required />
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-upload me-1"></i>Upload
                             </button>
                         </div>
-                        <div class="form-text">Accepted format: .json (max 1 MB).</div>
+                        <div class="form-text">Accepted formats: .txt or .csv (max 1 MB).</div>
                         <div id="accreditationTemplateUploadValidation" class="invalid-feedback d-block d-none"></div>
                     </form>
                 </div>
@@ -296,45 +289,18 @@ else
 
                 const file = uploadInput.files && uploadInput.files.length > 0 ? uploadInput.files[0] : null;
                 if (!file) {
-                    showValidation('Please select a JSON file.');
+                    showValidation('Please select a template file.');
                     return;
                 }
 
-                if (!file.name.toLowerCase().endsWith('.json')) {
-                    showValidation('Only .json template files are supported.');
+                const lowerName = file.name.toLowerCase();
+                if (!lowerName.endsWith('.txt') && !lowerName.endsWith('.csv')) {
+                    showValidation('Only .txt or .csv template files are supported.');
                     return;
                 }
 
                 if (file.size > 1048576) {
                     showValidation('Template file is too large. Maximum size is 1 MB.');
-                    return;
-                }
-
-                try {
-                    const text = await file.text();
-                    const parsed = JSON.parse(text);
-                    const payload = parsed && typeof parsed === 'object' && parsed.template
-                        ? parsed.template
-                        : parsed;
-
-                    if (!payload || typeof payload !== 'object') {
-                        showValidation('Invalid template JSON structure.');
-                        return;
-                    }
-
-                    const name = typeof payload.name === 'string' ? payload.name.trim() : '';
-                    if (!name) {
-                        showValidation('Template JSON must include a non-empty Name value.');
-                        return;
-                    }
-
-                    const formatRaw = typeof payload.format === 'string' ? payload.format.trim().toUpperCase() : 'CSV';
-                    if (formatRaw !== 'CSV' && formatRaw !== 'PDF') {
-                        showValidation('Template format must be CSV or PDF.');
-                        return;
-                    }
-                } catch {
-                    showValidation('Invalid JSON file. Please upload a valid accreditation template export.');
                     return;
                 }
 

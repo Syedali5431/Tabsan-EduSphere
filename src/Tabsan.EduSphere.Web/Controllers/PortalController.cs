@@ -7716,26 +7716,16 @@ using Microsoft.AspNetCore.Mvc.Filters;
                 return RedirectToAction(nameof(AccreditationTemplates));
             }
 
-            var export = new AccreditationTemplateExportEnvelope
+            var content = string.Join(Environment.NewLine, new[]
             {
-                Version = 1,
-                ExportedAtUtc = DateTime.UtcNow,
-                Template = new AccreditationTemplateImportPayload
-                {
-                    Name = template.Name,
-                    Description = template.Description,
-                    Format = template.Format,
-                    FieldMappingsJson = template.FieldMappingsJson,
-                    IsActive = template.IsActive
-                }
-            };
+                $"Name: {template.Name}",
+                $"Description: {template.Description ?? string.Empty}",
+                $"Format: {template.Format}",
+                $"FieldMappings: {template.FieldMappingsJson ?? string.Empty}"
+            }) + Environment.NewLine;
 
-            var json = System.Text.Json.JsonSerializer.Serialize(
-                export,
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-
-            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-            return File(bytes, "application/json", $"accreditation-template-{template.Id:N}.json");
+            var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+            return File(bytes, "text/plain", $"accreditation-template-{template.Id:N}.txt");
         }
         catch (Exception ex)
         {
@@ -7752,13 +7742,15 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
         if (templateFile == null || templateFile.Length == 0)
         {
-            TempData["Error"] = "Please choose a JSON template file to upload.";
+            TempData["Error"] = "Please choose a template file to upload.";
             return RedirectToAction(nameof(AccreditationTemplates));
         }
 
-        if (!string.Equals(Path.GetExtension(templateFile.FileName), ".json", StringComparison.OrdinalIgnoreCase))
+        var extension = Path.GetExtension(templateFile.FileName);
+        if (!string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase))
         {
-            TempData["Error"] = "Only .json template files are supported.";
+            TempData["Error"] = "Only .txt or .csv template files are supported.";
             return RedirectToAction(nameof(AccreditationTemplates));
         }
 
@@ -7770,34 +7762,25 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
         try
         {
-            string json;
+            string fileContent;
             using (var stream = templateFile.OpenReadStream())
             using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
             {
-                json = await reader.ReadToEndAsync();
+                fileContent = await reader.ReadToEndAsync();
             }
 
-            var options = new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-
-            AccreditationTemplateImportPayload? payload = null;
-            var envelope = System.Text.Json.JsonSerializer.Deserialize<AccreditationTemplateExportEnvelope>(json, options);
-            if (envelope?.Template != null)
-            {
-                payload = envelope.Template;
-            }
-
-            payload ??= System.Text.Json.JsonSerializer.Deserialize<AccreditationTemplateImportPayload>(json, options);
+            var payload = ParseSimpleAccreditationTemplate(fileContent);
 
             if (payload == null || string.IsNullOrWhiteSpace(payload.Name))
             {
-                TempData["Error"] = "Invalid template JSON. Required field: Name.";
+                TempData["Error"] = "Invalid template file. Required field: Name.";
                 return RedirectToAction(nameof(AccreditationTemplates));
             }
 
             var normalizedFormat = payload.Format?.Trim().ToUpperInvariant();
+            if (normalizedFormat == "TXT")
+                normalizedFormat = "PDF";
+
             if (normalizedFormat != "CSV" && normalizedFormat != "PDF")
             {
                 TempData["Error"] = "Invalid template format. Use CSV or PDF.";
@@ -7835,10 +7818,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
                 ? "Accreditation template uploaded successfully."
                 : $"Accreditation template uploaded as '{targetName}' because '{requestedName}' already exists.";
         }
-        catch (System.Text.Json.JsonException)
-        {
-            TempData["Error"] = "Invalid JSON file. Please upload a valid accreditation template export.";
-        }
         catch (Exception ex)
         {
             TempData["Error"] = ex.Message;
@@ -7847,11 +7826,101 @@ using Microsoft.AspNetCore.Mvc.Filters;
         return RedirectToAction(nameof(AccreditationTemplates));
     }
 
-    private sealed class AccreditationTemplateExportEnvelope
+    private static AccreditationTemplateImportPayload? ParseSimpleAccreditationTemplate(string raw)
     {
-        public int Version { get; set; }
-        public DateTime ExportedAtUtc { get; set; }
-        public AccreditationTemplateImportPayload? Template { get; set; }
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        var payload = new AccreditationTemplateImportPayload();
+        var lines = raw.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.Trim())
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .ToList();
+
+        if (lines.Count == 0)
+            return null;
+
+        var hasKeyValue = lines.Any(l => l.Contains(':') || l.Contains('='));
+
+        if (hasKeyValue)
+        {
+            foreach (var line in lines)
+            {
+                var separatorIndex = line.IndexOf(':');
+                if (separatorIndex < 0)
+                    separatorIndex = line.IndexOf('=');
+                if (separatorIndex <= 0)
+                    continue;
+
+                var key = line[..separatorIndex].Trim().ToLowerInvariant();
+                var value = line[(separatorIndex + 1)..].Trim();
+                switch (key)
+                {
+                    case "name":
+                        payload.Name = value;
+                        break;
+                    case "description":
+                        payload.Description = value;
+                        break;
+                    case "format":
+                        payload.Format = value;
+                        break;
+                    case "fieldmappings":
+                    case "fieldmapping":
+                    case "mappings":
+                        payload.FieldMappingsJson = NormalizeMappings(value);
+                        break;
+                }
+            }
+        }
+        else
+        {
+            var header = lines[0].Split(',').Select(h => h.Trim().ToLowerInvariant()).ToList();
+            if (lines.Count < 2)
+                return null;
+
+            var values = lines[1].Split(',').Select(v => v.Trim()).ToList();
+            string GetValue(params string[] keys)
+            {
+                foreach (var key in keys)
+                {
+                    var index = header.FindIndex(h => h == key);
+                    if (index >= 0 && index < values.Count)
+                        return values[index];
+                }
+                return string.Empty;
+            }
+
+            payload.Name = GetValue("name");
+            payload.Description = GetValue("description");
+            payload.Format = GetValue("format");
+            payload.FieldMappingsJson = NormalizeMappings(GetValue("fieldmappings", "mappings"));
+        }
+
+        if (string.IsNullOrWhiteSpace(payload.Name))
+            return null;
+
+        payload.Format = string.IsNullOrWhiteSpace(payload.Format) ? "CSV" : payload.Format;
+        return payload;
+    }
+
+    private static string? NormalizeMappings(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        if (raw.TrimStart().StartsWith('['))
+            return raw;
+
+        var parts = raw.Split(new[] { '|', ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return parts.Count == 0
+            ? null
+            : System.Text.Json.JsonSerializer.Serialize(parts);
     }
 
     private sealed class AccreditationTemplateImportPayload
