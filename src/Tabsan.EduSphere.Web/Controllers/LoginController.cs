@@ -20,8 +20,12 @@ public class LoginController : Controller
         _api    = api;
         _config = config;
         _http   = http;
-        _configuredApiBaseUrl = (_config["EduApi:BaseUrl"] ?? throw new InvalidOperationException("EduApi:BaseUrl is required."))
-            .TrimEnd('/');
+
+        var configured = _config["EduApi:BaseUrl"] ?? throw new InvalidOperationException("EduApi:BaseUrl is required.");
+        if (!TryNormalizeApiBaseUrl(configured, out var normalized))
+            throw new InvalidOperationException("EduApi:BaseUrl is invalid. Use a full URL such as https://localhost:7061.");
+
+        _configuredApiBaseUrl = normalized;
     }
 
     // GET /Portal/Login
@@ -52,9 +56,17 @@ public class LoginController : Controller
         }
 
         var existingConnection = _api.GetConnection();
-        var apiBase = (string.IsNullOrWhiteSpace(existingConnection.ApiBaseUrl)
+        var apiBaseCandidate = string.IsNullOrWhiteSpace(existingConnection.ApiBaseUrl)
             ? _configuredApiBaseUrl
-            : existingConnection.ApiBaseUrl).TrimEnd('/');
+            : existingConnection.ApiBaseUrl;
+
+        if (!TryNormalizeApiBaseUrl(apiBaseCandidate, out var apiBase))
+        {
+            ViewData["Error"] = "API base URL is invalid. Use a full URL such as https://localhost:7061.";
+            ViewData["ReturnUrl"] = returnUrl;
+            await PopulateSecurityProfileAsync(_configuredApiBaseUrl, ct);
+            return View();
+        }
 
         try
         {
@@ -193,5 +205,31 @@ public class LoginController : Controller
         {
             // Login page should still render even when security profile endpoint is unreachable.
         }
+    }
+
+    private static bool TryNormalizeApiBaseUrl(string rawBaseUrl, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(rawBaseUrl))
+            return false;
+
+        var candidate = rawBaseUrl.Trim();
+        if (!candidate.Contains("://", StringComparison.Ordinal))
+        {
+            var isLocal = candidate.StartsWith("localhost", StringComparison.OrdinalIgnoreCase)
+                          || candidate.StartsWith("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                          || candidate.StartsWith("[::1]", StringComparison.OrdinalIgnoreCase);
+            candidate = (isLocal ? "http://" : "https://") + candidate;
+        }
+
+        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri))
+            return false;
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        normalized = uri.ToString().TrimEnd('/');
+        return true;
     }
 }

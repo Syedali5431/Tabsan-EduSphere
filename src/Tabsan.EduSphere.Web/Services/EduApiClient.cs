@@ -609,7 +609,9 @@ public class EduApiClient : IEduApiClient
             return;
         }
 
-        WriteCookie(ApiUrlKey, model.ApiBaseUrl.TrimEnd('/'));
+        var normalizedBaseUrl = NormalizeApiBaseUrlOrThrow(model.ApiBaseUrl);
+
+        WriteCookie(ApiUrlKey, normalizedBaseUrl);
         WriteCookie(ApiTokenKey, model.AccessToken.Trim());
         var refreshTokenToStore = !string.IsNullOrWhiteSpace(model.RefreshToken)
             ? model.RefreshToken.Trim()
@@ -635,7 +637,7 @@ public class EduApiClient : IEduApiClient
         {
             context.Items[ConnectionItemKey] = new ApiConnectionModel
             {
-                ApiBaseUrl = model.ApiBaseUrl.TrimEnd('/'),
+                ApiBaseUrl = normalizedBaseUrl,
                 AccessToken = model.AccessToken.Trim(),
                 RefreshToken = refreshTokenToStore,
                 DefaultDepartmentId = model.DefaultDepartmentId
@@ -1481,7 +1483,10 @@ public class EduApiClient : IEduApiClient
             if (string.IsNullOrWhiteSpace(latest.ApiBaseUrl) || string.IsNullOrWhiteSpace(latest.RefreshToken))
                 return false;
 
-            var refreshUri = new Uri(new Uri(latest.ApiBaseUrl.TrimEnd('/') + "/"), "api/v1/auth/refresh");
+            if (!TryBuildApiBaseUri(latest.ApiBaseUrl, out var latestBaseUri))
+                return false;
+
+            var refreshUri = new Uri(latestBaseUri, "api/v1/auth/refresh");
             var payload = JsonSerializer.Serialize(new { refreshToken = latest.RefreshToken }, _jsonOptions);
 
             using var request = new HttpRequestMessage(HttpMethod.Post, refreshUri)
@@ -1525,7 +1530,15 @@ public class EduApiClient : IEduApiClient
         }
     }
 
-    private HttpClient CreateClient() => _httpClientFactory.CreateClient("EduApi");
+    private HttpClient CreateClient()
+    {
+        var client = _httpClientFactory.CreateClient("EduApi");
+        var baseUrl = GetConnection().ApiBaseUrl;
+        if (TryBuildApiBaseUri(baseUrl, out var baseUri))
+            client.BaseAddress = baseUri;
+
+        return client;
+    }
 
     private HttpRequestMessage CreateRequest(HttpMethod method, string path)
     {
@@ -1533,10 +1546,48 @@ public class EduApiClient : IEduApiClient
         if (string.IsNullOrWhiteSpace(connection.ApiBaseUrl) || string.IsNullOrWhiteSpace(connection.AccessToken))
             throw new InvalidOperationException("API connection is not configured. Set base URL and access token first.");
 
-        var uri     = new Uri(new Uri(connection.ApiBaseUrl.TrimEnd('/') + "/"), path.TrimStart('/'));
+        if (!TryBuildApiBaseUri(connection.ApiBaseUrl, out var baseUri))
+            throw new InvalidOperationException("API base URL is invalid. Use a full URL such as https://localhost:7061.");
+
+        var uri = new Uri(baseUri, path.TrimStart('/'));
         var request = new HttpRequestMessage(method, uri);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", connection.AccessToken);
         return request;
+    }
+
+    private static string NormalizeApiBaseUrlOrThrow(string rawBaseUrl)
+    {
+        if (!TryBuildApiBaseUri(rawBaseUrl, out var baseUri))
+            throw new InvalidOperationException("API base URL is invalid. Use a full URL such as https://localhost:7061.");
+
+        return baseUri.ToString().TrimEnd('/');
+    }
+
+    private static bool TryBuildApiBaseUri(string? rawBaseUrl, out Uri baseUri)
+    {
+        baseUri = default!;
+        if (string.IsNullOrWhiteSpace(rawBaseUrl))
+            return false;
+
+        var candidate = rawBaseUrl.Trim();
+
+        if (!candidate.Contains("://", StringComparison.Ordinal))
+        {
+            var isLocal = candidate.StartsWith("localhost", StringComparison.OrdinalIgnoreCase)
+                          || candidate.StartsWith("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                          || candidate.StartsWith("[::1]", StringComparison.OrdinalIgnoreCase);
+            candidate = (isLocal ? "http://" : "https://") + candidate;
+        }
+
+        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var parsed))
+            return false;
+
+        if (!string.Equals(parsed.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(parsed.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        baseUri = new Uri(parsed.ToString().TrimEnd('/') + "/");
+        return true;
     }
 
     private static Exception BuildException(System.Net.HttpStatusCode statusCode, string body)
