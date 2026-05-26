@@ -289,6 +289,190 @@ public class PortalController : Controller
         }
     }
 
+    [HttpGet]
+    public IActionResult TwoFactorSettings()
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BeginTwoFactorSetup(CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        try
+        {
+            var setup = await _api.BeginTwoFactorSetupAsync(ct);
+            if (setup is null)
+            {
+                model.Message = "Unable to start 2FA setup right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = setup.TwoFactorEnabled;
+            model.Issuer = setup.Issuer;
+            model.AccountName = setup.AccountName;
+            model.ManualKey = setup.ManualKey;
+            model.ProvisioningUri = setup.ProvisioningUri;
+            model.QrCodeDataUrl = setup.QrCodeDataUrl;
+            model.Message = "2FA setup started. Scan the QR code or enter the manual key in your authenticator app.";
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyTwoFactorSetup(string code, CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            model.Message = "Enter an authenticator code to verify setup.";
+            return View(nameof(TwoFactorSettings), model);
+        }
+
+        try
+        {
+            var result = await _api.VerifyTwoFactorSetupAsync(code, ct);
+            if (result is null)
+            {
+                model.Message = "Unable to verify 2FA setup right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.Message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DisableTwoFactor(string code, CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            model.Message = "Enter an authenticator code to disable 2FA.";
+            return View(nameof(TwoFactorSettings), model);
+        }
+
+        try
+        {
+            var result = await _api.DisableTwoFactorAsync(code, ct);
+            if (result is null)
+            {
+                model.Message = "Unable to disable 2FA right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.Message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestTwoFactorLogin(string code, CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        if (!model.CurrentUserId.HasValue)
+        {
+            model.Message = "Unable to determine current user. Sign in again and retry.";
+            return View(nameof(TwoFactorSettings), model);
+        }
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            model.Message = "Enter an authenticator code to test login verification.";
+            return View(nameof(TwoFactorSettings), model);
+        }
+
+        try
+        {
+            var result = await _api.VerifyTwoFactorLoginAsync(model.CurrentUserId.Value, code, ct);
+            if (result is null)
+            {
+                model.Message = "Unable to validate 2FA login right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.Message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    private Guid? GetCurrentUserId()
+    {
+        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(callerIdStr, out var parsedUserId) ? parsedUserId : null;
+    }
+
     private async Task<List<LookupItem>> GetOfferingFilterOptionsAsync(SessionIdentity? sessionIdentity, CancellationToken ct, Guid? tenantId = null, Guid? campusId = null)
     {
         if (sessionIdentity?.IsAdmin == true || sessionIdentity?.IsSuperAdmin == true)
