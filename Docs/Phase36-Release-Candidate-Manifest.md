@@ -69,6 +69,16 @@ All deployment units are pinned to the same RC commit SHA listed above.
 - Startup safety checks must reject unsafe placeholder secrets in non-development environments.
 - Queue/cache/storage provider selections must match deployment environment capabilities.
 
+## Script Name Compatibility Policy (Pre-Deploy)
+- Accepted schema script names:
+  - `Scripts/01-Schema-Current.sql` (maintained source)
+  - `Scripts/01-Schema.sql` (canonical compatibility alias)
+- Accepted core seed script names:
+  - `Scripts/02-Seed-Core.sql` (maintained source)
+  - `Scripts/02-CoreSeed.sql` (canonical compatibility alias)
+- Release checklists and operator runbooks may use either accepted name; both must remain functionally equivalent.
+- CI/deployment automation must fail fast if none of the accepted names exist for a required stage.
+
 ## Stage 36.1 Validation Evidence
 - RC SHA captured from git and frozen in this manifest.
 - RC tag creation command:
