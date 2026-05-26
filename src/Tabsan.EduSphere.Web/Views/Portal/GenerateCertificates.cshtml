@@ -78,6 +78,22 @@
                         </select>
                     </div>
 
+                    @if (Model.ShowUniversityCertificates)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">@Model.PeriodFilterLabel</label>
+                            <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All @(Model.PeriodFilterLabel.ToLowerInvariant() + "s")</option>
+                                @foreach (var semester in Model.Semesters)
+                                {
+                                    <option value="@semester.Id" selected="@(Model.SelectedSemesterId == semester.Id)">@semester.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>Apply</button>
                         <a href="@Url.Action("GenerateCertificates", "Portal")" class="btn btn-outline-secondary ms-2">Clear</a>
@@ -88,7 +104,7 @@
 
         @if (!Model.Students.Any())
         {
-            <div class="alert alert-info">No graduated students found for the selected scope.</div>
+            <div class="alert alert-info">No students found for the selected scope.</div>
         }
         else
         {
@@ -102,8 +118,15 @@
                                 <th>Department</th>
                                 <th>Program</th>
                                 <th>Graduated</th>
-                                <th>Degree</th>
-                                <th>Transcript</th>
+                                @if (Model.ShowUniversityCertificates)
+                                {
+                                    <th>Degree</th>
+                                    <th>Transcript</th>
+                                }
+                                else
+                                {
+                                    <th>Certificates</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -115,54 +138,99 @@
                                     <td>@student.DepartmentName</td>
                                     <td>@student.ProgramName</td>
                                     <td>@student.GraduatedDate?.ToString("dd MMM yyyy")</td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @if (Model.CanManage)
+                                    @if (Model.ShowUniversityCertificates)
+                                    {
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @if (Model.CanManage)
+                                                {
+                                                    <form method="post" asp-action="GenerateDegreeCertificate" asp-controller="Portal" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
+                                                    </form>
+                                                }
+                                                @if (student.LatestDegreeDocumentId.HasValue)
+                                                {
+                                                    <a class="btn btn-sm btn-outline-primary"
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "docx" })">Download</a>
+                                                    <a class="btn btn-sm btn-outline-secondary"
+                                                       target="_blank"
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "pdf" })">Print</a>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @if (Model.CanManage)
+                                                {
+                                                    <form method="post" asp-action="GenerateTranscriptCertificate" asp-controller="Portal" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
+                                                    </form>
+                                                }
+                                                @if (student.LatestTranscriptDocumentId.HasValue)
+                                                {
+                                                    <a class="btn btn-sm btn-outline-primary"
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "docx" })">Download</a>
+                                                    <a class="btn btn-sm btn-outline-secondary"
+                                                       target="_blank"
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "pdf" })">Print</a>
+                                                }
+                                            </div>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                @if (Model.CanUploadAdditionalCertificates)
+                                                {
+                                                    <form method="post" enctype="multipart/form-data" asp-action="UploadStudentAdditionalCertificate" asp-controller="Portal" class="d-flex flex-wrap gap-1 align-items-center">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
+                                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="Certificate title" style="max-width: 180px;" />
+                                                        <input type="file" name="file" class="form-control form-control-sm" style="max-width: 220px;" required />
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">Upload</button>
+                                                    </form>
+                                                }
+                                            </div>
+
+                                            @if (student.AdditionalCertificates.Any())
                                             {
-                                                <form method="post" asp-action="GenerateDegreeCertificate" asp-controller="Portal" class="d-inline">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
-                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
-                                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
-                                                </form>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @foreach (var cert in student.AdditionalCertificates)
+                                                    {
+                                                        <a class="btn btn-sm btn-outline-primary"
+                                                           href="@Url.Action("DownloadStudentAdditionalCertificate", "Portal", new { documentId = cert.DocumentId })">@cert.Title</a>
+                                                    }
+                                                </div>
                                             }
-                                            @if (student.LatestDegreeDocumentId.HasValue)
+                                            else
                                             {
-                                                <a class="btn btn-sm btn-outline-primary"
-                                                   href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "docx" })">Download</a>
-                                                <a class="btn btn-sm btn-outline-secondary"
-                                                   target="_blank"
-                                                   href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "pdf" })">Print</a>
+                                                <span class="text-muted">No uploaded certificates.</span>
                                             }
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @if (Model.CanManage)
-                                            {
-                                                <form method="post" asp-action="GenerateTranscriptCertificate" asp-controller="Portal" class="d-inline">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
-                                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
-                                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
-                                                </form>
-                                            }
-                                            @if (student.LatestTranscriptDocumentId.HasValue)
-                                            {
-                                                <a class="btn btn-sm btn-outline-primary"
-                                                   href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "docx" })">Download</a>
-                                                <a class="btn btn-sm btn-outline-secondary"
-                                                   target="_blank"
-                                                   href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "pdf" })">Print</a>
-                                            }
-                                        </div>
-                                    </td>
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>

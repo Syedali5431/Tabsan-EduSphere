@@ -2210,6 +2210,17 @@ public class GraduatedCertificateStudentItem
     public DateTime? LatestDegreeGeneratedAtUtc { get; set; }
     public Guid? LatestTranscriptDocumentId { get; set; }
     public DateTime? LatestTranscriptGeneratedAtUtc { get; set; }
+    public List<StudentAdditionalCertificateItem> AdditionalCertificates { get; set; } = new();
+}
+
+public class StudentAdditionalCertificateItem
+{
+    public Guid DocumentId { get; set; }
+    public Guid StudentProfileId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "application/octet-stream";
+    public DateTime UploadedAtUtc { get; set; }
 }
 
 public class GenerateCertificatesPageModel
@@ -2222,10 +2233,16 @@ public class GenerateCertificatesPageModel
     public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
     public Guid? SelectedCourseId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public int? SelectedInstitutionType { get; set; }
+    public bool ShowUniversityCertificates { get; set; }
+    public bool CanUploadAdditionalCertificates { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Courses { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
     public List<GraduatedCertificateStudentItem> Students { get; set; } = new();
 }
 

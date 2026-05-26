@@ -214,6 +214,32 @@ public class PortalController : Controller
         return (true, string.Empty);
     }
 
+    private static bool IsUniversityInstitutionType(int? institutionType)
+        => institutionType.HasValue && institutionType.Value == 0;
+
+    private static string ResolvePeriodFilterLabel(int? institutionType)
+        => IsUniversityInstitutionType(institutionType) ? "Class" : "Semester";
+
+    private static int? ResolveCertificateInstitutionType(SessionIdentity? identity, List<DepartmentItem> departments, Guid? selectedDepartmentId)
+    {
+        if (selectedDepartmentId.HasValue)
+        {
+            return departments.FirstOrDefault(d => d.Id == selectedDepartmentId.Value)?.InstitutionType;
+        }
+
+        if (identity is { IsSuperAdmin: false, InstitutionType: not null })
+            return identity.InstitutionType.Value;
+
+        var distinctInstitutionTypes = departments
+            .Select(d => d.InstitutionType)
+            .Distinct()
+            .ToList();
+
+        return distinctInstitutionTypes.Count == 1
+            ? distinctInstitutionTypes[0]
+            : null;
+    }
+
     [HttpGet]
     public IActionResult ForceChangePassword()
     {
@@ -5821,6 +5847,260 @@ public class PortalController : Controller
         }
         catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GenerateCertificates(
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        CancellationToken ct)
+    {
+        ViewData["Title"] = "Generate Certificates";
+
+        var identity = _api.GetSessionIdentity();
+        var model = new GenerateCertificatesPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            CanManage = identity?.IsAdmin == true || identity?.IsSuperAdmin == true,
+            CanUploadAdditionalCertificates = identity?.IsAdmin == true || identity?.IsSuperAdmin == true,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId,
+            SelectedSemesterId = semesterId,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
+
+        if (!model.IsConnected)
+            return View(model);
+
+        try
+        {
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+
+                if (model.SelectedTenantId.HasValue)
+                {
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId.Value, ct);
+                }
+            }
+            else
+            {
+                model.SelectedTenantId ??= identity?.TenantId;
+                model.SelectedCampusId ??= identity?.CampusId;
+            }
+
+            var departmentDetails = await _api.GetDepartmentDetailsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            model.Departments = departmentDetails
+                .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                .ToList();
+
+            model.SelectedInstitutionType = ResolveCertificateInstitutionType(identity, departmentDetails, model.SelectedDepartmentId);
+            model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.SelectedInstitutionType);
+            model.Semesters = await _api.GetSemestersAsync(ct);
+
+            model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, ct);
+
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            model.ShowUniversityCertificates = IsUniversityInstitutionType(model.SelectedInstitutionType) && (matrix?.IncludeUniversity ?? true);
+
+            if (IsUniversityInstitutionType(model.SelectedInstitutionType) && !model.ShowUniversityCertificates)
+            {
+                model.Message = "Degree and transcript options are hidden because University is disabled by the current license policy.";
+            }
+
+            model.Students = await _api.GetGraduatedCertificateStudentsAsync(
+                model.SelectedTenantId,
+                model.SelectedCampusId,
+                model.SelectedDepartmentId,
+                model.SelectedCourseId,
+                model.SelectedInstitutionType,
+                ct);
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateDegreeCertificate(
+        Guid studentProfileId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        if (!IsUniversityInstitutionType(institutionType))
+        {
+            TempData["PortalMessage"] = "Degree generation is available only for university scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        try
+        {
+            await _api.GenerateDegreeCertificateAsync(studentProfileId, ct);
+            TempData["PortalMessage"] = "Degree generated successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateTranscriptCertificate(
+        Guid studentProfileId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        if (!IsUniversityInstitutionType(institutionType))
+        {
+            TempData["PortalMessage"] = "Transcript generation is available only for university scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        try
+        {
+            await _api.GenerateTranscriptCertificateAsync(studentProfileId, semesterId, ct);
+            TempData["PortalMessage"] = semesterId.HasValue
+                ? "Transcript generated for selected class/semester."
+                : "Transcript generated successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadGeneratedCertificateDocument(Guid documentId, string format, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        try
+        {
+            var bytes = await _api.DownloadGeneratedCertificateDocumentAsync(documentId, format, ct);
+            if (bytes is null || bytes.Length == 0)
+            {
+                TempData["PortalMessage"] = "Certificate document not found.";
+                return RedirectToAction(nameof(GenerateCertificates));
+            }
+
+            var normalizedFormat = string.Equals(format, "pdf", StringComparison.OrdinalIgnoreCase) ? "pdf" : "docx";
+            var contentType = normalizedFormat == "pdf"
+                ? "application/pdf"
+                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+            return File(bytes, contentType, $"certificate-{documentId:N}.{normalizedFormat}");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+            return RedirectToAction(nameof(GenerateCertificates));
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadStudentAdditionalCertificate(
+        Guid studentProfileId,
+        string? title,
+        IFormFile? file,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        if (IsUniversityInstitutionType(institutionType))
+        {
+            TempData["PortalMessage"] = "Additional certificate upload is available for school/college scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            TempData["PortalMessage"] = "Please select a certificate file to upload.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            await _api.UploadStudentAdditionalCertificateAsync(
+                studentProfileId,
+                string.IsNullOrWhiteSpace(title) ? "Certificate" : title,
+                stream,
+                file.FileName,
+                file.ContentType,
+                ct);
+
+            TempData["PortalMessage"] = "Additional certificate uploaded successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadStudentAdditionalCertificate(Guid documentId, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        try
+        {
+            var bytes = await _api.DownloadStudentAdditionalCertificateAsync(documentId, ct);
+            if (bytes is null || bytes.Length == 0)
+            {
+                TempData["PortalMessage"] = "Additional certificate file not found.";
+                return RedirectToAction(nameof(GenerateCertificates));
+            }
+
+            return File(bytes, "application/octet-stream", $"certificate-{documentId:N}");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+            return RedirectToAction(nameof(GenerateCertificates));
+        }
     }
 
     // ── Phase 20: Learning Management System (LMS) ────────────────────────────

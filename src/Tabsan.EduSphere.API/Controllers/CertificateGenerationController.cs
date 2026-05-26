@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,25 +50,38 @@ public class CertificateGenerationController : ControllerBase
         [FromQuery] Guid? campusId,
         [FromQuery] Guid? departmentId,
         [FromQuery] Guid? courseId,
+        [FromQuery] int? institutionType,
         CancellationToken ct)
     {
         var policy = await _institutionPolicy.GetPolicyAsync(ct);
-        if (!policy.IncludeUniversity)
-            return Forbid();
 
         if (tenantId.HasValue != campusId.HasValue)
             return BadRequest(new { message = "TenantId and CampusId must be provided together." });
 
         var callerInstitutionType = GetInstitutionTypeFromClaims();
-        if (!_accessScope.IsSuperAdmin() && callerInstitutionType.HasValue && callerInstitutionType.Value != (int)InstitutionType.University)
+        if (!_accessScope.IsSuperAdmin() && callerInstitutionType.HasValue && institutionType.HasValue && callerInstitutionType.Value != institutionType.Value)
+            return Forbid();
+
+        var effectiveInstitutionType = institutionType ?? callerInstitutionType ?? (int)InstitutionType.University;
+        var isUniversityScope = effectiveInstitutionType == (int)InstitutionType.University;
+        if (isUniversityScope && !policy.IncludeUniversity)
             return Forbid();
 
         var query = _db.StudentProfiles
             .AsNoTracking()
-            .Where(s => s.Status == StudentStatus.Graduated && s.Department.InstitutionType == InstitutionType.University)
+            .Where(s => s.Department.InstitutionType == (InstitutionType)effectiveInstitutionType)
             .Include(s => s.Program)
             .Include(s => s.Department)
             .AsQueryable();
+
+        if (isUniversityScope)
+        {
+            query = query.Where(s => s.Status == StudentStatus.Graduated);
+        }
+        else
+        {
+            query = query.Where(s => s.Status == StudentStatus.Active || s.Status == StudentStatus.Graduated);
+        }
 
         if (_accessScope.IsSuperAdmin())
         {
@@ -163,6 +177,28 @@ public class CertificateGenerationController : ControllerBase
             .Select(u => new { u.Id, u.Username })
             .ToDictionaryAsync(u => u.Id, u => u.Username, ct);
 
+        var additionalByStudent = new Dictionary<Guid, List<object>>();
+        if (!isUniversityScope)
+        {
+            var customDocs = await ListAdditionalCertificatesAsync(ct);
+            additionalByStudent = customDocs
+                .GroupBy(d => d.StudentProfileId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g
+                        .OrderByDescending(x => x.UploadedAtUtc)
+                        .Select(x => (object)new
+                        {
+                            documentId = x.DocumentId,
+                            studentProfileId = x.StudentProfileId,
+                            title = x.Title,
+                            fileName = x.FileName,
+                            contentType = x.ContentType,
+                            uploadedAtUtc = x.UploadedAtUtc
+                        })
+                        .ToList());
+        }
+
         var response = new List<object>(students.Count);
         foreach (var s in students)
         {
@@ -194,7 +230,10 @@ public class CertificateGenerationController : ControllerBase
                 LatestDegreeDocumentId = latestDegree?.DocumentId,
                 LatestDegreeGeneratedAtUtc = latestDegree?.GeneratedAtUtc,
                 LatestTranscriptDocumentId = latestTranscript?.DocumentId,
-                LatestTranscriptGeneratedAtUtc = latestTranscript?.GeneratedAtUtc
+                LatestTranscriptGeneratedAtUtc = latestTranscript?.GeneratedAtUtc,
+                AdditionalCertificates = additionalByStudent.TryGetValue(s.StudentProfileId, out var additionalDocs)
+                    ? additionalDocs
+                    : new List<object>()
             });
         }
 
@@ -222,13 +261,13 @@ public class CertificateGenerationController : ControllerBase
 
     [HttpPost("students/{studentProfileId:guid}/transcript")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> GenerateTranscriptCertificate(Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> GenerateTranscriptCertificate(Guid studentProfileId, [FromQuery] Guid? semesterId, CancellationToken ct)
     {
         var student = await GetStudentInScopeAsync(studentProfileId, ct);
         if (student is null)
             return Forbid();
 
-        var transcriptRows = await BuildTranscriptRowsAsync(student.Id, ct);
+        var transcriptRows = await BuildTranscriptRowsAsync(student.Id, semesterId, ct);
         var request = new TranscriptGenerationRequest(
             StudentId: student.Id,
             StudentName: await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct),
@@ -281,6 +320,97 @@ public class CertificateGenerationController : ControllerBase
             docxBytes,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             Path.GetFileName(doc.DocxPath));
+    }
+
+    [HttpGet("students/{studentProfileId:guid}/additional-certificates")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty,Student")]
+    public async Task<IActionResult> GetAdditionalCertificates(Guid studentProfileId, CancellationToken ct)
+    {
+        var hasScope = await HasAdditionalCertificateReadScopeAsync(studentProfileId, ct);
+        if (!hasScope)
+            return Forbid();
+
+        var docs = await ListAdditionalCertificatesAsync(ct);
+        var result = docs
+            .Where(d => d.StudentProfileId == studentProfileId)
+            .OrderByDescending(d => d.UploadedAtUtc)
+            .Select(d => new
+            {
+                d.DocumentId,
+                d.StudentProfileId,
+                d.Title,
+                d.FileName,
+                d.ContentType,
+                d.UploadedAtUtc
+            })
+            .ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("students/{studentProfileId:guid}/additional-certificates/upload")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<IActionResult> UploadAdditionalCertificate(Guid studentProfileId, [FromQuery] string? title, IFormFile? file, CancellationToken ct)
+    {
+        var student = await GetNonUniversityStudentForAdminManagementAsync(studentProfileId, ct);
+        if (student is null)
+            return Forbid();
+
+        if (file is null || file.Length == 0)
+            return BadRequest(new { message = "Certificate file is required." });
+
+        var safeTitle = string.IsNullOrWhiteSpace(title) ? "Certificate" : title.Trim();
+        var root = GetAdditionalCertificateStorageRoot();
+        var studentFolder = Path.Combine(root, studentProfileId.ToString("N"));
+        Directory.CreateDirectory(studentFolder);
+
+        var originalFileName = Path.GetFileName(file.FileName);
+        var extension = Path.GetExtension(originalFileName);
+        var generatedName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(studentFolder, generatedName);
+
+        await using (var fs = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        {
+            await file.CopyToAsync(fs, ct);
+        }
+
+        var index = await ListAdditionalCertificatesAsync(ct);
+        var currentUser = GetCurrentUserId();
+        index.Add(new AdditionalCertificateIndexEntry
+        {
+            DocumentId = Guid.NewGuid(),
+            StudentProfileId = studentProfileId,
+            Title = safeTitle,
+            FileName = originalFileName,
+            ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
+            FilePath = fullPath,
+            UploadedAtUtc = DateTime.UtcNow,
+            UploadedByUserId = currentUser == Guid.Empty ? null : currentUser
+        });
+        await SaveAdditionalCertificatesAsync(index, ct);
+
+        return Ok(new { message = "Certificate uploaded successfully." });
+    }
+
+    [HttpGet("documents/custom/{documentId:guid}/download")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty,Student")]
+    public async Task<IActionResult> DownloadAdditionalCertificate(Guid documentId, CancellationToken ct)
+    {
+        var index = await ListAdditionalCertificatesAsync(ct);
+        var doc = index.FirstOrDefault(d => d.DocumentId == documentId);
+        if (doc is null)
+            return NotFound();
+
+        var hasScope = await HasAdditionalCertificateReadScopeAsync(doc.StudentProfileId, ct);
+        if (!hasScope)
+            return Forbid();
+
+        if (!System.IO.File.Exists(doc.FilePath))
+            return NotFound();
+
+        var bytes = await System.IO.File.ReadAllBytesAsync(doc.FilePath, ct);
+        return File(bytes, string.IsNullOrWhiteSpace(doc.ContentType) ? "application/octet-stream" : doc.ContentType, doc.FileName);
     }
 
     private async Task<StudentProfile?> GetStudentInScopeAsync(Guid studentProfileId, CancellationToken ct)
@@ -411,6 +541,149 @@ public class CertificateGenerationController : ControllerBase
         return courseRows;
     }
 
+    private async Task<IReadOnlyList<TranscriptCourseRow>> BuildTranscriptRowsAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
+    {
+        var query =
+            from enrollment in _db.Enrollments.AsNoTracking()
+            where enrollment.StudentProfileId == studentProfileId
+            join offering in _db.CourseOfferings.AsNoTracking() on enrollment.CourseOfferingId equals offering.Id
+            join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
+            select new { offering.SemesterId, course.Code, course.Title, course.CreditHours };
+
+        if (semesterId.HasValue)
+            query = query.Where(x => x.SemesterId == semesterId.Value);
+
+        var rows = await query
+            .OrderBy(x => x.Code)
+            .Select(x => new TranscriptCourseRow(
+                string.IsNullOrWhiteSpace(x.Code) ? x.Title : $"{x.Code} - {x.Title}",
+                x.CreditHours,
+                "N/A",
+                "N/A"))
+            .ToListAsync(ct);
+
+        return rows;
+    }
+
+    private async Task<StudentProfile?> GetNonUniversityStudentForAdminManagementAsync(Guid studentProfileId, CancellationToken ct)
+    {
+        var student = await _db.StudentProfiles
+            .Include(s => s.Department)
+            .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
+
+        if (student is null || student.Department.InstitutionType == InstitutionType.University)
+            return null;
+
+        if (_accessScope.IsSuperAdmin())
+            return student;
+
+        var callerId = GetCurrentUserId();
+        if (callerId == Guid.Empty)
+            return null;
+
+        var callerTenantId = _accessScope.GetTenantId();
+        var callerCampusId = _accessScope.GetCampusId();
+
+        if (callerTenantId.HasValue && student.Department.TenantId != callerTenantId.Value)
+            return null;
+        if (callerCampusId.HasValue && student.Department.CampusId != callerCampusId.Value)
+            return null;
+
+        if (!User.IsInRole("Admin"))
+            return null;
+
+        var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(callerId, ct);
+        return allowedDepartmentIds.Contains(student.DepartmentId) ? student : null;
+    }
+
+    private async Task<bool> HasAdditionalCertificateReadScopeAsync(Guid studentProfileId, CancellationToken ct)
+    {
+        var student = await _db.StudentProfiles
+            .AsNoTracking()
+            .Include(s => s.Department)
+            .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
+
+        if (student is null || student.Department.InstitutionType == InstitutionType.University)
+            return false;
+
+        if (_accessScope.IsSuperAdmin())
+            return true;
+
+        var callerTenantId = _accessScope.GetTenantId();
+        var callerCampusId = _accessScope.GetCampusId();
+        if (callerTenantId.HasValue && student.Department.TenantId != callerTenantId.Value)
+            return false;
+        if (callerCampusId.HasValue && student.Department.CampusId != callerCampusId.Value)
+            return false;
+
+        var callerId = GetCurrentUserId();
+        if (callerId == Guid.Empty)
+            return false;
+
+        if (User.IsInRole("Admin"))
+        {
+            var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(callerId, ct);
+            return allowedDepartmentIds.Contains(student.DepartmentId);
+        }
+
+        if (User.IsInRole("Faculty"))
+        {
+            var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(callerId, ct);
+            if (!allowedDepartmentIds.Contains(student.DepartmentId))
+                return false;
+
+            var taughtStudentIds = await _db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.CourseOffering.FacultyUserId == callerId)
+                .Select(e => e.StudentProfileId)
+                .Distinct()
+                .ToListAsync(ct);
+            return taughtStudentIds.Contains(studentProfileId);
+        }
+
+        if (User.IsInRole("Student"))
+        {
+            var profile = await _studentProfiles.GetByUserIdAsync(callerId, ct);
+            return profile is not null && profile.Id == studentProfileId;
+        }
+
+        return false;
+    }
+
+    private static string GetAdditionalCertificateStorageRoot()
+    {
+        var root = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "Certificate-Uploads");
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    private static string GetAdditionalCertificateIndexPath()
+        => Path.Combine(GetAdditionalCertificateStorageRoot(), "index.json");
+
+    private static async Task<List<AdditionalCertificateIndexEntry>> ListAdditionalCertificatesAsync(CancellationToken ct)
+    {
+        var path = GetAdditionalCertificateIndexPath();
+        if (!System.IO.File.Exists(path))
+            return new List<AdditionalCertificateIndexEntry>();
+
+        try
+        {
+            var json = await System.IO.File.ReadAllTextAsync(path, ct);
+            return JsonSerializer.Deserialize<List<AdditionalCertificateIndexEntry>>(json) ?? new List<AdditionalCertificateIndexEntry>();
+        }
+        catch
+        {
+            return new List<AdditionalCertificateIndexEntry>();
+        }
+    }
+
+    private static async Task SaveAdditionalCertificatesAsync(List<AdditionalCertificateIndexEntry> entries, CancellationToken ct)
+    {
+        var path = GetAdditionalCertificateIndexPath();
+        var json = JsonSerializer.Serialize(entries);
+        await System.IO.File.WriteAllTextAsync(path, json, ct);
+    }
+
     private Guid GetCurrentUserId()
     {
         var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
@@ -421,5 +694,17 @@ public class CertificateGenerationController : ControllerBase
     {
         var raw = User.FindFirst("institutionType")?.Value;
         return int.TryParse(raw, out var value) ? value : null;
+    }
+
+    private sealed class AdditionalCertificateIndexEntry
+    {
+        public Guid DocumentId { get; set; }
+        public Guid StudentProfileId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = "application/octet-stream";
+        public string FilePath { get; set; } = string.Empty;
+        public DateTime UploadedAtUtc { get; set; }
+        public Guid? UploadedByUserId { get; set; }
     }
 }

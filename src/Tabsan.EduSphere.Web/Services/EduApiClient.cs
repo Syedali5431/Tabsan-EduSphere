@@ -477,10 +477,14 @@ public interface IEduApiClient
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        int? institutionType,
         CancellationToken ct);
     Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct);
-    Task GenerateTranscriptCertificateAsync(Guid studentProfileId, CancellationToken ct);
+    Task GenerateTranscriptCertificateAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct);
     Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct);
+    Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct);
+    Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
+    Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct);
 
     // Final-Touches Phase 21 Stage 21.1/21.2 — Study Planner
     Task<List<StudyPlanApiModel>> GetStudyPlansAsync(Guid studentProfileId, CancellationToken ct);
@@ -1265,6 +1269,7 @@ public class EduApiClient : IEduApiClient
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        int? institutionType,
         CancellationToken ct)
     {
         var parts = new List<string>();
@@ -1272,6 +1277,7 @@ public class EduApiClient : IEduApiClient
         if (campusId.HasValue) parts.Add($"campusId={campusId}");
         if (departmentId.HasValue) parts.Add($"departmentId={departmentId}");
         if (courseId.HasValue) parts.Add($"courseId={courseId}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
 
         var path = "api/v1/certificate-generation/graduated-students";
         if (parts.Count > 0)
@@ -1283,12 +1289,57 @@ public class EduApiClient : IEduApiClient
     public Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/degree", new { }, ct);
 
-    public Task GenerateTranscriptCertificateAsync(Guid studentProfileId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/transcript", new { }, ct);
+    public Task GenerateTranscriptCertificateAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
+    {
+        var path = $"api/v1/certificate-generation/students/{studentProfileId}/transcript";
+        if (semesterId.HasValue)
+            path += $"?semesterId={semesterId.Value}";
+
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public async Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct)
     {
         var path = $"api/v1/certificate-generation/documents/{documentId}/download?format={Uri.EscapeDataString(string.IsNullOrWhiteSpace(format) ? "docx" : format)}";
+        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
+        using var response = await CreateClient().SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadAsByteArrayAsync(ct);
+    }
+
+    public async Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct)
+        => await GetAsync<List<StudentAdditionalCertificateItem>>($"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates", ct)
+           ?? new List<StudentAdditionalCertificateItem>();
+
+    public async Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct)
+    {
+        using var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        var fileBytes = buffer.ToArray();
+
+        var path = $"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates/upload?title={Uri.EscapeDataString(title)}";
+
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, path);
+            var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+            content.Add(fileContent, "file", fileName);
+            request.Content = content;
+            return request;
+        }, ct);
+
+        var body = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw BuildException(response.StatusCode, body);
+    }
+
+    public async Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct)
+    {
+        var path = $"api/v1/certificate-generation/documents/custom/{documentId}/download";
         using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
