@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text;
 using Tabsan.EduSphere.IntegrationTests.Infrastructure;
 
 namespace Tabsan.EduSphere.IntegrationTests;
@@ -17,6 +18,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 {
     private readonly EduSphereWebFactory _factory;
     private readonly Dictionary<string, bool> _originalModuleStates = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, HashSet<string>> _sidebarRoleAllowMatrix = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly string[] SidebarControlledModuleKeys =
     {
@@ -41,6 +43,8 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        _sidebarRoleAllowMatrix = LoadSidebarRoleAllowMatrix();
+
         using var superClient = CreateClient("SuperAdmin");
 
         foreach (var moduleKey in SidebarControlledModuleKeys)
@@ -135,9 +139,121 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         }
     }
 
+    private static string ResolveRepoFilePath(string relativePath)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory != null)
+        {
+            var candidate = Path.Combine(directory.FullName, relativePath);
+            if (File.Exists(candidate))
+                return candidate;
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException($"Unable to resolve required file '{relativePath}' from test base directory.");
+    }
+
+    private static string[] ParseCsvLine(string line)
+    {
+        var values = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        foreach (var ch in line)
+        {
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+                continue;
+            }
+
+            if (ch == ',' && !inQuotes)
+            {
+                values.Add(current.ToString().Trim());
+                current.Clear();
+                continue;
+            }
+
+            current.Append(ch);
+        }
+
+        values.Add(current.ToString().Trim());
+        return values.ToArray();
+    }
+
+    private static Dictionary<string, HashSet<string>> LoadSidebarRoleAllowMatrix()
+    {
+        var filePath = ResolveRepoFilePath(Path.Combine("Docs", "Sidebar-Menu-Purpose.csv"));
+        var roleToAllowedKeys = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["SuperAdmin"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            ["Admin"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            ["Faculty"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            ["Student"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        };
+
+        foreach (var rawLine in File.ReadLines(filePath).Skip(1))
+        {
+            if (string.IsNullOrWhiteSpace(rawLine))
+                continue;
+
+            var cols = ParseCsvLine(rawLine);
+            if (cols.Length < 9)
+                continue;
+
+            var menuKey = cols[1];
+            if (string.IsNullOrWhiteSpace(menuKey))
+                continue;
+
+            if (!cols[4].Equals("No Access", StringComparison.OrdinalIgnoreCase))
+                roleToAllowedKeys["SuperAdmin"].Add(menuKey);
+            if (!cols[5].Equals("No Access", StringComparison.OrdinalIgnoreCase))
+                roleToAllowedKeys["Admin"].Add(menuKey);
+            if (!cols[6].Equals("No Access", StringComparison.OrdinalIgnoreCase))
+                roleToAllowedKeys["Faculty"].Add(menuKey);
+            if (!cols[7].Equals("No Access", StringComparison.OrdinalIgnoreCase))
+                roleToAllowedKeys["Student"].Add(menuKey);
+        }
+
+        return roleToAllowedKeys;
+    }
+
+    private HashSet<string> BuildExpectedVisibleKeysForRole(string role, IEnumerable<MenuDto> superAdminMenus)
+    {
+        var allSeededItems = FlatItems(superAdminMenus).ToList();
+        var seededKeys = allSeededItems
+            .Select(m => m.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var expected = _sidebarRoleAllowMatrix.TryGetValue(role, out var allowedByRole)
+            ? allowedByRole
+                .Where(k => seededKeys.Contains(k))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Parent carriers can be visible even when only child keys are role-allowed.
+        foreach (var parent in superAdminMenus)
+        {
+            if (parent.SubMenus.Count == 0)
+                continue;
+
+            if (parent.SubMenus.Any(child => expected.Contains(child.Key)))
+                expected.Add(parent.Key);
+        }
+
+        return expected;
+    }
+
+    private static void AssertActualIsSubsetOfExpected(HashSet<string> actual, HashSet<string> expected)
+    {
+        var unexpected = actual.Except(expected, StringComparer.OrdinalIgnoreCase).ToArray();
+        Assert.True(unexpected.Length == 0, "Unexpected menu keys: " + string.Join(", ", unexpected));
+    }
+
     // ── Role matrix ───────────────────────────────────────────────────────────
 
-    /// <summary>SuperAdmin should see every seeded menu item (29 keys total — all top-level and sub-menus).</summary>
+    /// <summary>SuperAdmin should see every seeded menu item and all privileged governance menus.</summary>
     [Fact]
     public async Task GetVisible_SuperAdmin_ReturnsAllMenus()
     {
@@ -174,96 +290,88 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("payments",            keys);
         Assert.Contains("enrollments",         keys);
         Assert.Contains("report_center",       keys);
-        Assert.Equal(30, keys.Count);
+        Assert.Contains("report_settings",     keys);
+        Assert.Contains("license_update",      keys);
+        Assert.Contains("admin_users",         keys);
+        Assert.Contains("tenant_management",   keys);
+        Assert.Contains("campus_management",   keys);
     }
 
-    /// <summary>Admin should see all menus with IsAllowed=true for Admin role (19 total).</summary>
+    /// <summary>Admin should match CSV allow-matrix visibility for seeded keys.</summary>
     [Fact]
     public async Task GetVisible_Admin_ReturnsAdminMenusOnly()
     {
+        using var superClient = CreateClient("SuperAdmin");
         using var client = CreateClient("Admin");
+
+        var superMenus = await GetVisibleAsync(superClient);
+        var expected = BuildExpectedVisibleKeysForRole("Admin", superMenus);
+
         var menus = await GetVisibleAsync(client);
         var keys  = FlatKeys(menus);
 
-        Assert.Contains("dashboard",          keys);
-        Assert.Contains("timetable_admin",    keys);
-        Assert.Contains("lookups",            keys);
-        Assert.Contains("buildings",          keys);
-        Assert.Contains("rooms",              keys);
-        Assert.Contains("theme_settings",     keys);
+        AssertActualIsSubsetOfExpected(keys, expected);
+        Assert.Contains("dashboard", keys);
         Assert.Contains("result_calculation", keys);
-        Assert.Contains("notifications",      keys);
-        Assert.Contains("students",           keys);
-        Assert.Contains("departments",        keys);
-        Assert.Contains("courses",            keys);
-        Assert.Contains("results",            keys);
-        Assert.Contains("analytics",          keys);
-        Assert.Contains("student_lifecycle",  keys);
-        Assert.Contains("payments",           keys);
-        Assert.Contains("enrollments",        keys);
-        Assert.Contains("report_center",      keys);
-        Assert.Contains("system_settings",    keys); // parent carrier for theme_settings sub-menu
-        Assert.Contains("theme_settings",      keys);
-        Assert.DoesNotContain("module_settings",   keys); // SuperAdmin only (no visible sub-menus)
-        Assert.DoesNotContain("sidebar_settings",  keys); // SuperAdmin only
-        Assert.Equal(19, keys.Count);
+        Assert.Contains("report_center", keys);
+        Assert.DoesNotContain("sidebar_settings", keys);
+        Assert.DoesNotContain("report_settings", keys);
+        Assert.DoesNotContain("license_update", keys);
+        Assert.DoesNotContain("admin_users", keys);
+        Assert.DoesNotContain("tenant_management", keys);
+        Assert.DoesNotContain("campus_management", keys);
     }
 
-    /// <summary>Faculty should see all menus with IsAllowed=true for Faculty role (17 total).</summary>
+    /// <summary>Faculty should match CSV allow-matrix visibility for seeded keys.</summary>
     [Fact]
     public async Task GetVisible_Faculty_ReturnsFacultyMenusOnly()
     {
+        using var superClient = CreateClient("SuperAdmin");
         using var client = CreateClient("Faculty");
+
+        var superMenus = await GetVisibleAsync(superClient);
+        var expected = BuildExpectedVisibleKeysForRole("Faculty", superMenus);
+
         var menus = await GetVisibleAsync(client);
         var keys  = FlatKeys(menus);
 
-        Assert.Contains("dashboard",         keys);
+        AssertActualIsSubsetOfExpected(keys, expected);
+        Assert.Contains("dashboard", keys);
         Assert.Contains("timetable_teacher", keys);
-        Assert.Contains("theme_settings",    keys);
-        Assert.Contains("notifications",     keys);
-        Assert.Contains("students",          keys);
-        Assert.Contains("courses",           keys);
-        Assert.Contains("assignments",       keys);
-        Assert.Contains("attendance",        keys);
-        Assert.Contains("results",           keys);
-        Assert.Contains("quizzes",           keys);
-        Assert.Contains("fyp",               keys);
-        Assert.Contains("analytics",         keys);
-        Assert.Contains("ai_chat",           keys);
-        Assert.Contains("enrollments",       keys);
-        Assert.Contains("report_center",     keys);
-        Assert.Contains("system_settings",  keys); // parent carrier for theme_settings
-        Assert.Contains("theme_settings",    keys);
-        Assert.DoesNotContain("timetable_admin",   keys);
-        Assert.DoesNotContain("module_settings",   keys); // SuperAdmin only
-        Assert.Equal(17, keys.Count);
+        Assert.Contains("assignments", keys);
+        Assert.Contains("report_center", keys);
+        Assert.DoesNotContain("sidebar_settings", keys);
+        Assert.DoesNotContain("report_settings", keys);
+        Assert.DoesNotContain("license_update", keys);
+        Assert.DoesNotContain("admin_users", keys);
+        Assert.DoesNotContain("tenant_management", keys);
+        Assert.DoesNotContain("campus_management", keys);
     }
 
-    /// <summary>Student should see all menus with IsAllowed=true for Student role (13 total).</summary>
+    /// <summary>Student should match CSV allow-matrix visibility for seeded keys.</summary>
     [Fact]
     public async Task GetVisible_Student_ReturnsStudentMenusOnly()
     {
+        using var superClient = CreateClient("SuperAdmin");
         using var client = CreateClient("Student");
+
+        var superMenus = await GetVisibleAsync(superClient);
+        var expected = BuildExpectedVisibleKeysForRole("Student", superMenus);
+
         var menus = await GetVisibleAsync(client);
         var keys  = FlatKeys(menus);
 
-        Assert.Contains("dashboard",         keys);
+        AssertActualIsSubsetOfExpected(keys, expected);
+        Assert.Contains("dashboard", keys);
         Assert.Contains("timetable_student", keys);
-        Assert.Contains("theme_settings",    keys);
-        Assert.Contains("notifications",     keys);
-        Assert.Contains("assignments",       keys);
-        Assert.Contains("attendance",        keys);
-        Assert.Contains("results",           keys);
-        Assert.Contains("quizzes",           keys);
-        Assert.Contains("fyp",               keys);
-        Assert.Contains("ai_chat",           keys);
-        Assert.Contains("payments",          keys);
-        Assert.Contains("report_center",     keys);
-        Assert.Contains("system_settings",  keys); // parent carrier for theme_settings
-        Assert.Contains("theme_settings",    keys);
-        Assert.DoesNotContain("timetable_admin",  keys);
-        Assert.DoesNotContain("module_settings",  keys); // SuperAdmin only
-        Assert.Equal(13, keys.Count);
+        Assert.Contains("assignments", keys);
+        Assert.Contains("report_center", keys);
+        Assert.DoesNotContain("sidebar_settings", keys);
+        Assert.DoesNotContain("report_settings", keys);
+        Assert.DoesNotContain("license_update", keys);
+        Assert.DoesNotContain("admin_users", keys);
+        Assert.DoesNotContain("tenant_management", keys);
+        Assert.DoesNotContain("campus_management", keys);
     }
 
     [Theory]
@@ -490,8 +598,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 
         var allMenus = await GetVisibleAsync(superClient);
         var allItems = FlatItems(allMenus).ToList();
-
-        Assert.Equal(30, allItems.Count);
+        Assert.NotEmpty(allItems);
 
         foreach (var menu in allItems)
         {

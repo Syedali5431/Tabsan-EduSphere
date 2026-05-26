@@ -27,6 +27,14 @@ jobs:
       - name: Build
         run: dotnet build Tabsan.EduSphere.sln --configuration Release --no-restore
 
+      - name: Sidebar Permission Drift Gate
+        run: |
+          dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj \
+            --configuration Release \
+            --no-build \
+            --filter FullyQualifiedName~SidebarMenuIntegrationTests \
+            --verbosity normal
+
       - name: Test
         run: dotnet test Tabsan.EduSphere.sln --configuration Release --no-build --verbosity normal
 
