@@ -103,8 +103,8 @@ public interface IEduApiClient
     Task SetModuleRolesAsync(string key, List<string> roles, CancellationToken ct);
 
     // Result Calculation
-    Task<ResultCalculationSettingsPageModel> GetResultCalculationSettingsAsync(CancellationToken ct);
-    Task SaveResultCalculationSettingsAsync(ResultCalculationSettingsPageModel model, CancellationToken ct);
+    Task<ResultCalculationSettingsPageModel> GetResultCalculationSettingsAsync(int institutionType, CancellationToken ct);
+    Task SaveResultCalculationSettingsAsync(ResultCalculationSettingsPageModel model, int institutionType, CancellationToken ct);
 
     // Phase 12: Reports
     Task<List<ReportCatalogItem>> GetReportCatalogAsync(CancellationToken ct);
@@ -1871,11 +1871,13 @@ public class EduApiClient : IEduApiClient
     public Task SetSidebarMenuStatusAsync(Guid id, bool isActive, CancellationToken ct)
         => PutAsync<object, object>($"api/v1/sidebar-menu/{id}/status", new { isActive }, ct);
 
-    public async Task<ResultCalculationSettingsPageModel> GetResultCalculationSettingsAsync(CancellationToken ct)
+    public async Task<ResultCalculationSettingsPageModel> GetResultCalculationSettingsAsync(int institutionType, CancellationToken ct)
     {
-        var raw = await GetAsync<ResultCalculationSettingsApiDto>("api/v1/result-calculation", ct);
-        var model = new ResultCalculationSettingsPageModel();
+        var raw = await GetAsync<ResultCalculationSettingsApiDto>($"api/v1/result-calculation?institutionType={institutionType}", ct);
+        var model = new ResultCalculationSettingsPageModel { SelectedInstitutionType = institutionType };
         if (raw is null) return model;
+
+        model.SelectedInstitutionType = raw.InstitutionType;
 
         model.GpaRules = raw.GpaScaleRules.Select((r, index) => new ResultCalculationGpaRuleItem
         {
@@ -1897,10 +1899,11 @@ public class EduApiClient : IEduApiClient
         return model;
     }
 
-    public Task SaveResultCalculationSettingsAsync(ResultCalculationSettingsPageModel model, CancellationToken ct)
+    public Task SaveResultCalculationSettingsAsync(ResultCalculationSettingsPageModel model, int institutionType, CancellationToken ct)
     {
         var payload = new
         {
+            institutionType,
             gpaScaleRules = model.GpaRules.Select((r, index) => new
             {
                 r.Id,
@@ -1957,6 +1960,7 @@ public class EduApiClient : IEduApiClient
 
     private sealed class ResultCalculationSettingsApiDto
     {
+        public int InstitutionType { get; set; }
         public List<ResultCalculationGpaRuleApiDto> GpaScaleRules { get; set; } = new();
         public List<ResultCalculationComponentRuleApiDto> ComponentRules { get; set; } = new();
     }

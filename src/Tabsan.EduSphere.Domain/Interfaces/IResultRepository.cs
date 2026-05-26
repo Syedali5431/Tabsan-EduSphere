@@ -1,5 +1,6 @@
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.Domain.Interfaces;
 
@@ -45,12 +46,15 @@ public interface IResultRepository
 
     /// <summary>Returns all result calculation component rules.</summary>
     Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default);
 
     /// <summary>Returns the configured GPA scale rules.</summary>
     Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(InstitutionType institutionType, CancellationToken ct = default);
 
     /// <summary>Replaces the result calculation configuration in one unit of work.</summary>
     Task ReplaceCalculationRulesAsync(IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default);
+    Task ReplaceCalculationRulesAsync(InstitutionType institutionType, IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default);
 
     /// <summary>Returns the student profile for GPA updates, or null when not found.</summary>
     Task<StudentProfile?> GetStudentProfileAsync(Guid studentProfileId, CancellationToken ct = default);

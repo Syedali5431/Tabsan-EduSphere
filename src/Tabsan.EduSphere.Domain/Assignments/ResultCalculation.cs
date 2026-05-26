@@ -1,4 +1,5 @@
 using Tabsan.EduSphere.Domain.Common;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.Domain.Assignments;
 
@@ -8,14 +9,16 @@ namespace Tabsan.EduSphere.Domain.Assignments;
 /// </summary>
 public class GpaScaleRule : BaseEntity
 {
+    public InstitutionType InstitutionType { get; private set; } = InstitutionType.University;
     public decimal GradePoint { get; private set; }
     public decimal MinimumScore { get; private set; }
     public int DisplayOrder { get; private set; }
 
     private GpaScaleRule() { }
 
-    public GpaScaleRule(decimal gradePoint, decimal minimumScore, int displayOrder)
+    public GpaScaleRule(decimal gradePoint, decimal minimumScore, int displayOrder, InstitutionType institutionType = InstitutionType.University)
     {
+        InstitutionType = institutionType;
         Update(gradePoint, minimumScore, displayOrder);
     }
 
@@ -39,6 +42,7 @@ public class GpaScaleRule : BaseEntity
 /// </summary>
 public class ResultComponentRule : BaseEntity
 {
+    public InstitutionType InstitutionType { get; private set; } = InstitutionType.University;
     public string Name { get; private set; } = default!;
     public decimal Weightage { get; private set; }
     public int DisplayOrder { get; private set; }
@@ -46,8 +50,9 @@ public class ResultComponentRule : BaseEntity
 
     private ResultComponentRule() { }
 
-    public ResultComponentRule(string name, decimal weightage, int displayOrder, bool isActive = true)
+    public ResultComponentRule(string name, decimal weightage, int displayOrder, bool isActive = true, InstitutionType institutionType = InstitutionType.University)
     {
+        InstitutionType = institutionType;
         Update(name, weightage, displayOrder, isActive);
     }
 

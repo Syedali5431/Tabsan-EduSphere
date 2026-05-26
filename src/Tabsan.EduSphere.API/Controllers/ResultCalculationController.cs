@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tabsan.EduSphere.Application.DTOs.Assignments;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -18,9 +19,13 @@ public class ResultCalculationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(CancellationToken ct)
+    public async Task<IActionResult> Get([FromQuery] int? institutionType, CancellationToken ct)
     {
-        var settings = await _service.GetSettingsAsync(ct);
+        var selectedType = Enum.IsDefined(typeof(InstitutionType), institutionType ?? (int)InstitutionType.University)
+            ? (InstitutionType)(institutionType ?? (int)InstitutionType.University)
+            : InstitutionType.University;
+
+        var settings = await _service.GetSettingsAsync(selectedType, ct);
         return Ok(settings);
     }
 
@@ -29,6 +34,9 @@ public class ResultCalculationController : ControllerBase
     {
         try
         {
+            if (!Enum.IsDefined(typeof(InstitutionType), request.InstitutionType))
+                return BadRequest(new { message = "Invalid institutionType." });
+
             await _service.SaveSettingsAsync(request, ct);
             return NoContent();
         }

@@ -503,6 +503,7 @@ public class ResultCalculationSettingsPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public int SelectedInstitutionType { get; set; }
     public List<ResultCalculationGpaRuleItem> GpaRules { get; set; } = new();
     public List<ResultCalculationComponentRuleItem> ComponentRules { get; set; } = new();
 }

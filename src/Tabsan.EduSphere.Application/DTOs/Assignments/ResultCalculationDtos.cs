@@ -1,3 +1,5 @@
+using Tabsan.EduSphere.Domain.Enums;
+
 namespace Tabsan.EduSphere.Application.DTOs.Assignments;
 
 public sealed record GpaScaleRuleDto(
@@ -14,9 +16,11 @@ public sealed record ResultComponentRuleDto(
     bool IsActive = true);
 
 public sealed record ResultCalculationSettingsResponse(
+    InstitutionType InstitutionType,
     IReadOnlyList<GpaScaleRuleDto> GpaScaleRules,
     IReadOnlyList<ResultComponentRuleDto> ComponentRules);
 
 public sealed record SaveResultCalculationSettingsRequest(
+    InstitutionType InstitutionType,
     IReadOnlyList<GpaScaleRuleDto> GpaScaleRules,
     IReadOnlyList<ResultComponentRuleDto> ComponentRules);

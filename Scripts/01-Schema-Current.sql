@@ -3425,6 +3425,7 @@ IF NOT EXISTS (
 BEGIN
     CREATE TABLE [gpa_scale_rules] (
         [Id] uniqueidentifier NOT NULL,
+        [InstitutionType] int NOT NULL CONSTRAINT [DF_gpa_scale_rules_InstitutionType] DEFAULT(0),
         [GradePoint] decimal(4,2) NOT NULL,
         [MinimumScore] decimal(5,2) NOT NULL,
         [DisplayOrder] int NOT NULL,
@@ -3443,6 +3444,7 @@ IF NOT EXISTS (
 BEGIN
     CREATE TABLE [result_component_rules] (
         [Id] uniqueidentifier NOT NULL,
+        [InstitutionType] int NOT NULL CONSTRAINT [DF_result_component_rules_InstitutionType] DEFAULT(0),
         [Name] nvarchar(100) NOT NULL,
         [Weightage] decimal(5,2) NOT NULL,
         [DisplayOrder] int NOT NULL,
@@ -3460,9 +3462,9 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260502134611_Phase11ResultCalculation'
 )
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_minimum_score' AND [object_id] = OBJECT_ID(N'[gpa_scale_rules]'))
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_institution_minimum_score' AND [object_id] = OBJECT_ID(N'[gpa_scale_rules]'))
     BEGIN
-        CREATE UNIQUE INDEX [IX_gpa_scale_rules_minimum_score] ON [gpa_scale_rules] ([MinimumScore]);
+        CREATE UNIQUE INDEX [IX_gpa_scale_rules_institution_minimum_score] ON [gpa_scale_rules] ([InstitutionType], [MinimumScore]);
     END;
 END;
 GO
@@ -3472,10 +3474,57 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260502134611_Phase11ResultCalculation'
 )
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_name' AND [object_id] = OBJECT_ID(N'[result_component_rules]'))
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_institution_name' AND [object_id] = OBJECT_ID(N'[result_component_rules]'))
     BEGIN
-        CREATE UNIQUE INDEX [IX_result_component_rules_name] ON [result_component_rules] ([Name]);
+        CREATE UNIQUE INDEX [IX_result_component_rules_institution_name] ON [result_component_rules] ([InstitutionType], [Name]);
     END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260526010000_ResultCalculationInstitutionScope'
+)
+BEGIN
+    IF OBJECT_ID(N'[gpa_scale_rules]') IS NOT NULL
+    BEGIN
+        IF COL_LENGTH(N'gpa_scale_rules', N'InstitutionType') IS NULL
+        BEGIN
+            ALTER TABLE [gpa_scale_rules]
+            ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_gpa_scale_rules_InstitutionType] DEFAULT(0);
+        END;
+
+        IF EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_minimum_score' AND [object_id] = OBJECT_ID(N'[gpa_scale_rules]'))
+            DROP INDEX [IX_gpa_scale_rules_minimum_score] ON [gpa_scale_rules];
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_institution_minimum_score' AND [object_id] = OBJECT_ID(N'[gpa_scale_rules]'))
+            CREATE UNIQUE INDEX [IX_gpa_scale_rules_institution_minimum_score] ON [gpa_scale_rules] ([InstitutionType], [MinimumScore]);
+    END;
+
+    IF OBJECT_ID(N'[result_component_rules]') IS NOT NULL
+    BEGIN
+        IF COL_LENGTH(N'result_component_rules', N'InstitutionType') IS NULL
+        BEGIN
+            ALTER TABLE [result_component_rules]
+            ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_result_component_rules_InstitutionType] DEFAULT(0);
+        END;
+
+        IF EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_name' AND [object_id] = OBJECT_ID(N'[result_component_rules]'))
+            DROP INDEX [IX_result_component_rules_name] ON [result_component_rules];
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_institution_name' AND [object_id] = OBJECT_ID(N'[result_component_rules]'))
+            CREATE UNIQUE INDEX [IX_result_component_rules_institution_name] ON [result_component_rules] ([InstitutionType], [Name]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260526010000_ResultCalculationInstitutionScope'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260526010000_ResultCalculationInstitutionScope', N'8.0.8');
 END;
 GO
 

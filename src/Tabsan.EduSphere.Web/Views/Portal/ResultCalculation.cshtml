@@ -17,6 +17,24 @@
 }
 else
 {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" asp-action="ResultCalculation" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Institute</label>
+                    <select id="selectedInstitutionType" name="selectedInstitutionType" class="form-select" onchange="this.form.submit()">
+                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">University</option>
+                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">School</option>
+                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">College</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <div class="text-muted small mt-4">Result calculation settings shown below are scoped to the selected institute only.</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @* Final-Touches Phase 19 Stage 19.3 — Course type and course filter *@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
@@ -43,6 +61,7 @@ else
     </div>
     <form asp-action="SaveResultCalculation" method="post" class="d-grid gap-4" id="resultCalculationForm">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="SelectedInstitutionType" value="@Model.SelectedInstitutionType" />
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">

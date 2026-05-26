@@ -1310,14 +1310,25 @@ public class PortalController : Controller
 
     // ── Result Calculation ────────────────────────────────────────────────
 
-    public async Task<IActionResult> ResultCalculation(CancellationToken ct)
+    public async Task<IActionResult> ResultCalculation(int? selectedInstitutionType, CancellationToken ct)
     {
-        var model = new ResultCalculationSettingsPageModel { IsConnected = _api.IsConnected() };
+        var resolvedInstitutionType = selectedInstitutionType switch
+        {
+            1 => 1, // School
+            2 => 2, // College
+            _ => 0  // University
+        };
+
+        var model = new ResultCalculationSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedInstitutionType = resolvedInstitutionType
+        };
         if (model.IsConnected)
         {
             try
             {
-                model = await _api.GetResultCalculationSettingsAsync(ct);
+                model = await _api.GetResultCalculationSettingsAsync(resolvedInstitutionType, ct);
                 model.IsConnected = true;
             }
             catch (Exception ex)
@@ -1357,7 +1368,7 @@ public class PortalController : Controller
                     .Where(r => !string.IsNullOrWhiteSpace(r.Name) && r.Weightage > 0)
                     .ToList();
 
-                await _api.SaveResultCalculationSettingsAsync(model, ct);
+                await _api.SaveResultCalculationSettingsAsync(model, model.SelectedInstitutionType, ct);
                 TempData["Message"] = "Result calculation settings updated.";
             }
             catch (Exception ex)
@@ -1366,7 +1377,7 @@ public class PortalController : Controller
             }
         }
 
-        return RedirectToAction(nameof(ResultCalculation));
+        return RedirectToAction(nameof(ResultCalculation), new { selectedInstitutionType = model.SelectedInstitutionType });
     }
 
     // ── Sidebar Settings ────────────────────────────────────────────────────

@@ -1831,8 +1831,8 @@ WHERE NOT EXISTS (SELECT 1 FROM [notification_recipients] x WHERE x.[Id] = r.Id)
 
 IF OBJECT_ID(N'[gpa_scale_rules]') IS NOT NULL
 BEGIN
-    INSERT INTO [gpa_scale_rules] ([Id], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
-    SELECT src.[Id], src.[GradePoint], src.[MinimumScore], src.[DisplayOrder], @Now, NULL
+    INSERT INTO [gpa_scale_rules] ([Id], [InstitutionType], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
+    SELECT src.[Id], 0, src.[GradePoint], src.[MinimumScore], src.[DisplayOrder], @Now, NULL
     FROM (VALUES
         ('41414141-4141-4141-4141-414141414101', CAST(4.00 AS DECIMAL(4,2)), CAST(85.00 AS DECIMAL(5,2)), 1),
         ('41414141-4141-4141-4141-414141414102', CAST(3.70 AS DECIMAL(4,2)), CAST(80.00 AS DECIMAL(5,2)), 2),
@@ -1849,8 +1849,8 @@ END
 
 IF OBJECT_ID(N'[result_component_rules]') IS NOT NULL
 BEGIN
-    INSERT INTO [result_component_rules] ([Id], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
-    SELECT src.[Id], src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
+    INSERT INTO [result_component_rules] ([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
+    SELECT src.[Id], 0, src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
     FROM (VALUES
         ('42424242-4242-4242-4242-424242424201', N'Assignments', CAST(25.00 AS DECIMAL(5,2)), 1),
         ('42424242-4242-4242-4242-424242424202', N'Quizzes', CAST(15.00 AS DECIMAL(5,2)), 2),

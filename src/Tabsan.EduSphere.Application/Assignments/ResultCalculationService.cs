@@ -1,6 +1,7 @@
 using Tabsan.EduSphere.Application.DTOs.Assignments;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Assignments;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 
 namespace Tabsan.EduSphere.Application.Assignments;
@@ -14,12 +15,13 @@ public class ResultCalculationService : IResultCalculationService
         _repo = repo;
     }
 
-    public async Task<ResultCalculationSettingsResponse> GetSettingsAsync(CancellationToken ct = default)
+    public async Task<ResultCalculationSettingsResponse> GetSettingsAsync(InstitutionType institutionType, CancellationToken ct = default)
     {
-        var gpaRules = await _repo.GetGpaScaleRulesAsync(ct);
-        var componentRules = await _repo.GetAllComponentRulesAsync(ct);
+        var gpaRules = await _repo.GetGpaScaleRulesAsync(institutionType, ct);
+        var componentRules = await _repo.GetAllComponentRulesAsync(institutionType, ct);
 
         return new ResultCalculationSettingsResponse(
+            institutionType,
             gpaRules.OrderBy(r => r.DisplayOrder)
                 .Select(r => new GpaScaleRuleDto(r.Id, r.GradePoint, r.MinimumScore, r.DisplayOrder))
                 .ToList(),
@@ -47,7 +49,7 @@ public class ResultCalculationService : IResultCalculationService
             if (!normalizedNames.Add(component.Name.Trim()))
                 throw new ArgumentException($"Duplicate component name '{component.Name}' is not allowed.");
 
-            var item = new ResultComponentRule(component.Name.Trim(), component.Weightage, displayOrder++, component.IsActive);
+            var item = new ResultComponentRule(component.Name.Trim(), component.Weightage, displayOrder++, component.IsActive, request.InstitutionType);
             components.Add(item);
             if (component.IsActive)
                 totalWeight += component.Weightage;
@@ -59,7 +61,7 @@ public class ResultCalculationService : IResultCalculationService
         var gpaRules = request.GpaScaleRules
             .OrderBy(x => x.MinimumScore)
             .ThenBy(x => x.DisplayOrder)
-            .Select((rule, index) => new GpaScaleRule(rule.GradePoint, rule.MinimumScore, index + 1))
+            .Select((rule, index) => new GpaScaleRule(rule.GradePoint, rule.MinimumScore, index + 1, request.InstitutionType))
             .ToList();
 
         for (var i = 1; i < gpaRules.Count; i++)
@@ -68,7 +70,7 @@ public class ResultCalculationService : IResultCalculationService
                 throw new ArgumentException("Duplicate GPA score thresholds are not allowed.");
         }
 
-        await _repo.ReplaceCalculationRulesAsync(gpaRules, components, ct);
+        await _repo.ReplaceCalculationRulesAsync(request.InstitutionType, gpaRules, components, ct);
         await _repo.SaveChangesAsync(ct);
     }
 }

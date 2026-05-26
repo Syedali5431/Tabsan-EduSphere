@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -183,19 +184,34 @@ public class ResultRepository : IResultRepository
                     .ToListAsync(ct);
 
     public async Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default)
+        => await GetAllComponentRulesAsync(InstitutionType.University, ct);
+
+    public async Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default)
         => await _db.ResultComponentRules
+                    .Where(r => r.InstitutionType == institutionType)
                     .OrderBy(r => r.DisplayOrder)
                     .ToListAsync(ct);
 
     public async Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(CancellationToken ct = default)
+        => await GetGpaScaleRulesAsync(InstitutionType.University, ct);
+
+    public async Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(InstitutionType institutionType, CancellationToken ct = default)
         => await _db.GpaScaleRules
+                    .Where(r => r.InstitutionType == institutionType)
                     .OrderBy(r => r.DisplayOrder)
                     .ToListAsync(ct);
 
     public async Task ReplaceCalculationRulesAsync(IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default)
+        => await ReplaceCalculationRulesAsync(InstitutionType.University, gpaScaleRules, componentRules, ct);
+
+    public async Task ReplaceCalculationRulesAsync(InstitutionType institutionType, IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default)
     {
-        var existingGpaRules = await _db.GpaScaleRules.ToListAsync(ct);
-        var existingComponentRules = await _db.ResultComponentRules.ToListAsync(ct);
+        var existingGpaRules = await _db.GpaScaleRules
+            .Where(r => r.InstitutionType == institutionType)
+            .ToListAsync(ct);
+        var existingComponentRules = await _db.ResultComponentRules
+            .Where(r => r.InstitutionType == institutionType)
+            .ToListAsync(ct);
 
         _db.GpaScaleRules.RemoveRange(existingGpaRules);
         _db.ResultComponentRules.RemoveRange(existingComponentRules);
