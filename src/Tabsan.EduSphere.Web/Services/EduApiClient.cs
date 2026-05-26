@@ -674,11 +674,15 @@ public class EduApiClient : IEduApiClient
 
     public async Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
     {
-        var setup = await TryGetAsync<TwoFactorSetupApiModel>("api/v1/2fa/setup", ct);
+        // Dedicated 2FA endpoint (newer API boundary): tolerate either verb for mixed deployments.
+        var setup = await TryGetAsync<TwoFactorSetupApiModel>("api/v1/2fa/setup", ct)
+            ?? await TryPostAsync<object, TwoFactorSetupApiModel>("api/v1/2fa/setup", new { }, ct);
         if (setup is not null)
             return setup;
 
-        var legacySetup = await PostAsync<object, LegacyMfaSetupApiModel>("api/v1/auth/mfa/setup", new { }, ct);
+        // Legacy auth/MFA endpoint (older API boundary): also tolerate either verb.
+        var legacySetup = await TryPostAsync<object, LegacyMfaSetupApiModel>("api/v1/auth/mfa/setup", new { }, ct)
+            ?? await TryGetAsync<LegacyMfaSetupApiModel>("api/v1/auth/mfa/setup", ct);
         if (legacySetup is null)
             return null;
 
@@ -1349,6 +1353,29 @@ public class EduApiClient : IEduApiClient
         {
             var body = await response.Content.ReadAsStringAsync(ct);
             return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<T>(body, _jsonOptions);
+        }
+
+        if (response.StatusCode is System.Net.HttpStatusCode.MethodNotAllowed or System.Net.HttpStatusCode.NotFound)
+            return default;
+
+        var errorBody = await response.Content.ReadAsStringAsync(ct);
+        throw BuildException(response.StatusCode, errorBody);
+    }
+
+    private async Task<TResponse?> TryPostAsync<TRequest, TResponse>(string path, TRequest payload, CancellationToken ct)
+    {
+        var json = JsonSerializer.Serialize(payload, _jsonOptions);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, path);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return request;
+        }, ct);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<TResponse>(body, _jsonOptions);
         }
 
         if (response.StatusCode is System.Net.HttpStatusCode.MethodNotAllowed or System.Net.HttpStatusCode.NotFound)
