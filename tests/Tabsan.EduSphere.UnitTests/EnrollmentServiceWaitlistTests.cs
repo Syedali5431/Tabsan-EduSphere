@@ -203,8 +203,11 @@ file sealed class StubResultRepository : IResultRepository
     public void Update(Result result) { }
     public Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
     public Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
+    public Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
     public Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<GpaScaleRule>>([]);
+    public Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(InstitutionType institutionType, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<GpaScaleRule>>([]);
     public Task ReplaceCalculationRulesAsync(IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default) => Task.CompletedTask;
+    public Task ReplaceCalculationRulesAsync(InstitutionType institutionType, IEnumerable<GpaScaleRule> gpaScaleRules, IEnumerable<ResultComponentRule> componentRules, CancellationToken ct = default) => Task.CompletedTask;
     public Task<StudentProfile?> GetStudentProfileAsync(Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<StudentProfile?>(null);
     public Task<IReadOnlyList<Enrollment>> GetActiveEnrollmentsForSemesterAsync(Guid studentProfileId, Guid semesterId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Enrollment>>([]);
     public Task<IReadOnlyList<Enrollment>> GetActiveEnrollmentsForStudentAsync(Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Enrollment>>([]);
