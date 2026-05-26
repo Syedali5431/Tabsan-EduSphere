@@ -10,6 +10,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
+
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -17,253 +18,57 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
+
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     <div class="alert alert-info">@Model.Message</div>
 }
 
-@if (!Model.IsConnected)
-{
-    <div class="alert alert-warning">
-        API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3"><i class="bi bi-download me-2"></i>Download Simple Template</h2>
+                <p class="text-muted small mb-3">
+                    Download a simple text template file and edit it as needed.
+                </p>
+                <a asp-action="DownloadAccreditationTemplate" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i>Download Template
+                </a>
+            </div>
+        </div>
     </div>
-}
-else
-{
-    <div class="row g-3">
-        <!-- Template list -->
-        <div class="col-12 col-xl-7">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h5 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Accreditation Templates</h2>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-                            <i class="bi bi-plus-lg me-1"></i>New Template
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3"><i class="bi bi-upload me-2"></i>Upload Template</h2>
+                <p class="text-muted small mb-3">
+                    Upload a plain .txt or .csv file. No JSON needed.
+                </p>
+
+                <form id="accreditationTemplateUploadForm" asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
+                    <div class="input-group">
+                        <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".txt,.csv,text/plain,text/csv" required />
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-upload me-1"></i>Upload
                         </button>
                     </div>
-                    @if (!Model.Templates.Any())
-                    {
-                        <p class="text-muted">No templates defined yet.</p>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle small">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Format</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var t in Model.Templates)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <strong>@t.Name</strong>
-                                                @if (!string.IsNullOrWhiteSpace(t.Description))
-                                                {
-                                                    <br /><span class="text-muted">@t.Description</span>
-                                                }
-                                            </td>
-                                            <td><span class="badge bg-secondary">@t.Format</span></td>
-                                            <td>
-                                                @if (t.IsActive)
-                                                {
-                                                    <span class="badge bg-success">Active</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-warning text-dark">Inactive</span>
-                                                }
-                                            </td>
-                                            <td>@t.CreatedAt.ToString("dd MMM yyyy")</td>
-                                            <td class="text-end">
-                                                <div class="btn-group btn-group-sm">
-                                                    <a asp-action="DownloadAccreditationTemplate" asp-route-id="@t.Id"
-                                                       class="btn btn-outline-secondary btn-sm d-flex align-items-center mb-1"
-                                                       title="Download Template File"
-                                                       style="min-width: 120px; justify-content: center;">
-                                                        <i class="bi bi-download me-1"></i> Template
-                                                    </a>
-                                                    <button class="btn btn-primary btn-sm edit-btn d-flex align-items-center mb-1"
-                                                            data-id="@t.Id"
-                                                            data-name="@t.Name"
-                                                            data-description="@t.Description"
-                                                            data-format="@t.Format"
-                                                            data-mappings="@t.FieldMappingsJson"
-                                                            data-active="@t.IsActive.ToString().ToLower()"
-                                                            data-bs-toggle="modal" data-bs-target="#editModal"
-                                                            title="Edit Accreditation Template"
-                                                            style="min-width: 100px; justify-content: center;">
-                                                        <i class="bi bi-pencil me-1"></i> Edit
-                                                    </button>
-                                                    <form asp-action="DeleteAccreditationTemplate" method="post"
-                                                          class="d-inline-block mb-1"
-                                                          onsubmit="return confirm('Delete this template?')">
-                                                        <input type="hidden" name="id" value="@t.Id" />
-                                                        <button type="submit" class="btn btn-danger btn-sm d-flex align-items-center"
-                                                                title="Delete Accreditation Template"
-                                                                style="min-width: 100px; justify-content: center;">
-                                                            <i class="bi bi-trash me-1"></i> Delete
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Info panel -->
-        <div class="col-12 col-xl-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h3 class="h6 fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>About Report Templates</h3>
-                    <p class="small text-muted">
-                        Accreditation templates define the structure of institutional reports submitted to
-                        government bodies or accrediting agencies.
-                    </p>
-                    <ul class="small text-muted mb-0">
-                        <li><strong>Format:</strong> CSV for spreadsheet submission; TXT for plain-text regulatory forms.</li>
-                        <li><strong>Field Mappings:</strong> Add plain values separated by commas (for example: enrollment,results,faculty).</li>
-                        <li><strong>Template Download:</strong> Use the <span class="badge bg-light text-dark border"><i class="bi bi-download"></i> Template</span> button to download a simple text template file.</li>
-                        <li><strong>Template Upload:</strong> Upload a simple .txt or .csv template file to create a template quickly.</li>
-                    </ul>
-
-                    <hr class="my-3" />
-
-                    <form id="accreditationTemplateUploadForm" asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
-                        <label class="form-label fw-semibold small">Upload Template File</label>
-                        <div class="input-group input-group-sm">
-                            <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".txt,.csv,text/plain,text/csv" required />
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-upload me-1"></i>Upload
-                            </button>
-                        </div>
-                        <div class="form-text">Accepted formats: .txt or .csv (max 1 MB).</div>
-                        <div id="accreditationTemplateUploadValidation" class="invalid-feedback d-block d-none"></div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Modal -->
-    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="CreateAccreditationTemplate" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="createModalLabel">New Accreditation Template</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-                            <input type="text" name="Name" class="form-control" required maxlength="200" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Description</label>
-                            <input type="text" name="Description" class="form-control" maxlength="500" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Format <span class="text-danger">*</span></label>
-                            <select name="Format" class="form-select" required>
-                                <option value="CSV">CSV</option>
-                                <option value="PDF">TXT/PDF</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Field Mappings (JSON)</label>
-                            <textarea name="FieldMappingsJson" class="form-control font-monospace" rows="3"
-                                      placeholder='["enrollment","results","faculty","students"]'></textarea>
-                            <div class="form-text">JSON array of section keys. Leave blank to include all sections.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Create Template</button>
-                    </div>
+                    <div class="form-text">Accepted formats: .txt or .csv (max 1 MB).</div>
+                    <div id="accreditationTemplateUploadValidation" class="invalid-feedback d-block d-none"></div>
                 </form>
             </div>
         </div>
     </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="UpdateAccreditationTemplate" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Template</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="Id" id="editId" />
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-                            <input type="text" name="Name" id="editName" class="form-control" required maxlength="200" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Description</label>
-                            <input type="text" name="Description" id="editDescription" class="form-control" maxlength="500" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Format <span class="text-danger">*</span></label>
-                            <select name="Format" id="editFormat" class="form-select" required>
-                                <option value="CSV">CSV</option>
-                                <option value="PDF">TXT/PDF</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Field Mappings (JSON)</label>
-                            <textarea name="FieldMappingsJson" id="editMappings" class="form-control font-monospace" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="IsActive" id="editIsActive" class="form-check-input" value="true" />
-                            <input type="hidden" name="IsActive" value="false" />
-                            <label class="form-check-label" for="editIsActive">Active</label>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-}
+</div>
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.getElementById('editId').value          = btn.dataset.id;
-                document.getElementById('editName').value        = btn.dataset.name || '';
-                document.getElementById('editDescription').value = btn.dataset.description || '';
-                document.getElementById('editFormat').value      = btn.dataset.format || 'CSV';
-                document.getElementById('editMappings').value    = btn.dataset.mappings || '';
-                document.getElementById('editIsActive').checked  = btn.dataset.active === 'true';
-            });
-        });
-
         const uploadForm = document.getElementById('accreditationTemplateUploadForm');
         const uploadInput = document.getElementById('accreditationTemplateFileInput');
         const uploadFeedback = document.getElementById('accreditationTemplateUploadValidation');
 
         if (uploadForm && uploadInput && uploadFeedback) {
-            let bypassValidation = false;
-
             const hideValidation = () => {
                 uploadFeedback.textContent = '';
                 uploadFeedback.classList.add('d-none');
@@ -278,34 +83,27 @@ else
 
             uploadInput.addEventListener('change', hideValidation);
 
-            uploadForm.addEventListener('submit', async (event) => {
-                if (bypassValidation) {
-                    bypassValidation = false;
-                    return;
-                }
-
-                event.preventDefault();
+            uploadForm.addEventListener('submit', (event) => {
                 hideValidation();
 
                 const file = uploadInput.files && uploadInput.files.length > 0 ? uploadInput.files[0] : null;
                 if (!file) {
+                    event.preventDefault();
                     showValidation('Please select a template file.');
                     return;
                 }
 
                 const lowerName = file.name.toLowerCase();
                 if (!lowerName.endsWith('.txt') && !lowerName.endsWith('.csv')) {
+                    event.preventDefault();
                     showValidation('Only .txt or .csv template files are supported.');
                     return;
                 }
 
                 if (file.size > 1048576) {
+                    event.preventDefault();
                     showValidation('Template file is too large. Maximum size is 1 MB.');
-                    return;
                 }
-
-                bypassValidation = true;
-                uploadForm.submit();
             });
         }
     </script>

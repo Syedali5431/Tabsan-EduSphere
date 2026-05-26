@@ -7612,120 +7612,27 @@ using Microsoft.AspNetCore.Mvc.Filters;
     [HttpGet]
     public async Task<IActionResult> AccreditationTemplates(CancellationToken ct)
     {
-        var model = new AccreditationTemplatesPageModel { IsConnected = _api.IsConnected() };
-        if (!model.IsConnected) return View(model);
-        try
-        {
-            var items = await _api.GetAccreditationTemplatesAsync(ct);
-            model.Templates = items.Select(t => new AccreditationTemplateRow
-            {
-                Id                = t.Id,
-                Name              = t.Name,
-                Description       = t.Description,
-                Format            = t.Format,
-                FieldMappingsJson = t.FieldMappingsJson,
-                IsActive          = t.IsActive,
-                CreatedAt         = t.CreatedAt
-            }).ToList();
-        }
-        catch (Exception ex) { model.Message = ex.Message; }
+        await Task.CompletedTask;
+        var model = new AccreditationTemplatesPageModel { IsConnected = true };
         return View(model);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateAccreditationTemplate(AccreditationTemplateFormModel form, CancellationToken ct)
-    {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
-        try
-        {
-            await _api.CreateAccreditationTemplateAsync(new CreateAccreditationTemplateForm
-            {
-                Name              = form.Name,
-                Description       = form.Description,
-                Format            = form.Format,
-                FieldMappingsJson = form.FieldMappingsJson
-            }, ct);
-
-            TempData["Success"] = "Accreditation template created.";
-        }
-        catch (Exception ex) { TempData["Error"] = ex.Message; }
-        return RedirectToAction(nameof(AccreditationTemplates));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> UpdateAccreditationTemplate(AccreditationTemplateFormModel form, CancellationToken ct)
-    {
-        if (!_api.IsConnected() || form.Id == null) return RedirectToAction(nameof(AccreditationTemplates));
-        try
-        {
-            await _api.UpdateAccreditationTemplateAsync(form.Id.Value, new UpdateAccreditationTemplateForm
-            {
-                Name              = form.Name,
-                Description       = form.Description,
-                Format            = form.Format,
-                FieldMappingsJson = form.FieldMappingsJson,
-                IsActive          = form.IsActive
-            }, ct);
-            TempData["Success"] = "Accreditation template updated.";
-        }
-        catch (Exception ex) { TempData["Error"] = ex.Message; }
-        return RedirectToAction(nameof(AccreditationTemplates));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> DeleteAccreditationTemplate(Guid id, CancellationToken ct)
-    {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
-        try
-        {
-            await _api.DeleteAccreditationTemplateAsync(id, ct);
-            TempData["Success"] = "Accreditation template deleted.";
-        }
-        catch (Exception ex) { TempData["Error"] = ex.Message; }
-        return RedirectToAction(nameof(AccreditationTemplates));
-    }
-
     [HttpGet]
-    public async Task<IActionResult> DownloadAccreditationReport(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DownloadAccreditationTemplate(CancellationToken ct)
     {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
+        await Task.CompletedTask;
         try
         {
-            var (content, contentType, fileName) = await _api.GenerateAccreditationReportAsync(id, ct);
-            if (content == null) return RedirectToAction(nameof(AccreditationTemplates));
-            return File(content, contentType, fileName);
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = ex.Message;
-            return RedirectToAction(nameof(AccreditationTemplates));
-        }
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> DownloadAccreditationTemplate(Guid id, CancellationToken ct)
-    {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
-
-        try
-        {
-            var template = await _api.GetAccreditationTemplateAsync(id, ct);
-            if (template == null)
-            {
-                TempData["Error"] = "Template not found.";
-                return RedirectToAction(nameof(AccreditationTemplates));
-            }
-
             var content = string.Join(Environment.NewLine, new[]
             {
-                $"Name: {template.Name}",
-                $"Description: {template.Description ?? string.Empty}",
-                $"Format: {template.Format}",
-                $"FieldMappings: {template.FieldMappingsJson ?? string.Empty}"
+                "Name: Simple Accreditation Template",
+                "Description: Basic template for upload/download only",
+                "Format: CSV",
+                "FieldMappings: enrollment,results,faculty"
             }) + Environment.NewLine;
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-            return File(bytes, "text/plain", $"accreditation-template-{template.Id:N}.txt");
+            return File(bytes, "text/plain", "accreditation-template-sample.txt");
         }
         catch (Exception ex)
         {
@@ -7738,7 +7645,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
     [RequestFormLimits(MultipartBodyLengthLimit = 1048576)]
     public async Task<IActionResult> UploadAccreditationTemplate(IFormFile? templateFile, CancellationToken ct)
     {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(AccreditationTemplates));
+        await Task.CompletedTask;
 
         if (templateFile == null || templateFile.Length == 0)
         {
@@ -7762,61 +7669,22 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
         try
         {
-            string fileContent;
-            using (var stream = templateFile.OpenReadStream())
-            using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
-            {
-                fileContent = await reader.ReadToEndAsync();
-            }
+            var uploadFolder = Path.Combine(Path.GetTempPath(), "Tabsan.EduSphere", "AccreditationTemplates");
+            Directory.CreateDirectory(uploadFolder);
 
-            var payload = ParseSimpleAccreditationTemplate(fileContent);
+            var safeName = Path.GetFileNameWithoutExtension(templateFile.FileName);
+            if (string.IsNullOrWhiteSpace(safeName))
+                safeName = "accreditation-template";
 
-            if (payload == null || string.IsNullOrWhiteSpace(payload.Name))
-            {
-                TempData["Error"] = "Invalid template file. Required field: Name.";
-                return RedirectToAction(nameof(AccreditationTemplates));
-            }
+            var safeExt = string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase) ? ".csv" : ".txt";
+            var savedFileName = $"{safeName}-{DateTime.UtcNow:yyyyMMddHHmmss}{safeExt}";
+            var savedPath = Path.Combine(uploadFolder, savedFileName);
 
-            var normalizedFormat = payload.Format?.Trim().ToUpperInvariant();
-            if (normalizedFormat == "TXT")
-                normalizedFormat = "PDF";
+            await using var stream = templateFile.OpenReadStream();
+            await using var fileStream = new FileStream(savedPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await stream.CopyToAsync(fileStream, ct);
 
-            if (normalizedFormat != "CSV" && normalizedFormat != "PDF")
-            {
-                TempData["Error"] = "Invalid template format. Use CSV or PDF.";
-                return RedirectToAction(nameof(AccreditationTemplates));
-            }
-
-            var requestedName = payload.Name.Trim();
-            var targetName = requestedName;
-            var existingTemplates = await _api.GetAccreditationTemplatesAsync(ct);
-            var existingNames = new HashSet<string>(
-                existingTemplates.Select(t => t.Name.Trim()),
-                StringComparer.OrdinalIgnoreCase);
-
-            if (existingNames.Contains(targetName))
-            {
-                var baseName = $"{requestedName} Imported";
-                targetName = $"{baseName} {DateTime.UtcNow:yyyyMMddHHmmss}";
-                var suffix = 1;
-                while (existingNames.Contains(targetName))
-                {
-                    targetName = $"{baseName} {DateTime.UtcNow:yyyyMMddHHmmss}-{suffix}";
-                    suffix++;
-                }
-            }
-
-            await _api.CreateAccreditationTemplateAsync(new CreateAccreditationTemplateForm
-            {
-                Name = targetName,
-                Description = payload.Description?.Trim(),
-                Format = normalizedFormat,
-                FieldMappingsJson = payload.FieldMappingsJson
-            }, ct);
-
-            TempData["Success"] = string.Equals(targetName, requestedName, StringComparison.Ordinal)
-                ? "Accreditation template uploaded successfully."
-                : $"Accreditation template uploaded as '{targetName}' because '{requestedName}' already exists.";
+            TempData["Success"] = $"Template uploaded successfully: {savedFileName}";
         }
         catch (Exception ex)
         {
@@ -7824,112 +7692,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
         }
 
         return RedirectToAction(nameof(AccreditationTemplates));
-    }
-
-    private static AccreditationTemplateImportPayload? ParseSimpleAccreditationTemplate(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-
-        var payload = new AccreditationTemplateImportPayload();
-        var lines = raw.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(l => l.Trim())
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            .ToList();
-
-        if (lines.Count == 0)
-            return null;
-
-        var hasKeyValue = lines.Any(l => l.Contains(':') || l.Contains('='));
-
-        if (hasKeyValue)
-        {
-            foreach (var line in lines)
-            {
-                var separatorIndex = line.IndexOf(':');
-                if (separatorIndex < 0)
-                    separatorIndex = line.IndexOf('=');
-                if (separatorIndex <= 0)
-                    continue;
-
-                var key = line[..separatorIndex].Trim().ToLowerInvariant();
-                var value = line[(separatorIndex + 1)..].Trim();
-                switch (key)
-                {
-                    case "name":
-                        payload.Name = value;
-                        break;
-                    case "description":
-                        payload.Description = value;
-                        break;
-                    case "format":
-                        payload.Format = value;
-                        break;
-                    case "fieldmappings":
-                    case "fieldmapping":
-                    case "mappings":
-                        payload.FieldMappingsJson = NormalizeMappings(value);
-                        break;
-                }
-            }
-        }
-        else
-        {
-            var header = lines[0].Split(',').Select(h => h.Trim().ToLowerInvariant()).ToList();
-            if (lines.Count < 2)
-                return null;
-
-            var values = lines[1].Split(',').Select(v => v.Trim()).ToList();
-            string GetValue(params string[] keys)
-            {
-                foreach (var key in keys)
-                {
-                    var index = header.FindIndex(h => h == key);
-                    if (index >= 0 && index < values.Count)
-                        return values[index];
-                }
-                return string.Empty;
-            }
-
-            payload.Name = GetValue("name");
-            payload.Description = GetValue("description");
-            payload.Format = GetValue("format");
-            payload.FieldMappingsJson = NormalizeMappings(GetValue("fieldmappings", "mappings"));
-        }
-
-        if (string.IsNullOrWhiteSpace(payload.Name))
-            return null;
-
-        payload.Format = string.IsNullOrWhiteSpace(payload.Format) ? "CSV" : payload.Format;
-        return payload;
-    }
-
-    private static string? NormalizeMappings(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-
-        if (raw.TrimStart().StartsWith('['))
-            return raw;
-
-        var parts = raw.Split(new[] { '|', ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        return parts.Count == 0
-            ? null
-            : System.Text.Json.JsonSerializer.Serialize(parts);
-    }
-
-    private sealed class AccreditationTemplateImportPayload
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string? Format { get; set; } = "CSV";
-        public string? FieldMappingsJson { get; set; }
-        public bool IsActive { get; set; } = true;
     }
 
     // ── Phase 23 — Institution Policy ─────────────────────────────────────────
