@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tabsan.EduSphere.Domain.Academic;
 
 namespace Tabsan.EduSphere.Infrastructure.Persistence.Configurations;
@@ -49,6 +50,11 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
 /// <summary>EF Core configuration for Enrollment — append-only academic history row.</summary>
 public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
 {
+       private static readonly ValueConverter<EnrollmentStatus, string> EnrollmentStatusConverter =
+              new(
+                     status => status.ToString(),
+                     dbValue => ParseEnrollmentStatus(dbValue));
+
     public void Configure(EntityTypeBuilder<Enrollment> builder)
     {
         builder.ToTable("enrollments");
@@ -56,7 +62,7 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
 
         // Store enrollment status as a string for human-readable DB values.
         builder.Property(e => e.Status)
-               .HasConversion<string>()
+                        .HasConversion(EnrollmentStatusConverter)
                .HasMaxLength(32);
 
         // A student can only have one enrollment row per offering (active OR dropped).
@@ -86,6 +92,23 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
 
         // No query filter here — enrollment history is never filtered out.
     }
+
+       private static EnrollmentStatus ParseEnrollmentStatus(string? dbValue)
+       {
+              if (string.IsNullOrWhiteSpace(dbValue))
+                     return EnrollmentStatus.Active;
+
+              var normalized = dbValue.Trim();
+
+              // Backward compatibility: old data used "Enrolled" before the enum value was renamed to "Active".
+              if (normalized.Equals("Enrolled", StringComparison.OrdinalIgnoreCase))
+                     return EnrollmentStatus.Active;
+
+              if (Enum.TryParse<EnrollmentStatus>(normalized, ignoreCase: true, out var parsed))
+                     return parsed;
+
+              throw new InvalidOperationException($"Unsupported enrollment status '{dbValue}' in database.");
+       }
 }
 
 /// <summary>EF Core configuration for RegistrationWhitelist.</summary>

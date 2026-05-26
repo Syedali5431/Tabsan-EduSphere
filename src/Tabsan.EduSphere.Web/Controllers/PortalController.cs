@@ -1,206 +1,287 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Tabsan.EduSphere.Web.Models.Portal;
-using Tabsan.EduSphere.Web.Services;
+    // -- Phase 21 Stage 21.1/21.2 — Study Planner -----------------------------
 
-namespace Tabsan.EduSphere.Web.Controllers;
-
-public class PortalController : Controller
-{
-    private readonly IEduApiClient _api;
-    private readonly IWebHostEnvironment _environment;
-
-    private static readonly Dictionary<string, string> ActionMenuKeyMap = new(StringComparer.OrdinalIgnoreCase)
+    [HttpGet]
+    public async Task<IActionResult> StudyPlan(Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        [nameof(ModuleComposition)] = "module_composition",
-        [nameof(TimetableAdmin)] = "timetable_admin",
-        [nameof(TimetableStudent)] = "timetable_student",
-        [nameof(TimetableTeacher)] = "timetable_teacher",
-        [nameof(Buildings)] = "buildings",
-        [nameof(Rooms)] = "rooms",
-        [nameof(ReportSettings)] = "report_settings",
-        [nameof(ResultCalculation)] = "result_calculation",
-        [nameof(SidebarSettings)] = "sidebar_settings",
-        [nameof(LicenseUpdate)] = "license_update",
-        [nameof(ThemeSettings)] = "theme_settings",
-        [nameof(Notifications)] = "notifications",
-        [nameof(Students)] = "students",
-        [nameof(UserImport)] = "user_import",
-        [nameof(Departments)] = "departments",
-        [nameof(Programs)] = "programs",
-        [nameof(TenantManagement)] = "tenant_management",
-        [nameof(CampusManagement)] = "campus_management",
-        [nameof(AdminUsers)] = "admin_users",
-        [nameof(Courses)] = "courses",
-        [nameof(Assignments)] = "assignments",
-        [nameof(Attendance)] = "attendance",
-        [nameof(Results)] = "results",
-        [nameof(Quizzes)] = "quizzes",
-        [nameof(Fyp)] = "fyp",
-        [nameof(Helpdesk)] = "helpdesk",
-        [nameof(Prerequisites)] = "prerequisites",
-        [nameof(Gradebook)] = "gradebook",
-        [nameof(RubricManage)] = "rubric_manage",
-        [nameof(Analytics)] = "analytics",
-        [nameof(AiChat)] = "ai_chat",
-        [nameof(StudentLifecycle)] = "student_lifecycle",
-        [nameof(Payments)] = "payments",
-        [nameof(Enrollments)] = "enrollments",
-        [nameof(ReportCenter)] = "report_center",
-        [nameof(ReportPayments)] = "report_center",
-        [nameof(DashboardSettings)] = "dashboard_settings",
-        [nameof(DegreeAudit)] = "degree_audit",
-        [nameof(GraduationEligibility)] = "graduation_eligibility",
-        [nameof(DegreeRules)] = "degree_rules",
-        [nameof(GraduationApply)] = "graduation_apply",
-        [nameof(GraduationApplications)] = "graduation_applications",
-        [nameof(GenerateCertificates)] = "generate_certificates",
-        [nameof(GradingConfig)] = "grading_config",
-        [nameof(LmsManage)] = "lms_manage",
-        [nameof(CourseMaterial)] = "course_material",
-        [nameof(Discussion)] = "discussion",
-        [nameof(Announcements)] = "announcements",
-        [nameof(StudyPlan)] = "study_plan",
-        [nameof(LibraryConfig)] = "library_config",
-        [nameof(AccreditationTemplates)] = "accreditation",
-        [nameof(InstitutionPolicy)] = "institution_policy"
-    };
+        ViewData["Title"] = "Study Plans";
+        var identity = _api.GetSessionIdentity();
+        var model = new StudyPlanPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedStudentProfileId = studentProfileId,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
 
-    private static readonly HashSet<string> FinanceBlockedAcademicMenuKeys = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "timetable_admin",
-        "timetable_teacher",
-        "timetable_student",
-        "buildings",
-        "rooms",
-        "students",
-        "user_import",
-        "departments",
-        "courses",
-        "assignments",
-        "attendance",
-        "results",
-        "quizzes",
-        "fyp",
-        "prerequisites",
-        "gradebook",
-        "rubric_manage",
-        "student_lifecycle",
-        "enrollments",
-        "degree_audit",
-        "graduation_eligibility",
-        "degree_rules",
-        "graduation_apply",
-        "graduation_applications",
-        "generate_certificates",
-        "grading_config",
-        "lms_manage",
-        "course_material",
-        "discussion",
-        "announcements",
-        "study_plan"
-    };
+        if (TempData["SuccessMessage"] is string s)
+            model.SuccessMessage = s;
+        if (TempData["ErrorMessage"] is string e)
+            model.ErrorMessage = e;
 
-    public PortalController(IEduApiClient api, IWebHostEnvironment environment)
-    {
-        _api = api;
-        _environment = environment;
+        if (!model.IsConnected)
+            return View(model);
+
+        try
+        {
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (tenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(tenantId, ct);
+
+                if (tenantId.HasValue && !campusId.HasValue)
+                {
+                    model.Message = "Select a campus to view study plans for the selected tenant.";
+                    return View(model);
+                }
+
+                if (campusId.HasValue && !tenantId.HasValue)
+                {
+                    model.Message = "Select a tenant first.";
+                    return View(model);
+                }
+            }
+
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+            if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            {
+                model.ErrorMessage = "TenantId and CampusId must be provided together.";
+                return View(model);
+            }
+
+            if (identity?.IsStudent == true)
+            {
+                var profile = await _api.GetMyStudentProfileAsync(ct);
+                if (profile is null)
+                {
+                    model.ErrorMessage = "Student profile not found.";
+                    return View(model);
+                }
+
+                model.StudentProfileId = profile.Id;
+                model.SelectedStudentProfileId = profile.Id;
+                model.Plans = (await _api.GetStudyPlansAsync(profile.Id, ct)).Select(MapStudyPlanItem).ToList();
+                return View(model);
+            }
+
+            model.Departments = effectiveTenantId.HasValue || effectiveCampusId.HasValue
+                ? await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct)
+                : await _api.GetDepartmentsAsync(ct);
+
+            model.Students = studentProfileId.HasValue
+                ? await _api.GetStudentsAsync(null, ct)
+                : await _api.GetStudentsAsync(departmentId, ct);
+
+            if (!studentProfileId.HasValue && model.Students.Count == 1)
+                studentProfileId = model.Students[0].Id;
+
+            if (studentProfileId.HasValue)
+            {
+                model.StudentProfileId = studentProfileId.Value;
+                model.SelectedStudentProfileId = studentProfileId.Value;
+                model.Plans = (await _api.GetStudyPlansAsync(studentProfileId.Value, ct)).Select(MapStudyPlanItem).ToList();
+            }
+            else if (departmentId.HasValue)
+            {
+                var plans = await _api.GetStudyPlansByDepartmentAsync(departmentId.Value, ct);
+                model.Plans = plans.Select(MapStudyPlanItem).ToList();
+            }
+            else
+            {
+                model.ErrorMessage = "Select a department or student to view study plans.";
+            }
+        }
+        catch (Exception ex)
+        {
+            model.ErrorMessage = ex.Message;
+        }
+
+        return View(model);
     }
 
-    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    [HttpGet]
+    public async Task<IActionResult> StudyPlanDetail(Guid planId, Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var action = context.RouteData.Values["action"]?.ToString();
-        var isForceChangeAction = string.Equals(action, nameof(ForceChangePassword), StringComparison.OrdinalIgnoreCase);
-
-        if (!isForceChangeAction && _api.IsConnected() && _api.IsForcePasswordChangeRequired())
+        ViewData["Title"] = "Study Plan Detail";
+        var model = new StudyPlanDetailPageModel
         {
-            context.Result = RedirectToAction(nameof(ForceChangePassword));
-            return;
+            IsConnected = _api.IsConnected(),
+            SelectedStudentProfileId = studentProfileId,
+            SelectedDepartmentId = departmentId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId
+        };
+
+        if (TempData["SuccessMessage"] is string s)
+            model.SuccessMessage = s;
+        if (TempData["ErrorMessage"] is string e)
+            model.ErrorMessage = e;
+
+        if (!_api.IsConnected())
+            return View(model);
+
+        try
+        {
+            var plan = await _api.GetStudyPlanAsync(planId, ct);
+            if (plan is null)
+                return NotFound();
+
+            model.Plan = MapStudyPlanItem(plan);
+            model.SelectedStudentProfileId ??= model.Plan.StudentProfileId;
+        }
+        catch (Exception ex)
+        {
+            model.ErrorMessage = ex.Message;
         }
 
-        if (ShouldBlockFinanceAcademicAction(action))
-        {
-            TempData["PortalMessage"] = "Finance access is limited to finance modules. Academic sections are blocked.";
-            context.Result = RedirectToAction(nameof(Payments));
-            return;
-        }
+        return View(model);
+    }
 
-        if (ShouldEnforceSidebarGuard(action) && !CanBypassSidebarGuard())
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateStudyPlan(
+        Guid studentProfileId,
+        string plannedSemesterName,
+        string? notes,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
         {
-            var requiredMenuKey = ActionMenuKeyMap[action!];
-            HashSet<string> visibleMenuKeys;
             try
             {
-                visibleMenuKeys = await GetVisibleMenuKeysAsync(context.HttpContext.RequestAborted);
-            }
-            catch (InvalidOperationException ex) when (IsUnauthorizedApiException(ex))
-            {
-                _api.SaveConnection(new ApiConnectionModel());
-                _api.SetForcePasswordChangeRequired(false);
-                context.Result = RedirectToAction("Index", "Login", new { returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString });
-                return;
-            }
+                if (studentProfileId == Guid.Empty && _api.GetSessionIdentity()?.IsStudent == true)
+                {
+                    var profile = await _api.GetMyStudentProfileAsync(ct);
+                    if (profile is not null)
+                        studentProfileId = profile.Id;
+                }
 
-            if (!visibleMenuKeys.Contains(requiredMenuKey))
+                if (studentProfileId == Guid.Empty)
+                    throw new InvalidOperationException("Select a student before creating a study plan.");
+
+                await _api.CreateStudyPlanAsync(studentProfileId, plannedSemesterName, notes, ct);
+                TempData["SuccessMessage"] = "Study plan created.";
+            }
+            catch (Exception ex)
             {
-                TempData["PortalMessage"] = "Access denied for this section based on your current role and menu permissions.";
-                context.Result = RedirectToAction(nameof(Dashboard));
-                return;
+                TempData["ErrorMessage"] = ex.Message;
             }
         }
 
-        await base.OnActionExecutionAsync(context, next);
+        return RedirectToAction(nameof(StudyPlan), new { studentProfileId, departmentId, tenantId, campusId });
     }
 
-    private bool ShouldBlockFinanceAcademicAction(string? actionName)
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddStudyPlanCourse(
+        Guid planId,
+        Guid courseId,
+        Guid? studentProfileId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
     {
-        if (!_api.IsConnected() || string.IsNullOrWhiteSpace(actionName))
-            return false;
-
-        if (!ActionMenuKeyMap.TryGetValue(actionName, out var menuKey))
-            return false;
-
-        var identity = _api.GetSessionIdentity();
-        if (identity is null || !identity.IsFinance || identity.IsAdmin || identity.IsSuperAdmin)
-            return false;
-
-        return FinanceBlockedAcademicMenuKeys.Contains(menuKey);
-    }
-
-    private bool ShouldEnforceSidebarGuard(string? actionName)
-        => _api.IsConnected()
-           && !string.IsNullOrWhiteSpace(actionName)
-           && ActionMenuKeyMap.ContainsKey(actionName)
-           && !string.Equals(actionName, nameof(Dashboard), StringComparison.OrdinalIgnoreCase);
-
-    private bool CanBypassSidebarGuard()
-    {
-        var identity = _api.GetSessionIdentity();
-        return identity?.IsSuperAdmin == true;
-    }
-
-    private async Task<HashSet<string>> GetVisibleMenuKeysAsync(CancellationToken ct)
-    {
-        var visibleMenus = await _api.GetVisibleSidebarMenusForCurrentUserAsync(ct);
-        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var menu in visibleMenus)
+        if (_api.IsConnected())
         {
-            keys.Add(menu.Key);
-            foreach (var subMenu in menu.SubMenus)
-                keys.Add(subMenu.Key);
+            try
+            {
+                await _api.AddStudyPlanCourseAsync(planId, courseId, ct);
+                TempData["SuccessMessage"] = "Course added to plan.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
         }
 
-        return keys;
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
     }
 
-    private static bool IsUnauthorizedApiException(InvalidOperationException ex)
-        => ex.Message.Contains("status 401", StringComparison.OrdinalIgnoreCase)
-           || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase);
-
-    private async Task<(bool Allowed, string Message)> CanUseDegreeAuditAsync(CancellationToken ct)
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveStudyPlanCourse(
+        Guid planId,
+        Guid courseId,
+        Guid? studentProfileId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
     {
-        var identity = _api.GetSessionIdentity();
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.RemoveStudyPlanCourseAsync(planId, courseId, ct);
+                TempData["SuccessMessage"] = "Course removed from plan.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+        }
+
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteStudyPlan(
+        Guid planId,
+        Guid? studentProfileId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.DeleteStudyPlanAsync(planId, ct);
+                TempData["SuccessMessage"] = "Study plan deleted.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+        }
+
+        return RedirectToAction(nameof(StudyPlan), new { studentProfileId, departmentId, tenantId, campusId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdvisePlan(
+        Guid planId,
+        bool isEndorsed,
+        string? advisorNotes,
+        Guid? studentProfileId,
+        Guid? departmentId,
+        Guid? tenantId,
+        Guid? campusId,
+        CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                await _api.AdvisePlanAsync(planId, isEndorsed, advisorNotes, ct);
+                TempData["SuccessMessage"] = isEndorsed ? "Plan endorsed." : "Plan rejected.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+        }
+
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
+    }
         if (identity is { IsSuperAdmin: false, InstitutionType: not null } && identity.InstitutionType.Value != 0)
             return (false, "Degree Audit is available only for university institution type.");
 
@@ -283,7 +364,7 @@ public class PortalController : Controller
                 Id = o.Id,
                 Name = string.IsNullOrWhiteSpace(o.CourseCode)
                     ? $"{o.CourseTitle} ({o.SemesterName})"
-                    : $"{o.CourseCode} — {o.CourseTitle} ({o.SemesterName})"
+                    : $"{o.CourseCode} � {o.CourseTitle} ({o.SemesterName})"
             }).ToList();
         }
 
@@ -351,7 +432,7 @@ public class PortalController : Controller
         return fallback.HasValue && fallback.Value != Guid.Empty ? fallback : null;
     }
 
-    // ── Dashboard / Connection ──────────────────────────────────────────────
+    // -- Dashboard / Connection ----------------------------------------------
 
     [HttpGet]
     public IActionResult Dashboard()
@@ -370,13 +451,13 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Dashboard));
     }
 
-    // ── Phase 24 — Module Composition Panel ────────────────────────────────
+    // -- Phase 24 � Module Composition Panel --------------------------------
 
     [HttpGet]
     public async Task<IActionResult> ModuleComposition(CancellationToken ct)
     {
         var model = new DashboardCompositionModel { IsConnected = _api.IsConnected() };
-        if (!model.IsConnected) return View(model);
+        if (!model.IsConnected) return View("DiscussionThread", model);
         try
         {
             var identity = _api.GetSessionIdentity();
@@ -412,7 +493,7 @@ public class PortalController : Controller
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
+        return View("DiscussionThread", model);
     }
 
     [HttpPost]
@@ -439,7 +520,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ModuleComposition));
     }
 
-    // ── Phase 27 — Student Portal Capability Matrix ───────────────────────
+    // -- Phase 27 � Student Portal Capability Matrix -----------------------
 
     [HttpGet]
     public async Task<IActionResult> PortalCapabilityMatrix(CancellationToken ct)
@@ -500,7 +581,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Timetable Admin ─────────────────────────────────────────────────────
+    // -- Timetable Admin -----------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> TimetableAdmin(
@@ -666,7 +747,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(TimetableAdmin), new { timetableId, tenantId, campusId, departmentId });
     }
 
-    // ── Timetable Student ───────────────────────────────────────────────────
+    // -- Timetable Student ---------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> TimetableStudent(
@@ -803,7 +884,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(TimetableStudent), new { departmentId, timetableId, tenantId, campusId, dayOfWeek });
     }
 
-    // ── Timetable Teacher ───────────────────────────────────────────────────
+    // -- Timetable Teacher ---------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> TimetableTeacher(
@@ -897,7 +978,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, includeInactive });
     }
 
-    // ── Buildings ───────────────────────────────────────────────────────────
+    // -- Buildings -----------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Buildings(Guid? selectedId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -1000,7 +1081,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Buildings), new { selectedId = id, tenantId, campusId });
     }
 
-    // ── Rooms ───────────────────────────────────────────────────────────────
+    // -- Rooms ---------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Rooms(Guid? buildingId, Guid? selectedId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -1115,7 +1196,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Rooms), new { buildingId, selectedId = id, tenantId, campusId });
     }
 
-    // ── License Update ─────────────────────────────────────────────────────
+    // -- License Update -----------------------------------------------------
 
     public async Task<IActionResult> LicenseUpdate(CancellationToken ct)
     {
@@ -1171,7 +1252,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(LicenseUpdate));
     }
 
-    // ── Theme Settings ─────────────────────────────────────────────────────
+    // -- Theme Settings -----------------------------------------------------
 
     public async Task<IActionResult> ThemeSettings(CancellationToken ct)
     {
@@ -1184,7 +1265,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Two-Factor Authentication Settings ──────────────────────────────────
+    // -- Two-Factor Authentication Settings ----------------------------------
 
     public IActionResult TwoFactorSettings()
     {
@@ -1318,7 +1399,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ThemeSettings));
     }
 
-    // ── Report Settings ────────────────────────────────────────────────────
+    // -- Report Settings ----------------------------------------------------
 
     public async Task<IActionResult> ReportSettings(CancellationToken ct)
     {
@@ -1376,7 +1457,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ReportSettings));
     }
 
-    // ── Module Settings ────────────────────────────────────────────────────
+    // -- Module Settings ----------------------------------------------------
 
     public async Task<IActionResult> ModuleSettings(CancellationToken ct)
     {
@@ -1434,7 +1515,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ModuleSettings));
     }
 
-    // ── Result Calculation ────────────────────────────────────────────────
+    // -- Result Calculation ------------------------------------------------
 
     public async Task<IActionResult> ResultCalculation(CancellationToken ct)
     {
@@ -1495,7 +1576,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ResultCalculation));
     }
 
-    // ── Sidebar Settings ────────────────────────────────────────────────────
+    // -- Sidebar Settings ----------------------------------------------------
 
     public async Task<IActionResult> SidebarSettings(CancellationToken ct)
     {
@@ -1568,7 +1649,7 @@ public class PortalController : Controller
         return View("Section");
     }
 
-    // ── Notifications ──────────────────────────────────────────────────────
+    // -- Notifications ------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Notifications(CancellationToken ct)
@@ -1596,7 +1677,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Notifications));
     }
 
-    // Final-Touches Phase 6 Stage 6.1 — mark individual notification as read
+    // Final-Touches Phase 6 Stage 6.1 � mark individual notification as read
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkNotificationRead(Guid id, CancellationToken ct)
     {
@@ -1608,7 +1689,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Notifications));
     }
 
-    // ── Students ──────────────────────────────────────────────────────────
+    // -- Students ----------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Students(Guid? departmentId, CancellationToken ct)
@@ -1625,7 +1706,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── User Import ───────────────────────────────────────────────────────
+    // -- User Import -------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> UserImport(Guid? tenantId, Guid? campusId, string? generatedSampleFileName, CancellationToken ct)
@@ -1806,7 +1887,7 @@ public class PortalController : Controller
     private string GetUserImportSheetsRoot()
         => Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "..", "..", "User Import Sheets"));
 
-    // ── Departments ────────────────────────────────────────────────────────
+    // -- Departments --------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Departments(Guid? selectedAdminUserId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -2289,7 +2370,7 @@ public class PortalController : Controller
             await _api.RemoveAdminFromDepartmentAsync(adminUserId, departmentId, ct);
     }
 
-    // ── Courses ────────────────────────────────────────────────────────────
+    // -- Courses ------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Courses(Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
@@ -2307,17 +2388,48 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
+            var canManageScopes = sessionId?.IsAdmin == true || sessionId?.IsSuperAdmin == true;
+            var effectiveTenantId = sessionId?.IsSuperAdmin == true ? model.SelectedTenantId : sessionId?.TenantId;
+            var effectiveCampusId = sessionId?.IsSuperAdmin == true ? model.SelectedCampusId : sessionId?.CampusId;
+
+            if (canManageScopes)
+            {
+                // Keep selected scope visible for constrained roles and ensure create/view forms share the same scope.
+                model.SelectedTenantId ??= effectiveTenantId;
+                model.SelectedCampusId ??= effectiveCampusId;
+            }
+
             if (sessionId?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
                 if (model.SelectedTenantId.HasValue)
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
 
-                model.Departments = await _api.GetDepartmentsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+                model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
             else
             {
-                model.Departments = await _api.GetDepartmentsAsync(ct);
+                if (canManageScopes)
+                {
+                    // Best-effort so tenant/campus selectors can render for non-superadmin users.
+                    try
+                    {
+                        model.Tenants = await _api.GetTenantsAsync(ct);
+                        if (model.SelectedTenantId.HasValue)
+                        {
+                            model.Tenants = model.Tenants.Where(t => t.Id == model.SelectedTenantId.Value).ToList();
+                            model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+                            if (model.SelectedCampusId.HasValue)
+                                model.Campuses = model.Campuses.Where(c => c.Id == model.SelectedCampusId.Value).ToList();
+                        }
+                    }
+                    catch
+                    {
+                        // Keep page functional if constrained users cannot load global tenant/campus catalogs.
+                    }
+                }
+
+                model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
 
             if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
@@ -2330,8 +2442,8 @@ public class PortalController : Controller
             var selectedInstitutionType = model.Departments
                 .FirstOrDefault(d => d.Id == model.SelectedDepartmentId)?.InstitutionType;
 
-            model.Courses = await _api.GetCourseDetailsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
-            model.Offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
+            model.Courses = await _api.GetCourseDetailsAsync(model.SelectedDepartmentId, effectiveTenantId, effectiveCampusId, selectedInstitutionType, ct);
+            model.Offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, effectiveTenantId, effectiveCampusId, selectedInstitutionType, ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
         model.Message ??= TempData["PortalMessage"]?.ToString();
@@ -2344,6 +2456,7 @@ public class PortalController : Controller
         bool hasSemesters, int? totalSemesters, int? durationValue, string? durationUnit, string? gradingType,
         CancellationToken ct)
     {
+        filterDepartmentId ??= departmentId;
         if (_api.IsConnected())
         {
             try
@@ -2358,7 +2471,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
-    // Final-Touches Phase 19 Stage 19.4 — GradingConfig page (GET)
+    // Final-Touches Phase 19 Stage 19.4 � GradingConfig page (GET)
     public async Task<IActionResult> GradingConfig(Guid? courseId, CancellationToken ct)
     {
         var model = new GradingConfigPageModel { IsConnected = _api.IsConnected() };
@@ -2431,7 +2544,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GradingConfig), new { courseId });
     }
 
-    // Final-Touches Phase 19 Stage 19.4 — GradingConfig save (POST)
+    // Final-Touches Phase 19 Stage 19.4 � GradingConfig save (POST)
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveGradingConfig(Guid courseId, decimal passThreshold, string gradingType, string? gradeRangesJson, CancellationToken ct)
     {
@@ -2512,7 +2625,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId });
     }
 
-    // ── Assignments ────────────────────────────────────────────────────────
+    // -- Assignments --------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Assignments(Guid? offeringId, string? semesterName, Guid? selectedAssignmentId, Guid? tenantId, Guid? campusId, bool includeInactive = false, CancellationToken ct = default)
@@ -2602,7 +2715,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Attendance ─────────────────────────────────────────────────────────
+    // -- Attendance ---------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -2675,7 +2788,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Results ────────────────────────────────────────────────────────────
+    // -- Results ------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Results(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -2787,7 +2900,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Quizzes ────────────────────────────────────────────────────────────
+    // -- Quizzes ------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Quizzes(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
@@ -2843,7 +2956,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── FYP ────────────────────────────────────────────────────────────────
+    // -- FYP ----------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Fyp(Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -2864,6 +2977,16 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
+            if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            {
+                model.Message = "TenantId and CampusId must be provided together.";
+
+                if (identity?.IsSuperAdmin == true)
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+
+                return View(model);
+            }
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -2895,7 +3018,7 @@ public class PortalController : Controller
 
                 model.Projects = await _api.GetMyFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
-            // Issue-Fix Phase 3 Stage 3.8 — Faculty FYP workflow: load supervised projects + student list for FYP creation.
+            // Issue-Fix Phase 3 Stage 3.8 � Faculty FYP workflow: load supervised projects + student list for FYP creation.
             else if (sessionId?.IsFaculty == true)
             {
                 model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
@@ -2928,9 +3051,9 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Analytics ──────────────────────────────────────────────────────────
+    // -- Analytics ----------------------------------------------------------
 
-    // ── Assignment write actions ────────────────────────────────────────────
+    // -- Assignment write actions --------------------------------------------
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitAssignment(
@@ -2944,7 +3067,7 @@ public class PortalController : Controller
 
                 if (submissionFile is { Length: > 0 })
                 {
-                    // Validate before writing to disk — size, extension, and MIME check
+                    // Validate before writing to disk � size, extension, and MIME check
                     const long maxSubmissionBytes = 5 * 1024 * 1024;
                     var allowedSubmissionExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                         { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
@@ -3058,7 +3181,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Assignments), new { offeringId, selectedAssignmentId = assignmentId });
     }
 
-    // ── Attendance write actions ────────────────────────────────────────────
+    // -- Attendance write actions --------------------------------------------
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkMarkAttendance(
@@ -3104,7 +3227,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Attendance), new { offeringId, tenantId, campusId });
     }
 
-    // ── Result write actions ────────────────────────────────────────────────
+    // -- Result write actions ------------------------------------------------
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateResult(
@@ -3251,21 +3374,75 @@ public class PortalController : Controller
                 using var doc = System.Text.Json.JsonDocument.Parse(req.ProposedData);
                 var root = doc.RootElement;
 
-                var studentProfileId = root.GetProperty("studentProfileId").GetGuid();
-                var courseOfferingId = root.GetProperty("courseOfferingId").GetGuid();
-                var resultType = root.GetProperty("resultType").GetString() ?? "Final";
-                var newMarksObtained = root.GetProperty("newMarksObtained").GetDecimal();
-                var newMaxMarks = root.GetProperty("newMaxMarks").GetDecimal();
+                TryReadGuid(root, out var studentProfileId, "studentProfileId", "StudentProfileId");
+                TryReadGuid(root, out var courseOfferingId, "courseOfferingId", "CourseOfferingId", "offeringId", "OfferingId");
+
+                ResultItem? originalResult = null;
+                Guid? effectiveOfferingId = courseOfferingId ?? offeringId;
+
+                async Task<ResultItem?> GetOriginalResultAsync()
+                {
+                    if (originalResult is not null || !effectiveOfferingId.HasValue)
+                        return originalResult;
+
+                    var results = await _api.GetResultsByOfferingAsync(effectiveOfferingId.Value, tenantId, campusId, ct);
+                    originalResult = results.FirstOrDefault(r => r.Id == req.RecordId);
+                    return originalResult;
+                }
+
+                if (!studentProfileId.HasValue)
+                {
+                    var result = await GetOriginalResultAsync();
+                    if (result is null)
+                        throw new InvalidOperationException("Cannot approve request: missing student profile reference in proposed data.");
+
+                    studentProfileId = result.StudentProfileId;
+                    effectiveOfferingId ??= result.CourseOfferingId;
+                }
+
+                if (!effectiveOfferingId.HasValue)
+                {
+                    var result = await GetOriginalResultAsync();
+                    if (result is null)
+                        throw new InvalidOperationException("Cannot approve request: missing course offering reference in proposed data.");
+
+                    effectiveOfferingId = result.CourseOfferingId;
+                }
+
+                var resultType = TryReadString(root, "resultType", "ResultType");
+                if (string.IsNullOrWhiteSpace(resultType))
+                {
+                    var result = await GetOriginalResultAsync();
+                    resultType = result?.ResultType ?? "Final";
+                }
+
+                if (!TryReadDecimal(root, out var newMarksObtained, "newMarksObtained", "NewMarksObtained", "marksObtained", "MarksObtained"))
+                {
+                    var result = await GetOriginalResultAsync();
+                    if (result is null || result.MarksObtained is null)
+                        throw new InvalidOperationException("Cannot approve request: missing marks obtained value in proposed data.");
+
+                    newMarksObtained = result.MarksObtained.Value;
+                }
+
+                if (!TryReadDecimal(root, out var newMaxMarks, "newMaxMarks", "NewMaxMarks", "maxMarks", "MaxMarks"))
+                {
+                    var result = await GetOriginalResultAsync();
+                    if (result is null)
+                        throw new InvalidOperationException("Cannot approve request: missing max marks value in proposed data.");
+
+                    newMaxMarks = result.TotalMarks;
+                }
 
                 Guid? requestedTenantId = null;
                 Guid? requestedCampusId = null;
 
-                if (root.TryGetProperty("tenantId", out var tenantNode) && tenantNode.ValueKind == System.Text.Json.JsonValueKind.String)
-                    requestedTenantId = Guid.TryParse(tenantNode.GetString(), out var parsedTenant) ? parsedTenant : null;
-                if (root.TryGetProperty("campusId", out var campusNode) && campusNode.ValueKind == System.Text.Json.JsonValueKind.String)
-                    requestedCampusId = Guid.TryParse(campusNode.GetString(), out var parsedCampus) ? parsedCampus : null;
+                if (TryReadGuid(root, out var parsedTenantId, "tenantId", "TenantId"))
+                    requestedTenantId = parsedTenantId;
+                if (TryReadGuid(root, out var parsedCampusId, "campusId", "CampusId"))
+                    requestedCampusId = parsedCampusId;
 
-                await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, requestedTenantId, requestedCampusId, ct);
+                await _api.CorrectResultAsync(studentProfileId.Value, effectiveOfferingId.Value, resultType, newMarksObtained, newMaxMarks, requestedTenantId, requestedCampusId, ct);
                 await _api.ApproveResultModificationRequestAsync(requestId, notes, ct);
                 TempData["PortalMessage"] = "Result modification request approved and applied.";
             }
@@ -3276,6 +3453,74 @@ public class PortalController : Controller
         }
 
         return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+    }
+
+    private static bool TryReadGuid(System.Text.Json.JsonElement root, out Guid value, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (!root.TryGetProperty(name, out var node))
+                continue;
+
+            if (node.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var text = node.GetString();
+                if (Guid.TryParse(text, out value))
+                    return true;
+            }
+            else if (node.ValueKind == System.Text.Json.JsonValueKind.Null)
+            {
+                continue;
+            }
+            else
+            {
+                var raw = node.ToString();
+                if (Guid.TryParse(raw, out value))
+                    return true;
+            }
+        }
+
+        value = Guid.Empty;
+        return false;
+    }
+
+    private static bool TryReadDecimal(System.Text.Json.JsonElement root, out decimal value, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (!root.TryGetProperty(name, out var node))
+                continue;
+
+            if (node.ValueKind == System.Text.Json.JsonValueKind.Number && node.TryGetDecimal(out value))
+                return true;
+
+            if (node.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var text = node.GetString();
+                if (decimal.TryParse(text, out value))
+                    return true;
+            }
+        }
+
+        value = 0m;
+        return false;
+    }
+
+    private static string? TryReadString(System.Text.Json.JsonElement root, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (!root.TryGetProperty(name, out var node))
+                continue;
+
+            if (node.ValueKind == System.Text.Json.JsonValueKind.String)
+                return node.GetString();
+
+            if (node.ValueKind != System.Text.Json.JsonValueKind.Null)
+                return node.ToString();
+        }
+
+        return null;
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -3336,7 +3581,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
     }
 
-    // ── Quiz write actions ──────────────────────────────────────────────────
+    // -- Quiz write actions --------------------------------------------------
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateQuiz(
@@ -3432,7 +3677,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
-    // ── FYP write actions ───────────────────────────────────────────────────
+    // -- FYP write actions ---------------------------------------------------
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ProposeFypProject(
@@ -3794,7 +4039,7 @@ public class PortalController : Controller
                 model.SelectedSemesterId = null;
             }
 
-            // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON.
+            // Final-Touches Phase 6 Stage 6.2 � fetch typed DTOs instead of raw JSON.
             // Finance-only users can access payment analytics without academic report permissions.
             if (!model.IsFinanceOnly)
             {
@@ -3812,9 +4057,9 @@ public class PortalController : Controller
                 {
                     Label = "Avg. Marks",
                     Value = $"{model.Performance.AverageMarks:F1}%",
-                    SubText = $"{model.Performance.TotalStudents} students · {model.Performance.DepartmentName}",
+                    SubText = $"{model.Performance.TotalStudents} students � {model.Performance.DepartmentName}",
                     ColorClass = "text-primary",
-                    Icon = "📊"
+                    Icon = "??"
                 });
             }
             if (model.Attendance is not null)
@@ -3825,7 +4070,7 @@ public class PortalController : Controller
                     Value = $"{model.Attendance.OverallAttendancePercentage:F1}%",
                     SubText = model.Attendance.DepartmentName,
                     ColorClass = "text-success",
-                    Icon = "📋"
+                    Icon = "??"
                 });
             }
             if (model.Assignments is not null)
@@ -3836,7 +4081,7 @@ public class PortalController : Controller
                     Value = model.Assignments.Assignments.Count.ToString(),
                     SubText = model.Assignments.DepartmentName,
                     ColorClass = "text-warning",
-                    Icon = "📝"
+                    Icon = "??"
                 });
             }
             if (model.PaymentStatus is not null)
@@ -3846,9 +4091,9 @@ public class PortalController : Controller
                 {
                     Label = "Payment Status",
                     Value = $"{model.PaymentStatus.PaidCount}/{total}",
-                    SubText = $"Paid vs total · {model.PaymentStatus.DepartmentName}",
+                    SubText = $"Paid vs total � {model.PaymentStatus.DepartmentName}",
                     ColorClass = "text-info",
-                    Icon = "💳"
+                    Icon = "??"
                 });
             }
         }
@@ -3860,7 +4105,7 @@ public class PortalController : Controller
         return model;
     }
 
-    // ── AI Chat ────────────────────────────────────────────────────────────
+    // -- AI Chat ------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> AiChat(Guid? conversationId, CancellationToken ct)
@@ -3892,7 +4137,7 @@ public class PortalController : Controller
             var reply = await _api.SendChatMessageAsync(conversationId, message, ct);
             conversationId = reply?.ConversationId ?? conversationId;
         }
-        catch { /* errors handled gracefully — just reload */ }
+        catch { /* errors handled gracefully � just reload */ }
         return RedirectToAction(nameof(AiChat), new { conversationId });
     }
 
@@ -3974,7 +4219,7 @@ public class PortalController : Controller
         }
     }
 
-    // ── Student Lifecycle ──────────────────────────────────────────────────
+    // -- Student Lifecycle --------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> StudentLifecycle(Guid? departmentId, Guid? tenantId, Guid? campusId, int semester = 1, CancellationToken ct = default)
@@ -4071,8 +4316,8 @@ public class PortalController : Controller
         return RedirectToAction(nameof(StudentLifecycle), new { departmentId, tenantId, campusId, semester });
     }
 
-    // ── Payments ───────────────────────────────────────────────────────────
-    // Final-Touches Phase 7 — admin all-receipts view + student own receipts
+    // -- Payments -----------------------------------------------------------
+    // Final-Touches Phase 7 � admin all-receipts view + student own receipts
 
     [HttpGet]
     public async Task<IActionResult> Payments(Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4130,7 +4375,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 7 Stage 7.2 — create receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 � create receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePayment(CreatePaymentForm form, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4147,7 +4392,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 — edit receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 � edit receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4164,7 +4409,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 — confirm payment (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 � confirm payment (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4181,7 +4426,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 — cancel receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 � cancel receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CancelPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4198,7 +4443,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.3 — student marks receipt as submitted
+    // Final-Touches Phase 7 Stage 7.3 � student marks receipt as submitted
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
@@ -4215,10 +4460,10 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
     }
 
-    // ── Enrollments ────────────────────────────────────────────────────────
+    // -- Enrollments --------------------------------------------------------
 
-    // Final-Touches Phase 8 Stage 8.1+8.2 — student sees own courses; admin sees offering roster + students list
-    // Issue-Fix Phase 3 Stage 3.3 — Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
+    // Final-Touches Phase 8 Stage 8.1+8.2 � student sees own courses; admin sees offering roster + students list
+    // Issue-Fix Phase 3 Stage 3.3 � Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
     [HttpGet]
     public async Task<IActionResult> Enrollments(Guid? tenantId, Guid? campusId, Guid? offeringId, CancellationToken ct)
     {
@@ -4253,7 +4498,7 @@ public class PortalController : Controller
                 model.Message ??= "Enrollment is currently deactivated for the selected tenant/campus scope.";
             }
 
-            // Issue-Fix Phase 3 Stage 3.3 — Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
+            // Issue-Fix Phase 3 Stage 3.3 � Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
             model.Offerings = await _api.GetCourseOfferingsAsync(null, model.SelectedTenantId, model.SelectedCampusId, null, ct);
 
             if (!model.IsEnrollmentActive)
@@ -4303,7 +4548,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 — admin enrolls a student
+    // Final-Touches Phase 8 Stage 8.2 � admin enrolls a student
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> EnrollStudent(Guid studentProfileId, Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -4316,7 +4561,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId = courseOfferingId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 — admin drops any enrollment by ID
+    // Final-Touches Phase 8 Stage 8.2 � admin drops any enrollment by ID
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AdminDropEnrollment(Guid enrollmentId, Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -4329,7 +4574,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 — student self-enrolls in a course offering
+    // Final-Touches Phase 8 Stage 8.2 � student self-enrolls in a course offering
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> StudentEnroll(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -4342,7 +4587,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 — student drops their own enrollment
+    // Final-Touches Phase 8 Stage 8.2 � student drops their own enrollment
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> StudentDropEnrollment(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -4355,7 +4600,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId });
     }
 
-    // ── Reports ────────────────────────────────────────────────────────────
+    // -- Reports ------------------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> ReportCenter(Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -4380,7 +4625,17 @@ public class PortalController : Controller
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
             }
 
-            model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            var hasOnlyOneScopePart = model.SelectedTenantId.HasValue != model.SelectedCampusId.HasValue;
+            if (hasOnlyOneScopePart)
+            {
+                model.IsReportsActive = false;
+                model.Message ??= "Please select both tenant and campus to apply a scoped report view.";
+            }
+            else
+            {
+                model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            }
+
             model.Reports = await _api.GetReportCatalogAsync(ct);
             if (!model.IsReportsActive)
                 model.Message ??= "Reports are currently deactivated for the selected tenant/campus scope.";
@@ -4392,6 +4647,12 @@ public class PortalController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SetReportsActive(bool isActive, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
+        if (tenantId.HasValue != campusId.HasValue)
+        {
+            TempData["PortalMessage"] = "Please select both tenant and campus before changing report scope activation.";
+            return RedirectToAction(nameof(ReportCenter), new { tenantId, campusId });
+        }
+
         if (_api.IsConnected())
         {
             try
@@ -4663,7 +4924,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Excel export actions — these act as portal-side proxies:
+    // Excel export actions � these act as portal-side proxies:
     // they call the API export endpoint, receive the .xlsx bytes, and
     // stream the file directly to the browser. On failure they fall back
     // to the report view with a TempData error message.
@@ -4849,7 +5110,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ReportGpa), new { departmentId, programId, institutionType = ResolveReportInstitutionType(institutionType) });
     }
 
-    // ── Stage 4.2: Additional Reports ─────────────────────────────────────────
+    // -- Stage 4.2: Additional Reports -----------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> ReportTranscript(Guid? studentProfileId, CancellationToken ct)
@@ -5083,7 +5344,7 @@ public class PortalController : Controller
             .ToList();
     }
 
-    // ── Dashboard Settings ────────────────────────────────────────────────────
+    // -- Dashboard Settings ----------------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> DashboardSettings(CancellationToken ct)
@@ -5127,7 +5388,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DashboardSettings));
     }
 
-    // ── Phase 12: Academic Calendar ────────────────────────────────────────────
+    // -- Phase 12: Academic Calendar --------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> AcademicCalendar(Guid? semesterId, CancellationToken ct)
@@ -5215,7 +5476,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(AcademicDeadlines), new { semesterId });
     }
 
-    // ── Phase 13: Global Search ───────────────────────────────────────────────
+    // -- Phase 13: Global Search -----------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Search(string? q, int limit = 20, CancellationToken ct = default)
@@ -5263,7 +5524,7 @@ public class PortalController : Controller
         }
     }
 
-    // ── Phase 14: Helpdesk / Support Ticketing ────────────────────────────────
+    // -- Phase 14: Helpdesk / Support Ticketing --------------------------------
 
     [HttpGet]
     public async Task<IActionResult> Helpdesk(TicketStatusWeb? status, int page = 1, CancellationToken ct = default)
@@ -5427,9 +5688,9 @@ public class PortalController : Controller
         return RedirectToAction(nameof(HelpdeskDetail), new { id = ticketId });
     }
 
-    // ── Phase 15: Enrollment Rules — Prerequisites ─────────────────────────────────
+    // -- Phase 15: Enrollment Rules � Prerequisites ---------------------------------
 
-    // Final-Touches Phase 15 Stage 15.1 — Prerequisites: Admin/SuperAdmin manage course prerequisites
+    // Final-Touches Phase 15 Stage 15.1 � Prerequisites: Admin/SuperAdmin manage course prerequisites
     [HttpGet]
     public async Task<IActionResult> Prerequisites(Guid? departmentId, CancellationToken ct)
     {
@@ -5489,9 +5750,9 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Prerequisites), new { departmentId });
     }
 
-    // ── Phase 16: Faculty Grading System ──────────────────────────────────────────
+    // -- Phase 16: Faculty Grading System ------------------------------------------
 
-    // Final-Touches Phase 16 Stage 16.1 — Gradebook grid for faculty
+    // Final-Touches Phase 16 Stage 16.1 � Gradebook grid for faculty
     public async Task<IActionResult> Gradebook(Guid? offeringId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5507,7 +5768,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 16 Stage 16.1 — AJAX endpoint: upsert one result cell inline
+    // Final-Touches Phase 16 Stage 16.1 � AJAX endpoint: upsert one result cell inline
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookUpsertEntry(
         Guid offeringId,
@@ -5526,7 +5787,7 @@ public class PortalController : Controller
         catch (Exception ex) { return Json(new { success = false, error = ex.Message }); }
     }
 
-    // Final-Touches Phase 16 Stage 16.1 — publish all results for an offering
+    // Final-Touches Phase 16 Stage 16.1 � publish all results for an offering
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookPublishAll(Guid offeringId, CancellationToken ct)
     {
@@ -5540,7 +5801,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.3 — download CSV template
+    // Final-Touches Phase 16 Stage 16.3 � download CSV template
     public async Task<IActionResult> GradebookCsvTemplate(Guid offeringId, string component, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5548,7 +5809,7 @@ public class PortalController : Controller
         return File(bytes, "text/csv", $"gradebook-{component}-template.csv");
     }
 
-    // Final-Touches Phase 16 Stage 16.3 — upload CSV preview
+    // Final-Touches Phase 16 Stage 16.3 � upload CSV preview
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookBulkUpload(
         Guid offeringId,
@@ -5574,7 +5835,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.3 — confirm bulk grade
+    // Final-Touches Phase 16 Stage 16.3 � confirm bulk grade
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookBulkConfirm(
         Guid offeringId,
@@ -5600,7 +5861,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 — rubric management (Faculty/Admin)
+    // Final-Touches Phase 16 Stage 16.2 � rubric management (Faculty/Admin)
     public async Task<IActionResult> RubricManage(Guid? offeringId, Guid? assignmentId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5616,7 +5877,7 @@ public class PortalController : Controller
                 if (assignmentId.HasValue)
                 {
                     try { model.Rubric = await _api.GetRubricByAssignmentAsync(assignmentId.Value, ct); }
-                    catch { /* no rubric yet — model.Rubric stays null */ }
+                    catch { /* no rubric yet � model.Rubric stays null */ }
                 }
             }
         }
@@ -5624,7 +5885,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 16 Stage 16.2 — create rubric POST handler
+    // Final-Touches Phase 16 Stage 16.2 � create rubric POST handler
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> RubricCreate(CreateRubricWebRequest request, Guid? offeringId, CancellationToken ct)
     {
@@ -5638,7 +5899,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(RubricManage), new { offeringId, assignmentId = request.AssignmentId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 — delete (deactivate) rubric
+    // Final-Touches Phase 16 Stage 16.2 � delete (deactivate) rubric
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> RubricDelete(Guid rubricId, Guid? offeringId, Guid? assignmentId, CancellationToken ct)
     {
@@ -5652,7 +5913,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(RubricManage), new { offeringId, assignmentId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 — student rubric grade view
+    // Final-Touches Phase 16 Stage 16.2 � student rubric grade view
     public async Task<IActionResult> RubricView(Guid rubricId, Guid submissionId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5665,9 +5926,9 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Phase 17: Degree Audit System ─────────────────────────────────────────
+    // -- Phase 17: Degree Audit System -----------------------------------------
 
-    // Final-Touches Phase 17 Stage 17.1 — student views own degree audit
+    // Final-Touches Phase 17 Stage 17.1 � student views own degree audit
     public async Task<IActionResult> DegreeAudit(Guid? studentProfileId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5697,7 +5958,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 17 Stage 17.2 — admin views eligibility list
+    // Final-Touches Phase 17 Stage 17.2 � admin views eligibility list
     public async Task<IActionResult> GraduationEligibility(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5747,7 +6008,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationEligibility), new { departmentId, programId });
     }
 
-    // Final-Touches Phase 17 Stage 17.2 — SuperAdmin manages degree rules
+    // Final-Touches Phase 17 Stage 17.2 � SuperAdmin manages degree rules
     public async Task<IActionResult> DegreeRules(CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -5769,7 +6030,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 17 Stage 17.2 — POST create degree rule
+    // Final-Touches Phase 17 Stage 17.2 � POST create degree rule
     [HttpPost]
     public async Task<IActionResult> DegreeRuleCreate(CreateDegreeRuleWebRequest request, CancellationToken ct)
     {
@@ -5791,7 +6052,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DegreeRules));
     }
 
-    // Final-Touches Phase 17 Stage 17.2 — POST delete degree rule
+    // Final-Touches Phase 17 Stage 17.2 � POST delete degree rule
     [HttpPost]
     public async Task<IActionResult> DegreeRuleDelete(Guid ruleId, CancellationToken ct)
     {
@@ -5813,7 +6074,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DegreeRules));
     }
 
-    // Final-Touches Phase 17 Stage 17.3 — AJAX POST to tag course type
+    // Final-Touches Phase 17 Stage 17.3 � AJAX POST to tag course type
     [HttpPost]
     public async Task<IActionResult> CourseSetType(Guid courseId, string courseType, CancellationToken ct)
     {
@@ -5831,9 +6092,9 @@ public class PortalController : Controller
         catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
     }
 
-    // ── Phase 18: Graduation Workflow ─────────────────────────────────────────
+    // -- Phase 18: Graduation Workflow -----------------------------------------
 
-    // Final-Touches Phase 18 Stage 18.1 — student views own graduation applications + submit form
+    // Final-Touches Phase 18 Stage 18.1 � student views own graduation applications + submit form
     public async Task<IActionResult> GraduationApply(int page = 1, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -5857,7 +6118,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1 — POST: student submits graduation application
+    // Final-Touches Phase 18 Stage 18.1 � POST: student submits graduation application
     [HttpPost]
     public async Task<IActionResult> GraduationSubmit(string? studentNote, CancellationToken ct)
     {
@@ -5871,7 +6132,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApply));
     }
 
-    // Final-Touches Phase 18 Stage 18.1 — admin/faculty views application list
+    // Final-Touches Phase 18 Stage 18.1 � admin/faculty views application list
     public async Task<IActionResult> GraduationApplications(string? status, Guid? departmentId, int page = 1, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -5896,7 +6157,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1/18.2 — view application detail
+    // Final-Touches Phase 18 Stage 18.1/18.2 � view application detail
     public async Task<IActionResult> GraduationApplicationDetail(Guid id, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -5911,7 +6172,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1 — POST: approve or reject at the right stage
+    // Final-Touches Phase 18 Stage 18.1 � POST: approve or reject at the right stage
     [HttpPost]
     public async Task<IActionResult> GraduationApprove(Guid id, string action, string? note, CancellationToken ct)
     {
@@ -5938,7 +6199,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
     }
 
-    // Final-Touches Phase 18 Stage 18.1 — POST: explicit reject
+    // Final-Touches Phase 18 Stage 18.1 � POST: explicit reject
     [HttpPost]
     public async Task<IActionResult> GraduationReject(Guid id, string? reason, CancellationToken ct)
     {
@@ -5952,7 +6213,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
     }
 
-    // Final-Touches Phase 18 Stage 18.2 — download certificate
+    // Final-Touches Phase 18 Stage 18.2 � download certificate
     public async Task<IActionResult> GraduationCertificateDownload(Guid id, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -5961,7 +6222,7 @@ public class PortalController : Controller
         return File(bytes, "application/pdf", $"certificate_{id}.pdf");
     }
 
-    // Final-Touches Phase 18 Stage 18.2 — POST: regenerate certificate (admin)
+    // Final-Touches Phase 18 Stage 18.2 � POST: regenerate certificate (admin)
     [HttpPost]
     public async Task<IActionResult> GraduationRegenerateCertificate(Guid id, CancellationToken ct)
     {
@@ -6012,6 +6273,13 @@ public class PortalController : Controller
             model.Tenants = await _api.GetTenantsAsync(ct);
             if (tenantId.HasValue)
                 model.Campuses = await _api.GetCampusesAsync(tenantId, ct);
+        }
+
+        var hasOnlyOneScopePart = tenantId.HasValue != campusId.HasValue;
+        if (hasOnlyOneScopePart)
+        {
+            model.Message ??= "Please select both tenant and campus to filter certificate generation scope.";
+            return View(model);
         }
 
         model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
@@ -6112,20 +6380,28 @@ public class PortalController : Controller
         return File(bytes, contentType, fileName);
     }
 
-    // ── Phase 20: Learning Management System (LMS) ────────────────────────────
+    // -- Phase 20: Learning Management System (LMS) ----------------------------
 
-    // Final-Touches Phase 20 Stage 20.1 — student LMS view
+    // Final-Touches Phase 20 Stage 20.1 � student LMS view
     [HttpGet]
-    public async Task<IActionResult> CourseLms(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> CourseLms(Guid? offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Course Content";
-        var model = new CourseLmsPageModel { OfferingId = offeringId, IsConnected = _api.IsConnected() };
+        var model = new CourseLmsPageModel { OfferingId = offeringId ?? Guid.Empty, IsConnected = _api.IsConnected() };
         if (!model.IsConnected) return View(model);
         try
         {
+            var effectiveOfferingId = await ResolveLmsOfferingIdAsync(offeringId, ct);
+            if (!effectiveOfferingId.HasValue)
+            {
+                ViewData["Error"] = "No course offering is available for LMS right now.";
+                return View(model);
+            }
+
+            model.OfferingId = effectiveOfferingId.Value;
             var identity = _api.GetSessionIdentity();
             bool isStudent = identity?.IsStudent == true;
-            var modules = await _api.GetLmsModulesAsync(offeringId, isStudent, ct);
+            var modules = await _api.GetLmsModulesAsync(effectiveOfferingId.Value, isStudent, ct);
             model.Modules = modules.Select(m => new LmsModuleItem
             {
                 Id = m.Id, OfferingId = m.OfferingId, Title = m.Title,
@@ -6143,14 +6419,14 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 20 Stage 20.1 — faculty LMS management view
+    // Final-Touches Phase 20 Stage 20.1 � faculty LMS management view
     [HttpGet]
-    public async Task<IActionResult> LmsManage(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> LmsManage(Guid? offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Manage Course Content";
         var model = new LmsManagePageModel
         {
-            OfferingId     = offeringId,
+            OfferingId     = offeringId ?? Guid.Empty,
             IsConnected    = _api.IsConnected(),
             SuccessMessage = TempData["SuccessMessage"]?.ToString(),
             ErrorMessage   = TempData["ErrorMessage"]?.ToString()
@@ -6158,7 +6434,15 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var modules = await _api.GetLmsModulesAsync(offeringId, false, ct);
+            var effectiveOfferingId = await ResolveLmsOfferingIdAsync(offeringId, ct);
+            if (!effectiveOfferingId.HasValue)
+            {
+                model.ErrorMessage ??= "No course offering is available for LMS management right now.";
+                return View(model);
+            }
+
+            model.OfferingId = effectiveOfferingId.Value;
+            var modules = await _api.GetLmsModulesAsync(effectiveOfferingId.Value, false, ct);
             model.Modules = modules.Select(m => new LmsModuleItem
             {
                 Id = m.Id, OfferingId = m.OfferingId, Title = m.Title,
@@ -6255,6 +6539,8 @@ public class PortalController : Controller
 
     [HttpGet]
     public async Task<IActionResult> CourseMaterial(
+        Guid? tenantId,
+        Guid? campusId,
         Guid? departmentId,
         Guid? academicProgramId,
         Guid? semesterId,
@@ -6268,12 +6554,17 @@ public class PortalController : Controller
         var canManage = session?.IsAdmin == true || session?.IsSuperAdmin == true || session?.IsFaculty == true;
         if (!canManage)
         {
-            return RedirectToAction(nameof(CourseMaterialStudent), new { departmentId, academicProgramId, semesterId, courseId });
+            return RedirectToAction(nameof(CourseMaterialStudent), new { tenantId, campusId, departmentId, academicProgramId, semesterId, courseId });
         }
+
+        var effectiveTenantId = session?.IsSuperAdmin == true ? tenantId : session?.TenantId;
+        var effectiveCampusId = session?.IsSuperAdmin == true ? campusId : session?.CampusId;
 
         var model = new CourseMaterialManagePageModel
         {
             IsConnected = _api.IsConnected(),
+            SelectedTenantId = effectiveTenantId,
+            SelectedCampusId = effectiveCampusId,
             SelectedDepartmentId = departmentId,
             SelectedAcademicProgramId = academicProgramId,
             SelectedSemesterId = semesterId,
@@ -6286,14 +6577,31 @@ public class PortalController : Controller
 
         try
         {
-            var tenantId = session?.TenantId;
-            var campusId = session?.CampusId;
+            if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            {
+                model.Message = "Please select both tenant and campus to filter course materials.";
+                if (session?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (effectiveTenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+                }
 
-            model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
+                return View(model);
+            }
+
+            if (session?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (effectiveTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+            }
+
+            model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
 
-            model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
-            model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+            model.Programs = await _api.GetProgramsAsync(departmentId, effectiveTenantId, effectiveCampusId, ct);
+            model.Courses = await _api.GetCoursesAsync(departmentId, effectiveTenantId, effectiveCampusId, ct);
 
             if (academicProgramId.HasValue && !model.Programs.Any(p => p.Id == academicProgramId.Value))
                 academicProgramId = null;
@@ -6309,8 +6617,8 @@ public class PortalController : Controller
                 academicProgramId,
                 semesterId,
                 courseId,
-                tenantId,
-                campusId,
+                effectiveTenantId,
+                effectiveCampusId,
                 activeOnly,
                 ct);
 
@@ -6344,6 +6652,8 @@ public class PortalController : Controller
 
     [HttpGet]
     public async Task<IActionResult> CourseMaterialStudent(
+        Guid? tenantId,
+        Guid? campusId,
         Guid? departmentId,
         Guid? academicProgramId,
         Guid? semesterId,
@@ -6354,6 +6664,8 @@ public class PortalController : Controller
         var model = new CourseMaterialStudentPageModel
         {
             IsConnected = _api.IsConnected(),
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             SelectedDepartmentId = departmentId,
             SelectedAcademicProgramId = academicProgramId,
             SelectedSemesterId = semesterId,
@@ -6365,14 +6677,37 @@ public class PortalController : Controller
         try
         {
             var session = _api.GetSessionIdentity();
-            var tenantId = session?.TenantId;
-            var campusId = session?.CampusId;
+            var effectiveTenantId = session?.IsSuperAdmin == true ? tenantId : session?.TenantId;
+            var effectiveCampusId = session?.IsSuperAdmin == true ? campusId : session?.CampusId;
 
-            model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
+            model.SelectedTenantId = effectiveTenantId;
+            model.SelectedCampusId = effectiveCampusId;
+
+            if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            {
+                model.Message = "Please select both tenant and campus to filter course materials.";
+                if (session?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (effectiveTenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+                }
+
+                return View(model);
+            }
+
+            if (session?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (effectiveTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+            }
+
+            model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
 
-            model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
-            model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+            model.Programs = await _api.GetProgramsAsync(departmentId, effectiveTenantId, effectiveCampusId, ct);
+            model.Courses = await _api.GetCoursesAsync(departmentId, effectiveTenantId, effectiveCampusId, ct);
 
             if (academicProgramId.HasValue && !model.Programs.Any(p => p.Id == academicProgramId.Value))
                 academicProgramId = null;
@@ -6388,8 +6723,8 @@ public class PortalController : Controller
                 academicProgramId,
                 semesterId,
                 courseId,
-                tenantId,
-                campusId,
+                effectiveTenantId,
+                effectiveCampusId,
                 true,
                 ct);
 
@@ -6436,6 +6771,8 @@ public class PortalController : Controller
         string? fileName,
         long? fileSizeBytes,
         bool isActive,
+        Guid? selectedTenantId,
+        Guid? selectedCampusId,
         Guid? selectedDepartmentId,
         Guid? selectedAcademicProgramId,
         Guid? selectedSemesterId,
@@ -6483,6 +6820,8 @@ public class PortalController : Controller
 
         return RedirectToAction(nameof(CourseMaterial), new
         {
+            tenantId = selectedTenantId,
+            campusId = selectedCampusId,
             departmentId = selectedDepartmentId,
             academicProgramId = selectedAcademicProgramId,
             semesterId = selectedSemesterId,
@@ -6503,6 +6842,8 @@ public class PortalController : Controller
         string? fileName,
         long? fileSizeBytes,
         bool isActive,
+        Guid? selectedTenantId,
+        Guid? selectedCampusId,
         Guid? selectedDepartmentId,
         Guid? selectedAcademicProgramId,
         Guid? selectedSemesterId,
@@ -6547,6 +6888,8 @@ public class PortalController : Controller
 
         return RedirectToAction(nameof(CourseMaterial), new
         {
+            tenantId = selectedTenantId,
+            campusId = selectedCampusId,
             departmentId = selectedDepartmentId,
             academicProgramId = selectedAcademicProgramId,
             semesterId = selectedSemesterId,
@@ -6559,6 +6902,8 @@ public class PortalController : Controller
     public async Task<IActionResult> SetCourseMaterialActive(
         Guid id,
         bool isActive,
+        Guid? selectedTenantId,
+        Guid? selectedCampusId,
         Guid? selectedDepartmentId,
         Guid? selectedAcademicProgramId,
         Guid? selectedSemesterId,
@@ -6581,6 +6926,8 @@ public class PortalController : Controller
 
         return RedirectToAction(nameof(CourseMaterial), new
         {
+            tenantId = selectedTenantId,
+            campusId = selectedCampusId,
             departmentId = selectedDepartmentId,
             academicProgramId = selectedAcademicProgramId,
             semesterId = selectedSemesterId,
@@ -6617,9 +6964,9 @@ public class PortalController : Controller
         }
     }
 
-    // Final-Touches Phase 20 Stage 20.3 — discussion forum
+    // Final-Touches Phase 20 Stage 20.3 � discussion forum
     [HttpGet]
-    public async Task<IActionResult> Discussion(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> Discussion(Guid? offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Discussion";
         var session = _api.GetSessionIdentity();
@@ -6629,7 +6976,7 @@ public class PortalController : Controller
 
         var model = new DiscussionPageModel
         {
-            OfferingId     = offeringId,
+            OfferingId     = offeringId ?? Guid.Empty,
             CurrentUserId  = currentUserId,
             CanModerate    = canModerate,
             IsConnected    = _api.IsConnected(),
@@ -6639,7 +6986,15 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var threads = await _api.GetDiscussionThreadsAsync(offeringId, ct);
+            var effectiveOfferingId = await ResolveLmsOfferingIdAsync(offeringId, ct);
+            if (!effectiveOfferingId.HasValue)
+            {
+                model.ErrorMessage ??= "Please select a course offering to open discussion.";
+                return View(model);
+            }
+
+            model.OfferingId = effectiveOfferingId.Value;
+            var threads = await _api.GetDiscussionThreadsAsync(effectiveOfferingId.Value, ct);
             model.Threads = threads.Select(t => new DiscussionThreadItem
             {
                 Id = t.Id, OfferingId = t.OfferingId, AuthorId = t.AuthorId, Title = t.Title,
@@ -6802,19 +7157,21 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
     }
 
-    // Final-Touches Phase 20 Stage 20.4 — announcements
+    // Final-Touches Phase 20 Stage 20.4 � announcements
     [HttpGet]
-    public async Task<IActionResult> Announcements(Guid offeringId, bool includeInactive = true, CancellationToken ct = default)
+    public async Task<IActionResult> Announcements(Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive = true, CancellationToken ct = default)
     {
         ViewData["Title"] = "Announcements";
         var session = _api.GetSessionIdentity();
         var canManage = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
-        var tenantId = session?.TenantId;
-        var campusId = session?.CampusId;
+        var effectiveTenantId = session?.IsSuperAdmin == true ? tenantId : session?.TenantId;
+        var effectiveCampusId = session?.IsSuperAdmin == true ? campusId : session?.CampusId;
 
         var model = new AnnouncementsPageModel
         {
-            OfferingId     = offeringId,
+            OfferingId     = offeringId ?? Guid.Empty,
+            SelectedTenantId = effectiveTenantId,
+            SelectedCampusId = effectiveCampusId,
             IncludeInactive = includeInactive,
             CanManage      = canManage,
             IsConnected    = _api.IsConnected(),
@@ -6824,7 +7181,51 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var items = await _api.GetAnnouncementsAsync(offeringId, includeInactive, tenantId, campusId, ct);
+            if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+            {
+                model.ErrorMessage ??= "Please select both tenant and campus for announcements scope.";
+                if (session?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (effectiveTenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+                }
+
+                return View(model);
+            }
+
+            if (session?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (effectiveTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(effectiveTenantId, ct);
+            }
+
+            var scopedOfferings = await _api.GetCourseOfferingsAsync(null, effectiveTenantId, effectiveCampusId, session?.InstitutionType, ct);
+            model.Offerings = scopedOfferings
+                .OrderBy(o => o.CourseTitle)
+                .ThenBy(o => o.SemesterName)
+                .Select(o => new LookupItem
+                {
+                    Id = o.Id,
+                    Name = string.IsNullOrWhiteSpace(o.SemesterName)
+                        ? o.CourseTitle
+                        : $"{o.CourseTitle} ({o.SemesterName})"
+                })
+                .ToList();
+
+            Guid? effectiveOfferingId = offeringId;
+            if (!effectiveOfferingId.HasValue || effectiveOfferingId == Guid.Empty || !model.Offerings.Any(o => o.Id == effectiveOfferingId.Value))
+                effectiveOfferingId = model.Offerings.FirstOrDefault()?.Id;
+
+            if (!effectiveOfferingId.HasValue)
+            {
+                model.ErrorMessage ??= "Please select a course offering to view announcements.";
+                return View(model);
+            }
+
+            model.OfferingId = effectiveOfferingId.Value;
+            var items = await _api.GetAnnouncementsAsync(effectiveOfferingId.Value, includeInactive, effectiveTenantId, effectiveCampusId, ct);
             model.Announcements = items.Select(a => new AnnouncementItem
             {
                 Id = a.Id, OfferingId = a.OfferingId, Title = a.Title,
@@ -6836,7 +7237,7 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateAnnouncement(Guid offeringId, string title, string body, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> CreateAnnouncement(Guid offeringId, Guid? tenantId, Guid? campusId, string title, string body, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -6845,65 +7246,157 @@ public class PortalController : Controller
                 if (offeringId == Guid.Empty)
                     throw new InvalidOperationException("Please select a valid course offering before posting an announcement.");
 
+                if (tenantId.HasValue != campusId.HasValue)
+                    throw new InvalidOperationException("Please select both tenant and campus for announcement scope.");
+
                 if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
                     throw new InvalidOperationException("Title and body are required.");
 
-                var session = _api.GetSessionIdentity();
-                await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, session?.TenantId, session?.CampusId, ct);
+                await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, tenantId, campusId, ct);
                 TempData["SuccessMessage"] = "Announcement posted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, tenantId, campusId, includeInactive });
+    }
+
+    private async Task<Guid?> ResolveLmsOfferingIdAsync(Guid? requestedOfferingId, CancellationToken ct)
+    {
+        if (requestedOfferingId.HasValue && requestedOfferingId.Value != Guid.Empty)
+            return requestedOfferingId.Value;
+
+        var myOfferings = await _api.GetMyOfferingsAsync(ct);
+        var myOfferingId = myOfferings.FirstOrDefault(o => o.Id != Guid.Empty)?.Id;
+        if (myOfferingId.HasValue)
+            return myOfferingId.Value;
+
+        var identity = _api.GetSessionIdentity();
+        var tenantId = identity?.TenantId;
+        var campusId = identity?.CampusId;
+        if (tenantId.HasValue != campusId.HasValue)
+        {
+            tenantId = null;
+            campusId = null;
+        }
+
+        var offerings = await _api.GetCourseOfferingsAsync(null, tenantId, campusId, identity?.InstitutionType, ct);
+        return offerings.FirstOrDefault(o => o.Id != Guid.Empty)?.Id;
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid offeringId, bool isActive, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid offeringId, Guid? tenantId, Guid? campusId, bool isActive, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                var session = _api.GetSessionIdentity();
-                await _api.SetAnnouncementActiveAsync(announcementId, isActive, session?.TenantId, session?.CampusId, ct);
+                await _api.SetAnnouncementActiveAsync(announcementId, isActive, tenantId, campusId, ct);
                 TempData["SuccessMessage"] = isActive ? "Announcement activated." : "Announcement deactivated.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, tenantId, campusId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid offeringId, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                var session = _api.GetSessionIdentity();
-                await _api.DeleteAnnouncementAsync(announcementId, session?.TenantId, session?.CampusId, ct);
+                await _api.DeleteAnnouncementAsync(announcementId, tenantId, campusId, ct);
                 TempData["SuccessMessage"] = "Announcement deleted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, tenantId, campusId, includeInactive });
     }
 
-    // ── Phase 21 Stage 21.1/21.2 — Study Planner ─────────────────────────────
+    // -- Phase 21 Stage 21.1/21.2 � Study Planner -----------------------------
 
     [HttpGet]
-    public async Task<IActionResult> StudyPlan(Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> StudyPlan(Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Study Plans";
-        var model = new StudyPlanPageModel { StudentProfileId = studentProfileId, IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new StudyPlanPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedStudentProfileId = studentProfileId,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
         if (TempData["SuccessMessage"] is string s) model.SuccessMessage = s;
         if (TempData["ErrorMessage"]   is string e) model.ErrorMessage   = e;
         if (_api.IsConnected())
         {
             try
             {
-                var plans = await _api.GetStudyPlansAsync(studentProfileId, ct);
-                model.Plans = plans.Select(p => MapStudyPlanItem(p)).ToList();
+                if (identity?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (tenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(tenantId, ct);
+                }
+
+                if (tenantId.HasValue != campusId.HasValue)
+                {
+                    model.ErrorMessage = "TenantId and CampusId must be provided together.";
+                    return View(model);
+                }
+
+                var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+                var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+                if (effectiveTenantId.HasValue != effectiveCampusId.HasValue)
+                {
+                    model.ErrorMessage = "TenantId and CampusId must be provided together.";
+                    return View(model);
+                }
+
+                if (identity?.IsStudent == true)
+                {
+                    var profile = await _api.GetMyStudentProfileAsync(ct);
+                    if (profile is null)
+                    {
+                        model.ErrorMessage = "Student profile not found.";
+                        return View(model);
+                    }
+
+                    model.StudentProfileId = profile.Id;
+                    model.SelectedStudentProfileId = profile.Id;
+                    model.Plans = (await _api.GetStudyPlansAsync(profile.Id, ct)).Select(MapStudyPlanItem).ToList();
+                }
+                else
+                {
+                    model.Departments = effectiveTenantId.HasValue || effectiveCampusId.HasValue
+                        ? await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct)
+                        : await _api.GetDepartmentsAsync(ct);
+
+                    model.Students = await _api.GetStudentsAsync(departmentId, ct);
+
+                    if (!studentProfileId.HasValue && model.Students.Count == 1)
+                        studentProfileId = model.Students[0].Id;
+
+                    if (studentProfileId.HasValue)
+                    {
+                        model.StudentProfileId = studentProfileId.Value;
+                        model.SelectedStudentProfileId = studentProfileId.Value;
+                        model.Plans = (await _api.GetStudyPlansAsync(studentProfileId.Value, ct)).Select(MapStudyPlanItem).ToList();
+                    }
+                    else if (departmentId.HasValue)
+                    {
+                        var plans = await _api.GetStudyPlansByDepartmentAsync(departmentId.Value, ct);
+                        model.Plans = plans.Select(MapStudyPlanItem).ToList();
+                    }
+                    else
+                    {
+                        model.ErrorMessage = "Select a department or student to view study plans.";
+                    }
+                }
             }
             catch (Exception ex) { model.ErrorMessage = ex.Message; }
         }
@@ -6911,10 +7404,17 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> StudyPlanDetail(Guid planId, CancellationToken ct)
+    public async Task<IActionResult> StudyPlanDetail(Guid planId, Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         ViewData["Title"] = "Study Plan Detail";
-        var model = new StudyPlanDetailPageModel { IsConnected = _api.IsConnected() };
+        var model = new StudyPlanDetailPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedStudentProfileId = studentProfileId,
+            SelectedDepartmentId = departmentId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId
+        };
         if (TempData["SuccessMessage"] is string s) model.SuccessMessage = s;
         if (TempData["ErrorMessage"]   is string e) model.ErrorMessage   = e;
         if (_api.IsConnected())
@@ -6930,22 +7430,32 @@ public class PortalController : Controller
         return View(model);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateStudyPlan(Guid studentProfileId, string plannedSemesterName, string? notes, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     public async Task<IActionResult> CreateStudyPlan(Guid studentProfileId, string plannedSemesterName, string? notes, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
+                    if (studentProfileId == Guid.Empty && _api.GetSessionIdentity()?.IsStudent == true)
+                    {
+                        var profile = await _api.GetMyStudentProfileAsync(ct);
+                        if (profile is not null)
+                            studentProfileId = profile.Id;
+                    }
+
+                    if (studentProfileId == Guid.Empty)
+                        throw new InvalidOperationException("Select a student before creating a study plan.");
+
             {
                 await _api.CreateStudyPlanAsync(studentProfileId, plannedSemesterName, notes, ct);
                 TempData["SuccessMessage"] = "Study plan created.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
-        }
+            return RedirectToAction(nameof(StudyPlan), new { studentProfileId, departmentId, tenantId, campusId });
         return RedirectToAction(nameof(StudyPlan), new { studentProfileId });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStudyPlanCourse(Guid planId, Guid courseId, Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     public async Task<IActionResult> AddStudyPlanCourse(Guid planId, Guid courseId, Guid studentProfileId, CancellationToken ct)
     {
         if (_api.IsConnected())
@@ -6956,11 +7466,11 @@ public class PortalController : Controller
                 TempData["SuccessMessage"] = "Course added to plan.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
-        }
+            return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
         return RedirectToAction(nameof(StudyPlanDetail), new { planId });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveStudyPlanCourse(Guid planId, Guid courseId, Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     public async Task<IActionResult> RemoveStudyPlanCourse(Guid planId, Guid courseId, CancellationToken ct)
     {
         if (_api.IsConnected())
@@ -6971,11 +7481,11 @@ public class PortalController : Controller
                 TempData["SuccessMessage"] = "Course removed from plan.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
-        }
+            return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
         return RedirectToAction(nameof(StudyPlanDetail), new { planId });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> AdvisePlan(Guid planId, bool isEndorsed, string? advisorNotes, Guid? studentProfileId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     public async Task<IActionResult> DeleteStudyPlan(Guid planId, Guid studentProfileId, CancellationToken ct)
     {
         if (_api.IsConnected())
@@ -6986,7 +7496,7 @@ public class PortalController : Controller
                 TempData["SuccessMessage"] = "Study plan deleted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
-        }
+            return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
         return RedirectToAction(nameof(StudyPlan), new { studentProfileId });
     }
 
@@ -7040,7 +7550,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // ── Phase 21 helper ───────────────────────────────────────────────────────
+    // -- Phase 21 helper -------------------------------------------------------
 
     private static StudyPlanItem MapStudyPlanItem(StudyPlanApiModel p) => new()
     {
@@ -7063,7 +7573,7 @@ public class PortalController : Controller
         CreatedAt = p.CreatedAt
     };
 
-    // ── Phase 22: External Integrations ─────────────────────────────────────────────
+    // -- Phase 22: External Integrations ---------------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> LibraryConfig(CancellationToken ct)
@@ -7135,6 +7645,7 @@ public class PortalController : Controller
                 Format            = form.Format,
                 FieldMappingsJson = form.FieldMappingsJson
             }, ct);
+
             TempData["Success"] = "Accreditation template created.";
         }
         catch (Exception ex) { TempData["Error"] = ex.Message; }
@@ -7369,7 +7880,6 @@ public class PortalController : Controller
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
     }
-
     [HttpPost]
     public async Task<IActionResult> InstitutionPolicy(
         InstitutionPolicyPageModel form, CancellationToken ct)
@@ -7389,4 +7899,5 @@ public class PortalController : Controller
         return RedirectToAction(nameof(InstitutionPolicy));
     }
 }
+
 

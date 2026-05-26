@@ -1,0 +1,126 @@
+@model Tabsan.EduSphere.Web.Models.Portal.DiscussionDetailPageModel
+@{
+    ViewData["Title"]     = Model.Thread?.Title ?? "Thread";
+    ViewData["PageTitle"] = "Discussion Thread";
+    ViewData["ActivePage"] = "discussion";
+}
+
+@* Final-Touches Phase 20 Stage 20.3 — discussion thread detail with replies *@
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">API is not available.</div>
+    return;
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.SuccessMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.Thread is null)
+{
+    <div class="alert alert-warning">Thread not found.</div>
+    return;
+}
+
+<div class="card mb-4">
+    <div class="card-header">
+        @if (Model.Thread.IsPinned) { <span class="badge bg-warning text-dark me-1">Pinned</span> }
+        @if (Model.Thread.IsSolved) { <span class="badge bg-success me-1">Resolved</span> }
+        @if (Model.Thread.IsClosed) { <span class="badge bg-secondary me-1">Closed</span> }
+        <strong>@Model.Thread.Title</strong>
+        <small class="text-muted ms-2">by @Model.Thread.AuthorName on @Model.Thread.CreatedAt.ToString("MMM dd, yyyy")</small>
+        @if (!string.IsNullOrWhiteSpace(Model.Thread.TicketNumber))
+        {
+            <small class="text-muted ms-2">Ticket: @Model.Thread.TicketNumber</small>
+        }
+        @if (Model.Thread.IsSolved && !string.IsNullOrWhiteSpace(Model.Thread.ResolvedByName))
+        {
+            <small class="text-muted ms-2">Resolved by @Model.Thread.ResolvedByName@(Model.Thread.ResolvedAt.HasValue ? $" on {Model.Thread.ResolvedAt.Value:MMM dd, yyyy HH:mm}" : "")</small>
+        }
+    </div>
+    <div class="card-body">
+        @if (Model.CanModerate)
+        {
+            <div class="mb-3">
+                @if (!Model.Thread.IsSolved)
+                {
+                    <form asp-action="MarkDiscussionSolved" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <button type="submit" class="btn btn-success btn-sm">Mark Resolved</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="MarkDiscussionUnresolved" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Mark Unresolved</button>
+                    </form>
+                }
+            </div>
+        }
+
+        @if (!Model.Thread.Replies.Any())
+        {
+            <p class="text-muted">No replies yet.</p>
+        }
+        else
+        {
+            @foreach (var reply in Model.Thread.Replies)
+            {
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>@reply.AuthorName</strong>
+                        <small class="text-muted">@reply.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    </div>
+                    <p class="mb-1 mt-1">@reply.Body</p>
+                    @if (Model.CanModerate || (Model.CurrentUserId.HasValue && Model.CurrentUserId.Value == reply.AuthorId))
+                    {
+                        <form asp-action="DeleteDiscussionReply" method="post" class="d-inline"
+                              onsubmit="return confirm('Delete reply?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="replyId" value="@reply.Id" />
+                            <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                        </form>
+                    }
+                </div>
+            }
+        }
+
+        @if (!Model.Thread.IsClosed)
+        {
+            <form asp-action="AddDiscussionReply" method="post" class="mt-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+                <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                <div class="input-group">
+                    <textarea name="body" class="form-control" rows="2" placeholder="Write a reply..." required></textarea>
+                    <button type="submit" class="btn btn-primary">Reply</button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="alert alert-secondary mt-3">This thread is closed/resolved.</div>
+        }
+    </div>
+</div>
+
+<a asp-action="Discussion" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary">
+    &larr; Back to Discussion
+</a>

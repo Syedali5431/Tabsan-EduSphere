@@ -267,7 +267,7 @@ else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
                                 <div id="performanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                                <canvas id="performanceChart" height="120"></canvas>
+                                <canvas id="performanceChart" height="90"></canvas>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-sm mb-0">
@@ -832,7 +832,10 @@ else
                 if (!el) return;
                 var performance = snapshot ? prop(snapshot, 'performance', 'Performance', null) : null;
                 var students = prop(performance, 'students', 'Students', []) || [];
-                var labels = students.slice(0, 10).map(function (s) { return prop(s, 'fullName', 'FullName', ''); });
+                var labels = students.slice(0, 10).map(function (s) {
+                    var name = prop(s, 'fullName', 'FullName', '');
+                    return name.length > 22 ? name.substring(0, 22) + '...' : name;
+                });
                 var values = students.slice(0, 10).map(function (s) { return Number(prop(s, 'averageMarks', 'AverageMarks', 0)) || 0; });
                 destroyChart(charts.performance);
 
@@ -852,13 +855,25 @@ else
                             data: values,
                             backgroundColor: 'rgba(13, 110, 253, 0.35)',
                             borderColor: 'rgba(13, 110, 253, 1)',
-                            borderWidth: 1
+                            borderWidth: 1,
+                            categoryPercentage: 0.62,
+                            barPercentage: 0.8,
+                            maxBarThickness: 28
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true, max: 100 } },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 35,
+                                    minRotation: 20
+                                }
+                            },
+                            y: { beginAtZero: true, max: 100 }
+                        },
                         plugins: { legend: { display: false } }
                     }
                 });

@@ -37,6 +37,29 @@ else
             </div>
 
             <form method="get" asp-action="CourseMaterial" class="row g-2 align-items-end filter-toolbar">
+                @if (Model.Tenants.Count > 0)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
                 <div class="col-md-3">
                     <label class="form-label">Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -83,6 +106,9 @@ else
                         <input class="form-check-input" type="checkbox" id="activeOnly" name="activeOnly" value="true" checked="@(Model.ActiveOnly ? "checked" : null)" onchange="this.form.submit()" />
                         <label class="form-check-label" for="activeOnly">Active only</label>
                     </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
                 </div>
             </form>
         </div>
@@ -156,6 +182,8 @@ else
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@m.Id" />
                                             <input type="hidden" name="isActive" value="@(!m.IsActive)" />
+                                            <input type="hidden" name="selectedTenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="selectedCampusId" value="@Model.SelectedCampusId" />
                                             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
                                             <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
                                             <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />
@@ -173,6 +201,8 @@ else
                                         <form method="post" asp-action="UpdateCourseMaterial" enctype="multipart/form-data">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@m.Id" />
+                                            <input type="hidden" name="selectedTenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="selectedCampusId" value="@Model.SelectedCampusId" />
                                             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
                                             <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
                                             <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />
@@ -242,6 +272,8 @@ else
     <div class="modal-dialog">
         <form method="post" asp-action="CreateCourseMaterial" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="selectedTenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="selectedCampusId" value="@Model.SelectedCampusId" />
             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
             <input type="hidden" name="selectedAcademicProgramId" value="@Model.SelectedAcademicProgramId" />
             <input type="hidden" name="selectedSemesterId" value="@Model.SelectedSemesterId" />

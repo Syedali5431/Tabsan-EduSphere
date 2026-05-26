@@ -2374,6 +2374,11 @@ public class AnnouncementsPageModel
 {
     public Guid   OfferingId    { get; set; }
     public string OfferingTitle { get; set; } = string.Empty;
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Offerings { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public bool   IncludeInactive { get; set; }
     public bool   CanManage { get; set; }
     public List<AnnouncementItem> Announcements { get; set; } = new();
@@ -2405,11 +2410,15 @@ public class CourseMaterialManagePageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Programs { get; set; } = new();
     public List<LookupItem> Semesters { get; set; } = new();
     public List<LookupItem> Courses { get; set; } = new();
     public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
     public Guid? SelectedAcademicProgramId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
@@ -2422,11 +2431,15 @@ public class CourseMaterialStudentPageModel
 {
     public bool IsConnected { get; set; }
     public string? Message { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Programs { get; set; } = new();
     public List<LookupItem> Semesters { get; set; } = new();
     public List<LookupItem> Courses { get; set; } = new();
     public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
     public Guid? SelectedDepartmentId { get; set; }
     public Guid? SelectedAcademicProgramId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
@@ -2460,19 +2473,32 @@ public class StudyPlanItem
 
 public class StudyPlanPageModel
 {
-    public Guid              StudentProfileId { get; set; }
-    public List<StudyPlanItem> Plans          { get; set; } = new();
-    public string?           SuccessMessage   { get; set; }
-    public string?           ErrorMessage     { get; set; }
-    public bool              IsConnected      { get; set; }
+    public Guid                    StudentProfileId      { get; set; }
+    public Guid?                   SelectedTenantId      { get; set; }
+    public Guid?                   SelectedCampusId      { get; set; }
+    public Guid?                   SelectedDepartmentId  { get; set; }
+    public Guid?                   SelectedStudentProfileId { get; set; }
+    public List<LookupItem>        Tenants               { get; set; } = new();
+    public List<LookupItem>        Campuses              { get; set; } = new();
+    public List<LookupItem>        Departments           { get; set; } = new();
+    public List<StudentItem>       Students              { get; set; } = new();
+    public List<StudyPlanItem>     Plans                 { get; set; } = new();
+    public string?                 Message               { get; set; }
+    public string?                 SuccessMessage        { get; set; }
+    public string?                 ErrorMessage          { get; set; }
+    public bool                    IsConnected           { get; set; }
 }
 
 public class StudyPlanDetailPageModel
 {
-    public StudyPlanItem Plan           { get; set; } = new();
-    public string?       SuccessMessage { get; set; }
-    public string?       ErrorMessage   { get; set; }
-    public bool          IsConnected    { get; set; }
+    public StudyPlanItem Plan                 { get; set; } = new();
+    public Guid?         SelectedTenantId     { get; set; }
+    public Guid?         SelectedCampusId     { get; set; }
+    public Guid?         SelectedDepartmentId { get; set; }
+    public Guid?         SelectedStudentProfileId { get; set; }
+    public string?       SuccessMessage       { get; set; }
+    public string?       ErrorMessage         { get; set; }
+    public bool          IsConnected          { get; set; }
 }
 
 public class RecommendationItem

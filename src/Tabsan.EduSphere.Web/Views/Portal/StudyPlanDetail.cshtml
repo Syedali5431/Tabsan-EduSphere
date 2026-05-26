@@ -27,6 +27,17 @@
 }
 
 <div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-2 small text-muted">
+            <div class="col-md-3"><strong>Student:</strong> @Model.Plan.StudentProfileId</div>
+            <div class="col-md-3"><strong>Department:</strong> @(Model.SelectedDepartmentId?.ToString() ?? "All")</div>
+            <div class="col-md-3"><strong>Tenant:</strong> @(Model.SelectedTenantId?.ToString() ?? "All")</div>
+            <div class="col-md-3"><strong>Campus:</strong> @(Model.SelectedCampusId?.ToString() ?? "All")</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <strong>@Model.Plan.PlannedSemesterName</strong>
         @{
@@ -82,6 +93,10 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="planId"   value="@Model.Plan.Id" />
                                 <input type="hidden" name="courseId" value="@c.CourseId" />
+                                <input type="hidden" name="studentProfileId" value="@(Model.SelectedStudentProfileId ?? Model.Plan.StudentProfileId)" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                             </form>
                         </td>
@@ -100,7 +115,10 @@
         <form asp-action="AddStudyPlanCourse" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="planId"           value="@Model.Plan.Id" />
-            <input type="hidden" name="studentProfileId" value="@Model.Plan.StudentProfileId" />
+            <input type="hidden" name="studentProfileId" value="@(Model.SelectedStudentProfileId ?? Model.Plan.StudentProfileId)" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="row g-2">
                 <div class="col-md-8">
                     <input name="courseId" class="form-control" placeholder="Course GUID" required />
@@ -120,6 +138,10 @@
         <form asp-action="AdvisePlan" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="planId" value="@Model.Plan.Id" />
+            <input type="hidden" name="studentProfileId" value="@(Model.SelectedStudentProfileId ?? Model.Plan.StudentProfileId)" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="mb-2">
                 <textarea name="advisorNotes" class="form-control" rows="2"
                           placeholder="Advisor notes (required when rejecting)..."></textarea>
@@ -132,5 +154,5 @@
     </div>
 </div>
 
-<a href="@Url.Action("StudyPlan", "Portal", new { studentProfileId = Model.Plan.StudentProfileId })"
+<a href="@Url.Action("StudyPlan", "Portal", new { studentProfileId = Model.SelectedStudentProfileId ?? Model.Plan.StudentProfileId, departmentId = Model.SelectedDepartmentId, tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId })"
    class="btn btn-outline-secondary">← Back to Plans</a>

@@ -1541,8 +1541,34 @@ textarea:focus,
 
 .ui-toast-body {
   padding: 0.95rem 1rem;
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
   font-weight: 600;
   color: var(--color-slate-800);
+}
+
+.ui-toast-message {
+  flex: 1 1 auto;
+}
+
+.ui-toast-close {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-slate-600);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+  margin-top: -0.1rem;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.ui-toast-close:hover,
+.ui-toast-close:focus-visible {
+  opacity: 1;
+  color: var(--color-slate-900);
 }
 
 .ai-chat-widget {

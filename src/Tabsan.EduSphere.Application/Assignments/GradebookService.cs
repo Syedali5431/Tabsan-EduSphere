@@ -28,17 +28,13 @@ public class GradebookService : IGradebookService
 
     public async Task<GradebookGridResponse> GetGradebookAsync(Guid courseOfferingId, CancellationToken ct = default)
     {
-        // Final-Touches Phase 16 Stage 16.1 — build grid in parallel
-        var studentsTask    = _gradebookRepo.GetStudentsForOfferingAsync(courseOfferingId, ct);
-        var componentsTask  = _resultRepo.GetActiveComponentRulesAsync(ct);
-        var resultsTask     = _resultRepo.GetByOfferingAsync(courseOfferingId, ct);
-
-        await Task.WhenAll(studentsTask, componentsTask, resultsTask);
-
-        // Final-Touches Phase 34 Stage 6.3 — avoid sync-over-async reads on hot request path.
-        var students   = await studentsTask;
-        var components = (await componentsTask).OrderBy(c => c.DisplayOrder).ToList();
-        var results    = await resultsTask;
+        // Query sequentially because scoped repositories can share one DbContext instance.
+        // Running these queries in parallel can trigger EF Core's "second operation" exception.
+        var students = await _gradebookRepo.GetStudentsForOfferingAsync(courseOfferingId, ct);
+        var components = (await _resultRepo.GetActiveComponentRulesAsync(ct))
+            .OrderBy(c => c.DisplayOrder)
+            .ToList();
+        var results = await _resultRepo.GetByOfferingAsync(courseOfferingId, ct);
 
         // Index results by (studentProfileId, resultType) for O(1) lookup
         var resultIndex = results.ToDictionary(

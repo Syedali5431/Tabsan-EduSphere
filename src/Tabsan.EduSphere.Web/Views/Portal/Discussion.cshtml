@@ -26,6 +26,12 @@
     </div>
 }
 
+@if (Model.OfferingId == System.Guid.Empty)
+{
+    <div class="alert alert-info">Select a valid course offering to open discussion threads.</div>
+    return;
+}
+
 <div class="card mb-4">
     <div class="card-header"><strong>Start a New Thread</strong></div>
     <div class="card-body">

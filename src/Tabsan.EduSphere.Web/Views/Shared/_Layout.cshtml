@@ -779,6 +779,23 @@
     <script>
     (function () {
         document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.alert').forEach(function (alertEl) {
+                if (alertEl.classList.contains('alert-dismissible')) return;
+                if (alertEl.querySelector('.btn-close[data-bs-dismiss="alert"], .btn-close[data-bs-dismiss]')) return;
+
+                alertEl.classList.add('alert-dismissible', 'fade', 'show');
+                if (!alertEl.getAttribute('role')) {
+                    alertEl.setAttribute('role', 'alert');
+                }
+
+                var closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'btn-close';
+                closeBtn.setAttribute('data-bs-dismiss', 'alert');
+                closeBtn.setAttribute('aria-label', 'Close');
+                alertEl.appendChild(closeBtn);
+            });
+
             var sidebar = document.querySelector('[data-app-sidebar]');
             var sidebarToggle = document.querySelector('[data-sidebar-toggle]');
             var sidebarClose = document.querySelector('[data-sidebar-close]');

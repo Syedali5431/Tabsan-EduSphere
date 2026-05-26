@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.StudyPlanPageModel
 @{
     ViewData["Title"]     = "Study Plans";
-    ViewData["PageTitle"] = "My Study Plans";
+    ViewData["PageTitle"] = "Study Plans";
     ViewData["ActivePage"] = "study_plan";
 }
 
@@ -11,6 +11,13 @@
 {
     <div class="alert alert-warning">API is not available.</div>
     return;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show">
+        @Model.Message <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
@@ -26,12 +33,75 @@
     </div>
 }
 
-<div class="card mb-4">
-    <div class="card-header"><strong>Create New Study Plan</strong></div>
+@if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("Faculty"))
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="StudyPlan" class="row g-3 align-items-end">
+                @if (User.IsInRole("SuperAdmin"))
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id ? "selected" : null)">@tenant.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">All Campuses</option>
+                            @foreach (var campus in Model.Campuses)
+                            {
+                                <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id ? "selected" : null)">@campus.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in Model.Departments)
+                        {
+                            <option value="@dept.Id" selected="@(Model.SelectedDepartmentId == dept.Id ? "selected" : null)">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Student</label>
+                    <select name="studentProfileId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All / Department Plans</option>
+                        @foreach (var student in Model.Students)
+                        {
+                            <option value="@student.Id" selected="@(Model.SelectedStudentProfileId == student.Id ? "selected" : null)">@student.FullName</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Create New Study Plan</strong>
+        <span class="text-muted small">Create plans for the selected student.</span>
+    </div>
     <div class="card-body">
+        @if (Model.StudentProfileId == Guid.Empty)
+        {
+            <div class="alert alert-info mb-3">Select a student in the filters above to create a plan.</div>
+        }
         <form asp-action="CreateStudyPlan" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="studentProfileId" value="@Model.StudentProfileId" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="row g-2">
                 <div class="col-md-4">
                     <input name="plannedSemesterName" class="form-control" placeholder="Semester (e.g. Fall 2026)" required />
@@ -40,68 +110,81 @@
                     <input name="notes" class="form-control" placeholder="Optional notes..." />
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Create</button>
+                    <button type="submit" class="btn btn-primary w-100" @(Model.StudentProfileId == Guid.Empty ? "disabled" : null)>Create</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-@if (!Model.Plans.Any())
-{
-    <div class="alert alert-info">No study plans yet. Create one above.</div>
-}
-else
-{
-    <div class="row g-3">
-    @foreach (var plan in Model.Plans)
-    {
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <strong>@plan.PlannedSemesterName</strong>
-                    @{
-                        var badgeClass = plan.AdvisorStatus switch
-                        {
-                            "Endorsed" => "bg-success",
-                            "Rejected" => "bg-danger",
-                            _          => "bg-secondary"
-                        };
-                    }
-                    <span class="badge @badgeClass">@plan.AdvisorStatus</span>
-                </div>
-                <div class="card-body">
-                    <p class="mb-1"><strong>Total Credits:</strong> @plan.TotalCreditHours</p>
-                    <p class="mb-1"><strong>Courses:</strong> @plan.Courses.Count</p>
-                    @if (!string.IsNullOrEmpty(plan.Notes))
-                    {
-                        <p class="text-muted small mb-1">@plan.Notes</p>
-                    }
-                    @if (!string.IsNullOrEmpty(plan.AdvisorNotes))
-                    {
-                        <p class="text-muted small mb-1"><strong>Advisor:</strong> @plan.AdvisorNotes</p>
-                    }
-                </div>
-                <div class="card-footer d-flex gap-2">
-                    <a href="@Url.Action("StudyPlanDetail", "Portal", new { planId = plan.Id })"
-                       class="btn btn-sm btn-outline-primary">View / Edit</a>
-                    <form asp-action="DeleteStudyPlan" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete this plan?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="planId" value="@plan.Id" />
-                        <input type="hidden" name="studentProfileId" value="@Model.StudentProfileId" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                    </form>
-                </div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 mb-0">Plans</h2>
+                <div class="text-muted small">Showing @Model.Plans.Count plan(s)</div>
             </div>
+            @if (Model.StudentProfileId != Guid.Empty)
+            {
+                <a href="@Url.Action("StudyPlanRecommendations", "Portal", new { studentProfileId = Model.StudentProfileId })"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-lightbulb"></i> Get Course Recommendations
+                </a>
+            }
         </div>
-    }
-    </div>
-}
 
-<div class="mt-3">
-    <a href="@Url.Action("StudyPlanRecommendations", "Portal", new { studentProfileId = Model.StudentProfileId })"
-       class="btn btn-outline-secondary">
-        <i class="bi bi-lightbulb"></i> Get Course Recommendations
-    </a>
+        @if (!Model.Plans.Any())
+        {
+            <div class="alert alert-info mb-0">No study plans match the selected filters.</div>
+        }
+        else
+        {
+            <div class="row g-3">
+            @foreach (var plan in Model.Plans)
+            {
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>@plan.PlannedSemesterName</strong>
+                            @{
+                                var badgeClass = plan.AdvisorStatus switch
+                                {
+                                    "Endorsed" => "bg-success",
+                                    "Rejected" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass">@plan.AdvisorStatus</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong>Total Credits:</strong> @plan.TotalCreditHours</p>
+                            <p class="mb-1"><strong>Courses:</strong> @plan.Courses.Count</p>
+                            @if (!string.IsNullOrEmpty(plan.Notes))
+                            {
+                                <p class="text-muted small mb-1">@plan.Notes</p>
+                            }
+                            @if (!string.IsNullOrEmpty(plan.AdvisorNotes))
+                            {
+                                <p class="text-muted small mb-1"><strong>Advisor:</strong> @plan.AdvisorNotes</p>
+                            }
+                        </div>
+                        <div class="card-footer d-flex gap-2">
+                            <a href="@Url.Action("StudyPlanDetail", "Portal", new { planId = plan.Id, studentProfileId = Model.SelectedStudentProfileId ?? Model.StudentProfileId, departmentId = Model.SelectedDepartmentId, tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId })"
+                               class="btn btn-sm btn-outline-primary">View / Edit</a>
+                            <form asp-action="DeleteStudyPlan" method="post" class="d-inline" onsubmit="return confirm('Delete this plan?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="planId" value="@plan.Id" />
+                                <input type="hidden" name="studentProfileId" value="@(Model.SelectedStudentProfileId ?? Model.StudentProfileId)" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            </div>
+        }
+    </div>
 </div>

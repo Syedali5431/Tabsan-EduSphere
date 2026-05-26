@@ -2808,10 +2808,10 @@ public class EduApiClient : IEduApiClient
 
     public async Task<(byte[]? Content, string ContentType, string FileName)> GenerateAccreditationReportAsync(Guid id, CancellationToken ct)
     {
-        var client   = CreateClient();
-        var response = await client.GetAsync($"api/v1/accreditation/{id}/generate", ct);
+        using var request = CreateRequest(HttpMethod.Get, $"api/v1/accreditation/{id}/generate");
+        var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return (null, "", "");
-        var bytes       = await response.Content.ReadAsByteArrayAsync(ct);
+        var bytes = await response.Content.ReadAsByteArrayAsync(ct);
         var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
         var fileName    = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
                           ?? "report.csv";

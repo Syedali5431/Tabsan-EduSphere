@@ -23,7 +23,7 @@ else
                 <form asp-action="Buildings" method="get" class="row g-2 align-items-end">
                     <div class="col-12 col-md-4">
                         <label class="form-label">Tenant</label>
-                        <select class="form-select" name="tenantId">
+                        <select class="form-select" name="tenantId" onchange="this.form.submit()">
                             <option value="">All tenants</option>
                             @foreach (var t in Model.Tenants)
                             {
@@ -33,7 +33,7 @@ else
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label">Campus</label>
-                        <select class="form-select" name="campusId">
+                        <select class="form-select" name="campusId" onchange="this.form.submit()">
                             <option value="">All campuses</option>
                             @foreach (var c in Model.Campuses)
                             {

@@ -68,7 +68,7 @@
                         }
                     </form>
 
-                    <div class="alert alert-light border small mb-3">
+                    <div class="alert alert-light border alert-dismissible fade show small mb-3" role="alert">
                         <p class="mb-2"><strong>Use one of the official templates before upload:</strong></p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <a class="btn btn-sm btn-outline-secondary" asp-action="UserImportTemplate" asp-route-fileName="faculty-admin-import-template.csv">faculty-admin-import-template.csv</a>
@@ -83,6 +83,7 @@
                             <li>If you provide <strong>CampusAssignments</strong>, use pipe-separated campus GUIDs (example: <strong>guid1|guid2</strong>).</li>
                             <li>Imported accounts use Username as temporary password and must change it at first login.</li>
                         </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
 
                     <form asp-action="ImportUsersCsv" method="post" enctype="multipart/form-data">

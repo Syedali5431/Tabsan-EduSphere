@@ -11,6 +11,9 @@ public enum FypProjectStatus
     /// <summary>Project title and description submitted by the student, awaiting coordinator review.</summary>
     Proposed = 1,
 
+    /// <summary>Backward-compatible legacy label for projects awaiting review.</summary>
+    UnderReview = Proposed,
+
     /// <summary>Approved by the FYP coordinator — supervisor assignment pending.</summary>
     Approved = 2,
 

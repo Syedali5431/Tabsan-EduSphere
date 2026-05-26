@@ -31,6 +31,29 @@ else
             </div>
 
             <form method="get" asp-action="CourseMaterialStudent" class="row g-2 align-items-end filter-toolbar">
+                @if (Model.Tenants.Count > 0)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Tenants</option>
+                            @foreach (var t in Model.Tenants)
+                            {
+                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
                 <div class="col-md-3">
                     <label class="form-label">Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -70,6 +93,9 @@ else
                             <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
                         }
                     </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
                 </div>
             </form>
         </div>

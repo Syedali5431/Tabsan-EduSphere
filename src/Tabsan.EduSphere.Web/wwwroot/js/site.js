@@ -76,7 +76,10 @@
 		return '' +
 			'<div class="ui-toast is-' + escapeHtml(variant) + '">' +
 				'<div class="ui-toast-accent"></div>' +
-				'<div class="ui-toast-body">' + escapeHtml(message) + '</div>' +
+				'<div class="ui-toast-body">' +
+					'<span class="ui-toast-message">' + escapeHtml(message) + '</span>' +
+					'<button type="button" class="ui-toast-close" aria-label="Close" title="Close">&times;</button>' +
+				'</div>' +
 			'</div>';
 	}
 
@@ -90,6 +93,18 @@
 
 		var toastStack = document.querySelector('[data-toast-stack]');
 		if (toastStack) {
+			toastStack.addEventListener('click', function (event) {
+				var closeButton = event.target.closest('.ui-toast-close');
+				if (!closeButton) {
+					return;
+				}
+
+				var toast = closeButton.closest('.ui-toast');
+				if (toast) {
+					toast.remove();
+				}
+			});
+
 			document.querySelectorAll('.alert, .validation-summary-errors, .field-validation-error').forEach(function (node) {
 				var text = (node.textContent || '').trim();
 				if (!text) {

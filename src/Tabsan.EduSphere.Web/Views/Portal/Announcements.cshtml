@@ -26,12 +26,65 @@
     </div>
 }
 
+@if (Model.OfferingId == System.Guid.Empty)
+{
+    <div class="alert alert-info">Select a valid course offering to view or post announcements.</div>
+    return;
+}
+
+<form method="get" asp-action="Announcements" class="row g-2 align-items-end mb-4">
+    @if (Model.Tenants.Count > 0)
+    {
+        <div class="col-md-3">
+            <label class="form-label">Tenant</label>
+            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                <option value="">All Tenants</option>
+                @foreach (var t in Model.Tenants)
+                {
+                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Campus</label>
+            <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                <option value="">All Campuses</option>
+                @foreach (var c in Model.Campuses)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                }
+            </select>
+        </div>
+    }
+    <div class="col-md-4">
+        <label class="form-label">Course Offering</label>
+        <select name="offeringId" class="form-select" onchange="this.form.submit()">
+            @foreach (var o in Model.Offerings)
+            {
+                <option value="@o.Id" selected="@(Model.OfferingId == o.Id ? "selected" : null)">@o.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <div class="form-check mt-2">
+            <input type="hidden" name="includeInactive" value="false" />
+            <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" checked="@(Model.IncludeInactive ? "checked" : null)" onchange="this.form.submit()" />
+            <label class="form-check-label" for="includeInactive">Show inactive</label>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary w-100">Apply</button>
+    </div>
+</form>
+
 <div class="card mb-4">
     <div class="card-header"><strong>Post Announcement</strong></div>
     <div class="card-body">
         <form asp-action="CreateAnnouncement" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
             <div class="mb-2">
                 <input name="title" class="form-control" placeholder="Announcement title..." required />
@@ -43,15 +96,6 @@
         </form>
     </div>
 </div>
-
-<form method="get" asp-action="Announcements" class="mb-3">
-    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-    <input type="hidden" name="includeInactive" value="false" />
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" checked="@(Model.IncludeInactive ? "checked" : null)" onchange="this.form.submit()" />
-        <label class="form-check-label" for="includeInactive">Show inactive announcements</label>
-    </div>
-</form>
 
 @if (!Model.Announcements.Any())
 {
@@ -89,11 +133,22 @@ else
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
                                     <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                     <input type="hidden" name="isActive" value="@(!a.IsActive)" />
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">
                                         @(a.IsActive ? "Deactivate" : "Activate")
                                     </button>
+                                </form>
+                                <form asp-action="DeleteAnnouncement" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="announcementId" value="@a.Id" />
+                                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             }
                         </td>

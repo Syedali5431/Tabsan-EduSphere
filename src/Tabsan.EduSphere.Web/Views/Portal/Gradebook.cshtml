@@ -169,6 +169,33 @@ else
 @section Scripts {
     <script>
     // Final-Touches Phase 16 Stage 16.1 — auto-save on blur via fetch
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function showGradebookSaveError(message) {
+        var main = document.getElementById('main-content');
+        if (!main) return;
+
+        var host = document.getElementById('gradebook-save-alert-host');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'gradebook-save-alert-host';
+            host.className = 'mb-3';
+            main.prepend(host);
+        }
+
+        host.innerHTML = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'
+            + escapeHtml(message)
+            + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>'
+            + '</div>';
+    }
+
     document.querySelectorAll('.gradebook-cell').forEach(inp => {
         inp.addEventListener('blur', function () {
             const val = parseFloat(this.value);
@@ -185,7 +212,12 @@ else
             fetch('@Url.Action("GradebookUpsertEntry")', { method: 'POST', body })
                 .then(r => r.json())
                 .then(j => {
-                    if (!j.success) alert('Save failed: ' + j.error);
+                    if (!j.success) {
+                        showGradebookSaveError('Save failed: ' + (j.error || 'Unknown error.'));
+                    }
+                })
+                .catch(() => {
+                    showGradebookSaveError('Save failed: network or server error.');
                 });
         });
     });

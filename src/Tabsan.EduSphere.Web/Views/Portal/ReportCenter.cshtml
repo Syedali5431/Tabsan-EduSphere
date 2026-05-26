@@ -16,16 +16,13 @@
     {
         <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>Not connected to API. Please configure the connection.</div>
     }
-    else if (!string.IsNullOrEmpty(Model.Message))
-    {
-        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.Message</div>
-    }
-    else if (Model.Reports.Count == 0)
-    {
-        <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No reports are available for your role.</div>
-    }
     else
     {
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.Message</div>
+        }
+
         @if (Model.Identity?.IsSuperAdmin == true)
         {
             <form method="get" asp-action="ReportCenter" class="row g-2 mb-3">
@@ -63,73 +60,83 @@
                         }
                     </select>
                 </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary w-100">Apply Scope</button>
+                </div>
             </form>
         }
 
-        <form method="post" asp-action="SetReportsActive" class="mb-3 d-flex justify-content-end">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-            @if (Model.IsReportsActive)
-            {
-                <button type="submit" class="btn btn-outline-danger" name="isActive" value="false">Deactivate Reports for Scope</button>
-            }
-            else
-            {
-                <button type="submit" class="btn btn-outline-success" name="isActive" value="true">Activate Reports for Scope</button>
-            }
-        </form>
-
-        <div class="row g-4">
-            @foreach (var report in Model.Reports)
-            {
-                @* Map the DB report key to an icon class and portal action URL.
-                   The DB is seeded with hyphenated keys (e.g. "attendance-report"),
-                   while earlier code used underscore variants — both formats are handled
-                   to remain backward-compatible with any existing data.
-                   "dept-summary" shares the Enrollment view; no dedicated dept view exists. *@
-                var (icon, href) = report.Key switch
+        @if (Model.Reports.Count == 0)
+        {
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No reports are available for your role.</div>
+        }
+        else
+        {
+            <form method="post" asp-action="SetReportsActive" class="mb-3 d-flex justify-content-end">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                @if (Model.IsReportsActive)
                 {
-                    "attendance_summary" or "attendance-report" => ("bi-calendar-check",   Url.Action("ReportAttendance",       "Portal")),
-                    "result_summary"     or "results-report"    => ("bi-clipboard-data",   Url.Action("ReportResults",          "Portal")),
-                    "assignment_summary" or "assignment-report" or "assignment-summary" => ("bi-journal-check",    Url.Action("ReportAssignments",      "Portal")),
-                    "quiz_summary"       or "quiz-report"       or "quiz-summary"       => ("bi-patch-question",   Url.Action("ReportQuizzes",          "Portal")),
-                    "gpa_report"                                => ("bi-graph-up",          Url.Action("ReportGpa",              "Portal")),
-                    "enrollment_summary"                        => ("bi-people",            Url.Action("ReportEnrollment",       "Portal")),
-                    "dept-summary"       or "department_summary"=> ("bi-building",          Url.Action("ReportEnrollment",       "Portal")),
-                    "semester-results"    or "semester_results"      => ("bi-calendar3",           Url.Action("ReportSemesterResults", "Portal")),
-                    "student_transcript" or "student-transcript" => ("bi-journal-text",       Url.Action("ReportTranscript",      "Portal")),
-                    "low_attendance_warning"                     => ("bi-exclamation-triangle",Url.Action("ReportLowAttendance",   "Portal")),
-                    "fyp_status"         or "fyp-status"         => ("bi-mortarboard",         Url.Action("ReportFypStatus",       "Portal")),
-                    "payment_summary"    or "payment-summary"    => ("bi-cash-stack",          Url.Action("ReportPayments",        "Portal")),
-                    _                                           => ("bi-file-earmark-text", "#")
-                };
-                <div class="col-md-6 col-xl-4">
-                    <a href="@href" class="text-decoration-none @(Model.IsReportsActive ? "" : "disabled")" style="@(Model.IsReportsActive ? "" : "pointer-events:none;opacity:.65;")">
-                        <div class="card h-100 shadow-sm border-0 hover-card">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
-                                        <i class="bi @icon fs-4 text-primary"></i>
+                    <button type="submit" class="btn btn-outline-danger" name="isActive" value="false">Deactivate Reports for Scope</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-outline-success" name="isActive" value="true">Activate Reports for Scope</button>
+                }
+            </form>
+
+            <div class="row g-4">
+                @foreach (var report in Model.Reports)
+                {
+                    @* Map the DB report key to an icon class and portal action URL.
+                       The DB is seeded with hyphenated keys (e.g. "attendance-report"),
+                       while earlier code used underscore variants — both formats are handled
+                       to remain backward-compatible with any existing data.
+                       "dept-summary" shares the Enrollment view; no dedicated dept view exists. *@
+                    var (icon, href) = report.Key switch
+                    {
+                        "attendance_summary" or "attendance-report" => ("bi-calendar-check",   Url.Action("ReportAttendance",       "Portal")),
+                        "result_summary"     or "results-report"    => ("bi-clipboard-data",   Url.Action("ReportResults",          "Portal")),
+                        "assignment_summary" or "assignment-report" or "assignment-summary" => ("bi-journal-check",    Url.Action("ReportAssignments",      "Portal")),
+                        "quiz_summary"       or "quiz-report"       or "quiz-summary"       => ("bi-patch-question",   Url.Action("ReportQuizzes",          "Portal")),
+                        "gpa_report"                                => ("bi-graph-up",          Url.Action("ReportGpa",              "Portal")),
+                        "enrollment_summary"                        => ("bi-people",            Url.Action("ReportEnrollment",       "Portal")),
+                        "dept-summary"       or "department_summary"=> ("bi-building",          Url.Action("ReportEnrollment",       "Portal")),
+                        "semester-results"    or "semester_results"      => ("bi-calendar3",           Url.Action("ReportSemesterResults", "Portal")),
+                        "student_transcript" or "student-transcript" => ("bi-journal-text",       Url.Action("ReportTranscript",      "Portal")),
+                        "low_attendance_warning"                     => ("bi-exclamation-triangle",Url.Action("ReportLowAttendance",   "Portal")),
+                        "fyp_status"         or "fyp-status"         => ("bi-mortarboard",         Url.Action("ReportFypStatus",       "Portal")),
+                        "payment_summary"    or "payment-summary"    => ("bi-cash-stack",          Url.Action("ReportPayments",        "Portal")),
+                        _                                           => ("bi-file-earmark-text", "#")
+                    };
+                    <div class="col-md-6 col-xl-4">
+                        <a href="@href" class="text-decoration-none @(Model.IsReportsActive ? "" : "disabled")" style="@(Model.IsReportsActive ? "" : "pointer-events:none;opacity:.65;")">
+                            <div class="card h-100 shadow-sm border-0 hover-card">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                                            <i class="bi @icon fs-4 text-primary"></i>
+                                        </div>
+                                        <h5 class="mb-0 text-dark">@report.Name</h5>
                                     </div>
-                                    <h5 class="mb-0 text-dark">@report.Name</h5>
+                                    <p class="text-muted small mb-3">@report.Purpose</p>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var role in report.AllowedRoles)
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@role</span>
+                                        }
+                                    </div>
                                 </div>
-                                <p class="text-muted small mb-3">@report.Purpose</p>
-                                <div class="d-flex flex-wrap gap-1">
-                                    @foreach (var role in report.AllowedRoles)
-                                    {
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">@role</span>
-                                    }
+                                <div class="card-footer bg-transparent border-top-0 pb-3 px-4">
+                                    <span class="text-primary small fw-semibold">View Report <i class="bi bi-arrow-right"></i></span>
                                 </div>
                             </div>
-                            <div class="card-footer bg-transparent border-top-0 pb-3 px-4">
-                                <span class="text-primary small fw-semibold">View Report <i class="bi bi-arrow-right"></i></span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
-        </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
     }
 </div>
 
