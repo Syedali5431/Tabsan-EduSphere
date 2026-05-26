@@ -22,6 +22,7 @@ public sealed class TwoFactorController : ControllerBase
 
     /// <summary>Starts 2FA enrollment for the current signed-in user.</summary>
     [HttpGet("setup")]
+    [HttpPost("setup")]
     [Authorize]
     public async Task<IActionResult> Setup(CancellationToken ct)
     {

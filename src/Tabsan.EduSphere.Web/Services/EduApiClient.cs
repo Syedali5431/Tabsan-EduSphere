@@ -672,7 +672,7 @@ public class EduApiClient : IEduApiClient
         => PostAsync<object, object>("api/v1/auth/force-change-password", new { newPassword }, ct);
 
     public Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
-        => PostAsync<object, TwoFactorSetupApiModel>("api/v1/2fa/setup", new { }, ct);
+        => GetAsync<TwoFactorSetupApiModel>("api/v1/2fa/setup", ct);
 
     public Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct)
         => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/verify", new { code }, ct);
