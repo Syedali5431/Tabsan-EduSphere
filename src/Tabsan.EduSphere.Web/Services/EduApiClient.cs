@@ -2819,10 +2819,14 @@ public class EduApiClient : IEduApiClient
 
     public async Task<StudyPlanApiModel?> AddStudyPlanCourseAsync(Guid planId, Guid courseId, CancellationToken ct)
     {
-        var client  = CreateClient();
-        var json    = System.Text.Json.JsonSerializer.Serialize(courseId);
-        var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync($"api/v1/study-plan/plan/{planId}/course", content, ct);
+        var json = System.Text.Json.JsonSerializer.Serialize(courseId);
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, $"api/v1/study-plan/plan/{planId}/course");
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return request;
+        }, ct);
+
         if (!response.IsSuccessStatusCode) return null;
         var body = await response.Content.ReadAsStringAsync(ct);
         return System.Text.Json.JsonSerializer.Deserialize<StudyPlanApiModel>(body, _jsonOptions);
