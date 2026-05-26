@@ -105,6 +105,7 @@ DECLARE @RoleAdmin INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin'
 DECLARE @RoleFaculty INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Faculty');
 DECLARE @RoleStudent INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Student');
 DECLARE @RoleFinance INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Finance');
+DECLARE @RoleParent INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Parent');
 DECLARE @SuperAdminUserId UNIQUEIDENTIFIER = (
     SELECT TOP 1 [Id]
     FROM [users]
@@ -128,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v6', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v7', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v6',
+    SET [DemoValue] = N'FullDummyData-v7',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -556,28 +557,38 @@ DECLARE @BulkTarget TABLE
     InstitutionCode NVARCHAR(10),
     InstitutionType INT,
     DepartmentId UNIQUEIDENTIFIER,
+    DepartmentCode NVARCHAR(20),
     ProgramId UNIQUEIDENTIFIER,
+    ProgramCode NVARCHAR(20),
     StudentCount INT,
     FacultyCount INT,
     AdminCount INT
 );
 
-INSERT INTO @BulkTarget (InstitutionCode, InstitutionType, DepartmentId, ProgramId, StudentCount, FacultyCount, AdminCount)
-VALUES
-    (N'UNI', 2, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER), 320, 40, 12),
-    (N'COL', 1, CAST('12222222-2222-2222-2222-222222222221' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222321' AS UNIQUEIDENTIFIER), 260, 30, 10),
-    (N'SCH', 0, CAST('13333333-3333-3333-3333-333333333332' AS UNIQUEIDENTIFIER), CAST('22222222-2222-2222-2222-222222222432' AS UNIQUEIDENTIFIER), 220, 24, 10);
+INSERT INTO @BulkTarget (InstitutionCode, InstitutionType, DepartmentId, DepartmentCode, ProgramId, ProgramCode, StudentCount, FacultyCount, AdminCount)
+SELECT
+    CASE d.[InstitutionType] WHEN 2 THEN N'UNI' WHEN 1 THEN N'COL' ELSE N'SCH' END,
+    d.[InstitutionType],
+    d.[Id],
+    d.[Code],
+    p.[Id],
+    p.[Code],
+    CASE d.[InstitutionType] WHEN 2 THEN 80 WHEN 1 THEN 64 ELSE 56 END,
+    CASE d.[InstitutionType] WHEN 2 THEN 10 WHEN 1 THEN 8 ELSE 6 END,
+    CASE d.[InstitutionType] WHEN 2 THEN 4 WHEN 1 THEN 3 ELSE 2 END
+FROM @Programs p
+INNER JOIN @Departments d ON d.[Id] = p.[DepartmentId];
 
 ;WITH N AS
 (
-    SELECT TOP (220) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    SELECT TOP (120) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
     FROM sys.all_objects a
     CROSS JOIN sys.all_objects b
 )
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT NEWID(),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4)),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4), N'@demo.local'),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4), N'@demo.local'),
        @PwdHash,
        @RoleStudent,
        t.DepartmentId,
@@ -594,18 +605,18 @@ WHERE NOT EXISTS
 (
     SELECT 1
     FROM [users] x
-    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4))
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.student.', RIGHT(N'0000' + CAST(n.n AS NVARCHAR(10)), 4))
 );
 
 ;WITH N AS
 (
-    SELECT TOP (60) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    SELECT TOP (20) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
     FROM sys.all_objects a
 )
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT NEWID(),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3)),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3), N'@demo.local'),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3), N'@demo.local'),
        @PwdHash,
        @RoleFaculty,
        t.DepartmentId,
@@ -622,18 +633,18 @@ WHERE NOT EXISTS
 (
     SELECT 1
     FROM [users] x
-    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3))
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.faculty.', RIGHT(N'000' + CAST(n.n AS NVARCHAR(10)), 3))
 );
 
 ;WITH N AS
 (
-    SELECT TOP (20) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    SELECT TOP (10) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
     FROM sys.all_objects
 )
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT NEWID(),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2)),
-       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2), N'@demo.local'),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2)),
+       CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2), N'@demo.local'),
        @PwdHash,
        @RoleAdmin,
        t.DepartmentId,
@@ -650,13 +661,13 @@ WHERE NOT EXISTS
 (
     SELECT 1
     FROM [users] x
-    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2))
+    WHERE x.[Username] = CONCAT(N'bulk.', LOWER(t.InstitutionCode), N'.', LOWER(t.DepartmentCode), N'.', LOWER(t.ProgramCode), N'.admin.', RIGHT(N'00' + CAST(n.n AS NVARCHAR(10)), 2))
 );
 
 INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT NEWID(),
        u.[Id],
-       CONCAT(N'BULK-', t.InstitutionCode, N'-', RIGHT(N'0000' + CAST(ROW_NUMBER() OVER (PARTITION BY t.InstitutionCode ORDER BY u.[Username]) AS NVARCHAR(10)), 4)),
+       CONCAT(N'BULK-', t.InstitutionCode, N'-', t.DepartmentCode, N'-', t.ProgramCode, N'-', RIGHT(N'0000' + CAST(ROW_NUMBER() OVER (PARTITION BY t.InstitutionCode, t.DepartmentCode, t.ProgramCode ORDER BY u.[Username]) AS NVARCHAR(10)), 4)),
        t.ProgramId,
        t.DepartmentId,
        DATEADD(day, -ABS(CHECKSUM(u.[Id])) % 540, @Now),
@@ -671,7 +682,9 @@ SELECT NEWID(),
        0,
        NULL
 FROM [users] u
-INNER JOIN @BulkTarget t ON t.DepartmentId = u.[DepartmentId]
+INNER JOIN @BulkTarget t
+        ON t.DepartmentId = u.[DepartmentId]
+     AND u.[Username] LIKE CONCAT(N'bulk.%.', LOWER(t.[ProgramCode]), N'.student.%')
 WHERE u.[Username] LIKE N'bulk.%.student.%'
   AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[UserId] = u.[Id]);
 
@@ -2456,7 +2469,7 @@ BEGIN
     ('55550000-0000-0000-0000-000000000010', N'parent.guardian.10', N'parent.guardian.10@demo.local');
 
     INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT p.[Id], p.[Username], p.[Email], @PwdHash, @RoleStudent, NULL, 0, 1, NULL, @Now, NULL, 0, NULL
+    SELECT p.[Id], p.[Username], p.[Email], @PwdHash, COALESCE(@RoleParent, @RoleStudent), NULL, 0, 1, NULL, @Now, NULL, 0, NULL
     FROM @ParentUsers p
     WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = p.[Id] OR x.[Username] = p.[Username]);
 
@@ -2485,7 +2498,8 @@ BEGIN
     ;WITH InstitutionStudents AS (
         SELECT sp.[Id] AS StudentProfileId,
                u.[InstitutionType],
-               ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
+               sp.[DepartmentId],
+               ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType], sp.[DepartmentId] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
         FROM [student_profiles] sp
         INNER JOIN [users] u ON u.[Id] = sp.[UserId]
         WHERE u.[IsDeleted] = 0
@@ -2495,7 +2509,7 @@ BEGIN
                d.[InstitutionType],
                co.[SemesterId],
                ROW_NUMBER() OVER (
-                   PARTITION BY d.[InstitutionType], co.[SemesterId]
+                   PARTITION BY d.[InstitutionType], c.[DepartmentId], co.[SemesterId]
                    ORDER BY c.[Code], co.[Id]
                ) AS OfferingRn
         FROM [course_offerings] co
@@ -2508,8 +2522,9 @@ BEGIN
     FROM InstitutionStudents s
     INNER JOIN RankedOfferings o
         ON o.[InstitutionType] = s.[InstitutionType]
-       AND o.[OfferingRn] <= 2
-    WHERE s.[StudentRn] <= 180
+             AND o.[DepartmentId] = s.[DepartmentId]
+             AND o.[OfferingRn] <= 4
+        WHERE s.[StudentRn] <= 220
       AND NOT EXISTS (
           SELECT 1
           FROM [enrollments] e
@@ -2527,7 +2542,8 @@ BEGIN
     ;WITH StudentScope AS (
         SELECT sp.[Id] AS StudentProfileId,
                u.[InstitutionType],
-               ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
+             sp.[DepartmentId],
+             ROW_NUMBER() OVER (PARTITION BY u.[InstitutionType], sp.[DepartmentId] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentRn
         FROM [student_profiles] sp
         INNER JOIN [users] u ON u.[Id] = sp.[UserId]
         WHERE u.[IsDeleted] = 0
@@ -2550,7 +2566,10 @@ BEGIN
             WHEN 1 THEN CAST(12200 + (sm.[SemesterRn] * 120) AS DECIMAL(10,2))
             ELSE CAST(9300 + (sm.[SemesterRn] * 90) AS DECIMAL(10,2))
         END,
-        CONCAT(N'Semester Fee - ', sm.[Name]),
+        CASE st.[InstitutionType]
+            WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(8 + ((sm.[SemesterRn] - 1) % 2) AS NVARCHAR(10)), N' - ', sm.[Name])
+            ELSE CONCAT(N'Semester Fee - ', sm.[Name])
+        END,
         DATEADD(day, 18, sm.[StartDate]),
         NULL,
         NULL,
@@ -2569,13 +2588,16 @@ BEGIN
         NULL
     FROM StudentScope st
     CROSS JOIN SemesterScope sm
-    WHERE st.[StudentRn] <= 180
-      AND sm.[SemesterRn] <= 8
+        WHERE st.[StudentRn] <= 220
+            AND sm.[SemesterRn] <= 12
       AND NOT EXISTS (
           SELECT 1
           FROM [payment_receipts] pr
           WHERE pr.[StudentProfileId] = st.[StudentProfileId]
-            AND pr.[Description] = CONCAT(N'Semester Fee - ', sm.[Name])
+                        AND pr.[Description] = CASE st.[InstitutionType]
+                                WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(8 + ((sm.[SemesterRn] - 1) % 2) AS NVARCHAR(10)), N' - ', sm.[Name])
+                                ELSE CONCAT(N'Semester Fee - ', sm.[Name])
+                        END
       );
 END
 

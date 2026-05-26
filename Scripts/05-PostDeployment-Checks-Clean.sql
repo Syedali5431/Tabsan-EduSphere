@@ -220,7 +220,7 @@ BEGIN
         N'0'
     FROM [Tabsan-EduSphere]
     WHERE [DemoKey] = N'DemoDatasetVersion'
-      AND [DemoValue] = N'FullDummyData-v6';
+      AND [DemoValue] LIKE N'FullDummyData-v%';
 END;
 
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])

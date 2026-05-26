@@ -576,10 +576,37 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV6' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV7' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v6';
+	AND DemoValue = N'FullDummyData-v7';
+
+SELECT 'SidebarMenu_GenerateCertificates_Count' AS [CheckName], COUNT(1) AS [Value]
+FROM [sidebar_menu_items]
+WHERE [Key] = N'generate_certificates';
+
+SELECT 'SidebarMenu_CourseMaterial_Count' AS [CheckName], COUNT(1) AS [Value]
+FROM [sidebar_menu_items]
+WHERE [Key] = N'course_material';
+
+SELECT 'DummySeed_AllInstitutionTypes_HaveTimetableCoverage' AS [CheckName], COUNT(1) AS [Value]
+FROM
+(
+	SELECT d.[InstitutionType]
+	FROM [timetables] t
+	INNER JOIN [departments] d ON d.[Id] = t.[DepartmentId]
+	GROUP BY d.[InstitutionType]
+) x;
+
+SELECT 'DummySeed_AllInstitutionTypes_HavePaymentCoverage' AS [CheckName], COUNT(1) AS [Value]
+FROM
+(
+	SELECT u.[InstitutionType]
+	FROM [payment_receipts] pr
+	INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
+	INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+	GROUP BY u.[InstitutionType]
+) x;
 
 SELECT 'DummySeed_CourseOfferingsDistinctSemesterCount' AS [CheckName], COUNT(DISTINCT co.[SemesterId]) AS [Value]
 FROM [course_offerings] co;
