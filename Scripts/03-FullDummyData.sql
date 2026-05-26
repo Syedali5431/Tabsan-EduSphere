@@ -672,11 +672,12 @@ SELECT NEWID(),
        t.DepartmentId,
        DATEADD(day, -ABS(CHECKSUM(u.[Id])) % 540, @Now),
        CAST(2.50 + (ABS(CHECKSUM(u.[Id])) % 150) / 100.0 AS DECIMAL(4,2)),
-       CASE
-            WHEN t.InstitutionType = 2 THEN ((ABS(CHECKSUM(u.[Id])) % 8) + 1)
-            WHEN t.InstitutionType = 1 THEN ((ABS(CHECKSUM(u.[Id])) % 6) + 1)
-            ELSE ((ABS(CHECKSUM(u.[Id])) % 2) + 1)
-       END,
+      ((ROW_NUMBER() OVER (PARTITION BY t.ProgramId ORDER BY u.[Username]) - 1)
+          % CASE
+               WHEN t.InstitutionType = 0 THEN 12
+               WHEN p.[TotalSemesters] > 0 THEN p.[TotalSemesters]
+               ELSE 1
+            END) + 1,
        @Now,
        NULL,
        0,
@@ -685,6 +686,7 @@ FROM [users] u
 INNER JOIN @BulkTarget t
         ON t.DepartmentId = u.[DepartmentId]
      AND u.[Username] LIKE CONCAT(N'bulk.%.', LOWER(t.[ProgramCode]), N'.student.%')
+INNER JOIN @Programs p ON p.[Id] = t.[ProgramId]
 WHERE u.[Username] LIKE N'bulk.%.student.%'
   AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[UserId] = u.[Id]);
 
@@ -950,7 +952,7 @@ BEGIN
         CASE WHEN ct.[CourseOrdinal] = 1 THEN CAST('10:00:00' AS TIME) ELSE CAST('12:15:00' AS TIME) END,
         CONCAT(
             CASE
-                WHEN ct.[InstitutionType] = 0 THEN CONCAT(N'Class ', CAST(8 + ct.[SemesterNumber] AS NVARCHAR(10)))
+                WHEN ct.[InstitutionType] = 0 THEN CONCAT(N'Class ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
                 ELSE CONCAT(N'College Semester ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
             END,
             N' - ',
@@ -2556,13 +2558,13 @@ BEGIN
         NEWID(),
         st.[StudentProfileId],
         CASE st.[InstitutionType]
-            WHEN 2 THEN COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
+            WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(((sm.[SemesterRn] - 1) % 12) + 1 AS NVARCHAR(10)), N' - ', sm.[Name])
             WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
             ELSE COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
         END,
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN 0 ELSE 1 END,
         CASE st.[InstitutionType]
-            WHEN 2 THEN CAST(15500 + (sm.[SemesterRn] * 150) AS DECIMAL(10,2))
+                WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(((sm.[SemesterRn] - 1) % 12) + 1 AS NVARCHAR(10)), N' - ', sm.[Name])
             WHEN 1 THEN CAST(12200 + (sm.[SemesterRn] * 120) AS DECIMAL(10,2))
             ELSE CAST(9300 + (sm.[SemesterRn] * 90) AS DECIMAL(10,2))
         END,
