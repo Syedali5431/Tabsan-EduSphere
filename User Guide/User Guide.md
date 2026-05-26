@@ -1,7 +1,7 @@
 # Tabsan EduSphere – User Guide
 
-**Version:** 1.5  
-**Date:** 15 May 2026  
+**Version:** 1.6  
+**Date:** 26 May 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
 **Completion Status:** Phase 38 complete (final separation baseline)  
 **Audience:** Students, Faculty, Admins, Finance, Super Admins
@@ -16,6 +16,13 @@
 - Graduation approval/reject flows now return deterministic conflict feedback when concurrent updates occur.
 - FYP panel member data remains compatible with legacy role values (`Internal`/`External`).
 - Settings/governance coverage includes full privileged menus: report settings, sidebar settings, dashboard settings, license update, institution policy, module composition, tenant management, campus management, and admin users.
+
+### Institution-Aware Certificate Workflow (26 May 2026)
+- Generate Certificates now adapts behavior by institution context.
+- University mode enables degree generation and period-scoped transcript generation.
+- School/College mode enables additional student certificate upload/list/download workflows.
+- Degree/transcript actions are hidden when university mode is disabled in active policy/license.
+- Period labels in certificate workflow are context-aware (`Class` for university, `Semester` otherwise).
 
 ### Final Documentation Synchronization (Post Phase 38 Execute)
 - User documentation baseline has been synchronized to the final execute-mode release closure.

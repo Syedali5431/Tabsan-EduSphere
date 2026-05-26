@@ -1,7 +1,7 @@
 # Tabsan EduSphere – Training Manual
 
-**Version:** 1.5  
-**Date:** 15 May 2026  
+**Version:** 1.6  
+**Date:** 26 May 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
 **Completion Status:** Phase 38 complete (final separation baseline)  
 **Audience:** Trainers, IT Staff, Finance, Super Admins, Department Coordinators
@@ -16,6 +16,13 @@
 - Include trainer scenario for graduation approval/reject concurrency conflicts and recommended retry workflow.
 - Include trainer note for FYP panel-role backward compatibility (`Internal`/`External`) when validating legacy seeded data.
 - Include settings governance walkthrough covering report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user menus.
+
+### Institution-Aware Certificate Workflow (26 May 2026)
+- Include trainer walkthrough for Generate Certificates behavior by institution mode.
+- University scenario: degree and period-scoped transcript generation for graduation-ready students.
+- School/College scenario: additional certificate upload/list/download lifecycle and student access verification.
+- Include validation step for policy/license-controlled visibility (degree/transcript hidden when university mode is disabled).
+- Include terminology check for period label behavior (`Class` in university mode, `Semester` otherwise).
 
 ### Final Documentation Synchronization (Post Phase 38 Execute)
 - Trainer-facing baseline now references final execute-mode publish-separation behavior.

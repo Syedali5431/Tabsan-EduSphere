@@ -1,7 +1,7 @@
 # Admin User Guide
 
-Version: 1.5  
-Date: 15 May 2026  
+Version: 1.6  
+Date: 26 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
 ## 1. Purpose
@@ -293,4 +293,13 @@ For change requests:
 - Report Center availability may now vary by tenant and campus because report activation is governed per scope.
 - Sidebar and module governance synchronization now updates existing environments so admin-visible menus better match configured role and module policy.
 - New governance surfaces may appear only for privileged roles: Admin Users, Tenant Management, and Campus Management.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- Generate Certificates now uses institution-aware behavior:
+	- University mode: generate degree and transcript for scoped, graduation-ready students.
+	- School/College mode: upload and manage additional student certificates.
+- Additional certificate uploads are admin-managed and remain restricted by tenant/campus/department scope.
+- Degree/transcript actions are hidden automatically when university mode is disabled in policy/license.
+- Period filter wording is now context-aware (`Class` in university mode; `Semester` in non-university modes).
 

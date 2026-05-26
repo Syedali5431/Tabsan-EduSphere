@@ -1,7 +1,7 @@
 # SuperAdmin User Guide
 
-Version: 1.5  
-Date: 15 May 2026  
+Version: 1.6  
+Date: 26 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
 ## 1. Purpose
@@ -230,4 +230,12 @@ Common parity-scope signals to record:
 - Sidebar governance synchronization now self-heals role-access and active-status mappings in existing environments.
 - Settings governance catalog now explicitly includes Admin Users, Tenant Management, and Campus Management alongside Sidebar Settings, Report Settings, Institution Policy, and Module Composition.
 - User import governance now enforces claim-aware effective scope resolution to prevent cross-scope onboarding mistakes.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- Certificate governance now differentiates university vs non-university operational paths.
+- University mode enables degree/transcript generation flows subject to role and scope controls.
+- School/College mode enables additional student certificate upload/list/download flows under authorized operations.
+- License/policy controls can disable university behavior; when disabled, degree/transcript surfaces are hidden.
+- Scope validation for certificate operations remains tenant/campus and role-assignment aware.
 

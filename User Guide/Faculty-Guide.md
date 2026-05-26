@@ -1,7 +1,7 @@
 # Faculty User Guide
 
-Version: 1.5  
-Date: 15 May 2026  
+Version: 1.6  
+Date: 26 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
 ## 1. Purpose
@@ -264,4 +264,11 @@ Use high-contrast or readable themes when reviewing long grading sessions.
 - Report Center visibility can now differ per tenant and campus activation state, even when role permissions are unchanged.
 - Sidebar visibility consistency was improved through synchronized menu governance, reducing mismatches between visible menus and allowed routes.
 - Faculty should report missing menu items with role, department, tenant, and campus context so governance troubleshooting is accurate.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- Faculty visibility on certificate surfaces now follows institution mode and active policy/license.
+- University mode supports degree/transcript generation flows for authorized, scoped operations.
+- School/College mode exposes additional student certificate workflows managed by authorized staff, with student download visibility.
+- Period selector wording in certificate workflow is now context-aware (`Class` for university, `Semester` otherwise).
 

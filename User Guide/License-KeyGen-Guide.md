@@ -1,7 +1,7 @@
 # License KeyGen User Guide
 
-Version: 1.5  
-Date: 15 May 2026  
+Version: 1.6  
+Date: 26 May 2026  
 Applies to: tools/KeyGen/KeyGen.cs  
 Completion Status: Phase 38 complete (final separation baseline)
 
@@ -176,4 +176,10 @@ After issuing a license:
 - Licensing operations should now be validated with tenant and campus scoped governance behaviors in mind for shared deployments.
 - SuperAdmin post-license verification should include scoped Program and Report Center behavior checks by tenant/campus context.
 - Continue strict key handling while expanding validation checklists to include scope-aware access and settings governance surfaces.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- License verification should confirm university capability flags because they govern degree/transcript visibility.
+- When university mode is disabled by policy/license, university-only certificate actions should not be visible.
+- For School/College deployments, validate additional certificate workflows and student download visibility after license upload.
 

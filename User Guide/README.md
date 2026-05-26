@@ -2,7 +2,7 @@
 
 This folder contains role-based manuals for day-to-day use of the platform.
 
-Version: 1.5 — updated 15 May 2026  
+Version: 1.6 — updated 26 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
 Repository Sync Note (15 May 2026):
@@ -64,3 +64,11 @@ Repository Sync Note (15 May 2026):
 - Sidebar governance synchronization now self-heals role/menu visibility mappings in existing environments.
 - Settings and governance coverage now explicitly includes Sidebar Settings, Report Settings, Institution Policy, Module Composition, Admin Users, Tenant Management, and Campus Management surfaces.
 - User import operations now follow claim-aware tenant and campus scope resolution for safer onboarding boundaries.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- Generate Certificates behavior now adapts by institution mode.
+- University mode supports degree generation and period-scoped transcript generation.
+- School/College mode supports additional student certificate upload, listing, and download workflows.
+- Degree/transcript actions are hidden when university mode is disabled by active policy/license.
+- Certificate period label now adapts by context (`Class` in university mode, `Semester` otherwise).

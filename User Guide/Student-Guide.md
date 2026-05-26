@@ -1,7 +1,7 @@
 # Student User Guide
 
-Version: 1.5  
-Date: 15 May 2026  
+Version: 1.6  
+Date: 26 May 2026  
 Completion Status: Phase 38 complete (final separation baseline)
 
 ## 1. Purpose
@@ -121,7 +121,7 @@ Path: Sidebar > Results
 You can:
 - View published midterm/final marks
 - Track percentage per course
-- Download transcript in supported format
+- Download transcript in supported format (where available by institution mode and policy)
 
 Transcript export activity may be logged for audit.
 
@@ -222,4 +222,12 @@ Use this weekly:
 - Student-facing access behavior remains role-safe, with stronger tenant and campus scoped governance in shared environments.
 - Menu visibility consistency was improved by synchronized sidebar governance and module entitlement checks.
 - If a student menu appears missing, support teams should verify role, active module state, and tenant/campus scope mapping before raising incidents.
+
+## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
+
+- Certificate surfaces are now institution-aware:
+	- University context: transcript workflows follow university policy and visibility settings.
+	- School/College context: students can view/download additional certificates uploaded by authorized admins.
+- Degree/transcript options may be hidden when university mode is disabled by active policy/license.
+- Period wording in related academic/certificate views is context-aware (`Class` in university mode; `Semester` in non-university modes).
 
