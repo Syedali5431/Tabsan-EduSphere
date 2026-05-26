@@ -58,14 +58,14 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @{ int sr = 1; }
-                    @foreach (var item in Model.TopLevelMenus.OrderBy(x => x.DisplayOrder))
+                    @{ int topIndex = 1; }
+                    @foreach (var item in Model.TopLevelMenus.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name))
                     {
                         <tr class="table-primary fw-semibold @(item.SubMenus.Any() ? "has-submenus" : "")"
                             data-id="@item.Id"
                             style="cursor:@(item.SubMenus.Any() ? "pointer" : "default")"
                             onclick="@(item.SubMenus.Any() ? $"toggleSub('{item.Id}')" : "")">
-                            <td>@(sr++)</td>
+                            <td>@topIndex</td>
                             <td>
                                 @if (item.SubMenus.Any())
                                 {
@@ -119,10 +119,11 @@ else
                         @* Sub-menu rows (collapsed by default) *@
                         @if (item.SubMenus.Any())
                         {
-                            foreach (var sub in item.SubMenus.OrderBy(s => s.DisplayOrder))
+                            var subIndex = 1;
+                            foreach (var sub in item.SubMenus.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
                             {
                                 <tr class="submenu-row d-none table-light" data-parent="@item.Id">
-                                    <td class="ps-4 text-muted small">@(sr++)</td>
+                                    <td class="ps-4 text-muted small">@($"{topIndex}.{subIndex}")</td>
                                     <td class="ps-5 fst-italic">
                                         <i class="bi bi-arrow-return-right me-1 text-muted"></i>@sub.Name
                                     </td>
@@ -168,8 +169,11 @@ else
                                         }
                                     </td>
                                 </tr>
+                                subIndex++;
                             }
                         }
+
+                        topIndex++;
                     }
                 </tbody>
             </table>

@@ -3,6 +3,27 @@
     ViewData["Title"] = "Module Settings";
     var tempMsg = TempData["Message"] as string ?? Model.Message;
     var allRoles = new[] { "Admin", "Faculty", "Student" };
+    var moduleOrder = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["authentication"] = 10,
+        ["departments"] = 20,
+        ["sis"] = 30,
+        ["courses"] = 40,
+        ["assignments"] = 50,
+        ["quizzes"] = 60,
+        ["attendance"] = 70,
+        ["results"] = 80,
+        ["fyp"] = 90,
+        ["notifications"] = 100,
+        ["reports"] = 110,
+        ["themes"] = 120,
+        ["ai_chat"] = 130,
+        ["advanced_audit"] = 140,
+    };
+    var orderedModules = Model.Modules
+        .OrderBy(m => moduleOrder.TryGetValue(m.Key ?? string.Empty, out var order) ? order : int.MaxValue)
+        .ThenBy(m => m.Name)
+        .ToList();
 }
 
 <div class="row g-4">
@@ -35,17 +56,17 @@
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-puzzle-fill text-primary"></i>
                 <strong>Feature Modules</strong>
-                <span class="badge bg-secondary ms-auto">@Model.Modules.Count</span>
+                <span class="badge bg-secondary ms-auto">@orderedModules.Count</span>
             </div>
             <div class="card-body p-0">
-                @if (Model.Modules.Count == 0)
+                @if (orderedModules.Count == 0)
                 {
                     <p class="text-muted p-3 mb-0">No modules registered.</p>
                 }
                 else
                 {
                     <div class="accordion accordion-flush" id="modulesAccordion">
-                        @foreach (var mod in Model.Modules)
+                        @foreach (var mod in orderedModules)
                         {
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
