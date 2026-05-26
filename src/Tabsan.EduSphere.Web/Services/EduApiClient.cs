@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.DataProtection;
+using QRCoder;
 using Tabsan.EduSphere.Application.DTOs.Analytics;
 using Tabsan.EduSphere.Web.Models.Portal;
 
@@ -671,8 +672,25 @@ public class EduApiClient : IEduApiClient
     public Task ForceChangePasswordAsync(string newPassword, CancellationToken ct)
         => PostAsync<object, object>("api/v1/auth/force-change-password", new { newPassword }, ct);
 
-    public Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
-        => GetAsync<TwoFactorSetupApiModel>("api/v1/2fa/setup", ct);
+    public async Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
+    {
+        var setup = await TryGetAsync<TwoFactorSetupApiModel>("api/v1/2fa/setup", ct);
+        if (setup is not null)
+            return setup;
+
+        var legacySetup = await PostAsync<object, LegacyMfaSetupApiModel>("api/v1/auth/mfa/setup", new { }, ct);
+        if (legacySetup is null)
+            return null;
+
+        var provisioningUri = legacySetup.ProvisioningUri ?? string.Empty;
+        return new TwoFactorSetupApiModel(
+            legacySetup.Enabled,
+            ExtractQueryValue(provisioningUri, "issuer") ?? GetSessionIdentity()?.Email ?? GetSessionIdentity()?.UserName ?? "Tabsan EduSphere",
+            GetSessionIdentity()?.Email ?? GetSessionIdentity()?.UserName ?? "User",
+            legacySetup.Secret,
+            provisioningUri,
+            GenerateQrCodeDataUrl(provisioningUri));
+    }
 
     public Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct)
         => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/verify", new { code }, ct);
@@ -1324,6 +1342,22 @@ public class EduApiClient : IEduApiClient
         return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<T>(body, _jsonOptions);
     }
 
+    private async Task<T?> TryGetAsync<T>(string path, CancellationToken ct)
+    {
+        using var response = await SendWithAutoRefreshAsync(() => CreateRequest(HttpMethod.Get, path), ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            return string.IsNullOrWhiteSpace(body) ? default : JsonSerializer.Deserialize<T>(body, _jsonOptions);
+        }
+
+        if (response.StatusCode is System.Net.HttpStatusCode.MethodNotAllowed or System.Net.HttpStatusCode.NotFound)
+            return default;
+
+        var errorBody = await response.Content.ReadAsStringAsync(ct);
+        throw BuildException(response.StatusCode, errorBody);
+    }
+
     private async Task<TResponse?> PostAsync<TRequest, TResponse>(string path, TRequest payload, CancellationToken ct)
     {
         var json = JsonSerializer.Serialize(payload, _jsonOptions);
@@ -1486,6 +1520,43 @@ public class EduApiClient : IEduApiClient
         return new InvalidOperationException(message);
     }
 
+    private static string? ExtractQueryValue(string uri, string key)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsedUri))
+            return null;
+
+        var query = parsedUri.Query;
+        if (string.IsNullOrWhiteSpace(query))
+            return null;
+
+        foreach (var segment in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = segment.Split('=', 2);
+            if (parts.Length != 2)
+                continue;
+
+            var segmentKey = Uri.UnescapeDataString(parts[0]);
+            if (!string.Equals(segmentKey, key, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return Uri.UnescapeDataString(parts[1]);
+        }
+
+        return null;
+    }
+
+    private static string GenerateQrCodeDataUrl(string payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+            return string.Empty;
+
+        using var generator = new QRCodeGenerator();
+        using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(data);
+        var bytes = qrCode.GetGraphic(8);
+        return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+    }
+
     private sealed record RefreshLoginApiResponse(
         string AccessToken,
         string RefreshToken,
@@ -1498,6 +1569,12 @@ public class EduApiClient : IEduApiClient
         bool SsoEnabled,
         string? SsoProvider,
         string SessionRiskLevel);
+
+    private sealed record LegacyMfaSetupApiModel(
+        bool Enabled,
+        string Secret,
+        string ProvisioningUri,
+        IReadOnlyList<string> RecoveryCodes);
 
     private string? ReadCookie(string key)
     {

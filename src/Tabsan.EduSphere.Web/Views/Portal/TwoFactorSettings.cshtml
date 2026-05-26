@@ -96,6 +96,17 @@
         color: #475569;
         font-size: .92rem;
     }
+
+    .security-chip {
+        color: #0f172a !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        border-color: rgba(15, 118, 110, 0.16) !important;
+    }
+
+    .security-code-box {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.98) !important;
+    }
 </style>
 
 <div class="security-shell">
@@ -111,9 +122,9 @@
                 The setup flow stays additive, and the legacy login screen continues to work as before.
             </p>
             <div class="d-flex flex-wrap gap-2">
-                <span class="badge rounded-pill text-bg-light border">RFC 6238 TOTP</span>
-                <span class="badge rounded-pill text-bg-light border">QR + manual key</span>
-                <span class="badge rounded-pill text-bg-light border">Encrypted secret at rest</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">RFC 6238 TOTP</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">QR + manual key</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">Encrypted secret at rest</span>
             </div>
         </div>
 
@@ -178,11 +189,11 @@
                                 </div>
                                 <div class="mb-3">
                                     <div class="text-muted small text-uppercase mb-1">Manual key</div>
-                                    <div class="font-monospace small p-3 bg-light border rounded-3 text-break">@Model.ManualKey</div>
+                                    <div class="font-monospace small p-3 bg-light border rounded-3 text-break security-code-box">@Model.ManualKey</div>
                                 </div>
                                 <div class="mb-0">
                                     <div class="text-muted small text-uppercase mb-1">Provisioning URI</div>
-                                    <div class="font-monospace small p-3 bg-light border rounded-3 text-break">@Model.ProvisioningUri</div>
+                                    <div class="font-monospace small p-3 bg-light border rounded-3 text-break security-code-box">@Model.ProvisioningUri</div>
                                 </div>
                             </div>
                         </div>
