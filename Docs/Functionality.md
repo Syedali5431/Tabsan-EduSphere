@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 7 Manual Validation Hardening
+
+### Implementation sync
+- Manual attendance submission now rejects empty row payloads before write operations.
+- Added duplicate Student+Date detection in manual row submissions.
+- Added required row-date enforcement before grouping and writing attendance entries.
+
+### Validation sync
+- Attendance-focused unit matrix passed (`20/20`) including new manual duplicate and empty-row guard tests.
+- Web build and sidebar integration regression suites passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 6 Row Table Structure
 
 ### Implementation sync

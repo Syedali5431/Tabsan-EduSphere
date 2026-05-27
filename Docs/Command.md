@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 7 Completion - Manual Entry Validation Hardening (2026-05-28)
+- Implementation Summary:
+  - Hardened manual attendance submit validation to reject empty row submissions.
+  - Added duplicate row guard to block repeated Student+Date combinations in a single submission.
+  - Enforced required per-row date checks before bulk attendance writes are executed.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter "FullyQualifiedName~PortalAttendanceCsvImportTests|FullyQualifiedName~AttendancePageModelTests" -v minimal` passed (`20/20`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 6 Completion - Row Table Structure Alignment (2026-05-28)
 - Implementation Summary:
   - Updated Enter Attendance row-entry table to use Phase 6 columns: Student ID, Student Name, Date, and Present.

@@ -3680,10 +3680,16 @@ public class PortalController : Controller
         Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint,
         CancellationToken ct)
     {
-        if (_api.IsConnected() && studentIds.Length > 0)
+        if (_api.IsConnected())
         {
             try
             {
+                if (studentIds.Length == 0)
+                {
+                    TempData["PortalMessage"] = "No attendance rows were submitted.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                }
+
                 var sessionId = _api.GetSessionIdentity();
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
@@ -3717,6 +3723,7 @@ public class PortalController : Controller
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
                 var entriesByDate = new Dictionary<DateTime, List<(Guid StudentProfileId, string Status)>>();
                 var invalidStudentIds = new List<Guid>();
+                var duplicateKeys = new HashSet<(Guid StudentId, DateTime Date)>();
 
                 for (var i = 0; i < studentIds.Length; i++)
                 {
@@ -3734,6 +3741,18 @@ public class PortalController : Controller
                     }
 
                     var entryDate = hasPerRowDates ? dates![i].Date : date!.Value.Date;
+                    if (entryDate == default)
+                    {
+                        TempData["PortalMessage"] = "Attendance date is required for each row.";
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    }
+
+                    if (!duplicateKeys.Add((studentId, entryDate)))
+                    {
+                        TempData["PortalMessage"] = "Duplicate attendance rows detected for the same student and date.";
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    }
+
                     if (!entriesByDate.TryGetValue(entryDate, out var entries))
                     {
                         entries = new List<(Guid StudentProfileId, string Status)>();

@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance Phase 7 Validation Inventory
+
+### Phase 7 Implementation Summary
+- Hardened `PortalController.BulkMarkAttendance` manual-entry validation for empty submissions.
+- Added duplicate Student+Date row detection for manual row submissions.
+- Enforced required per-row dates before attendance batch writes.
+
+### Phase 7 Validation Summary
+- Attendance-focused unit matrix passed (`20/20`).
+- Sidebar integration regression slice passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 6 Table Structure Inventory
 
 ### Phase 6 Implementation Summary

@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 7 Validation Hardening)
+
+- No menu topology change in this slice.
+- Enter Attendance manual submission now enforces stronger row-level validation for empty rows, duplicate Student+Date rows, and required dates.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 6 Table Structure)
 
 - No menu topology change in this slice.

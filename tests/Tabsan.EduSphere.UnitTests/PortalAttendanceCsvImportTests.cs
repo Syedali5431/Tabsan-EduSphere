@@ -126,6 +126,68 @@ public class PortalAttendanceCsvImportTests
     }
 
     [Fact]
+    public async Task BulkMarkAttendance_DuplicateStudentDateRows_DoesNotCallBulkMark()
+    {
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.BulkMarkAttendance(
+            OfferingId,
+            date: null,
+            studentIds: [studentOne, studentOne],
+            statuses: ["Present", "Absent"],
+            dates: [new DateTime(2026, 5, 28), new DateTime(2026, 5, 28)],
+            tenantId: TenantId,
+            campusId: CampusId,
+            departmentId: DepartmentId,
+            courseId: CourseId,
+            semesterName: SemesterName,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("duplicate attendance rows");
+    }
+
+    [Fact]
+    public async Task BulkMarkAttendance_NoRowsSubmitted_DoesNotCallBulkMark()
+    {
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.BulkMarkAttendance(
+            OfferingId,
+            date: DateTime.UtcNow.Date,
+            studentIds: [],
+            statuses: [],
+            dates: null,
+            tenantId: TenantId,
+            campusId: CampusId,
+            departmentId: DepartmentId,
+            courseId: CourseId,
+            semesterName: SemesterName,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("No attendance rows were submitted");
+    }
+
+    [Fact]
     public async Task CorrectAttendance_StudentOutsideRoster_DoesNotCallCorrectAttendance()
     {
         var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
