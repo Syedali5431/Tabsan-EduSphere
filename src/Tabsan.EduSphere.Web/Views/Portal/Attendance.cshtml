@@ -265,6 +265,22 @@ else
                             Download Template
                         </a>
 
+                        @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
+                        {
+                            <a class="btn btn-outline-success btn-sm"
+                               asp-action="DownloadAttendanceImportReport"
+                               asp-route-reportToken="@Model.ImportReportToken"
+                               asp-route-offeringId="@Model.SelectedOfferingId"
+                               asp-route-tenantId="@Model.SelectedTenantId"
+                               asp-route-campusId="@Model.SelectedCampusId"
+                               asp-route-departmentId="@Model.SelectedDepartmentId"
+                               asp-route-courseId="@Model.SelectedCourseId"
+                               asp-route-semesterName="@Model.SelectedSemesterName"
+                               asp-route-entryPoint="@attendanceAction">
+                                Download Last Import Report
+                            </a>
+                        }
+
                         <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using Tabsan.EduSphere.Web.Models.Portal;
@@ -13,6 +14,7 @@ public class PortalController : Controller
     private readonly IEduApiClient _api;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<PortalController> _logger;
+    private static readonly ConcurrentDictionary<string, AttendanceImportReportPayload> AttendanceImportReports = new(StringComparer.Ordinal);
 
     private static readonly Dictionary<string, string> ActionMenuKeyMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -102,6 +104,19 @@ public class PortalController : Controller
         "announcements",
         "study_plan"
     };
+
+    private sealed record AttendanceImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
+
+    private sealed class AttendanceImportReportRow
+    {
+        public int RowNumber { get; init; }
+        public string StudentId { get; init; } = string.Empty;
+        public string StudentName { get; init; } = string.Empty;
+        public string DateValue { get; init; } = string.Empty;
+        public string PresentValue { get; init; } = string.Empty;
+        public string Outcome { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+    }
 
     public PortalController(IEduApiClient api, IWebHostEnvironment environment, ILogger<PortalController> logger)
     {
@@ -2681,12 +2696,12 @@ public class PortalController : Controller
     // ── Attendance ─────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, nameof(Attendance), "Attendance", ct);
+    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? reportToken, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken, nameof(Attendance), "Attendance", ct);
 
     [HttpGet]
-    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, nameof(EnterAttendance), "Enter Attendance", ct);
+    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? reportToken, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken, nameof(EnterAttendance), "Enter Attendance", ct);
 
     private async Task<IActionResult> RenderAttendanceAsync(
         Guid? offeringId,
@@ -2695,6 +2710,7 @@ public class PortalController : Controller
         Guid? departmentId,
         Guid? courseId,
         string? semesterName,
+        string? reportToken,
         string attendanceAction,
         string title,
         CancellationToken ct)
@@ -2710,6 +2726,7 @@ public class PortalController : Controller
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
             SelectedSemesterName = semesterName,
+            ImportReportToken = reportToken,
             Message          = TempData["PortalMessage"]?.ToString()
         };
         var messageDetailsRaw = TempData["PortalMessageDetails"]?.ToString();
@@ -3294,6 +3311,27 @@ public class PortalController : Controller
         return File(bytes, "text/csv", $"enter-attendance-template-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
     }
 
+    [HttpGet]
+    public IActionResult DownloadAttendanceImportReport(
+        string? reportToken,
+        Guid? offeringId,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        string? semesterName,
+        string? entryPoint)
+    {
+        if (string.IsNullOrWhiteSpace(reportToken) || !AttendanceImportReports.TryRemove(reportToken, out var payload))
+        {
+            TempData["PortalMessage"] = "Import report is not available. Please run CSV import again.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(payload.CsvContent);
+        return File(bytes, "text/csv", payload.FileName);
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportAttendanceCsv(
         Guid? offeringId,
@@ -3310,6 +3348,39 @@ public class PortalController : Controller
         var importAuditErrorDetails = new List<string>();
         var totalRows = 0;
         var importedRows = 0;
+        var reportRows = new List<AttendanceImportReportRow>();
+        var pendingRows = new List<AttendanceImportReportRow>();
+
+        void CleanupExpiredImportReports()
+        {
+            var threshold = DateTime.UtcNow.AddHours(-2);
+            foreach (var item in AttendanceImportReports)
+            {
+                if (item.Value.CreatedAtUtc < threshold)
+                    AttendanceImportReports.TryRemove(item.Key, out _);
+            }
+        }
+
+        string StoreImportReportAndGetToken()
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("RowNumber,StudentId,StudentName,Date,Present,Outcome,Reason");
+            foreach (var row in reportRows.OrderBy(r => r.RowNumber))
+            {
+                csv.AppendLine(
+                    $"{row.RowNumber},{EscapeCsvField(row.StudentId)},{EscapeCsvField(row.StudentName)},{EscapeCsvField(row.DateValue)},{EscapeCsvField(row.PresentValue)},{EscapeCsvField(row.Outcome)},{EscapeCsvField(row.Reason)}");
+            }
+
+            var token = Guid.NewGuid().ToString("N");
+            AttendanceImportReports[token] = new AttendanceImportReportPayload(
+                $"attendance-import-report-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv",
+                csv.ToString(),
+                DateTime.UtcNow);
+            return token;
+        }
+
+        IActionResult RedirectWithContext(string? reportToken = null)
+            => RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken });
 
         void WriteAttendanceImportAudit(string outcome, SessionIdentity? actor, IReadOnlyCollection<string>? errorDetails = null)
         {
@@ -3320,11 +3391,13 @@ public class PortalController : Controller
             _logger.LogInformation("Attendance CSV import audit {AuditLine}", auditLine);
         }
 
+        CleanupExpiredImportReports();
+
         if (!_api.IsConnected())
         {
             TempData["PortalMessage"] = "Connect to the API before importing attendance CSV.";
             WriteAttendanceImportAudit("blocked-not-connected", actor: null);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         var identity = _api.GetSessionIdentity();
@@ -3338,21 +3411,21 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = "Select a course offering before importing attendance CSV.";
             WriteAttendanceImportAudit("blocked-missing-offering", identity);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         if (csvFile is null || csvFile.Length == 0)
         {
             TempData["PortalMessage"] = "Please choose a non-empty CSV file.";
             WriteAttendanceImportAudit("blocked-empty-file", identity);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         if (!csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
         {
             TempData["PortalMessage"] = "Invalid file type. Only .csv files are accepted.";
             WriteAttendanceImportAudit("blocked-invalid-file-type", identity);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         var effectiveTenantId = identity.IsSuperAdmin ? tenantId : identity.TenantId;
@@ -3363,7 +3436,7 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = scopeValidation.Message;
             WriteAttendanceImportAudit("blocked-scope-validation", identity, new List<string> { scopeValidation.Message });
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         List<EnrollmentRosterItem> roster;
@@ -3375,7 +3448,7 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = $"Unable to load roster for selected offering: {ex.Message}";
             WriteAttendanceImportAudit("failed-roster-load", identity, new List<string> { ex.Message });
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         var rosterIds = roster.Select(r => r.Id).ToHashSet();
@@ -3383,7 +3456,7 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = "No students found in the selected offering roster.";
             WriteAttendanceImportAudit("blocked-empty-roster", identity);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         var validationErrors = new List<string>();
@@ -3399,7 +3472,8 @@ public class PortalController : Controller
             if (string.IsNullOrWhiteSpace(headerLine))
             {
                 TempData["PortalMessage"] = "CSV is empty or missing the header row.";
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                WriteAttendanceImportAudit("blocked-empty-header", identity);
+                return RedirectWithContext();
             }
 
             var header = ParseCsvLine(headerLine);
@@ -3407,7 +3481,8 @@ public class PortalController : Controller
             if (header.Length != expectedHeader.Length || !header.Select(h => h.Trim()).SequenceEqual(expectedHeader, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["PortalMessage"] = "CSV header does not match the template. Expected: StudentId,StudentName,Date,Present.";
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                WriteAttendanceImportAudit("blocked-invalid-header", identity, new List<string> { "CSV header does not match expected template." });
+                return RedirectWithContext();
             }
 
             var rowNumber = 1;
@@ -3422,46 +3497,75 @@ public class PortalController : Controller
                 totalRows++;
 
                 var cols = ParseCsvLine(line);
-                WriteAttendanceImportAudit("blocked-empty-header", identity);
                 if (cols.Length != 4)
                 {
                     validationErrors.Add($"Row {rowNumber}: expected 4 columns.");
+                    reportRows.Add(new AttendanceImportReportRow
+                    {
+                        RowNumber = rowNumber,
+                        StudentId = cols.ElementAtOrDefault(0)?.Trim() ?? string.Empty,
+                        StudentName = cols.ElementAtOrDefault(1)?.Trim() ?? string.Empty,
+                        DateValue = cols.ElementAtOrDefault(2)?.Trim() ?? string.Empty,
+                        PresentValue = cols.ElementAtOrDefault(3)?.Trim() ?? string.Empty,
+                        Outcome = "Skipped",
+                        Reason = "Expected 4 columns."
+                    });
                     continue;
                 }
 
-                    WriteAttendanceImportAudit("blocked-invalid-header", identity, new List<string> { "CSV header does not match expected template." });
                 var studentIdRaw = cols[0].Trim();
                 var studentNameRaw = cols[1].Trim();
                 var dateRaw = cols[2].Trim();
                 var presentRaw = cols[3].Trim();
 
+                var reportRow = new AttendanceImportReportRow
+                {
+                    RowNumber = rowNumber,
+                    StudentId = studentIdRaw,
+                    StudentName = studentNameRaw,
+                    DateValue = dateRaw,
+                    PresentValue = presentRaw,
+                    Outcome = "Pending"
+                };
+                reportRows.Add(reportRow);
+
                 if (string.IsNullOrWhiteSpace(studentIdRaw) || string.IsNullOrWhiteSpace(studentNameRaw) || string.IsNullOrWhiteSpace(dateRaw) || string.IsNullOrWhiteSpace(presentRaw))
                 {
                     validationErrors.Add($"Row {rowNumber}: required fields must not be empty.");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "Required fields must not be empty.";
                     continue;
                 }
 
                 if (!Guid.TryParse(studentIdRaw, out var studentId))
                 {
                     validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "StudentId is invalid.";
                     continue;
                 }
 
                 if (!rosterIds.Contains(studentId))
                 {
                     validationErrors.Add($"Row {rowNumber}: StudentId does not belong to the selected offering roster.");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "StudentId does not belong to the selected offering roster.";
                     continue;
                 }
 
                 if (!TryParseAttendanceDate(dateRaw, out var date))
                 {
                     validationErrors.Add($"Row {rowNumber}: Date must be a valid value (for example yyyy-MM-dd).");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "Date must be a valid value (for example yyyy-MM-dd).";
                     continue;
                 }
 
                 if (!TryParsePresentFlag(presentRaw, out var isPresent))
                 {
                     validationErrors.Add($"Row {rowNumber}: Present must be true/false, yes/no, 1/0, or present/absent.");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "Present must be true/false, yes/no, 1/0, or present/absent.";
                     continue;
                 }
 
@@ -3469,17 +3573,20 @@ public class PortalController : Controller
                 if (!seenStudentDate.Add(duplicateKey))
                 {
                     validationErrors.Add($"Row {rowNumber}: duplicate StudentId + Date entry in import file.");
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "Duplicate StudentId + Date entry in import file.";
                     continue;
                 }
 
                 parsedRows.Add((studentId, date, isPresent ? "Present" : "Absent"));
+                pendingRows.Add(reportRow);
             }
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to read CSV file: {ex.Message}";
             WriteAttendanceImportAudit("failed-file-read", identity, new List<string> { ex.Message });
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectWithContext();
         }
 
         importAuditErrorDetails = validationErrors.Take(5).ToList();
@@ -3488,10 +3595,17 @@ public class PortalController : Controller
         {
             if (strictMode)
             {
+                foreach (var row in pendingRows)
+                {
+                    row.Outcome = "Skipped";
+                    row.Reason = "Strict mode rejected the import because other rows are invalid.";
+                }
+
+                var reportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
                 TempData["PortalMessage"] = $"CSV validation failed in strict mode. Invalid rows: {validationErrors.Count}.";
                 TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
                 WriteAttendanceImportAudit("failed-strict-validation", identity, importAuditErrorDetails);
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                return RedirectWithContext(reportToken);
             }
         }
 
@@ -3501,9 +3615,11 @@ public class PortalController : Controller
             if (validationErrors.Count > 0)
                 TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
             WriteAttendanceImportAudit("failed-no-valid-rows", identity, importAuditErrorDetails);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            var reportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
+            return RedirectWithContext(reportToken);
         }
 
+        string? finalReportToken;
         try
         {
             foreach (var byDate in parsedRows.GroupBy(r => r.Date.Date))
@@ -3511,6 +3627,12 @@ public class PortalController : Controller
                 var entries = byDate.Select(r => (r.StudentId, r.Status));
                 await _api.BulkMarkAttendanceAsync(offeringId.Value, byDate.Key, entries, effectiveTenantId, effectiveCampusId, ct);
                 importedRows += byDate.Count();
+            }
+
+            foreach (var row in pendingRows)
+            {
+                row.Outcome = "Imported";
+                row.Reason = string.Empty;
             }
 
             if (validationErrors.Count > 0)
@@ -3524,14 +3646,22 @@ public class PortalController : Controller
             }
 
             WriteAttendanceImportAudit(validationErrors.Count > 0 ? "succeeded-with-warnings" : "succeeded", identity, importAuditErrorDetails);
+            finalReportToken = StoreImportReportAndGetToken();
         }
         catch (Exception ex)
         {
+            foreach (var row in pendingRows.Where(r => string.Equals(r.Outcome, "Pending", StringComparison.OrdinalIgnoreCase)))
+            {
+                row.Outcome = "Failed";
+                row.Reason = ex.Message;
+            }
+
             TempData["PortalMessage"] = $"Attendance CSV import failed: {ex.Message}";
             WriteAttendanceImportAudit("failed-bulk-import", identity, new List<string> { ex.Message });
+            finalReportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
         }
 
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        return RedirectWithContext(finalReportToken);
     }
 
     [HttpPost, ValidateAntiForgeryToken]

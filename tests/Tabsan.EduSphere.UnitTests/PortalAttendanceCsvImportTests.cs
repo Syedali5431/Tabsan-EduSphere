@@ -124,6 +124,8 @@ public class PortalAttendanceCsvImportTests
 
         var redirect = result.Should().BeOfType<RedirectToActionResult>().Subject;
         redirect.ActionName.Should().Be("EnterAttendance");
+        redirect.RouteValues.Should().ContainKey("reportToken");
+        redirect.RouteValues!["reportToken"]?.ToString().Should().NotBeNullOrWhiteSpace();
         proxy.BulkCalls.Should().HaveCount(1);
         proxy.BulkCalls[0].OfferingId.Should().Be(OfferingId);
         proxy.BulkCalls[0].Entries.Should().Contain(x => x.StudentProfileId == studentOne && x.Status == "Present");
@@ -340,6 +342,60 @@ public class PortalAttendanceCsvImportTests
         proxy.BulkCalls[0].Entries.Should().ContainSingle(x => x.StudentProfileId == inRoster && x.Status == "Present");
         sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("completed with warnings");
         sut.TempData["PortalMessageDetails"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
+    }
+
+    [Fact]
+    public async Task DownloadAttendanceImportReport_WithValidToken_ReturnsCsvFile()
+    {
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, _) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{inRoster},Student One,2026-05-28,true",
+            $"{unknownStudent},Unknown Student,2026-05-28,true"
+        ]);
+
+        var importResult = await sut.ImportAttendanceCsv(
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None,
+            strictMode: false);
+
+        var redirect = importResult.Should().BeOfType<RedirectToActionResult>().Subject;
+        var reportToken = redirect.RouteValues!["reportToken"]?.ToString();
+        reportToken.Should().NotBeNullOrWhiteSpace();
+
+        var downloadResult = sut.DownloadAttendanceImportReport(
+            reportToken,
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance");
+
+        var file = downloadResult.Should().BeOfType<FileContentResult>().Subject;
+        file.FileDownloadName.Should().ContainEquivalentOf("attendance-import-report");
+        var content = Encoding.UTF8.GetString(file.FileContents);
+        content.Should().ContainEquivalentOf("RowNumber,StudentId,StudentName,Date,Present,Outcome,Reason");
+        content.Should().ContainEquivalentOf("Imported");
+        content.Should().ContainEquivalentOf("Skipped");
     }
 
     [Fact]

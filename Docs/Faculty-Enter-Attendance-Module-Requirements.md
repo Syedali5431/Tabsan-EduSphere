@@ -199,6 +199,30 @@ Ensure every attendance CSV import attempt creates an audit trail entry with act
 - Web build succeeded after audit instrumentation.
 - Sidebar integration regression suite remained green (`17/17`).
 
+## Phase 4.2. Import Result Report Download
+
+### Goal
+
+Allow faculty/admin users to download a CSV report after each import showing row-level outcomes (imported or skipped) with reasons.
+
+### Scope Delivered
+
+- Added per-import report token flow from CSV import action to Enter Attendance view.
+- Added download endpoint for attendance import reports with one-time token retrieval.
+- Added report generation with columns: row number, student fields, outcome, and reason.
+
+### Phase 4.2 Implementation Summary
+
+- `ImportAttendanceCsv` now generates/stores report payloads and redirects with `reportToken`.
+- Enter Attendance UI now exposes `Download Last Import Report` when a token is present.
+- Added unit coverage for report token propagation and report file download content.
+
+### Phase 4.2 Validation Summary
+
+- Attendance CSV import unit matrix passed (`12/12`) including report download test.
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 4. CSV Import
 
 This phase enables bulk attendance entry through template-based import.

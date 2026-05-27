@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.2 Import Result Report Download
+
+### Implementation sync
+- Enter Attendance CSV import now returns a report token and generates row-level import result CSV output.
+- Added report download endpoint and UI button for the latest import result report.
+- Existing strict/non-strict behavior, filter enforcement, and audit trail behavior remain intact.
+
+### Validation sync
+- Attendance import unit matrix passed with report download coverage (`12/12`).
+- Web build and sidebar integration regressions passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.1 Upload Audit Trail
 
 ### Implementation sync

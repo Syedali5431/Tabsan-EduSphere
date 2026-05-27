@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.2 Import Result Report Download
+
+- Implementation Summary:
+  - Added report token propagation from import post-action to attendance GET route.
+  - Added report download endpoint and UI action for generated CSV import results.
+  - Preserved existing contracts and role boundaries.
+- Validation Summary:
+  - Attendance import unit matrix passed (`12/12`).
+  - Web build and targeted sidebar integration tests passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.1 Upload Audit Trail
 
 - Implementation Summary:

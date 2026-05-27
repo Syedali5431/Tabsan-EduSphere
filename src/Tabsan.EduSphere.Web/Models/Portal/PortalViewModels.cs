@@ -837,6 +837,7 @@ public class AttendancePageModel
     public Guid?  SelectedDepartmentId { get; set; }
     public Guid?  SelectedCourseId     { get; set; }
     public string? SelectedSemesterName { get; set; }
+    public string? ImportReportToken { get; set; }
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────

@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.2 Result Report Download)
+- Runtime delivery in this slice:
+  - Added downloadable CSV report for import outcomes (imported/skipped rows with reasons).
+  - Added report-token route flow from import completion to Enter Attendance page.
+  - Preserved strict-mode validation and upload-audit behavior from prior phases.
+- Compatibility boundary:
+  - No schema mutation, no new menu keys, and no external API contract expansion.
+- Validation Summary:
+  - Attendance import unit matrix passed (`12/12`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.1 Upload Audit Trail)
 - Runtime delivery in this slice:
   - Added per-upload attendance CSV audit trail details.

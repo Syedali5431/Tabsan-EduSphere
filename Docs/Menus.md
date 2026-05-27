@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.2 Result Report)
+
+- No menu key additions or removals in this slice.
+- Enter Attendance now includes contextual download for the last CSV import result report.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.1 Audit Trail)
 
 - No menu structure change in this slice.

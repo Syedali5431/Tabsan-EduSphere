@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 4.2 Completion - Import Result Report Download (2026-05-28)
+- Implementation Summary:
+  - Added report-token redirect flow from attendance CSV import to Enter Attendance page.
+  - Added downloadable CSV report endpoint for last import result rows.
+  - Added Enter Attendance UI action to download generated report.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`12/12`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 4.1 Completion - Upload Audit Trail (2026-05-28)
 - Implementation Summary:
   - Added per-upload audit trail writing for Enter Attendance CSV import.
