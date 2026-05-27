@@ -371,6 +371,18 @@ Each attendance row must contain:
 - **Date:** Selectable using a calendar picker.
 - **Present:** Checkbox where checked means Present and unchecked means Absent.
 
+### Phase 6 Implementation Summary
+
+- Updated Enter Attendance row-entry table to explicit Phase 6 fields: Student ID, Student Name, Date, and Present.
+- Added generic disabled row-table structure with the same fields for incomplete filter/offering state.
+- Updated bulk-mark flow to accept per-row dates and batch attendance writes by date.
+
+### Phase 6 Validation Summary
+
+- Attendance-focused unit test matrix passed (`18/18`) including per-row date bulk-mark tests.
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 7. Validation Rules
 
 This phase defines validation behavior for manual entry and import.

@@ -3674,8 +3674,9 @@ public class PortalController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkMarkAttendance(
-        Guid offeringId, DateTime date,
+        Guid offeringId, DateTime? date,
         [FromForm] Guid[] studentIds, [FromForm] string[] statuses,
+        [FromForm] DateTime[]? dates,
         Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint,
         CancellationToken ct)
     {
@@ -3700,8 +3701,21 @@ public class PortalController : Controller
                     return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
+                var hasPerRowDates = dates is { Length: > 0 };
+                if (hasPerRowDates && dates!.Length != studentIds.Length)
+                {
+                    TempData["PortalMessage"] = "Invalid attendance submission: student and date counts do not match.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                }
+
+                if (!hasPerRowDates && !date.HasValue)
+                {
+                    TempData["PortalMessage"] = "Attendance date is required.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                }
+
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
-                var entries = new List<(Guid StudentProfileId, string Status)>();
+                var entriesByDate = new Dictionary<DateTime, List<(Guid StudentProfileId, string Status)>>();
                 var invalidStudentIds = new List<Guid>();
 
                 for (var i = 0; i < studentIds.Length; i++)
@@ -3719,6 +3733,13 @@ public class PortalController : Controller
                         return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                     }
 
+                    var entryDate = hasPerRowDates ? dates![i].Date : date!.Value.Date;
+                    if (!entriesByDate.TryGetValue(entryDate, out var entries))
+                    {
+                        entries = new List<(Guid StudentProfileId, string Status)>();
+                        entriesByDate[entryDate] = entries;
+                    }
+
                     entries.Add((studentId, normalizedStatus));
                 }
 
@@ -3728,13 +3749,17 @@ public class PortalController : Controller
                     return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
-                if (entries.Count == 0)
+                if (entriesByDate.Count == 0)
                 {
                     TempData["PortalMessage"] = "No valid attendance entries were submitted.";
                     return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
-                await _api.BulkMarkAttendanceAsync(offeringId, date, entries, effectiveTenantId, effectiveCampusId, ct);
+                foreach (var batch in entriesByDate.OrderBy(x => x.Key))
+                {
+                    await _api.BulkMarkAttendanceAsync(offeringId, batch.Key, batch.Value, effectiveTenantId, effectiveCampusId, ct);
+                }
+
                 TempData["PortalMessage"] = "Attendance marked.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }

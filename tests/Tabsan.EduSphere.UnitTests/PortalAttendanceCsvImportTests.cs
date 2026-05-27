@@ -41,6 +41,7 @@ public class PortalAttendanceCsvImportTests
             date: DateTime.UtcNow.Date,
             studentIds: [outsideRoster],
             statuses: ["Present"],
+            dates: null,
             tenantId: TenantId,
             campusId: CampusId,
             departmentId: DepartmentId,
@@ -52,6 +53,76 @@ public class PortalAttendanceCsvImportTests
         result.Should().BeOfType<RedirectToActionResult>();
         proxy.BulkCalls.Should().BeEmpty();
         sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("outside the selected offering roster");
+    }
+
+    [Fact]
+    public async Task BulkMarkAttendance_PerRowDates_GroupsBulkCallsByDate()
+    {
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var studentTwo = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster:
+            [
+                new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" },
+                new EnrollmentRosterItem { Id = studentTwo, StudentName = "Student Two" }
+            ],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.BulkMarkAttendance(
+            OfferingId,
+            date: null,
+            studentIds: [studentOne, studentTwo],
+            statuses: ["Present", "Absent"],
+            dates: [new DateTime(2026, 5, 28), new DateTime(2026, 5, 29)],
+            tenantId: TenantId,
+            campusId: CampusId,
+            departmentId: DepartmentId,
+            courseId: CourseId,
+            semesterName: SemesterName,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().HaveCount(2);
+        proxy.BulkCalls.Should().Contain(x => x.Date.Date == new DateTime(2026, 5, 28) && x.Entries.Count == 1);
+        proxy.BulkCalls.Should().Contain(x => x.Date.Date == new DateTime(2026, 5, 29) && x.Entries.Count == 1);
+    }
+
+    [Fact]
+    public async Task BulkMarkAttendance_DateMissingWithoutPerRowDates_DoesNotCallBulkMark()
+    {
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.BulkMarkAttendance(
+            OfferingId,
+            date: null,
+            studentIds: [studentOne],
+            statuses: ["Present"],
+            dates: [],
+            tenantId: TenantId,
+            campusId: CampusId,
+            departmentId: DepartmentId,
+            courseId: CourseId,
+            semesterName: SemesterName,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("date is required");
     }
 
     [Fact]

@@ -324,30 +324,33 @@ else
                     <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                     <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input name="date" type="date" class="form-control" style="max-width:200px"
-                               value="@DateTime.Today.ToString("yyyy-MM-dd")" required disabled="@writeActionsDisabled" />
-                    </div>
                     <div class="table-responsive">
                         <table class="table table-sm mb-3">
                             <thead class="table-light">
-                                <tr><th>Student</th><th>Reg. No.</th><th>Status</th></tr>
+                                <tr><th>Student ID</th><th>Student Name</th><th>Date</th><th>Present</th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var s in Model.Roster)
                                 {
                                     <tr>
-                                        <td>@s.StudentName</td>
                                         <td><code>@s.RegistrationNumber</code></td>
+                                        <td>@s.StudentName</td>
                                         <td>
                                             <input type="hidden" name="studentIds" value="@s.Id" />
-                                            <select name="statuses" class="form-select form-select-sm" style="width:120px" disabled="@writeActionsDisabled">
-                                                <option value="Present" selected>Present</option>
-                                                <option value="Absent">Absent</option>
-                                                <option value="Late">Late</option>
-                                                <option value="Excused">Excused</option>
-                                            </select>
+                                            <input type="date" name="dates" class="form-control form-control-sm" style="min-width: 170px;"
+                                                   value="@DateTime.Today.ToString("yyyy-MM-dd")" required disabled="@writeActionsDisabled" />
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="statuses" id="status_@s.Id" value="Present" />
+                                            <div class="form-check mb-0">
+                                                <input type="checkbox"
+                                                       class="form-check-input attendance-present-checkbox"
+                                                       id="present_@s.Id"
+                                                       data-status-target="status_@s.Id"
+                                                       checked
+                                                       disabled="@writeActionsDisabled" />
+                                                <label class="form-check-label" for="present_@s.Id">Present</label>
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -356,6 +359,38 @@ else
                     </div>
                     <button type="submit" class="btn btn-primary" disabled="@writeActionsDisabled">Save Attendance</button>
                 </form>
+            </div>
+        </div>
+    }
+
+    @if (string.Equals(attendanceAction, "EnterAttendance", StringComparison.OrdinalIgnoreCase)
+        && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        && (!Model.SelectedOfferingId.HasValue || Model.Roster.Count == 0))
+    {
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header bg-light">
+                <strong>Attendance Entry Table</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning py-2" role="alert">
+                    @Model.SaveAttendanceDisabledReason
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-3">
+                        <thead class="table-light">
+                            <tr><th>Student ID</th><th>Student Name</th><th>Date</th><th>Present</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">-</td>
+                                <td class="text-muted">Select required filters and offering</td>
+                                <td><input type="date" class="form-control form-control-sm" disabled /></td>
+                                <td><input type="checkbox" class="form-check-input" disabled /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-primary" disabled>Save Attendance</button>
             </div>
         </div>
     }
@@ -416,6 +451,18 @@ document.getElementById('correctAttendanceModal')?.addEventListener('show.bs.mod
     document.getElementById('correctAttendance_studentProfileId').value = btn.dataset.studentid;
     document.getElementById('correctAttendance_date').value = btn.dataset.date;
     document.getElementById('correctAttendance_status').value = btn.dataset.status;
+});
+
+document.querySelectorAll('.attendance-present-checkbox').forEach(function(checkbox) {
+    checkbox.addEventListener('change', function() {
+        var targetId = checkbox.getAttribute('data-status-target');
+        if (!targetId) return;
+
+        var statusInput = document.getElementById(targetId);
+        if (statusInput) {
+            statusInput.value = checkbox.checked ? 'Present' : 'Absent';
+        }
+    });
 });
 </script>
 }

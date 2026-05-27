@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 6 Row Table Structure
+
+### Implementation sync
+- Enter Attendance row-entry table now renders Student ID, Student Name, Date, and Present columns.
+- Added generic disabled row table state with matching columns for incomplete filter/offering context.
+- Bulk attendance post flow now supports per-row dates and groups writes by date while preserving existing scope validation.
+
+### Validation sync
+- Attendance-focused unit matrix passed (`18/18`) including new per-row date bulk-mark tests.
+- Web build and sidebar integration regression suites passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 5 Required Filter UI Save Guard
 
 ### Implementation sync

@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance Phase 6 Table Structure Inventory
+
+### Phase 6 Implementation Summary
+- Updated attendance row-entry table rendering to Student ID, Student Name, Date, and Present fields.
+- Added generic disabled row-table structure for incomplete filter/offering state.
+- Updated `PortalController.BulkMarkAttendance` to support and group per-row date submissions.
+
+### Phase 6 Validation Summary
+- Attendance-focused unit matrix passed (`18/18`).
+- Sidebar integration regression slice passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 5 UI Save Guard Inventory
 
 ### Phase 5 Implementation Summary

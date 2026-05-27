@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 6 Table Structure)
+
+- No menu topology change in this slice.
+- Enter Attendance now renders the row table structure as Student ID, Student Name, Date, and Present with disabled generic state when filters are incomplete.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 5 UI Save Guard)
 
 - No menu topology change in this slice.

@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 6 Completion - Row Table Structure Alignment (2026-05-28)
+- Implementation Summary:
+  - Updated Enter Attendance row-entry table to use Phase 6 columns: Student ID, Student Name, Date, and Present.
+  - Added generic disabled table state with the same columns when offering/required filters are not yet ready.
+  - Added per-row date handling in bulk attendance post flow and grouped writes by entry date.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter "FullyQualifiedName~PortalAttendanceCsvImportTests|FullyQualifiedName~AttendancePageModelTests" -v minimal` passed (`18/18`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 5 Completion - Required Filter UI Save Guard (2026-05-28)
 - Implementation Summary:
   - Added required-filter UI save guard state to attendance page model for Enter Attendance flows.
