@@ -2709,6 +2709,13 @@ public class PortalController : Controller
             SelectedSemesterName = semesterName,
             Message          = TempData["PortalMessage"]?.ToString()
         };
+        var messageDetailsRaw = TempData["PortalMessageDetails"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(messageDetailsRaw))
+        {
+            model.MessageDetails = messageDetailsRaw
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+        }
         if (!model.IsConnected) return View(model);
         try
         {
@@ -3294,7 +3301,8 @@ public class PortalController : Controller
         string? semesterName,
         string? entryPoint,
         IFormFile? csvFile,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool strictMode = true)
     {
         if (!_api.IsConnected())
         {
@@ -3445,13 +3453,19 @@ public class PortalController : Controller
 
         if (validationErrors.Count > 0)
         {
-            TempData["PortalMessage"] = "CSV validation failed: " + string.Join(" ", validationErrors.Take(5)) + (validationErrors.Count > 5 ? " ..." : string.Empty);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            if (strictMode)
+            {
+                TempData["PortalMessage"] = $"CSV validation failed in strict mode. Invalid rows: {validationErrors.Count}.";
+                TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            }
         }
 
         if (parsedRows.Count == 0)
         {
             TempData["PortalMessage"] = "CSV file has no valid attendance rows to import.";
+            if (validationErrors.Count > 0)
+                TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3463,7 +3477,15 @@ public class PortalController : Controller
                 await _api.BulkMarkAttendanceAsync(offeringId.Value, byDate.Key, entries, effectiveTenantId, effectiveCampusId, ct);
             }
 
-            TempData["PortalMessage"] = $"Attendance CSV import processed successfully. Rows processed: {parsedRows.Count}.";
+            if (validationErrors.Count > 0)
+            {
+                TempData["PortalMessage"] = $"Attendance CSV import completed with warnings. Imported rows: {parsedRows.Count}. Skipped rows: {validationErrors.Count}.";
+                TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+            }
+            else
+            {
+                TempData["PortalMessage"] = $"Attendance CSV import processed successfully. Rows processed: {parsedRows.Count}.";
+            }
         }
         catch (Exception ex)
         {

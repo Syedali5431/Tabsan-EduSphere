@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 3 Import UX)
+
+- No new menu key was introduced in this slice.
+- Enter Attendance import UX now supports strict-mode processing and row-level error feedback.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 2 Filters)
 
 - No new menu key was introduced in this slice.

@@ -820,6 +820,7 @@ public class AttendancePageModel
 {
     public bool   IsConnected        { get; set; }
     public string? Message           { get; set; }
+    public List<string> MessageDetails { get; set; } = new();
     public List<AttendanceRecordItem>  Records         { get; set; } = new();
     public List<AttendanceSummaryItem> Summary         { get; set; } = new();
     public List<AttendanceSummaryItem> LowAttendance   { get; set; } = new();

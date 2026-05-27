@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 3 Completion - Strict Mode and Row-Level Feedback (2026-05-28)
+- Implementation Summary:
+  - Added `strictMode` option in attendance CSV import flow to support strict fail-fast or partial-success behavior.
+  - Added row-level import feedback detail handling through portal message details.
+  - Updated Enter Attendance import UI with strict-mode checkbox and detailed import warning rendering.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`9/9`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 2 Completion - Dependent Filters and Scope Enforcement (2026-05-28)
 - Implementation Summary:
   - Added Department, Course/Subject, and Class/Semester dependent filtering to the Enter Attendance UI flow.

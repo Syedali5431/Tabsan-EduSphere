@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 3 Import UX
+
+- Implementation Summary:
+  - Added strict-mode input and row-level feedback handling to Enter Attendance CSV import.
+  - Updated attendance UI to surface detailed import warnings.
+  - Preserved existing API contracts and schema posture.
+- Validation Summary:
+  - Focused attendance unit matrix passed (`9/9`).
+  - Web project build passed.
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 2 Dependent Filters
 
 - Implementation Summary:

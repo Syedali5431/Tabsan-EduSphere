@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 3 Import Feedback and Strict Mode
+
+### Implementation sync
+- Enter Attendance CSV import now supports strict-mode fail-fast validation and non-strict partial-success behavior.
+- Row-level CSV validation details are surfaced back to the attendance page for user correction guidance.
+- Import UI now includes strict-mode control while preserving existing role and filter-context boundaries.
+
+### Validation sync
+- Focused attendance unit matrix passed with strict-mode coverage (`9/9`).
+- Targeted sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 2 Dependent Filter Enforcement
 
 ### Implementation sync

@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 3 Import UX)
+- Runtime delivery in this slice:
+  - Added strict-mode CSV import option for fail-fast versus partial-success import behavior.
+  - Added row-level import feedback surface on attendance page.
+  - Preserved Phase 2 filter-context enforcement across import operations.
+- Compatibility boundary:
+  - No new menu key, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Focused attendance unit test matrix passed (`9/9`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 2 Filters)
 - Runtime delivery in this slice:
   - Added dependent filter behavior for Department, Course/Subject, and Class/Semester in Enter Attendance.

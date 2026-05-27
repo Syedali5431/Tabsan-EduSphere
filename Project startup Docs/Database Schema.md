@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 3 Import UX (Schema Posture)
+
+- Implementation Summary:
+	- Completed strict-mode and row-level feedback behavior in the web controller and attendance UI.
+	- Added focused unit-test coverage for non-strict partial-success import behavior.
+	- No table, column, index, FK, constraint, or migration change was required.
+- Validation Summary:
+	- Attendance unit matrix and sidebar integration validations passed.
+	- Schema posture remains unchanged; no script mutation is required.
+
 ## 2026-05-28 Update - Enter Attendance Phase 2 Filter Enforcement (Schema Posture)
 
 - Implementation Summary:

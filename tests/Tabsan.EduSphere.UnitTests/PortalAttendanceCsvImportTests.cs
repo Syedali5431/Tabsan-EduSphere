@@ -228,7 +228,8 @@ public class PortalAttendanceCsvImportTests
 
         result.Should().BeOfType<RedirectToActionResult>();
         proxy.BulkCalls.Should().BeEmpty();
-        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("strict mode");
+        sut.TempData["PortalMessageDetails"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
     }
 
     [Fact]
@@ -297,7 +298,47 @@ public class PortalAttendanceCsvImportTests
 
         result.Should().BeOfType<RedirectToActionResult>();
         proxy.BulkCalls.Should().BeEmpty();
-        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("duplicate");
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("strict mode");
+        sut.TempData["PortalMessageDetails"]?.ToString().Should().ContainEquivalentOf("duplicate");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_NonStrictMode_ImportsValidRowsAndReturnsWarnings()
+    {
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{inRoster},Student One,2026-05-28,true",
+            $"{unknownStudent},Unknown Student,2026-05-28,true"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None,
+            strictMode: false);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().HaveCount(1);
+        proxy.BulkCalls[0].Entries.Should().ContainSingle(x => x.StudentProfileId == inRoster && x.Status == "Present");
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("completed with warnings");
+        sut.TempData["PortalMessageDetails"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
     }
 
     private static SessionIdentity CreateFacultyIdentity() => new()

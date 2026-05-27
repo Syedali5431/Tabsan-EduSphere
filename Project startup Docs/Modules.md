@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-28 (Enter Attendance Phase 3 Import UX)
+
+### Module impact summary
+- No new module was introduced.
+- Existing attendance module now supports strict-mode and row-level feedback in CSV import workflows.
+- Enter Attendance role boundaries and sidebar-governed access remain unchanged.
+
+### Validation summary
+- Focused attendance unit test matrix passed (`9/9`).
+- Targeted sidebar integration suite passed (`17/17`).
+
 ## Execution Update - 2026-05-28 (Enter Attendance Phase 2 Filters)
 
 ### Module impact summary
