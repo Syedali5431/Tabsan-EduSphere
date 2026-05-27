@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 8 Integration Compliance)
+
+- No menu topology change in this slice.
+- Sidebar and role governance behavior for Enter Attendance remained aligned with existing governed menu patterns.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 7 Validation Hardening)
 
 - No menu topology change in this slice.
