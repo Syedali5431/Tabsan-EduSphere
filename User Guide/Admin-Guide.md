@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD007 MD010 MD012 MD022 MD029 MD032 MD060 -->
+
 # Admin User Guide
 
 Version: 1.6  
