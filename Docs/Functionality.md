@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Attendance Phase 0 Governance and Navigation Requirements
+
+### Implementation sync
+- Added Phase 0 documentation for a new **Enter Attendance** menu under **Faculty Related**.
+- Restricted planned menu access to **SuperAdmin**, **Admin**, and **Faculty** only.
+- Required the menu to be governed through **Sidebar Settings** so visibility, active state, and role mapping follow the existing sidebar administration flow.
+- Kept this checkpoint documentation-only; manual entry, CSV import, validation, and persistence phases remain subsequent implementation stages.
+
+### Validation sync
+- Documentation alignment completed across menu, PRD, module, schema, and plan references.
+- No current runtime functionality changed in Phase 0.
+
 # Tabsan EduSphere - Functionality List
 
 **Project**: Tabsan EduSphere - Comprehensive Educational Management System  

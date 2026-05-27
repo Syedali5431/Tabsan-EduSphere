@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 0 Schema Planning Note
+
+- Implementation Summary:
+	- Recorded Phase 0 schema planning intent for the new **Enter Attendance** workflow.
+	- Phase 0 does not introduce any table, column, index, foreign-key, constraint, or migration change.
+	- Future attendance persistence planning remains constrained to additive attendance-related structures with duplicate prevention on `StudentId + SubjectId + AttendanceDate` and supporting indexes.
+- Validation Summary:
+	- Verified this checkpoint is documentation-only and does not mutate the current schema posture.
+	- Verified schema planning remains aligned with the requirement to update `Scripts` only when implementation phases introduce actual database changes.
+
 ## 2026-05-21 Update - Plan J Deep Validation Execution (Schema Posture)
 
 - Implementation Summary:

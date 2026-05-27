@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 0)
+- Phase 0 requirement added:
+  - Introduce `enter_attendance` as a new menu under **Faculty Related**.
+  - Restrict access to **SuperAdmin**, **Admin**, and **Faculty** only.
+  - Require the menu to be configurable through **Sidebar Settings** for role visibility and active-status governance.
+- Delivery boundary:
+  - Phase 0 is documentation and governance alignment only.
+  - Manual attendance entry, CSV import, template download, validation rules, and database/script changes remain later implementation phases.
+- Validation Summary:
+  - PRD alignment completed with the phase-based attendance requirement document and supporting governance docs.
+  - No product runtime behavior changed in this Phase 0 checkpoint.
+
 ### 2026-05-27 - Product Requirements Synchronization (Startup Configuration Reliability)
 - Configuration requirement clarified: environment-profile loading must support layered and absolute-path profile sources to avoid false startup-profile warnings.
 - Development runtime requirement clarified: profile-resolved development DB configuration must remain local-startup compatible.

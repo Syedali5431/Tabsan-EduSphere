@@ -1,3 +1,15 @@
+<!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
+
+## 2026-05-28 Update - Enter Attendance Phase 0 Function Inventory Note
+
+### Implementation Summary
+- Phase 0 for **Enter Attendance** is documentation-only and introduces no new runtime functions, controllers, services, repositories, or portal actions yet.
+- The governed menu key planned for later implementation is `enter_attendance` with default access restricted to **SuperAdmin**, **Admin**, and **Faculty**.
+
+### Validation Summary
+- Function inventory intentionally remains unchanged for Phase 0 to avoid duplicating planned behavior as implemented runtime surface.
+- Runtime function entries will be added in later phases when API, web, application, or infrastructure code is introduced.
+
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
 | ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy | Loads layered configuration including parent/root `environments.json`, optional external profile file, and environment-variable overlays in deterministic order. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |

@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note
+
+- Added planned menu governance coverage for `enter_attendance` under **Faculty Related**.
+- Default role access for the new menu is restricted to **SuperAdmin**, **Admin**, and **Faculty**.
+- The menu must be governed through **Sidebar Settings** like other managed sidebar entries.
+
 ## 2026-05-26 Synchronization Summary
 
 - Menu catalog is synchronized with current institution-aware workflows, including certificate and result-calculation governance surfaces.
@@ -49,6 +55,7 @@ This document lists dashboard menus and explains what each menu does for end use
 | generate_certificates | Generate Certificates | Admin, Faculty, Student | University: generate degree/transcript for scoped students; School/College: manage additional student certificates upload/view/download. |
 | assignments | Assignments | Faculty, Student | Faculty creates/grades assignments; students view and submit assignments. |
 | attendance | Attendance | Faculty, Student | Faculty records attendance; students view attendance and warnings. |
+| enter_attendance | Enter Attendance | SuperAdmin, Admin, Faculty | Governed Faculty Related menu for manual attendance entry and CSV import workflows with Sidebar Settings role/status control. |
 | results | Results | Admin, Faculty, Student | Enter/publish/view results and access transcript-related outputs. |
 | quizzes | Quizzes | Faculty, Student | Faculty authors/publishes quizzes; students attempt and review outcomes. |
 | fyp | FYP | Faculty, Student | Manage final year project workflows, meetings, and supervision updates. |

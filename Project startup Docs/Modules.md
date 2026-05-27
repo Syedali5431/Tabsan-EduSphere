@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-28 (Enter Attendance Phase 0 Governance Start)
+
+### Module impact summary
+- No new paid module is introduced in Phase 0.
+- A new governed menu key `enter_attendance` is planned under the existing Faculty Related navigation surface.
+- Default access is restricted to **SuperAdmin**, **Admin**, and **Faculty** only.
+- **Sidebar Settings** must govern this menu's visibility and active status before implementation phases expand the runtime surface.
+
+### Validation summary
+- Module catalog documentation is synchronized for the Phase 0 navigation and governance checkpoint.
+- No runtime module contract, entitlement matrix, or implementation surface changed in this step.
+
 ## Execution Update - 2026-05-26 (Synchronized Module Behavior and Validation)
 
 ### Validation status snapshot

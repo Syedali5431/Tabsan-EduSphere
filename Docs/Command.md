@@ -1,3 +1,15 @@
+<!-- markdownlint-disable MD022 MD032 MD041 -->
+
+### Enter Attendance Phase 0 Documentation Alignment (2026-05-28)
+- Implementation Summary:
+  - Started Phase 0 for the new **Enter Attendance** capability as a documentation and governance checkpoint only.
+  - Added a phase-based requirements document for the new `enter_attendance` menu under **Faculty Related**.
+  - Locked default access to **SuperAdmin**, **Admin**, and **Faculty**, and required the menu to be managed through **Sidebar Settings**.
+  - Synchronized the requested planning, menu, schema, and PRD documents so Phase 0 expectations are consistent before implementation begins.
+- Validation Summary:
+  - Documentation cross-check completed for requirements, menu catalog, sidebar purpose matrix, planning docs, and schema notes.
+  - Phase 0 remains documentation-only; no code, database script, or schema change was introduced in this checkpoint.
+
 ### Degree/Transcript Generation and Two-Factor Naming Alignment (2026-05-25)
 - Implementation Summary:
   - Replaced plan-labeled runtime naming with functionality-based naming in controllers and service comments/logging.

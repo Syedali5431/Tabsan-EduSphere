@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 0 Plan Start
+
+- Implementation Summary:
+  - Started Phase 0 for **Enter Attendance** as a governed documentation checkpoint.
+  - Planned the new menu under **Faculty Related** with default access limited to **SuperAdmin**, **Admin**, and **Faculty**.
+  - Added the requirement that the menu must be surfaced and managed through **Sidebar Settings** before later web/API/database phases proceed.
+- Validation Summary:
+  - Plan synchronization completed across requirements, menu, PRD, module, and schema documents.
+  - Phase 0 remains documentation-only; application-layer implementation begins in later phases.
+
 ## 2026-05-26 Synchronization - Current Functionality and Validation Snapshot
 
 ### Current build and validation state
