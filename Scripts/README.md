@@ -7,7 +7,6 @@ This folder is intentionally kept DB-focused and now contains only database setu
 | Order | File | Purpose |
 | --- | --- | --- |
 | 00 | 00-Cleanup-Master-Mistake.sql | One-time cleanup if legacy app tables were accidentally created in master. |
-| 01C | 01-Schema.sql | Canonical compatibility alias that delegates to 01-Schema-Current.sql. |
 | 01 | 01-Schema-Current.sql | Creates/updates current database schema. |
 | 02C | 02-CoreSeed.sql | Canonical compatibility alias that delegates to 02-Seed-Core.sql. |
 | 02 | 02-Seed-Core.sql | Seeds core roles, modules, departments, baseline users, and access matrices. |
@@ -35,10 +34,10 @@ sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexe
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks.sql"
 ```
 
-Canonical alias path (equivalent):
+Canonical alias path (equivalent for the core seed step):
 
 ```powershell
-sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema.sql"
+sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema-Current.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\02-CoreSeed.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\03-FullDummyData.sql"
 sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"

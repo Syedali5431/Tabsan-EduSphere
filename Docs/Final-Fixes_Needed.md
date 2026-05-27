@@ -139,10 +139,10 @@ Follow-up execution focused on remaining high-priority startup checks.
   - Estimate: 2-3 hours (2 story points)
 
 - [Script Governance] Deployment script naming mismatch versus requested canonical names.
-  - Evidence: repository uses Scripts/01-Schema-Current.sql and Scripts/02-Seed-Core.sql, not 01-Schema.sql and 02-CoreSeed.sql.
+  - Evidence: repository uses Scripts/01-Schema-Current.sql and Scripts/02-Seed-Core.sql, with only 02-CoreSeed.sql retained as a compatibility alias.
   - Severity: High
-  - Suggested Fix: provide alias scripts/symlink-equivalent wrappers or update deployment runbooks to accepted canonical filenames.
-  - Actionable Task: add script-name compatibility policy to README-SCRIPT-EXECUTION-ORDER.md and release checklist.
+  - Suggested Fix: keep the canonical schema script as the required deployment entry point and update runbooks to the accepted filenames.
+  - Actionable Task: keep the script-name compatibility policy aligned with the maintained schema path and the retained core-seed alias.
   - Estimate: 2 hours (1 story point)
 
 ## Phase 3 - Medium
