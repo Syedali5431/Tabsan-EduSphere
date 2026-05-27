@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 2 Filter Enforcement (Schema Posture)
+
+- Implementation Summary:
+	- Completed Phase 2 dependent filter and write-scope validation behavior in web layer.
+	- Added focused unit tests for filter-context enforcement.
+	- No table, column, index, FK, constraint, or migration change was required.
+- Validation Summary:
+	- Attendance unit matrix and sidebar integration validations passed.
+	- Schema posture remains unchanged; no script mutation is required.
+
 ## 2026-05-28 Update - Enter Attendance Roster Scope Hardening (Schema Posture)
 
 - Implementation Summary:

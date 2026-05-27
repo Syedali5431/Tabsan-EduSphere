@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 2 Completion - Dependent Filters and Scope Enforcement (2026-05-28)
+- Implementation Summary:
+  - Added Department, Course/Subject, and Class/Semester dependent filtering to the Enter Attendance UI flow.
+  - Enforced filter-context validation in attendance write actions so selected offering must match selected Department, Course, and Class/Semester under effective tenant/campus scope.
+  - Preserved filter context on template download, CSV import, manual mark, and correction redirects/posts.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`8/8`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 1 Completion - Roster Scope Hardening and Test Matrix (2026-05-28)
 - Implementation Summary:
   - Hardened `BulkMarkAttendance` and `CorrectAttendance` in portal flow to enforce offering-roster membership under effective tenant/campus scope.

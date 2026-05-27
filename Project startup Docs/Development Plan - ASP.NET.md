@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 2 Dependent Filters
+
+- Implementation Summary:
+  - Added dependent attendance filters (Department, Course/Subject, Class/Semester) in portal attendance view and model.
+  - Added write-scope validation to attendance write endpoints so selected offering must match selected filter context.
+  - Preserved existing API contracts and schema posture.
+- Validation Summary:
+  - Focused attendance unit matrix passed (`8/8`).
+  - Web project build passed.
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Hard Scope Enforcement
 
 - Implementation Summary:

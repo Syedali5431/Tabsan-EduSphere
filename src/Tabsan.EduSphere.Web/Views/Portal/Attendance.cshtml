@@ -43,6 +43,36 @@ else
                             </select>
                         </div>
                     }
+                    <div class="col-md-3">
+                        <label class="form-label">Department</label>
+                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Departments</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Course/Subject</label>
+                        <select name="courseId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Courses</option>
+                            @foreach (var c in Model.Courses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Class/Semester</label>
+                        <select name="semesterName" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Classes/Semesters</option>
+                            @foreach (var s in Model.SemesterOptions)
+                            {
+                                <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>
+                            }
+                        </select>
+                    </div>
                     <div class="col-md-5">
                         <label class="form-label">Select Course Offering</label>
                         <select name="offeringId" class="form-select" onchange="this.form.submit()">
@@ -215,6 +245,9 @@ else
                            asp-route-offeringId="@Model.SelectedOfferingId"
                            asp-route-tenantId="@Model.SelectedTenantId"
                            asp-route-campusId="@Model.SelectedCampusId"
+                           asp-route-departmentId="@Model.SelectedDepartmentId"
+                           asp-route-courseId="@Model.SelectedCourseId"
+                           asp-route-semesterName="@Model.SelectedSemesterName"
                            asp-route-entryPoint="@attendanceAction">
                             Download Template
                         </a>
@@ -224,6 +257,9 @@ else
                             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                            <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                             <input type="hidden" name="entryPoint" value="@attendanceAction" />
                             <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required />
                             <button type="submit" class="btn btn-outline-primary btn-sm">Import CSV</button>
@@ -236,6 +272,9 @@ else
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                    <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="mb-3">
                         <label class="form-label">Date <span class="text-danger">*</span></label>
@@ -283,6 +322,9 @@ else
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                    <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="modal-content">
                         <div class="modal-header">

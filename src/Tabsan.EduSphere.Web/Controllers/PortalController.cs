@@ -2678,17 +2678,20 @@ public class PortalController : Controller
     // ── Attendance ─────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, nameof(Attendance), "Attendance", ct);
+    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, nameof(Attendance), "Attendance", ct);
 
     [HttpGet]
-    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, nameof(EnterAttendance), "Enter Attendance", ct);
+    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, nameof(EnterAttendance), "Enter Attendance", ct);
 
     private async Task<IActionResult> RenderAttendanceAsync(
         Guid? offeringId,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        string? semesterName,
         string attendanceAction,
         string title,
         CancellationToken ct)
@@ -2701,6 +2704,9 @@ public class PortalController : Controller
             SelectedOfferingId = offeringId,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId,
+            SelectedSemesterName = semesterName,
             Message          = TempData["PortalMessage"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
@@ -2725,37 +2731,115 @@ public class PortalController : Controller
                     .OrderBy(s => s.AttendancePercentage)
                     .ToList();
             }
-            else if (offeringId.HasValue)
+            else
             {
-                model.Records = await _api.GetAttendanceByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
-                model.Roster  = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+                var departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+                model.Departments = departments
+                    .OrderBy(d => d.Name)
+                    .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                    .ToList();
 
-                model.Summary = model.Records
-                    .GroupBy(r => new { r.StudentProfileId, r.StudentName, r.RegistrationNumber })
-                    .Select(g =>
+                if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
+                    model.SelectedDepartmentId = null;
+
+                var allOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, effectiveTenantId, effectiveCampusId, null, ct);
+
+                model.Courses = allOfferings
+                    .GroupBy(o => o.CourseId)
+                    .Select(g => g.First())
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .Select(o => new LookupItem
                     {
-                        var total = g.Count();
-                        var present = g.Count(x => string.Equals(x.Status, "Present", StringComparison.OrdinalIgnoreCase)
-                            || string.Equals(x.Status, "Late", StringComparison.OrdinalIgnoreCase));
-                        var pct = total > 0 ? Math.Round((double)present / total * 100, 2) : 0.0;
-                        return new AttendanceSummaryItem
-                        {
-                            StudentId = g.Key.StudentProfileId,
-                            StudentName = g.Key.StudentName,
-                            RegistrationNumber = g.Key.RegistrationNumber,
-                            CourseName = model.CourseOfferings.FirstOrDefault(o => o.Id == offeringId.Value)?.Name ?? string.Empty,
-                            TotalClasses = total,
-                            PresentCount = present,
-                            AttendancePercentage = pct
-                        };
+                        Id = o.CourseId,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode) ? o.CourseTitle : $"{o.CourseCode} - {o.CourseTitle}"
                     })
-                    .OrderBy(s => s.StudentName)
                     .ToList();
 
-                model.LowAttendance = model.Summary
-                    .Where(s => s.AttendancePercentage < 75)
-                    .OrderBy(s => s.AttendancePercentage)
+                if (model.SelectedCourseId.HasValue && !model.Courses.Any(c => c.Id == model.SelectedCourseId.Value))
+                    model.SelectedCourseId = null;
+
+                var courseFilteredOfferings = model.SelectedCourseId.HasValue
+                    ? allOfferings.Where(o => o.CourseId == model.SelectedCourseId.Value).ToList()
+                    : allOfferings;
+
+                model.SemesterOptions = courseFilteredOfferings
+                    .Select(o => o.SemesterName)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(s => s)
+                    .Select(s => new LookupItem { Id = Guid.Empty, Name = s! })
                     .ToList();
+
+                if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    && !model.SemesterOptions.Any(s => string.Equals(s.Name, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    model.SelectedSemesterName = null;
+                }
+
+                var semesterFilteredOfferings = !string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    ? courseFilteredOfferings.Where(o => string.Equals(o.SemesterName, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)).ToList()
+                    : courseFilteredOfferings;
+
+                model.CourseOfferings = semesterFilteredOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .ThenBy(o => o.SemesterName)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? $"{o.CourseTitle} ({o.SemesterName})"
+                            : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                    })
+                    .ToList();
+
+                if (model.SelectedOfferingId.HasValue && !model.CourseOfferings.Any(o => o.Id == model.SelectedOfferingId.Value))
+                {
+                    model.SelectedOfferingId = null;
+                    model.Message = string.IsNullOrWhiteSpace(model.Message)
+                        ? "Selected offering is not valid for the current filter context."
+                        : model.Message;
+                }
+
+                if (model.SelectedOfferingId.HasValue)
+                {
+                    model.Records = await _api.GetAttendanceByOfferingAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
+                    model.Roster = await _api.GetEnrollmentRosterAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
+
+                    var selectedOffering = semesterFilteredOfferings.FirstOrDefault(o => o.Id == model.SelectedOfferingId.Value);
+
+                    model.Summary = model.Records
+                        .GroupBy(r => new { r.StudentProfileId, r.StudentName, r.RegistrationNumber })
+                        .Select(g =>
+                        {
+                            var total = g.Count();
+                            var present = g.Count(x => string.Equals(x.Status, "Present", StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(x.Status, "Late", StringComparison.OrdinalIgnoreCase));
+                            var pct = total > 0 ? Math.Round((double)present / total * 100, 2) : 0.0;
+                            return new AttendanceSummaryItem
+                            {
+                                StudentId = g.Key.StudentProfileId,
+                                StudentName = g.Key.StudentName,
+                                RegistrationNumber = g.Key.RegistrationNumber,
+                                CourseName = selectedOffering is null
+                                    ? string.Empty
+                                    : string.IsNullOrWhiteSpace(selectedOffering.CourseCode)
+                                        ? selectedOffering.CourseTitle
+                                        : $"{selectedOffering.CourseCode} - {selectedOffering.CourseTitle}",
+                                TotalClasses = total,
+                                PresentCount = present,
+                                AttendancePercentage = pct
+                            };
+                        })
+                        .OrderBy(s => s.StudentName)
+                        .ToList();
+
+                    model.LowAttendance = model.Summary
+                        .Where(s => s.AttendancePercentage < 75)
+                        .OrderBy(s => s.AttendancePercentage)
+                        .ToList();
+                }
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
@@ -3148,12 +3232,12 @@ public class PortalController : Controller
     // ── Attendance write actions ────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> DownloadAttendanceCsvTemplate(Guid? offeringId, Guid? tenantId, Guid? campusId, string? entryPoint, CancellationToken ct)
+    public async Task<IActionResult> DownloadAttendanceCsvTemplate(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint, CancellationToken ct)
     {
         if (!_api.IsConnected())
         {
             TempData["PortalMessage"] = "Connect to the API before downloading the attendance template.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var identity = _api.GetSessionIdentity();
@@ -3166,6 +3250,13 @@ public class PortalController : Controller
         var rows = new List<(Guid StudentId, string StudentName)>();
         if (offeringId.HasValue)
         {
+            var scopeValidation = await ValidateAttendanceWriteScopeAsync(offeringId.Value, departmentId, courseId, semesterName, effectiveTenantId, effectiveCampusId, identity, ct);
+            if (!scopeValidation.Allowed)
+            {
+                TempData["PortalMessage"] = scopeValidation.Message;
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            }
+
             try
             {
                 var roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
@@ -3198,6 +3289,9 @@ public class PortalController : Controller
         Guid? offeringId,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        string? semesterName,
         string? entryPoint,
         IFormFile? csvFile,
         CancellationToken ct)
@@ -3205,7 +3299,7 @@ public class PortalController : Controller
         if (!_api.IsConnected())
         {
             TempData["PortalMessage"] = "Connect to the API before importing attendance CSV.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var identity = _api.GetSessionIdentity();
@@ -3215,23 +3309,30 @@ public class PortalController : Controller
         if (!offeringId.HasValue)
         {
             TempData["PortalMessage"] = "Select a course offering before importing attendance CSV.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (csvFile is null || csvFile.Length == 0)
         {
             TempData["PortalMessage"] = "Please choose a non-empty CSV file.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (!csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
         {
             TempData["PortalMessage"] = "Invalid file type. Only .csv files are accepted.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var effectiveTenantId = identity.IsSuperAdmin ? tenantId : identity.TenantId;
         var effectiveCampusId = identity.IsSuperAdmin ? campusId : identity.CampusId;
+
+        var scopeValidation = await ValidateAttendanceWriteScopeAsync(offeringId.Value, departmentId, courseId, semesterName, effectiveTenantId, effectiveCampusId, identity, ct);
+        if (!scopeValidation.Allowed)
+        {
+            TempData["PortalMessage"] = scopeValidation.Message;
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        }
 
         List<EnrollmentRosterItem> roster;
         try
@@ -3241,14 +3342,14 @@ public class PortalController : Controller
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to load roster for selected offering: {ex.Message}";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var rosterIds = roster.Select(r => r.Id).ToHashSet();
         if (rosterIds.Count == 0)
         {
             TempData["PortalMessage"] = "No students found in the selected offering roster.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var validationErrors = new List<string>();
@@ -3264,7 +3365,7 @@ public class PortalController : Controller
             if (string.IsNullOrWhiteSpace(headerLine))
             {
                 TempData["PortalMessage"] = "CSV is empty or missing the header row.";
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
             }
 
             var header = ParseCsvLine(headerLine);
@@ -3272,7 +3373,7 @@ public class PortalController : Controller
             if (header.Length != expectedHeader.Length || !header.Select(h => h.Trim()).SequenceEqual(expectedHeader, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["PortalMessage"] = "CSV header does not match the template. Expected: StudentId,StudentName,Date,Present.";
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
             }
 
             var rowNumber = 1;
@@ -3339,19 +3440,19 @@ public class PortalController : Controller
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to read CSV file: {ex.Message}";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (validationErrors.Count > 0)
         {
             TempData["PortalMessage"] = "CSV validation failed: " + string.Join(" ", validationErrors.Take(5)) + (validationErrors.Count > 5 ? " ..." : string.Empty);
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (parsedRows.Count == 0)
         {
             TempData["PortalMessage"] = "CSV file has no valid attendance rows to import.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         try
@@ -3369,14 +3470,14 @@ public class PortalController : Controller
             TempData["PortalMessage"] = $"Attendance CSV import failed: {ex.Message}";
         }
 
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkMarkAttendance(
         Guid offeringId, DateTime date,
         [FromForm] Guid[] studentIds, [FromForm] string[] statuses,
-        Guid? tenantId, Guid? campusId, string? entryPoint,
+        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint,
         CancellationToken ct)
     {
         if (_api.IsConnected() && studentIds.Length > 0)
@@ -3387,10 +3488,17 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
+                var scopeValidation = await ValidateAttendanceWriteScopeAsync(offeringId, departmentId, courseId, semesterName, effectiveTenantId, effectiveCampusId, sessionId, ct);
+                if (!scopeValidation.Allowed)
+                {
+                    TempData["PortalMessage"] = scopeValidation.Message;
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                }
+
                 if (studentIds.Length != statuses.Length)
                 {
                     TempData["PortalMessage"] = "Invalid attendance submission: student and status counts do not match.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
@@ -3409,7 +3517,7 @@ public class PortalController : Controller
                     if (!TryNormalizeAttendanceStatus(statuses[i], out var normalizedStatus))
                     {
                         TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
-                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                     }
 
                     entries.Add((studentId, normalizedStatus));
@@ -3418,13 +3526,13 @@ public class PortalController : Controller
                 if (invalidStudentIds.Count > 0)
                 {
                     TempData["PortalMessage"] = "Attendance submission contains students outside the selected offering roster.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
                 if (entries.Count == 0)
                 {
                     TempData["PortalMessage"] = "No valid attendance entries were submitted.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
                 await _api.BulkMarkAttendanceAsync(offeringId, date, entries, effectiveTenantId, effectiveCampusId, ct);
@@ -3432,13 +3540,13 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectAttendance(
         Guid studentProfileId, Guid offeringId, DateTime date,
-        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, string? entryPoint, CancellationToken ct)
+        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -3448,17 +3556,24 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
+                var scopeValidation = await ValidateAttendanceWriteScopeAsync(offeringId, departmentId, courseId, semesterName, effectiveTenantId, effectiveCampusId, sessionId, ct);
+                if (!scopeValidation.Allowed)
+                {
+                    TempData["PortalMessage"] = scopeValidation.Message;
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                }
+
                 if (!TryNormalizeAttendanceStatus(newStatus, out var normalizedStatus))
                 {
                     TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
                 if (!rosterIds.Contains(studentProfileId))
                 {
                     TempData["PortalMessage"] = "Attendance correction denied: selected student is not in the offering roster.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
                 }
 
                 await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, normalizedStatus, remarks, effectiveTenantId, effectiveCampusId, ct);
@@ -3466,7 +3581,7 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
     }
 
     private static string ResolveAttendanceEntryAction(string? entryPoint)
@@ -3478,6 +3593,39 @@ public class PortalController : Controller
     {
         var roster = await _api.GetEnrollmentRosterAsync(offeringId, tenantId, campusId, ct);
         return roster.Select(r => r.Id).ToHashSet();
+    }
+
+    private async Task<(bool Allowed, string Message)> ValidateAttendanceWriteScopeAsync(
+        Guid offeringId,
+        Guid? departmentId,
+        Guid? courseId,
+        string? semesterName,
+        Guid? effectiveTenantId,
+        Guid? effectiveCampusId,
+        SessionIdentity? identity,
+        CancellationToken ct)
+    {
+        if (identity?.IsSuperAdmin == true && (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue))
+            return (false, "Select tenant and campus before performing attendance write operations.");
+
+        if (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue)
+            return (false, "Tenant and campus scope is required for attendance write operations.");
+
+        if (!departmentId.HasValue || !courseId.HasValue || string.IsNullOrWhiteSpace(semesterName))
+            return (false, "Select department, course, and semester/class before performing attendance write operations.");
+
+        var offerings = await _api.GetCourseOfferingsAsync(departmentId, effectiveTenantId, effectiveCampusId, null, ct);
+        var selectedOffering = offerings.FirstOrDefault(o => o.Id == offeringId);
+        if (selectedOffering is null)
+            return (false, "Selected offering is not valid for the current filter scope.");
+
+        if (selectedOffering.CourseId != courseId.Value)
+            return (false, "Selected offering does not match the selected course.");
+
+        if (!string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
+            return (false, "Selected offering does not match the selected semester/class.");
+
+        return (true, string.Empty);
     }
 
     private static string[] ParseCsvLine(string line)

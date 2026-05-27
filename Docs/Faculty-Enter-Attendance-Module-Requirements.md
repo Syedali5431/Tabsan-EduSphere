@@ -125,6 +125,18 @@ The screen must provide the following filters.
 - Downstream filters must refresh based on upstream selections, preserving current tenant-aware and campus-aware boundaries.
 - Student filtering must narrow the visible result set but must not bypass the required filter selection rules.
 
+### Phase 2 Implementation Summary
+
+- Added dependent attendance filters in the portal UI for Tenant, Campus, Department, Course/Subject, and Class/Semester.
+- Added server-side filter-context validation so attendance write actions require Department + Course + Class/Semester + Offering consistency under effective tenant/campus scope.
+- Preserved filter context across Enter Attendance actions (template download, CSV import, manual mark, correction) through hidden route/form values.
+
+### Phase 2 Validation Summary
+
+- Added and passed focused unit tests for CSV import plus filter-context enforcement (`8/8`).
+- Verified `Tabsan.EduSphere.Web` build passed after Phase 2 filter and controller changes.
+- Revalidated sidebar governance behavior in `SidebarMenuIntegrationTests` (`17/17`).
+
 ## Phase 3. Template Download
 
 This phase provides a system-generated CSV template for faculty and administrators.

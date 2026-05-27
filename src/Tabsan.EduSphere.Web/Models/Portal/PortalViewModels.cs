@@ -825,11 +825,17 @@ public class AttendancePageModel
     public List<AttendanceSummaryItem> LowAttendance   { get; set; } = new();
     public List<TenantItem> Tenants                    { get; set; } = new();
     public List<CampusItem> Campuses                   { get; set; } = new();
+    public List<LookupItem> Departments                { get; set; } = new();
+    public List<LookupItem> Courses                    { get; set; } = new();
+    public List<LookupItem> SemesterOptions            { get; set; } = new();
     public List<LookupItem>            CourseOfferings { get; set; } = new();
     public List<EnrollmentRosterItem>  Roster          { get; set; } = new();
     public Guid?  SelectedOfferingId { get; set; }
     public Guid?  SelectedTenantId   { get; set; }
     public Guid?  SelectedCampusId   { get; set; }
+    public Guid?  SelectedDepartmentId { get; set; }
+    public Guid?  SelectedCourseId     { get; set; }
+    public string? SelectedSemesterName { get; set; }
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────

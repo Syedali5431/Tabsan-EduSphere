@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 2 Filters)
+- Runtime delivery in this slice:
+  - Added dependent filter behavior for Department, Course/Subject, and Class/Semester in Enter Attendance.
+  - Enforced attendance write validation so selected offering must match selected filter context under effective tenant/campus scope.
+  - Preserved selected filter context across template download/import and manual write actions.
+- Compatibility boundary:
+  - No new menu key, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Focused attendance unit test matrix passed (`8/8`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Scope Hardening)
 - Runtime delivery in this slice:
   - Hardened manual attendance mark/correct writes to enforce selected-offering roster membership under effective tenant/campus scope.

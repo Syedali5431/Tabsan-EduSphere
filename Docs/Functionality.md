@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 2 Dependent Filter Enforcement
+
+### Implementation sync
+- Attendance page now exposes dependent filters for Department, Course/Subject, and Class/Semester in addition to tenant/campus/offering.
+- Attendance write endpoints now reject write attempts when selected offering does not match selected Department, Course, and Class/Semester under effective tenant/campus scope.
+- Filter context is carried across Enter Attendance post/get actions so users remain on the same scoped selection after operations.
+
+### Validation sync
+- Focused attendance unit matrix passed with new filter-context enforcement coverage (`8/8`).
+- Targeted sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Hard Scope Enforcement
 
 ### Implementation sync

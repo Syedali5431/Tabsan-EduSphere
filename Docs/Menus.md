@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 2 Filters)
+
+- No new menu key was introduced in this slice.
+- Enter Attendance runtime now uses dependent Department, Course/Subject, and Class/Semester filters before write actions.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Scope Hardening)
 
 - No new menu key was introduced in this slice.
