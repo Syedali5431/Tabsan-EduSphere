@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.1 Audit Trail)
+
+- No menu structure change in this slice.
+- Enter Attendance CSV import now writes upload-level audit trail metadata for operational traceability.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 3 Import UX)
 
 - No new menu key was introduced in this slice.

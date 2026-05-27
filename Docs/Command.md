@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 4.1 Completion - Upload Audit Trail (2026-05-28)
+- Implementation Summary:
+  - Added per-upload audit trail writing for Enter Attendance CSV import.
+  - Audit entry now records uploader, UTC time, strict mode, offering context, row totals/imported/skipped counts, and top error reasons.
+  - Added `PortalImportAudit` temp payload and structured logger emission for each import outcome.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter "FullyQualifiedName~PortalAttendanceCsvImportTests|FullyQualifiedName~PortalTwoFactorControllerTests" -v minimal` passed (`14/14`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 3 Completion - Strict Mode and Row-Level Feedback (2026-05-28)
 - Implementation Summary:
   - Added `strictMode` option in attendance CSV import flow to support strict fail-fast or partial-success behavior.

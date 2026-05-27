@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.1 Upload Audit Trail
+
+### Implementation sync
+- Enter Attendance CSV import now writes an upload-level audit trail entry for every outcome (blocked/failed/success/warnings).
+- Audit entry includes uploader identity, import timestamp, strict-mode state, offering scope, row totals, imported/skipped counts, and top error reasons.
+- Existing strict/non-strict import behavior and row-level feedback UX remain intact.
+
+### Validation sync
+- Focused controller unit suite passed (`14/14`).
+- Web build and targeted sidebar integration validations passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 3 Import Feedback and Strict Mode
 
 ### Implementation sync

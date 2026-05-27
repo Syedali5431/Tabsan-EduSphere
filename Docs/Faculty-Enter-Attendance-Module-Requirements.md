@@ -175,6 +175,30 @@ The module must provide a **Download Template** button.
 - Verified `Tabsan.EduSphere.Web` build succeeded after Phase 3 import-feedback enhancements.
 - Revalidated sidebar/menu governance behavior in `SidebarMenuIntegrationTests` (`17/17`).
 
+## Phase 4. Import Audit Trail (Stage 4.1)
+
+### Goal
+
+Ensure every attendance CSV import attempt creates an audit trail entry with actor, timestamp, strict mode, row counts, and top error reasons.
+
+### Scope Delivered
+
+- Added upload-level audit trail capture in `ImportAttendanceCsv` for blocked, failed, successful, and warning outcomes.
+- Captured audit fields: uploader identity (`UserName`/`Email` fallback), UTC timestamp, strict-mode flag, offering, total/imported/skipped rows, and top validation reasons.
+- Stored audit summary in portal temp state (`PortalImportAudit`) and emitted structured server logs.
+
+### Phase 4.1 Implementation Summary
+
+- Extended `PortalController` with logger-backed import audit writing across all return paths in the CSV import flow.
+- Kept existing strict/non-strict import behavior unchanged while adding audit metadata.
+- Updated controller unit-test construction sites for logger constructor dependency.
+
+### Phase 4.1 Validation Summary
+
+- Focused controller unit suite passed (`14/14`) covering attendance CSV and portal 2FA controller construction.
+- Web build succeeded after audit instrumentation.
+- Sidebar integration regression suite remained green (`17/17`).
+
 ## Phase 4. CSV Import
 
 This phase enables bulk attendance entry through template-based import.

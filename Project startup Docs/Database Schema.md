@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.1 Upload Audit Trail (Schema Posture)
+
+- Implementation Summary:
+	- Added controller-level upload audit metadata emission for attendance CSV imports.
+	- Captured actor/time/mode/row counts/top error reasons per upload attempt.
+	- No schema mutation, migration, or SQL script change required.
+- Validation Summary:
+	- Focused controller unit suite, web build, and sidebar integration slice passed.
+	- Schema posture remains unchanged.
+
 ## 2026-05-28 Update - Enter Attendance Phase 3 Import UX (Schema Posture)
 
 - Implementation Summary:

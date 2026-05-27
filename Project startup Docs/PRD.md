@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.1 Upload Audit Trail)
+- Runtime delivery in this slice:
+  - Added per-upload attendance CSV audit trail details.
+  - Captures uploader, timestamp, strict mode, row totals/imported/skipped, and top error reasons.
+  - Preserved strict/non-strict behavior and existing menu/access constraints.
+- Compatibility boundary:
+  - No schema, migration, or menu-key changes.
+- Validation Summary:
+  - Focused controller unit suite passed (`14/14`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 3 Import UX)
 - Runtime delivery in this slice:
   - Added strict-mode CSV import option for fail-fast versus partial-success import behavior.

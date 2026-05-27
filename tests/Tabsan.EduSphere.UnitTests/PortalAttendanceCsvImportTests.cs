@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.FileProviders;
 using Tabsan.EduSphere.Web.Controllers;
 using Tabsan.EduSphere.Web.Models.Portal;
@@ -341,6 +342,79 @@ public class PortalAttendanceCsvImportTests
         sut.TempData["PortalMessageDetails"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
     }
 
+    [Fact]
+    public async Task ImportAttendanceCsv_StrictModeValidationFailure_WritesAuditTrail()
+    {
+        var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, _) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{unknownStudent},Unknown Student,2026-05-28,true"
+        ]);
+
+        await sut.ImportAttendanceCsv(
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None,
+            strictMode: true);
+
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("strictMode=true");
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("importedRows=0");
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("skippedRows=1");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_NonStrictModeSuccessWithWarnings_WritesAuditTrail()
+    {
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{inRoster},Student One,2026-05-28,true",
+            $"{unknownStudent},Unknown Student,2026-05-28,true"
+        ]);
+
+        await sut.ImportAttendanceCsv(
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None,
+            strictMode: false);
+
+        proxy.BulkCalls.Should().HaveCount(1);
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("strictMode=false");
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("importedRows=1");
+        sut.TempData["PortalImportAudit"]?.ToString().Should().ContainEquivalentOf("skippedRows=1");
+    }
+
     private static SessionIdentity CreateFacultyIdentity() => new()
     {
         Roles = ["Faculty"],
@@ -362,7 +436,7 @@ public class PortalAttendanceCsvImportTests
 
     private static PortalController CreateSut(IEduApiClient api)
     {
-        var controller = new PortalController(api, new AttendanceTestWebHostEnvironment());
+        var controller = new PortalController(api, new AttendanceTestWebHostEnvironment(), NullLogger<PortalController>.Instance);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Text;
 using Tabsan.EduSphere.Web.Models.Portal;
@@ -11,6 +12,7 @@ public class PortalController : Controller
 {
     private readonly IEduApiClient _api;
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<PortalController> _logger;
 
     private static readonly Dictionary<string, string> ActionMenuKeyMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -101,10 +103,11 @@ public class PortalController : Controller
         "study_plan"
     };
 
-    public PortalController(IEduApiClient api, IWebHostEnvironment environment)
+    public PortalController(IEduApiClient api, IWebHostEnvironment environment, ILogger<PortalController> logger)
     {
         _api = api;
         _environment = environment;
+        _logger = logger;
     }
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -3304,31 +3307,51 @@ public class PortalController : Controller
         CancellationToken ct,
         bool strictMode = true)
     {
+        var importAuditErrorDetails = new List<string>();
+        var totalRows = 0;
+        var importedRows = 0;
+
+        void WriteAttendanceImportAudit(string outcome, SessionIdentity? actor, IReadOnlyCollection<string>? errorDetails = null)
+        {
+            var details = errorDetails?.Where(e => !string.IsNullOrWhiteSpace(e)).Take(5).ToList() ?? new List<string>();
+            var auditLine = $"outcome={outcome}; uploadedBy={actor?.UserName ?? actor?.Email ?? "unknown"}; uploadedAtUtc={DateTime.UtcNow:O}; strictMode={strictMode}; offeringId={offeringId?.ToString() ?? "none"}; totalRows={totalRows}; importedRows={importedRows}; skippedRows={Math.Max(totalRows - importedRows, 0)}; errors={string.Join(" | ", details)}";
+
+            TempData["PortalImportAudit"] = auditLine;
+            _logger.LogInformation("Attendance CSV import audit {AuditLine}", auditLine);
+        }
+
         if (!_api.IsConnected())
         {
             TempData["PortalMessage"] = "Connect to the API before importing attendance CSV.";
+            WriteAttendanceImportAudit("blocked-not-connected", actor: null);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         var identity = _api.GetSessionIdentity();
         if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+        {
+            WriteAttendanceImportAudit("blocked-forbidden", identity);
             return Forbid();
+        }
 
         if (!offeringId.HasValue)
         {
             TempData["PortalMessage"] = "Select a course offering before importing attendance CSV.";
+            WriteAttendanceImportAudit("blocked-missing-offering", identity);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (csvFile is null || csvFile.Length == 0)
         {
             TempData["PortalMessage"] = "Please choose a non-empty CSV file.";
+            WriteAttendanceImportAudit("blocked-empty-file", identity);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
         if (!csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
         {
             TempData["PortalMessage"] = "Invalid file type. Only .csv files are accepted.";
+            WriteAttendanceImportAudit("blocked-invalid-file-type", identity);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3339,6 +3362,7 @@ public class PortalController : Controller
         if (!scopeValidation.Allowed)
         {
             TempData["PortalMessage"] = scopeValidation.Message;
+            WriteAttendanceImportAudit("blocked-scope-validation", identity, new List<string> { scopeValidation.Message });
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3350,6 +3374,7 @@ public class PortalController : Controller
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to load roster for selected offering: {ex.Message}";
+            WriteAttendanceImportAudit("failed-roster-load", identity, new List<string> { ex.Message });
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3357,6 +3382,7 @@ public class PortalController : Controller
         if (rosterIds.Count == 0)
         {
             TempData["PortalMessage"] = "No students found in the selected offering roster.";
+            WriteAttendanceImportAudit("blocked-empty-roster", identity);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3393,13 +3419,17 @@ public class PortalController : Controller
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
+                totalRows++;
+
                 var cols = ParseCsvLine(line);
+                WriteAttendanceImportAudit("blocked-empty-header", identity);
                 if (cols.Length != 4)
                 {
                     validationErrors.Add($"Row {rowNumber}: expected 4 columns.");
                     continue;
                 }
 
+                    WriteAttendanceImportAudit("blocked-invalid-header", identity, new List<string> { "CSV header does not match expected template." });
                 var studentIdRaw = cols[0].Trim();
                 var studentNameRaw = cols[1].Trim();
                 var dateRaw = cols[2].Trim();
@@ -3448,8 +3478,11 @@ public class PortalController : Controller
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to read CSV file: {ex.Message}";
+            WriteAttendanceImportAudit("failed-file-read", identity, new List<string> { ex.Message });
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
+
+        importAuditErrorDetails = validationErrors.Take(5).ToList();
 
         if (validationErrors.Count > 0)
         {
@@ -3457,6 +3490,7 @@ public class PortalController : Controller
             {
                 TempData["PortalMessage"] = $"CSV validation failed in strict mode. Invalid rows: {validationErrors.Count}.";
                 TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+                WriteAttendanceImportAudit("failed-strict-validation", identity, importAuditErrorDetails);
                 return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
             }
         }
@@ -3466,6 +3500,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "CSV file has no valid attendance rows to import.";
             if (validationErrors.Count > 0)
                 TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+            WriteAttendanceImportAudit("failed-no-valid-rows", identity, importAuditErrorDetails);
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
@@ -3475,6 +3510,7 @@ public class PortalController : Controller
             {
                 var entries = byDate.Select(r => (r.StudentId, r.Status));
                 await _api.BulkMarkAttendanceAsync(offeringId.Value, byDate.Key, entries, effectiveTenantId, effectiveCampusId, ct);
+                importedRows += byDate.Count();
             }
 
             if (validationErrors.Count > 0)
@@ -3486,10 +3522,13 @@ public class PortalController : Controller
             {
                 TempData["PortalMessage"] = $"Attendance CSV import processed successfully. Rows processed: {parsedRows.Count}.";
             }
+
+            WriteAttendanceImportAudit(validationErrors.Count > 0 ? "succeeded-with-warnings" : "succeeded", identity, importAuditErrorDetails);
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Attendance CSV import failed: {ex.Message}";
+            WriteAttendanceImportAudit("failed-bulk-import", identity, new List<string> { ex.Message });
         }
 
         return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });

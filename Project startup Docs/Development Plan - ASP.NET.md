@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.1 Upload Audit Trail
+
+- Implementation Summary:
+  - Added upload-level audit trail writing in attendance CSV import control flow.
+  - Added logger dependency in `PortalController` with constructor updates in unit tests.
+  - Preserved existing import behavior and API contracts.
+- Validation Summary:
+  - Focused unit suite passed (`14/14`).
+  - Web build and targeted sidebar integration tests passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 3 Import UX
 
 - Implementation Summary:

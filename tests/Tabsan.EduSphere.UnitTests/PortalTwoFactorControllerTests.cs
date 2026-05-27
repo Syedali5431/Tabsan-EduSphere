@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging.Abstractions;
 using Tabsan.EduSphere.Application.DTOs.TwoFactor;
 using Tabsan.EduSphere.Web.Controllers;
 using Tabsan.EduSphere.Web.Models.Portal;
@@ -71,7 +72,7 @@ public class PortalTwoFactorControllerTests
 
     private static PortalController CreateSut(IEduApiClient api, Guid? userId)
     {
-        var sut = new PortalController(api, new TestWebHostEnvironment());
+        var sut = new PortalController(api, new TestWebHostEnvironment(), NullLogger<PortalController>.Instance);
         sut.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext

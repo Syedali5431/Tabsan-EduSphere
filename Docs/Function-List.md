@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance Phase 4.1 Audit Inventory
+
+### Phase 4.1 Implementation Summary
+- Added upload-audit metadata writing inside `PortalController.ImportAttendanceCsv`.
+- Added logger dependency to `PortalController` and updated unit-test constructor call sites.
+
+### Phase 4.1 Validation Summary
+- Focused portal controller unit suite passed (`14/14`).
+- Sidebar integration regression slice passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 3 Import UX Inventory
 
 ### Phase 3 Implementation Summary
@@ -133,6 +143,7 @@
 | PortalController.EnterAttendance | Opens the new Enter Attendance menu route while reusing the current attendance screen and preserving guarded access. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.DownloadAttendanceCsvTemplate | Generates and downloads the Enter Attendance CSV template with required headers and sample rows. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.ImportAttendanceCsv | Validates Enter Attendance CSV rows and imports attendance using existing bulk-mark API calls grouped by date. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.WriteAttendanceImportAudit (local function) | Emits per-upload attendance CSV audit trail details with actor/time/strict-mode/row counts/error reasons. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | AttendancePageModel.MessageDetails | Carries row-level CSV import feedback details for attendance UI rendering. | src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs |
 | PortalController.BulkMarkAttendance | Enforces roster-scoped student validation and normalized attendance statuses before submitting manual attendance entries. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.CorrectAttendance | Enforces roster-scoped student validation and normalized status values before submitting attendance corrections. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
