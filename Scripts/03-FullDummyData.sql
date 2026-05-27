@@ -337,7 +337,7 @@ INSERT INTO @Users VALUES
 ('88888888-8888-8888-8888-888888888847', N'student.scisch.5', N'student.scisch.5@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0),
 ('88888888-8888-8888-8888-888888888848', N'student.scisch.6', N'student.scisch.6@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0),
 ('88888888-8888-8888-8888-888888888849', N'student.scisch.7', N'student.scisch.7@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0),
-('88888888-8888-8888-8888-888888888850', N'student.scisch.8', N'student.scisch.8@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0);
+('88888888-8888-8888-8888-888888888850', N'student.scisch.8', N'student.scisch.8@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0),
 ('88888888-8888-8888-8888-888888888856', N'student.scisch.9', N'student.scisch.9@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0),
 ('88888888-8888-8888-8888-888888888857', N'student.scisch.10', N'student.scisch.10@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333332', 0);
 
@@ -2606,7 +2606,7 @@ BEGIN
         END,
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN 0 ELSE 1 END,
         CASE st.[InstitutionType]
-                WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(((sm.[SemesterRn] - 1) % 12) + 1 AS NVARCHAR(10)), N' - ', sm.[Name])
+            WHEN 0 THEN CAST(9800 + (sm.[SemesterRn] * 85) AS DECIMAL(10,2))
             WHEN 1 THEN CAST(12200 + (sm.[SemesterRn] * 120) AS DECIMAL(10,2))
             ELSE CAST(9300 + (sm.[SemesterRn] * 90) AS DECIMAL(10,2))
         END,
