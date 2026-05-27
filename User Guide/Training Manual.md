@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD060 -->
+
 # Tabsan EduSphere – Training Manual
 
 **Version:** 1.6  
@@ -9,6 +11,11 @@
 ---
 
 ## 0. Training Updates (May 2026)
+
+### Startup Reliability Synchronization (27 May 2026)
+- Add trainer pre-check: ensure SQL target is running before API startup smoke validation.
+- Include configuration walkthrough for clean environment-profile detection from layered configuration sources.
+- Confirm no change in role/menu coverage from this reliability update; focus remains operational startup readiness.
 
 ### Runtime Stability and Compatibility (26 May 2026)
 - Include trainer scenario for announcement posting with invalid offering selection and expected controlled validation error behavior.

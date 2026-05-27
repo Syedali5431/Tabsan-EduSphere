@@ -6,6 +6,12 @@
 - Settings/governance menus are explicitly complete: system/report/sidebar/dashboard/license/policy/module/theme/admin-user/tenant/campus.
 - Validation note: sidebar runtime remains stable; pending test drift is limited to expected-count assertions that require matrix-based updates.
 
+## 2026-05-27 Synchronization Note
+
+- No new menu keys were introduced in this change set.
+- Settings/governance menu coverage remains complete and unchanged.
+- Startup/profile-loading reliability fixes do not alter role/menu visibility contracts.
+
 ## Purpose
 This document lists dashboard menus and explains what each menu does for end users.
 

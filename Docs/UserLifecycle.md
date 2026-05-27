@@ -9,6 +9,12 @@
 - Authentication lifecycle retains operational portal 2FA setup/verify/disable/test flows for user-level security hardening.
 - Validation snapshot is synchronized: build/runtime healthy, with remaining known sidebar assertion drift tracked for test-matrix refactor.
 
+## 2026-05-27 Lifecycle Synchronization Summary
+
+- Startup lifecycle reliability is hardened by deterministic environment-profile loading from layered configuration sources (including parent/root profile file paths).
+- Development runtime lifecycle now uses profile-resolved LocalDB-compatible defaults for stable API/Web startup checks.
+- Operational lifecycle note: local API startup requires an available SQL target before startup seeding is executed.
+
 ## Purpose
 This document describes the full lifecycle of platform roles, including each role's purpose, what it does, and how user/account states evolve from onboarding to offboarding.
 

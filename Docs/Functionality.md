@@ -4,6 +4,13 @@
 **Version**: Phase 33 (Current)  
 **Last Updated**: May 2026
 
+## Startup Configuration Reliability Update (2026-05-27)
+
+- Configuration bootstrap now reliably loads environment profiles from parent/root absolute-path JSON sources, preventing false "missing Environments" startup warnings.
+- API and Web startup now consistently resolve `Development` profile values from `src/environments.json`.
+- Local development database profile defaults are normalized to LocalDB-compatible values for deterministic local startup smoke checks.
+- Operational note: local API smoke validation requires an available SQL target (for example LocalDB instance started) before startup seeding.
+
 ## Full Validation Snapshot (2026-05-26)
 
 - Build validation: passed (Debug + Release checks).

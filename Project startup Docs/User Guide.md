@@ -1,6 +1,11 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (27 May 2026):
+- Startup profile warnings for missing environment profiles are resolved through layered profile-loading reliability updates.
+- Development startup guidance now assumes LocalDB-compatible defaults for local validation.
+- User-facing menu/role/functionality coverage remains unchanged and fully aligned with settings/governance + institution-aware certificate workflows.
+
 User guide synchronization update (26 May 2026 - validation snapshot):
 - Build/runtime validation remains healthy.
 - Current test snapshot is `438 passed / 5 failed`; remaining failures are sidebar role/menu expected-count drift.

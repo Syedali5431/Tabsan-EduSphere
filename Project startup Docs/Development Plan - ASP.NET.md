@@ -14,6 +14,18 @@
 - Portal 2FA settings flow remains active (setup/verify/disable/test).
 - Governance/settings coverage remains complete for report/sidebar/dashboard/license/policy/module/tenant/campus/admin-user controls.
 
+## 2026-05-27 Synchronization - Startup Reliability and Configuration Baseline
+
+### Implementation sync
+- Configuration bootstrap updated to reliably load absolute-path environment profile files, removing false missing-profile startup warnings.
+- Development environment profile DB targets were normalized to LocalDB-compatible defaults for deterministic local smoke runs.
+- API and Web now consistently resolve `Development` profile metadata from `src/environments.json` during startup telemetry output.
+
+### Validation sync
+- Solution build passed after synchronization updates.
+- API/Web startup smoke passed in local validation with LocalDB started.
+- Operational prerequisite retained: local SQL target availability is required before API seeding startup path.
+
 ## 2026-05-26 Update - Runtime Hardening and Governance Completion
 
 ### Implementation sync

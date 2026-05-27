@@ -1,5 +1,7 @@
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy | Loads layered configuration including parent/root `environments.json`, optional external profile file, and environment-variable overlays in deterministic order. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |
+| ConfigurationBootstrapper.InsertJsonSourceIfMissing | Adds JSON config sources idempotently and now supports absolute-path files through a physical file provider for reliable profile loading. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |
 | ResultCalculationController.Get | Returns institute-scoped result calculation settings using `institutionType` filter with safe university fallback. | src/Tabsan.EduSphere.API/Controllers/ResultCalculationController.cs |
 | ResultCalculationController.Save | Validates institute type and persists institute-scoped GPA/component rules. | src/Tabsan.EduSphere.API/Controllers/ResultCalculationController.cs |
 | ResultCalculationService.GetSettingsAsync | Retrieves institute-scoped GPA and component rules for result calculation settings. | src/Tabsan.EduSphere.Application/Assignments/ResultCalculationService.cs |

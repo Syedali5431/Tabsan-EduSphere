@@ -22,18 +22,18 @@ Core,student_lifecycle,Student Lifecycle,Manage promotion graduation activation 
 Core,payments,Payments,Track update and confirm payment receipts,Add Edit View Deactivate override,Add Edit View Deactivate,View,View,Student own records only
 Core,enrollments,Enrollments,Manage enrollment rosters and offering enrollment actions,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View scoped,View,Student is mostly view
 Core,report_center,Report Center,Run and export reports by role assignment and scope,View Run Export override,View Run Export,View Run Export,View Run Export assigned,Scoped report-center activation
-Settings,system_settings,System Settings,Parent governance container for privileged controls,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,report_settings,Report Settings,Configure report definitions and role report access,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,sidebar_settings,Sidebar Settings,Configure role visibility and menu active status,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,dashboard_settings,Dashboard Settings,Maintain branding and portal identity settings,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,license_update,License Update,Upload validate and activate license scope,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,institution_policy,Institution Policy,Control School College University policy and vocabulary,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
-Settings,module_composition,Module Composition,Control module exposure and dashboard composition,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only
+Settings,system_settings,System Settings,Parent governance container for privileged controls,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,report_settings,Report Settings,Configure report definitions and role report access,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,sidebar_settings,Sidebar Settings,Configure role visibility and menu active status,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,dashboard_settings,Dashboard Settings,Maintain branding and portal identity settings,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,license_update,License Update,Upload validate and activate license scope,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,institution_policy,Institution Policy,Control School College University policy and vocabulary,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
+Settings,module_composition,Module Composition,Control module exposure and dashboard composition,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin only (verified 2026-05-27)
 Settings,result_calculation,Result Calculation,Configure institution-scoped GPA and component rules for result calculation behavior,Add Edit View Deactivate override,Add Edit View scoped,No Access,No Access,Scoped governance by institution mode
 Settings,theme_settings,Theme Settings,Apply and manage visual theme preferences,Add Edit View Deactivate override,Edit View own scope,Edit View own scope,Edit View own scope,Personalization
-Settings,admin_users,Admin Users,Manage privileged admin account lifecycle,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance
-Settings,tenant_management,Tenant Management,Manage tenant entities and tenant operational state,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance
-Settings,campus_management,Campus Management,Manage campuses and tenant campus mapping boundaries,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance
+Settings,admin_users,Admin Users,Manage privileged admin account lifecycle,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance (verified 2026-05-27)
+Settings,tenant_management,Tenant Management,Manage tenant entities and tenant operational state,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance (verified 2026-05-27)
+Settings,campus_management,Campus Management,Manage campuses and tenant campus mapping boundaries,Add Edit View Deactivate,No Access,No Access,No Access,SuperAdmin governance (verified 2026-05-27)
 Feature,helpdesk,Helpdesk,Ticketing for academic technical and administrative support,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View assigned,Add View own tickets,Module and role dependent
 Feature,prerequisites,Prerequisites,Manage prerequisite rules for enrollment validation,Add Edit View Deactivate override,Add Edit View Deactivate,View,No Access,Module and role dependent
 Feature,gradebook,Gradebook,Maintain gradebook entries and score history,Add Edit View Deactivate override,Add Edit View Deactivate,Add Edit View Deactivate,View,Module and role dependent

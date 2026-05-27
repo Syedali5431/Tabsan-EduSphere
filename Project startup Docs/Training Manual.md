@@ -1,6 +1,11 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (27 May 2026):
+- Add trainer pre-check note to ensure local SQL target availability before API startup smoke demonstrations.
+- Add trainer note that environment profile detection now resolves cleanly from layered configuration sources.
+- Preserve existing training coverage for full settings/governance menu catalog and institution-aware certificate workflows.
+
 Training synchronization update (26 May 2026 - validation snapshot):
 - Build/runtime validation remains healthy.
 - Current test snapshot is `438 passed / 5 failed`; outstanding failures are sidebar expected-count drift and do not change trainer workflow semantics.

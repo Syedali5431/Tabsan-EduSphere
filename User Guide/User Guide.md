@@ -10,6 +10,11 @@
 
 ## 0. What’s New (May 2026)
 
+### Startup Reliability Synchronization (27 May 2026)
+- Startup environment profile detection is now consistently resolved from layered configuration sources.
+- Development startup baseline uses LocalDB-compatible defaults for local validation readiness.
+- No end-user menu/role behavior changed in this update; this change improves startup reliability and operational consistency.
+
 ### Runtime Stability and Compatibility (26 May 2026)
 - Announcement creation now returns clear validation feedback when offering selection is invalid or missing.
 - LMS module creation now fails safely with user-readable feedback when course-offering linkage is invalid.

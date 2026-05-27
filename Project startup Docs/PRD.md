@@ -1,5 +1,11 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-27 - Product Requirements Synchronization (Startup Configuration Reliability)
+- Configuration requirement clarified: environment-profile loading must support layered and absolute-path profile sources to avoid false startup-profile warnings.
+- Development runtime requirement clarified: profile-resolved development DB configuration must remain local-startup compatible.
+- Operational requirement clarified: API startup seeding requires an available SQL target in local validation runs.
+- Compatibility requirement retained: no module/role/menu contract change introduced by startup reliability updates.
+
 ### 2026-05-26 - PRD Synchronization (Validation Snapshot + Functional Baseline)
 - Validation snapshot:
   - Build and runtime startup checks passed.
