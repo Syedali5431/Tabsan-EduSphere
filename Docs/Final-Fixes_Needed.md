@@ -51,6 +51,19 @@ Follow-up execution focused on remaining high-priority startup checks.
 - Keep LocalDB (or equivalent SQL target) available before API smoke/startup in local validation runs.
 - Continue markdown-lint backlog burn-down beyond the already cleaned operational docs.
 
+## Execution Update (2026-05-27, Regression Refresh)
+
+### Validation outcome
+
+- Full regression suite rerun completed successfully.
+- Current test snapshot: `443 passed / 0 failed`.
+- The earlier sidebar drift failures are no longer present in the current run.
+
+### Current state
+
+- Build/runtime checks remain green from the prior pass.
+- The audit now reflects a fully passing test run, so the remaining work is limited to documentation backlog burn-down and any future drift that reappears.
+
 ## Validation Result Summary (All Phases)
 
 - Overall validation execution status: Completed
