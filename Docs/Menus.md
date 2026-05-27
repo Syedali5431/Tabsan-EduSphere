@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.5 Web Integration)
+
+- No menu topology change in this slice.
+- Added real web-route integration coverage for Enter Attendance import report download behavior.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.4 UX Hint)
 
 - No menu changes in this slice.

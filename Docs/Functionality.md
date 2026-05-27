@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.5 Web Route Integration Coverage
+
+### Implementation sync
+- Added a dedicated web-host integration test project to validate `PortalController.DownloadAttendanceImportReport` through the real MVC route.
+- Added a web entry-point marker type to support route-level `WebApplicationFactory` test bootstrapping.
+- Added coverage for valid one-time report download plus invalid/expired token redirect outcomes.
+
+### Validation sync
+- Attendance import unit matrix passed (`14/14`).
+- Web integration route suite passed (`3/3`).
+- Web build and sidebar integration regression suites passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.4 Report Download UX Hint
 
 ### Implementation sync

@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 4.5 Completion - Web Route Integration Coverage (2026-05-28)
+- Implementation Summary:
+  - Added dedicated web-host integration test project for Enter Attendance report download route coverage.
+  - Added marker type to stabilize web-host `WebApplicationFactory` entry point for MVC route testing.
+  - Added integration tests for valid one-time download, invalid token redirect, and expired token redirect flows.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`14/14`).
+  - `dotnet test tests/Tabsan.EduSphere.WebIntegrationTests/Tabsan.EduSphere.WebIntegrationTests.csproj -v minimal` passed (`3/3`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 4.4 Completion - Report UX Hint (2026-05-28)
 - Implementation Summary:
   - Added inline Enter Attendance UI guidance that report links are one-time and expire after 2 hours.

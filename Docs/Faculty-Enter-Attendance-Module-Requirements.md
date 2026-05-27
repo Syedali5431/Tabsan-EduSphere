@@ -270,6 +270,31 @@ Make token behavior explicit in the Enter Attendance UI so users understand one-
 - Web build passed.
 - Sidebar integration regression suite passed (`17/17`).
 
+## Phase 4.5. Web Route Integration Coverage
+
+### Goal
+
+Prove the import report download flow works end-to-end through actual web routing, not just controller-level unit tests.
+
+### Scope Delivered
+
+- Added dedicated web integration test project for MVC-host route execution.
+- Added marker-based host bootstrapping for `WebApplicationFactory` against web app entry point.
+- Added route-level tests for valid one-time report download, invalid token redirect, and expired token redirect.
+
+### Phase 4.5 Implementation Summary
+
+- Added `tests/Tabsan.EduSphere.WebIntegrationTests` with web-host integration setup.
+- Added `AttendanceImportReportWebIntegrationTests` to validate `/Portal/DownloadAttendanceImportReport` behavior against real route pipeline.
+- Added `src/Tabsan.EduSphere.Web/WebEntryPointMarker.cs` for stable test host entry targeting.
+
+### Phase 4.5 Validation Summary
+
+- Attendance import unit matrix passed (`14/14`).
+- Web integration route suite passed (`3/3`).
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 4. CSV Import
 
 This phase enables bulk attendance entry through template-based import.

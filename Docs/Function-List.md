@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance Phase 4.5 Web Integration Inventory
+
+### Phase 4.5 Implementation Summary
+- Added `Tabsan.EduSphere.WebIntegrationTests` project for real web-route verification.
+- Added `WebEntryPointMarker` for MVC-host integration bootstrapping.
+- Added route-level tests for `PortalController.DownloadAttendanceImportReport` valid, invalid, and expired token behavior.
+
+### Phase 4.5 Validation Summary
+- Attendance import unit matrix passed (`14/14`).
+- Web integration route suite passed (`3/3`).
+- Sidebar integration regression slice passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.4 UX Inventory
 
 ### Phase 4.4 Implementation Summary
