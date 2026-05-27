@@ -636,6 +636,58 @@ SELECT 'DummySeed_CollegeClassEntryCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [timetable_entries] te
 WHERE te.[SubjectName] LIKE N'College Semester %';
 
+SELECT 'DummySeed_TargetSchoolScienceClassCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries] te
+INNER JOIN [timetables] t ON t.[Id] = te.[TimetableId]
+WHERE t.[AcademicProgramId] = CAST('22222222-2222-2222-2222-222222222432' AS UNIQUEIDENTIFIER)
+	AND te.[SubjectName] LIKE N'Class [0-9]% - %';
+
+SELECT 'DummySeed_TargetCollegeIcsClassCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries] te
+INNER JOIN [timetables] t ON t.[Id] = te.[TimetableId]
+WHERE t.[AcademicProgramId] = CAST('22222222-2222-2222-2222-222222222325' AS UNIQUEIDENTIFIER)
+	AND te.[SubjectName] LIKE N'College Semester [0-9]% - %';
+
+SELECT 'DummySeed_ExactSchoolScienceClassEntries_10' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [Id] BETWEEN CAST('26262626-2626-2626-2626-262626262701' AS UNIQUEIDENTIFIER)
+								AND CAST('26262626-2626-2626-2626-262626262710' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_ExactCollegeIcsClassEntries_2' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [Id] IN
+(
+		CAST('26262626-2626-2626-2626-262626262711' AS UNIQUEIDENTIFIER),
+		CAST('26262626-2626-2626-2626-262626262712' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_TargetUniversityFocusCoursesDistinctCount' AS [CheckName], COUNT(DISTINCT co.[CourseId]) AS [Value]
+FROM [course_offerings] co
+WHERE co.[CourseId] IN
+(
+		CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER), -- BSCS focus
+		CAST('44444444-4444-4444-4444-444444444402' AS UNIQUEIDENTIFIER), -- MCS focus
+		CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER), -- BBA focus
+		CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER)  -- Language learning focus
+);
+
+SELECT 'DummySeed_TargetUniversityFocusCourseSemesterCoverage' AS [CheckName],
+			 COUNT(1) AS [Value]
+FROM
+(
+		SELECT co.[CourseId], COUNT(DISTINCT co.[SemesterId]) AS SemCount
+		FROM [course_offerings] co
+		WHERE co.[CourseId] IN
+		(
+				CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER),
+				CAST('44444444-4444-4444-4444-444444444402' AS UNIQUEIDENTIFIER),
+				CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER),
+				CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER)
+		)
+		GROUP BY co.[CourseId]
+) fc
+WHERE fc.[SemCount] = (SELECT COUNT(1) FROM [semesters]);
+
 SELECT 'DummySeed_DepartmentsMissingAdminUser' AS [CheckName], COUNT(1) AS [Value]
 FROM [departments] d
 WHERE NOT EXISTS
@@ -724,5 +776,13 @@ WHERE [Role] IN (N'Internal', N'External');
 SELECT TOP 20 [MigrationId], [ProductVersion]
 FROM __EFMigrationsHistory
 ORDER BY [MigrationId] DESC;
+
+IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
+BEGIN
+		SELECT 'DummySeed_DemoDatasetVersion_v8' AS [CheckName], COUNT(1) AS [Value]
+		FROM [Tabsan-EduSphere]
+		WHERE [DemoKey] = N'DemoDatasetVersion'
+			AND [DemoValue] = N'FullDummyData-v8';
+END;
 
 PRINT 'Post-deployment checks completed.';

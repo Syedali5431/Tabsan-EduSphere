@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v7', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v8', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v7',
+    SET [DemoValue] = N'FullDummyData-v8',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -983,8 +983,8 @@ BEGIN
         CASE WHEN ct.[CourseOrdinal] = 1 THEN CAST('10:00:00' AS TIME) ELSE CAST('12:15:00' AS TIME) END,
         CONCAT(
             CASE
-                WHEN ct.[InstitutionType] = 0 THEN CONCAT(N'Class ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
-                ELSE CONCAT(N'College Semester ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
+                WHEN ct.[InstitutionType] = 0 THEN CONCAT(N'School Cycle ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
+                ELSE CONCAT(N'College Cycle ', CAST(ct.[SemesterNumber] AS NVARCHAR(10)))
             END,
             N' - ',
             ct.[CourseTitle]
@@ -1006,6 +1006,80 @@ BEGIN
         WHERE te.[TimetableId] = ct.[TimetableId]
           AND te.[CourseId] = ct.[CourseId]
     );
+END
+
+/* 6.3) Explicit class matrix for requested testing coverage
+       - School Science: 10 classes (Class 1 to Class 10)
+       - College ICS: 2 classes (College Semester 1 to College Semester 2)
+*/
+IF OBJECT_ID(N'[timetables]') IS NOT NULL
+BEGIN
+    DECLARE @TargetClassTimetables TABLE
+    (
+        Id UNIQUEIDENTIFIER,
+        DepartmentId UNIQUEIDENTIFIER,
+        AcademicProgramId UNIQUEIDENTIFIER,
+        SemesterId UNIQUEIDENTIFIER,
+        EffectiveDate DATE,
+        SemesterNumber INT
+    );
+
+    INSERT INTO @TargetClassTimetables VALUES
+    ('25252525-2525-2525-2525-252525252601', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 1),
+    ('25252525-2525-2525-2525-252525252602', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 2),
+    ('25252525-2525-2525-2525-252525252603', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 3),
+    ('25252525-2525-2525-2525-252525252604', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 4),
+    ('25252525-2525-2525-2525-252525252605', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 5),
+    ('25252525-2525-2525-2525-252525252606', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 6),
+    ('25252525-2525-2525-2525-252525252607', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 7),
+    ('25252525-2525-2525-2525-252525252608', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 8),
+    ('25252525-2525-2525-2525-252525252609', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 9),
+    ('25252525-2525-2525-2525-252525252610', '13333333-3333-3333-3333-333333333332', '22222222-2222-2222-2222-222222222432', '33333333-3333-3333-3333-333333333334', '2026-01-15', 10),
+    ('25252525-2525-2525-2525-252525252611', '12222222-2222-2222-2222-222222222223', '22222222-2222-2222-2222-222222222325', '33333333-3333-3333-3333-333333333334', '2026-01-15', 1),
+    ('25252525-2525-2525-2525-252525252612', '12222222-2222-2222-2222-222222222223', '22222222-2222-2222-2222-222222222325', '33333333-3333-3333-3333-333333333334', '2026-01-15', 2);
+
+    INSERT INTO [timetables] ([Id], [DepartmentId], [AcademicProgramId], [SemesterId], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [EffectiveDate], [SemesterNumber])
+    SELECT t.[Id], t.[DepartmentId], t.[AcademicProgramId], t.[SemesterId], 1, @Now, @Now, NULL, 0, NULL, t.[EffectiveDate], t.[SemesterNumber]
+    FROM @TargetClassTimetables t
+    WHERE NOT EXISTS (SELECT 1 FROM [timetables] x WHERE x.[Id] = t.[Id]);
+END
+
+IF OBJECT_ID(N'[timetable_entries]') IS NOT NULL
+BEGIN
+    DECLARE @TargetClassEntries TABLE
+    (
+        Id UNIQUEIDENTIFIER,
+        TimetableId UNIQUEIDENTIFIER,
+        DayOfWeek INT,
+        StartTime TIME,
+        EndTime TIME,
+        SubjectName NVARCHAR(200),
+        RoomNumber NVARCHAR(50),
+        FacultyName NVARCHAR(200),
+        RoomId UNIQUEIDENTIFIER,
+        BuildingId UNIQUEIDENTIFIER,
+        CourseId UNIQUEIDENTIFIER,
+        FacultyUserId UNIQUEIDENTIFIER
+    );
+
+    INSERT INTO @TargetClassEntries VALUES
+    ('26262626-2626-2626-2626-262626262701', '25252525-2525-2525-2525-252525252601', 1, '08:30:00', '10:00:00', N'Class 1 - General Science', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444431', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262702', '25252525-2525-2525-2525-252525252602', 1, '08:30:00', '10:00:00', N'Class 2 - Physics Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444432', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262703', '25252525-2525-2525-2525-252525252603', 1, '08:30:00', '10:00:00', N'Class 3 - Chemistry Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444433', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262704', '25252525-2525-2525-2525-252525252604', 1, '08:30:00', '10:00:00', N'Class 4 - General Science', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444431', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262705', '25252525-2525-2525-2525-252525252605', 1, '08:30:00', '10:00:00', N'Class 5 - Physics Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444432', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262706', '25252525-2525-2525-2525-252525252606', 1, '08:30:00', '10:00:00', N'Class 6 - Chemistry Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444433', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262707', '25252525-2525-2525-2525-252525252607', 1, '08:30:00', '10:00:00', N'Class 7 - General Science', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444431', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262708', '25252525-2525-2525-2525-252525252608', 1, '08:30:00', '10:00:00', N'Class 8 - Physics Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444432', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262709', '25252525-2525-2525-2525-252525252609', 1, '08:30:00', '10:00:00', N'Class 9 - Chemistry Basics', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444433', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262710', '25252525-2525-2525-2525-252525252610', 1, '08:30:00', '10:00:00', N'Class 10 - General Science', N'S-101', N'Faculty School Sci 1', '24242424-2424-2424-2424-242424242405', '23232323-2323-2323-2323-232323232303', '44444444-4444-4444-4444-444444444431', '77777777-7777-7777-7777-777777777732'),
+    ('26262626-2626-2626-2626-262626262711', '25252525-2525-2525-2525-252525252611', 2, '10:45:00', '12:15:00', N'College Semester 1 - Computer Fundamentals', N'C-101', N'Faculty College Sci 1', '24242424-2424-2424-2424-242424242403', '23232323-2323-2323-2323-232323232302', '44444444-4444-4444-4444-444444444435', '77777777-7777-7777-7777-777777777723'),
+    ('26262626-2626-2626-2626-262626262712', '25252525-2525-2525-2525-252525252612', 2, '10:45:00', '12:15:00', N'College Semester 2 - Applied Mathematics', N'C-101', N'Faculty College Sci 1', '24242424-2424-2424-2424-242424242403', '23232323-2323-2323-2323-232323232302', '44444444-4444-4444-4444-444444444434', '77777777-7777-7777-7777-777777777723');
+
+    INSERT INTO [timetable_entries] ([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName], [RoomId], [CreatedAt], [UpdatedAt], [BuildingId], [CourseId], [FacultyUserId])
+    SELECT te.[Id], te.[TimetableId], te.[DayOfWeek], te.[StartTime], te.[EndTime], te.[SubjectName], te.[RoomNumber], te.[FacultyName], te.[RoomId], @Now, NULL, te.[BuildingId], te.[CourseId], te.[FacultyUserId]
+    FROM @TargetClassEntries te
+    WHERE NOT EXISTS (SELECT 1 FROM [timetable_entries] x WHERE x.[Id] = te.[Id]);
 END
 
 /* 7) Course offerings (Spring 2026 and beyond) - Massively expanded */
@@ -1095,6 +1169,57 @@ WHERE NOT EXISTS
     SELECT 1
     FROM [course_offerings] co
     WHERE co.[CourseId] = dc.[CourseId]
+      AND co.[SemesterId] = sb.[Id]
+);
+
+/* 7.2) Explicit university focus coverage
+       Ensure one offering per semester for requested focus courses:
+       BSCS, MCS, BBA, and Language Learning. */
+;WITH SemesterBase AS
+(
+    SELECT s.[Id]
+    FROM @Semesters s
+), DepartmentLeadFaculty AS
+(
+    SELECT
+        u.[DepartmentId],
+        u.[Id] AS FacultyUserId,
+        ROW_NUMBER() OVER (PARTITION BY u.[DepartmentId] ORDER BY u.[Username], u.[Id]) AS rn
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleFaculty
+      AND u.[IsDeleted] = 0
+), FocusCourses AS
+(
+    SELECT CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER) AS CourseId, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER) AS DepartmentId, 65 AS MaxEnrollment -- BSCS focus
+    UNION ALL
+    SELECT CAST('44444444-4444-4444-4444-444444444402' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), 55 -- MCS focus
+    UNION ALL
+    SELECT CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER), 60 -- BBA focus
+    UNION ALL
+    SELECT CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111114' AS UNIQUEIDENTIFIER), 45 -- Language learning focus
+)
+INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [MaxEnrollment], [IsOpen], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT
+    NEWID(),
+    fc.[CourseId],
+    sb.[Id],
+    dlf.[FacultyUserId],
+    fc.[MaxEnrollment],
+    1,
+    @Now,
+    NULL,
+    0,
+    NULL
+FROM FocusCourses fc
+INNER JOIN SemesterBase sb ON 1 = 1
+INNER JOIN DepartmentLeadFaculty dlf
+    ON dlf.[DepartmentId] = fc.[DepartmentId]
+   AND dlf.[rn] = 1
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [course_offerings] co
+    WHERE co.[CourseId] = fc.[CourseId]
       AND co.[SemesterId] = sb.[Id]
 );
 
@@ -1677,7 +1802,10 @@ BEGIN
                     SELECT 1
                     FROM [fyp_projects] fp
                     WHERE fp.StudentProfileId = sp.Id
-                        AND fp.Status = 4
+                        AND (
+                            TRY_CONVERT(INT, fp.[Status]) = 4
+                            OR CONVERT(NVARCHAR(50), fp.[Status]) IN (N'Completed', N'Approved')
+                        )
             )
         ORDER BY sp.CreatedAt;
 
@@ -2223,35 +2351,89 @@ END
 
 IF OBJECT_ID(N'[fyp_projects]') IS NOT NULL
 BEGIN
-    ;WITH CandidateStudents AS (
-        SELECT TOP 24 sp.[Id] AS StudentProfileId, sp.[DepartmentId], ROW_NUMBER() OVER (ORDER BY sp.[RegistrationNumber], sp.[Id]) AS rn
-        FROM [student_profiles] sp
-        ORDER BY sp.[RegistrationNumber], sp.[Id]
-    ), FacultyBase AS (
-        SELECT u.[Id], ROW_NUMBER() OVER (ORDER BY u.[Username], u.[Id]) AS rn
-        FROM [users] u
-        WHERE u.[RoleId] = @RoleFaculty
+    DECLARE @FypCandidateStudents TABLE
+    (
+        StudentProfileId UNIQUEIDENTIFIER,
+        DepartmentId UNIQUEIDENTIFIER,
+        rn INT
+    );
+
+    DECLARE @FypFacultyBase TABLE
+    (
+        FacultyUserId UNIQUEIDENTIFIER,
+        rn INT
+    );
+
+    INSERT INTO @FypCandidateStudents (StudentProfileId, DepartmentId, rn)
+    SELECT TOP 24 sp.[Id], sp.[DepartmentId], ROW_NUMBER() OVER (ORDER BY sp.[RegistrationNumber], sp.[Id])
+    FROM [student_profiles] sp
+    ORDER BY sp.[RegistrationNumber], sp.[Id];
+
+    INSERT INTO @FypFacultyBase (FacultyUserId, rn)
+    SELECT u.[Id], ROW_NUMBER() OVER (ORDER BY u.[Username], u.[Id])
+    FROM [users] u
+    WHERE u.[RoleId] = @RoleFaculty;
+
+    DECLARE @FypFacultyCount INT = (SELECT COUNT(1) FROM @FypFacultyBase);
+
+    IF @FypFacultyCount = 0
+    BEGIN
+        SET @FypFacultyCount = 1;
+    END;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = N'fyp_projects'
+          AND COLUMN_NAME = N'Status'
+          AND DATA_TYPE IN (N'int', N'smallint', N'tinyint', N'bigint')
     )
-    INSERT INTO [fyp_projects]
-        ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt], [CompletionApprovedByUserIdsCsv], [CompletionRequestedAt], [CompletionRequestedByStudentProfileId], [IsCompletionRequested])
-    SELECT
-        CONVERT(uniqueidentifier, CONCAT('49494949-4949-4949-4949-', RIGHT('000000000000' + CAST(cs.rn AS VARCHAR(12)), 12))),
-        cs.[StudentProfileId],
-        cs.[DepartmentId],
-        CONCAT(N'Capstone Project ', FORMAT(cs.rn, '00')),
-        N'Full-stack academic automation and analytics project for enterprise-scale institution workflows.',
-        CASE WHEN cs.rn % 3 = 0 THEN N'UnderReview' ELSE N'InProgress' END,
-        fb.[Id],
-        N'Auto-generated coordinator note for demo coverage.',
-        @Now,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        0
-    FROM CandidateStudents cs
-    INNER JOIN FacultyBase fb ON fb.rn = ((cs.rn - 1) % (SELECT COUNT(1) FROM FacultyBase)) + 1
-    WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[StudentProfileId] = cs.[StudentProfileId]);
+    BEGIN
+        INSERT INTO [fyp_projects]
+            ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt], [CompletionApprovedByUserIdsCsv], [CompletionRequestedAt], [CompletionRequestedByStudentProfileId], [IsCompletionRequested])
+        SELECT
+            CONVERT(uniqueidentifier, CONCAT('49494949-4949-4949-4949-', RIGHT('000000000000' + CAST(cs.rn AS VARCHAR(12)), 12))),
+            cs.[StudentProfileId],
+            cs.[DepartmentId],
+            CONCAT(N'Capstone Project ', FORMAT(cs.rn, '00')),
+            N'Full-stack academic automation and analytics project for enterprise-scale institution workflows.',
+            CASE WHEN cs.rn % 3 = 0 THEN 2 ELSE 1 END,
+            fb.[FacultyUserId],
+            N'Auto-generated coordinator note for demo coverage.',
+            @Now,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            0
+        FROM @FypCandidateStudents cs
+        INNER JOIN @FypFacultyBase fb ON fb.rn = ((cs.rn - 1) % @FypFacultyCount) + 1
+        WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[StudentProfileId] = cs.[StudentProfileId]);
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [fyp_projects]
+            ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt], [CompletionApprovedByUserIdsCsv], [CompletionRequestedAt], [CompletionRequestedByStudentProfileId], [IsCompletionRequested])
+        SELECT
+            CONVERT(uniqueidentifier, CONCAT('49494949-4949-4949-4949-', RIGHT('000000000000' + CAST(cs.rn AS VARCHAR(12)), 12))),
+            cs.[StudentProfileId],
+            cs.[DepartmentId],
+            CONCAT(N'Capstone Project ', FORMAT(cs.rn, '00')),
+            N'Full-stack academic automation and analytics project for enterprise-scale institution workflows.',
+            CASE WHEN cs.rn % 3 = 0 THEN N'UnderReview' ELSE N'InProgress' END,
+            fb.[FacultyUserId],
+            N'Auto-generated coordinator note for demo coverage.',
+            @Now,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            0
+        FROM @FypCandidateStudents cs
+        INNER JOIN @FypFacultyBase fb ON fb.rn = ((cs.rn - 1) % @FypFacultyCount) + 1
+        WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[StudentProfileId] = cs.[StudentProfileId]);
+    END
 END
 
 IF OBJECT_ID(N'[fyp_meetings]') IS NOT NULL

@@ -23,7 +23,7 @@ Run scripts in this exact order.
 - Other scripts run against `Tabsan-EduSphere` database.
 - The core seed step uses `02-Seed-Core.sql` as the maintained entry point.
 - Seeded user password in both core and dummy seed scripts: `EduSphere147`.
-- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v7`.
+- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v8`.
 - Script 03 includes expanded tenant/campus-aware high-volume saturation across departments/programs, all seeded classes/semesters, enrollments, and semester-cycle payment receipts.
 - If legacy objects were accidentally created in `master`, run `00-Cleanup-Master-Mistake.sql` once before step 1.
 
