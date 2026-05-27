@@ -21,9 +21,7 @@ Run scripts in this exact order.
 
 - `01-Schema-Current.sql` must run from `master` because it creates/ensures database context.
 - Other scripts run against `Tabsan-EduSphere` database.
-- Canonical compatibility aliases are now supported for deployment/runbook parity:
-  - `02-CoreSeed.sql` delegates to `02-Seed-Core.sql`
-  - `02-CoreSeed.sql` can be used in automated pipelines and operator runbooks.
+- The core seed step uses `02-Seed-Core.sql` as the maintained entry point.
 - Seeded user password in both core and dummy seed scripts: `EduSphere147`.
 - Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v7`.
 - Script 03 includes expanded tenant/campus-aware high-volume saturation across departments/programs, all seeded classes/semesters, enrollments, and semester-cycle payment receipts.
@@ -36,18 +34,6 @@ $server = "YOUR_SERVER"
 
 sqlcmd -S $server -d master -i Scripts/01-Schema-Current.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/02-Seed-Core.sql
-sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/03-FullDummyData.sql
-sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/04-Maintenance-Indexes-And-Views.sql
-sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/05-PostDeployment-Checks.sql
-```
-
-Canonical alias example (equivalent core-seed step name):
-
-```powershell
-$server = "YOUR_SERVER"
-
-sqlcmd -S $server -d master -i Scripts/01-Schema-Current.sql
-sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/02-CoreSeed.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/03-FullDummyData.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/04-Maintenance-Indexes-And-Views.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/05-PostDeployment-Checks.sql

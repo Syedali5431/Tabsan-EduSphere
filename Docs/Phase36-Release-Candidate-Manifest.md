@@ -74,10 +74,9 @@ All deployment units are pinned to the same RC commit SHA listed above.
 ## Script Name Compatibility Policy (Pre-Deploy)
 - Accepted schema script name:
   - `Scripts/01-Schema-Current.sql` (maintained source)
-- Accepted core seed script names:
+- Accepted core seed script name:
   - `Scripts/02-Seed-Core.sql` (maintained source)
-  - `Scripts/02-CoreSeed.sql` (canonical compatibility alias)
-- Release checklists and operator runbooks may use the accepted core-seed alias where needed; the schema step should use the maintained source directly.
+- Release checklists and operator runbooks should use the maintained schema and core-seed entry points directly.
 - CI/deployment automation must fail fast if the required script name for a stage does not exist.
 
 ## Stage 36.1 Validation Evidence
