@@ -2564,7 +2564,7 @@ BEGIN
         NEWID(),
         st.[StudentProfileId],
         CASE st.[InstitutionType]
-            WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(((sm.[SemesterRn] - 1) % 12) + 1 AS NVARCHAR(10)), N' - ', sm.[Name])
+            WHEN 0 THEN COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
             WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
             ELSE COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
         END,
