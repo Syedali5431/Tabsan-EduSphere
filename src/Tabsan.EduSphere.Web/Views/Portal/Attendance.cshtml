@@ -245,11 +245,21 @@ else
     @* ── Mark Attendance Form (Faculty/Admin, when offering selected and roster available) *@
     @if (Model.SelectedOfferingId.HasValue && Model.Roster.Count > 0 && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
     {
+        var writeActionsDisabled = string.Equals(attendanceAction, "EnterAttendance", StringComparison.OrdinalIgnoreCase)
+            && !Model.CanSaveAttendance;
+
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-header bg-light">
                 <strong>Mark Attendance</strong>
             </div>
             <div class="card-body">
+                @if (writeActionsDisabled)
+                {
+                    <div class="alert alert-warning py-2" role="alert">
+                        @Model.SaveAttendanceDisabledReason
+                    </div>
+                }
+
                 @if (string.Equals(attendanceAction, "EnterAttendance", StringComparison.OrdinalIgnoreCase))
                 {
                     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -296,11 +306,11 @@ else
                             <input type="hidden" name="entryPoint" value="@attendanceAction" />
                             <input type="hidden" name="strictMode" value="false" />
                             <div class="form-check form-check-inline mb-0">
-                                <input class="form-check-input" type="checkbox" id="strictMode" name="strictMode" value="true" checked />
+                                <input class="form-check-input" type="checkbox" id="strictMode" name="strictMode" value="true" checked disabled="@writeActionsDisabled" />
                                 <label class="form-check-label" for="strictMode">Strict mode</label>
                             </div>
-                            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required />
-                            <button type="submit" class="btn btn-outline-primary btn-sm">Import CSV</button>
+                            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
+                            <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import CSV</button>
                         </form>
                     </div>
                 }
@@ -317,7 +327,7 @@ else
                     <div class="mb-3">
                         <label class="form-label">Date <span class="text-danger">*</span></label>
                         <input name="date" type="date" class="form-control" style="max-width:200px"
-                               value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" required disabled="@writeActionsDisabled" />
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm mb-3">
@@ -332,7 +342,7 @@ else
                                         <td><code>@s.RegistrationNumber</code></td>
                                         <td>
                                             <input type="hidden" name="studentIds" value="@s.Id" />
-                                            <select name="statuses" class="form-select form-select-sm" style="width:120px">
+                                            <select name="statuses" class="form-select form-select-sm" style="width:120px" disabled="@writeActionsDisabled">
                                                 <option value="Present" selected>Present</option>
                                                 <option value="Absent">Absent</option>
                                                 <option value="Late">Late</option>
@@ -344,7 +354,7 @@ else
                             </tbody>
                         </table>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Attendance</button>
+                    <button type="submit" class="btn btn-primary" disabled="@writeActionsDisabled">Save Attendance</button>
                 </form>
             </div>
         </div>

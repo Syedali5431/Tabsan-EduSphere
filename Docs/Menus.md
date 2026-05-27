@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 5 UI Save Guard)
+
+- No menu topology change in this slice.
+- Enter Attendance write actions now remain disabled until required filters are selected.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.5 Web Integration)
 
 - No menu topology change in this slice.

@@ -343,6 +343,18 @@ When required filters are not fully selected, display a generic table structure 
 
 In this state, save actions must remain disabled until all required filters are selected.
 
+### Phase 5 Implementation Summary
+
+- Added Enter Attendance page-level required-filter write-state evaluation.
+- Disabled manual save and CSV import controls when Department, Course, or Class/Semester is not selected.
+- Added inline guidance message to explain disabled write actions.
+
+### Phase 5 Validation Summary
+
+- Attendance-focused unit test matrix passed (`16/16`) including new model save-guard tests.
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 6. Attendance Table Structure
 
 This phase defines the row-level attendance entry model displayed in the UI.
