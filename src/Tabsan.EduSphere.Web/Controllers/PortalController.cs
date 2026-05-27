@@ -15,6 +15,8 @@ public class PortalController : Controller
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<PortalController> _logger;
     private static readonly ConcurrentDictionary<string, AttendanceImportReportPayload> AttendanceImportReports = new(StringComparer.Ordinal);
+    private static readonly TimeSpan AttendanceImportReportTtl = TimeSpan.FromHours(2);
+    private static Func<DateTime> UtcNowProvider = static () => DateTime.UtcNow;
 
     private static readonly Dictionary<string, string> ActionMenuKeyMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -3328,6 +3330,12 @@ public class PortalController : Controller
             return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
         }
 
+        if (payload.CreatedAtUtc + AttendanceImportReportTtl < UtcNowProvider())
+        {
+            TempData["PortalMessage"] = "Import report has expired. Please run CSV import again.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        }
+
         var bytes = Encoding.UTF8.GetBytes(payload.CsvContent);
         return File(bytes, "text/csv", payload.FileName);
     }
@@ -3353,7 +3361,7 @@ public class PortalController : Controller
 
         void CleanupExpiredImportReports()
         {
-            var threshold = DateTime.UtcNow.AddHours(-2);
+            var threshold = UtcNowProvider().Subtract(AttendanceImportReportTtl);
             foreach (var item in AttendanceImportReports)
             {
                 if (item.Value.CreatedAtUtc < threshold)
@@ -3373,9 +3381,9 @@ public class PortalController : Controller
 
             var token = Guid.NewGuid().ToString("N");
             AttendanceImportReports[token] = new AttendanceImportReportPayload(
-                $"attendance-import-report-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv",
+                $"attendance-import-report-{UtcNowProvider():yyyyMMdd-HHmmss}.csv",
                 csv.ToString(),
-                DateTime.UtcNow);
+                UtcNowProvider());
             return token;
         }
 

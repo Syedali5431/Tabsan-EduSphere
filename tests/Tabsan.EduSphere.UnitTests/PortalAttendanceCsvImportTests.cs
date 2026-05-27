@@ -399,6 +399,121 @@ public class PortalAttendanceCsvImportTests
     }
 
     [Fact]
+    public async Task DownloadAttendanceImportReport_TokenIsOneTimeUse()
+    {
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var (api, _) = CreateApiClient(
+            isConnected: true,
+            identity: CreateFacultyIdentity(),
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }],
+            offerings: [BuildOffering()]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{inRoster},Student One,2026-05-28,true"
+        ]);
+
+        var importResult = await sut.ImportAttendanceCsv(
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None,
+            strictMode: true);
+
+        var redirect = importResult.Should().BeOfType<RedirectToActionResult>().Subject;
+        var reportToken = redirect.RouteValues!["reportToken"]?.ToString();
+        reportToken.Should().NotBeNullOrWhiteSpace();
+
+        var firstDownload = sut.DownloadAttendanceImportReport(
+            reportToken,
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance");
+        firstDownload.Should().BeOfType<FileContentResult>();
+
+        var secondDownload = sut.DownloadAttendanceImportReport(
+            reportToken,
+            OfferingId,
+            TenantId,
+            CampusId,
+            DepartmentId,
+            CourseId,
+            SemesterName,
+            entryPoint: "EnterAttendance");
+
+        secondDownload.Should().BeOfType<RedirectToActionResult>();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("not available");
+    }
+
+    [Fact]
+    public async Task DownloadAttendanceImportReport_ExpiredToken_RedirectsWithExpiredMessage()
+    {
+        var originalClock = SetPortalControllerClock(new DateTime(2026, 5, 28, 8, 0, 0, DateTimeKind.Utc));
+        try
+        {
+            var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+            var (api, _) = CreateApiClient(
+                isConnected: true,
+                identity: CreateFacultyIdentity(),
+                roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }],
+                offerings: [BuildOffering()]);
+
+            var sut = CreateSut(api);
+            var csv = string.Join('\n',
+            [
+                "StudentId,StudentName,Date,Present",
+                $"{inRoster},Student One,2026-05-28,true"
+            ]);
+
+            var importResult = await sut.ImportAttendanceCsv(
+                OfferingId,
+                TenantId,
+                CampusId,
+                DepartmentId,
+                CourseId,
+                SemesterName,
+                entryPoint: "EnterAttendance",
+                csvFile: CreateCsvFile(csv),
+                ct: CancellationToken.None,
+                strictMode: true);
+
+            var redirect = importResult.Should().BeOfType<RedirectToActionResult>().Subject;
+            var reportToken = redirect.RouteValues!["reportToken"]?.ToString();
+            reportToken.Should().NotBeNullOrWhiteSpace();
+
+            SetPortalControllerClock(new DateTime(2026, 5, 28, 11, 30, 0, DateTimeKind.Utc));
+
+            var downloadResult = sut.DownloadAttendanceImportReport(
+                reportToken,
+                OfferingId,
+                TenantId,
+                CampusId,
+                DepartmentId,
+                CourseId,
+                SemesterName,
+                entryPoint: "EnterAttendance");
+
+            downloadResult.Should().BeOfType<RedirectToActionResult>();
+            sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("expired");
+        }
+        finally
+        {
+            SetPortalControllerClock(originalClock);
+        }
+    }
+
+    [Fact]
     public async Task ImportAttendanceCsv_StrictModeValidationFailure_WritesAuditTrail()
     {
         var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
@@ -525,6 +640,19 @@ public class PortalAttendanceCsvImportTests
             Headers = new HeaderDictionary(),
             ContentType = "text/csv"
         };
+    }
+
+    private static Func<DateTime> SetPortalControllerClock(DateTime fixedUtcNow)
+        => SetPortalControllerClock(() => fixedUtcNow);
+
+    private static Func<DateTime> SetPortalControllerClock(Func<DateTime> clock)
+    {
+        var field = typeof(PortalController).GetField("UtcNowProvider", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("UtcNowProvider field not found on PortalController.");
+
+        var previous = (Func<DateTime>)field.GetValue(null)!;
+        field.SetValue(null, clock);
+        return previous;
     }
 }
 

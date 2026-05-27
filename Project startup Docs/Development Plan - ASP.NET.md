@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.3 Token Retention and Expiry
+
+- Implementation Summary:
+  - Added token TTL policy and expiry checks for attendance import report downloads.
+  - Added explicit expired-token messaging while preserving one-time token behavior.
+  - Preserved existing API and schema posture.
+- Validation Summary:
+  - Attendance import unit matrix passed (`14/14`).
+  - Web build and targeted sidebar integration tests passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.2 Import Result Report Download
 
 - Implementation Summary:

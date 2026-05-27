@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.3 Token Retention)
+
+- No menu topology change in this slice.
+- Enter Attendance import report download now enforces token retention and explicit expiry messaging.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.2 Result Report)
 
 - No menu key additions or removals in this slice.

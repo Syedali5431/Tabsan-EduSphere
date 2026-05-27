@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.3 Token Retention)
+- Runtime delivery in this slice:
+  - Added report token TTL policy for attendance import result downloads.
+  - Added explicit expiry handling and message path.
+  - Preserved one-time token consumption and prior strict/audit/report capabilities.
+- Compatibility boundary:
+  - No schema mutation, no menu-key change, and no external API contract expansion.
+- Validation Summary:
+  - Attendance import unit matrix passed (`14/14`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.2 Result Report Download)
 - Runtime delivery in this slice:
   - Added downloadable CSV report for import outcomes (imported/skipped rows with reasons).

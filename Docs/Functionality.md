@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.3 Report Retention Controls
+
+### Implementation sync
+- Attendance import report tokens now apply explicit retention controls with TTL at download time.
+- Expired report tokens now produce a distinct user-facing expiry message.
+- One-time token consumption behavior remains enforced.
+
+### Validation sync
+- Attendance import unit matrix passed with one-time and expiry coverage (`14/14`).
+- Web build and sidebar integration regressions passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.2 Import Result Report Download
 
 ### Implementation sync

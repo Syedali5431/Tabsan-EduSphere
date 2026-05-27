@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-28 (Enter Attendance Phase 4.3 Token Retention)
+
+### Module impact summary
+- No new module introduced.
+- Attendance import report flow now enforces retention and expiry controls.
+- Role/menu boundaries remain unchanged.
+
+### Validation summary
+- Attendance import unit matrix passed (`14/14`).
+- Sidebar integration suite passed (`17/17`).
+
 ## Execution Update - 2026-05-28 (Enter Attendance Phase 4.2 Result Report Download)
 
 ### Module impact summary

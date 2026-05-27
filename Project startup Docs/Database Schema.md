@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.3 Token Retention Controls (Schema Posture)
+
+- Implementation Summary:
+	- Added report token TTL enforcement and explicit expiry path in web controller.
+	- Added deterministic clock hook used by tests to validate expiry behavior.
+	- No schema or migration changes required.
+- Validation Summary:
+	- Attendance import unit matrix, web build, and sidebar integration regressions passed.
+	- Schema posture unchanged.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.2 Result Report Download (Schema Posture)
 
 - Implementation Summary:

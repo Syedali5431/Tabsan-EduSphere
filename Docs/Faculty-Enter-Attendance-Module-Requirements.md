@@ -223,6 +223,30 @@ Allow faculty/admin users to download a CSV report after each import showing row
 - Web build passed.
 - Sidebar integration regression suite passed (`17/17`).
 
+## Phase 4.3. Report Token Retention and Expiry Controls
+
+### Goal
+
+Harden report download flow with explicit retention and one-time-use token behavior so stale links fail safely with clear user feedback.
+
+### Scope Delivered
+
+- Enforced one-time token semantics (consume on first successful lookup).
+- Added TTL enforcement (`2` hours) during report download path.
+- Added explicit expired-token message separate from generic unavailable-token message.
+
+### Phase 4.3 Implementation Summary
+
+- Added retention controls via centralized report TTL and clock provider inside attendance import report flow.
+- Updated download endpoint to return expired-message redirect when token age exceeds retention window.
+- Added focused unit tests for one-time use and expiry behavior.
+
+### Phase 4.3 Validation Summary
+
+- Attendance import unit matrix passed (`14/14`) including one-time/expiry tests.
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 4. CSV Import
 
 This phase enables bulk attendance entry through template-based import.

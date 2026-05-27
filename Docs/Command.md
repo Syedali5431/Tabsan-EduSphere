@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 4.3 Completion - Report Token TTL and One-Time Controls (2026-05-28)
+- Implementation Summary:
+  - Added report token retention policy (`2` hour TTL) for attendance import report downloads.
+  - Enforced explicit expired token path with user message.
+  - Preserved one-time token consumption behavior.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`14/14`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 4.2 Completion - Import Result Report Download (2026-05-28)
 - Implementation Summary:
   - Added report-token redirect flow from attendance CSV import to Enter Attendance page.
