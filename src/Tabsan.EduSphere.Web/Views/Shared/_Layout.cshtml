@@ -240,29 +240,17 @@
     {
         "dashboard" => ("Overview", 1),
 
-        "admin_users" => ("General Settings", 2),
-        "user_import" => ("General Settings", 2),
-        "buildings" => ("General Settings", 2),
-        "rooms" => ("General Settings", 2),
-        "analytics" => ("General Settings", 2),
-        "report_center" => ("General Settings", 2),
-        "report_settings" => ("General Settings", 2),
-        "sidebar_settings" => ("General Settings", 2),
-        "theme_settings" => ("General Settings", 2),
-        "license_update" => ("General Settings", 2),
-        "dashboard_settings" => ("General Settings", 2),
-        "institution_policy" => ("General Settings", 2),
-        "module_composition" => ("General Settings", 2),
-        "library_config" => ("General Settings", 2),
-        "accreditation" => ("General Settings", 2),
-        "tenant_management" => ("General Settings", 2),
-        "campus_management" => ("General Settings", 2),
-        "notifications" => ("General Settings", 2),
-        "helpdesk" => ("General Settings", 2),
+        "timetable_admin" => ("Faculty Related", 2),
+        "timetable_teacher" => ("Faculty Related", 2),
+        "assignments" => ("Faculty Related", 2),
+        "gradebook"     => ("Faculty Related", 2),
+        "rubric_manage" => ("Faculty Related", 2),
+        "lms_manage"    => ("Faculty Related", 2),
+        "course_material" => ("Faculty Related", 2),
+        "discussion"    => ("Faculty Related", 2),
+        "announcements" => ("Faculty Related", 2),
 
-        "payments" => ("Finance Related", 3),
-
-        "timetable_student" => ("Student Related", 4),
+        "timetable_student" => ("Student Related", 3),
         "students" => ("Student Related", 3),
         "attendance" => ("Student Related", 3),
         "results" => ("Student Related", 3),
@@ -271,30 +259,43 @@
         "student_lifecycle" => ("Student Related", 3),
         "enrollments" => ("Student Related", 3),
 
-        "program" => ("Academic Related", 5),
-        "programs" => ("Academic Related", 5),
-        "departments" => ("Academic Related", 5),
-        "courses" => ("Academic Related", 5),
-        "prerequisites" => ("Academic Related", 5),
-        "degree_audit" => ("Academic Related", 5),
-        "graduation_eligibility" => ("Academic Related", 5),
-        "degree_rules" => ("Academic Related", 5),
-        "graduation_apply" => ("Academic Related", 5),
-        "graduation_applications" => ("Academic Related", 5),
-        "generate_certificates" => ("Academic Related", 5),
-        "grading_config" => ("Academic Related", 5),
-        "study_plan" => ("Academic Related", 5),
-        "result_calculation" => ("Academic Related", 5),
+        "program" => ("Academic Related", 4),
+        "programs" => ("Academic Related", 4),
+        "departments" => ("Academic Related", 4),
+        "courses" => ("Academic Related", 4),
+        "prerequisites" => ("Academic Related", 4),
+        "degree_audit" => ("Academic Related", 4),
+        "graduation_eligibility" => ("Academic Related", 4),
+        "degree_rules" => ("Academic Related", 4),
+        "graduation_apply" => ("Academic Related", 4),
+        "graduation_applications" => ("Academic Related", 4),
+        "generate_certificates" => ("Academic Related", 4),
+        "grading_config" => ("Academic Related", 4),
+        "study_plan" => ("Academic Related", 4),
+        "result_calculation" => ("Academic Related", 4),
 
-        "timetable_admin" => ("Faculty Related", 6),
-        "timetable_teacher" => ("Faculty Related", 6),
-        "assignments" => ("Faculty Related", 6),
-        "gradebook"     => ("Faculty Related", 6),
-        "rubric_manage" => ("Faculty Related", 6),
-        "lms_manage"    => ("Faculty Related", 6),
-        "course_material" => ("Faculty Related", 6),
-        "discussion"    => ("Faculty Related", 6),
-        "announcements" => ("Faculty Related", 6),
+        "payments" => ("Financial Related", 5),
+
+        "admin_users" => ("Settings Related", 6),
+        "user_import" => ("Settings Related", 6),
+        "buildings" => ("Settings Related", 6),
+        "rooms" => ("Settings Related", 6),
+        "analytics" => ("Settings Related", 6),
+        "report_center" => ("Settings Related", 6),
+        "report_settings" => ("Settings Related", 6),
+        "sidebar_settings" => ("Settings Related", 6),
+        "theme_settings" => ("Settings Related", 6),
+        "license_update" => ("Settings Related", 6),
+        "dashboard_settings" => ("Settings Related", 6),
+        "institution_policy" => ("Settings Related", 6),
+        "module_composition" => ("Settings Related", 6),
+        "library_config" => ("Settings Related", 6),
+        "accreditation" => ("Settings Related", 6),
+        "tenant_management" => ("Settings Related", 6),
+        "campus_management" => ("Settings Related", 6),
+        "notifications" => ("Settings Related", 6),
+        "helpdesk" => ("Settings Related", 6),
+
         _ => ("General", 9)
     };
 
@@ -465,7 +466,7 @@
                         && l.Action.Equals("Programs", StringComparison.OrdinalIgnoreCase));
                     if ((showAdminLinks || hasStudentsLink) && !hasProgramsLink)
                     {
-                        groupedLinks.Add(("Academic Related", 5, 2500, "Programs", "Portal", "Programs"));
+                        groupedLinks.Add(("Academic Related", 4, 2500, "Programs", "Portal", "Programs"));
                     }
 
                     var hasUserImportLink = groupedLinks.Any(l =>
@@ -473,43 +474,43 @@
                         && l.Action.Equals("UserImport", StringComparison.OrdinalIgnoreCase));
                     if ((showAdminLinks || hasStudentsLink) && !hasUserImportLink)
                     {
-                        groupedLinks.Add(("General Settings", 2, 2510, "User Import", "Portal", "UserImport"));
+                        groupedLinks.Add(("Settings Related", 6, 2510, "User Import", "Portal", "UserImport"));
                     }
 
                     if (isSuperAdmin)
                     {
                         var superAdminFallbackLinks = new[]
                         {
-                            ("General Settings", 2, 2600, "Report Center", "Portal", "ReportCenter"),
-                            ("General Settings", 2, 2610, "Analytics", "Portal", "Analytics"),
-                            ("Academic Related", 5, 2650, "Graduation Apply", "Portal", "GraduationApply"),
-                            ("Academic Related", 5, 2660, "Graduation Applications", "Portal", "GraduationApplications"),
-                            ("Academic Related", 5, 2670, "Grading Config", "Portal", "GradingConfig"),
-                            ("Faculty Related", 6, 2680, "LMS Manage", "Portal", "LmsManage"),
-                            ("Faculty Related", 6, 2685, "Course Materials", "Portal", "CourseMaterial"),
-                            ("Faculty Related", 6, 2690, "Discussion", "Portal", "Discussion"),
-                            ("Faculty Related", 6, 2700, "Announcements", "Portal", "Announcements"),
-                            ("Academic Related", 5, 2710, "Study Plan", "Portal", "StudyPlan"),
-                            ("General Settings", 2, 2720, "Report Settings", "Portal", "ReportSettings"),
-                            ("General Settings", 2, 2730, "Sidebar Settings", "Portal", "SidebarSettings"),
-                            ("General Settings", 2, 2740, "Theme Settings", "Portal", "ThemeSettings"),
-                            ("General Settings", 2, 2745, "Two-Factor Authentication", "Portal", "TwoFactorSettings"),
-                            ("General Settings", 2, 2750, "License Update", "Portal", "LicenseUpdate"),
-                            ("General Settings", 2, 2760, "Dashboard Settings", "Portal", "DashboardSettings"),
-                            ("General Settings", 2, 2770, "Institution Policy", "Portal", "InstitutionPolicy"),
-                            ("General Settings", 2, 2780, "Module Composition", "Portal", "ModuleComposition"),
-                            ("General Settings", 2, 2790, "Library Config", "Portal", "LibraryConfig"),
-                            ("General Settings", 2, 2800, "Accreditation", "Portal", "AccreditationTemplates"),
-                            ("General Settings", 2, 2810, "Tenant Management", "Portal", "TenantManagement"),
-                            ("General Settings", 2, 2820, "Campus Management", "Portal", "CampusManagement")
+                            ("Settings Related", 6, 2600, "Report Center", "Portal", "ReportCenter"),
+                            ("Settings Related", 6, 2610, "Analytics", "Portal", "Analytics"),
+                            ("Academic Related", 4, 2650, "Graduation Apply", "Portal", "GraduationApply"),
+                            ("Academic Related", 4, 2660, "Graduation Applications", "Portal", "GraduationApplications"),
+                            ("Academic Related", 4, 2670, "Grading Config", "Portal", "GradingConfig"),
+                            ("Faculty Related", 2, 2680, "LMS Manage", "Portal", "LmsManage"),
+                            ("Faculty Related", 2, 2685, "Course Materials", "Portal", "CourseMaterial"),
+                            ("Faculty Related", 2, 2690, "Discussion", "Portal", "Discussion"),
+                            ("Faculty Related", 2, 2700, "Announcements", "Portal", "Announcements"),
+                            ("Academic Related", 4, 2710, "Study Plan", "Portal", "StudyPlan"),
+                            ("Settings Related", 6, 2720, "Report Settings", "Portal", "ReportSettings"),
+                            ("Settings Related", 6, 2730, "Sidebar Settings", "Portal", "SidebarSettings"),
+                            ("Settings Related", 6, 2740, "Theme Settings", "Portal", "ThemeSettings"),
+                            ("Settings Related", 6, 2745, "Two-Factor Authentication", "Portal", "TwoFactorSettings"),
+                            ("Settings Related", 6, 2750, "License Update", "Portal", "LicenseUpdate"),
+                            ("Settings Related", 6, 2760, "Dashboard Settings", "Portal", "DashboardSettings"),
+                            ("Settings Related", 6, 2770, "Institution Policy", "Portal", "InstitutionPolicy"),
+                            ("Settings Related", 6, 2780, "Module Composition", "Portal", "ModuleComposition"),
+                            ("Settings Related", 6, 2790, "Library Config", "Portal", "LibraryConfig"),
+                            ("Settings Related", 6, 2800, "Accreditation", "Portal", "AccreditationTemplates"),
+                            ("Settings Related", 6, 2810, "Tenant Management", "Portal", "TenantManagement"),
+                            ("Settings Related", 6, 2820, "Campus Management", "Portal", "CampusManagement")
                         };
 
                         if (showDegreeAuditSidebar)
                         {
-                            groupedLinks.Add(("Academic Related", 2, 2620, "Degree Audit", "Portal", "DegreeAudit"));
-                            groupedLinks.Add(("Academic Related", 2, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
-                            groupedLinks.Add(("Academic Related", 2, 2640, "Degree Rules", "Portal", "DegreeRules"));
-                            groupedLinks.Add(("Academic Related", 2, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
+                            groupedLinks.Add(("Academic Related", 4, 2620, "Degree Audit", "Portal", "DegreeAudit"));
+                            groupedLinks.Add(("Academic Related", 4, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
+                            groupedLinks.Add(("Academic Related", 4, 2640, "Degree Rules", "Portal", "DegreeRules"));
+                            groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
                         }
 
                         foreach (var link in superAdminFallbackLinks)
