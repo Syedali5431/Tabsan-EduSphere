@@ -207,6 +207,30 @@ else
                 <strong>Mark Attendance</strong>
             </div>
             <div class="card-body">
+                @if (string.Equals(attendanceAction, "EnterAttendance", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <a class="btn btn-outline-secondary btn-sm"
+                           asp-action="DownloadAttendanceCsvTemplate"
+                           asp-route-offeringId="@Model.SelectedOfferingId"
+                           asp-route-tenantId="@Model.SelectedTenantId"
+                           asp-route-campusId="@Model.SelectedCampusId"
+                           asp-route-entryPoint="@attendanceAction">
+                            Download Template
+                        </a>
+
+                        <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="entryPoint" value="@attendanceAction" />
+                            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required />
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Import CSV</button>
+                        </form>
+                    </div>
+                }
+
                 <form asp-action="BulkMarkAttendance" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />

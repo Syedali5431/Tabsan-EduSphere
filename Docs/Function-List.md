@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance CSV Function Inventory
+
+### Phase 1 Implementation Summary
+- Added `PortalController.DownloadAttendanceCsvTemplate` to generate/download the CSV template.
+- Added `PortalController.ImportAttendanceCsv` to validate and import CSV attendance rows through existing bulk-mark paths.
+
+### Phase 1 Validation Summary
+- Web project build passed after CSV action and view wiring implementation.
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Start Function Inventory
 
 ### Phase 1 Implementation Summary
@@ -91,6 +100,8 @@
 | DatabaseSeeder.SeedRolesAsync | Seeds `Finance` role additively alongside existing system roles during startup bootstrap. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
 | DatabaseSeeder.SeedSidebarMenusAsync(...) | Makes sidebar role seeding self-healing by updating existing role-access values, including the new `enter_attendance` menu, so corrected visibility rules are enforced on already-seeded databases. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
 | PortalController.EnterAttendance | Opens the new Enter Attendance menu route while reusing the current attendance screen and preserving guarded access. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.DownloadAttendanceCsvTemplate | Generates and downloads the Enter Attendance CSV template with required headers and sample rows. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ImportAttendanceCsv | Validates Enter Attendance CSV rows and imports attendance using existing bulk-mark API calls grouped by date. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | Department.SetTenantCampus(tenantId, campusId) | Assigns or clears tenant/campus ownership for department-level scoping while preserving InstitutionType behavior. | src/Tabsan.EduSphere.Domain/Academic/Department.cs |
 | DepartmentRepository.ApplyTenantCampusScope | Applies tenant/campus query filtering for department reads with SuperAdmin bypass. | src/Tabsan.EduSphere.Infrastructure/Repositories/DepartmentRepository.cs |
 | DeploymentTopologyResolver.Resolve | Resolves effective deployment mode, customer identity, domain, database name, and scaling settings from config and environment variables. | src/Tabsan.EduSphere.Application/Services/DeploymentTopologyResolver.cs |

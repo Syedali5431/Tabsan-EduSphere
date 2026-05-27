@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Completion (CSV Template and Import)
+
+### Implementation sync
+- Enter Attendance now supports CSV template download and CSV import in the portal attendance page.
+- Template uses predefined columns: `StudentId,StudentName,Date,Present`.
+- Import validates header shape, required fields, roster membership, duplicate StudentId+Date rows, and date/present value parsing.
+- Validated rows are grouped by date and processed through the existing attendance bulk-mark API behavior.
+
+### Validation sync
+- Web project build passed after CSV feature additions.
+- Existing Enter Attendance role/menu boundaries remain unchanged.
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Start
 
 ### Implementation sync

@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Completion (CSV)
+
+- Implementation Summary:
+  - Implemented Enter Attendance CSV template download and CSV import actions in the portal controller.
+  - Added validation and roster-scoped import processing while reusing existing attendance bulk-mark behavior.
+  - Kept implementation additive with no schema mutation.
+- Validation Summary:
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - Existing attendance route/menu behavior remains backward compatible.
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Start
 
 - Implementation Summary:

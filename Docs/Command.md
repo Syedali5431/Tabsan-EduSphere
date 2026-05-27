@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 1 Completion - CSV Template and Import (2026-05-28)
+- Implementation Summary:
+  - Added `DownloadAttendanceCsvTemplate` for Enter Attendance with CSV headers `StudentId,StudentName,Date,Present` and two sample rows.
+  - Added `ImportAttendanceCsv` with CSV structure and required-field validation, roster-based StudentId validation, date/present parsing, and duplicate StudentId+Date rejection in-file.
+  - Added Enter Attendance UI controls for template download and CSV upload while preserving manual attendance entry flows.
+- Validation Summary:
+  - Diagnostics passed for `PortalController.cs` and `Attendance.cshtml`.
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+
 ### Enter Attendance Phase 1 Start - Menu Wiring and Manual Entry Reuse (2026-05-28)
 - Implementation Summary:
   - Seeded a new `enter_attendance` sidebar menu item with default access for **Admin** and **Faculty**, with **SuperAdmin** visibility preserved through existing override behavior.

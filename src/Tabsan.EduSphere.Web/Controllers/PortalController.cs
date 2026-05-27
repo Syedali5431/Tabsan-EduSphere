@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Globalization;
+using System.Text;
 using Tabsan.EduSphere.Web.Models.Portal;
 using Tabsan.EduSphere.Web.Services;
 
@@ -3145,6 +3147,231 @@ public class PortalController : Controller
 
     // ── Attendance write actions ────────────────────────────────────────────
 
+    [HttpGet]
+    public async Task<IActionResult> DownloadAttendanceCsvTemplate(Guid? offeringId, Guid? tenantId, Guid? campusId, string? entryPoint, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+        {
+            TempData["PortalMessage"] = "Connect to the API before downloading the attendance template.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        var identity = _api.GetSessionIdentity();
+        if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+            return Forbid();
+
+        var effectiveTenantId = identity.IsSuperAdmin ? tenantId : identity.TenantId;
+        var effectiveCampusId = identity.IsSuperAdmin ? campusId : identity.CampusId;
+
+        var rows = new List<(Guid StudentId, string StudentName)>();
+        if (offeringId.HasValue)
+        {
+            try
+            {
+                var roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+                rows = roster
+                    .Take(2)
+                    .Select(r => (r.Id, r.StudentName))
+                    .ToList();
+            }
+            catch
+            {
+                // Keep template generation resilient even if roster lookup fails.
+            }
+        }
+
+        while (rows.Count < 2)
+            rows.Add((Guid.NewGuid(), rows.Count == 0 ? "Student One" : "Student Two"));
+
+        var today = DateTime.UtcNow.Date;
+        var csv = new StringBuilder();
+        csv.AppendLine("StudentId,StudentName,Date,Present");
+        csv.AppendLine($"{rows[0].StudentId},{EscapeCsvField(rows[0].StudentName)},{today:yyyy-MM-dd},true");
+        csv.AppendLine($"{rows[1].StudentId},{EscapeCsvField(rows[1].StudentName)},{today:yyyy-MM-dd},false");
+
+        var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+        return File(bytes, "text/csv", $"enter-attendance-template-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportAttendanceCsv(
+        Guid? offeringId,
+        Guid? tenantId,
+        Guid? campusId,
+        string? entryPoint,
+        IFormFile? csvFile,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+        {
+            TempData["PortalMessage"] = "Connect to the API before importing attendance CSV.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        var identity = _api.GetSessionIdentity();
+        if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+            return Forbid();
+
+        if (!offeringId.HasValue)
+        {
+            TempData["PortalMessage"] = "Select a course offering before importing attendance CSV.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        if (csvFile is null || csvFile.Length == 0)
+        {
+            TempData["PortalMessage"] = "Please choose a non-empty CSV file.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        if (!csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["PortalMessage"] = "Invalid file type. Only .csv files are accepted.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        var effectiveTenantId = identity.IsSuperAdmin ? tenantId : identity.TenantId;
+        var effectiveCampusId = identity.IsSuperAdmin ? campusId : identity.CampusId;
+
+        List<EnrollmentRosterItem> roster;
+        try
+        {
+            roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Unable to load roster for selected offering: {ex.Message}";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        var rosterIds = roster.Select(r => r.Id).ToHashSet();
+        if (rosterIds.Count == 0)
+        {
+            TempData["PortalMessage"] = "No students found in the selected offering roster.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        var validationErrors = new List<string>();
+        var parsedRows = new List<(Guid StudentId, DateTime Date, string Status)>();
+        var seenStudentDate = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            using var stream = csvFile.OpenReadStream();
+            using var reader = new StreamReader(stream);
+
+            var headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(headerLine))
+            {
+                TempData["PortalMessage"] = "CSV is empty or missing the header row.";
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            }
+
+            var header = ParseCsvLine(headerLine);
+            var expectedHeader = new[] { "StudentId", "StudentName", "Date", "Present" };
+            if (header.Length != expectedHeader.Length || !header.Select(h => h.Trim()).SequenceEqual(expectedHeader, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["PortalMessage"] = "CSV header does not match the template. Expected: StudentId,StudentName,Date,Present.";
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+            }
+
+            var rowNumber = 1;
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                rowNumber++;
+
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var cols = ParseCsvLine(line);
+                if (cols.Length != 4)
+                {
+                    validationErrors.Add($"Row {rowNumber}: expected 4 columns.");
+                    continue;
+                }
+
+                var studentIdRaw = cols[0].Trim();
+                var studentNameRaw = cols[1].Trim();
+                var dateRaw = cols[2].Trim();
+                var presentRaw = cols[3].Trim();
+
+                if (string.IsNullOrWhiteSpace(studentIdRaw) || string.IsNullOrWhiteSpace(studentNameRaw) || string.IsNullOrWhiteSpace(dateRaw) || string.IsNullOrWhiteSpace(presentRaw))
+                {
+                    validationErrors.Add($"Row {rowNumber}: required fields must not be empty.");
+                    continue;
+                }
+
+                if (!Guid.TryParse(studentIdRaw, out var studentId))
+                {
+                    validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
+                    continue;
+                }
+
+                if (!rosterIds.Contains(studentId))
+                {
+                    validationErrors.Add($"Row {rowNumber}: StudentId does not belong to the selected offering roster.");
+                    continue;
+                }
+
+                if (!TryParseAttendanceDate(dateRaw, out var date))
+                {
+                    validationErrors.Add($"Row {rowNumber}: Date must be a valid value (for example yyyy-MM-dd).");
+                    continue;
+                }
+
+                if (!TryParsePresentFlag(presentRaw, out var isPresent))
+                {
+                    validationErrors.Add($"Row {rowNumber}: Present must be true/false, yes/no, 1/0, or present/absent.");
+                    continue;
+                }
+
+                var duplicateKey = $"{studentId:D}|{date:yyyy-MM-dd}";
+                if (!seenStudentDate.Add(duplicateKey))
+                {
+                    validationErrors.Add($"Row {rowNumber}: duplicate StudentId + Date entry in import file.");
+                    continue;
+                }
+
+                parsedRows.Add((studentId, date, isPresent ? "Present" : "Absent"));
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Unable to read CSV file: {ex.Message}";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        if (validationErrors.Count > 0)
+        {
+            TempData["PortalMessage"] = "CSV validation failed: " + string.Join(" ", validationErrors.Take(5)) + (validationErrors.Count > 5 ? " ..." : string.Empty);
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        if (parsedRows.Count == 0)
+        {
+            TempData["PortalMessage"] = "CSV file has no valid attendance rows to import.";
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+        }
+
+        try
+        {
+            foreach (var byDate in parsedRows.GroupBy(r => r.Date.Date))
+            {
+                var entries = byDate.Select(r => (r.StudentId, r.Status));
+                await _api.BulkMarkAttendanceAsync(offeringId.Value, byDate.Key, entries, effectiveTenantId, effectiveCampusId, ct);
+            }
+
+            TempData["PortalMessage"] = $"Attendance CSV import processed successfully. Rows processed: {parsedRows.Count}.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Attendance CSV import failed: {ex.Message}";
+        }
+
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkMarkAttendance(
         Guid offeringId, DateTime date,
@@ -3193,6 +3420,88 @@ public class PortalController : Controller
         => string.Equals(entryPoint, nameof(EnterAttendance), StringComparison.OrdinalIgnoreCase)
             ? nameof(EnterAttendance)
             : nameof(Attendance);
+
+    private static string[] ParseCsvLine(string line)
+    {
+        var values = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        for (var i = 0; i < line.Length; i++)
+        {
+            var ch = line[i];
+            if (ch == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    current.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+
+                continue;
+            }
+
+            if (ch == ',' && !inQuotes)
+            {
+                values.Add(current.ToString());
+                current.Clear();
+                continue;
+            }
+
+            current.Append(ch);
+        }
+
+        values.Add(current.ToString());
+        return values.ToArray();
+    }
+
+    private static bool TryParseAttendanceDate(string input, out DateTime date)
+    {
+        var formats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
+        return DateTime.TryParseExact(input, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date)
+               || DateTime.TryParse(input, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+    }
+
+    private static bool TryParsePresentFlag(string input, out bool isPresent)
+    {
+        switch (input.Trim().ToLowerInvariant())
+        {
+            case "true":
+            case "1":
+            case "yes":
+            case "y":
+            case "present":
+            case "p":
+                isPresent = true;
+                return true;
+            case "false":
+            case "0":
+            case "no":
+            case "n":
+            case "absent":
+            case "a":
+                isPresent = false;
+                return true;
+            default:
+                isPresent = false;
+                return false;
+        }
+    }
+
+    private static string EscapeCsvField(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+            return '"' + value.Replace("\"", "\"\"") + '"';
+
+        return value;
+    }
 
     // ── Result write actions ────────────────────────────────────────────────
 

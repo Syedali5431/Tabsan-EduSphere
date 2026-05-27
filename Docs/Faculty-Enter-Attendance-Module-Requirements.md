@@ -84,13 +84,16 @@ Attendance entry must be scoped by:
 - Added a dedicated `EnterAttendance` portal action so the page can be entered through the new menu without breaking existing `attendance` behavior.
 - Preserved the active entry-point route during filter, mark, and correction operations so the new menu remains the controlling surface after user interaction.
 - Reused the existing manual attendance entry UI for this phase-start slice.
-- CSV import for this phase remains pending and is not implemented in this checkpoint.
+- Added Enter Attendance CSV template download with required headers (`StudentId,StudentName,Date,Present`) and two example rows.
+- Added Enter Attendance CSV import with file/header checks, required-field checks, roster-scoped StudentId validation, duplicate StudentId+Date file checks, and date/present parsing.
+- Reused existing attendance bulk-mark APIs by grouping imported rows by date and posting validated entries.
 
 ### Validation Summary
 
 - Verified editor diagnostics for the touched seed, controller, layout, view, and sidebar test files.
 - Focused validation passed in `SidebarMenuIntegrationTests` (`17/17`).
 - Verified the new menu is visible for **SuperAdmin**, **Admin**, and **Faculty**, and hidden for **Student** in the owning sidebar integration suite.
+- Verified `Tabsan.EduSphere.Web` project build succeeds after adding CSV template/import actions and view wiring.
 
 ## Phase 2. Filter Criteria and Dynamic Selection
 

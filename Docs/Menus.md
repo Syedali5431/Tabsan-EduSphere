@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Implementation Note (Enter Attendance CSV)
+
+- The `enter_attendance` routed portal surface now includes CSV template download and CSV import actions.
+- CSV actions are available only within authorized Enter Attendance access boundaries.
+
 ## 2026-05-28 Implementation Note
 
 - The `enter_attendance` menu is now seeded and routed to the portal as a separate governed entry.
