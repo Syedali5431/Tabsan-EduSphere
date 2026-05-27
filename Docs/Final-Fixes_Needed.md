@@ -3,6 +3,54 @@
 System audit timestamp: 2026-05-26
 Scope: full build/test/runtime and static validation only (no code changes applied)
 
+## Execution Update (2026-05-27)
+
+Pending-check execution started from this file and validated against current repo + local runs.
+
+### Current Check Results
+
+- Phase 1 - Critical checks:
+  - Sidebar role/regression integration checks now pass locally (`SidebarMenuIntegrationTests`: 17 passed, 0 failed).
+  - CSV-driven role matrix assertion path is now present in integration tests (test helper loads `Docs/Sidebar-Menu-Purpose.csv` and validates role visibility).
+- Phase 2 - High checks:
+  - Full solution build check passes locally.
+  - Runtime startup still reports environment-profile warnings in API/Web logs (`No 'Environments' section` / profile fallback warnings) and API startup also fails on SQL connection pool timeout during seeding in current local environment.
+  - Script governance compatibility check is implemented in docs (execution-order README contains compatibility alias policy).
+- Phase 3 - Medium checks:
+  - CI workflow includes SQL service + schema/seed + `05-PostDeployment-Checks.sql` execution.
+  - CI workflow includes module health summary generation and artifact upload (`test-module-summary.md` + `test-module-summary.json`).
+- Phase 4 - Low checks:
+  - Docs lint cleanup has started with bounded fixes on operational docs, but full markdown backlog remains a larger ongoing task.
+
+### Remaining Open from This Validation Pass
+
+- Resolve runtime environment-profile warning path in API/Web startup (configuration source loading mismatch).
+- Stabilize API startup DB connectivity in local smoke path (connection pool timeout during startup seed).
+- Continue markdown cleanup as a full backlog burn-down (current pass only covered high-priority docs).
+
+## Execution Update (2026-05-27, Continuation)
+
+Follow-up execution focused on remaining high-priority startup checks.
+
+### Fixes Applied During This Pass
+
+- Startup configuration loader now correctly supports absolute parent-path JSON sources, ensuring `src/environments.json` is loaded for API/Web profile resolution.
+- Development profile DB targets were normalized for local startup smoke consistency:
+  - `src/environments.json` Development/LocalHost/Testing database connection values updated to LocalDB conventions.
+  - API development appsettings connection string aligned to LocalDB baseline.
+
+### Re-Validation Outcomes
+
+- Build: passed (`Tabsan.EduSphere.sln`).
+- API startup smoke: passed after starting LocalDB instance (`sqllocaldb start MSSQLLocalDB`).
+- Web startup smoke: passed.
+- Environment-profile warning path: resolved (no more `No 'Environments' section` / fallback warnings in startup logs).
+
+### Remaining Open (Updated)
+
+- Keep LocalDB (or equivalent SQL target) available before API smoke/startup in local validation runs.
+- Continue markdown-lint backlog burn-down beyond the already cleaned operational docs.
+
 ## Validation Result Summary (All Phases)
 
 - Overall validation execution status: Completed

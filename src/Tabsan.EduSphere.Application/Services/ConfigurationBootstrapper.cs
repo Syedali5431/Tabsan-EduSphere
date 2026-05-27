@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 namespace Tabsan.EduSphere.Application.Services;
@@ -66,12 +67,30 @@ public static class ConfigurationBootstrapper
             return insertIndex;
         }
 
-        var source = new JsonConfigurationSource
+        JsonConfigurationSource source;
+        if (Path.IsPathRooted(path))
         {
-            Path = path,
-            Optional = optional,
-            ReloadOnChange = reloadOnChange
-        };
+            var directory = Path.GetDirectoryName(path);
+            var fileName = Path.GetFileName(path);
+
+            source = new JsonConfigurationSource
+            {
+                Path = fileName,
+                FileProvider = string.IsNullOrWhiteSpace(directory) ? null : new PhysicalFileProvider(directory),
+                Optional = optional,
+                ReloadOnChange = reloadOnChange
+            };
+        }
+        else
+        {
+            source = new JsonConfigurationSource
+            {
+                Path = path,
+                Optional = optional,
+                ReloadOnChange = reloadOnChange
+            };
+        }
+
         source.EnsureDefaults(configurationBuilder);
 
         configurationBuilder.Sources.Insert(insertIndex, source);

@@ -2,11 +2,11 @@
   "Environments": {
     "Development": {
       "AppConnectionString": "http://localhost:5181",
-      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb;Trusted_Connection=True;TrustServerCertificate=True;"
+      "DatabaseConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
     "LocalHost": {
       "AppConnectionString": "http://localhost:5181",
-      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb;Trusted_Connection=True;TrustServerCertificate=True;"
+      "DatabaseConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
     "Production": {
       "AppConnectionString": "https://api.example.com",
@@ -34,7 +34,7 @@
     },
     "Testing": {
       "AppConnectionString": "http://localhost:5181",
-      "DatabaseConnectionString": "Server=localhost;Database=TabsanEduSphereDb_Testing;Trusted_Connection=True;TrustServerCertificate=True;"
+      "DatabaseConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=TabsanEduSphereDb_Testing;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     }
   },
   "DefaultEnvironment": "Development",
