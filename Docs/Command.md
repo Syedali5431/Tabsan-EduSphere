@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 1 Completion - Roster Scope Hardening and Test Matrix (2026-05-28)
+- Implementation Summary:
+  - Hardened `BulkMarkAttendance` and `CorrectAttendance` in portal flow to enforce offering-roster membership under effective tenant/campus scope.
+  - Added manual status normalization gate so invalid status values are rejected before API calls.
+  - Added focused unit tests covering CSV success/failure matrix and manual roster-scope guard paths.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`7/7`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 1 Completion - CSV Template and Import (2026-05-28)
 - Implementation Summary:
   - Added `DownloadAttendanceCsvTemplate` for Enter Attendance with CSV headers `StudentId,StudentName,Date,Present` and two sample rows.

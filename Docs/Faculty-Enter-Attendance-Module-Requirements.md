@@ -87,6 +87,8 @@ Attendance entry must be scoped by:
 - Added Enter Attendance CSV template download with required headers (`StudentId,StudentName,Date,Present`) and two example rows.
 - Added Enter Attendance CSV import with file/header checks, required-field checks, roster-scoped StudentId validation, duplicate StudentId+Date file checks, and date/present parsing.
 - Reused existing attendance bulk-mark APIs by grouping imported rows by date and posting validated entries.
+- Hardened manual attendance write paths so submitted/corrected student IDs must belong to the selected offering roster for the effective tenant/campus scope.
+- Normalized manual attendance status values to valid `Present` or `Absent` values before API submission.
 
 ### Validation Summary
 
@@ -94,6 +96,7 @@ Attendance entry must be scoped by:
 - Focused validation passed in `SidebarMenuIntegrationTests` (`17/17`).
 - Verified the new menu is visible for **SuperAdmin**, **Admin**, and **Faculty**, and hidden for **Student** in the owning sidebar integration suite.
 - Verified `Tabsan.EduSphere.Web` project build succeeds after adding CSV template/import actions and view wiring.
+- Added and passed focused unit test matrix for attendance CSV import validation and roster hard-scope guards (`7/7`).
 
 ## Phase 2. Filter Criteria and Dynamic Selection
 

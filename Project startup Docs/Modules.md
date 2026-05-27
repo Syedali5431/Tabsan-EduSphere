@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-28 (Enter Attendance Scope Hardening)
+
+### Module impact summary
+- No new module was introduced.
+- Existing attendance module behavior was hardened to enforce offering-roster scope in manual mark/correct writes.
+- CSV template/import behavior from prior slice remains in place.
+
+### Validation summary
+- Focused attendance unit test matrix passed (`7/7`).
+- Targeted sidebar integration suite passed (`17/17`).
+
 ## Execution Update - 2026-05-28 (Enter Attendance Phase 1 Completion - CSV)
 
 ### Module impact summary

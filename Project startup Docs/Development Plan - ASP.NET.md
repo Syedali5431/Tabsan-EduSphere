@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Hard Scope Enforcement
+
+- Implementation Summary:
+  - Added roster-scope validation in manual attendance mark/correct portal actions.
+  - Added focused unit tests for CSV import matrix and manual scope guards.
+  - Preserved existing API contracts and schema posture.
+- Validation Summary:
+  - Focused unit test matrix passed (`7/7`).
+  - Web project build passed.
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Completion (CSV)
 
 - Implementation Summary:

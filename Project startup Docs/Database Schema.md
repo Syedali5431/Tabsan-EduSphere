@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Roster Scope Hardening (Schema Posture)
+
+- Implementation Summary:
+	- Completed attendance write-scope hardening in web controller flow for manual mark/correct operations.
+	- Added focused unit test matrix for CSV import and manual roster-scope guard behavior.
+	- No table, column, index, FK, constraint, or migration change was required.
+- Validation Summary:
+	- Targeted unit and integration validations passed for this slice.
+	- Schema posture remains unchanged; no script mutation is required.
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 CSV Completion (Schema Posture)
 
 - Implementation Summary:

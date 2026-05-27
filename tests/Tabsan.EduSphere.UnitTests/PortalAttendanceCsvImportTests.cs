@@ -1,0 +1,357 @@
+using System.Reflection;
+using System.Text;
+using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.FileProviders;
+using Tabsan.EduSphere.Web.Controllers;
+using Tabsan.EduSphere.Web.Models.Portal;
+using Tabsan.EduSphere.Web.Services;
+
+namespace Tabsan.EduSphere.UnitTests;
+
+public class PortalAttendanceCsvImportTests
+{
+    [Fact]
+    public async Task BulkMarkAttendance_StudentOutsideRoster_DoesNotCallBulkMark()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var outsideRoster = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.BulkMarkAttendance(
+            offeringId,
+            date: DateTime.UtcNow.Date,
+            studentIds: [outsideRoster],
+            statuses: ["Present"],
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("outside the selected offering roster");
+    }
+
+    [Fact]
+    public async Task CorrectAttendance_StudentOutsideRoster_DoesNotCallCorrectAttendance()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var outsideRoster = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+
+        var result = await sut.CorrectAttendance(
+            studentProfileId: outsideRoster,
+            offeringId: offeringId,
+            date: DateTime.UtcNow.Date,
+            newStatus: "Present",
+            remarks: "test",
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.CorrectCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("not in the offering roster");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_ValidRows_CallsBulkMarkAndRedirectsToEnterAttendance()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var tenantId = Guid.Parse("00000000-0000-0000-0000-000000000111");
+        var campusId = Guid.Parse("00000000-0000-0000-0000-000000000222");
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var studentTwo = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity
+            {
+                Roles = ["Faculty"],
+                TenantId = tenantId,
+                CampusId = campusId
+            },
+            roster:
+            [
+                new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" },
+                new EnrollmentRosterItem { Id = studentTwo, StudentName = "Student Two" }
+            ]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{studentOne},Student One,2026-05-28,true",
+            $"{studentTwo},Student Two,2026-05-28,false"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            offeringId,
+            tenantId,
+            campusId,
+            "EnterAttendance",
+            CreateCsvFile(csv),
+            CancellationToken.None);
+
+        var redirect = result.Should().BeOfType<RedirectToActionResult>().Subject;
+        redirect.ActionName.Should().Be("EnterAttendance");
+        proxy.BulkCalls.Should().HaveCount(1);
+        proxy.BulkCalls[0].OfferingId.Should().Be(offeringId);
+        proxy.BulkCalls[0].Entries.Should().Contain(x => x.StudentProfileId == studentOne && x.Status == "Present");
+        proxy.BulkCalls[0].Entries.Should().Contain(x => x.StudentProfileId == studentTwo && x.Status == "Absent");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_InvalidHeader_DoesNotCallBulkMark()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,Name,Date,Present",
+            $"{studentOne},Student One,2026-05-28,true"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            offeringId,
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("header does not match");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_UnknownStudentId_DoesNotCallBulkMark()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var inRoster = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var unknownStudent = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = inRoster, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{unknownStudent},Unknown Student,2026-05-28,true"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            offeringId,
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("does not belong to the selected offering roster");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_InvalidDateOrPresent_DoesNotCallBulkMark()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{studentOne},Student One,not-a-date,maybe"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            offeringId,
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("validation failed");
+    }
+
+    [Fact]
+    public async Task ImportAttendanceCsv_DuplicateStudentAndDate_DoesNotCallBulkMark()
+    {
+        var offeringId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var studentOne = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+        var (api, proxy) = CreateApiClient(
+            isConnected: true,
+            identity: new SessionIdentity { Roles = ["Faculty"] },
+            roster: [new EnrollmentRosterItem { Id = studentOne, StudentName = "Student One" }]);
+
+        var sut = CreateSut(api);
+        var csv = string.Join('\n',
+        [
+            "StudentId,StudentName,Date,Present",
+            $"{studentOne},Student One,2026-05-28,true",
+            $"{studentOne},Student One,2026-05-28,false"
+        ]);
+
+        var result = await sut.ImportAttendanceCsv(
+            offeringId,
+            tenantId: null,
+            campusId: null,
+            entryPoint: "EnterAttendance",
+            csvFile: CreateCsvFile(csv),
+            ct: CancellationToken.None);
+
+        result.Should().BeOfType<RedirectToActionResult>();
+        proxy.BulkCalls.Should().BeEmpty();
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("duplicate");
+    }
+
+    private static PortalController CreateSut(IEduApiClient api)
+    {
+        var controller = new PortalController(api, new AttendanceTestWebHostEnvironment());
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+        controller.TempData = new TempDataDictionary(controller.HttpContext, new TestTempDataProvider());
+        return controller;
+    }
+
+    private static (IEduApiClient Client, AttendanceCsvEduApiClientProxy Proxy) CreateApiClient(bool isConnected, SessionIdentity identity, List<EnrollmentRosterItem> roster)
+    {
+        var api = DispatchProxy.Create<IEduApiClient, AttendanceCsvEduApiClientProxy>();
+        var proxy = (AttendanceCsvEduApiClientProxy)(object)api;
+        proxy.IsConnectedValue = isConnected;
+        proxy.Identity = identity;
+        proxy.Roster = roster;
+        return (api, proxy);
+    }
+
+    private static IFormFile CreateCsvFile(string csv)
+    {
+        var bytes = Encoding.UTF8.GetBytes(csv);
+        var stream = new MemoryStream(bytes);
+        return new FormFile(stream, 0, bytes.Length, "csvFile", "attendance.csv")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "text/csv"
+        };
+    }
+}
+
+public class AttendanceCsvEduApiClientProxy : DispatchProxy
+{
+    public bool IsConnectedValue { get; set; }
+    public SessionIdentity Identity { get; set; } = new();
+    public List<EnrollmentRosterItem> Roster { get; set; } = [];
+    public List<BulkCallRecord> BulkCalls { get; } = [];
+    public List<CorrectCallRecord> CorrectCalls { get; } = [];
+
+    protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+    {
+        if (targetMethod is null)
+            throw new NotSupportedException();
+
+        return targetMethod.Name switch
+        {
+            nameof(IEduApiClient.IsConnected) => IsConnectedValue,
+            nameof(IEduApiClient.GetSessionIdentity) => Identity,
+            nameof(IEduApiClient.GetEnrollmentRosterAsync) => Task.FromResult(Roster),
+            nameof(IEduApiClient.BulkMarkAttendanceAsync) => HandleBulkMarkAttendanceAsync(args),
+            nameof(IEduApiClient.CorrectAttendanceAsync) => HandleCorrectAttendanceAsync(args),
+            _ => throw new NotSupportedException($"Method '{targetMethod.Name}' is not configured for this test proxy.")
+        };
+    }
+
+    private Task HandleBulkMarkAttendanceAsync(object?[]? args)
+    {
+        if (args is null || args.Length < 3)
+            throw new InvalidOperationException("Unexpected BulkMarkAttendanceAsync invocation arguments.");
+
+        var offeringId = (Guid)args[0]!;
+        var date = (DateTime)args[1]!;
+        var entries = ((IEnumerable<(Guid StudentProfileId, string Status)>)args[2]!).ToList();
+
+        BulkCalls.Add(new BulkCallRecord(offeringId, date, entries));
+        return Task.CompletedTask;
+    }
+
+    private Task HandleCorrectAttendanceAsync(object?[]? args)
+    {
+        if (args is null || args.Length < 4)
+            throw new InvalidOperationException("Unexpected CorrectAttendanceAsync invocation arguments.");
+
+        var studentProfileId = (Guid)args[0]!;
+        var offeringId = (Guid)args[1]!;
+        var date = (DateTime)args[2]!;
+        var newStatus = (string)args[3]!;
+
+        CorrectCalls.Add(new CorrectCallRecord(studentProfileId, offeringId, date, newStatus));
+        return Task.CompletedTask;
+    }
+}
+
+public record BulkCallRecord(Guid OfferingId, DateTime Date, List<(Guid StudentProfileId, string Status)> Entries);
+public record CorrectCallRecord(Guid StudentProfileId, Guid OfferingId, DateTime Date, string Status);
+
+file sealed class AttendanceTestWebHostEnvironment : IWebHostEnvironment
+{
+    public string EnvironmentName { get; set; } = "Development";
+    public string ApplicationName { get; set; } = "Tabsan.EduSphere.Web.Tests";
+    public string WebRootPath { get; set; } = string.Empty;
+    public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
+    public string ContentRootPath { get; set; } = string.Empty;
+    public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+}
+
+file sealed class TestTempDataProvider : ITempDataProvider
+{
+    private IDictionary<string, object> _data = new Dictionary<string, object>();
+
+    public IDictionary<string, object> LoadTempData(HttpContext context) => _data;
+
+    public void SaveTempData(HttpContext context, IDictionary<string, object> values)
+    {
+        _data = new Dictionary<string, object>(values);
+    }
+}

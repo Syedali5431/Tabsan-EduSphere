@@ -3386,8 +3386,47 @@ public class PortalController : Controller
                 var sessionId = _api.GetSessionIdentity();
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
-                var entries = studentIds
-                    .Zip(statuses, (sid, s) => (StudentProfileId: sid, Status: s));
+
+                if (studentIds.Length != statuses.Length)
+                {
+                    TempData["PortalMessage"] = "Invalid attendance submission: student and status counts do not match.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                }
+
+                var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
+                var entries = new List<(Guid StudentProfileId, string Status)>();
+                var invalidStudentIds = new List<Guid>();
+
+                for (var i = 0; i < studentIds.Length; i++)
+                {
+                    var studentId = studentIds[i];
+                    if (!rosterIds.Contains(studentId))
+                    {
+                        invalidStudentIds.Add(studentId);
+                        continue;
+                    }
+
+                    if (!TryNormalizeAttendanceStatus(statuses[i], out var normalizedStatus))
+                    {
+                        TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                    }
+
+                    entries.Add((studentId, normalizedStatus));
+                }
+
+                if (invalidStudentIds.Count > 0)
+                {
+                    TempData["PortalMessage"] = "Attendance submission contains students outside the selected offering roster.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                }
+
+                if (entries.Count == 0)
+                {
+                    TempData["PortalMessage"] = "No valid attendance entries were submitted.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                }
+
                 await _api.BulkMarkAttendanceAsync(offeringId, date, entries, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Attendance marked.";
             }
@@ -3408,7 +3447,21 @@ public class PortalController : Controller
                 var sessionId = _api.GetSessionIdentity();
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
-                await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, newStatus, remarks, effectiveTenantId, effectiveCampusId, ct);
+
+                if (!TryNormalizeAttendanceStatus(newStatus, out var normalizedStatus))
+                {
+                    TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                }
+
+                var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
+                if (!rosterIds.Contains(studentProfileId))
+                {
+                    TempData["PortalMessage"] = "Attendance correction denied: selected student is not in the offering roster.";
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
+                }
+
+                await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, normalizedStatus, remarks, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Attendance corrected.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
@@ -3420,6 +3473,12 @@ public class PortalController : Controller
         => string.Equals(entryPoint, nameof(EnterAttendance), StringComparison.OrdinalIgnoreCase)
             ? nameof(EnterAttendance)
             : nameof(Attendance);
+
+    private async Task<HashSet<Guid>> GetRosterIdsAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var roster = await _api.GetEnrollmentRosterAsync(offeringId, tenantId, campusId, ct);
+        return roster.Select(r => r.Id).ToHashSet();
+    }
 
     private static string[] ParseCsvLine(string line)
     {
@@ -3490,6 +3549,18 @@ public class PortalController : Controller
                 isPresent = false;
                 return false;
         }
+    }
+
+    private static bool TryNormalizeAttendanceStatus(string input, out string normalizedStatus)
+    {
+        if (TryParsePresentFlag(input, out var isPresent))
+        {
+            normalizedStatus = isPresent ? "Present" : "Absent";
+            return true;
+        }
+
+        normalizedStatus = string.Empty;
+        return false;
     }
 
     private static string EscapeCsvField(string value)

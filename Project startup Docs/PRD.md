@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Scope Hardening)
+- Runtime delivery in this slice:
+  - Hardened manual attendance mark/correct writes to enforce selected-offering roster membership under effective tenant/campus scope.
+  - Added status normalization checks for manual attendance updates before API submission.
+  - Added focused test matrix coverage for CSV validation and manual scope enforcement.
+- Compatibility boundary:
+  - No menu-key expansion, no API contract expansion, and no schema mutation in this slice.
+- Validation Summary:
+  - Focused attendance unit test matrix passed (`7/7`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 1 Completion - CSV)
 - Runtime delivery in this slice:
   - Added Enter Attendance CSV template download with required headers and sample rows.

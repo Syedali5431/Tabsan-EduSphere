@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Scope Hardening)
+
+- No new menu key was introduced in this slice.
+- Runtime behavior was hardened so Enter Attendance write operations enforce selected-offering roster scope under effective tenant/campus context.
+
 ## 2026-05-28 Implementation Note (Enter Attendance CSV)
 
 - The `enter_attendance` routed portal surface now includes CSV template download and CSV import actions.

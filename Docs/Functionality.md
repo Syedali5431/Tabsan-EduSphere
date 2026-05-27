@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Hard Scope Enforcement
+
+### Implementation sync
+- Manual attendance write operations now enforce selected-offering roster membership under effective tenant/campus scope.
+- Manual attendance status input is normalized and validated to `Present`/`Absent` before API submission.
+- Focused unit test matrix now covers CSV validation paths and manual roster-scope guard behavior.
+
+### Validation sync
+- Focused unit test matrix passed (`7/7`).
+- Targeted sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 1 Completion (CSV Template and Import)
 
 ### Implementation sync
