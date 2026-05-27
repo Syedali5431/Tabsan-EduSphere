@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 4.4 Completion - Report UX Hint (2026-05-28)
+- Implementation Summary:
+  - Added inline Enter Attendance UI guidance that report links are one-time and expire after 2 hours.
+  - Preserved existing strict mode, audit trail, report generation, and token retention behavior.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter FullyQualifiedName~PortalAttendanceCsvImportTests -v minimal` passed (`14/14`).
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal` passed.
+  - `dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal` passed (`17/17`).
+
 ### Enter Attendance Phase 4.3 Completion - Report Token TTL and One-Time Controls (2026-05-28)
 - Implementation Summary:
   - Added report token retention policy (`2` hour TTL) for attendance import report downloads.

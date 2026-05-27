@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.4 UX Hint)
+- Runtime delivery in this slice:
+  - Added inline UI guidance for one-time and 2-hour expiry behavior of import report links.
+  - Preserved token retention, strict-mode, and report generation behavior.
+- Compatibility boundary:
+  - No schema mutation, no menu-key updates, and no API contract changes.
+- Validation Summary:
+  - Attendance import unit matrix passed (`14/14`).
+  - Targeted sidebar integration tests passed (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.3 Token Retention)
 - Runtime delivery in this slice:
   - Added report token TTL policy for attendance import result downloads.

@@ -1,3 +1,12 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.4 Report UX Hint
+
+- Implementation Summary:
+  - Added inline report-link behavior hint in Enter Attendance UI.
+  - No controller API signature changes and no schema impact.
+- Validation Summary:
+  - Attendance import unit matrix passed (`14/14`).
+  - Web build and targeted sidebar integration suite passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.3 Token Retention and Expiry
 
 - Implementation Summary:

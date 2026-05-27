@@ -247,6 +247,29 @@ Harden report download flow with explicit retention and one-time-use token behav
 - Web build passed.
 - Sidebar integration regression suite passed (`17/17`).
 
+## Phase 4.4. Import Report UX Clarification
+
+### Goal
+
+Make token behavior explicit in the Enter Attendance UI so users understand one-time and expiry constraints before clicking the report link.
+
+### Scope Delivered
+
+- Added inline hint text near import report download action.
+- Kept one-time and TTL behavior unchanged while improving UX clarity.
+- Revalidated attendance/unit/build/integration baseline.
+
+### Phase 4.4 Implementation Summary
+
+- Updated `Attendance.cshtml` to show: report links are one-time and expire after 2 hours.
+- No API/schema/menu changes in this slice.
+
+### Phase 4.4 Validation Summary
+
+- Attendance import unit matrix passed (`14/14`).
+- Web build passed.
+- Sidebar integration regression suite passed (`17/17`).
+
 ## Phase 4. CSV Import
 
 This phase enables bulk attendance entry through template-based import.

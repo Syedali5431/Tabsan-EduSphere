@@ -1,3 +1,13 @@
+## Execution Update - 2026-05-28 (Enter Attendance Phase 4.4 UX Hint)
+
+### Module impact summary
+- No new module or backend contract change.
+- Attendance import UI now includes explicit guidance for report token usage and expiry.
+
+### Validation summary
+- Attendance import unit matrix passed (`14/14`).
+- Sidebar integration suite passed (`17/17`).
+
 ## Execution Update - 2026-05-28 (Enter Attendance Phase 4.3 Token Retention)
 
 ### Module impact summary

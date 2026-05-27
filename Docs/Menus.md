@@ -1,5 +1,10 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.4 UX Hint)
+
+- No menu changes in this slice.
+- Enter Attendance screen now includes hint text for report link one-time/expiry behavior.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 4.3 Token Retention)
 
 - No menu topology change in this slice.

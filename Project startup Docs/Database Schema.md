@@ -1,3 +1,12 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.4 UX Hint (Schema Posture)
+
+- Implementation Summary:
+	- Added UI hint text for report token one-time and expiry rules.
+	- No schema/data/migration/script changes.
+- Validation Summary:
+	- Attendance import unit matrix, web build, and sidebar integration regressions passed.
+	- Schema posture unchanged.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.3 Token Retention Controls (Schema Posture)
 
 - Implementation Summary:

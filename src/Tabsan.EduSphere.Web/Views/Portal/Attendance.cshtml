@@ -281,6 +281,10 @@ else
                             </a>
                         }
 
+                        <div class="w-100">
+                            <small class="text-muted">Import reports are one-time download links and expire after 2 hours.</small>
+                        </div>
+
                         <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />

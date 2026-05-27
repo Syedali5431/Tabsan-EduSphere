@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Attendance Phase 4.4 UX Inventory
+
+### Phase 4.4 Implementation Summary
+- Added user-facing hint text near import report download action in attendance view.
+- No controller/action contract changes.
+
+### Phase 4.4 Validation Summary
+- Attendance import unit matrix passed (`14/14`).
+- Sidebar integration regression slice passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.3 Retention Inventory
 
 ### Phase 4.3 Implementation Summary
@@ -168,6 +178,7 @@
 | PortalController.AttendanceImportReportTtl / UtcNowProvider | Controls report retention window and deterministic time evaluation for token expiry decisions. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | AttendancePageModel.MessageDetails | Carries row-level CSV import feedback details for attendance UI rendering. | src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs |
 | AttendancePageModel.ImportReportToken | Carries report token used to render last import report download action in Enter Attendance UI. | src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs |
+| Attendance.cshtml import hint text | Explains one-time and 2-hour expiry behavior for import report links in UI. | src/Tabsan.EduSphere.Web/Views/Portal/Attendance.cshtml |
 | PortalController.BulkMarkAttendance | Enforces roster-scoped student validation and normalized attendance statuses before submitting manual attendance entries. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.CorrectAttendance | Enforces roster-scoped student validation and normalized status values before submitting attendance corrections. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.ValidateAttendanceWriteScopeAsync | Validates selected offering against selected Department, Course, and Class/Semester under effective tenant/campus scope before attendance write operations. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |

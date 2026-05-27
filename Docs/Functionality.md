@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 4.4 Report Download UX Hint
+
+### Implementation sync
+- Enter Attendance import section now displays explicit one-time and 2-hour expiry guidance for report links.
+- No behavior changes to token validation logic in this slice.
+
+### Validation sync
+- Attendance import unit matrix passed (`14/14`).
+- Web build and sidebar integration regression suites passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 4.3 Report Retention Controls
 
 ### Implementation sync
