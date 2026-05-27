@@ -6,9 +6,10 @@ Version: 1.6 — updated 26 May 2026
 Completion Status: Phase 38 complete (final separation baseline)
 
 Repository Sync Note (15 May 2026):
+
 - Operations now support dual deployment flows:
-	- Demo flow (with full dummy data)
-	- Clean flow (startup-only baseline without dummy data)
+  - Demo flow (with full dummy data)
+  - Clean flow (startup-only baseline without dummy data)
 - Refer to `Scripts/README.md` and `Scripts/README-SCRIPT-EXECUTION-ORDER.md` for exact commands.
 
 ## Final Release Packaging Update (Phase 37/38)
@@ -16,9 +17,9 @@ Repository Sync Note (15 May 2026):
 - Runtime app publish output is separated from the license app publish output.
 - Non-runtime documentation and training assets are distributed as a separate package.
 - Canonical package outputs:
-	- Artifacts/Phase37/Tabsan.EduSphere-App-Publish-20260515.zip
-	- Artifacts/Phase37/Tabsan.Lic-Publish-20260515.zip
-	- Artifacts/Phase38/NonRuntime-Assets-20260515.zip
+  - Artifacts/Phase37/Tabsan.EduSphere-App-Publish-20260515.zip
+  - Artifacts/Phase37/Tabsan.Lic-Publish-20260515.zip
+  - Artifacts/Phase38/NonRuntime-Assets-20260515.zip
 
 ## Documents
 

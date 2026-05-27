@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
+
 ### 2026-05-26 - PRD Synchronization (Validation Snapshot + Functional Baseline)
 - Validation snapshot:
   - Build and runtime startup checks passed.

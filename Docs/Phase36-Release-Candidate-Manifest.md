@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 MD032 -->
+
 # Phase 36 Release Candidate Manifest
 
 ## Scope
