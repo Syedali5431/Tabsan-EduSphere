@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Start
+
+- Implementation Summary:
+  - Started runtime implementation for **Enter Attendance** by seeding the new sidebar menu and wiring a dedicated portal action.
+  - Reused the existing attendance page for manual entry behavior to keep the first implementation slice additive and low risk.
+  - Preserved backward compatibility by leaving the original `attendance` menu and route intact.
+  - CSV import and broader phase requirements remain scheduled for subsequent implementation steps.
+- Validation Summary:
+  - Focused `SidebarMenuIntegrationTests` passed (`17/17`).
+  - No API contract expansion, schema change, or script update was required in this slice.
+
 ## 2026-05-28 Update - Enter Attendance Phase 0 Plan Start
 
 - Implementation Summary:

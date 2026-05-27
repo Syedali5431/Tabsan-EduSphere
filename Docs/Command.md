@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Attendance Phase 1 Start - Menu Wiring and Manual Entry Reuse (2026-05-28)
+- Implementation Summary:
+  - Seeded a new `enter_attendance` sidebar menu item with default access for **Admin** and **Faculty**, with **SuperAdmin** visibility preserved through existing override behavior.
+  - Added portal route and sidebar-route mappings so the new menu opens a dedicated `EnterAttendance` action while reusing the current attendance page implementation.
+  - Preserved the new entry point across attendance filter, mark, and correction flows by carrying the active attendance action through page interactions.
+  - Kept the existing `attendance` menu and student attendance view intact to avoid breaking current workflows.
+  - CSV import remains pending for a later Phase 1 slice.
+- Validation Summary:
+  - Editor diagnostics passed for the touched runtime and test files.
+  - Focused integration validation passed: `SidebarMenuIntegrationTests` (`17/17`).
+
 ### Enter Attendance Phase 0 Documentation Alignment (2026-05-28)
 - Implementation Summary:
   - Started Phase 0 for the new **Enter Attendance** capability as a documentation and governance checkpoint only.

@@ -33,6 +33,7 @@ public class PortalController : Controller
         [nameof(Courses)] = "courses",
         [nameof(Assignments)] = "assignments",
         [nameof(Attendance)] = "attendance",
+        [nameof(EnterAttendance)] = "enter_attendance",
         [nameof(Results)] = "results",
         [nameof(Quizzes)] = "quizzes",
         [nameof(Fyp)] = "fyp",
@@ -76,6 +77,7 @@ public class PortalController : Controller
         "courses",
         "assignments",
         "attendance",
+        "enter_attendance",
         "results",
         "quizzes",
         "fyp",
@@ -2675,8 +2677,22 @@ public class PortalController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, nameof(Attendance), "Attendance", ct);
+
+    [HttpGet]
+    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, nameof(EnterAttendance), "Enter Attendance", ct);
+
+    private async Task<IActionResult> RenderAttendanceAsync(
+        Guid? offeringId,
+        Guid? tenantId,
+        Guid? campusId,
+        string attendanceAction,
+        string title,
+        CancellationToken ct)
     {
-        ViewData["Title"] = "Attendance";
+        ViewData["Title"] = title;
+        ViewData["AttendanceAction"] = attendanceAction;
         var model = new AttendancePageModel
         {
             IsConnected      = _api.IsConnected(),
@@ -3133,7 +3149,7 @@ public class PortalController : Controller
     public async Task<IActionResult> BulkMarkAttendance(
         Guid offeringId, DateTime date,
         [FromForm] Guid[] studentIds, [FromForm] string[] statuses,
-        Guid? tenantId, Guid? campusId,
+        Guid? tenantId, Guid? campusId, string? entryPoint,
         CancellationToken ct)
     {
         if (_api.IsConnected() && studentIds.Length > 0)
@@ -3150,13 +3166,13 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Attendance), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectAttendance(
         Guid studentProfileId, Guid offeringId, DateTime date,
-        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, string? entryPoint, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -3170,8 +3186,13 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Attendance), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId });
     }
+
+    private static string ResolveAttendanceEntryAction(string? entryPoint)
+        => string.Equals(entryPoint, nameof(EnterAttendance), StringComparison.OrdinalIgnoreCase)
+            ? nameof(EnterAttendance)
+            : nameof(Attendance);
 
     // ── Result write actions ────────────────────────────────────────────────
 

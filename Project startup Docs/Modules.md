@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-28 (Enter Attendance Phase 1 Start)
+
+### Module impact summary
+- No new paid module was introduced.
+- The existing attendance module now exposes a separate governed sidebar entry `enter_attendance` for **SuperAdmin**, **Admin**, and **Faculty**.
+- The new menu routes to the current attendance UI for manual-entry workflow reuse while preserving the legacy `attendance` menu for existing users and flows.
+- CSV import behavior is still pending and does not change module capability in this slice.
+
+### Validation summary
+- Focused sidebar role/menu validation passed in the existing integration suite (`17/17`).
+- No entitlement-matrix or schema mutation was introduced.
+
 ## Execution Update - 2026-05-28 (Enter Attendance Phase 0 Governance Start)
 
 ### Module impact summary

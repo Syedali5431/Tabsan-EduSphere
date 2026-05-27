@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 1 Start)
+- Runtime delivery in this slice:
+  - Seed and expose a separate `enter_attendance` menu under **Faculty Related**.
+  - Restrict runtime visibility to **SuperAdmin**, **Admin**, and **Faculty**.
+  - Route the new menu to a dedicated portal entry action that reuses the existing manual attendance page.
+- Backward-compatibility boundary:
+  - Keep the current `attendance` menu and student attendance behavior unchanged.
+  - Keep CSV import, template download, and database/script changes for later implementation slices.
+- Validation Summary:
+  - Focused sidebar integration validation passed (`17/17`).
+  - No schema or script change was introduced in this slice.
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 0)
 - Phase 0 requirement added:
   - Introduce `enter_attendance` as a new menu under **Faculty Related**.

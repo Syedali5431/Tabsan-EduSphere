@@ -1,3 +1,16 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Start
+
+### Implementation sync
+- Implemented the first runtime slice for **Enter Attendance** by adding the new governed sidebar menu key `enter_attendance`.
+- Wired the new menu to a dedicated `EnterAttendance` portal action that reuses the current attendance screen for manual attendance entry.
+- Restricted visibility for the new menu to **SuperAdmin**, **Admin**, and **Faculty** while leaving the existing `attendance` surface unchanged for backward compatibility.
+- Preserved the selected entry route during attendance filtering, bulk marking, and correction flows.
+- CSV import and template download remain pending for later slices.
+
+### Validation sync
+- Focused sidebar/menu validation passed in the existing integration suite (`17/17`).
+- No schema or script change was introduced in this slice.
+
 ## 2026-05-28 Update - Enter Attendance Phase 0 Governance and Navigation Requirements
 
 ### Implementation sync

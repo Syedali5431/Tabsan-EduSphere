@@ -371,6 +371,7 @@ public static class DatabaseSeeder
         var prerequisites    = await Upsert("prerequisites",     "Prerequisites",      "Configure course prerequisite rules",            13);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
+        var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
         var results          = await Upsert("results",           "Results",            "View and publish academic results",              16);
         var gradebook        = await Upsert("gradebook",         "Gradebook",          "Review and publish gradebook entries",           17);
         var rubricManage     = await Upsert("rubric_manage",     "Rubric Management",  "Manage grading rubrics",                         18);
@@ -523,6 +524,11 @@ public static class DatabaseSeeder
         EnsureRoleAccess(attendance.Id, "Admin",   isAllowed: false);
         EnsureRoleAccess(attendance.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(attendance.Id, "Student", isAllowed: true);
+
+        // Enter Attendance: Admin + Faculty; SuperAdmin accesses via override; students are excluded.
+        EnsureRoleAccess(enterAttendance.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(enterAttendance.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(enterAttendance.Id, "Student", isAllowed: false);
 
         // Results: Admin + Faculty + Student
         foreach (var role in new[] { "Admin", "Faculty", "Student" })

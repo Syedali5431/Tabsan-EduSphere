@@ -281,6 +281,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("courses",             keys);
         Assert.Contains("assignments",         keys);
         Assert.Contains("attendance",          keys);
+        Assert.Contains("enter_attendance",    keys);
         Assert.Contains("results",             keys);
         Assert.Contains("quizzes",             keys);
         Assert.Contains("fyp",                 keys);
@@ -312,6 +313,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 
         AssertActualIsSubsetOfExpected(keys, expected);
         Assert.Contains("dashboard", keys);
+        Assert.Contains("enter_attendance", keys);
         Assert.Contains("result_calculation", keys);
         Assert.Contains("report_center", keys);
         Assert.DoesNotContain("sidebar_settings", keys);
@@ -339,6 +341,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("dashboard", keys);
         Assert.Contains("timetable_teacher", keys);
         Assert.Contains("assignments", keys);
+        Assert.Contains("enter_attendance", keys);
         Assert.Contains("report_center", keys);
         Assert.DoesNotContain("sidebar_settings", keys);
         Assert.DoesNotContain("report_settings", keys);

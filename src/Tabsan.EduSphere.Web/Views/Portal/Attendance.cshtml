@@ -1,5 +1,8 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AttendancePageModel
 @{ ViewData["Title"] = "Attendance"; }
+@{
+    var attendanceAction = ViewData["AttendanceAction"]?.ToString() ?? "Attendance";
+}
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
@@ -16,7 +19,7 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <form method="get" asp-action="Attendance" class="row g-2 align-items-end">
+                <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end">
                     @if (User.IsInRole("SuperAdmin"))
                     {
                         <div class="col-md-3">
@@ -209,6 +212,7 @@ else
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="mb-3">
                         <label class="form-label">Date <span class="text-danger">*</span></label>
                         <input name="date" type="date" class="form-control" style="max-width:200px"
@@ -255,6 +259,7 @@ else
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Correct Attendance</h5>

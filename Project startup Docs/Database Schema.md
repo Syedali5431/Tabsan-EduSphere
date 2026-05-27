@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Attendance Phase 1 Start (Schema Posture)
+
+- Implementation Summary:
+	- Implemented the runtime menu and portal-route slice for **Enter Attendance**.
+	- This slice does not introduce any table, column, index, foreign-key, constraint, or migration change.
+	- Existing attendance persistence remains unchanged in this phase-start implementation.
+- Validation Summary:
+	- Focused sidebar integration validation passed while schema posture remained unchanged.
+	- Database and `Scripts` updates remain pending until later phases add CSV import or new attendance persistence requirements.
+
 ## 2026-05-28 Update - Enter Attendance Phase 0 Schema Planning Note
 
 - Implementation Summary:

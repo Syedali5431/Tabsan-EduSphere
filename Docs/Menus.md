@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Implementation Note
+
+- The `enter_attendance` menu is now seeded and routed to the portal as a separate governed entry.
+- Runtime visibility is limited to **SuperAdmin**, **Admin**, and **Faculty**.
+- The existing `attendance` menu remains in place for current attendance viewing behavior, including student access.
+
 ## 2026-05-28 Synchronization Note
 
 - Added planned menu governance coverage for `enter_attendance` under **Faculty Related**.

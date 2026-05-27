@@ -44,14 +44,14 @@ This phase defines how the menu is introduced into the application without affec
 - Sidebar role mapping for the new menu must default to **SuperAdmin**, **Admin**, and **Faculty** only.
 - Direct route access must remain protected even if a user manually enters the URL.
 
-### Implementation Summary
+### Phase 1 Implementation Summary
 
 - Defined the new `enter_attendance` menu as a governed **Faculty Related** sidebar entry.
 - Restricted default access to **SuperAdmin**, **Admin**, and **Faculty** only.
 - Required the menu to be added to **Sidebar Settings** so visibility, active status, and role mapping remain governed by the existing sidebar administration workflow.
 - Kept Phase 0 documentation-only so navigation and authorization requirements are captured before runtime changes begin.
 
-### Validation Summary
+### Phase 1 Validation Summary
 
 - Verified Phase 0 scope remains documentation-only with no runtime, database, or API mutation in this step.
 - Verified the Phase 0 requirements align with existing role-aware sidebar and route-guard patterns.
@@ -76,6 +76,21 @@ Attendance entry must be scoped by:
 - Department
 - Course
 - Subject assigned to the logged-in faculty
+
+### Implementation Summary
+
+- Added runtime menu wiring for `enter_attendance` as a distinct sidebar entry that points to the existing attendance page flow.
+- Restricted the new menu to **SuperAdmin**, **Admin**, and **Faculty** through sidebar seeding and route-guard mappings.
+- Added a dedicated `EnterAttendance` portal action so the page can be entered through the new menu without breaking existing `attendance` behavior.
+- Preserved the active entry-point route during filter, mark, and correction operations so the new menu remains the controlling surface after user interaction.
+- Reused the existing manual attendance entry UI for this phase-start slice.
+- CSV import for this phase remains pending and is not implemented in this checkpoint.
+
+### Validation Summary
+
+- Verified editor diagnostics for the touched seed, controller, layout, view, and sidebar test files.
+- Focused validation passed in `SidebarMenuIntegrationTests` (`17/17`).
+- Verified the new menu is visible for **SuperAdmin**, **Admin**, and **Faculty**, and hidden for **Student** in the owning sidebar integration suite.
 
 ## Phase 2. Filter Criteria and Dynamic Selection
 
