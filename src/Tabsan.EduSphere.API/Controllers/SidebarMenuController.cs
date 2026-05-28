@@ -57,6 +57,7 @@ public class SidebarMenuController : ControllerBase
             ["rubric_manage"] = "assignments",
             ["attendance"] = "attendance",
             ["results"] = "results",
+            ["enter_results"] = "results",
             ["gradebook"] = "results",
             ["result_calculation"] = "results",
             ["quizzes"] = "quizzes",

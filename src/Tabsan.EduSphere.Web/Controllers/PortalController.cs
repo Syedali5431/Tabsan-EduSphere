@@ -43,6 +43,7 @@ public class PortalController : Controller
         [nameof(Attendance)] = "attendance",
         [nameof(EnterAttendance)] = "enter_attendance",
         [nameof(Results)] = "results",
+        [nameof(EnterResults)] = "enter_results",
         [nameof(Quizzes)] = "quizzes",
         [nameof(Fyp)] = "fyp",
         [nameof(Helpdesk)] = "helpdesk",
@@ -87,6 +88,7 @@ public class PortalController : Controller
         "attendance",
         "enter_attendance",
         "results",
+        "enter_results",
         "quizzes",
         "fyp",
         "prerequisites",
@@ -2986,6 +2988,10 @@ public class PortalController : Controller
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> EnterResults(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => await Results(offeringId, semesterName, tenantId, campusId, ct);
 
     // ── Quizzes ────────────────────────────────────────────────────────────
 

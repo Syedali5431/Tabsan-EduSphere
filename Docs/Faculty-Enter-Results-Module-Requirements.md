@@ -42,6 +42,17 @@ The feature must follow current architecture, coding standards, tenant-aware bou
 - Student and other non-authorized roles must not see or access this route unless future requirements explicitly change behavior.
 - Direct route access must remain protected even when a URL is entered manually.
 
+### Phase 0 Implementation Summary
+
+- Added governed sidebar menu key `enter_results` under Faculty Related with display label **Enter Results**.
+- Wired web route handling so `enter_results` opens dedicated portal action `EnterResults` while preserving existing `Results` surface and behavior.
+- Enforced role defaults to Admin and Faculty with Student denied, while retaining SuperAdmin override through existing governance model.
+
+### Phase 0 Validation Summary
+
+- Sidebar integration matrix passed with `enter_results` visibility expectations for SuperAdmin/Admin/Faculty and deny expectation for Student.
+- Solution build remained green after menu and route wiring.
+
 ## Phase 1. Result Entry Methods
 
 The module must support both of these entry methods:
@@ -60,6 +71,17 @@ Result entry must be scoped by:
 - Subject
 - Class/Semester
 - Exam / Assessment Component
+
+### Phase 1 Implementation Summary (Initial Slice)
+
+- Added `PortalController.EnterResults(...)` as a dedicated entry route that reuses the existing result-entry workflow to avoid behavioral regressions.
+- Kept existing manual result-entry behavior intact through the current Results page implementation.
+- Preserved existing role-based and sidebar-governed authorization boundaries during entry-route expansion.
+
+### Phase 1 Validation Summary (Initial Slice)
+
+- Focused sidebar integration suite passed after route/menu changes.
+- Full solution build passed.
 
 ## Phase 2. Filter Criteria and Dynamic Selection
 

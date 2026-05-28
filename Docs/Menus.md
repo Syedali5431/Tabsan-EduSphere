@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Phase 0/1 Initial Slice)
+
+- Added governed menu key `enter_results` under Faculty Related.
+- Default visibility is restricted to SuperAdmin/Admin/Faculty, with Student denied under sidebar governance.
+- Route mapping now supports dedicated portal action `EnterResults` while preserving existing Results behavior.
+
 ## 2026-05-28 Synchronization Note (Enter Attendance Phase 11 Integration Expectations Closure)
 
 - No menu topology change in this slice.

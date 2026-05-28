@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 0/1 Initial Slice
+
+### Implementation sync
+- Added governed sidebar key `enter_results` for Faculty Related navigation.
+- Added dedicated portal entry action `EnterResults` and mapped sidebar routing to that action while preserving the existing Results workflow.
+- Applied Admin/Faculty allow and Student deny role visibility defaults for `enter_results` under existing sidebar governance.
+
+### Validation sync
+- Sidebar integration matrix passed with `enter_results` visibility assertions.
+- Full solution build passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 11 Integration Expectations Closure
 
 ### Implementation sync

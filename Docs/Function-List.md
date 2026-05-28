@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Phase 0/1 Initial Inventory
+
+### Phase 0/1 Implementation Summary
+- Added governed sidebar key `enter_results` in menu seeding and role-access defaults.
+- Added `PortalController.EnterResults` as dedicated entry route for Enter Results menu navigation.
+- Added sidebar module-key mapping for `enter_results` to results-module entitlement behavior.
+
+### Phase 0/1 Validation Summary
+- Sidebar integration matrix passed with `enter_results` coverage.
+- Full solution build passed.
+
 ## 2026-05-28 Update - Enter Attendance Phase 11 Integration Expectations Inventory
 
 ### Phase 11 Implementation Summary

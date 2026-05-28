@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Enter Results Phase 0/1 Initial Completion - Access Control Navigation and Entry Route (2026-05-28)
+- Implementation Summary:
+  - Added governed sidebar menu key `enter_results` with label **Enter Results** under Faculty Related.
+  - Wired dedicated portal action `EnterResults` and route mapping while reusing existing `Results` behavior to preserve backward compatibility.
+  - Applied default role access for Admin and Faculty, denied Student, with SuperAdmin visibility retained through override behavior.
+  - Updated sidebar role matrix and module-key mapping so `enter_results` follows results-module entitlement and governance filters.
+- Validation Summary:
+  - dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter FullyQualifiedName~SidebarMenuIntegrationTests -v minimal passed.
+  - dotnet build Tabsan.EduSphere.sln -v minimal passed.
+
 ### Enter Attendance Phase 11 Completion - Integration Expectations Closure (2026-05-28)
 - Implementation Summary:
   - Confirmed Enter Attendance cross-module stability for sidebar governance, role authorization, reporting surfaces, and student attendance pathways.
