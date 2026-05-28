@@ -28,6 +28,7 @@ public class LicenseBuilder
         var payload = new TablicPayload
         {
             LicenseType         = key.ExpiryType == ExpiryType.Permanent ? "Permanent" : "Yearly",
+            ExpiryType          = key.ExpiryType.ToString(),
             IssuedAt            = key.IssuedAt,
             ExpiresAt           = key.ExpiresAt,
             VerificationKeyHash = key.VerificationKeyHash,
@@ -71,6 +72,7 @@ public class LicenseBuilder
     private sealed class TablicPayload
     {
         public string LicenseType { get; init; } = default!;
+        public string ExpiryType { get; init; } = default!;
         public DateTime IssuedAt { get; init; }
         public DateTime? ExpiresAt { get; init; }
         public string VerificationKeyHash { get; init; } = default!;

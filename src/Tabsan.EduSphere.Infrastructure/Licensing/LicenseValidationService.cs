@@ -186,15 +186,16 @@ public class LicenseValidationService
             var activatedDomain = requestDomain ?? payload.AllowedDomain;
 
             var existing = await _licenseRepo.GetCurrentAsync(ct);
+            var effectiveExpiry = ResolveEffectiveExpiry(payload);
             if (existing is null)
             {
                 await _licenseRepo.AddAsync(
-                    new LicenseState(fileHash, licenseType, payload.ExpiresAt,
+                    new LicenseState(fileHash, licenseType, effectiveExpiry,
                                      payload.MaxUsers, activatedDomain), ct);
             }
             else
             {
-                existing.Replace(fileHash, licenseType, payload.ExpiresAt,
+                existing.Replace(fileHash, licenseType, effectiveExpiry,
                                  payload.MaxUsers, activatedDomain);
                 _licenseRepo.Update(existing);
             }
@@ -217,7 +218,7 @@ public class LicenseValidationService
 
             _logger.LogInformation(
                 "License activated. Type={Type}, ExpiresAt={Expiry}, MaxUsers={MaxUsers}, Domain={Domain}",
-                licenseType, payload.ExpiresAt?.ToString("O") ?? "never", payload.MaxUsers, activatedDomain ?? "any");
+                licenseType, effectiveExpiry?.ToString("O") ?? "never", payload.MaxUsers, activatedDomain ?? "any");
             return true;
         }
         catch (Exception ex)
@@ -350,6 +351,47 @@ public class LicenseValidationService
             .TrimEnd('=');
     }
 
+    private static DateTime? ResolveEffectiveExpiry(TablicPayload payload)
+    {
+        var expectedExpiry = ComputeExpectedExpiryFromIssuedAt(payload.ExpiryType, payload.IssuedAt);
+        if (!expectedExpiry.HasValue)
+        {
+            return payload.ExpiresAt;
+        }
+
+        if (!payload.ExpiresAt.HasValue)
+        {
+            return expectedExpiry;
+        }
+
+        return payload.ExpiresAt.Value <= expectedExpiry.Value
+            ? payload.ExpiresAt
+            : expectedExpiry;
+    }
+
+    private static DateTime? ComputeExpectedExpiryFromIssuedAt(string? expiryTypeRaw, DateTime issuedAt)
+    {
+        if (string.IsNullOrWhiteSpace(expiryTypeRaw))
+        {
+            return null;
+        }
+
+        if (!Enum.TryParse<TablicExpiryType>(expiryTypeRaw, ignoreCase: true, out var expiryType))
+        {
+            return null;
+        }
+
+        return expiryType switch
+        {
+            TablicExpiryType.OneMonth => issuedAt.AddMonths(1),
+            TablicExpiryType.OneYear => issuedAt.AddYears(1),
+            TablicExpiryType.TwoYears => issuedAt.AddYears(2),
+            TablicExpiryType.ThreeYears => issuedAt.AddYears(3),
+            TablicExpiryType.Permanent => null,
+            _ => null
+        };
+    }
+
     // ── Internal DTO ──────────────────────────────────────────────────────────
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -361,6 +403,7 @@ public class LicenseValidationService
     private sealed class TablicPayload
     {
         public string LicenseType { get; set; } = default!;
+        public string? ExpiryType { get; set; }
         public DateTime IssuedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
         public string VerificationKeyHash { get; set; } = default!;
@@ -385,5 +428,14 @@ public class LicenseValidationService
         /// Null means the license is not domain-locked at issuance time.
         /// </summary>
         public string? AllowedDomain { get; set; }
+    }
+
+    private enum TablicExpiryType
+    {
+        OneMonth = 1,
+        OneYear = 2,
+        TwoYears = 3,
+        ThreeYears = 4,
+        Permanent = 5
     }
 }
