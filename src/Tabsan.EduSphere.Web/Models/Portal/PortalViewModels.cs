@@ -911,8 +911,17 @@ public class ResultsPageModel
         && !string.IsNullOrWhiteSpace(SelectedExamType)
         && !string.IsNullOrWhiteSpace(SelectedAssessmentComponent);
 
+    public bool CanPublishResults =>
+        CanWriteResults
+        && (Identity?.IsAdmin == true || Identity?.IsSuperAdmin == true);
+
     public string SaveResultDisabledReason =>
         "Select department, course, subject, semester/class, exam type, and assessment component before result write actions.";
+
+    public string PublishResultDisabledReason =>
+        CanWriteResults
+            ? "Final publish requires Admin/SuperAdmin approval."
+            : SaveResultDisabledReason;
 }
 
 public class ResultModificationRequestItem

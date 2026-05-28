@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Publishing Rules Governance Hardening)
+- Runtime delivery in this slice:
+  - Enter Results final publish is now approval-gated to Admin/SuperAdmin roles in web flow.
+  - Faculty remains able to save/import draft result entries but cannot execute final publish.
+  - Correction flow now carries correction reason and records reason alongside actor metadata in correction audit payload.
+  - Draft result rows are now immutable to correction endpoints; correction is enforced for published rows only.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion beyond correction reason payload shape.
+- Validation Summary:
+  - Web build passed after publishing-governance update.
+  - Focused unit tests passed (`6/6`) for publish-role and correction invariants.
+  - Sidebar integration suite remained green (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 5 UI Behavior Logic)
 - Runtime delivery in this slice:
   - Enter Results now renders two explicit UI behavior states for result entry under required-filter governance.

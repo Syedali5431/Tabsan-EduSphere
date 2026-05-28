@@ -77,7 +77,8 @@ public sealed record BulkCreateResultsRequest(IReadOnlyList<CreateResultRequest>
 /// <summary>Request body for Admin correction of a published result.</summary>
 public sealed record CorrectResultRequest(
     decimal NewMarksObtained,
-    decimal NewMaxMarks);
+    decimal NewMaxMarks,
+    string? Reason = null);
 
 /// <summary>Read-model returned for a result entry.</summary>
 public sealed record ResultResponse(

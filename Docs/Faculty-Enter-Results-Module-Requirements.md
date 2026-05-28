@@ -267,6 +267,19 @@ Display a disabled or guidance state with the same structure, but keep write act
 - Published results must be immutable unless correction workflow is used.
 - Corrections must be fully auditable with reason and actor metadata.
 
+### Result Publishing Rules Implementation Summary
+
+- Final publish is now approval-gated in Enter Results web flow: publish action is enabled only for Admin/SuperAdmin with required filters complete.
+- Faculty write users remain able to save/import draft results but cannot execute final publish from Enter Results.
+- Correction flow now captures correction reason in request payload and persists it in correction audit metadata.
+- Correction logic now enforces published-only correction behavior so draft rows are not corrected through admin correction endpoints.
+
+### Result Publishing Rules Validation Summary
+
+- Web build passed after publish-governance and correction-audit updates.
+- Focused unit tests passed for Results page publish eligibility and published-only correction domain rule (`6/6`).
+- Sidebar integration suite remained green (`17/17`).
+
 ## Non-Functional Requirements
 
 - Preserve existing authorization and tenant isolation patterns.

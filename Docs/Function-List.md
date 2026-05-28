@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Publishing Rules Function Inventory
+
+### Runtime additions
+- `ResultsPageModel.CanPublishResults` and `PublishResultDisabledReason` added for publish-role governance state.
+- `PortalController.PublishAllResults` hardened with explicit Admin/SuperAdmin approval gating in web flow.
+- `CorrectResultRequest` expanded to include correction `Reason` for audit payload capture.
+- `Result.CorrectMarks` now enforces published-only correction invariant.
+- `ResultService.CorrectAsync` now captures correction reason in audit metadata and blocks correction of draft rows.
+
+### Validation Summary
+- Web build passed after publishing-rule hardening.
+- Focused unit tests passed (`6/6`) for publish-role and correction invariants.
+
 ## 2026-05-28 Update - Enter Results Phase 5 Function Inventory
 
 ### Runtime additions

@@ -39,4 +39,41 @@ public class ResultsPageModelTests
 
         model.CanWriteResults.Should().BeTrue();
     }
+
+    [Fact]
+    public void CanPublishResults_WhenFacultyScopeComplete_ReturnsFalse()
+    {
+        var model = new ResultsPageModel
+        {
+            Identity = new SessionIdentity { Roles = new List<string> { "Faculty" } },
+            SelectedOfferingId = Guid.NewGuid(),
+            SelectedDepartmentId = Guid.NewGuid(),
+            SelectedCourseId = Guid.NewGuid(),
+            SelectedSubjectOfferingId = Guid.NewGuid(),
+            SelectedSemesterName = "Semester 1",
+            SelectedExamType = "Final",
+            SelectedAssessmentComponent = "Theory"
+        };
+
+        model.CanPublishResults.Should().BeFalse();
+        model.PublishResultDisabledReason.Should().ContainEquivalentOf("Admin/SuperAdmin");
+    }
+
+    [Fact]
+    public void CanPublishResults_WhenAdminScopeComplete_ReturnsTrue()
+    {
+        var model = new ResultsPageModel
+        {
+            Identity = new SessionIdentity { Roles = new List<string> { "Admin" } },
+            SelectedOfferingId = Guid.NewGuid(),
+            SelectedDepartmentId = Guid.NewGuid(),
+            SelectedCourseId = Guid.NewGuid(),
+            SelectedSubjectOfferingId = Guid.NewGuid(),
+            SelectedSemesterName = "Semester 1",
+            SelectedExamType = "Final",
+            SelectedAssessmentComponent = "Theory"
+        };
+
+        model.CanPublishResults.Should().BeTrue();
+    }
 }

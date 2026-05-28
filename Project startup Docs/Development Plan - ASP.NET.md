@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Publishing Rules Governance Hardening
+
+### Implementation Summary:
+- Final publish in Enter Results is now approval-gated to Admin/SuperAdmin in web flow.
+- Correction request payload now carries correction reason and audit metadata includes reason with actor context.
+- Correction logic now blocks draft-row correction and enforces published-only correction behavior.
+
+### Validation Summary:
+- Web project build passed.
+- Focused unit slice passed (`6/6`) for publish eligibility and correction invariant checks.
+
 ## 2026-05-28 Update - Enter Results Phase 5 UI Behavior Logic
 
 ### Implementation Summary:

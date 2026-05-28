@@ -4922,7 +4922,7 @@ public class PortalController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectResult(
         Guid studentProfileId, Guid offeringId, string resultType,
-        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId,
+        decimal newMarksObtained, decimal newMaxMarks, string reason, Guid? tenantId, Guid? campusId,
         Guid? departmentId, Guid? courseId, Guid? subjectOfferingId, string? semesterName, string? examType, string? assessmentComponent,
         Guid? studentId, string? section, string? batch,
         string? entryPoint,
@@ -4936,7 +4936,7 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
-                await _api.CorrectResultAsync(studentProfileId, offeringId, resultType, newMarksObtained, newMaxMarks, effectiveTenantId, effectiveCampusId, ct);
+                await _api.CorrectResultAsync(studentProfileId, offeringId, resultType, newMarksObtained, newMaxMarks, reason, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Result corrected.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
@@ -4971,6 +4971,26 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (sessionId?.IsAdmin != true && sessionId?.IsSuperAdmin != true)
+                {
+                    TempData["PortalMessage"] = "Final publish requires Admin/SuperAdmin approval.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
@@ -5124,7 +5144,11 @@ public class PortalController : Controller
                 if (root.TryGetProperty("campusId", out var campusNode) && campusNode.ValueKind == System.Text.Json.JsonValueKind.String)
                     requestedCampusId = Guid.TryParse(campusNode.GetString(), out var parsedCampus) ? parsedCampus : null;
 
-                await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, requestedTenantId, requestedCampusId, ct);
+                var correctionReason = string.IsNullOrWhiteSpace(req.Reason)
+                    ? "Approved modification request correction."
+                    : req.Reason;
+
+                await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, correctionReason, requestedTenantId, requestedCampusId, ct);
                 await _api.ApproveResultModificationRequestAsync(requestId, notes, ct);
                 TempData["PortalMessage"] = "Result modification request approved and applied.";
             }

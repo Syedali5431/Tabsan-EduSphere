@@ -1,3 +1,13 @@
+## Execution Update - 2026-05-28 (Enter Results Publishing Rules Governance Hardening)
+
+### Module impact summary
+- No new module introduced; updates remain inside Enter Results publish/correction workflow.
+- Enter Results now enforces approval-gated final publish and published-only correction rule with correction reason audit capture.
+
+### Validation summary
+- Web build passed after publishing-rule governance updates.
+- Focused unit slice passed (`6/6`).
+
 ## Execution Update - 2026-05-28 (Enter Results Phase 5 UI Behavior Logic)
 
 ### Module impact summary

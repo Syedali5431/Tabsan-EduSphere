@@ -86,6 +86,9 @@ public class Result : BaseEntity
     /// </summary>
     public void CorrectMarks(decimal newMarksObtained, decimal newMaxMarks)
     {
+        if (!IsPublished)
+            throw new InvalidOperationException("Only published results can be corrected.");
+
         if (newMarksObtained < 0 || newMarksObtained > newMaxMarks)
             throw new ArgumentOutOfRangeException(nameof(newMarksObtained),
                 $"Corrected marks ({newMarksObtained}) must be between 0 and {newMaxMarks}.");

@@ -185,6 +185,8 @@ public class ResultService : IResultService
 
         var result = await _repo.GetAsync(studentProfileId, courseOfferingId, normalizedType, ct);
         if (result is null) return false;
+        if (!result.IsPublished)
+            throw new InvalidOperationException("Only published results can be corrected. Save draft changes through result entry.");
 
         var oldJson = $"{{\"marks\":{result.MarksObtained},\"max\":{result.MaxMarks}}}";
 
@@ -199,7 +201,7 @@ public class ResultService : IResultService
         await _audit.LogAsync(new AuditLog("CorrectResult", "Result", result.Id.ToString(),
             actorUserId: correctedByUserId,
             oldValuesJson: oldJson,
-            newValuesJson: $"{{\"marks\":{request.NewMarksObtained},\"max\":{request.NewMaxMarks}}}"), ct);
+            newValuesJson: $"{{\"marks\":{request.NewMarksObtained},\"max\":{request.NewMaxMarks},\"reason\":{System.Text.Json.JsonSerializer.Serialize(request.Reason ?? string.Empty)}}}"), ct);
 
         return true;
     }

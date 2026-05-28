@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Results Publishing Rules Governance Hardening
+
+### Implementation sync
+- Enter Results final publish is now approval-gated to Admin/SuperAdmin roles in the web flow.
+- Faculty can continue creating draft results and imports but cannot execute final publish.
+- Result correction now requires published state and includes correction reason in correction audit payload.
+
+### Validation sync
+- Web build passed after governance updates.
+- Focused unit test slice passed (`6/6`) for publish eligibility and published-only correction rule.
+- Sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Results Phase 5 UI Behavior Logic
 
 ### Implementation sync

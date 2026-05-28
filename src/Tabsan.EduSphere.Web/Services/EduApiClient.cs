@@ -304,7 +304,7 @@ public interface IEduApiClient
     Task<List<ResultItem>> GetMyResultsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<ResultItem>> GetResultsByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CreateResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal marksObtained, decimal maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
-    Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, string reason, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task PublishAllResultsAsync(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<ResultModificationRequestItem> CreateResultModificationRequestAsync(Guid resultId, Guid studentProfileId, Guid courseOfferingId, string resultType, decimal newMarksObtained, decimal newMaxMarks, string reason, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task<List<ResultModificationRequestItem>> GetPendingResultModificationRequestsAsync(CancellationToken ct);
@@ -3551,9 +3551,9 @@ public class EduApiClient : IEduApiClient
     }
 
     public Task CorrectResultAsync(Guid studentProfileId, Guid courseOfferingId, string resultType,
-        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        decimal newMarksObtained, decimal newMaxMarks, string reason, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
-        var payload = new { newMarksObtained, newMaxMarks };
+        var payload = new { newMarksObtained, newMaxMarks, reason };
         var queryParts = new List<string>
         {
             $"studentProfileId={studentProfileId}",

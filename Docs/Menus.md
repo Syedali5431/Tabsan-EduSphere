@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Publishing Rules Governance Hardening)
+
+- No new menu key introduced in this slice.
+- `enter_results` now enforces approval-gated final publish behavior (Admin/SuperAdmin) while preserving draft entry for Faculty.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Phase 5 UI Behavior Logic)
 
 - No new menu key introduced in this slice.
