@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 3 Template Download Completion)
+- Runtime delivery in this slice:
+  - Enter Results template download includes two explicit example rows in CSV output.
+  - Template example rows are treated as guidance-only and skipped during import write processing.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Web build passed after phase 3 update.
+  - Sidebar integration matrix remained green (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 1 and Phase 2 Runtime Completion)
 - Runtime delivery in this slice:
   - Enter Results now supports CSV template download and CSV import workflows.

@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Results Phase 3 Template Download Completion (Schema Posture)
+
+- Implementation Summary:
+	- Enter Results template CSV now includes two explicit example rows for import guidance.
+	- Import path now excludes those example rows from production write handling.
+	- No table, column, index, foreign key, constraint, migration, or SQL script changes were required.
+- Validation Summary:
+	- Web build passed after phase 3 update.
+	- Schema posture unchanged.
+
 ## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Completion (Schema Posture)
 
 - Implementation Summary:

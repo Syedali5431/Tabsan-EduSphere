@@ -22,6 +22,15 @@
 - Web build passed with new Enter Results runtime function surfaces.
 - Existing sidebar/menu integration matrix remained green.
 
+## 2026-05-28 Update - Enter Results Phase 3 Template Function Inventory
+
+### Phase 3 Implementation Summary
+- `PortalController.DownloadResultCsvTemplate` now emits two explicit example rows in template CSV output.
+- `PortalController.ImportResultCsv` now skips template example rows so they are not treated as production writes.
+
+### Phase 3 Validation Summary
+- Web build passed after template/import guidance-row behavior updates.
+
 ## 2026-05-28 Update - Enter Results Phase 0/1 Initial Inventory
 
 ### Phase 0/1 Implementation Summary

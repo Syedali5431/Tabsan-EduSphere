@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Phase 3 Template Download Completion)
+
+- No new menu key introduced in this slice.
+- `enter_results` template-download flow now includes explicit example-row guidance behavior.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Phase 1 and Phase 2 Runtime Completion)
 
 - No new menu key introduced in this slice.

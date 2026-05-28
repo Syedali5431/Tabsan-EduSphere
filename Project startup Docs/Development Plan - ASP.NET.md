@@ -1,3 +1,13 @@
+## 2026-05-28 Update - Enter Results Phase 3 Template Download Completion
+
+### Implementation Summary:
+- Enter Results template download now emits two explicit example rows in CSV output.
+- Import flow now excludes template example rows from write processing.
+
+### Validation Summary:
+- Web project build passed for phase 3 update.
+- Sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Completion
 
 ### Implementation Summary:

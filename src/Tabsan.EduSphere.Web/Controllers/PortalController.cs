@@ -4196,6 +4196,12 @@ public class PortalController : Controller
         return value;
     }
 
+    private static readonly HashSet<Guid> ResultTemplateExampleStudentIds = new()
+    {
+        Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        Guid.Parse("22222222-2222-2222-2222-222222222222")
+    };
+
     private static List<LookupItem> BuildResultExamTypeOptions()
         => new()
         {
@@ -4322,6 +4328,9 @@ public class PortalController : Controller
             builder.AppendLine("StudentId,StudentName,ResultType,MarksObtained,MaxMarks");
 
             var templateResultType = string.IsNullOrWhiteSpace(examType) ? "Final" : examType;
+            builder.AppendLine($"11111111-1111-1111-1111-111111111111,Example Row 1 - Replace Before Import,{EscapeCsvField(templateResultType)},75,100");
+            builder.AppendLine($"22222222-2222-2222-2222-222222222222,Example Row 2 - Replace Before Import,{EscapeCsvField(templateResultType)},88,100");
+
             foreach (var student in roster.OrderBy(x => x.StudentName, StringComparer.OrdinalIgnoreCase))
             {
                 builder.Append(EscapeCsvField(student.Id.ToString()));
@@ -4471,6 +4480,13 @@ public class PortalController : Controller
                 if (!Guid.TryParse(studentIdRaw, out var parsedStudentId))
                 {
                     validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
+                    continue;
+                }
+
+                if (ResultTemplateExampleStudentIds.Contains(parsedStudentId)
+                    || studentNameRaw.StartsWith("Example Row", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Template example rows are guidance-only and are intentionally excluded from import writes.
                     continue;
                 }
 

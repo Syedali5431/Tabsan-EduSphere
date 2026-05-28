@@ -167,6 +167,18 @@ The module must provide a **Download Template** button.
 - Grade
 - Remarks
 
+### Phase 3 Implementation Summary
+
+- Added Enter Results **Download Template** runtime behavior in web flow.
+- Template export remains CSV and now includes two explicit example rows for format guidance.
+- Example rows are marked as guidance-only and are excluded from import write processing.
+
+### Phase 3 Validation Summary
+
+- Web build passed after template example-row update.
+- Existing Enter Results route/menu governance remained unchanged.
+- Template download behavior verified with CSV header and example-row output.
+
 ## Phase 4. Import Validation, Audit, and Reporting
 
 ### Core Validation Rules

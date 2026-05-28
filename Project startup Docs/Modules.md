@@ -1,3 +1,13 @@
+## Execution Update - 2026-05-28 (Enter Results Phase 3 Template Download Completion)
+
+### Module impact summary
+- No new module introduced; updates remain inside Enter Results runtime flow.
+- Template CSV now includes two explicit guidance rows and import path excludes those rows from production writes.
+
+### Validation summary
+- Web build passed after phase 3 template behavior update.
+- Sidebar integration suite passed (`17/17`).
+
 ## Execution Update - 2026-05-28 (Enter Results Phase 1 and Phase 2 Runtime Completion)
 
 ### Module impact summary
