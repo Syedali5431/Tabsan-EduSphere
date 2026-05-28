@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Test Requirements Function Inventory
+
+### Runtime additions
+- No new runtime endpoint introduced in this slice.
+- Added focused unit test surface in `ResultServiceGovernanceTests` for:
+	- `ResultService.CorrectAsync` draft-correction guard.
+	- `ResultService.CorrectAsync` correction-reason audit propagation.
+	- `ResultService.PublishAllForOfferingAsync` draft-only publish behavior.
+
+### Validation Summary
+- Focused result-governance unit suites passed (`9/9`).
+- Web build passed after test-requirement expansion.
+
 ## 2026-05-28 Update - Enter Results Publishing Rules Function Inventory
 
 ### Runtime additions

@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Test Requirements Expansion
+
+### Implementation Summary:
+- Added focused ResultService governance test suite for publish-all and correction invariants.
+- Added service-level verification for correction reason propagation into audit payload metadata.
+- Added service-level verification that draft rows are blocked from correction path.
+
+### Validation Summary:
+- Focused result-governance unit test slice passed (`9/9`).
+- Web project build passed.
+
 ## 2026-05-28 Update - Enter Results Publishing Rules Governance Hardening
 
 ### Implementation Summary:

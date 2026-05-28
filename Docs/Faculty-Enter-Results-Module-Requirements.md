@@ -294,6 +294,20 @@ Display a disabled or guidance state with the same structure, but keep write act
 - Web-route integration tests for report download token lifecycle.
 - Regression validation for unaffected modules.
 
+### Test Requirements Implementation Summary
+
+- Added focused ResultService governance unit tests for publish/correction workflows.
+- Added service-level coverage for published-only correction guard and correction-audit reason propagation.
+- Added coverage for bulk publish behavior to ensure only draft rows are published in publish-all flow.
+- Preserved and continued route-level report token coverage and sidebar/menu integration regression checks.
+
+### Test Requirements Validation Summary
+
+- Focused result-governance unit suites passed (`9/9`).
+- Web build passed after test-requirement expansion.
+- Existing report-token web integration suite remained green (`3/3`).
+- Sidebar integration suite remained green (`17/17`).
+
 ## Acceptance Criteria
 
 1. Authorized roles can access **Enter Results** and unauthorized roles cannot.

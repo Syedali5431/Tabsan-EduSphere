@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Test Requirements Expansion)
+
+- No new menu key introduced in this slice.
+- `enter_results` behavior remains unchanged; this phase expands test coverage only for publish/correction governance invariants.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Publishing Rules Governance Hardening)
 
 - No new menu key introduced in this slice.

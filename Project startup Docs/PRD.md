@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Test Requirements Expansion)
+- Runtime delivery in this slice:
+  - No new runtime endpoint or workflow introduced.
+  - Added focused ResultService unit coverage for publish/correction invariants and correction-reason audit propagation.
+  - Added coverage to ensure publish-all affects draft rows only.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Focused result-governance unit test slice passed (`9/9`).
+  - Web build passed.
+  - Report-token web integration suite remained green (`3/3`).
+  - Sidebar integration suite remained green (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Publishing Rules Governance Hardening)
 - Runtime delivery in this slice:
   - Enter Results final publish is now approval-gated to Admin/SuperAdmin roles in web flow.

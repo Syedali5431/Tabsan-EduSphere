@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Results Test Requirements Expansion
+
+### Implementation sync
+- Added ResultService governance unit coverage for publish/correction workflow invariants.
+- Added unit checks for correction-audit reason propagation and published-only correction enforcement.
+- Added unit checks for publish-all behavior to ensure only draft rows are published.
+
+### Validation sync
+- Focused result-governance unit slices passed (`9/9`).
+- Web build passed.
+- Report-token web integration (`3/3`) and sidebar regression (`17/17`) remained green.
+
 ## 2026-05-28 Update - Enter Results Publishing Rules Governance Hardening
 
 ### Implementation sync
