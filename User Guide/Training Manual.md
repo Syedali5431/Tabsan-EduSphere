@@ -239,3 +239,10 @@ Each participant should:
 - Include governance awareness module for Admin Users, Tenant Management, and Campus Management settings surfaces.
 - Reinforce user-import training to cover claim-aware tenant/campus boundaries in bulk onboarding.
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Add trainer demo for Enter Results write-scope checks and controlled publish rights by role.
+- Add correction workflow drill: enforce reason capture and published-state prerequisite before correction.
+- Add attendance verification scenario using multi-day seeded records for trend analysis and threshold checks.
+- Update training DB validation steps to expect `DemoDatasetVersion = FullDummyData-v9`.
+

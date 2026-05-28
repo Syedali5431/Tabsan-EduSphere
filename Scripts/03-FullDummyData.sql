@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v8', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v9', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v8',
+    SET [DemoValue] = N'FullDummyData-v9',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1428,6 +1428,35 @@ SELECT a.Id, a.StudentProfileId, a.CourseOfferingId, a.[Date], a.[Status], a.Mar
 FROM @Attendance a
 WHERE NOT EXISTS (SELECT 1 FROM [attendance_records] x WHERE x.[Id] = a.Id);
 
+/* 11.2) Additional attendance timeline coverage for non-bulk students */
+INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+SELECT
+    NEWID(),
+    e.[StudentProfileId],
+    e.[CourseOfferingId],
+    DATEADD(day, -1, CAST(@Now AS date)),
+    CASE ABS(CHECKSUM(e.[StudentProfileId], e.[CourseOfferingId])) % 5
+        WHEN 0 THEN N'Absent'
+        WHEN 1 THEN N'Late'
+        ELSE N'Present'
+    END,
+    COALESCE(co.[FacultyUserId], @SuperAdminUserId),
+    N'Additional non-bulk attendance for trend scenarios.',
+    @Now,
+    NULL
+FROM [enrollments] e
+INNER JOIN [student_profiles] sp ON sp.[Id] = e.[StudentProfileId]
+INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+INNER JOIN [course_offerings] co ON co.[Id] = e.[CourseOfferingId]
+WHERE u.[Username] NOT LIKE N'bulk.%.student.%'
+    AND NOT EXISTS (
+        SELECT 1
+        FROM [attendance_records] ar
+        WHERE ar.[StudentProfileId] = e.[StudentProfileId]
+        AND ar.[CourseOfferingId] = e.[CourseOfferingId]
+        AND CAST(ar.[Date] AS date) = DATEADD(day, -1, CAST(@Now AS date))
+    );
+
 /* 11.1) High-volume attendance for bulk enrollments */
 INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
 SELECT
@@ -1553,6 +1582,64 @@ BEGIN
                     WHERE x.[StudentProfileId] = e.[StudentProfileId]
                         AND x.[CourseOfferingId] = e.[CourseOfferingId]
                         AND x.[ResultType] = N'Final'
+            );
+
+        /* 12.0.2) Midterm published data and draft final-review data for lifecycle testing */
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT
+            NEWID(),
+            r.[StudentProfileId],
+            r.[CourseOfferingId],
+            N'Midterm',
+            CAST(CASE
+                WHEN r.[MarksObtained] > 12 THEN r.[MarksObtained] - 12
+                ELSE r.[MarksObtained]
+            END AS DECIMAL(8,2)),
+            r.[MaxMarks],
+            1,
+            DATEADD(day, -30, @Now),
+            COALESCE(r.[PublishedByUserId], @SuperAdminUserId),
+            @Now,
+            NULL
+        FROM [results] r
+        WHERE r.[ResultType] = N'Final'
+            AND r.[IsPublished] = 1
+            AND NOT EXISTS (
+                SELECT 1
+                FROM [results] x
+                WHERE x.[StudentProfileId] = r.[StudentProfileId]
+                AND x.[CourseOfferingId] = r.[CourseOfferingId]
+                AND x.[ResultType] = N'Midterm'
+            );
+
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT
+            NEWID(),
+            r.[StudentProfileId],
+            r.[CourseOfferingId],
+            N'FinalReview',
+            r.[MarksObtained],
+            r.[MaxMarks],
+            0,
+            NULL,
+            NULL,
+            @Now,
+            NULL
+        FROM [results] r
+        WHERE r.[ResultType] = N'Final'
+            AND r.[IsPublished] = 1
+            AND r.[StudentProfileId] IN (
+                '99999999-9999-9999-9999-999999999911',
+                '99999999-9999-9999-9999-999999999918',
+                '99999999-9999-9999-9999-999999999931',
+                '99999999-9999-9999-9999-999999999941'
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM [results] x
+                WHERE x.[StudentProfileId] = r.[StudentProfileId]
+                AND x.[CourseOfferingId] = r.[CourseOfferingId]
+                AND x.[ResultType] = N'FinalReview'
             );
 END
 

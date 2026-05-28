@@ -272,3 +272,11 @@ Use high-contrast or readable themes when reviewing long grading sessions.
 - School/College mode exposes additional student certificate workflows managed by authorized staff, with student download visibility.
 - Period selector wording in certificate workflow is now context-aware (`Class` for university, `Semester` otherwise).
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Enter Results now enforces stricter write scope checks by assignment and institution compatibility.
+- Import report download uses short-lived, one-time tokens for safer audit/report handling.
+- Result correction requires a reason and applies only after the result is already published.
+- Faculty should treat `FinalReview` rows as draft correction-stage records; students see only published states.
+- Demo dataset now includes expanded attendance timeline and mixed result types (`Midterm`, `Final`, `FinalReview`) for realistic faculty testing.
+

@@ -585,10 +585,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV7' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV9' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v7';
+	AND DemoValue = N'FullDummyData-v9';
 
 SELECT 'SidebarMenu_GenerateCertificates_Count' AS [CheckName], COUNT(1) AS [Value]
 FROM [sidebar_menu_items]
@@ -762,11 +762,35 @@ INNER JOIN [student_profiles] sp ON sp.[Id] = ar.[StudentProfileId]
 INNER JOIN [users] u ON u.[Id] = sp.[UserId]
 WHERE u.[Username] LIKE N'bulk.%.student.%';
 
+SELECT 'DummySeed_AttendanceStatusPresentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [attendance_records]
+WHERE [Status] = N'Present';
+
+SELECT 'DummySeed_AttendanceStatusAbsentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [attendance_records]
+WHERE [Status] = N'Absent';
+
 SELECT 'DummySeed_BulkResultsCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [results] r
 INNER JOIN [student_profiles] sp ON sp.[Id] = r.[StudentProfileId]
 INNER JOIN [users] u ON u.[Id] = sp.[UserId]
 WHERE u.[Username] LIKE N'bulk.%.student.%';
+
+SELECT 'DummySeed_ResultsPublishedCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [IsPublished] = 1;
+
+SELECT 'DummySeed_ResultsDraftCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [IsPublished] = 0;
+
+SELECT 'DummySeed_ResultsMidtermCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [ResultType] = N'Midterm';
+
+SELECT 'DummySeed_ResultsFinalReviewCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [ResultType] = N'FinalReview';
 
 SELECT 'DummySeed_BulkPaymentReceiptsCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts] pr
@@ -788,10 +812,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v8' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v9' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v8';
+			AND [DemoValue] = N'FullDummyData-v9';
 END;
 
 PRINT 'Post-deployment checks completed.';

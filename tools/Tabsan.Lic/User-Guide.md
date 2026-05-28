@@ -171,3 +171,5 @@ Check the following:
 3. Confirm output file in `license/` folder.
 4. Upload in EduSphere as SuperAdmin.
 5. Validate status, expiry, scope, and restrictions.
+6. Run functional smoke checks for attendance/results governance (published visibility, controlled publish, correction reason flow).
+7. For demo path validation, confirm `DemoDatasetVersion = FullDummyData-v9` after full seeding.

@@ -1,6 +1,11 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (28 May 2026):
+- Enter Results governance now documents stricter write-scope checks, controlled publish actions, and mandatory correction reason capture.
+- Training/demo baseline now includes expanded attendance timeline rows and mixed result lifecycle states (`Midterm`, published `Final`, draft `FinalReview`).
+- Full demo dataset marker reference updated to `DemoDatasetVersion = FullDummyData-v9`.
+
 User guide synchronization update (27 May 2026):
 - Startup profile warnings for missing environment profiles are resolved through layered profile-loading reliability updates.
 - Development startup guidance now assumes LocalDB-compatible defaults for local validation.

@@ -73,3 +73,9 @@ Repository Sync Note (15 May 2026):
 - School/College mode supports additional student certificate upload, listing, and download workflows.
 - Degree/transcript actions are hidden when university mode is disabled by active policy/license.
 - Certificate period label now adapts by context (`Class` in university mode, `Semester` otherwise).
+
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- User guides now align with stricter Enter Results governance (write scope checks, publish role controls, correction reason requirement).
+- Demo validation baseline for training/UAT now includes mixed result states (`Midterm`, published `Final`, draft `FinalReview`) and expanded attendance timeline rows.
+- Script marker for full dataset path is now `DemoDatasetVersion = FullDummyData-v9`.

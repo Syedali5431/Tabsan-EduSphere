@@ -231,3 +231,10 @@ Use this weekly:
 - Degree/transcript options may be hidden when university mode is disabled by active policy/license.
 - Period wording in related academic/certificate views is context-aware (`Class` in university mode; `Semester` in non-university modes).
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Student-visible results continue to show published marks only; draft correction-stage records remain hidden.
+- Result corrections now follow stricter governance and must include reason/audit context before republishing.
+- Attendance data quality is improved through expanded multi-day records in the training/demo baseline.
+- If a result is delayed, it may be under controlled `FinalReview` workflow pending authorized publication.
+

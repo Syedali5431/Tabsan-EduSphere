@@ -239,3 +239,10 @@ Common parity-scope signals to record:
 - License/policy controls can disable university behavior; when disabled, degree/transcript surfaces are hidden.
 - Scope validation for certificate operations remains tenant/campus and role-assignment aware.
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Results workflows now enforce explicit separation between entry and publication authority.
+- Correction operations require reasoned audit context and published-state eligibility before change.
+- Import report access is hardened through one-time token validation and expiry controls.
+- Full dummy validation now expects `DemoDatasetVersion = FullDummyData-v9` with mixed results lifecycle and attendance timeline seed data.
+

@@ -183,3 +183,9 @@ After issuing a license:
 - When university mode is disabled by policy/license, university-only certificate actions should not be visible.
 - For School/College deployments, validate additional certificate workflows and student download visibility after license upload.
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Post-license validation should include results governance checks: controlled publication, published-only student visibility, and correction reason enforcement.
+- Operational smoke tests should verify attendance and result workflows in at least one scoped department per institution mode.
+- Demo-path verification now references full dummy marker `DemoDatasetVersion = FullDummyData-v9`.
+

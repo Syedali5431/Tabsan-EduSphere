@@ -305,3 +305,11 @@ For change requests:
 - Degree/transcript actions are hidden automatically when university mode is disabled in policy/license.
 - Period filter wording is now context-aware (`Class` in university mode; `Semester` in non-university modes).
 
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Results governance now separates write vs publish responsibilities with stricter role checks.
+- Correction requests for marks require explicit reason capture and published-state precondition.
+- Attendance and result audits should include both bulk seeded rows and non-bulk timeline rows.
+- Post-deployment checks now include published/draft result counts and attendance status distribution checks.
+- Full demo validation marker is now `DemoDatasetVersion = FullDummyData-v9`.
+

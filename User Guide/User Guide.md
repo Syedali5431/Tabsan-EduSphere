@@ -282,3 +282,11 @@ Finance users cannot:
 - Report Center state can be activated or deactivated per tenant and campus scope through settings governance.
 - Sidebar visibility now reflects synchronized role access, active status, and module entitlement alignment, including settings-governance menu surfaces.
 - User import and onboarding flows now enforce effective tenant and campus scope boundaries in bulk onboarding scenarios.
+
+## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
+
+- Results entry now follows stricter write-scope checks by role, assignment, and institution context.
+- Publish action is governance-controlled; only authorized roles can publish final result visibility.
+- Result correction now requires an explicit reason and applies to published records only.
+- Attendance and result training data now includes expanded multi-day attendance plus mixed result lifecycle states (published and draft).
+- Demo database validation references `DemoDatasetVersion = FullDummyData-v9` after full dummy seed execution.
