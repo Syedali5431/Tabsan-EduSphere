@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = "Results"; }
 @{
     var currentAction = (ViewData["ResultsAction"] as string) ?? (ViewContext.RouteData.Values["action"]?.ToString() ?? "Results");
+    var classSemesterLabel = (Model.Identity?.InstitutionType ?? 2) == 2 ? "Semester" : "Class";
     var semesterLabels = Model.SemesterOptions
         .Select((s, index) => new { s.Name, Label = (index + 1).ToString() })
         .ToDictionary(x => x.Name, x => x.Label, StringComparer.OrdinalIgnoreCase);
@@ -43,18 +44,16 @@
 }
 else
 {
-    @if (Model.Offerings.Count > 0)
-    {
-        <div class="page-section-card card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <div class="section-head mb-3">
-                    <div>
-                        <span class="section-kicker">Result controls</span>
-                        <h2 class="h5 mb-1">Filter results by scoped academic context</h2>
-                        <p class="text-muted mb-0">Required filters must be selected before write actions are enabled.</p>
-                    </div>
+    <div class="page-section-card card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="section-head mb-3">
+                <div>
+                    <span class="section-kicker">Result controls</span>
+                    <h2 class="h5 mb-1">Filter results by scoped academic context</h2>
+                    <p class="text-muted mb-0">Required filters must be selected before write actions are enabled.</p>
                 </div>
-                <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
+            </div>
+            <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-3">
@@ -108,19 +107,16 @@ else
                         </div>
                     }
 
-                    @if (Model.SemesterOptions.Count > 0)
-                    {
-                        <div class="col-md-3">
-                            <label class="form-label">Class/Semester @if (!User.IsInRole("Student")) { <span class="text-danger">*</span> }</label>
-                            <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Semesters</option>
-                                @foreach (var s in Model.SemesterOptions)
-                                {
-                                    <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@GetSemesterLabel(s.Name)</option>
-                                }
-                            </select>
-                        </div>
-                    }
+                    <div class="col-md-3">
+                        <label class="form-label">@classSemesterLabel @if (!User.IsInRole("Student")) { <span class="text-danger">*</span> }</label>
+                        <select name="semesterName" class="form-select" onchange="this.form.submit()">
+                            <option value="">All @classSemesterLabel</option>
+                            @foreach (var s in Model.SemesterOptions)
+                            {
+                                <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@GetSemesterLabel(s.Name)</option>
+                            }
+                        </select>
+                    </div>
 
                     @if (!User.IsInRole("Student"))
                     {
@@ -196,10 +192,9 @@ else
                             <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
                         </div>
                     }
-                </form>
-            </div>
+            </form>
         </div>
-    }
+    </div>
 
     @if (Model.Cgpa.HasValue)
     {

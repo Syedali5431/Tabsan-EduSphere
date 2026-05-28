@@ -28,11 +28,9 @@
 }
 else
 {
-    @if (Model.CourseOfferings.Count > 0)
-    {
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end">
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end">
                     @if (User.IsInRole("SuperAdmin"))
                     {
                         <div class="col-md-3">
@@ -96,10 +94,22 @@ else
                             }
                         </select>
                     </div>
-                </form>
-            </div>
+                    @if (Model.SelectedOfferingId.HasValue)
+                    {
+                        <div class="col-md-4">
+                            <label class="form-label">Student (Optional)</label>
+                            <select name="studentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Students</option>
+                                @foreach (var s in Model.Students)
+                                {
+                                    <option value="@s.Id" selected="@(Model.SelectedStudentId == s.Id ? "selected" : null)">@s.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+            </form>
         </div>
-    }
+    </div>
 
     @if (!User.IsInRole("Student"))
     {
@@ -270,6 +280,7 @@ else
                            asp-route-campusId="@Model.SelectedCampusId"
                            asp-route-departmentId="@Model.SelectedDepartmentId"
                            asp-route-courseId="@Model.SelectedCourseId"
+                           asp-route-studentId="@Model.SelectedStudentId"
                            asp-route-semesterName="@Model.SelectedSemesterName"
                            asp-route-entryPoint="@attendanceAction">
                             Download Template
@@ -285,6 +296,7 @@ else
                                asp-route-campusId="@Model.SelectedCampusId"
                                asp-route-departmentId="@Model.SelectedDepartmentId"
                                asp-route-courseId="@Model.SelectedCourseId"
+                               asp-route-studentId="@Model.SelectedStudentId"
                                asp-route-semesterName="@Model.SelectedSemesterName"
                                asp-route-entryPoint="@attendanceAction">
                                 Download Last Import Report
@@ -302,6 +314,7 @@ else
                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                             <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                             <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                             <input type="hidden" name="entryPoint" value="@attendanceAction" />
                             <input type="hidden" name="strictMode" value="false" />
@@ -322,6 +335,7 @@ else
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                     <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                    <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                     <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="table-responsive">
@@ -407,6 +421,7 @@ else
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                     <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                    <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                     <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="modal-content">

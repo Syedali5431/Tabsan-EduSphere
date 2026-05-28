@@ -1,0 +1,7 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AttendancePageModel
+@{
+    ViewData["Title"] = "Enter Attendance";
+    ViewData["AttendanceAction"] = "EnterAttendance";
+}
+
+@await Html.PartialAsync("Attendance", Model)

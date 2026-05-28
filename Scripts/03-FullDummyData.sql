@@ -2082,33 +2082,78 @@ WHERE NOT EXISTS (SELECT 1 FROM [notification_recipients] x WHERE x.[Id] = r.Id)
 
 IF OBJECT_ID(N'[gpa_scale_rules]') IS NOT NULL
 BEGIN
-    INSERT INTO [gpa_scale_rules] ([Id], [InstitutionType], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
-    SELECT src.[Id], 0, src.[GradePoint], src.[MinimumScore], src.[DisplayOrder], @Now, NULL
-    FROM (VALUES
-        ('41414141-4141-4141-4141-414141414101', CAST(4.00 AS DECIMAL(4,2)), CAST(85.00 AS DECIMAL(5,2)), 1),
-        ('41414141-4141-4141-4141-414141414102', CAST(3.70 AS DECIMAL(4,2)), CAST(80.00 AS DECIMAL(5,2)), 2),
-        ('41414141-4141-4141-4141-414141414103', CAST(3.30 AS DECIMAL(4,2)), CAST(75.00 AS DECIMAL(5,2)), 3),
-        ('41414141-4141-4141-4141-414141414104', CAST(3.00 AS DECIMAL(4,2)), CAST(70.00 AS DECIMAL(5,2)), 4),
-        ('41414141-4141-4141-4141-414141414105', CAST(2.70 AS DECIMAL(4,2)), CAST(65.00 AS DECIMAL(5,2)), 5),
-        ('41414141-4141-4141-4141-414141414106', CAST(2.30 AS DECIMAL(4,2)), CAST(60.00 AS DECIMAL(5,2)), 6),
-        ('41414141-4141-4141-4141-414141414107', CAST(2.00 AS DECIMAL(4,2)), CAST(55.00 AS DECIMAL(5,2)), 7),
-        ('41414141-4141-4141-4141-414141414108', CAST(1.70 AS DECIMAL(4,2)), CAST(50.00 AS DECIMAL(5,2)), 8),
-        ('41414141-4141-4141-4141-414141414109', CAST(0.00 AS DECIMAL(4,2)), CAST(0.00 AS DECIMAL(5,2)), 9)
-    ) src([Id], [GradePoint], [MinimumScore], [DisplayOrder])
-    WHERE NOT EXISTS (SELECT 1 FROM [gpa_scale_rules] x WHERE x.[Id] = src.[Id]);
+    DECLARE @GpaScaleSql NVARCHAR(MAX);
+    IF COL_LENGTH('gpa_scale_rules', 'InstitutionType') IS NOT NULL
+    BEGIN
+        SET @GpaScaleSql = N'
+            INSERT INTO [gpa_scale_rules] ([Id], [InstitutionType], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
+            SELECT src.[Id], 0, src.[GradePoint], src.[MinimumScore], src.[DisplayOrder], @Now, NULL
+            FROM (VALUES
+                (''41414141-4141-4141-4141-414141414101'', CAST(4.00 AS DECIMAL(4,2)), CAST(85.00 AS DECIMAL(5,2)), 1),
+                (''41414141-4141-4141-4141-414141414102'', CAST(3.70 AS DECIMAL(4,2)), CAST(80.00 AS DECIMAL(5,2)), 2),
+                (''41414141-4141-4141-4141-414141414103'', CAST(3.30 AS DECIMAL(4,2)), CAST(75.00 AS DECIMAL(5,2)), 3),
+                (''41414141-4141-4141-4141-414141414104'', CAST(3.00 AS DECIMAL(4,2)), CAST(70.00 AS DECIMAL(5,2)), 4),
+                (''41414141-4141-4141-4141-414141414105'', CAST(2.70 AS DECIMAL(4,2)), CAST(65.00 AS DECIMAL(5,2)), 5),
+                (''41414141-4141-4141-4141-414141414106'', CAST(2.30 AS DECIMAL(4,2)), CAST(60.00 AS DECIMAL(5,2)), 6),
+                (''41414141-4141-4141-4141-414141414107'', CAST(2.00 AS DECIMAL(4,2)), CAST(55.00 AS DECIMAL(5,2)), 7),
+                (''41414141-4141-4141-4141-414141414108'', CAST(1.70 AS DECIMAL(4,2)), CAST(50.00 AS DECIMAL(5,2)), 8),
+                (''41414141-4141-4141-4141-414141414109'', CAST(0.00 AS DECIMAL(4,2)), CAST(0.00 AS DECIMAL(5,2)), 9)
+            ) src([Id], [GradePoint], [MinimumScore], [DisplayOrder])
+            WHERE NOT EXISTS (SELECT 1 FROM [gpa_scale_rules] x WHERE x.[Id] = src.[Id]);';
+    END
+    ELSE
+    BEGIN
+        SET @GpaScaleSql = N'
+            INSERT INTO [gpa_scale_rules] ([Id], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
+            SELECT src.[Id], src.[GradePoint], src.[MinimumScore], src.[DisplayOrder], @Now, NULL
+            FROM (VALUES
+                (''41414141-4141-4141-4141-414141414101'', CAST(4.00 AS DECIMAL(4,2)), CAST(85.00 AS DECIMAL(5,2)), 1),
+                (''41414141-4141-4141-4141-414141414102'', CAST(3.70 AS DECIMAL(4,2)), CAST(80.00 AS DECIMAL(5,2)), 2),
+                (''41414141-4141-4141-4141-414141414103'', CAST(3.30 AS DECIMAL(4,2)), CAST(75.00 AS DECIMAL(5,2)), 3),
+                (''41414141-4141-4141-4141-414141414104'', CAST(3.00 AS DECIMAL(4,2)), CAST(70.00 AS DECIMAL(5,2)), 4),
+                (''41414141-4141-4141-4141-414141414105'', CAST(2.70 AS DECIMAL(4,2)), CAST(65.00 AS DECIMAL(5,2)), 5),
+                (''41414141-4141-4141-4141-414141414106'', CAST(2.30 AS DECIMAL(4,2)), CAST(60.00 AS DECIMAL(5,2)), 6),
+                (''41414141-4141-4141-4141-414141414107'', CAST(2.00 AS DECIMAL(4,2)), CAST(55.00 AS DECIMAL(5,2)), 7),
+                (''41414141-4141-4141-4141-414141414108'', CAST(1.70 AS DECIMAL(4,2)), CAST(50.00 AS DECIMAL(5,2)), 8),
+                (''41414141-4141-4141-4141-414141414109'', CAST(0.00 AS DECIMAL(4,2)), CAST(0.00 AS DECIMAL(5,2)), 9)
+            ) src([Id], [GradePoint], [MinimumScore], [DisplayOrder])
+            WHERE NOT EXISTS (SELECT 1 FROM [gpa_scale_rules] x WHERE x.[Id] = src.[Id]);';
+    END
+
+    EXEC sp_executesql @GpaScaleSql, N'@Now datetime2', @Now = @Now;
 END
 
 IF OBJECT_ID(N'[result_component_rules]') IS NOT NULL
 BEGIN
-    INSERT INTO [result_component_rules] ([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
-    SELECT src.[Id], 0, src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
-    FROM (VALUES
-        ('42424242-4242-4242-4242-424242424201', N'Assignments', CAST(25.00 AS DECIMAL(5,2)), 1),
-        ('42424242-4242-4242-4242-424242424202', N'Quizzes', CAST(15.00 AS DECIMAL(5,2)), 2),
-        ('42424242-4242-4242-4242-424242424203', N'Midterm', CAST(25.00 AS DECIMAL(5,2)), 3),
-        ('42424242-4242-4242-4242-424242424204', N'Final', CAST(35.00 AS DECIMAL(5,2)), 4)
-    ) src([Id], [Name], [Weightage], [DisplayOrder])
-    WHERE NOT EXISTS (SELECT 1 FROM [result_component_rules] x WHERE x.[Id] = src.[Id]);
+    DECLARE @ResultComponentSql NVARCHAR(MAX);
+    IF COL_LENGTH('result_component_rules', 'InstitutionType') IS NOT NULL
+    BEGIN
+        SET @ResultComponentSql = N'
+            INSERT INTO [result_component_rules] ([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
+            SELECT src.[Id], 0, src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
+            FROM (VALUES
+                (''42424242-4242-4242-4242-424242424201'', N''Assignments'', CAST(25.00 AS DECIMAL(5,2)), 1),
+                (''42424242-4242-4242-4242-424242424202'', N''Quizzes'', CAST(15.00 AS DECIMAL(5,2)), 2),
+                (''42424242-4242-4242-4242-424242424203'', N''Midterm'', CAST(25.00 AS DECIMAL(5,2)), 3),
+                (''42424242-4242-4242-4242-424242424204'', N''Final'', CAST(35.00 AS DECIMAL(5,2)), 4)
+            ) src([Id], [Name], [Weightage], [DisplayOrder])
+            WHERE NOT EXISTS (SELECT 1 FROM [result_component_rules] x WHERE x.[Id] = src.[Id]);';
+    END
+    ELSE
+    BEGIN
+        SET @ResultComponentSql = N'
+            INSERT INTO [result_component_rules] ([Id], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
+            SELECT src.[Id], src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
+            FROM (VALUES
+                (''42424242-4242-4242-4242-424242424201'', N''Assignments'', CAST(25.00 AS DECIMAL(5,2)), 1),
+                (''42424242-4242-4242-4242-424242424202'', N''Quizzes'', CAST(15.00 AS DECIMAL(5,2)), 2),
+                (''42424242-4242-4242-4242-424242424203'', N''Midterm'', CAST(25.00 AS DECIMAL(5,2)), 3),
+                (''42424242-4242-4242-4242-424242424204'', N''Final'', CAST(35.00 AS DECIMAL(5,2)), 4)
+            ) src([Id], [Name], [Weightage], [DisplayOrder])
+            WHERE NOT EXISTS (SELECT 1 FROM [result_component_rules] x WHERE x.[Id] = src.[Id]);';
+    END
+
+    EXEC sp_executesql @ResultComponentSql, N'@Now datetime2', @Now = @Now;
 END
 
 IF OBJECT_ID(N'[institution_grading_profiles]') IS NOT NULL
@@ -3231,7 +3276,7 @@ BEGIN
         CASE st.[InstitutionType]
             WHEN 0 THEN COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
             WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
-            ELSE COALESCE(@FinanceSchUserId2, @SuperAdminUserId)
+            ELSE COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
         END,
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN 0 ELSE 1 END,
         CASE st.[InstitutionType]
@@ -3272,6 +3317,166 @@ BEGIN
                                 ELSE CONCAT(N'Semester Fee - ', sm.[Name])
                         END
       );
+END
+
+/* 18.1) Deterministic minimum lifecycle matrix coverage
+   Guarantees:
+   - At least one Faculty and one Finance user per department.
+   - At least one StudentProfile per program.
+   - At least one enrollment for every seeded course offering (course + semester coverage).
+*/
+IF OBJECT_ID(N'[users]') IS NOT NULL
+BEGIN
+    INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        CONCAT(N'matrix.faculty.', LOWER(d.[Code])),
+        CONCAT(N'matrix.faculty.', LOWER(d.[Code]), N'@demo.local'),
+        @PwdHash,
+        @RoleFaculty,
+        d.[Id],
+        d.[InstitutionType],
+        1,
+        NULL,
+        @Now,
+        NULL,
+        0,
+        NULL
+    FROM @Departments d
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [users] u
+        WHERE u.[DepartmentId] = d.[Id]
+          AND u.[RoleId] = @RoleFaculty
+          AND u.[IsDeleted] = 0
+    );
+
+    INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        CONCAT(N'matrix.finance.', LOWER(d.[Code])),
+        CONCAT(N'matrix.finance.', LOWER(d.[Code]), N'@demo.local'),
+        @PwdHash,
+        @RoleFinance,
+        d.[Id],
+        d.[InstitutionType],
+        1,
+        NULL,
+        @Now,
+        NULL,
+        0,
+        NULL
+    FROM @Departments d
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [users] u
+        WHERE u.[DepartmentId] = d.[Id]
+          AND u.[RoleId] = @RoleFinance
+          AND u.[IsDeleted] = 0
+    );
+
+    INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        CONCAT(N'matrix.student.', LOWER(p.[Code])),
+        CONCAT(N'matrix.student.', LOWER(p.[Code]), N'@demo.local'),
+        @PwdHash,
+        @RoleStudent,
+        p.[DepartmentId],
+        d.[InstitutionType],
+        1,
+        NULL,
+        @Now,
+        NULL,
+        0,
+        NULL
+    FROM @Programs p
+    INNER JOIN @Departments d ON d.[Id] = p.[DepartmentId]
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [student_profiles] sp
+        WHERE sp.[ProgramId] = p.[Id]
+          AND sp.[IsDeleted] = 0
+    )
+      AND NOT EXISTS
+    (
+        SELECT 1
+        FROM [users] u
+        WHERE u.[Username] = CONCAT(N'matrix.student.', LOWER(p.[Code]))
+    );
+END
+
+IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
+BEGIN
+    INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        NEWID(),
+        u.[Id],
+        CONCAT(N'MX-', UPPER(p.[Code]), N'-', RIGHT(REPLACE(CONVERT(NVARCHAR(36), u.[Id]), N'-', N''), 8)),
+        p.[Id],
+        p.[DepartmentId],
+        DATEADD(day, -180, @Now),
+        CAST(2.80 AS DECIMAL(4,2)),
+        1,
+        @Now,
+        NULL,
+        0,
+        NULL
+    FROM @Programs p
+    INNER JOIN [users] u
+        ON u.[DepartmentId] = p.[DepartmentId]
+       AND u.[RoleId] = @RoleStudent
+       AND u.[Username] = CONCAT(N'matrix.student.', LOWER(p.[Code]))
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [student_profiles] sp
+        WHERE sp.[ProgramId] = p.[Id]
+          AND sp.[IsDeleted] = 0
+    );
+END
+
+IF OBJECT_ID(N'[enrollments]') IS NOT NULL
+BEGIN
+    ;WITH OfferingDepartment AS
+    (
+        SELECT
+            co.[Id] AS CourseOfferingId,
+            c.[DepartmentId]
+        FROM [course_offerings] co
+        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+    ), DepartmentStudents AS
+    (
+        SELECT
+            sp.[Id] AS StudentProfileId,
+            sp.[DepartmentId],
+            ROW_NUMBER() OVER (PARTITION BY sp.[DepartmentId] ORDER BY sp.[RegistrationNumber], sp.[Id]) AS StudentOrdinal
+        FROM [student_profiles] sp
+        WHERE sp.[IsDeleted] = 0
+    )
+    INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+    SELECT
+        NEWID(),
+        ds.[StudentProfileId],
+        od.[CourseOfferingId],
+        @Now,
+        NULL,
+        N'Enrolled',
+        @Now,
+        NULL
+    FROM OfferingDepartment od
+    INNER JOIN DepartmentStudents ds
+        ON ds.[DepartmentId] = od.[DepartmentId]
+       AND ds.[StudentOrdinal] = 1
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [enrollments] e
+        WHERE e.[CourseOfferingId] = od.[CourseOfferingId]
+    );
 END
 
 IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL

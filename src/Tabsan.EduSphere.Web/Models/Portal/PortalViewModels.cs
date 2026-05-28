@@ -830,12 +830,14 @@ public class AttendancePageModel
     public List<LookupItem> Courses                    { get; set; } = new();
     public List<LookupItem> SemesterOptions            { get; set; } = new();
     public List<LookupItem>            CourseOfferings { get; set; } = new();
+    public List<LookupItem> Students                   { get; set; } = new();
     public List<EnrollmentRosterItem>  Roster          { get; set; } = new();
     public Guid?  SelectedOfferingId { get; set; }
     public Guid?  SelectedTenantId   { get; set; }
     public Guid?  SelectedCampusId   { get; set; }
     public Guid?  SelectedDepartmentId { get; set; }
     public Guid?  SelectedCourseId     { get; set; }
+    public Guid?  SelectedStudentId    { get; set; }
     public string? SelectedSemesterName { get; set; }
     public string? ImportReportToken { get; set; }
     public bool CanSaveAttendance =>
@@ -845,7 +847,7 @@ public class AttendancePageModel
         && !string.IsNullOrWhiteSpace(SelectedSemesterName);
 
     public string SaveAttendanceDisabledReason =>
-        "Select department, course, and semester/class before saving attendance.";
+        "Select department, course, subject offering, and semester/class before saving attendance.";
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────

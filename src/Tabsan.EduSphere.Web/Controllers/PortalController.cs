@@ -2716,12 +2716,12 @@ public class PortalController : Controller
     // ── Attendance ─────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? reportToken, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken, nameof(Attendance), "Attendance", ct);
+    public async Task<IActionResult> Attendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? studentId, string? semesterName, string? reportToken, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName, reportToken, nameof(Attendance), "Attendance", ct);
 
     [HttpGet]
-    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? reportToken, CancellationToken ct)
-        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken, nameof(EnterAttendance), "Enter Attendance", ct);
+    public async Task<IActionResult> EnterAttendance(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? studentId, string? semesterName, string? reportToken, CancellationToken ct)
+        => await RenderAttendanceAsync(offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName, reportToken, nameof(EnterAttendance), "Enter Attendance", ct);
 
     private async Task<IActionResult> RenderAttendanceAsync(
         Guid? offeringId,
@@ -2729,6 +2729,7 @@ public class PortalController : Controller
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        Guid? studentId,
         string? semesterName,
         string? reportToken,
         string attendanceAction,
@@ -2745,6 +2746,7 @@ public class PortalController : Controller
             SelectedCampusId = campusId,
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
+            SelectedStudentId = studentId,
             SelectedSemesterName = semesterName,
             ImportReportToken = reportToken,
             Message          = TempData["PortalMessage"]?.ToString()
@@ -2854,6 +2856,31 @@ public class PortalController : Controller
                     model.Records = await _api.GetAttendanceByOfferingAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
                     model.Roster = await _api.GetEnrollmentRosterAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
 
+                    model.Students = model.Roster
+                        .OrderBy(s => s.StudentName)
+                        .Select(s => new LookupItem
+                        {
+                            Id = s.Id,
+                            Name = string.IsNullOrWhiteSpace(s.RegistrationNumber)
+                                ? s.StudentName
+                                : $"{s.RegistrationNumber} - {s.StudentName}"
+                        })
+                        .ToList();
+
+                    if (model.SelectedStudentId.HasValue && !model.Students.Any(s => s.Id == model.SelectedStudentId.Value))
+                        model.SelectedStudentId = null;
+
+                    if (model.SelectedStudentId.HasValue)
+                    {
+                        model.Records = model.Records
+                            .Where(r => r.StudentProfileId == model.SelectedStudentId.Value)
+                            .ToList();
+
+                        model.Roster = model.Roster
+                            .Where(r => r.Id == model.SelectedStudentId.Value)
+                            .ToList();
+                    }
+
                     var selectedOffering = semesterFilteredOfferings.FirstOrDefault(o => o.Id == model.SelectedOfferingId.Value);
 
                     model.Summary = model.Records
@@ -2890,7 +2917,7 @@ public class PortalController : Controller
             }
         }
         catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
+        return View("Attendance", model);
     }
 
     // ── Results ────────────────────────────────────────────────────────────
@@ -3514,12 +3541,12 @@ public class PortalController : Controller
     // ── Attendance write actions ────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> DownloadAttendanceCsvTemplate(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint, CancellationToken ct)
+    public async Task<IActionResult> DownloadAttendanceCsvTemplate(Guid? offeringId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? studentId, string? semesterName, string? entryPoint, CancellationToken ct)
     {
         if (!_api.IsConnected())
         {
             TempData["PortalMessage"] = "Connect to the API before downloading the attendance template.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
         }
 
         var identity = _api.GetSessionIdentity();
@@ -3536,7 +3563,7 @@ public class PortalController : Controller
             if (!scopeValidation.Allowed)
             {
                 TempData["PortalMessage"] = scopeValidation.Message;
-                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
             }
 
             try
@@ -3574,19 +3601,20 @@ public class PortalController : Controller
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        Guid? studentId,
         string? semesterName,
         string? entryPoint)
     {
         if (string.IsNullOrWhiteSpace(reportToken) || !AttendanceImportReports.TryRemove(reportToken, out var payload))
         {
             TempData["PortalMessage"] = "Import report is not available. Please run CSV import again.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
         }
 
         if (payload.CreatedAtUtc + AttendanceImportReportTtl < UtcNowProvider())
         {
             TempData["PortalMessage"] = "Import report has expired. Please run CSV import again.";
-            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+            return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
         }
 
         var bytes = Encoding.UTF8.GetBytes(payload.CsvContent);
@@ -3600,6 +3628,7 @@ public class PortalController : Controller
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        Guid? studentId,
         string? semesterName,
         string? entryPoint,
         IFormFile? csvFile,
@@ -3641,7 +3670,7 @@ public class PortalController : Controller
         }
 
         IActionResult RedirectWithContext(string? reportToken = null)
-            => RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName, reportToken });
+            => RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName, reportToken });
 
         void WriteAttendanceImportAudit(string outcome, SessionIdentity? actor, IReadOnlyCollection<string>? errorDetails = null)
         {
@@ -3798,7 +3827,7 @@ public class PortalController : Controller
                     continue;
                 }
 
-                if (!Guid.TryParse(studentIdRaw, out var studentId))
+                if (!Guid.TryParse(studentIdRaw, out var rowStudentId))
                 {
                     validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
                     reportRow.Outcome = "Skipped";
@@ -3806,7 +3835,7 @@ public class PortalController : Controller
                     continue;
                 }
 
-                if (!rosterIds.Contains(studentId))
+                if (!rosterIds.Contains(rowStudentId))
                 {
                     validationErrors.Add($"Row {rowNumber}: StudentId does not belong to the selected offering roster.");
                     reportRow.Outcome = "Skipped";
@@ -3830,7 +3859,7 @@ public class PortalController : Controller
                     continue;
                 }
 
-                var duplicateKey = $"{studentId:D}|{date:yyyy-MM-dd}";
+                var duplicateKey = $"{rowStudentId:D}|{date:yyyy-MM-dd}";
                 if (!seenStudentDate.Add(duplicateKey))
                 {
                     validationErrors.Add($"Row {rowNumber}: duplicate StudentId + Date entry in import file.");
@@ -3839,7 +3868,7 @@ public class PortalController : Controller
                     continue;
                 }
 
-                parsedRows.Add((studentId, date, isPresent ? "Present" : "Absent"));
+                parsedRows.Add((rowStudentId, date, isPresent ? "Present" : "Absent"));
                 pendingRows.Add(reportRow);
             }
         }
@@ -3930,7 +3959,7 @@ public class PortalController : Controller
         Guid offeringId, DateTime? date,
         [FromForm] Guid[] studentIds, [FromForm] string[] statuses,
         [FromForm] DateTime[]? dates,
-        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint,
+        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? studentId, string? semesterName, string? entryPoint,
         CancellationToken ct)
     {
         if (_api.IsConnected())
@@ -3940,7 +3969,7 @@ public class PortalController : Controller
                 if (studentIds.Length == 0)
                 {
                     TempData["PortalMessage"] = "No attendance rows were submitted.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 var sessionId = _api.GetSessionIdentity();
@@ -3951,26 +3980,26 @@ public class PortalController : Controller
                 if (!scopeValidation.Allowed)
                 {
                     TempData["PortalMessage"] = scopeValidation.Message;
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 if (studentIds.Length != statuses.Length)
                 {
                     TempData["PortalMessage"] = "Invalid attendance submission: student and status counts do not match.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 var hasPerRowDates = dates is { Length: > 0 };
                 if (hasPerRowDates && dates!.Length != studentIds.Length)
                 {
                     TempData["PortalMessage"] = "Invalid attendance submission: student and date counts do not match.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 if (!hasPerRowDates && !date.HasValue)
                 {
                     TempData["PortalMessage"] = "Attendance date is required.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
@@ -3980,30 +4009,30 @@ public class PortalController : Controller
 
                 for (var i = 0; i < studentIds.Length; i++)
                 {
-                    var studentId = studentIds[i];
-                    if (!rosterIds.Contains(studentId))
+                    var rowStudentId = studentIds[i];
+                    if (!rosterIds.Contains(rowStudentId))
                     {
-                        invalidStudentIds.Add(studentId);
+                        invalidStudentIds.Add(rowStudentId);
                         continue;
                     }
 
                     if (!TryNormalizeAttendanceStatus(statuses[i], out var normalizedStatus))
                     {
                         TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
-                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                     }
 
                     var entryDate = hasPerRowDates ? dates![i].Date : date!.Value.Date;
                     if (entryDate == default)
                     {
                         TempData["PortalMessage"] = "Attendance date is required for each row.";
-                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                     }
 
-                    if (!duplicateKeys.Add((studentId, entryDate)))
+                    if (!duplicateKeys.Add((rowStudentId, entryDate)))
                     {
                         TempData["PortalMessage"] = "Duplicate attendance rows detected for the same student and date.";
-                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                     }
 
                     if (!entriesByDate.TryGetValue(entryDate, out var entries))
@@ -4012,19 +4041,19 @@ public class PortalController : Controller
                         entriesByDate[entryDate] = entries;
                     }
 
-                    entries.Add((studentId, normalizedStatus));
+                    entries.Add((rowStudentId, normalizedStatus));
                 }
 
                 if (invalidStudentIds.Count > 0)
                 {
                     TempData["PortalMessage"] = "Attendance submission contains students outside the selected offering roster.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 if (entriesByDate.Count == 0)
                 {
                     TempData["PortalMessage"] = "No valid attendance entries were submitted.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 foreach (var batch in entriesByDate.OrderBy(x => x.Key))
@@ -4036,13 +4065,13 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectAttendance(
         Guid studentProfileId, Guid offeringId, DateTime date,
-        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? semesterName, string? entryPoint, CancellationToken ct)
+        string newStatus, string? remarks, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, Guid? studentId, string? semesterName, string? entryPoint, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -4056,20 +4085,20 @@ public class PortalController : Controller
                 if (!scopeValidation.Allowed)
                 {
                     TempData["PortalMessage"] = scopeValidation.Message;
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 if (!TryNormalizeAttendanceStatus(newStatus, out var normalizedStatus))
                 {
                     TempData["PortalMessage"] = "Invalid attendance status. Allowed values: Present or Absent.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 var rosterIds = await GetRosterIdsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
                 if (!rosterIds.Contains(studentProfileId))
                 {
                     TempData["PortalMessage"] = "Attendance correction denied: selected student is not in the offering roster.";
-                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+                    return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
                 }
 
                 await _api.CorrectAttendanceAsync(studentProfileId, offeringId, date, normalizedStatus, remarks, effectiveTenantId, effectiveCampusId, ct);
@@ -4077,7 +4106,7 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, semesterName });
+        return RedirectToAction(ResolveAttendanceEntryAction(entryPoint), new { offeringId, tenantId, campusId, departmentId, courseId, studentId, semesterName });
     }
 
     private static string ResolveAttendanceEntryAction(string? entryPoint)
