@@ -2880,21 +2880,122 @@ public class PortalController : Controller
     // ── Results ────────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Results(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<IActionResult> Results(
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        CancellationToken ct)
+        => await RenderResultsAsync(
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch,
+            nameof(Results),
+            "Results",
+            ct);
+
+    [HttpGet]
+    public async Task<IActionResult> EnterResults(
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        CancellationToken ct)
+        => await RenderResultsAsync(
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch,
+            nameof(EnterResults),
+            "Enter Results",
+            ct);
+
+    private async Task<IActionResult> RenderResultsAsync(
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        string resultsAction,
+        string title,
+        CancellationToken ct)
     {
-        ViewData["Title"] = "Results";
+        ViewData["Title"] = title;
+        ViewData["ResultsAction"] = resultsAction;
+
         var identity = _api.GetSessionIdentity();
         var model = new ResultsPageModel
         {
-            IsConnected      = _api.IsConnected(),
-            Identity         = identity,
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
             SelectedOfferingId = offeringId,
             SelectedSemesterName = semesterName,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
-            Message          = TempData["PortalMessage"]?.ToString()
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId,
+            SelectedSubjectOfferingId = subjectOfferingId,
+            SelectedExamType = examType,
+            SelectedAssessmentComponent = assessmentComponent,
+            SelectedStudentId = studentId,
+            SelectedSection = section,
+            SelectedBatch = batch,
+            Message = TempData["PortalMessage"]?.ToString()
         };
-        if (!model.IsConnected) return View(model);
+
+        var messageDetailsRaw = TempData["PortalMessageDetails"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(messageDetailsRaw))
+        {
+            model.MessageDetails = messageDetailsRaw
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+        }
+
+        model.ExamTypeOptions = BuildResultExamTypeOptions();
+
+        if (!model.IsConnected)
+            return View("Results", model);
+
         try
         {
             var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
@@ -2907,12 +3008,12 @@ public class PortalController : Controller
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
             }
 
-            var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
-            model.SemesterOptions = BuildSemesterOptions(allOfferings);
-            model.Offerings = FilterOfferingsBySemester(allOfferings, semesterName);
-
             if (identity?.IsStudent == true)
             {
+                var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
+                model.SemesterOptions = BuildSemesterOptions(allOfferings);
+                model.Offerings = FilterOfferingsBySemester(allOfferings, semesterName);
+
                 model.Results = await _api.GetMyResultsAsync(effectiveTenantId, effectiveCampusId, ct);
 
                 if (offeringId.HasValue)
@@ -2930,8 +3031,13 @@ public class PortalController : Controller
                         .ToList();
                 }
 
-                // Stage 4.6: Completed FYP should be visible in student results.
-                // Represent it as a published synthetic result row when no offering filter is active.
+                if (!string.IsNullOrWhiteSpace(model.SelectedExamType))
+                {
+                    model.Results = model.Results
+                        .Where(r => string.Equals(r.ResultType, model.SelectedExamType, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
                 if (!offeringId.HasValue)
                 {
                     var myProjects = await _api.GetMyFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
@@ -2969,10 +3075,129 @@ public class PortalController : Controller
 
                 model.MyRecheckRequests = await _api.GetMyResultRecheckRequestsAsync(ct);
             }
-            else if (offeringId.HasValue)
+            else
             {
-                model.Results   = await _api.GetResultsByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
-                model.Roster    = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+                model.Departments = (await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct))
+                    .OrderBy(d => d.Name)
+                    .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                    .ToList();
+
+                if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
+                    model.SelectedDepartmentId = null;
+
+                var allOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, effectiveTenantId, effectiveCampusId, null, ct);
+
+                model.Courses = allOfferings
+                    .GroupBy(o => o.CourseId)
+                    .Select(g => g.First())
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.CourseId,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode) ? o.CourseTitle : $"{o.CourseCode} - {o.CourseTitle}"
+                    })
+                    .ToList();
+
+                if (model.SelectedCourseId.HasValue && !model.Courses.Any(c => c.Id == model.SelectedCourseId.Value))
+                    model.SelectedCourseId = null;
+
+                var courseFilteredOfferings = model.SelectedCourseId.HasValue
+                    ? allOfferings.Where(o => o.CourseId == model.SelectedCourseId.Value).ToList()
+                    : allOfferings;
+
+                model.SemesterOptions = courseFilteredOfferings
+                    .Select(o => o.SemesterName)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(s => s)
+                    .Select(s => new LookupItem { Id = Guid.Empty, Name = s! })
+                    .ToList();
+
+                if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    && !model.SemesterOptions.Any(s => string.Equals(s.Name, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    model.SelectedSemesterName = null;
+                }
+
+                var semesterFilteredOfferings = !string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    ? courseFilteredOfferings.Where(o => string.Equals(o.SemesterName, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)).ToList()
+                    : courseFilteredOfferings;
+
+                model.Subjects = semesterFilteredOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? o.CourseTitle
+                            : $"{o.CourseCode} - {o.CourseTitle}"
+                    })
+                    .ToList();
+
+                if (model.SelectedSubjectOfferingId.HasValue && !model.Subjects.Any(s => s.Id == model.SelectedSubjectOfferingId.Value))
+                    model.SelectedSubjectOfferingId = null;
+
+                if (!model.SelectedOfferingId.HasValue && model.SelectedSubjectOfferingId.HasValue)
+                    model.SelectedOfferingId = model.SelectedSubjectOfferingId;
+
+                if (!model.SelectedSubjectOfferingId.HasValue && model.SelectedOfferingId.HasValue)
+                    model.SelectedSubjectOfferingId = model.SelectedOfferingId;
+
+                model.Offerings = semesterFilteredOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .ThenBy(o => o.SemesterName)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? $"{o.CourseTitle} ({o.SemesterName})"
+                            : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                    })
+                    .ToList();
+
+                if (model.SelectedOfferingId.HasValue && !model.Offerings.Any(o => o.Id == model.SelectedOfferingId.Value))
+                {
+                    model.SelectedOfferingId = null;
+                    model.Message = string.IsNullOrWhiteSpace(model.Message)
+                        ? "Selected offering is not valid for the current filter context."
+                        : model.Message;
+                }
+
+                if (!string.IsNullOrWhiteSpace(model.SelectedExamType)
+                    && !model.ExamTypeOptions.Any(x => string.Equals(x.Name, model.SelectedExamType, StringComparison.OrdinalIgnoreCase)))
+                {
+                    model.SelectedExamType = null;
+                }
+
+                model.AssessmentComponentOptions = BuildAssessmentComponentOptions(model.SelectedExamType);
+                if (!string.IsNullOrWhiteSpace(model.SelectedAssessmentComponent)
+                    && !model.AssessmentComponentOptions.Any(x => string.Equals(x.Name, model.SelectedAssessmentComponent, StringComparison.OrdinalIgnoreCase)))
+                {
+                    model.SelectedAssessmentComponent = null;
+                }
+
+                if (model.SelectedOfferingId.HasValue)
+                {
+                    model.Results = await _api.GetResultsByOfferingAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
+                    model.Roster = await _api.GetEnrollmentRosterAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
+
+                    if (model.SelectedStudentId.HasValue)
+                    {
+                        model.Results = model.Results
+                            .Where(r => r.StudentProfileId == model.SelectedStudentId.Value)
+                            .ToList();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(model.SelectedExamType))
+                    {
+                        model.Results = model.Results
+                            .Where(r => string.Equals(r.ResultType, model.SelectedExamType, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                    }
+                }
             }
 
             if (identity?.IsFaculty == true)
@@ -2985,13 +3210,13 @@ public class PortalController : Controller
                 model.PendingModificationRequests = await _api.GetPendingResultModificationRequestsAsync(ct);
             }
         }
-        catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
-    }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
 
-    [HttpGet]
-    public async Task<IActionResult> EnterResults(Guid? offeringId, string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => await Results(offeringId, semesterName, tenantId, campusId, ct);
+        return View("Results", model);
+    }
 
     // ── Quizzes ────────────────────────────────────────────────────────────
 
@@ -3971,13 +4196,402 @@ public class PortalController : Controller
         return value;
     }
 
+    private static List<LookupItem> BuildResultExamTypeOptions()
+        => new()
+        {
+            new LookupItem { Id = Guid.Empty, Name = "Midterm" },
+            new LookupItem { Id = Guid.Empty, Name = "Final" },
+            new LookupItem { Id = Guid.Empty, Name = "Quiz" },
+            new LookupItem { Id = Guid.Empty, Name = "Assignment" },
+            new LookupItem { Id = Guid.Empty, Name = "Internal" }
+        };
+
+    private static List<LookupItem> BuildAssessmentComponentOptions(string? examType)
+    {
+        var options = string.Equals(examType, "Quiz", StringComparison.OrdinalIgnoreCase)
+            ? new[] { "Theory", "Internal" }
+            : string.Equals(examType, "Assignment", StringComparison.OrdinalIgnoreCase)
+                ? new[] { "Internal", "Practical" }
+                : new[] { "Theory", "Practical", "Internal" };
+
+        return options
+            .Select(x => new LookupItem { Id = Guid.Empty, Name = x })
+            .ToList();
+    }
+
+    private static string ResolveResultsEntryAction(string? entryPoint)
+        => string.Equals(entryPoint, nameof(EnterResults), StringComparison.OrdinalIgnoreCase)
+            ? nameof(EnterResults)
+            : nameof(Results);
+
+    private async Task<(bool Allowed, string Message)> ValidateResultWriteScopeAsync(
+        Guid offeringId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? semesterName,
+        string? examType,
+        string? assessmentComponent,
+        Guid? effectiveTenantId,
+        Guid? effectiveCampusId,
+        SessionIdentity? identity,
+        CancellationToken ct)
+    {
+        if (identity?.IsSuperAdmin == true && (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue))
+            return (false, "Select tenant and campus before performing result write operations.");
+
+        if (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue)
+            return (false, "Tenant and campus scope is required for result write operations.");
+
+        if (!departmentId.HasValue || !courseId.HasValue || !subjectOfferingId.HasValue || string.IsNullOrWhiteSpace(semesterName)
+            || string.IsNullOrWhiteSpace(examType) || string.IsNullOrWhiteSpace(assessmentComponent))
+        {
+            return (false, "Select department, course, subject, semester/class, exam type, and assessment component before performing result write operations.");
+        }
+
+        if (subjectOfferingId.Value != offeringId)
+            return (false, "Selected subject does not match the selected offering.");
+
+        var offerings = await _api.GetCourseOfferingsAsync(departmentId, effectiveTenantId, effectiveCampusId, null, ct);
+        var selectedOffering = offerings.FirstOrDefault(o => o.Id == offeringId);
+        if (selectedOffering is null)
+            return (false, "Selected offering is not valid for the current filter scope.");
+
+        if (selectedOffering.CourseId != courseId.Value)
+            return (false, "Selected offering does not match the selected course.");
+
+        if (!string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
+            return (false, "Selected offering does not match the selected semester/class.");
+
+        return (true, string.Empty);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadResultCsvTemplate(
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        string? entryPoint,
+        CancellationToken ct)
+    {
+        IActionResult RedirectWithContext() => RedirectToAction(
+            ResolveResultsEntryAction(entryPoint),
+            new
+            {
+                offeringId,
+                semesterName,
+                tenantId,
+                campusId,
+                departmentId,
+                courseId,
+                subjectOfferingId,
+                examType,
+                assessmentComponent,
+                studentId,
+                section,
+                batch
+            });
+
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        if (!offeringId.HasValue)
+        {
+            TempData["PortalMessage"] = "Select an offering before downloading the result CSV template.";
+            return RedirectWithContext();
+        }
+
+        try
+        {
+            var sessionId = _api.GetSessionIdentity();
+            var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+            var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+
+            var roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+
+            var builder = new StringBuilder();
+            builder.AppendLine("StudentId,StudentName,ResultType,MarksObtained,MaxMarks");
+
+            var templateResultType = string.IsNullOrWhiteSpace(examType) ? "Final" : examType;
+            foreach (var student in roster.OrderBy(x => x.StudentName, StringComparer.OrdinalIgnoreCase))
+            {
+                builder.Append(EscapeCsvField(student.Id.ToString()));
+                builder.Append(',');
+                builder.Append(EscapeCsvField(student.StudentName ?? string.Empty));
+                builder.Append(',');
+                builder.Append(EscapeCsvField(templateResultType));
+                builder.Append(",0,100");
+                builder.AppendLine();
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(builder.ToString());
+            return File(bytes, "text/csv", $"result-entry-template-{offeringId.Value:D}.csv");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Unable to generate result CSV template: {ex.Message}";
+            return RedirectWithContext();
+        }
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportResultCsv(
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        IFormFile? csvFile,
+        bool strictMode,
+        string? entryPoint,
+        CancellationToken ct)
+    {
+        IActionResult RedirectWithContext() => RedirectToAction(
+            ResolveResultsEntryAction(entryPoint),
+            new
+            {
+                offeringId,
+                semesterName,
+                tenantId,
+                campusId,
+                departmentId,
+                courseId,
+                subjectOfferingId,
+                examType,
+                assessmentComponent,
+                studentId,
+                section,
+                batch
+            });
+
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        if (!offeringId.HasValue)
+        {
+            TempData["PortalMessage"] = "Select an offering before importing result CSV.";
+            return RedirectWithContext();
+        }
+
+        if (csvFile is null || csvFile.Length == 0)
+        {
+            TempData["PortalMessage"] = "Select a CSV file to import results.";
+            return RedirectWithContext();
+        }
+
+        var sessionId = _api.GetSessionIdentity();
+        var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
+        var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+        var scopeValidation = await ValidateResultWriteScopeAsync(
+            offeringId.Value,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            semesterName,
+            examType,
+            assessmentComponent,
+            effectiveTenantId,
+            effectiveCampusId,
+            sessionId,
+            ct);
+        if (!scopeValidation.Allowed)
+        {
+            TempData["PortalMessage"] = scopeValidation.Message;
+            return RedirectWithContext();
+        }
+
+        var roster = await _api.GetEnrollmentRosterAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, ct);
+        var rosterById = roster.ToDictionary(x => x.Id, x => x.StudentName ?? string.Empty);
+
+        var validationErrors = new List<string>();
+        var parsedRows = new List<(int RowNumber, Guid StudentId, string ResultType, decimal MarksObtained, decimal MaxMarks)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            await using var stream = csvFile.OpenReadStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+
+            var headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(headerLine))
+            {
+                TempData["PortalMessage"] = "CSV file is empty.";
+                return RedirectWithContext();
+            }
+
+            var headers = ParseCsvLine(headerLine)
+                .Select(h => h.Trim())
+                .ToArray();
+
+            var expected = new[] { "StudentId", "StudentName", "ResultType", "MarksObtained", "MaxMarks" };
+            if (headers.Length != expected.Length || !headers.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["PortalMessage"] = "Invalid CSV header. Expected: StudentId,StudentName,ResultType,MarksObtained,MaxMarks.";
+                return RedirectWithContext();
+            }
+
+            var rowNumber = 1;
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                rowNumber++;
+
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var cols = ParseCsvLine(line);
+                if (cols.Length != 5)
+                {
+                    validationErrors.Add($"Row {rowNumber}: expected 5 columns.");
+                    continue;
+                }
+
+                var studentIdRaw = cols[0].Trim();
+                var studentNameRaw = cols[1].Trim();
+                var resultTypeRaw = cols[2].Trim();
+                var marksRaw = cols[3].Trim();
+                var maxRaw = cols[4].Trim();
+
+                if (!Guid.TryParse(studentIdRaw, out var parsedStudentId))
+                {
+                    validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
+                    continue;
+                }
+
+                if (!rosterById.ContainsKey(parsedStudentId))
+                {
+                    validationErrors.Add($"Row {rowNumber}: StudentId does not belong to the selected offering roster.");
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(studentNameRaw)
+                    && !string.Equals(studentNameRaw, rosterById[parsedStudentId], StringComparison.OrdinalIgnoreCase))
+                {
+                    validationErrors.Add($"Row {rowNumber}: StudentName does not match the selected offering roster.");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(resultTypeRaw))
+                {
+                    validationErrors.Add($"Row {rowNumber}: ResultType is required.");
+                    continue;
+                }
+
+                if (!decimal.TryParse(marksRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var marksObtained)
+                    && !decimal.TryParse(marksRaw, NumberStyles.Number, CultureInfo.CurrentCulture, out marksObtained))
+                {
+                    validationErrors.Add($"Row {rowNumber}: MarksObtained is invalid.");
+                    continue;
+                }
+
+                if (!decimal.TryParse(maxRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var maxMarks)
+                    && !decimal.TryParse(maxRaw, NumberStyles.Number, CultureInfo.CurrentCulture, out maxMarks))
+                {
+                    validationErrors.Add($"Row {rowNumber}: MaxMarks is invalid.");
+                    continue;
+                }
+
+                if (marksObtained < 0 || maxMarks <= 0 || marksObtained > maxMarks)
+                {
+                    validationErrors.Add($"Row {rowNumber}: marks must be within 0 and MaxMarks.");
+                    continue;
+                }
+
+                var duplicateKey = $"{parsedStudentId:D}|{resultTypeRaw}|{assessmentComponent}";
+                if (!seen.Add(duplicateKey))
+                {
+                    validationErrors.Add($"Row {rowNumber}: duplicate StudentId + ResultType entry.");
+                    continue;
+                }
+
+                parsedRows.Add((rowNumber, parsedStudentId, resultTypeRaw, marksObtained, maxMarks));
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Unable to read result CSV file: {ex.Message}";
+            return RedirectWithContext();
+        }
+
+        if (validationErrors.Count > 0 && strictMode)
+        {
+            TempData["PortalMessage"] = $"Result CSV validation failed in strict mode. Invalid rows: {validationErrors.Count}.";
+            TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+            return RedirectWithContext();
+        }
+
+        if (parsedRows.Count == 0)
+        {
+            TempData["PortalMessage"] = "CSV file has no valid result rows to import.";
+            if (validationErrors.Count > 0)
+                TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
+            return RedirectWithContext();
+        }
+
+        var importedCount = 0;
+        var importErrors = new List<string>();
+        foreach (var row in parsedRows)
+        {
+            try
+            {
+                await _api.CreateResultAsync(
+                    row.StudentId,
+                    offeringId.Value,
+                    row.ResultType,
+                    row.MarksObtained,
+                    row.MaxMarks,
+                    effectiveTenantId,
+                    effectiveCampusId,
+                    ct);
+                importedCount++;
+            }
+            catch (Exception ex)
+            {
+                importErrors.Add($"Row {row.RowNumber}: {ex.Message}");
+            }
+        }
+
+        var warningCount = validationErrors.Count + importErrors.Count;
+        if (warningCount == 0)
+        {
+            TempData["PortalMessage"] = $"Result CSV import completed successfully. Imported rows: {importedCount}.";
+        }
+        else
+        {
+            TempData["PortalMessage"] = $"Result CSV import completed with warnings. Imported rows: {importedCount}. Skipped/failed rows: {warningCount}.";
+            TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Concat(importErrors).Take(20));
+        }
+
+        return RedirectWithContext();
+    }
+
     // ── Result write actions ────────────────────────────────────────────────
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateResult(
         Guid studentProfileId, Guid offeringId,
         string resultType, decimal marksObtained, decimal maxMarks,
-        bool promote, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        bool promote, Guid? tenantId, Guid? campusId,
+        Guid? departmentId, Guid? courseId, Guid? subjectOfferingId, string? semesterName, string? examType, string? assessmentComponent,
+        Guid? studentId, string? section, string? batch,
+        string? entryPoint,
+        CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -3987,7 +4601,41 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
-                await _api.CreateResultAsync(studentProfileId, offeringId, resultType, marksObtained, maxMarks, effectiveTenantId, effectiveCampusId, ct);
+                var scopeValidation = await ValidateResultWriteScopeAsync(
+                    offeringId,
+                    departmentId,
+                    courseId,
+                    subjectOfferingId,
+                    semesterName,
+                    examType,
+                    assessmentComponent,
+                    effectiveTenantId,
+                    effectiveCampusId,
+                    sessionId,
+                    ct);
+                if (!scopeValidation.Allowed)
+                {
+                    TempData["PortalMessage"] = scopeValidation.Message;
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
+                var effectiveResultType = string.IsNullOrWhiteSpace(examType) ? resultType : examType;
+
+                await _api.CreateResultAsync(studentProfileId, offeringId, effectiveResultType, marksObtained, maxMarks, effectiveTenantId, effectiveCampusId, ct);
 
                 // Promotion is only offered in the UI for Final result type.
                 // When the checkbox is checked the form sends promote=true;
@@ -3997,14 +4645,33 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+        {
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch
+        });
     }
 
     // Standalone per-row Promote button in the Results table.
     // Reuses the existing POST api/v1/student-lifecycle/{id}/promote endpoint
     // without requiring a new result entry.
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PromoteStudentFromResult(Guid studentProfileId, Guid? offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<IActionResult> PromoteStudentFromResult(
+        Guid studentProfileId, Guid? offeringId, Guid? tenantId, Guid? campusId,
+        Guid? departmentId, Guid? courseId, Guid? subjectOfferingId, string? semesterName, string? examType, string? assessmentComponent,
+        Guid? studentId, string? section, string? batch,
+        string? entryPoint,
+        CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -4018,13 +4685,31 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+        {
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch
+        });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CorrectResult(
         Guid studentProfileId, Guid offeringId, string resultType,
-        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        decimal newMarksObtained, decimal newMaxMarks, Guid? tenantId, Guid? campusId,
+        Guid? departmentId, Guid? courseId, Guid? subjectOfferingId, string? semesterName, string? examType, string? assessmentComponent,
+        Guid? studentId, string? section, string? batch,
+        string? entryPoint,
+        CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -4039,11 +4724,30 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+        {
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch
+        });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> PublishAllResults(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<IActionResult> PublishAllResults(
+        Guid offeringId, Guid? tenantId, Guid? campusId,
+        Guid? departmentId, Guid? courseId, Guid? subjectOfferingId, string? semesterName, string? examType, string? assessmentComponent,
+        Guid? studentId, string? section, string? batch,
+        string? entryPoint,
+        CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -4052,12 +4756,59 @@ public class PortalController : Controller
                 var sessionId = _api.GetSessionIdentity();
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
+
+                var scopeValidation = await ValidateResultWriteScopeAsync(
+                    offeringId,
+                    departmentId,
+                    courseId,
+                    subjectOfferingId,
+                    semesterName,
+                    examType,
+                    assessmentComponent,
+                    effectiveTenantId,
+                    effectiveCampusId,
+                    sessionId,
+                    ct);
+                if (!scopeValidation.Allowed)
+                {
+                    TempData["PortalMessage"] = scopeValidation.Message;
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 await _api.PublishAllResultsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "All results published.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+        {
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch
+        });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -4071,6 +4822,16 @@ public class PortalController : Controller
         string reason,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? semesterName,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        string? entryPoint,
         CancellationToken ct)
     {
         if (_api.IsConnected())
@@ -4101,7 +4862,21 @@ public class PortalController : Controller
             }
         }
 
-        return RedirectToAction(nameof(Results), new { offeringId, tenantId, campusId });
+        return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+        {
+            offeringId,
+            semesterName,
+            tenantId,
+            campusId,
+            departmentId,
+            courseId,
+            subjectOfferingId,
+            examType,
+            assessmentComponent,
+            studentId,
+            section,
+            batch
+        });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

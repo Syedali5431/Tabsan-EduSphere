@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Phase 1 and Phase 2 Runtime Completion)
+
+- No new menu key introduced in this slice.
+- `enter_results` now includes runtime CSV template/import behavior and required-filter write-guard behavior.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Phase 2 Filter Criteria and Dynamic Selection)
 
 - No new menu key was introduced in this slice.

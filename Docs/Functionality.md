@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Completion
+
+### Implementation sync
+- Enter Results now supports CSV template download and CSV import with strict-mode validation behavior.
+- Enter Results now enforces required-filter completion for write actions and uses dependent filter refresh across scoped academic context.
+- Result write endpoints now validate selected scope context server-side before accepting writes.
+
+### Validation sync
+- Web build passed after Enter Results runtime completion.
+- Sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Results Phase 2 Filter Criteria and Dynamic Selection
 
 ### Implementation sync

@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Completion
+
+### Implementation Summary:
+- Enter Results CSV template download and CSV import are implemented in web controller flow.
+- Enter Results required-filter and dependent-filter behavior is implemented for scoped write-action control.
+- Result write operations now enforce selected filter scope server-side.
+
+### Validation Summary:
+- Web project build passed for runtime completion slice.
+- Sidebar integration suite remained green (`17/17`).
+
 ## 2026-05-28 Update - Enter Results Phase 2 Filter Criteria and Dynamic Selection
 
 ### Implementation Summary:

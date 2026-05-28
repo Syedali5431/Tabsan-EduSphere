@@ -872,9 +872,15 @@ public class ResultsPageModel
 {
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
+    public List<string> MessageDetails { get; set; } = new();
     public SessionIdentity? Identity { get; set; }
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<LookupItem> Subjects { get; set; } = new();
+    public List<LookupItem> ExamTypeOptions { get; set; } = new();
+    public List<LookupItem> AssessmentComponentOptions { get; set; } = new();
     public List<ResultItem>              Results  { get; set; } = new();
     public List<LookupItem>              Offerings { get; set; } = new();
     public List<LookupItem>              SemesterOptions { get; set; } = new();
@@ -886,7 +892,26 @@ public class ResultsPageModel
     public Guid?  SelectedOfferingId { get; set; }
     public Guid?  SelectedTenantId { get; set; }
     public Guid?  SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public Guid? SelectedSubjectOfferingId { get; set; }
+    public string? SelectedExamType { get; set; }
+    public string? SelectedAssessmentComponent { get; set; }
+    public Guid? SelectedStudentId { get; set; }
+    public string? SelectedSection { get; set; }
+    public string? SelectedBatch { get; set; }
     public string? SelectedSemesterName { get; set; }
+    public bool CanWriteResults =>
+        SelectedOfferingId.HasValue
+        && SelectedDepartmentId.HasValue
+        && SelectedCourseId.HasValue
+        && SelectedSubjectOfferingId.HasValue
+        && !string.IsNullOrWhiteSpace(SelectedSemesterName)
+        && !string.IsNullOrWhiteSpace(SelectedExamType)
+        && !string.IsNullOrWhiteSpace(SelectedAssessmentComponent);
+
+    public string SaveResultDisabledReason =>
+        "Select department, course, subject, semester/class, exam type, and assessment component before result write actions.";
 }
 
 public class ResultModificationRequestItem

@@ -83,6 +83,17 @@ Result entry must be scoped by:
 - Focused sidebar integration suite passed after route/menu changes.
 - Full solution build passed.
 
+### Phase 1 Implementation Summary (Runtime Completion)
+
+- Implemented result CSV template download endpoint and CSV import endpoint under the Enter Results flow.
+- Added strict-mode CSV validation and partial-success behavior with row-level skip/error feedback.
+- Preserved tenant/campus scope and existing result write pathways while extending entry methods.
+
+### Phase 1 Validation Summary (Runtime Completion)
+
+- Web project build passed after result CSV template/import implementation.
+- Sidebar/menu integration suite remained green for Enter Results access boundaries.
+
 ## Phase 2. Filter Criteria and Dynamic Selection
 
 ### Required Filters
@@ -121,6 +132,12 @@ Result entry must be scoped by:
 - Manual verification completed for required-filter gating, dependent-refresh behavior, and scoped filtering continuity.
 - Backward-compatibility check completed for existing Results route and role-based access behavior.
 - No schema or migration change required for this phase.
+
+### Phase 2 Validation Summary (Runtime Completion)
+
+- Implemented required-filter write guards for Enter Results save/publish/import operations.
+- Implemented dependent filter sequencing for Department, Program/Course, Subject, and Semester/Class context.
+- Added server-side scope validation to prevent write operations outside selected filter context.
 
 ## Phase 3. Template Download
 

@@ -11,6 +11,17 @@
 - Function inventory reviewed and confirmed no additional runtime function entries are required for this phase.
 - Existing Enter Results function entries from Phase 0/1 remain the authoritative runtime references.
 
+## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Function Inventory
+
+### Runtime additions
+- `PortalController.DownloadResultCsvTemplate` added for Enter Results template generation and download.
+- `PortalController.ImportResultCsv` added for Enter Results CSV import with strict/non-strict validation behavior.
+- `PortalController.ValidateResultWriteScopeAsync` added for server-side required-filter and scope enforcement before result write actions.
+
+### Validation Summary
+- Web build passed with new Enter Results runtime function surfaces.
+- Existing sidebar/menu integration matrix remained green.
+
 ## 2026-05-28 Update - Enter Results Phase 0/1 Initial Inventory
 
 ### Phase 0/1 Implementation Summary

@@ -1,6 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ResultsPageModel
 @{ ViewData["Title"] = "Results"; }
 @{
+    var currentAction = (ViewData["ResultsAction"] as string) ?? (ViewContext.RouteData.Values["action"]?.ToString() ?? "Results");
     var semesterLabels = Model.SemesterOptions
         .Select((s, index) => new { s.Name, Label = (index + 1).ToString() })
         .ToDictionary(x => x.Name, x => x.Label, StringComparer.OrdinalIgnoreCase);
@@ -23,6 +24,19 @@
     <div class="alert alert-info">@Model.Message</div>
 }
 
+@if (Model.MessageDetails.Count > 0)
+{
+    <div class="alert alert-warning">
+        <div class="fw-semibold mb-1">Details</div>
+        <ul class="mb-0">
+            @foreach (var detail in Model.MessageDetails)
+            {
+                <li>@detail</li>
+            }
+        </ul>
+    </div>
+}
+
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
@@ -36,11 +50,11 @@ else
                 <div class="section-head mb-3">
                     <div>
                         <span class="section-kicker">Result controls</span>
-                        <h2 class="h5 mb-1">Filter results by semester and offering</h2>
-                        <p class="text-muted mb-0">Switch context quickly to review outcomes and publish pending records.</p>
+                        <h2 class="h5 mb-1">Filter results by scoped academic context</h2>
+                        <p class="text-muted mb-0">Required filters must be selected before write actions are enabled.</p>
                     </div>
                 </div>
-                <form method="get" asp-action="Results" class="row g-2 align-items-end filter-toolbar">
+                <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-3">
@@ -70,10 +84,34 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
 
-                    @if (User.IsInRole("Student") && Model.SemesterOptions.Count > 0)
+                    @if (!User.IsInRole("Student"))
                     {
-                        <div class="col-md-4">
-                            <label class="form-label">Select Semester</label>
+                        <div class="col-md-3">
+                            <label class="form-label">Department <span class="text-danger">*</span></label>
+                            <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select department</option>
+                                @foreach (var d in Model.Departments)
+                                {
+                                    <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id)">@d.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Program/Course <span class="text-danger">*</span></label>
+                            <select name="courseId" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select course</option>
+                                @foreach (var c in Model.Courses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    @if (Model.SemesterOptions.Count > 0)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Class/Semester @if (!User.IsInRole("Student")) { <span class="text-danger">*</span> }</label>
                             <select name="semesterName" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Semesters</option>
                                 @foreach (var s in Model.SemesterOptions)
@@ -83,16 +121,81 @@ else
                             </select>
                         </div>
                     }
-                    <div class="col-md-5">
-                        <label class="form-label">Select Course Offering</label>
-                        <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                            <option value="">My Results (all)</option>
-                            @foreach (var o in Model.Offerings)
-                            {
-                                <option value="@o.Id" selected="@(Model.SelectedOfferingId == o.Id ? "selected" : null)">@o.Name</option>
-                            }
-                        </select>
-                    </div>
+
+                    @if (!User.IsInRole("Student"))
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Subject <span class="text-danger">*</span></label>
+                            <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select subject</option>
+                                @foreach (var s in Model.Subjects)
+                                {
+                                    <option value="@s.Id" selected="@(Model.SelectedSubjectOfferingId == s.Id)">@s.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Exam Type <span class="text-danger">*</span></label>
+                            <select name="examType" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select exam type</option>
+                                @foreach (var e in Model.ExamTypeOptions)
+                                {
+                                    <option value="@e.Name" selected="@(string.Equals(Model.SelectedExamType, e.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@e.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Assessment Component <span class="text-danger">*</span></label>
+                            <select name="assessmentComponent" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select component</option>
+                                @foreach (var a in Model.AssessmentComponentOptions)
+                                {
+                                    <option value="@a.Name" selected="@(string.Equals(Model.SelectedAssessmentComponent, a.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@a.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <input type="hidden" name="offeringId" value="@Model.SelectedSubjectOfferingId" />
+
+                        <div class="col-md-3">
+                            <label class="form-label">Student (optional)</label>
+                            <select name="studentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All students</option>
+                                @foreach (var r in Model.Roster)
+                                {
+                                    <option value="@r.Id" selected="@(Model.SelectedStudentId == r.Id)">@r.StudentName (@r.RegistrationNumber)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Section</label>
+                            <input name="section" value="@Model.SelectedSection" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Batch</label>
+                            <input name="batch" value="@Model.SelectedBatch" class="form-control" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-5">
+                            <label class="form-label">Select Course Offering</label>
+                            <select name="offeringId" class="form-select" onchange="this.form.submit()">
+                                <option value="">My Results (all)</option>
+                                @foreach (var o in Model.Offerings)
+                                {
+                                    <option value="@o.Id" selected="@(Model.SelectedOfferingId == o.Id ? "selected" : null)">@o.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    @if (!User.IsInRole("Student"))
+                    {
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
+                        </div>
+                    }
                 </form>
             </div>
         </div>
@@ -112,16 +215,65 @@ else
                 @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
                     <div class="responsive-action-group">
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal">
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">
                             + Enter Result
                         </button>
-                        <form asp-action="PublishAllResults" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
+                        <form asp-action="DownloadResultCsvTemplate" method="get" class="d-inline">
+                            <input type="hidden" name="entryPoint" value="@currentAction" />
                             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                            <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                            <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                            <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                            <input type="hidden" name="section" value="@Model.SelectedSection" />
+                            <input type="hidden" name="batch" value="@Model.SelectedBatch" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Template CSV</button>
+                        </form>
+                        <form asp-action="ImportResultCsv" method="post" enctype="multipart/form-data" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="entryPoint" value="@currentAction" />
+                            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                            <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                            <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                            <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                            <input type="hidden" name="section" value="@Model.SelectedSection" />
+                            <input type="hidden" name="batch" value="@Model.SelectedBatch" />
+                            <input type="file" name="csvFile" accept=".csv" class="form-control form-control-sm d-inline-block" style="width: 190px;" />
+                            <label class="form-check-label ms-1 me-1">
+                                <input type="checkbox" name="strictMode" value="true" class="form-check-input" /> strict
+                            </label>
+                            <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">Import CSV</button>
+                        </form>
+                        <form asp-action="PublishAllResults" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="entryPoint" value="@currentAction" />
+                            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                            <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                            <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                            <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                            <input type="hidden" name="section" value="@Model.SelectedSection" />
+                            <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                             <button type="submit" class="btn btn-sm btn-success"
-                                    onclick="return confirm('Publish all draft results for this offering?')">
+                                    onclick="return confirm('Publish all draft results for this offering?')"
+                                    disabled="@(!Model.CanWriteResults)"
+                                    title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">
                                 Publish All
                             </button>
                         </form>
@@ -205,10 +357,20 @@ else
                                                 <form asp-action="PromoteStudentFromResult" method="post" class="d-inline"
                                                       onsubmit="return confirm('Promote @r.StudentName to next semester?')">
                                                     @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="entryPoint" value="@currentAction" />
                                                     <input type="hidden" name="studentProfileId" value="@r.StudentProfileId" />
                                                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                                    <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                                    <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                                                    <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                                                    <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                                                    <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                                                    <input type="hidden" name="section" value="@Model.SelectedSection" />
+                                                    <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                                                     <button type="submit" class="btn btn-xs btn-outline-primary btn-sm">Promote ↑</button>
                                                 </form>
                                             }
@@ -244,9 +406,19 @@ else
         <div class="modal-dialog">
             <form asp-action="CreateResult" method="post">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="entryPoint" value="@currentAction" />
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                <input type="hidden" name="section" value="@Model.SelectedSection" />
+                <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Enter Result</h5>
@@ -309,11 +481,21 @@ else
         <div class="modal-dialog">
             <form asp-action="CorrectResult" method="post">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="entryPoint" value="@currentAction" />
                 <input type="hidden" id="correctResult_studentProfileId" name="studentProfileId" />
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                 <input type="hidden" id="correctResult_resultType" name="resultType" />
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                <input type="hidden" name="section" value="@Model.SelectedSection" />
+                <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Correct Result</h5>
@@ -347,12 +529,22 @@ else
         <div class="modal-dialog">
             <form asp-action="RequestResultModification" method="post">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="entryPoint" value="@currentAction" />
                 <input type="hidden" id="modifyResult_resultId" name="resultId" />
                 <input type="hidden" id="modifyResult_studentProfileId" name="studentProfileId" />
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                 <input type="hidden" id="modifyResult_resultType" name="resultType" />
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                <input type="hidden" name="section" value="@Model.SelectedSection" />
+                <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Request Result Modification</h5>
