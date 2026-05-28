@@ -2,8 +2,8 @@
 
 # Tabsan EduSphere – Training Manual
 
-**Version:** 1.6  
-**Date:** 26 May 2026  
+**Version:** 1.7  
+**Date:** 28 May 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
 **Completion Status:** Phase 38 complete (final separation baseline)  
 **Audience:** Trainers, IT Staff, Finance, Super Admins, Department Coordinators
@@ -245,4 +245,6 @@ Each participant should:
 - Add correction workflow drill: enforce reason capture and published-state prerequisite before correction.
 - Add attendance verification scenario using multi-day seeded records for trend analysis and threshold checks.
 - Update training DB validation steps to expect `DemoDatasetVersion = FullDummyData-v9`.
+- Add results lifecycle training check: validate `Midterm` (published), `Final` (published), and `FinalReview` (draft) behavior in the same offering.
+- Add import-report token handling drill: verify one-time report-download token expiry/reuse behavior in results import workflow.
 

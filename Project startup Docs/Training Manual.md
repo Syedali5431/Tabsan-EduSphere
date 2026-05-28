@@ -1,6 +1,11 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (28 May 2026):
+- Add trainer coverage for Enter Results governance: write-scope checks, controlled publish rights, and mandatory correction reason.
+- Add seeded-data walkthrough for expanded attendance timeline and mixed result lifecycle states (`Midterm`, published `Final`, draft `FinalReview`).
+- Update full demo validation marker reference to `DemoDatasetVersion = FullDummyData-v9`.
+
 Training synchronization update (27 May 2026):
 - Add trainer pre-check note to ensure local SQL target availability before API startup smoke demonstrations.
 - Add trainer note that environment profile detection now resolves cleanly from layered configuration sources.
