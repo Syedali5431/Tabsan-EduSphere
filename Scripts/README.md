@@ -11,9 +11,9 @@ This folder is intentionally kept DB-focused and now contains only database setu
 | 02 | 02-Seed-Core.sql | Seeds core roles, modules, departments, baseline users, and access matrices. |
 | 02A | Seed-Core-Clean.sql | Seeds clean baseline (no dummy/demo rows). |
 | 03 | 03-FullDummyData.sql | Seeds very high-volume dummy/demo data (v9) across School/College/University institutes with tenant/campus-aware program coverage, including all-semester offerings/enrollments, school/college class timetables, institute-wide role users, and expanded attendance/results lifecycle coverage (published + draft states). |
-| 04 | 04-Maintenance-Indexes-And-Views.sql | Adds maintenance indexes and reporting views. |
-| 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path. |
-| 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path. |
+| 04 | 04-Maintenance-Indexes-And-Views.sql | Adds maintenance indexes and reporting views, including results lifecycle indexes used by publish/draft workflows. |
+| 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path, including attendance/results lifecycle and institution-coverage checks. |
+| 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path, including no-dummy assertions for attendance and results. |
 
 ## Default Seeded Credentials
 

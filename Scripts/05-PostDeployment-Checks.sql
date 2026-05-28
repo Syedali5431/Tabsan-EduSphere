@@ -214,6 +214,12 @@ SELECT 'IndexExists_IX_attendance_student_id' AS [CheckName],
 SELECT 'IndexExists_IX_attendance_student_offering_date' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_student_offering_date' AND object_id = OBJECT_ID('attendance_records')) THEN 1 ELSE 0 END AS [Value];
 
+SELECT 'IndexExists_IX_results_offering_publish_type' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_results_offering_publish_type' AND object_id = OBJECT_ID('results')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_results_student_publish_type' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_results_student_publish_type' AND object_id = OBJECT_ID('results')) THEN 1 ELSE 0 END AS [Value];
+
 SELECT 'MigrationExists_Stage11_DepartmentInstitutionType' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId = '20260513121000_Phase1Stage11DepartmentInstitutionType') THEN 1 ELSE 0 END AS [Value];
 
@@ -770,6 +776,10 @@ SELECT 'DummySeed_AttendanceStatusAbsentCount' AS [CheckName], COUNT(1) AS [Valu
 FROM [attendance_records]
 WHERE [Status] = N'Absent';
 
+SELECT 'DummySeed_AttendanceStatusLateCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [attendance_records]
+WHERE [Status] = N'Late';
+
 SELECT 'DummySeed_BulkResultsCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [results] r
 INNER JOIN [student_profiles] sp ON sp.[Id] = r.[StudentProfileId]
@@ -791,6 +801,18 @@ WHERE [ResultType] = N'Midterm';
 SELECT 'DummySeed_ResultsFinalReviewCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [results]
 WHERE [ResultType] = N'FinalReview';
+
+SELECT 'DummySeed_AttendanceInstitutionCoverageCount' AS [CheckName], COUNT(DISTINCT d.[InstitutionType]) AS [Value]
+FROM [attendance_records] ar
+INNER JOIN [course_offerings] co ON co.[Id] = ar.[CourseOfferingId]
+INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId];
+
+SELECT 'DummySeed_ResultsInstitutionCoverageCount' AS [CheckName], COUNT(DISTINCT d.[InstitutionType]) AS [Value]
+FROM [results] r
+INNER JOIN [course_offerings] co ON co.[Id] = r.[CourseOfferingId]
+INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId];
 
 SELECT 'DummySeed_BulkPaymentReceiptsCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts] pr

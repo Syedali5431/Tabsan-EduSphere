@@ -514,6 +514,13 @@ BEGIN
     FROM [results];
 END;
 
+IF OBJECT_ID(N'[attendance_records]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT N'NoDummy.AttendanceRecords', CASE WHEN COUNT(1) = 0 THEN 1 ELSE 0 END, CAST(COUNT(1) AS NVARCHAR(20)), N'0'
+    FROM [attendance_records];
+END;
+
 IF OBJECT_ID(N'[quizzes]') IS NOT NULL
 BEGIN
     INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])

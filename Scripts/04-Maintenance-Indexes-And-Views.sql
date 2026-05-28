@@ -88,6 +88,24 @@ BEGIN
   ON attendance_records (StudentProfileId, CourseOfferingId, [Date]);
 END
 
+IF COL_LENGTH('results', 'CourseOfferingId') IS NOT NULL
+AND COL_LENGTH('results', 'IsPublished') IS NOT NULL
+AND COL_LENGTH('results', 'ResultType') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_results_offering_publish_type' AND object_id = OBJECT_ID('results'))
+BEGIN
+  CREATE INDEX IX_results_offering_publish_type
+  ON results (CourseOfferingId, IsPublished, ResultType);
+END
+
+IF COL_LENGTH('results', 'StudentProfileId') IS NOT NULL
+AND COL_LENGTH('results', 'IsPublished') IS NOT NULL
+AND COL_LENGTH('results', 'ResultType') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_results_student_publish_type' AND object_id = OBJECT_ID('results'))
+BEGIN
+  CREATE INDEX IX_results_student_publish_type
+  ON results (StudentProfileId, IsPublished, ResultType);
+END
+
   /* Stage 1.3 parity hardening indexes */
   IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_institution_type' AND object_id = OBJECT_ID('departments'))
