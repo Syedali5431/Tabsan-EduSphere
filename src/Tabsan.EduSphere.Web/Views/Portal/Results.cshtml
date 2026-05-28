@@ -255,6 +255,26 @@ else
                             </label>
                             <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">Import CSV</button>
                         </form>
+                        @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
+                        {
+                            <form asp-action="DownloadResultImportReport" method="get" class="d-inline">
+                                <input type="hidden" name="reportToken" value="@Model.ImportReportToken" />
+                                <input type="hidden" name="entryPoint" value="@currentAction" />
+                                <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                                <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
+                                <input type="hidden" name="examType" value="@Model.SelectedExamType" />
+                                <input type="hidden" name="assessmentComponent" value="@Model.SelectedAssessmentComponent" />
+                                <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                                <input type="hidden" name="section" value="@Model.SelectedSection" />
+                                <input type="hidden" name="batch" value="@Model.SelectedBatch" />
+                                <button type="submit" class="btn btn-sm btn-outline-info">Import Report</button>
+                            </form>
+                        }
                         <form asp-action="PublishAllResults" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="entryPoint" value="@currentAction" />
@@ -279,7 +299,7 @@ else
                         </form>
                     </div>
                     <div class="text-muted small mt-1">
-                        Template CSV includes 2 example rows for format guidance; those example rows are skipped during import.
+                        Template CSV includes 2 example rows for format guidance; those example rows are skipped during import. Import report links are one-time use and expire after 2 hours.
                     </div>
                 }
             </div>

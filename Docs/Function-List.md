@@ -31,6 +31,17 @@
 ### Phase 3 Validation Summary
 - Web build passed after template/import guidance-row behavior updates.
 
+## 2026-05-28 Update - Enter Results Phase 4 Function Inventory
+
+### Runtime additions
+- `PortalController.DownloadResultImportReport` added for one-time, expiring import-report download.
+- `PortalController.ImportResultCsv` extended with upload-audit emission and row-level report-token generation.
+- `PortalController.ResultImportReports` and `ResultImportReportTtl` added for result report-token retention controls.
+
+### Validation Summary
+- Result import report web route integration tests passed (`3/3`).
+- Web build passed after phase 4 runtime additions.
+
 ## 2026-05-28 Update - Enter Results Phase 0/1 Initial Inventory
 
 ### Phase 0/1 Implementation Summary

@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 4 Import Audit and Report Lifecycle
+
+### Implementation Summary:
+- Enter Results CSV import now emits upload audit metadata and row-level import report artifacts.
+- Report download flow now enforces one-time token and 2-hour expiry behavior with distinct user messages.
+- Route-level integration tests added for valid, one-time, and expired report-token behavior.
+
+### Validation Summary:
+- Result import report web integration tests passed (`3/3`).
+- Web project build passed.
+
 ## 2026-05-28 Update - Enter Results Phase 3 Template Download Completion
 
 ### Implementation Summary:

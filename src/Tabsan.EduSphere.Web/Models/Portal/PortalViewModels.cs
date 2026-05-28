@@ -901,6 +901,7 @@ public class ResultsPageModel
     public string? SelectedSection { get; set; }
     public string? SelectedBatch { get; set; }
     public string? SelectedSemesterName { get; set; }
+    public string? ImportReportToken { get; set; }
     public bool CanWriteResults =>
         SelectedOfferingId.HasValue
         && SelectedDepartmentId.HasValue

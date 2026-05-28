@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 4 Import Audit and Report Lifecycle)
+- Runtime delivery in this slice:
+  - Enter Results import now emits upload-level audit metadata per import attempt.
+  - Enter Results import now produces downloadable row-level report output with Imported/Skipped outcomes and reasons.
+  - Report links now enforce one-time use and 2-hour expiry with distinct unavailable versus expired messages.
+  - Route-level integration tests now cover valid, one-time, and expired report-token behavior.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Result report route web integration tests passed (`3/3`).
+  - Web build passed after phase 4 update.
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 3 Template Download Completion)
 - Runtime delivery in this slice:
   - Enter Results template download includes two explicit example rows in CSV output.

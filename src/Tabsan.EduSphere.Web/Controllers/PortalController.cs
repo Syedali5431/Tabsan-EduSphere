@@ -15,7 +15,9 @@ public class PortalController : Controller
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<PortalController> _logger;
     private static readonly ConcurrentDictionary<string, AttendanceImportReportPayload> AttendanceImportReports = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, ResultImportReportPayload> ResultImportReports = new(StringComparer.Ordinal);
     private static readonly TimeSpan AttendanceImportReportTtl = TimeSpan.FromHours(2);
+    private static readonly TimeSpan ResultImportReportTtl = TimeSpan.FromHours(2);
     private static Func<DateTime> UtcNowProvider = static () => DateTime.UtcNow;
 
     private static readonly Dictionary<string, string> ActionMenuKeyMap = new(StringComparer.OrdinalIgnoreCase)
@@ -111,6 +113,8 @@ public class PortalController : Controller
 
     private sealed record AttendanceImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
 
+    private sealed record ResultImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
+
     private sealed class AttendanceImportReportRow
     {
         public int RowNumber { get; init; }
@@ -118,6 +122,18 @@ public class PortalController : Controller
         public string StudentName { get; init; } = string.Empty;
         public string DateValue { get; init; } = string.Empty;
         public string PresentValue { get; init; } = string.Empty;
+        public string Outcome { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    private sealed class ResultImportReportRow
+    {
+        public int RowNumber { get; init; }
+        public string StudentId { get; init; } = string.Empty;
+        public string StudentName { get; init; } = string.Empty;
+        public string ResultType { get; init; } = string.Empty;
+        public string MarksObtained { get; init; } = string.Empty;
+        public string MaxMarks { get; init; } = string.Empty;
         public string Outcome { get; set; } = string.Empty;
         public string Reason { get; set; } = string.Empty;
     }
@@ -2885,6 +2901,7 @@ public class PortalController : Controller
         string? semesterName,
         Guid? tenantId,
         Guid? campusId,
+        string? reportToken,
         Guid? departmentId,
         Guid? courseId,
         Guid? subjectOfferingId,
@@ -2899,6 +2916,7 @@ public class PortalController : Controller
             semesterName,
             tenantId,
             campusId,
+            reportToken,
             departmentId,
             courseId,
             subjectOfferingId,
@@ -2917,6 +2935,7 @@ public class PortalController : Controller
         string? semesterName,
         Guid? tenantId,
         Guid? campusId,
+        string? reportToken,
         Guid? departmentId,
         Guid? courseId,
         Guid? subjectOfferingId,
@@ -2931,6 +2950,7 @@ public class PortalController : Controller
             semesterName,
             tenantId,
             campusId,
+            reportToken,
             departmentId,
             courseId,
             subjectOfferingId,
@@ -2948,6 +2968,7 @@ public class PortalController : Controller
         string? semesterName,
         Guid? tenantId,
         Guid? campusId,
+        string? reportToken,
         Guid? departmentId,
         Guid? courseId,
         Guid? subjectOfferingId,
@@ -2972,6 +2993,7 @@ public class PortalController : Controller
             SelectedSemesterName = semesterName,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
+            ImportReportToken = reportToken,
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
             SelectedSubjectOfferingId = subjectOfferingId,
@@ -4352,6 +4374,58 @@ public class PortalController : Controller
         }
     }
 
+    [HttpGet]
+    public IActionResult DownloadResultImportReport(
+        string? reportToken,
+        Guid? offeringId,
+        string? semesterName,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? subjectOfferingId,
+        string? examType,
+        string? assessmentComponent,
+        Guid? studentId,
+        string? section,
+        string? batch,
+        string? entryPoint)
+    {
+        IActionResult RedirectWithContext()
+            => RedirectToAction(
+                ResolveResultsEntryAction(entryPoint),
+                new
+                {
+                    offeringId,
+                    semesterName,
+                    tenantId,
+                    campusId,
+                    departmentId,
+                    courseId,
+                    subjectOfferingId,
+                    examType,
+                    assessmentComponent,
+                    studentId,
+                    section,
+                    batch
+                });
+
+        if (string.IsNullOrWhiteSpace(reportToken) || !ResultImportReports.TryRemove(reportToken, out var payload))
+        {
+            TempData["PortalMessage"] = "Import report is not available. Please run CSV import again.";
+            return RedirectWithContext();
+        }
+
+        if (payload.CreatedAtUtc + ResultImportReportTtl < UtcNowProvider())
+        {
+            TempData["PortalMessage"] = "Import report has expired. Please run CSV import again.";
+            return RedirectWithContext();
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(payload.CsvContent);
+        return File(bytes, "text/csv", payload.FileName);
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportResultCsv(
         Guid? offeringId,
@@ -4371,7 +4445,39 @@ public class PortalController : Controller
         string? entryPoint,
         CancellationToken ct)
     {
-        IActionResult RedirectWithContext() => RedirectToAction(
+        var totalRows = 0;
+        var importedCount = 0;
+        var reportRows = new List<ResultImportReportRow>();
+
+        void CleanupExpiredImportReports()
+        {
+            var threshold = UtcNowProvider().Subtract(ResultImportReportTtl);
+            foreach (var item in ResultImportReports)
+            {
+                if (item.Value.CreatedAtUtc < threshold)
+                    ResultImportReports.TryRemove(item.Key, out _);
+            }
+        }
+
+        string StoreImportReportAndGetToken()
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("RowNumber,StudentId,StudentName,ResultType,MarksObtained,MaxMarks,Outcome,Reason");
+            foreach (var row in reportRows.OrderBy(r => r.RowNumber))
+            {
+                csv.AppendLine(
+                    $"{row.RowNumber},{EscapeCsvField(row.StudentId)},{EscapeCsvField(row.StudentName)},{EscapeCsvField(row.ResultType)},{EscapeCsvField(row.MarksObtained)},{EscapeCsvField(row.MaxMarks)},{EscapeCsvField(row.Outcome)},{EscapeCsvField(row.Reason)}");
+            }
+
+            var token = Guid.NewGuid().ToString("N");
+            ResultImportReports[token] = new ResultImportReportPayload(
+                $"result-import-report-{UtcNowProvider():yyyyMMdd-HHmmss}.csv",
+                csv.ToString(),
+                UtcNowProvider());
+            return token;
+        }
+
+        IActionResult RedirectWithContext(string? reportToken = null) => RedirectToAction(
             ResolveResultsEntryAction(entryPoint),
             new
             {
@@ -4379,6 +4485,7 @@ public class PortalController : Controller
                 semesterName,
                 tenantId,
                 campusId,
+                reportToken,
                 departmentId,
                 courseId,
                 subjectOfferingId,
@@ -4389,18 +4496,33 @@ public class PortalController : Controller
                 batch
             });
 
+        void WriteResultImportAudit(string outcome, SessionIdentity? actor, IReadOnlyCollection<string>? errorDetails = null)
+        {
+            var details = errorDetails?.Where(e => !string.IsNullOrWhiteSpace(e)).Take(5).ToList() ?? new List<string>();
+            var auditLine = $"outcome={outcome}; uploadedBy={actor?.UserName ?? actor?.Email ?? "unknown"}; uploadedAtUtc={DateTime.UtcNow:O}; strictMode={strictMode}; offeringId={offeringId?.ToString() ?? "none"}; totalRows={totalRows}; importedRows={importedCount}; skippedRows={Math.Max(totalRows - importedCount, 0)}; errors={string.Join(" | ", details)}";
+            TempData["PortalImportAudit"] = auditLine;
+            _logger.LogInformation("Result CSV import audit {AuditLine}", auditLine);
+        }
+
+        CleanupExpiredImportReports();
+
         if (!_api.IsConnected())
+        {
+            WriteResultImportAudit("blocked-not-connected", actor: null);
             return RedirectToAction(nameof(Dashboard));
+        }
 
         if (!offeringId.HasValue)
         {
             TempData["PortalMessage"] = "Select an offering before importing result CSV.";
+            WriteResultImportAudit("blocked-missing-offering", _api.GetSessionIdentity());
             return RedirectWithContext();
         }
 
         if (csvFile is null || csvFile.Length == 0)
         {
             TempData["PortalMessage"] = "Select a CSV file to import results.";
+            WriteResultImportAudit("blocked-empty-file", _api.GetSessionIdentity());
             return RedirectWithContext();
         }
 
@@ -4422,6 +4544,7 @@ public class PortalController : Controller
         if (!scopeValidation.Allowed)
         {
             TempData["PortalMessage"] = scopeValidation.Message;
+            WriteResultImportAudit("blocked-scope-validation", sessionId, new List<string> { scopeValidation.Message });
             return RedirectWithContext();
         }
 
@@ -4441,6 +4564,7 @@ public class PortalController : Controller
             if (string.IsNullOrWhiteSpace(headerLine))
             {
                 TempData["PortalMessage"] = "CSV file is empty.";
+                WriteResultImportAudit("blocked-empty-header", sessionId);
                 return RedirectWithContext();
             }
 
@@ -4452,6 +4576,7 @@ public class PortalController : Controller
             if (headers.Length != expected.Length || !headers.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["PortalMessage"] = "Invalid CSV header. Expected: StudentId,StudentName,ResultType,MarksObtained,MaxMarks.";
+                WriteResultImportAudit("blocked-invalid-header", sessionId, new List<string> { "CSV header does not match expected template." });
                 return RedirectWithContext();
             }
 
@@ -4464,10 +4589,18 @@ public class PortalController : Controller
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
+                totalRows++;
                 var cols = ParseCsvLine(line);
                 if (cols.Length != 5)
                 {
-                    validationErrors.Add($"Row {rowNumber}: expected 5 columns.");
+                    var reason = $"Row {rowNumber}: expected 5 columns.";
+                    validationErrors.Add(reason);
+                    reportRows.Add(new ResultImportReportRow
+                    {
+                        RowNumber = rowNumber,
+                        Outcome = "Skipped",
+                        Reason = reason
+                    });
                     continue;
                 }
 
@@ -4477,79 +4610,134 @@ public class PortalController : Controller
                 var marksRaw = cols[3].Trim();
                 var maxRaw = cols[4].Trim();
 
+                var reportRow = new ResultImportReportRow
+                {
+                    RowNumber = rowNumber,
+                    StudentId = studentIdRaw,
+                    StudentName = studentNameRaw,
+                    ResultType = resultTypeRaw,
+                    MarksObtained = marksRaw,
+                    MaxMarks = maxRaw,
+                    Outcome = "Pending"
+                };
+
                 if (!Guid.TryParse(studentIdRaw, out var parsedStudentId))
                 {
-                    validationErrors.Add($"Row {rowNumber}: StudentId is invalid.");
+                    var reason = $"Row {rowNumber}: StudentId is invalid.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (ResultTemplateExampleStudentIds.Contains(parsedStudentId)
                     || studentNameRaw.StartsWith("Example Row", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Template example rows are guidance-only and are intentionally excluded from import writes.
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = "Template example row skipped (guidance only).";
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (!rosterById.ContainsKey(parsedStudentId))
                 {
-                    validationErrors.Add($"Row {rowNumber}: StudentId does not belong to the selected offering roster.");
+                    var reason = $"Row {rowNumber}: StudentId does not belong to the selected offering roster.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (!string.IsNullOrWhiteSpace(studentNameRaw)
                     && !string.Equals(studentNameRaw, rosterById[parsedStudentId], StringComparison.OrdinalIgnoreCase))
                 {
-                    validationErrors.Add($"Row {rowNumber}: StudentName does not match the selected offering roster.");
+                    var reason = $"Row {rowNumber}: StudentName does not match the selected offering roster.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(resultTypeRaw))
                 {
-                    validationErrors.Add($"Row {rowNumber}: ResultType is required.");
+                    var reason = $"Row {rowNumber}: ResultType is required.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (!decimal.TryParse(marksRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var marksObtained)
                     && !decimal.TryParse(marksRaw, NumberStyles.Number, CultureInfo.CurrentCulture, out marksObtained))
                 {
-                    validationErrors.Add($"Row {rowNumber}: MarksObtained is invalid.");
+                    var reason = $"Row {rowNumber}: MarksObtained is invalid.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (!decimal.TryParse(maxRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var maxMarks)
                     && !decimal.TryParse(maxRaw, NumberStyles.Number, CultureInfo.CurrentCulture, out maxMarks))
                 {
-                    validationErrors.Add($"Row {rowNumber}: MaxMarks is invalid.");
+                    var reason = $"Row {rowNumber}: MaxMarks is invalid.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 if (marksObtained < 0 || maxMarks <= 0 || marksObtained > maxMarks)
                 {
-                    validationErrors.Add($"Row {rowNumber}: marks must be within 0 and MaxMarks.");
+                    var reason = $"Row {rowNumber}: marks must be within 0 and MaxMarks.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 var duplicateKey = $"{parsedStudentId:D}|{resultTypeRaw}|{assessmentComponent}";
                 if (!seen.Add(duplicateKey))
                 {
-                    validationErrors.Add($"Row {rowNumber}: duplicate StudentId + ResultType entry.");
+                    var reason = $"Row {rowNumber}: duplicate StudentId + ResultType + AssessmentComponent entry.";
+                    validationErrors.Add(reason);
+                    reportRow.Outcome = "Skipped";
+                    reportRow.Reason = reason;
+                    reportRows.Add(reportRow);
                     continue;
                 }
 
                 parsedRows.Add((rowNumber, parsedStudentId, resultTypeRaw, marksObtained, maxMarks));
+                reportRows.Add(reportRow);
             }
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Unable to read result CSV file: {ex.Message}";
+            WriteResultImportAudit("failed-csv-read", sessionId, new List<string> { ex.Message });
             return RedirectWithContext();
         }
 
         if (validationErrors.Count > 0 && strictMode)
         {
+            foreach (var row in reportRows.Where(r => string.Equals(r.Outcome, "Pending", StringComparison.OrdinalIgnoreCase)))
+            {
+                row.Outcome = "Skipped";
+                row.Reason = "Skipped due to strict mode validation failure.";
+            }
+
             TempData["PortalMessage"] = $"Result CSV validation failed in strict mode. Invalid rows: {validationErrors.Count}.";
             TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
-            return RedirectWithContext();
+            WriteResultImportAudit("strict-validation-failed", sessionId, validationErrors);
+            var strictReportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
+            return RedirectWithContext(strictReportToken);
         }
 
         if (parsedRows.Count == 0)
@@ -4557,10 +4745,12 @@ public class PortalController : Controller
             TempData["PortalMessage"] = "CSV file has no valid result rows to import.";
             if (validationErrors.Count > 0)
                 TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Take(20));
-            return RedirectWithContext();
+
+            WriteResultImportAudit("no-valid-rows", sessionId, validationErrors);
+            var emptyReportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
+            return RedirectWithContext(emptyReportToken);
         }
 
-        var importedCount = 0;
         var importErrors = new List<string>();
         foreach (var row in parsedRows)
         {
@@ -4575,11 +4765,19 @@ public class PortalController : Controller
                     effectiveTenantId,
                     effectiveCampusId,
                     ct);
+
                 importedCount++;
+                var reportRow = reportRows.First(r => r.RowNumber == row.RowNumber);
+                reportRow.Outcome = "Imported";
+                reportRow.Reason = string.Empty;
             }
             catch (Exception ex)
             {
-                importErrors.Add($"Row {row.RowNumber}: {ex.Message}");
+                var reason = $"Row {row.RowNumber}: {ex.Message}";
+                importErrors.Add(reason);
+                var reportRow = reportRows.First(r => r.RowNumber == row.RowNumber);
+                reportRow.Outcome = "Skipped";
+                reportRow.Reason = ex.Message;
             }
         }
 
@@ -4587,14 +4785,17 @@ public class PortalController : Controller
         if (warningCount == 0)
         {
             TempData["PortalMessage"] = $"Result CSV import completed successfully. Imported rows: {importedCount}.";
+            WriteResultImportAudit("success", sessionId);
         }
         else
         {
             TempData["PortalMessage"] = $"Result CSV import completed with warnings. Imported rows: {importedCount}. Skipped/failed rows: {warningCount}.";
             TempData["PortalMessageDetails"] = string.Join('\n', validationErrors.Concat(importErrors).Take(20));
+            WriteResultImportAudit("completed-with-warnings", sessionId, validationErrors.Concat(importErrors).ToList());
         }
 
-        return RedirectWithContext();
+        var reportToken = reportRows.Count > 0 ? StoreImportReportAndGetToken() : null;
+        return RedirectWithContext(reportToken);
     }
 
     // ── Result write actions ────────────────────────────────────────────────
