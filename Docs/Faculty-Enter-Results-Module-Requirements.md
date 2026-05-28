@@ -109,6 +109,19 @@ Result entry must be scoped by:
 - Downstream filters must refresh based on upstream selections while preserving tenant/campus boundaries.
 - Student-level filter can narrow rows but must not bypass required filter rules.
 
+### Phase 2 Implementation Summary
+
+- Completed Enter Results filter scope wiring across Tenant/Campus, Department, Program/Course, Subject (course-offering scoped), and Class/Semester context.
+- Added dependent filter refresh flow so downstream result-entry options re-evaluate when upstream scope changes.
+- Added required-filter write guard behavior so result write actions remain disabled until required scope inputs are selected.
+- Preserved tenant/campus and role-authorization boundaries while applying faculty/admin scoped filtering behavior.
+
+### Phase 2 Validation Summary
+
+- Manual verification completed for required-filter gating, dependent-refresh behavior, and scoped filtering continuity.
+- Backward-compatibility check completed for existing Results route and role-based access behavior.
+- No schema or migration change required for this phase.
+
 ## Phase 3. Template Download
 
 The module must provide a **Download Template** button.

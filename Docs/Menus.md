@@ -1,5 +1,12 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Phase 2 Filter Criteria and Dynamic Selection)
+
+- No new menu key was introduced in this slice.
+- `enter_results` remains governed under Faculty Related with role visibility controlled by Sidebar Settings.
+- Enter Results menu behavior now requires required-filter completion before write actions are enabled.
+- Dependent filter refresh behavior is documented for scoped downstream selections.
+
 ## 2026-05-28 Synchronization Note (Enter Results Phase 0/1 Initial Slice)
 
 - Added governed menu key `enter_results` under Faculty Related.

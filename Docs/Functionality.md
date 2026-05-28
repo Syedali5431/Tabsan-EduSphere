@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Results Phase 2 Filter Criteria and Dynamic Selection
+
+### Implementation sync
+- Enter Results scoped filtering is synchronized for Tenant/Campus, Department, Program/Course, Subject, Class/Semester, Exam Type, and Assessment Component checkpoints.
+- Required-filter write-guard behavior is now documented as mandatory for result write operations.
+- Dependent filter refresh behavior is now documented so downstream selection options remain scope-safe.
+
+### Validation sync
+- Requirement-to-flow validation completed for filter dependency and required-filter guard behavior.
+- Existing role-governed menu access and route protection remain unchanged.
+- No schema mutation required in this phase.
+
 ## 2026-05-28 Update - Enter Results Phase 0/1 Initial Slice
 
 ### Implementation sync

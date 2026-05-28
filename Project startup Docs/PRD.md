@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 2 Filter Criteria and Dynamic Selection)
+- Runtime delivery in this slice:
+  - Enter Results required-filter rules are synchronized so write actions require completed scope selection.
+  - Dependent filter refresh behavior is synchronized for tenant/campus, department, program-course, subject, and class/semester contexts.
+  - Optional narrowing filters (student/section/batch) remain additive and non-bypass for required write guards.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Requirement-to-flow alignment review completed for filter dependency and write-guard behavior.
+  - Existing role-based route and sidebar governance constraints remain intact.
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Attendance Phase 4.4 UX Hint)
 - Runtime delivery in this slice:
   - Added inline UI guidance for one-time and 2-hour expiry behavior of import report links.
