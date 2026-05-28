@@ -132,3 +132,11 @@ Summary: Start fast with a low-cost core package, then scale features as institu
 - Mobile APP rollout is part of planned enhancements and is not billed as a separate pricing tier in the current cycle.
 - Current pricing remains unchanged across this document version.
 - New feature additions in this release wave are provided free under existing pricing plans.
+
+## Functionality Synchronization Update (2026-05-28)
+
+- Results governance strengthened: write-scope controls, controlled publish actions, and correction-reason workflow.
+- Attendance and results data coverage expanded for realistic training/UAT with multi-day attendance and mixed result lifecycle states.
+- Import report access hardening introduced with one-time, short-lived report token behavior.
+- Institution-aware certificate workflows and scoped governance controls remain active across School/College/University modes.
+- Pricing confirmation: Foundation Lite remains AUD 1.5 per user yearly (no price change).
