@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Non-Functional Hardening)
+
+- No new menu key introduced in this slice.
+- `enter_results` keeps existing navigation and role visibility; hardening is runtime validation/logging consistency only.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Test Requirements Expansion)
 
 - No new menu key introduced in this slice.

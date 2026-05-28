@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Non-Functional Hardening)
+- Runtime delivery in this slice:
+  - Added correction-path scope-validation parity with other Enter Results write operations.
+  - Added defensive server-side mark-range validation responses for manual create/correction pathways.
+  - Added structured operational logging for create/correct/publish success and blocked outcomes with actor/scope context.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Web build passed after non-functional hardening updates.
+  - Focused result-governance unit slice remained green (`9/9`).
+  - Report-token web integration suite remained green (`3/3`).
+  - Sidebar integration suite remained green (`17/17`).
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Test Requirements Expansion)
 - Runtime delivery in this slice:
   - No new runtime endpoint or workflow introduced.

@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Results Non-Functional Hardening
+
+### Implementation sync
+- Enter Results correction flow now enforces the same selected-scope validation pattern used by create/import/publish actions.
+- Manual create/correction flows now return clearer server-side mark-range validation guidance.
+- Structured logging now captures actor, offering scope, and block reason context for create/correct/publish operations.
+
+### Validation sync
+- Web build passed after non-functional hardening.
+- Focused result-governance unit tests remained green (`9/9`).
+- Report-token web integration (`3/3`) and sidebar regression (`17/17`) remained green.
+
 ## 2026-05-28 Update - Enter Results Test Requirements Expansion
 
 ### Implementation sync

@@ -4818,6 +4818,26 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
+                if (marksObtained < 0 || maxMarks <= 0 || marksObtained > maxMarks)
+                {
+                    TempData["PortalMessage"] = "Marks must be within valid range (0 <= Marks Obtained <= Max Marks, and Max Marks > 0).";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 var scopeValidation = await ValidateResultWriteScopeAsync(
                     offeringId,
                     departmentId,
@@ -4832,6 +4852,13 @@ public class PortalController : Controller
                     ct);
                 if (!scopeValidation.Allowed)
                 {
+                    _logger.LogWarning(
+                        "Result create scope blocked. offeringId={OfferingId}; studentProfileId={StudentProfileId}; actor={Actor}; reason={Reason}",
+                        offeringId,
+                        studentProfileId,
+                        sessionId?.UserName ?? sessionId?.Email ?? "unknown",
+                        scopeValidation.Message);
+
                     TempData["PortalMessage"] = scopeValidation.Message;
                     return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
                     {
@@ -4853,6 +4880,12 @@ public class PortalController : Controller
                 var effectiveResultType = string.IsNullOrWhiteSpace(examType) ? resultType : examType;
 
                 await _api.CreateResultAsync(studentProfileId, offeringId, effectiveResultType, marksObtained, maxMarks, effectiveTenantId, effectiveCampusId, ct);
+                _logger.LogInformation(
+                    "Result created. offeringId={OfferingId}; studentProfileId={StudentProfileId}; resultType={ResultType}; actor={Actor}",
+                    offeringId,
+                    studentProfileId,
+                    effectiveResultType,
+                    sessionId?.UserName ?? sessionId?.Email ?? "unknown");
 
                 // Promotion is only offered in the UI for Final result type.
                 // When the checkbox is checked the form sends promote=true;
@@ -4936,7 +4969,92 @@ public class PortalController : Controller
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
+                if (newMarksObtained < 0 || newMaxMarks <= 0 || newMarksObtained > newMaxMarks)
+                {
+                    TempData["PortalMessage"] = "Correction values are invalid (0 <= New Marks Obtained <= New Max Marks, and New Max Marks > 0).";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    TempData["PortalMessage"] = "Correction reason is required for audit traceability.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
+                var scopeValidation = await ValidateResultWriteScopeAsync(
+                    offeringId,
+                    departmentId,
+                    courseId,
+                    subjectOfferingId,
+                    semesterName,
+                    examType,
+                    assessmentComponent,
+                    effectiveTenantId,
+                    effectiveCampusId,
+                    sessionId,
+                    ct);
+                if (!scopeValidation.Allowed)
+                {
+                    _logger.LogWarning(
+                        "Result correction scope blocked. offeringId={OfferingId}; studentProfileId={StudentProfileId}; actor={Actor}; reason={Reason}",
+                        offeringId,
+                        studentProfileId,
+                        sessionId?.UserName ?? sessionId?.Email ?? "unknown",
+                        scopeValidation.Message);
+
+                    TempData["PortalMessage"] = scopeValidation.Message;
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 await _api.CorrectResultAsync(studentProfileId, offeringId, resultType, newMarksObtained, newMaxMarks, reason, effectiveTenantId, effectiveCampusId, ct);
+                _logger.LogInformation(
+                    "Result corrected. offeringId={OfferingId}; studentProfileId={StudentProfileId}; resultType={ResultType}; actor={Actor}",
+                    offeringId,
+                    studentProfileId,
+                    resultType,
+                    sessionId?.UserName ?? sessionId?.Email ?? "unknown");
                 TempData["PortalMessage"] = "Result corrected.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
@@ -4973,6 +5091,11 @@ public class PortalController : Controller
                 var sessionId = _api.GetSessionIdentity();
                 if (sessionId?.IsAdmin != true && sessionId?.IsSuperAdmin != true)
                 {
+                    _logger.LogWarning(
+                        "Result publish blocked due to role. offeringId={OfferingId}; actor={Actor}",
+                        offeringId,
+                        sessionId?.UserName ?? sessionId?.Email ?? "unknown");
+
                     TempData["PortalMessage"] = "Final publish requires Admin/SuperAdmin approval.";
                     return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
                     {
@@ -5008,6 +5131,12 @@ public class PortalController : Controller
                     ct);
                 if (!scopeValidation.Allowed)
                 {
+                    _logger.LogWarning(
+                        "Result publish scope blocked. offeringId={OfferingId}; actor={Actor}; reason={Reason}",
+                        offeringId,
+                        sessionId?.UserName ?? sessionId?.Email ?? "unknown",
+                        scopeValidation.Message);
+
                     TempData["PortalMessage"] = scopeValidation.Message;
                     return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
                     {
@@ -5027,6 +5156,10 @@ public class PortalController : Controller
                 }
 
                 await _api.PublishAllResultsAsync(offeringId, effectiveTenantId, effectiveCampusId, ct);
+                _logger.LogInformation(
+                    "All results published. offeringId={OfferingId}; actor={Actor}",
+                    offeringId,
+                    sessionId?.UserName ?? sessionId?.Email ?? "unknown");
                 TempData["PortalMessage"] = "All results published.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }

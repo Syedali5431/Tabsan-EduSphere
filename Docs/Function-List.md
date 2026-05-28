@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Non-Functional Function Inventory
+
+### Runtime additions
+- `PortalController.CorrectResult` now applies `ValidateResultWriteScopeAsync` for consistent write-scope enforcement.
+- `PortalController.CreateResult` and `PortalController.CorrectResult` now add defensive server-side mark-range validation messaging.
+- `PortalController.CreateResult`, `PortalController.CorrectResult`, and `PortalController.PublishAllResults` now emit structured operational logs for success and blocked outcomes.
+
+### Validation Summary
+- Web build passed after non-functional hardening.
+- Focused result-governance unit suite remained green (`9/9`).
+
 ## 2026-05-28 Update - Enter Results Test Requirements Function Inventory
 
 ### Runtime additions

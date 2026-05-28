@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Non-Functional Hardening
+
+### Implementation Summary:
+- Added correction-path scope validation parity with other Enter Results write actions.
+- Added defensive server-side mark-range validation messages for manual write/correction paths.
+- Added structured action logs for result create/correct/publish success and blocked outcomes.
+
+### Validation Summary:
+- Web project build passed.
+- Focused result-governance unit tests remained green (`9/9`).
+
 ## 2026-05-28 Update - Enter Results Test Requirements Expansion
 
 ### Implementation Summary:

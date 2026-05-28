@@ -287,6 +287,20 @@ Display a disabled or guidance state with the same structure, but keep write act
 - Support operational logging and troubleshooting through structured logs.
 - Maintain backward compatibility for existing attendance and academic modules.
 
+### Non-Functional Requirements Implementation Summary
+
+- Added consistent server-side scope validation for result correction flow to match create/import/publish scope enforcement behavior.
+- Added server-side defensive validation messages for manual create/correct mark ranges to improve operational troubleshooting clarity.
+- Added structured operational logs for create, correction, and publish actions, including actor identity, scope, and blocked-reason context.
+- Preserved existing API contracts and route behavior while hardening observability and validation pathways.
+
+### Non-Functional Requirements Validation Summary
+
+- Web build passed after non-functional hardening updates.
+- Focused result-governance unit slice remained green (`9/9`).
+- Existing report-token web integration suite remained green (`3/3`).
+- Sidebar integration suite remained green (`17/17`).
+
 ## Test Requirements
 
 - Unit tests for validation matrix, strict/non-strict behavior, duplicate guards, and range checks.
