@@ -17,7 +17,7 @@
 
   <!-- Plan I: exclude non-runtime repository content from publish output without deleting source files. -->
   <ItemGroup>
-    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;**\*.http;Properties\launchSettings.json;appsettings.Local.json;..\environments.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>

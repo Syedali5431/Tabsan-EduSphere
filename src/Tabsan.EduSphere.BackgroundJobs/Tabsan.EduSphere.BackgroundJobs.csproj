@@ -20,7 +20,7 @@
 
   <!-- Plan I: keep docs/tests/scripts in repo, exclude them from build and publish artifacts. -->
   <ItemGroup>
-    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;**\*.http;Properties\launchSettings.json;appsettings.Local.json;..\environments.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>

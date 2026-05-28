@@ -45,7 +45,7 @@
 
   <!-- Plan I: keep repository artifacts on disk, but do not copy them to build/publish output. -->
   <ItemGroup>
-    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;Properties\launchSettings.json;appsettings.Local.json">
+    <None Update="**\*.md;**\*.bak;**\*.tmp;**\*.old;**\*.log;**\*.http;Properties\launchSettings.json;appsettings.Local.json;..\environments.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
