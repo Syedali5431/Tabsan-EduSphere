@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 5 UI Behavior Logic
+
+### Implementation Summary:
+- Enter Results now renders a two-state result-entry grid for authorized writing roles.
+- Editable grid state is shown only after required filters are complete.
+- Guidance/disabled state is shown with the same table structure when required filters are incomplete.
+
+### Validation Summary:
+- Web project build passed.
+- Focused unit coverage added for result write-gating behavior in `ResultsPageModel`.
+
 ## 2026-05-28 Update - Enter Results Phase 4 Import Audit and Report Lifecycle
 
 ### Implementation Summary:

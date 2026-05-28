@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 5 UI Behavior Logic)
+- Runtime delivery in this slice:
+  - Enter Results now renders two explicit UI behavior states for result entry under required-filter governance.
+  - Complete required filters render editable result-entry table structure (Student ID, Student Name, Marks Obtained, Max Marks, Grade, Remarks).
+  - Incomplete required filters render the same table in guidance/disabled state while write actions remain blocked.
+- Compatibility boundary:
+  - No menu-key addition, no schema mutation, and no external API contract expansion.
+- Validation Summary:
+  - Web build passed after phase 5 UI behavior update.
+  - Focused unit coverage added for `ResultsPageModel` write-guard eligibility behavior.
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Phase 4 Import Audit and Report Lifecycle)
 - Runtime delivery in this slice:
   - Enter Results import now emits upload-level audit metadata per import attempt.

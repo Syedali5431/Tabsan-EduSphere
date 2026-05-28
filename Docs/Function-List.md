@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Phase 5 Function Inventory
+
+### Runtime additions
+- No new controller actions or API endpoints were introduced in this phase.
+- Existing `ResultsPageModel.CanWriteResults` and `SaveResultDisabledReason` continue to drive write-action eligibility and UI guidance state.
+
+### Validation Summary
+- Web build passed after phase 5 result-entry table behavior update.
+- Focused unit coverage added for result write-guard eligibility conditions.
+
 ## 2026-05-28 Update - Enter Results Phase 2 Filter Criteria Inventory
 
 ### Phase 2 Implementation Summary

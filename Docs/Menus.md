@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Phase 5 UI Behavior Logic)
+
+- No new menu key introduced in this slice.
+- `enter_results` now includes two-state result-entry grid behavior (editable when required filters are complete, guidance/disabled when incomplete).
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Phase 4 Import Audit and Report Lifecycle)
 
 - No new menu key introduced in this slice.

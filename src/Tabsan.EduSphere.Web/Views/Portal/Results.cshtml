@@ -304,6 +304,77 @@ else
                 }
             </div>
 
+            @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            {
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <h3 class="h6 mb-0">Result Entry Grid</h3>
+                        @if (!Model.CanWriteResults)
+                        {
+                            <span class="badge bg-warning text-dark">Guidance state</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Editable state</span>
+                        }
+                    </div>
+                    <p class="text-muted small mb-2">
+                        @if (!Model.CanWriteResults)
+                        {
+                            @Model.SaveResultDisabledReason
+                        }
+                        else
+                        {
+                            @:Required filters are complete. Use this editable table to prepare row values before saving through Enter Result or CSV import.
+                        }
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Max Marks</th>
+                                    <th>Grade</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Roster.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-muted">No roster rows available for the current selection.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var row in Model.Roster.Take(10))
+                                    {
+                                        <tr>
+                                            <td>@row.RegistrationNumber</td>
+                                            <td>@row.StudentName</td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm" min="0" step="0.5" placeholder="0" disabled="@(!Model.CanWriteResults)" />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm" min="1" step="0.5" placeholder="100" disabled="@(!Model.CanWriteResults)" />
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" maxlength="10" placeholder="A" disabled="@(!Model.CanWriteResults)" />
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" maxlength="120" placeholder="Optional note" disabled="@(!Model.CanWriteResults)" />
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
             @if (Model.Results.Count == 0)
             {
                 <div class="empty-state-card">

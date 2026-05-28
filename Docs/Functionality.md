@@ -1,3 +1,14 @@
+## 2026-05-28 Update - Enter Results Phase 5 UI Behavior Logic
+
+### Implementation sync
+- Enter Results now renders a two-state result-entry grid for authorized result-writing roles.
+- When required filters are complete, the table is editable and shows Student ID, Student Name, Marks Obtained, Max Marks, Grade, and Remarks columns.
+- When required filters are incomplete, the same table structure renders in guidance/disabled state and write actions remain blocked.
+
+### Validation sync
+- Web build passed after phase 5 UI updates.
+- Focused unit coverage added for required-filter write gating on `ResultsPageModel`.
+
 ## 2026-05-28 Update - Enter Results Phase 4 Import Audit and Report Lifecycle
 
 ### Implementation sync

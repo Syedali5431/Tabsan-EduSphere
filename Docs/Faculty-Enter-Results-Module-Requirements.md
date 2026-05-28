@@ -248,6 +248,18 @@ Enable save/import actions only when scope and validations are satisfied.
 
 Display a disabled or guidance state with the same structure, but keep write actions disabled until required filters are complete.
 
+### Phase 5 Implementation Summary
+
+- Added Enter Results phase-5 UI behavior table state in the Results view for authorized roles.
+- Added an editable result-entry grid when required filters are complete with columns: Student ID, Student Name, Marks Obtained, Max Marks, Grade, and Remarks.
+- Added a guidance-state table with the same structure when required filters are incomplete; row inputs remain disabled.
+- Kept save/import/publish action gating aligned with existing required-filter write guard logic.
+
+### Phase 5 Validation Summary
+
+- Web build passed after phase-5 UI behavior updates.
+- Added focused unit coverage for `ResultsPageModel.CanWriteResults` required-filter gating behavior.
+
 ## Result Publishing Rules
 
 - Draft results can be saved by authorized users.
