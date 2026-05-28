@@ -2805,6 +2805,366 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM [parent_student_links] x WHERE x.[Id] = l.[Id]);
 END
 
+/* 18) Deterministic lifecycle coverage for School (Class 1-10), College (11-12), University (Semester 1-8 + Graduation) */
+DECLARE @LifecycleSchoolUserId UNIQUEIDENTIFIER = CAST('88881111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleCollegeUserId UNIQUEIDENTIFIER = CAST('88881111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleUniversityUserId UNIQUEIDENTIFIER = CAST('88881111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER);
+
+DECLARE @LifecycleSchoolProfileId UNIQUEIDENTIFIER = CAST('99991111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleCollegeProfileId UNIQUEIDENTIFIER = CAST('99991111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleUniversityProfileId UNIQUEIDENTIFIER = CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER);
+
+DECLARE @LifecycleSchoolDepartmentId UNIQUEIDENTIFIER = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleCollegeDepartmentId UNIQUEIDENTIFIER = CAST('12222222-2222-2222-2222-222222222223' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleUniversityDepartmentId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER);
+
+DECLARE @LifecycleSchoolProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleCollegeProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222327' AS UNIQUEIDENTIFIER);
+DECLARE @LifecycleUniversityProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER);
+
+IF OBJECT_ID(N'[academic_programs]') IS NOT NULL
+BEGIN
+        INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleCollegeProgramId, N'College Intermediate (Class 11-12)', N'COL-INT-11-12', @LifecycleCollegeDepartmentId, 12, 1, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = @LifecycleCollegeProgramId OR x.[Code] = N'COL-INT-11-12');
+END
+
+IF OBJECT_ID(N'[users]') IS NOT NULL
+BEGIN
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleSchoolUserId, N'lifecycle.school.c1to10', N'lifecycle.school.c1to10@demo.local', @PwdHash, @RoleStudent, @LifecycleSchoolDepartmentId, 0, 1, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleSchoolUserId OR u.[Username] = N'lifecycle.school.c1to10');
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleCollegeUserId, N'lifecycle.college.c11to12', N'lifecycle.college.c11to12@demo.local', @PwdHash, @RoleStudent, @LifecycleCollegeDepartmentId, 1, 1, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleCollegeUserId OR u.[Username] = N'lifecycle.college.c11to12');
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleUniversityUserId, N'lifecycle.university.s1to8', N'lifecycle.university.s1to8@demo.local', @PwdHash, @RoleStudent, @LifecycleUniversityDepartmentId, 2, 1, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleUniversityUserId OR u.[Username] = N'lifecycle.university.s1to8');
+END
+
+IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
+BEGIN
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleSchoolProfileId, @LifecycleSchoolUserId, N'LCYC-SCH-001', @LifecycleSchoolProgramId, @LifecycleSchoolDepartmentId, DATEADD(YEAR, -10, @Now), 3.70, 10, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = @LifecycleSchoolProfileId OR sp.[RegistrationNumber] = N'LCYC-SCH-001');
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleCollegeProfileId, @LifecycleCollegeUserId, N'LCYC-COL-001', @LifecycleCollegeProgramId, @LifecycleCollegeDepartmentId, DATEADD(YEAR, -2, @Now), 3.55, 12, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = @LifecycleCollegeProfileId OR sp.[RegistrationNumber] = N'LCYC-COL-001');
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleUniversityProfileId, @LifecycleUniversityUserId, N'LCYC-UNI-001', @LifecycleUniversityProgramId, @LifecycleUniversityDepartmentId, DATEADD(YEAR, -4, @Now), 3.88, 8, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = @LifecycleUniversityProfileId OR sp.[RegistrationNumber] = N'LCYC-UNI-001');
+
+        UPDATE [student_profiles]
+        SET [CurrentSemesterNumber] = 10,
+                [UpdatedAt] = @Now
+        WHERE [Id] = @LifecycleSchoolProfileId
+            AND [CurrentSemesterNumber] < 10;
+
+        UPDATE [student_profiles]
+        SET [CurrentSemesterNumber] = 12,
+                [UpdatedAt] = @Now
+        WHERE [Id] = @LifecycleCollegeProfileId
+            AND [CurrentSemesterNumber] < 12;
+
+        UPDATE [student_profiles]
+        SET [CurrentSemesterNumber] = 8,
+                [UpdatedAt] = @Now
+        WHERE [Id] = @LifecycleUniversityProfileId
+            AND [CurrentSemesterNumber] < 8;
+END
+
+DECLARE @LifecycleSchoolOfferingId UNIQUEIDENTIFIER;
+DECLARE @LifecycleCollegeOfferingId UNIQUEIDENTIFIER;
+DECLARE @LifecycleUniversityOfferingId UNIQUEIDENTIFIER;
+DECLARE @LifecycleSchoolFacultyId UNIQUEIDENTIFIER;
+DECLARE @LifecycleCollegeFacultyId UNIQUEIDENTIFIER;
+DECLARE @LifecycleUniversityFacultyId UNIQUEIDENTIFIER;
+
+IF OBJECT_ID(N'[course_offerings]') IS NOT NULL
+BEGIN
+        SELECT TOP (1)
+                @LifecycleSchoolOfferingId = co.[Id]
+        FROM [course_offerings] co
+        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+        WHERE c.[DepartmentId] = @LifecycleSchoolDepartmentId
+        ORDER BY co.[CreatedAt] DESC, co.[Id] DESC;
+
+        SELECT TOP (1)
+                @LifecycleCollegeOfferingId = co.[Id]
+        FROM [course_offerings] co
+        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+        WHERE c.[DepartmentId] = @LifecycleCollegeDepartmentId
+        ORDER BY co.[CreatedAt] DESC, co.[Id] DESC;
+
+        SELECT TOP (1)
+                @LifecycleUniversityOfferingId = co.[Id]
+        FROM [course_offerings] co
+        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+        WHERE c.[DepartmentId] = @LifecycleUniversityDepartmentId
+        ORDER BY co.[CreatedAt] DESC, co.[Id] DESC;
+END
+
+IF OBJECT_ID(N'[users]') IS NOT NULL
+BEGIN
+        SELECT TOP (1) @LifecycleSchoolFacultyId = [Id]
+        FROM [users]
+        WHERE [RoleId] = @RoleFaculty
+            AND [DepartmentId] = @LifecycleSchoolDepartmentId
+        ORDER BY [Username];
+
+        SELECT TOP (1) @LifecycleCollegeFacultyId = [Id]
+        FROM [users]
+        WHERE [RoleId] = @RoleFaculty
+            AND [DepartmentId] = @LifecycleCollegeDepartmentId
+        ORDER BY [Username];
+
+        SELECT TOP (1) @LifecycleUniversityFacultyId = [Id]
+        FROM [users]
+        WHERE [RoleId] = @RoleFaculty
+            AND [DepartmentId] = @LifecycleUniversityDepartmentId
+        ORDER BY [Username];
+END
+
+SET @LifecycleSchoolFacultyId = COALESCE(@LifecycleSchoolFacultyId, @SuperAdminUserId);
+SET @LifecycleCollegeFacultyId = COALESCE(@LifecycleCollegeFacultyId, @SuperAdminUserId);
+SET @LifecycleUniversityFacultyId = COALESCE(@LifecycleUniversityFacultyId, @SuperAdminUserId);
+
+IF OBJECT_ID(N'[enrollments]') IS NOT NULL
+BEGIN
+        INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleSchoolProfileId, @LifecycleSchoolOfferingId, @Now, NULL, N'Enrolled', @Now, NULL
+        WHERE @LifecycleSchoolOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[StudentProfileId] = @LifecycleSchoolProfileId AND e.[CourseOfferingId] = @LifecycleSchoolOfferingId);
+
+        INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleCollegeProfileId, @LifecycleCollegeOfferingId, @Now, NULL, N'Enrolled', @Now, NULL
+        WHERE @LifecycleCollegeOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[StudentProfileId] = @LifecycleCollegeProfileId AND e.[CourseOfferingId] = @LifecycleCollegeOfferingId);
+
+        INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleUniversityProfileId, @LifecycleUniversityOfferingId, @Now, NULL, N'Enrolled', @Now, NULL
+        WHERE @LifecycleUniversityOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[StudentProfileId] = @LifecycleUniversityProfileId AND e.[CourseOfferingId] = @LifecycleUniversityOfferingId);
+END
+
+IF OBJECT_ID(N'[attendance_records]') IS NOT NULL
+BEGIN
+        INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleSchoolProfileId, @LifecycleSchoolOfferingId, DATEADD(day, -2, CAST(@Now AS date)), N'Present', @LifecycleSchoolFacultyId, N'Lifecycle school class-10 attendance', @Now, NULL
+        WHERE @LifecycleSchoolOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [attendance_records] a WHERE a.[StudentProfileId] = @LifecycleSchoolProfileId AND a.[CourseOfferingId] = @LifecycleSchoolOfferingId AND a.[Date] = DATEADD(day, -2, CAST(@Now AS date)));
+
+        INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleCollegeProfileId, @LifecycleCollegeOfferingId, DATEADD(day, -2, CAST(@Now AS date)), N'Present', @LifecycleCollegeFacultyId, N'Lifecycle college class-12 attendance', @Now, NULL
+        WHERE @LifecycleCollegeOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [attendance_records] a WHERE a.[StudentProfileId] = @LifecycleCollegeProfileId AND a.[CourseOfferingId] = @LifecycleCollegeOfferingId AND a.[Date] = DATEADD(day, -2, CAST(@Now AS date)));
+
+        INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleUniversityProfileId, @LifecycleUniversityOfferingId, DATEADD(day, -2, CAST(@Now AS date)), N'Present', @LifecycleUniversityFacultyId, N'Lifecycle university semester-8 attendance', @Now, NULL
+        WHERE @LifecycleUniversityOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [attendance_records] a WHERE a.[StudentProfileId] = @LifecycleUniversityProfileId AND a.[CourseOfferingId] = @LifecycleUniversityOfferingId AND a.[Date] = DATEADD(day, -2, CAST(@Now AS date)));
+END
+
+IF OBJECT_ID(N'[results]') IS NOT NULL
+BEGIN
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleSchoolProfileId, @LifecycleSchoolOfferingId, N'Final', 86.00, 100.00, 1, @Now, @LifecycleSchoolFacultyId, @Now, NULL
+        WHERE @LifecycleSchoolOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [results] r WHERE r.[StudentProfileId] = @LifecycleSchoolProfileId AND r.[CourseOfferingId] = @LifecycleSchoolOfferingId AND r.[ResultType] = N'Final');
+
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleCollegeProfileId, @LifecycleCollegeOfferingId, N'Final', 81.00, 100.00, 1, @Now, @LifecycleCollegeFacultyId, @Now, NULL
+        WHERE @LifecycleCollegeOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [results] r WHERE r.[StudentProfileId] = @LifecycleCollegeProfileId AND r.[CourseOfferingId] = @LifecycleCollegeOfferingId AND r.[ResultType] = N'Final');
+
+        INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleUniversityProfileId, @LifecycleUniversityOfferingId, N'Final', 91.00, 100.00, 1, @Now, @LifecycleUniversityFacultyId, @Now, NULL
+        WHERE @LifecycleUniversityOfferingId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [results] r WHERE r.[StudentProfileId] = @LifecycleUniversityProfileId AND r.[CourseOfferingId] = @LifecycleUniversityOfferingId AND r.[ResultType] = N'Final');
+END
+
+IF OBJECT_ID(N'[assignment_submissions]') IS NOT NULL
+BEGIN
+        DECLARE @LifecycleSchoolAssignmentId UNIQUEIDENTIFIER;
+        DECLARE @LifecycleCollegeAssignmentId UNIQUEIDENTIFIER;
+        DECLARE @LifecycleUniversityAssignmentId UNIQUEIDENTIFIER;
+
+        SELECT TOP (1) @LifecycleSchoolAssignmentId = [Id]
+        FROM [assignments]
+        WHERE [CourseOfferingId] = @LifecycleSchoolOfferingId
+        ORDER BY [CreatedAt] DESC, [Id] DESC;
+
+        SELECT TOP (1) @LifecycleCollegeAssignmentId = [Id]
+        FROM [assignments]
+        WHERE [CourseOfferingId] = @LifecycleCollegeOfferingId
+        ORDER BY [CreatedAt] DESC, [Id] DESC;
+
+        SELECT TOP (1) @LifecycleUniversityAssignmentId = [Id]
+        FROM [assignments]
+        WHERE [CourseOfferingId] = @LifecycleUniversityOfferingId
+        ORDER BY [CreatedAt] DESC, [Id] DESC;
+
+        INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [MarksAwarded], [Feedback], [GradedAt], [GradedByUserId], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleSchoolAssignmentId, @LifecycleSchoolProfileId, NULL, N'Lifecycle school assignment submission for class-10 progression.', @Now, 85.00, N'Validated class progression evidence.', @Now, @LifecycleSchoolFacultyId, N'Graded', @Now, NULL
+        WHERE @LifecycleSchoolAssignmentId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [assignment_submissions] x WHERE x.[AssignmentId] = @LifecycleSchoolAssignmentId AND x.[StudentProfileId] = @LifecycleSchoolProfileId);
+
+        INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [MarksAwarded], [Feedback], [GradedAt], [GradedByUserId], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleCollegeAssignmentId, @LifecycleCollegeProfileId, NULL, N'Lifecycle college assignment submission for class-12 completion.', @Now, 80.00, N'Validated class 11-12 completion evidence.', @Now, @LifecycleCollegeFacultyId, N'Graded', @Now, NULL
+        WHERE @LifecycleCollegeAssignmentId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [assignment_submissions] x WHERE x.[AssignmentId] = @LifecycleCollegeAssignmentId AND x.[StudentProfileId] = @LifecycleCollegeProfileId);
+
+        INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [MarksAwarded], [Feedback], [GradedAt], [GradedByUserId], [Status], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), @LifecycleUniversityAssignmentId, @LifecycleUniversityProfileId, NULL, N'Lifecycle university assignment submission for semester-8 capstone pathway.', @Now, 92.00, N'Validated semester 8 completion evidence.', @Now, @LifecycleUniversityFacultyId, N'Graded', @Now, NULL
+        WHERE @LifecycleUniversityAssignmentId IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [assignment_submissions] x WHERE x.[AssignmentId] = @LifecycleUniversityAssignmentId AND x.[StudentProfileId] = @LifecycleUniversityProfileId);
+END
+
+IF OBJECT_ID(N'[student_report_cards]') IS NOT NULL
+BEGIN
+        INSERT INTO [student_report_cards] ([Id], [StudentProfileId], [InstitutionType], [PeriodLabel], [PayloadJson], [GeneratedByUserId], [GeneratedAt], [CreatedAt], [UpdatedAt])
+        SELECT NEWID(), v.[StudentProfileId], v.[InstitutionType], v.[PeriodLabel], v.[PayloadJson], v.[GeneratedByUserId], DATEADD(day, -v.[OrderNo], @Now), @Now, NULL
+        FROM
+        (
+                VALUES
+                (@LifecycleSchoolProfileId, 0, N'Class 1', N'{"phase":"lifecycle","progression":"school","class":1,"score":74.0}', @LifecycleSchoolFacultyId, 10),
+                (@LifecycleSchoolProfileId, 0, N'Class 2', N'{"phase":"lifecycle","progression":"school","class":2,"score":75.0}', @LifecycleSchoolFacultyId, 9),
+                (@LifecycleSchoolProfileId, 0, N'Class 3', N'{"phase":"lifecycle","progression":"school","class":3,"score":76.0}', @LifecycleSchoolFacultyId, 8),
+                (@LifecycleSchoolProfileId, 0, N'Class 4', N'{"phase":"lifecycle","progression":"school","class":4,"score":77.0}', @LifecycleSchoolFacultyId, 7),
+                (@LifecycleSchoolProfileId, 0, N'Class 5', N'{"phase":"lifecycle","progression":"school","class":5,"score":78.0}', @LifecycleSchoolFacultyId, 6),
+                (@LifecycleSchoolProfileId, 0, N'Class 6', N'{"phase":"lifecycle","progression":"school","class":6,"score":79.0}', @LifecycleSchoolFacultyId, 5),
+                (@LifecycleSchoolProfileId, 0, N'Class 7', N'{"phase":"lifecycle","progression":"school","class":7,"score":80.0}', @LifecycleSchoolFacultyId, 4),
+                (@LifecycleSchoolProfileId, 0, N'Class 8', N'{"phase":"lifecycle","progression":"school","class":8,"score":81.0}', @LifecycleSchoolFacultyId, 3),
+                (@LifecycleSchoolProfileId, 0, N'Class 9', N'{"phase":"lifecycle","progression":"school","class":9,"score":82.0}', @LifecycleSchoolFacultyId, 2),
+                (@LifecycleSchoolProfileId, 0, N'Class 10', N'{"phase":"lifecycle","progression":"school","class":10,"score":83.0}', @LifecycleSchoolFacultyId, 1),
+                (@LifecycleCollegeProfileId, 1, N'Class 11', N'{"phase":"lifecycle","progression":"college","class":11,"score":79.0}', @LifecycleCollegeFacultyId, 2),
+                (@LifecycleCollegeProfileId, 1, N'Class 12', N'{"phase":"lifecycle","progression":"college","class":12,"score":81.0}', @LifecycleCollegeFacultyId, 1),
+                (@LifecycleUniversityProfileId, 2, N'Semester 1', N'{"phase":"lifecycle","progression":"university","semester":1,"gpa":3.20}', @LifecycleUniversityFacultyId, 8),
+                (@LifecycleUniversityProfileId, 2, N'Semester 2', N'{"phase":"lifecycle","progression":"university","semester":2,"gpa":3.30}', @LifecycleUniversityFacultyId, 7),
+                (@LifecycleUniversityProfileId, 2, N'Semester 3', N'{"phase":"lifecycle","progression":"university","semester":3,"gpa":3.40}', @LifecycleUniversityFacultyId, 6),
+                (@LifecycleUniversityProfileId, 2, N'Semester 4', N'{"phase":"lifecycle","progression":"university","semester":4,"gpa":3.50}', @LifecycleUniversityFacultyId, 5),
+                (@LifecycleUniversityProfileId, 2, N'Semester 5', N'{"phase":"lifecycle","progression":"university","semester":5,"gpa":3.60}', @LifecycleUniversityFacultyId, 4),
+                (@LifecycleUniversityProfileId, 2, N'Semester 6', N'{"phase":"lifecycle","progression":"university","semester":6,"gpa":3.70}', @LifecycleUniversityFacultyId, 3),
+                (@LifecycleUniversityProfileId, 2, N'Semester 7', N'{"phase":"lifecycle","progression":"university","semester":7,"gpa":3.80}', @LifecycleUniversityFacultyId, 2),
+                (@LifecycleUniversityProfileId, 2, N'Semester 8', N'{"phase":"lifecycle","progression":"university","semester":8,"gpa":3.88}', @LifecycleUniversityFacultyId, 1)
+        ) v([StudentProfileId], [InstitutionType], [PeriodLabel], [PayloadJson], [GeneratedByUserId], [OrderNo])
+        WHERE NOT EXISTS
+        (
+                SELECT 1
+                FROM [student_report_cards] x
+                WHERE x.[StudentProfileId] = v.[StudentProfileId]
+                    AND x.[PeriodLabel] = v.[PeriodLabel]
+        );
+END
+
+IF OBJECT_ID(N'[fyp_projects]') IS NOT NULL
+BEGIN
+        DECLARE @LifecycleUniversityFypId UNIQUEIDENTIFIER = (SELECT TOP (1) [Id] FROM [fyp_projects] WHERE [StudentProfileId] = @LifecycleUniversityProfileId ORDER BY [CreatedAt] DESC, [Id] DESC);
+
+        IF @LifecycleUniversityFypId IS NULL
+        BEGIN
+                SET @LifecycleUniversityFypId = CAST('49490000-1111-2222-3333-000000000001' AS UNIQUEIDENTIFIER);
+
+                IF EXISTS
+                (
+                        SELECT 1
+                        FROM INFORMATION_SCHEMA.COLUMNS
+                        WHERE TABLE_NAME = N'fyp_projects'
+                            AND COLUMN_NAME = N'Status'
+                            AND DATA_TYPE IN (N'int', N'smallint', N'tinyint', N'bigint')
+                )
+                BEGIN
+                        INSERT INTO [fyp_projects] ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt])
+                        SELECT @LifecycleUniversityFypId, @LifecycleUniversityProfileId, @LifecycleUniversityDepartmentId,
+                                     N'Lifecycle Capstone: EduSphere End-to-End Progression',
+                                     N'Final-year project used for deterministic semester 1-8 lifecycle and graduation verification.',
+                                     4,
+                                     @LifecycleUniversityFacultyId,
+                                     N'Lifecycle validation project marked complete for graduation eligibility.',
+                                     @Now,
+                                     NULL
+                        WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[Id] = @LifecycleUniversityFypId);
+                END
+                ELSE
+                BEGIN
+                        INSERT INTO [fyp_projects] ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt])
+                        SELECT @LifecycleUniversityFypId, @LifecycleUniversityProfileId, @LifecycleUniversityDepartmentId,
+                                     N'Lifecycle Capstone: EduSphere End-to-End Progression',
+                                     N'Final-year project used for deterministic semester 1-8 lifecycle and graduation verification.',
+                                     N'Completed',
+                                     @LifecycleUniversityFacultyId,
+                                     N'Lifecycle validation project marked complete for graduation eligibility.',
+                                     @Now,
+                                     NULL
+                        WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[Id] = @LifecycleUniversityFypId);
+                END
+        END
+
+        IF OBJECT_ID(N'[fyp_meetings]') IS NOT NULL
+        BEGIN
+                INSERT INTO [fyp_meetings] ([Id], [FypProjectId], [ScheduledAt], [Venue], [Agenda], [Status], [OrganiserUserId], [Minutes], [CreatedAt], [UpdatedAt])
+                SELECT CAST('50500000-1111-2222-3333-000000000001' AS UNIQUEIDENTIFIER), @LifecycleUniversityFypId,
+                             DATEADD(day, -4, @Now), N'Innovation Lab 3', N'Final defense and completion sign-off.', N'Completed',
+                             @LifecycleUniversityFacultyId, N'Lifecycle capstone accepted and approved for graduation workflow.', @Now, NULL
+                WHERE NOT EXISTS (SELECT 1 FROM [fyp_meetings] x WHERE x.[FypProjectId] = @LifecycleUniversityFypId);
+        END
+END
+
+IF OBJECT_ID(N'[graduation_applications]') IS NOT NULL
+BEGIN
+        DECLARE @LifecycleGraduationApplicationId UNIQUEIDENTIFIER = (SELECT TOP (1) [Id] FROM [graduation_applications] WHERE [StudentProfileId] = @LifecycleUniversityProfileId ORDER BY [CreatedAt] DESC, [Id] DESC);
+
+        IF @LifecycleGraduationApplicationId IS NULL
+        BEGIN
+                SET @LifecycleGraduationApplicationId = CAST('31310000-1111-2222-3333-000000000001' AS UNIQUEIDENTIFIER);
+
+                INSERT INTO [graduation_applications] ([Id], [StudentProfileId], [Status], [StudentNote], [SubmittedAt], [CertificatePath], [CertificateGeneratedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+                SELECT @LifecycleGraduationApplicationId,
+                             @LifecycleUniversityProfileId,
+                             2,
+                             N'All semester 1-8 requirements, assessments, and FYP are completed.',
+                             DATEADD(day, -10, @Now),
+                             N'https://demo.local/certificates/LCYC-UNI-001.pdf',
+                             DATEADD(day, -1, @Now),
+                             @Now,
+                             NULL,
+                             0,
+                             NULL
+                WHERE NOT EXISTS (SELECT 1 FROM [graduation_applications] x WHERE x.[Id] = @LifecycleGraduationApplicationId);
+        END
+
+        IF OBJECT_ID(N'[graduation_application_approvals]') IS NOT NULL
+        BEGIN
+                INSERT INTO [graduation_application_approvals] ([Id], [GraduationApplicationId], [Stage], [ApproverUserId], [IsApproved], [Note], [ActedAt], [CreatedAt], [UpdatedAt])
+                SELECT CAST('32320000-1111-2222-3333-000000000001' AS UNIQUEIDENTIFIER), @LifecycleGraduationApplicationId, 0,
+                             CAST('66666666-6666-6666-6666-666666666611' AS UNIQUEIDENTIFIER), 1,
+                             N'Department lifecycle verification approved.', DATEADD(day, -5, @Now), @Now, NULL
+                WHERE NOT EXISTS
+                (
+                        SELECT 1
+                        FROM [graduation_application_approvals] x
+                        WHERE x.[GraduationApplicationId] = @LifecycleGraduationApplicationId
+                            AND x.[Stage] = 0
+                );
+
+                INSERT INTO [graduation_application_approvals] ([Id], [GraduationApplicationId], [Stage], [ApproverUserId], [IsApproved], [Note], [ActedAt], [CreatedAt], [UpdatedAt])
+                SELECT CAST('32320000-1111-2222-3333-000000000002' AS UNIQUEIDENTIFIER), @LifecycleGraduationApplicationId, 1,
+                             @SuperAdminUserId, 1,
+                             N'Registrar final approval granted.', DATEADD(day, -1, @Now), @Now, NULL
+                WHERE NOT EXISTS
+                (
+                        SELECT 1
+                        FROM [graduation_application_approvals] x
+                        WHERE x.[GraduationApplicationId] = @LifecycleGraduationApplicationId
+                            AND x.[Stage] = 1
+                );
+        END
+END
+
 /* 18) Additional semester saturation seed (class/semester logical coverage) */
 IF OBJECT_ID(N'[enrollments]') IS NOT NULL
 BEGIN

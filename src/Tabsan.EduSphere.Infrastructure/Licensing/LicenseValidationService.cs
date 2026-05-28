@@ -364,8 +364,10 @@ public class LicenseValidationService
             return expectedExpiry;
         }
 
-        return payload.ExpiresAt.Value <= expectedExpiry.Value
-            ? payload.ExpiresAt
+        var payloadExpiryDate = ToInclusiveEndOfDay(payload.ExpiresAt.Value.Date);
+
+        return payloadExpiryDate <= expectedExpiry.Value
+            ? payloadExpiryDate
             : expectedExpiry;
     }
 
@@ -381,16 +383,21 @@ public class LicenseValidationService
             return null;
         }
 
+        var issuedDate = issuedAt.Date;
+
         return expiryType switch
         {
-            TablicExpiryType.OneMonth => issuedAt.AddMonths(1),
-            TablicExpiryType.OneYear => issuedAt.AddYears(1),
-            TablicExpiryType.TwoYears => issuedAt.AddYears(2),
-            TablicExpiryType.ThreeYears => issuedAt.AddYears(3),
+            TablicExpiryType.OneMonth => ToInclusiveEndOfDay(issuedDate.AddMonths(1)),
+            TablicExpiryType.OneYear => ToInclusiveEndOfDay(issuedDate.AddYears(1)),
+            TablicExpiryType.TwoYears => ToInclusiveEndOfDay(issuedDate.AddYears(2)),
+            TablicExpiryType.ThreeYears => ToInclusiveEndOfDay(issuedDate.AddYears(3)),
             TablicExpiryType.Permanent => null,
             _ => null
         };
     }
+
+    private static DateTime ToInclusiveEndOfDay(DateTime date)
+        => DateTime.SpecifyKind(date.Date.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified);
 
     // ── Internal DTO ──────────────────────────────────────────────────────────
 

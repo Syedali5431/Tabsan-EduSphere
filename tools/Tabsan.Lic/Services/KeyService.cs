@@ -30,14 +30,15 @@ public class KeyService
     {
         var rawToken = GenerateRawToken();
         var hash     = HashToken(rawToken);
-        var issuedAt = DateTime.UtcNow;
+        // Use local calendar date (no timezone component) so validity matches operator expectations.
+        var issuedAt = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
 
         DateTime? expiresAt = expiry switch
         {
-            ExpiryType.OneMonth   => issuedAt.AddMonths(1),
-            ExpiryType.OneYear    => issuedAt.AddYears(1),
-            ExpiryType.TwoYears   => issuedAt.AddYears(2),
-            ExpiryType.ThreeYears => issuedAt.AddYears(3),
+            ExpiryType.OneMonth   => ToInclusiveEndOfDay(issuedAt.AddMonths(1)),
+            ExpiryType.OneYear    => ToInclusiveEndOfDay(issuedAt.AddYears(1)),
+            ExpiryType.TwoYears   => ToInclusiveEndOfDay(issuedAt.AddYears(2)),
+            ExpiryType.ThreeYears => ToInclusiveEndOfDay(issuedAt.AddYears(3)),
             ExpiryType.Permanent  => null,
             _                     => throw new ArgumentOutOfRangeException(nameof(expiry))
         };
@@ -144,6 +145,9 @@ public class KeyService
         var bytes = System.Text.Encoding.UTF8.GetBytes(token);
         return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     }
+
+    private static DateTime ToInclusiveEndOfDay(DateTime date)
+        => DateTime.SpecifyKind(date.Date.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified);
 
     private static string EscapeCsv(string? value)
         => value is null ? "" : $"\"{value.Replace("\"", "\"\"")}\"";

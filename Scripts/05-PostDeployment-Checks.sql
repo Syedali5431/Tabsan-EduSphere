@@ -828,6 +828,95 @@ SELECT 'DummySeed_FypPanelLegacyRoleRowsCount' AS [CheckName], COUNT(1) AS [Valu
 FROM [fyp_panel_members]
 WHERE [Role] IN (N'Internal', N'External');
 
+SELECT 'Lifecycle_School_Class1To10_ProfileCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [RegistrationNumber] = N'LCYC-SCH-001'
+	AND [CurrentSemesterNumber] >= 10;
+
+SELECT 'Lifecycle_School_Class1To10_ReportCardsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_report_cards]
+WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER)
+	AND [PeriodLabel] IN
+	(
+			N'Class 1', N'Class 2', N'Class 3', N'Class 4', N'Class 5',
+			N'Class 6', N'Class 7', N'Class 8', N'Class 9', N'Class 10'
+	);
+
+SELECT 'Lifecycle_College_Class11To12_ProfileCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [RegistrationNumber] = N'LCYC-COL-001'
+	AND [CurrentSemesterNumber] >= 12;
+
+SELECT 'Lifecycle_College_Class11To12_ReportCardsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_report_cards]
+WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER)
+	AND [PeriodLabel] IN (N'Class 11', N'Class 12');
+
+SELECT 'Lifecycle_University_Sem1To8_ProfileCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [RegistrationNumber] = N'LCYC-UNI-001'
+	AND [CurrentSemesterNumber] >= 8;
+
+SELECT 'Lifecycle_University_Sem1To8_ReportCardsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_report_cards]
+WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+	AND [PeriodLabel] IN
+	(
+			N'Semester 1', N'Semester 2', N'Semester 3', N'Semester 4',
+			N'Semester 5', N'Semester 6', N'Semester 7', N'Semester 8'
+	);
+
+SELECT 'Lifecycle_AttendanceRows_3Profiles' AS [CheckName], COUNT(1) AS [Value]
+FROM [attendance_records]
+WHERE [StudentProfileId] IN
+(
+		CAST('99991111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'Lifecycle_FinalResultsRows_3Profiles' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [StudentProfileId] IN
+(
+		CAST('99991111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+)
+AND [ResultType] = N'Final';
+
+SELECT 'Lifecycle_AssignmentSubmissionsRows_3Profiles' AS [CheckName], COUNT(1) AS [Value]
+FROM [assignment_submissions]
+WHERE [StudentProfileId] IN
+(
+		CAST('99991111-2222-3333-4444-000000000001' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000002' AS UNIQUEIDENTIFIER),
+		CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'Lifecycle_University_FypCompleteCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_projects]
+WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+	AND
+	(
+			TRY_CONVERT(INT, [Status]) = 4
+			OR CONVERT(NVARCHAR(50), [Status]) IN (N'Completed', N'Approved')
+	);
+
+SELECT 'Lifecycle_University_GraduationApprovedCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [graduation_applications]
+WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+	AND [Status] = 2;
+
+SELECT 'Lifecycle_University_GraduationApprovalStagesCount' AS [CheckName], COUNT(DISTINCT [Stage]) AS [Value]
+FROM [graduation_application_approvals]
+WHERE [GraduationApplicationId] IN
+(
+		SELECT [Id]
+		FROM [graduation_applications]
+		WHERE [StudentProfileId] = CAST('99991111-2222-3333-4444-000000000003' AS UNIQUEIDENTIFIER)
+);
+
 SELECT TOP 20 [MigrationId], [ProductVersion]
 FROM __EFMigrationsHistory
 ORDER BY [MigrationId] DESC;
