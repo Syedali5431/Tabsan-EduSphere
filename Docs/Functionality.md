@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Results Acceptance Criteria Closure
+
+### Implementation sync
+- Confirmed closure of AC1-AC6 across role access, scoped manual/CSV entry, validation/error messaging, import audit/report lifecycle, token one-time+expiry behavior, and publish/correction governance.
+- No additional runtime contract was introduced in this closure slice; this phase consolidates evidence mapping and verification status.
+
+### Validation sync
+- Focused result-governance unit slice passed (`9/9`).
+- Report-token web integration suite passed (`3/3`).
+- Sidebar integration suite passed (`17/17`).
+- Web build passed on closure baseline.
+
 ## 2026-05-28 Update - Enter Results Non-Functional Hardening
 
 ### Implementation sync

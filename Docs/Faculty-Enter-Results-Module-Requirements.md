@@ -330,3 +330,19 @@ Display a disabled or guidance state with the same structure, but keep write act
 4. Audit trail and import report are generated for every import attempt.
 5. Report token one-time and expiry behavior works as designed.
 6. Publishing and correction flows follow role and audit requirements.
+
+### Acceptance Criteria Implementation Closure Summary
+
+- AC1: Role-governed access is implemented through governed sidebar/menu visibility and route-level authorization boundaries for Enter Results.
+- AC2: Manual entry (`CreateResult`) and CSV import (`ImportResultCsv`) are both implemented under required scoped filter enforcement.
+- AC3: Invalid input rows and out-of-scope writes are blocked with actionable row-level/import-level feedback and server-side validation messages.
+- AC4: Import attempts generate upload audit metadata and row-level report artifacts with downloadable outcome details.
+- AC5: Import report tokens are enforced as one-time-use with TTL expiry and distinct unavailable versus expired paths.
+- AC6: Publish/correction governance enforces admin approval gate for final publish, published-only correction invariants, and correction reason audit traceability.
+
+### Acceptance Criteria Validation Closure Summary
+
+- Focused result unit-governance suites passed (`9/9`).
+- Report-token web-route integration suite passed (`3/3`).
+- Sidebar/menu access integration suite passed (`17/17`).
+- Web build passed on latest acceptance-closure baseline.

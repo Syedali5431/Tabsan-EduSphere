@@ -1,5 +1,11 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-05-28 Synchronization Note (Enter Results Acceptance Criteria Closure)
+
+- No new menu key introduced in this closure slice.
+- `enter_results` acceptance closure confirms governed access behavior, scoped write gating, and publish/correction governance consistency.
+- Role visibility and Sidebar Settings governance remain unchanged.
+
 ## 2026-05-28 Synchronization Note (Enter Results Non-Functional Hardening)
 
 - No new menu key introduced in this slice.

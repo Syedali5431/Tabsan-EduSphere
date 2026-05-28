@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-28 Update - Enter Results Acceptance Criteria Function Closure
+
+### Runtime additions
+- No new runtime function introduced in this closure phase.
+- Closure references existing runtime surfaces that satisfy acceptance criteria:
+	- `PortalController.CreateResult`, `PortalController.ImportResultCsv`, `PortalController.PublishAllResults`, `PortalController.CorrectResult`, `PortalController.DownloadResultImportReport`.
+	- `ResultsPageModel.CanWriteResults` and `CanPublishResults` for UI/action gating.
+
+### Validation Summary
+- Focused result-governance unit slice passed (`9/9`).
+- Report-token web integration passed (`3/3`).
+- Sidebar integration passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Results Non-Functional Function Inventory
 
 ### Runtime additions
