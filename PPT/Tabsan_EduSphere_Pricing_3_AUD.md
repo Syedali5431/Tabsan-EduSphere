@@ -109,6 +109,151 @@ Summary: Upcoming features to further enhance the platform.
 
 ---
 
+## Detailed Functional Coverage
+Summary: A complete functional map of what the platform delivers today across academic, governance, and operations workflows.
+
+### Academic Operations
+- Course lifecycle management (create, assign, open/close offering)
+- Enrollment workflows with status-driven controls
+- Assignment authoring, submission, grading, and feedback loops
+- Quiz authoring with publish windows, attempt limits, and scoring
+- Attendance recording with policy-aware status handling
+- Results entry with draft/publish governance and correction rules
+
+### Governance and Control
+- Role-based access by SuperAdmin, Admin, Faculty, Student, Finance, Parent
+- Sidebar/menu governance aligned to module entitlement and role policies
+- Institution-aware behavior (School, College, University)
+- Tenant/campus/department scoping controls for safer multi-entity operations
+- Audit-sensitive operations hardened with traceability and controlled transitions
+
+### Data and Reporting
+- Institution-specific report compositions
+- Advanced analytics and trend-ready metrics surfaces
+- Scoped exports with standardized output patterns
+- Post-deployment validation scripts and maintenance indexes for production readiness
+
+---
+
+## Enter Results Workflow (Detailed)
+Summary: Results operations are structured for integrity, controlled publication, and accountability.
+
+1. Scope Selection
+- Required filters enforce context (institution/campus/department/offering and relevant period)
+- Write operations remain unavailable until full valid scope is selected
+
+2. Draft Entry
+- Faculty/Admin enters marks in controlled table flow
+- Validation checks run for data completeness and acceptable ranges
+- Duplicate and invalid-entry prevention applied at workflow and data layers
+
+3. CSV Import
+- Download template with expected headers and sample format
+- Upload validated file with row-wise processing feedback
+- Import report generated with success/failure detail for each row
+
+4. Publish Governance
+- Publish flow is role-controlled (Admin/SuperAdmin governance path)
+- Draft-to-published transition changes visibility behavior for student-facing surfaces
+
+5. Correction Governance
+- Correction allowed under governed conditions with reason capture
+- Audit events retained for correction context and historical traceability
+
+---
+
+## Enter Attendance Workflow (Detailed)
+Summary: Attendance operations support both daily execution and reliable historical analysis.
+
+1. Context and Roster Loading
+- Select offering/date/scope to load the correct roster
+- Scope and assignment checks prevent unauthorized writes
+
+2. Manual Entry
+- Mark attendance statuses (Present/Absent/Late and policy variants)
+- Save with immediate validation and conflict/duplicate checks
+
+3. CSV Import Path
+- Template-assisted import for large classes and bulk updates
+- Validation for required columns, format quality, and scope consistency
+- Duplicate-date and duplicate-roster safeguards
+
+4. Analytics and Alerts
+- Attendance records feed trend metrics and risk indicators
+- Policy thresholds can drive warnings and interventions
+
+---
+
+## Security and Compliance Posture
+Summary: The platform enforces strict boundaries and operational safeguards for education data.
+- Direct URL bypass protection through backend authorization checks
+- Role escalation controls and scoped policy enforcement
+- Tenant/campus boundary isolation and anti-leakage protections
+- Auditable lifecycle for high-impact actions (publish, correction, imports)
+- Controlled tokenized report retrieval patterns for sensitive downloadable artifacts
+
+---
+
+## Performance and Reliability Design
+Summary: Built for sustained real-world load and predictable operational behavior.
+- Bulk CSV processing support for operational scale
+- High-volume seed and validation scripts for realistic performance rehearsal
+- Index maintenance strategy for attendance/results and scope-heavy queries
+- Safe handling of empty datasets, rapid filter changes, and concurrent actions
+- Deterministic validation scripts for go-live confidence
+
+---
+
+## Implementation and Rollout Model
+Summary: A phased approach minimizes risk and accelerates adoption.
+
+Phase 1: Foundation
+- Activate core modules, roles, and baseline data policies
+- Configure institution mode and governance defaults
+
+Phase 2: Academic Enablement
+- Enable results, attendance, assignments, quizzes, and reporting baseline
+- Run role-based UAT scenarios with real department stakeholders
+
+Phase 3: Governance Hardening
+- Apply scoped settings for tenant/campus/department boundaries
+- Validate publish/correction controls and audit/report integrity
+
+Phase 4: Optimization
+- Introduce advanced analytics and export workflows
+- Tune adoption, training, and KPI-based operational improvements
+
+---
+
+## Operational KPI Framework
+Summary: Suggested measurable outcomes to track institutional ROI.
+- Time-to-publish results (before vs after digitization)
+- Attendance completion accuracy and on-time submission rates
+- CSV import first-pass success ratio
+- Audit exception rate and correction turnaround duration
+- Report generation latency and stakeholder usage frequency
+- Faculty/admin productivity gains by workflow type
+
+---
+
+## Data Migration and Integration Readiness
+Summary: Migration and integration are designed for controlled adoption without service disruption.
+- Structured import templates for user and academic data onboarding
+- Validation-first migration path with staged dry-runs
+- Backward compatibility awareness for legacy data patterns
+- Integration roadmap for LMS, communication tools, and identity workflows
+
+---
+
+## Support and Success Model
+Summary: Institutions receive predictable support and practical enablement during growth.
+- Guided onboarding playbooks by role
+- Admin and faculty operational training modules
+- Troubleshooting runbooks for common workflow blockers
+- Continuous enhancement path aligned to institutional maturity
+
+---
+
 ## Pricing
 Summary: Balanced package for institutions scaling operations beyond basic administration.
 - Plan: Growth
@@ -140,3 +285,9 @@ Summary: The Growth plan offers strong capability coverage with clear ROI for mi
 - Import report access hardening introduced with one-time, short-lived report token behavior.
 - Institution-aware certificate workflows and scoped governance controls remain active across School/College/University modes.
 - Pricing confirmation: Growth remains AUD 3 per user yearly (no price change).
+
+## Detailed Plan Fit: Growth
+Summary: Growth extends foundational operations with collaboration and learning workflows for broader institutional adoption.
+- Best suited for institutions transitioning from basic administration to active digital teaching operations
+- Adds stronger day-to-day workflow capacity for faculty and mixed-role execution
+- Maintains cost predictability while preparing teams for advanced analytics and governance depth
