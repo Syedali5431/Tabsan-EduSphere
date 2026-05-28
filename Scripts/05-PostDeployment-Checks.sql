@@ -205,6 +205,15 @@ SELECT 'IndexExists_IX_departments_scope_institution' AS [CheckName],
 SELECT 'IndexExists_IX_users_scope_role_department_active' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_scope_role_department_active' AND object_id = OBJECT_ID('users')) THEN 1 ELSE 0 END AS [Value];
 
+SELECT 'IndexExists_IX_attendance_offering_date' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_offering_date' AND object_id = OBJECT_ID('attendance_records')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_attendance_student_id' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_student_id' AND object_id = OBJECT_ID('attendance_records')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_attendance_student_offering_date' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_student_offering_date' AND object_id = OBJECT_ID('attendance_records')) THEN 1 ELSE 0 END AS [Value];
+
 SELECT 'MigrationExists_Stage11_DepartmentInstitutionType' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId = '20260513121000_Phase1Stage11DepartmentInstitutionType') THEN 1 ELSE 0 END AS [Value];
 

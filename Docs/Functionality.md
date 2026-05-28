@@ -1,3 +1,15 @@
+## 2026-05-28 Update - Enter Attendance Phase 9 Database and Script Safeguards
+
+### Implementation sync
+- Added idempotent attendance index creation safeguards in maintenance script for offering/date, student, and unique student/offering/date paths.
+- Added post-deployment checks to verify attendance index existence in standard and clean validation scripts.
+- Confirmed attendance duplicate prevention and subject-scope coverage through StudentProfileId + CourseOfferingId + Date persistence/index model.
+
+### Validation sync
+- Full solution build passed.
+- Attendance-focused unit matrix passed (`20/20`).
+- Sidebar integration regression suite passed (`17/17`).
+
 ## 2026-05-28 Update - Enter Attendance Phase 8 Integration Compliance
 
 ### Implementation sync

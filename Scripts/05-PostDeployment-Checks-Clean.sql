@@ -233,6 +233,27 @@ FROM [module_status] ms
 INNER JOIN [modules] m ON m.[Id] = ms.[ModuleId]
 WHERE m.[Key] IN (SELECT [Key] FROM @RequiredModules);
 
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_attendance_offering_date',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_offering_date' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_offering_date' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_attendance_student_id',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_id' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_id' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_attendance_student_offering_date',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_offering_date' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_attendance_student_offering_date' AND [object_id] = OBJECT_ID(N'attendance_records')) THEN N'1' ELSE N'0' END,
+    N'1';
+
 /* 5) Module role assignments */
 IF OBJECT_ID(N'[module_role_assignments]') IS NOT NULL
 BEGIN

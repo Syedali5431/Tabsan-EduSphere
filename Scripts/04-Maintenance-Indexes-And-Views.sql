@@ -64,6 +64,30 @@ BEGIN
     ON student_profiles (RegistrationNumber, IsDeleted);
 END
 
+IF COL_LENGTH('attendance_records', 'CourseOfferingId') IS NOT NULL
+AND COL_LENGTH('attendance_records', 'Date') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_offering_date' AND object_id = OBJECT_ID('attendance_records'))
+BEGIN
+  CREATE INDEX IX_attendance_offering_date
+  ON attendance_records (CourseOfferingId, [Date]);
+END
+
+IF COL_LENGTH('attendance_records', 'StudentProfileId') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_student_id' AND object_id = OBJECT_ID('attendance_records'))
+BEGIN
+  CREATE INDEX IX_attendance_student_id
+  ON attendance_records (StudentProfileId);
+END
+
+IF COL_LENGTH('attendance_records', 'StudentProfileId') IS NOT NULL
+AND COL_LENGTH('attendance_records', 'CourseOfferingId') IS NOT NULL
+AND COL_LENGTH('attendance_records', 'Date') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_attendance_student_offering_date' AND object_id = OBJECT_ID('attendance_records'))
+BEGIN
+  CREATE UNIQUE INDEX IX_attendance_student_offering_date
+  ON attendance_records (StudentProfileId, CourseOfferingId, [Date]);
+END
+
   /* Stage 1.3 parity hardening indexes */
   IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_institution_type' AND object_id = OBJECT_ID('departments'))
