@@ -704,10 +704,29 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV11' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV12' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v11';
+	AND DemoValue = N'FullDummyData-v12';
+
+SELECT 'DummySeed_InstituteDemoUsers_University' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] IN (N'demo.uni.admin', N'demo.uni.faculty', N'demo.uni.student')
+	AND [InstitutionType] = 2;
+
+SELECT 'DummySeed_InstituteDemoUsers_College' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] IN (N'demo.col.admin', N'demo.col.faculty', N'demo.col.student')
+	AND [InstitutionType] = 1;
+
+SELECT 'DummySeed_InstituteDemoUsers_School' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] IN (N'demo.sch.admin', N'demo.sch.faculty', N'demo.sch.student')
+	AND [InstitutionType] = 0;
+
+SELECT 'DummySeed_InstituteDemoProfiles_CoverageCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [RegistrationNumber] IN (N'DEMO-UNI-0001', N'DEMO-COL-0001', N'DEMO-SCH-0001');
 
 SELECT 'SidebarMenu_GenerateCertificates_Count' AS [CheckName], COUNT(1) AS [Value]
 FROM [sidebar_menu_items]
@@ -1051,10 +1070,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v11' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v12' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v11';
+			AND [DemoValue] = N'FullDummyData-v12';
 END;
 
 PRINT 'Post-deployment checks completed.';

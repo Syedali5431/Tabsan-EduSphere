@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v11', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v12', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v11',
+    SET [DemoValue] = N'FullDummyData-v12',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -3642,6 +3642,96 @@ BEGIN
         FROM [enrollments] e
         WHERE e.[CourseOfferingId] = od.[CourseOfferingId]
     );
+END
+
+/* 24) Explicit demo users/profiles for each institute (School/College/University) */
+DECLARE @InstituteDemoUsers TABLE
+(
+    [Id] UNIQUEIDENTIFIER,
+    [Username] NVARCHAR(100),
+    [Email] NVARCHAR(256),
+    [RoleId] INT,
+    [DepartmentId] UNIQUEIDENTIFIER,
+    [InstitutionType] INT
+);
+
+INSERT INTO @InstituteDemoUsers ([Id], [Username], [Email], [RoleId], [DepartmentId], [InstitutionType]) VALUES
+(CAST('6a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.admin', N'demo.uni.admin@demo.local', @RoleAdmin, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('7a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.faculty', N'demo.uni.faculty@demo.local', @RoleFaculty, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('8a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.student', N'demo.uni.student@demo.local', @RoleStudent, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('6a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.admin', N'demo.col.admin@demo.local', @RoleAdmin, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('7a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.faculty', N'demo.col.faculty@demo.local', @RoleFaculty, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('8a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.student', N'demo.col.student@demo.local', @RoleStudent, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('6a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.admin', N'demo.sch.admin@demo.local', @RoleAdmin, '13333333-3333-3333-3333-333333333331', 0),
+(CAST('7a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.faculty', N'demo.sch.faculty@demo.local', @RoleFaculty, '13333333-3333-3333-3333-333333333331', 0),
+(CAST('8a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.student', N'demo.sch.student@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333331', 0);
+
+INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+SELECT src.[Id], src.[Username], src.[Email], @PwdHash, src.[RoleId], src.[DepartmentId], src.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
+FROM @InstituteDemoUsers src
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM [users] u
+    WHERE u.[Id] = src.[Id]
+       OR u.[Username] = src.[Username]
+       OR u.[Email] = src.[Email]
+);
+
+UPDATE u
+SET u.[Username] = src.[Username],
+    u.[Email] = src.[Email],
+    u.[PasswordHash] = @PwdHash,
+    u.[RoleId] = src.[RoleId],
+    u.[DepartmentId] = src.[DepartmentId],
+    u.[InstitutionType] = src.[InstitutionType],
+    u.[IsActive] = 1,
+    u.[IsDeleted] = 0,
+    u.[DeletedAt] = NULL,
+    u.[UpdatedAt] = @Now
+FROM [users] u
+INNER JOIN @InstituteDemoUsers src ON src.[Id] = u.[Id];
+
+IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
+BEGIN
+    DECLARE @InstituteDemoProfiles TABLE
+    (
+        [Id] UNIQUEIDENTIFIER,
+        [UserId] UNIQUEIDENTIFIER,
+        [RegistrationNumber] NVARCHAR(50),
+        [ProgramId] UNIQUEIDENTIFIER,
+        [DepartmentId] UNIQUEIDENTIFIER,
+        [CurrentSemesterNumber] INT,
+        [Cgpa] DECIMAL(4,2)
+    );
+
+    INSERT INTO @InstituteDemoProfiles ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [CurrentSemesterNumber], [Cgpa]) VALUES
+    (CAST('9a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), CAST('8a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'DEMO-UNI-0001', '22222222-2222-2222-2222-222222222211', '11111111-1111-1111-1111-111111111111', 2, CAST(3.45 AS DECIMAL(4,2))),
+    (CAST('9a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), CAST('8a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'DEMO-COL-0001', '22222222-2222-2222-2222-222222222321', '12222222-2222-2222-2222-222222222221', 1, CAST(3.20 AS DECIMAL(4,2))),
+    (CAST('9a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), CAST('8a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'DEMO-SCH-0001', '22222222-2222-2222-2222-222222222431', '13333333-3333-3333-3333-333333333331', 6, CAST(3.10 AS DECIMAL(4,2)));
+
+    INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT src.[Id], src.[UserId], src.[RegistrationNumber], src.[ProgramId], src.[DepartmentId], CAST('2026-01-15' AS DATETIME2), src.[Cgpa], src.[CurrentSemesterNumber], @Now, NULL, 0, NULL
+    FROM @InstituteDemoProfiles src
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [student_profiles] sp
+        WHERE sp.[Id] = src.[Id]
+           OR sp.[UserId] = src.[UserId]
+           OR sp.[RegistrationNumber] = src.[RegistrationNumber]
+    );
+
+    UPDATE sp
+    SET sp.[ProgramId] = src.[ProgramId],
+        sp.[DepartmentId] = src.[DepartmentId],
+        sp.[CurrentSemesterNumber] = src.[CurrentSemesterNumber],
+        sp.[Cgpa] = src.[Cgpa],
+        sp.[UpdatedAt] = @Now,
+        sp.[IsDeleted] = 0,
+        sp.[DeletedAt] = NULL
+    FROM [student_profiles] sp
+    INNER JOIN @InstituteDemoProfiles src ON src.[Id] = sp.[Id];
 END
 
 IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
