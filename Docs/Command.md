@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Student Timetable Demo Seed v25 Expansion (2026-05-30)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v25` and expanded Dummy Engineering Student Timetable demo rows (3 timetables, 6 entries).
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v25 marker assertions and additional Tuesday/Friday/Saturday checks for timetable `2525...2903`.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Validation Summary:
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -i Scripts/03-FullDummyData.sql`.
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -Q "SET NOCOUNT ON; SELECT DemoValue FROM [Tabsan-EduSphere] WHERE DemoKey='DemoDatasetVersion'; SELECT COUNT(1) AS TimetableRows FROM timetables WHERE Id IN ('25252525-2525-2525-2525-252525252901','25252525-2525-2525-2525-252525252902','25252525-2525-2525-2525-252525252903'); SELECT COUNT(1) AS EntryRows FROM timetable_entries WHERE Id IN ('26262626-2626-2626-2626-262626262901','26262626-2626-2626-2626-262626262902','26262626-2626-2626-2626-262626262903','26262626-2626-2626-2626-262626262904','26262626-2626-2626-2626-262626262905','26262626-2626-2626-2626-262626262906');"`.
+
 ### Attendance Demo Seed v23 and Student Filter Mapping Sync (2026-05-30)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v23` and added deterministic attendance filter demo data for DS-101/DB-201 (`2026-S2`).

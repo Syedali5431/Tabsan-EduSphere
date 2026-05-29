@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV24' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV25' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v24';
+	AND DemoValue = N'FullDummyData-v25';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -829,7 +829,8 @@ SELECT 'DummySeed_StudentTimetableDemo_TimetablesCount' AS [CheckName], COUNT(1)
 FROM [timetables]
 WHERE [Id] IN (
 	CAST('25252525-2525-2525-2525-252525252901' AS UNIQUEIDENTIFIER),
-	CAST('25252525-2525-2525-2525-252525252902' AS UNIQUEIDENTIFIER)
+	CAST('25252525-2525-2525-2525-252525252902' AS UNIQUEIDENTIFIER),
+	CAST('25252525-2525-2525-2525-252525252903' AS UNIQUEIDENTIFIER)
 )
 	AND [DepartmentId] = CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER)
 	AND [IsPublished] = 1;
@@ -839,7 +840,10 @@ FROM [timetable_entries]
 WHERE [Id] IN (
 	CAST('26262626-2626-2626-2626-262626262901' AS UNIQUEIDENTIFIER),
 	CAST('26262626-2626-2626-2626-262626262902' AS UNIQUEIDENTIFIER),
-	CAST('26262626-2626-2626-2626-262626262903' AS UNIQUEIDENTIFIER)
+	CAST('26262626-2626-2626-2626-262626262903' AS UNIQUEIDENTIFIER),
+	CAST('26262626-2626-2626-2626-262626262904' AS UNIQUEIDENTIFIER),
+	CAST('26262626-2626-2626-2626-262626262905' AS UNIQUEIDENTIFIER),
+	CAST('26262626-2626-2626-2626-262626262906' AS UNIQUEIDENTIFIER)
 );
 
 SELECT 'DummySeed_StudentTimetableDemo_MondayRows_Timetable901' AS [CheckName], COUNT(1) AS [Value]
@@ -857,24 +861,50 @@ FROM [timetable_entries]
 WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252902' AS UNIQUEIDENTIFIER)
 	AND [DayOfWeek] = 4;
 
+SELECT 'DummySeed_StudentTimetableDemo_TuesdayRows_Timetable903' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252903' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 2;
+
+SELECT 'DummySeed_StudentTimetableDemo_FridayRows_Timetable903' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252903' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 5;
+
+SELECT 'DummySeed_StudentTimetableDemo_SaturdayRows_Timetable903' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252903' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 6;
+
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
 WHERE [Status] = N'Active';
 
-SELECT 'DummySeed_ResultComponentRules_UniversityCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [result_component_rules]
-WHERE [InstitutionType] = 0
-	AND [IsActive] = 1;
+IF COL_LENGTH('result_component_rules', 'InstitutionType') IS NOT NULL
+BEGIN
+	EXEC(N'
+		SELECT ''DummySeed_ResultComponentRules_UniversityCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [result_component_rules]
+		WHERE [InstitutionType] = 0
+			AND [IsActive] = 1;
 
-SELECT 'DummySeed_ResultComponentRules_SchoolCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [result_component_rules]
-WHERE [InstitutionType] = 1
-	AND [IsActive] = 1;
+		SELECT ''DummySeed_ResultComponentRules_SchoolCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [result_component_rules]
+		WHERE [InstitutionType] = 1
+			AND [IsActive] = 1;
 
-SELECT 'DummySeed_ResultComponentRules_CollegeCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [result_component_rules]
-WHERE [InstitutionType] = 2
-	AND [IsActive] = 1;
+		SELECT ''DummySeed_ResultComponentRules_CollegeCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [result_component_rules]
+		WHERE [InstitutionType] = 2
+			AND [IsActive] = 1;
+	');
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_ResultComponentRules_UniversityCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_ResultComponentRules_SchoolCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_ResultComponentRules_CollegeCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_ResultRows_SchoolClassTestCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [results]
@@ -1291,10 +1321,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v24' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v25' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v24';
+			AND [DemoValue] = N'FullDummyData-v25';
 END;
 
 PRINT 'Post-deployment checks completed.';

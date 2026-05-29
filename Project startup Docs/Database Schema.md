@@ -1,3 +1,16 @@
+## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v25`.
+	- Added additive deterministic Student Timetable rows in existing tables only:
+		- `timetables` (one additional published Dummy Engineering row, total 3),
+		- `timetable_entries` (three additional rows for Tuesday/Friday/Saturday, total 6).
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v25 marker checks and timetable-903 day-specific assertions.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v24 (Schema Posture)
 
 - Implementation Summary:

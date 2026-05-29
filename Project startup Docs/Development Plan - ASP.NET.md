@@ -1,3 +1,15 @@
+## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v25`.
+- Expanded deterministic Student Timetable demo data for Dummy Engineering:
+  - timetables: `2525...2901`, `2525...2902`, `2525...2903` (published),
+  - entries: `2626...2901` to `2626...2906` (Monday through Saturday coverage for filter testing).
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v25 marker checks and new day-of-week assertions for timetable `2525...2903`.
+
+### Validation Summary:
+- Student Timetable day-filter demo/testing now has broader deterministic coverage from a single seed load.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v24 and Filter Verification
 
 ### Implementation Summary:

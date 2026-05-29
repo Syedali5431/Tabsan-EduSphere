@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
+
+### Runtime additions
+- No new API/controller method signature added in this slice.
+- Existing Student Timetable runtime surface remains authoritative:
+	- `PortalController.TimetableStudent`
+	- `EduApiClient.GetTimetablesByDepartmentAsync`
+	- `EduApiClient.GetTimetableByIdAsync`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v25`.
+- Student Timetable demo pack expanded for Dummy Engineering with one additional published timetable (`2525...2903`) and three additional entries (`2626...2904` to `2626...2906`) covering Tuesday/Friday/Saturday filters.
+- `Scripts/05-PostDeployment-Checks.sql` extended with v25 and new day-of-week assertions for timetable `2525...2903`.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v24 and Error Message Normalization
 
 ### Runtime additions

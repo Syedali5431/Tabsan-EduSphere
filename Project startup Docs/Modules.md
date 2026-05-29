@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-30 (Student Timetable Demo Seed v25 Expansion)
+
+### Module impact summary
+- No new module introduced; update remains within existing Student Timetable module behavior.
+- Full dummy seed now includes expanded deterministic Student Timetable demo rows for Dummy Engineering:
+  - 3 published timetables,
+  - 6 entries across Monday/Tuesday/Wednesday/Thursday/Friday/Saturday.
+- Post-deployment checks now include v25 dataset marker and additional Tuesday/Friday/Saturday assertions for timetable `2525...2903`.
+
+### Validation summary
+- Student Timetable filter demos now have richer deterministic day coverage for QA/UAT walkthroughs.
+
 ## Execution Update - 2026-05-30 (Student Timetable Demo Seed v24 + Filter Reliability)
 
 ### Module impact summary

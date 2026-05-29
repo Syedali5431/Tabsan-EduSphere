@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
+
+### Implementation sync
+- Upgraded `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v25`.
+- Expanded deterministic Student Timetable demo rows for Dummy Engineering (`departmentId=33333333-3333-3333-3333-333333333333`):
+	- 3 published timetables (`2525...2901`, `2525...2902`, `2525...2903`),
+	- 6 timetable entries (`2626...2901` to `2626...2906`) across Monday/Tuesday/Wednesday/Thursday/Friday/Saturday.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v25 marker checks plus Student Timetable checks for the new Tuesday/Friday/Saturday rows.
+
+### Validation sync
+- Student Timetable page now has richer deterministic coverage for both match and sparse/no-row day-filter demos.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v24 and Filter QA
 
 ### Implementation sync

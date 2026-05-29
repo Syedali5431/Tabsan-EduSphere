@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Student Timetable Demo Seed v25 Expansion)
+- Runtime delivery in this slice:
+  - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v25`.
+  - Expanded Student Timetable deterministic demo data for Dummy Engineering with one additional published timetable (`2525...2903`) and three additional rows for Tuesday/Friday/Saturday filtering.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v25 assertions and new day-specific checks for timetable `2525...2903`.
+- Compatibility boundary:
+  - No API route rename and no endpoint contract change.
+  - Update is additive seed/check coverage for demo/testing reliability.
+- Validation Summary:
+  - Student Timetable now supports broader deterministic day-filter scenarios from one seed pass.
+
 ### 2026-05-30 - Product Requirements Synchronization (Student Timetable Demo Seed v24 + Filter Reliability)
 - Runtime delivery in this slice:
   - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v24`.

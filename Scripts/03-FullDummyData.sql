@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v24', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v25', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v24',
+    SET [DemoValue] = N'FullDummyData-v25',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1159,7 +1159,8 @@ BEGIN
     SELECT v.[Id], v.[DepartmentId], v.[AcademicProgramId], v.[SemesterId], 1, @Now, @Now, NULL, 0, NULL, v.[EffectiveDate], v.[SemesterNumber]
     FROM (VALUES
         ('25252525-2525-2525-2525-252525252901', '33333333-3333-3333-3333-333333333333', '45454545-4545-4545-4545-454545454701', '44444444-4444-4444-4444-444444444444', CAST('2026-07-01' AS DATE), 1),
-        ('25252525-2525-2525-2525-252525252902', '33333333-3333-3333-3333-333333333333', '45454545-4545-4545-4545-454545454701', '44444444-4444-4444-4444-444444444444', CAST('2026-07-15' AS DATE), 1)
+        ('25252525-2525-2525-2525-252525252902', '33333333-3333-3333-3333-333333333333', '45454545-4545-4545-4545-454545454701', '44444444-4444-4444-4444-444444444444', CAST('2026-07-15' AS DATE), 1),
+        ('25252525-2525-2525-2525-252525252903', '33333333-3333-3333-3333-333333333333', '45454545-4545-4545-4545-454545454701', '44444444-4444-4444-4444-444444444444', CAST('2026-08-01' AS DATE), 1)
     ) v([Id], [DepartmentId], [AcademicProgramId], [SemesterId], [EffectiveDate], [SemesterNumber])
     WHERE NOT EXISTS (SELECT 1 FROM [timetables] t WHERE t.[Id] = v.[Id]);
 END
@@ -1167,13 +1168,17 @@ END
 IF OBJECT_ID(N'[timetable_entries]') IS NOT NULL
 AND EXISTS (SELECT 1 FROM [timetables] WHERE [Id] = '25252525-2525-2525-2525-252525252901')
 AND EXISTS (SELECT 1 FROM [timetables] WHERE [Id] = '25252525-2525-2525-2525-252525252902')
+AND EXISTS (SELECT 1 FROM [timetables] WHERE [Id] = '25252525-2525-2525-2525-252525252903')
 BEGIN
     INSERT INTO [timetable_entries] ([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName], [RoomId], [CreatedAt], [UpdatedAt], [BuildingId], [CourseId], [FacultyUserId])
     SELECT v.[Id], v.[TimetableId], v.[DayOfWeek], v.[StartTime], v.[EndTime], v.[SubjectName], v.[RoomNumber], v.[FacultyName], NULL, @Now, NULL, NULL, NULL, NULL
     FROM (VALUES
         ('26262626-2626-2626-2626-262626262901', '25252525-2525-2525-2525-252525252901', 1, CAST('09:00:00' AS TIME), CAST('10:30:00' AS TIME), N'Dummy Data Structures', N'E-101', N'Faculty Demo Alpha'),
         ('26262626-2626-2626-2626-262626262902', '25252525-2525-2525-2525-252525252901', 3, CAST('10:45:00' AS TIME), CAST('12:15:00' AS TIME), N'Dummy Databases', N'E-202', N'Faculty Demo Beta'),
-        ('26262626-2626-2626-2626-262626262903', '25252525-2525-2525-2525-252525252902', 4, CAST('13:00:00' AS TIME), CAST('14:30:00' AS TIME), N'Engineering Lab', N'LAB-1', N'Faculty Demo Gamma')
+        ('26262626-2626-2626-2626-262626262903', '25252525-2525-2525-2525-252525252902', 4, CAST('13:00:00' AS TIME), CAST('14:30:00' AS TIME), N'Engineering Lab', N'LAB-1', N'Faculty Demo Gamma'),
+        ('26262626-2626-2626-2626-262626262904', '25252525-2525-2525-2525-252525252903', 2, CAST('08:30:00' AS TIME), CAST('10:00:00' AS TIME), N'Applied Physics', N'E-303', N'Faculty Demo Delta'),
+        ('26262626-2626-2626-2626-262626262905', '25252525-2525-2525-2525-252525252903', 5, CAST('11:15:00' AS TIME), CAST('12:45:00' AS TIME), N'Engineering Ethics', N'E-404', N'Faculty Demo Epsilon'),
+        ('26262626-2626-2626-2626-262626262906', '25252525-2525-2525-2525-252525252903', 6, CAST('14:00:00' AS TIME), CAST('15:30:00' AS TIME), N'Workshop Practice', N'LAB-2', N'Faculty Demo Zeta')
     ) v([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName])
     WHERE NOT EXISTS (SELECT 1 FROM [timetable_entries] te WHERE te.[Id] = v.[Id]);
 END
@@ -2656,7 +2661,7 @@ BEGIN
     )
     INSERT INTO [study_plans] ([Id], [StudentProfileId], [PlannedSemesterName], [Notes], [AdvisorStatus], [AdvisorNotes], [ReviewedByUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT
-        CONVERT(uniqueidentifier, CONCAT('46464646-4646-4646-4646-', RIGHT('000000000000' + CAST(sb.rn AS VARCHAR(12)), 12))),
+        NEWID(),
         sb.[Id],
         N'Spring 2026',
         N'Auto-generated study plan for high-volume demo data.',
