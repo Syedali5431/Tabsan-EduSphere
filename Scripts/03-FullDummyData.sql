@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v17', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v18', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v17',
+    SET [DemoValue] = N'FullDummyData-v18',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2584,6 +2584,18 @@ BEGIN
         FROM [course_content_modules] x
         WHERE x.[OfferingId] = ob.[Id] AND x.[WeekNumber] = w.[WeekNumber]
     );
+
+    /* LMS Manage deep demo data: richer states for offering 513 */
+    INSERT INTO [course_content_modules] ([Id], [OfferingId], [Title], [WeekNumber], [Body], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT m.[Id], m.[OfferingId], m.[Title], m.[WeekNumber], m.[Body], m.[IsPublished], m.[PublishedAt], @Now, NULL, 0, NULL
+    FROM
+    (
+        VALUES
+            (CAST('58585858-5858-5858-5858-585858585851' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER), N'Week 5 Lab Readiness (Draft)', 5, N'<p>Practical setup checklist and pre-lab preparation notes.</p>', CAST(0 AS BIT), CAST(NULL AS DATETIME2)),
+            (CAST('58585858-5858-5858-5858-585858585852' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER), N'Week 6 Practical Walkthrough', 6, N'<p>Step-by-step biology practical walkthrough with grading cues.</p>', CAST(1 AS BIT), DATEADD(day, -1, @Now)),
+            (CAST('58585858-5858-5858-5858-585858585853' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER), N'Week 7 Reflection and Viva Prep', 7, N'<p>Viva question bank and reflection prompts.</p>', CAST(1 AS BIT), DATEADD(hour, -12, @Now))
+    ) m([Id], [OfferingId], [Title], [WeekNumber], [Body], [IsPublished], [PublishedAt])
+    WHERE NOT EXISTS (SELECT 1 FROM [course_content_modules] x WHERE x.[Id] = m.[Id]);
 END
 
 IF OBJECT_ID(N'[content_videos]') IS NOT NULL
@@ -2599,6 +2611,18 @@ BEGIN
            NULL
     FROM [course_content_modules] m
     WHERE NOT EXISTS (SELECT 1 FROM [content_videos] x WHERE x.[ModuleId] = m.[Id]);
+
+    /* LMS Manage deep demo data: one module with multiple videos and one with embed-only source */
+    INSERT INTO [content_videos] ([Id], [ModuleId], [Title], [StorageUrl], [EmbedUrl], [DurationSeconds], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT v.[Id], v.[ModuleId], v.[Title], v.[StorageUrl], v.[EmbedUrl], v.[DurationSeconds], @Now, NULL, 0, NULL
+    FROM
+    (
+        VALUES
+            (CAST('59595959-5959-5959-5959-595959595951' AS UNIQUEIDENTIFIER), CAST('58585858-5858-5858-5858-585858585851' AS UNIQUEIDENTIFIER), N'Week 5 Draft Lab Orientation', N'https://cdn.demo.local/videos/lms/w5-draft-orientation.mp4', N'https://video.demo.local/embed/lms-w5-draft', 780),
+            (CAST('59595959-5959-5959-5959-595959595952' AS UNIQUEIDENTIFIER), CAST('58585858-5858-5858-5858-585858585852' AS UNIQUEIDENTIFIER), N'Week 6 Practical Demo - Part 1', N'https://cdn.demo.local/videos/lms/w6-practical-part1.mp4', N'https://video.demo.local/embed/lms-w6-part1', 920),
+            (CAST('59595959-5959-5959-5959-595959595953' AS UNIQUEIDENTIFIER), CAST('58585858-5858-5858-5858-585858585852' AS UNIQUEIDENTIFIER), N'Week 6 Practical Demo - Part 2', CAST(NULL AS NVARCHAR(1024)), N'https://video.demo.local/embed/lms-w6-part2', 870)
+    ) v([Id], [ModuleId], [Title], [StorageUrl], [EmbedUrl], [DurationSeconds])
+    WHERE NOT EXISTS (SELECT 1 FROM [content_videos] x WHERE x.[Id] = v.[Id]);
 END
 
 IF OBJECT_ID(N'[rubrics]') IS NOT NULL

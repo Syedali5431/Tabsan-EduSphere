@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV17' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV18' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v17';
+	AND DemoValue = N'FullDummyData-v18';
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
@@ -760,6 +760,23 @@ SELECT 'DummySeed_ResultRows_Offering513_PracticalCount' AS [CheckName], COUNT(1
 FROM [results]
 WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
     AND [ResultType] = N'Practical';
+
+SELECT 'DummySeed_LmsManage_Offering513_ModuleCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_content_modules]
+WHERE [OfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+	AND [IsDeleted] = 0;
+
+SELECT 'DummySeed_LmsManage_Offering513_DraftModuleCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_content_modules]
+WHERE [OfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+	AND [WeekNumber] = 5
+	AND [IsPublished] = 0
+	AND [IsDeleted] = 0;
+
+SELECT 'DummySeed_LmsManage_Week6VideoCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [content_videos]
+WHERE [ModuleId] = CAST('58585858-5858-5858-5858-585858585852' AS UNIQUEIDENTIFIER)
+	AND [IsDeleted] = 0;
 
 SELECT 'DummySeed_ResultModificationRequests_ResultEntrySectionCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [teacher_modification_requests]
@@ -1126,10 +1143,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v17' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v18' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v17';
+			AND [DemoValue] = N'FullDummyData-v18';
 END;
 
 PRINT 'Post-deployment checks completed.';

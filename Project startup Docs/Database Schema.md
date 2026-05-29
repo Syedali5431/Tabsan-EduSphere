@@ -1,3 +1,16 @@
+## 2026-05-29 Update - LMS Demo Seed v18 Coverage (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v18`.
+	- Added data-only LMS rows in existing tables:
+		- `course_content_modules` (offering-513 mixed publication states),
+		- `content_videos` (expanded module video coverage).
+	- Updated `Scripts/05-PostDeployment-Checks.sql` to assert LMS seed coverage and v18 dataset marker.
+- Validation Summary:
+	- SQL changes remain idempotent and data-only.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-29 Update - Demo Seed v17 Rubric/Gradebook Coverage (Schema Posture)
 
 - Implementation Summary:

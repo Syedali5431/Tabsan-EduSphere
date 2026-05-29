@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-29 - Product Requirements Synchronization (LMS Demo Seed v18)
+- Runtime delivery in this slice:
+  - Expanded LMS demo data in full seed for offering `55555555-5555-5555-5555-555555555513` with draft/published mixed module states.
+  - Added multi-video LMS module coverage to validate UI rendering with higher-content scenarios.
+  - Updated dataset marker to `FullDummyData-v18`.
+- Compatibility boundary:
+  - No API contract, route, or schema structure change.
+  - Update remains additive seed/test data for demo and QA reliability.
+- Validation Summary:
+  - Post-deployment checks now assert LMS module/video demo coverage and v18 dataset marker.
+
 ### 2026-05-29 - Product Requirements Synchronization (Rubric/Gradebook Demo Data Depth)
 - Runtime delivery in this slice:
   - Expanded full dummy seed with rubric-friendly graded submissions for offering `55555555-5555-5555-5555-555555555513`.

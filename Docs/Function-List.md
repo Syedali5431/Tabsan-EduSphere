@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - LMS Demo Seed v18 Function Inventory Sync
+
+### Runtime additions
+- No new application-layer function signature was introduced in this update.
+- Existing LMS runtime surfaces continue to be used:
+	- `PortalController.LmsManage`
+	- `EduApiClient.GetLmsModulesAsync`
+	- `LmsController.GetModules`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` upgraded to `FullDummyData-v18` with LMS offering-513 draft/published module scenarios and additional videos.
+- `Scripts/05-PostDeployment-Checks.sql` now validates LMS module/video coverage for offering 513.
+
 ## 2026-05-29 Update - Demo Seed Expansion (Rubric/Gradebook)
 
 ### Runtime additions

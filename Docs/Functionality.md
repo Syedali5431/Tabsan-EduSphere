@@ -1,3 +1,18 @@
+## 2026-05-29 Update - LMS Demo Seed v18 Coverage
+
+### Implementation sync
+- Upgraded demo dataset marker to `FullDummyData-v18`.
+- Added LMS Manage demo scenarios for offering `55555555-5555-5555-5555-555555555513`:
+	- week 5 draft module,
+	- week 6 and week 7 published modules,
+	- additional module video rows to verify multi-video rendering.
+
+### Validation sync
+- Added post-check assertions for LMS data visibility:
+	- offering-513 module count,
+	- offering-513 draft week-5 module count,
+	- week-6 module video count.
+
 ## 2026-05-29 Update - Rubric/Gradebook Demo Data Expansion
 
 ### Implementation sync

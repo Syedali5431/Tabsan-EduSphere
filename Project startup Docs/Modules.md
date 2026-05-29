@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-29 (LMS Demo Seed v18)
+
+### Module impact summary
+- No new module introduced; update remains within existing LMS Manage module behavior.
+- Demo seed now includes offering-513 LMS draft/published mixed modules and richer video content coverage.
+- Module behavior validation now includes LMS-specific post-check counters.
+
+### Validation summary
+- Dataset marker upgraded to `FullDummyData-v18`.
+- Post-check coverage now includes LMS offering-513 module count, draft module count, and week-6 video count.
+
 ## Execution Update - 2026-05-29 (Rubric/Gradebook Demo Data Expansion)
 
 ### Module impact summary

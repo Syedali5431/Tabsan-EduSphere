@@ -1,3 +1,16 @@
+## 2026-05-29 Update - LMS Demo Seed v18 Stability
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v18`.
+- Added LMS Manage sample module rows for offering `55555555-5555-5555-5555-555555555513` with draft and published states.
+- Added additional LMS video rows for offering-513 module visibility and multi-video demo behavior.
+
+### Validation Summary:
+- Updated `Scripts/05-PostDeployment-Checks.sql` with LMS validations for:
+  - offering-513 LMS module count,
+  - offering-513 draft module count,
+  - offering-513 week-6 module video count.
+
 ## 2026-05-29 Update - Demo Seed v17 (Rubric/Gradebook Stability)
 
 ### Implementation Summary:
