@@ -147,6 +147,7 @@ public class EnrollmentController : ControllerBase
         return Ok(roster.Select(e => new
         {
             Id                 = e.Id,
+            StudentProfileId   = e.StudentProfileId,
             StudentName        = e.StudentProfile.RegistrationNumber,
             RegistrationNumber = e.StudentProfile.RegistrationNumber,
             ProgramName        = e.StudentProfile.Program?.Name ?? "",

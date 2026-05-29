@@ -17,7 +17,7 @@ public class AttendancePageModelTests
         };
 
         model.CanSaveAttendance.Should().BeFalse();
-        model.SaveAttendanceDisabledReason.Should().ContainEquivalentOf("Select department, course, and semester/class");
+        model.SaveAttendanceDisabledReason.Should().ContainEquivalentOf("Select department, course, subject offering, and semester/class");
     }
 
     [Fact]

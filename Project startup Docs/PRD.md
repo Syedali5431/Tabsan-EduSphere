@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Attendance Demo Seed v23 + Student Filter Reliability)
+- Runtime delivery in this slice:
+  - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v23`.
+  - Added deterministic Attendance demo data for DS-101/DB-201 (`2026-S2`) with scoped student/enrollment/attendance rows.
+  - Updated Attendance roster contract and web mapping path so student filter uses student profile identity while retaining enrollment identity for roster-admin actions.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v23 marker and attendance demo assertions.
+- Compatibility boundary:
+  - No endpoint rename and no new route surface.
+  - Update is additive seed/check coverage plus runtime filter-mapping correction.
+- Validation Summary:
+  - Attendance/Enter Attendance offering and student filters now return deterministic and correct datasets for demo/testing.
+
 ### 2026-05-30 - Product Requirements Synchronization (Announcements Demo Seed v22 + Filter Reliability)
 - Runtime delivery in this slice:
   - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v22`.

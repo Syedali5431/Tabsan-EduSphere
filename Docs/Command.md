@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Attendance Demo Seed v23 and Student Filter Mapping Sync (2026-05-30)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v23` and added deterministic attendance filter demo data for DS-101/DB-201 (`2026-S2`).
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v23 marker validation and deterministic attendance seed verification checks.
+  - Synchronized roster/student filter mapping in web/API flow so Attendance student filter uses `StudentProfileId` end-to-end.
+- Validation Summary:
+  - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter "FullyQualifiedName~PortalAttendanceCsvImportTests|FullyQualifiedName~AttendancePageModelTests" -v minimal`.
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -Q "SET NOCOUNT ON; SELECT COUNT(1) AS AttendanceDemoRows FROM attendance_records WHERE Id IN ('96969696-9696-9696-9696-969696969801','96969696-9696-9696-9696-969696969802','96969696-9696-9696-9696-969696969803','96969696-9696-9696-9696-969696969804','96969696-9696-9696-9696-969696969805','96969696-9696-9696-9696-969696969806');"`.
+  - Browser verification: `/Portal/EnterAttendance` and `/Portal/Attendance` offering + student filter scenarios.
+
 ### Announcements Demo Seed v22 and Filter Reliability Sync (2026-05-30)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v22` and added deterministic announcements sample rows for active/inactive filter testing.

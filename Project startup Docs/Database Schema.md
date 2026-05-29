@@ -1,3 +1,18 @@
+## 2026-05-30 Update - Attendance Filter Demo Seed v23 (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v23`.
+	- Added additive deterministic demo rows in existing tables only:
+		- `academic_programs` (attendance demo program),
+		- `users` / `student_profiles` (three scoped demo students),
+		- `enrollments` (DS-101/DB-201 demo enrollments),
+		- `attendance_records` (deterministic offering/student/date rows for filter demos).
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v23 marker assertion and attendance filter demo data checks.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Announcements Demo Seed v22 (Schema Posture)
 
 - Implementation Summary:

@@ -1213,6 +1213,7 @@ public class PaymentsPageModel
 public class EnrollmentRosterItem
 {
     public Guid   Id                 { get; set; }
+    public Guid   StudentProfileId   { get; set; }
     public string StudentName        { get; set; } = "";
     public string RegistrationNumber { get; set; } = "";
     public string ProgramName        { get; set; } = "";

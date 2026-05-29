@@ -4302,6 +4302,7 @@ public class EduApiClient : IEduApiClient
         return raw.Select(r => new EnrollmentRosterItem
         {
             Id                 = r.Id,
+            StudentProfileId   = r.StudentProfileId,
             StudentName        = r.StudentName ?? "",
             RegistrationNumber = r.RegistrationNumber ?? "",
             ProgramName        = r.ProgramName ?? "",
@@ -4393,6 +4394,7 @@ public class EduApiClient : IEduApiClient
     private sealed class RosterApiDto
     {
         public Guid    Id                 { get; set; }
+        public Guid    StudentProfileId   { get; set; }
         public string? StudentName        { get; set; }
         public string? RegistrationNumber { get; set; }
         public string? ProgramName        { get; set; }

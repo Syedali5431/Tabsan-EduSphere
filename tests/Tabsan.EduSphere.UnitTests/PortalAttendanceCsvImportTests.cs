@@ -46,6 +46,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -83,6 +84,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -116,6 +118,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -148,6 +151,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -178,6 +182,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -211,6 +216,7 @@ public class PortalAttendanceCsvImportTests
             campusId: CampusId,
             departmentId: DepartmentId,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             ct: CancellationToken.None);
@@ -250,6 +256,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             "EnterAttendance",
             CreateCsvFile(csv),
@@ -288,6 +295,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             departmentId: null,
             courseId: CourseId,
+            studentId: null,
             semesterName: SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -322,6 +330,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -357,6 +366,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -392,6 +402,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -427,6 +438,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -464,6 +476,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -503,6 +516,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -520,6 +534,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance");
 
@@ -554,6 +569,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -571,6 +587,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance");
         firstDownload.Should().BeOfType<FileContentResult>();
@@ -582,6 +599,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance");
 
@@ -615,6 +633,7 @@ public class PortalAttendanceCsvImportTests
                 CampusId,
                 DepartmentId,
                 CourseId,
+                null,
                 SemesterName,
                 entryPoint: "EnterAttendance",
                 csvFile: CreateCsvFile(csv),
@@ -634,6 +653,7 @@ public class PortalAttendanceCsvImportTests
                 CampusId,
                 DepartmentId,
                 CourseId,
+                null,
                 SemesterName,
                 entryPoint: "EnterAttendance");
 
@@ -670,6 +690,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),
@@ -707,6 +728,7 @@ public class PortalAttendanceCsvImportTests
             CampusId,
             DepartmentId,
             CourseId,
+            null,
             SemesterName,
             entryPoint: "EnterAttendance",
             csvFile: CreateCsvFile(csv),

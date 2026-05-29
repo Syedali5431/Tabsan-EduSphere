@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-30 (Attendance Filter Demo Seed v23 + Student Filter Mapping)
+
+### Module impact summary
+- No new module introduced; update remains within existing Attendance and Enrollment module behavior.
+- Full dummy seed now includes deterministic Attendance filter demo rows for DS-101/DB-201 `2026-S2` scenarios.
+- Attendance student filtering path now uses student profile identity end-to-end for correct record narrowing while preserving enrollment id usage for roster admin actions.
+- Post-deployment checks now include v23 marker and attendance filter-demo assertions.
+
+### Validation summary
+- Offering-level Attendance filters show deterministic seeded rows.
+- Student dropdown filter now narrows to the selected student record set correctly.
+
 ## Execution Update - 2026-05-30 (Announcements Demo Seed v22 + Filter Reliability)
 
 ### Module impact summary

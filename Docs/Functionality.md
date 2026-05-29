@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Filtering Reliability
+
+### Implementation sync
+- Upgraded `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v23`.
+- Added deterministic attendance filter demo cohort for DS-101/DB-201 (`2026-S2`) including:
+	- 3 demo student profiles,
+	- 6 enrollments (3 per offering),
+	- 6 attendance rows (3 per offering).
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v23 assertion and attendance filter demo row checks.
+- Fixed attendance student filter mapping so selected student filters records correctly (student profile id mapping path).
+
+### Validation sync
+- Attendance and Enter Attendance now show deterministic records for offering-level filter testing.
+- Student dropdown filtering now narrows records correctly instead of resetting to all students.
+
 ## 2026-05-30 Update - Announcements Demo Seed v22 and Show Inactive Reliability
 
 ### Implementation sync

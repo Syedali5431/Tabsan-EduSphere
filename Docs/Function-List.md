@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Filter Mapping Sync
+
+### Runtime additions
+- No new endpoint/method signature introduced in this slice.
+- Existing attendance/enrollment runtime surfaces were synchronized to fix student filter behavior without creating duplicate inventory entries:
+	- `EnrollmentController.GetRoster` (response contract extended with `StudentProfileId` while retaining enrollment `Id`)
+	- `EduApiClient.GetEnrollmentRosterAsync` (maps `StudentProfileId` for web usage)
+	- `PortalController.RenderAttendanceAsync` (student dropdown + roster filtering now use `StudentProfileId`)
+
+### Validation Summary
+- Deterministic attendance filter demo data added in `Scripts/03-FullDummyData.sql` with marker `FullDummyData-v23`.
+- `Scripts/05-PostDeployment-Checks.sql` extended with v23 and attendance filter demo assertions.
+- Attendance and Enter Attendance views now filter correctly when selecting a specific student.
+
 ## 2026-05-30 Update - Announcements Demo Seed v22 and Filter Binding Sync
 
 ### Runtime additions

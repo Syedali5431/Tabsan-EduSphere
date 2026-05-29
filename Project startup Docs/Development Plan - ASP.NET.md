@@ -1,3 +1,18 @@
+## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Mapping Reliability
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v23`.
+- Added deterministic attendance filter demo data for offerings `666...661` (DS-101) and `666...662` (DB-201):
+  - 3 student users/profiles,
+  - 6 enrollments,
+  - 6 attendance rows.
+- Updated roster response/web mapping to carry `StudentProfileId` and use it in Attendance student filtering.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v23 marker and attendance filter demo assertions.
+
+### Validation Summary:
+- Attendance and Enter Attendance offering/student filters now render deterministic seeded data for demo/testing.
+- Student filter selection now narrows records correctly (no silent reset to All Students).
+
 ## 2026-05-30 Update - Announcements Demo Seed v22 Filter Coverage
 
 ### Implementation Summary:

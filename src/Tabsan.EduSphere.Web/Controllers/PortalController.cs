@@ -2847,6 +2847,16 @@ public class PortalController : Controller
             var effectiveTenantId = sessionId?.IsSuperAdmin == true ? model.SelectedTenantId : sessionId?.TenantId;
             var effectiveCampusId = sessionId?.IsSuperAdmin == true ? model.SelectedCampusId : sessionId?.CampusId;
 
+            if (sessionId?.IsSuperAdmin == true
+                && (effectiveTenantId.HasValue ^ effectiveCampusId.HasValue))
+            {
+                model.Message = string.IsNullOrWhiteSpace(model.Message)
+                    ? "Select both tenant and campus to apply scoped attendance filters."
+                    : model.Message;
+                effectiveTenantId = null;
+                effectiveCampusId = null;
+            }
+
             if (sessionId?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -2942,7 +2952,7 @@ public class PortalController : Controller
                         .OrderBy(s => s.StudentName)
                         .Select(s => new LookupItem
                         {
-                            Id = s.Id,
+                            Id = s.StudentProfileId,
                             Name = string.IsNullOrWhiteSpace(s.RegistrationNumber)
                                 ? s.StudentName
                                 : $"{s.RegistrationNumber} - {s.StudentName}"
@@ -2959,7 +2969,7 @@ public class PortalController : Controller
                             .ToList();
 
                         model.Roster = model.Roster
-                            .Where(r => r.Id == model.SelectedStudentId.Value)
+                            .Where(r => r.StudentProfileId == model.SelectedStudentId.Value)
                             .ToList();
                     }
 
