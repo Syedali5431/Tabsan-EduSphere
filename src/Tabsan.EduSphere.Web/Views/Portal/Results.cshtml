@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = "Results"; }
 @{
     var currentAction = (ViewData["ResultsAction"] as string) ?? (ViewContext.RouteData.Values["action"]?.ToString() ?? "Results");
+    var canDownloadTemplate = Model.SelectedOfferingId.HasValue;
     var classSemesterLabel = (Model.Identity?.InstitutionType ?? 2) == 2 ? "Semester" : "Class";
     var semesterLabels = Model.SemesterOptions
         .Select((s, index) => new { s.Name, Label = (index + 1).ToString() })
@@ -17,6 +18,109 @@
         return semesterLabels.TryGetValue(semesterName, out var label)
             ? label
             : semesterName;
+    }
+
+    string NormalizeProposedDataLabel(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return string.Empty;
+        }
+
+        var normalized = key.Replace("-", " ", StringComparison.Ordinal)
+            .Replace("_", " ", StringComparison.Ordinal)
+            .Trim();
+
+        normalized = System.Text.RegularExpressions.Regex.Replace(normalized, "([a-z])([A-Z])", "$1 $2");
+
+        if (string.IsNullOrEmpty(normalized))
+        {
+            return string.Empty;
+        }
+
+        return char.ToUpperInvariant(normalized[0]) + normalized[1..];
+    }
+
+    string FormatProposedData(string? proposedData)
+    {
+        if (string.IsNullOrWhiteSpace(proposedData))
+        {
+            return "-";
+        }
+
+        static List<string> BuildFormattedParts(System.Text.Json.JsonElement element, Func<string, string> normalizeLabel)
+        {
+            var parts = new List<string>();
+            if (element.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return parts;
+            }
+
+            foreach (var property in element.EnumerateObject())
+            {
+                var label = normalizeLabel(property.Name);
+                var value = property.Value.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? property.Value.GetString() ?? string.Empty
+                    : property.Value.ToString();
+
+                value = value.Replace("-", " ", StringComparison.Ordinal)
+                    .Replace("_", " ", StringComparison.Ordinal)
+                    .Trim();
+
+                if (!string.IsNullOrWhiteSpace(label) && !string.IsNullOrWhiteSpace(value))
+                {
+                    parts.Add($"{label}: {value}");
+                }
+            }
+
+            return parts;
+        }
+
+        try
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(proposedData);
+            var formattedParts = BuildFormattedParts(json.RootElement, NormalizeProposedDataLabel);
+            if (formattedParts.Count == 0 && json.RootElement.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var nestedJson = json.RootElement.GetString();
+                if (!string.IsNullOrWhiteSpace(nestedJson))
+                {
+                    using var nested = System.Text.Json.JsonDocument.Parse(nestedJson);
+                    formattedParts = BuildFormattedParts(nested.RootElement, NormalizeProposedDataLabel);
+                }
+            }
+
+            if (formattedParts.Count > 0)
+            {
+                return string.Join(" | ", formattedParts);
+            }
+        }
+        catch
+        {
+            try
+            {
+                var trimmed = proposedData.Trim();
+                if (trimmed.Length > 1 && trimmed[0] == '"' && trimmed[^1] == '"')
+                {
+                    var unwrapped = System.Text.Json.JsonSerializer.Deserialize<string>(trimmed);
+                    if (!string.IsNullOrWhiteSpace(unwrapped))
+                    {
+                        using var nested = System.Text.Json.JsonDocument.Parse(unwrapped);
+                        var formattedParts = BuildFormattedParts(nested.RootElement, NormalizeProposedDataLabel);
+                        if (formattedParts.Count > 0)
+                        {
+                            return string.Join(" | ", formattedParts);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Keep original value if ProposedData is not valid JSON.
+            }
+        }
+
+        return proposedData;
     }
 }
 
@@ -207,7 +311,7 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <h2 class="h5 mb-0">Results <span class="badge bg-secondary ms-1">@Model.Results.Count</span></h2>
-                @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+                @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                 {
                     <div class="responsive-action-group">
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">
@@ -227,7 +331,12 @@ else
                             <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                             <input type="hidden" name="section" value="@Model.SelectedSection" />
                             <input type="hidden" name="batch" value="@Model.SelectedBatch" />
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">Template CSV</button>
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    disabled="@(!canDownloadTemplate)"
+                                    title="@(!canDownloadTemplate ? Model.SaveResultDisabledReason : null)">
+                                Get Template
+                            </button>
                         </form>
                         <form asp-action="ImportResultCsv" method="post" enctype="multipart/form-data" class="d-inline">
                             @Html.AntiForgeryToken()
@@ -248,7 +357,7 @@ else
                             <label class="form-check-label ms-1 me-1">
                                 <input type="checkbox" name="strictMode" value="true" class="form-check-input" /> strict
                             </label>
-                            <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">Import CSV</button>
+                            <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">Import Results</button>
                         </form>
                         @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
                         {
@@ -427,7 +536,7 @@ else
                                         <td>
                                             @* Only render the Promote button when a valid StudentProfileId is present.
                                                Rows without a profile ID (e.g., anonymous/test entries) skip this cell. *@
-                                            if (User.IsInRole("Faculty"))
+                                            @if (User.IsInRole("Faculty"))
                                             {
                                                 <button type="button" class="btn btn-xs btn-outline-warning btn-sm"
                                                         data-bs-toggle="modal" data-bs-target="#requestResultModificationModal"
@@ -436,13 +545,13 @@ else
                                                     Request Modify
                                                 </button>
                                             }
-                                            if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                                            @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                             {
                                                 <button type="button" class="btn btn-xs btn-outline-secondary btn-sm"
                                                         data-bs-toggle="modal" data-bs-target="#correctResultModal"
                                                         data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
                                                         data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
-                                                    Correct
+                                                    Update Result
                                                 </button>
                                             }
                                             @if (r.StudentProfileId != Guid.Empty)
@@ -725,7 +834,7 @@ else
                             <tr>
                                 <td>@req.Id<br /><small class="text-muted">@req.CreatedAt.ToLocalTime()</small></td>
                                 <td>@req.Reason</td>
-                                <td><code>@req.ProposedData</code></td>
+                                <td>@FormatProposedData(req.ProposedData)</td>
                                 <td>
                                     <form asp-action="ApproveResultModificationRequest" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()

@@ -283,7 +283,7 @@ else
                            asp-route-studentId="@Model.SelectedStudentId"
                            asp-route-semesterName="@Model.SelectedSemesterName"
                            asp-route-entryPoint="@attendanceAction">
-                            Download Template
+                            Get Template
                         </a>
 
                         @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
@@ -323,7 +323,7 @@ else
                                 <label class="form-check-label" for="strictMode">Strict mode</label>
                             </div>
                             <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
-                            <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import CSV</button>
+                            <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import Attendance</button>
                         </form>
                     </div>
                 }
@@ -381,11 +381,47 @@ else
         && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         && (!Model.SelectedOfferingId.HasValue || Model.Roster.Count == 0))
     {
+        var writeActionsDisabled = !Model.SelectedOfferingId.HasValue || !Model.CanSaveAttendance;
+
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-header bg-light">
                 <strong>Attendance Entry Table</strong>
             </div>
             <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <a class="btn btn-outline-secondary btn-sm"
+                       asp-action="DownloadAttendanceCsvTemplate"
+                       asp-route-offeringId="@Model.SelectedOfferingId"
+                       asp-route-tenantId="@Model.SelectedTenantId"
+                       asp-route-campusId="@Model.SelectedCampusId"
+                       asp-route-departmentId="@Model.SelectedDepartmentId"
+                       asp-route-courseId="@Model.SelectedCourseId"
+                       asp-route-studentId="@Model.SelectedStudentId"
+                       asp-route-semesterName="@Model.SelectedSemesterName"
+                       asp-route-entryPoint="@attendanceAction">
+                        Get Template
+                    </a>
+
+                    <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                        <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                        <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
+                        <input type="hidden" name="entryPoint" value="@attendanceAction" />
+                        <input type="hidden" name="strictMode" value="false" />
+                        <div class="form-check form-check-inline mb-0">
+                            <input class="form-check-input" type="checkbox" id="strictModeFallback" name="strictMode" value="true" checked disabled="@writeActionsDisabled" />
+                            <label class="form-check-label" for="strictModeFallback">Strict mode</label>
+                        </div>
+                        <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
+                        <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import Attendance</button>
+                    </form>
+                </div>
+
                 <div class="alert alert-warning py-2" role="alert">
                     @Model.SaveAttendanceDisabledReason
                 </div>

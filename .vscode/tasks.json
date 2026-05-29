@@ -1,0 +1,218 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run EduSphere API",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj",
+				"--launch-profile",
+				"http"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run EduSphere Web",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj",
+				"--launch-profile",
+				"http"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Kill EduSphere Processes",
+			"type": "shell",
+			"command": "taskkill",
+			"args": [
+				"/F",
+				"/IM",
+				"Tabsan.EduSphere.Web.exe",
+				"/IM",
+				"Tabsan.EduSphere.API.exe"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run EduSphere API A0384",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Run EduSphere Web A0384",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Kill API Process",
+			"type": "shell",
+			"command": "taskkill",
+			"args": [
+				"/F",
+				"/IM",
+				"Tabsan.EduSphere.API.exe"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run EduSphere API with EDUSPHERE_DB_CONNECTION",
+			"type": "shell",
+			"command": "$env:EDUSPHERE_DB_CONNECTION=\"Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30\"; Write-Host \"EDUSPHERE_DB_CONNECTION set\"; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Restart API with CLI ConnectionString",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.API.exe; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http -- --ConnectionStrings:DefaultConnection=\"Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30\"",
+			"isBackground": true
+		},
+		{
+			"label": "Run API via cmd env override",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.API.exe ; cmd /c \"set EDUSPHERE_DB_CONNECTION=Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30 && dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http\"",
+			"isBackground": true
+		},
+		{
+			"label": "Run API via cmd env override v2",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.API.exe ; cmd /c 'set EDUSPHERE_DB_CONNECTION=Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30 & dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http'",
+			"isBackground": true
+		},
+		{
+			"label": "Restart Web after identity fix",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.Web.exe ; dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Run CourseMaterial DB checks",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q \"SELECT 1 AS DbCheck\""
+		},
+		{
+			"label": "Run Db check query",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT 1 AS DbCheck'"
+		},
+		{
+			"label": "CourseMaterial unsupported extension count",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT ''CourseMaterialsUnsupportedFileExtensionCount'' AS CheckName, COUNT(1) AS [Value] FROM course_materials WHERE FileName IS NOT NULL AND LTRIM(RTRIM(FileName)) <> N'''' AND LOWER(CASE WHEN CHARINDEX(N''.'', REVERSE(FileName)) > 0 THEN RIGHT(FileName, CHARINDEX(N''.'', REVERSE(FileName))) ELSE N'''' END) NOT IN (N''.doc'', N''.docx'', N''.ppt'', N''.pptx'', N''.pdf'', N''.txt'', N''.xls'', N''.xlsx'', N''.jpg'', N''.jpeg'', N''.png'');'"
+		},
+		{
+			"label": "Inspect course_materials columns",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''course_materials'' ORDER BY ORDINAL_POSITION;'"
+		},
+		{
+			"label": "Run updated extension checks",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT ''CourseMaterialsUnsupportedFileExtensionCount'' AS CheckName, COUNT(1) AS [Value] FROM course_materials WHERE FilePath IS NOT NULL AND LTRIM(RTRIM(FilePath)) <> N'''' AND LOWER(CASE WHEN CHARINDEX(N''.'', REVERSE(FilePath)) > 0 THEN RIGHT(FilePath, CHARINDEX(N''.'', REVERSE(FilePath))) ELSE N'''' END) NOT IN (N''.doc'', N''.docx'', N''.ppt'', N''.pptx'', N''.pdf'', N''.txt'', N''.xls'', N''.xlsx'', N''.jpg'', N''.jpeg'', N''.png''); WITH ext AS (SELECT LOWER(CASE WHEN FilePath IS NULL OR LTRIM(RTRIM(FilePath)) = N'''' THEN N'''' WHEN CHARINDEX(N''.'', REVERSE(FilePath)) > 0 THEN RIGHT(FilePath, CHARINDEX(N''.'', REVERSE(FilePath))) ELSE N'''' END) AS [Extension] FROM course_materials) SELECT ''CourseMaterialsAllowedFileExtensionCount_'' + [Extension] AS CheckName, COUNT(1) AS [Value] FROM ext WHERE [Extension] IN (N''.doc'', N''.docx'', N''.ppt'', N''.pptx'', N''.pdf'', N''.txt'', N''.xls'', N''.xlsx'', N''.jpg'', N''.jpeg'', N''.png'') GROUP BY [Extension] ORDER BY [Extension];'"
+		},
+		{
+			"label": "Run post-deployment checks script",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -i \"Scripts\\05-PostDeployment-Checks.sql\""
+		},
+		{
+			"label": "Validate FullDummyData new demo blocks",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -i \"Scripts\\03-FullDummyData.sql\""
+		},
+		{
+			"label": "Verify new dummy sample data",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q \"SELECT 'TimetableAdminDemo_Timetables' AS CheckName, COUNT(1) AS [Value] FROM timetables WHERE Id IN ('25252525-2525-2525-2525-252525252701','25252525-2525-2525-2525-252525252702'); SELECT 'TimetableAdminDemo_Entries' AS CheckName, COUNT(1) AS [Value] FROM timetable_entries WHERE Id IN ('26262626-2626-2626-2626-262626262801','26262626-2626-2626-2626-262626262802','26262626-2626-2626-2626-262626262803'); SELECT 'CourseMaterialsDemo_Count' AS CheckName, COUNT(1) AS [Value] FROM course_materials WHERE Id IN ('27272727-2727-2727-2727-272727272701','27272727-2727-2727-2727-272727272702','27272727-2727-2727-2727-272727272703','27272727-2727-2727-2727-272727272704','27272727-2727-2727-2727-272727272705');\""
+		},
+		{
+			"label": "Verify new dummy sample data (fixed quoting)",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT ''TimetableAdminDemo_Timetables'' AS CheckName, COUNT(1) AS [Value] FROM timetables WHERE Id IN (''25252525-2525-2525-2525-252525252701'',''25252525-2525-2525-2525-252525252702''); SELECT ''TimetableAdminDemo_Entries'' AS CheckName, COUNT(1) AS [Value] FROM timetable_entries WHERE Id IN (''26262626-2626-2626-2626-262626262801'',''26262626-2626-2626-2626-262626262802'',''26262626-2626-2626-2626-262626262803''); SELECT ''CourseMaterialsDemo_Count'' AS CheckName, COUNT(1) AS [Value] FROM course_materials WHERE Id IN (''27272727-2727-2727-2727-272727272701'',''27272727-2727-2727-2727-272727272702'',''27272727-2727-2727-2727-272727272703'',''27272727-2727-2727-2727-272727272704'',''27272727-2727-2727-2727-272727272705'');'"
+		},
+		{
+			"label": "Git status check",
+			"type": "shell",
+			"command": "git status --short ; git branch --show-current ; git remote -v"
+		},
+		{
+			"label": "Git pull rebase autostash",
+			"type": "shell",
+			"command": "git pull --rebase --autostash origin main"
+		},
+		{
+			"label": "Stage repo updates",
+			"type": "shell",
+			"command": "git add Scripts/01-Schema-Current.sql Scripts/02-Seed-Core.sql Scripts/03-FullDummyData.sql Scripts/04-Maintenance-Indexes-And-Views.sql Scripts/05-PostDeployment-Checks-Clean.sql Scripts/05-PostDeployment-Checks.sql src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs src/Tabsan.EduSphere.Web/Services/EduApiClient.cs src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml ; git status --short"
+		},
+		{
+			"label": "Commit repository updates",
+			"type": "shell",
+			"command": "git commit -m \"Update course material upload, seed data, and DB validation scripts\""
+		},
+		{
+			"label": "Commit repository updates (fixed quoting)",
+			"type": "shell",
+			"command": "git commit -m 'Update course material upload, seed data, and DB validation scripts'"
+		},
+		{
+			"label": "Push main to origin",
+			"type": "shell",
+			"command": "git push origin main"
+		},
+		{
+			"label": "Final pull confirmation",
+			"type": "shell",
+			"command": "git pull --rebase origin main ; git status --short"
+		},
+		{
+			"label": "Run API Updated A0384",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Kill locked API process 40772",
+			"type": "shell",
+			"command": "taskkill /PID 40772 /F"
+		},
+		{
+			"label": "Run API Updated A0384 Retry",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Kill EduSphere API",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.API.exe",
+			"isBackground": false
+		},
+		{
+			"label": "Kill EduSphere Web",
+			"type": "shell",
+			"command": "taskkill /F /IM Tabsan.EduSphere.Web.exe",
+			"isBackground": false
+		},
+		{
+			"label": "Run API Updated A0384 Clean",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj --launch-profile http",
+			"isBackground": true
+		},
+		{
+			"label": "Run Web Updated A0384 Clean",
+			"type": "shell",
+			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http",
+			"isBackground": true
+		}
+	]
+}
