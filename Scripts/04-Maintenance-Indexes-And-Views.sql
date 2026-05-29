@@ -141,6 +141,16 @@ END
     ON courses (DepartmentId, IsActive);
   END
 
+  IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+  AND COL_LENGTH('courses', 'IsActive') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_courses_scope_active' AND object_id = OBJECT_ID('courses'))
+  BEGIN
+    CREATE INDEX IX_courses_scope_active
+    ON courses (TenantId, CampusId, InstitutionType, IsActive);
+  END
+
   IF COL_LENGTH('course_offerings', 'SemesterId') IS NOT NULL
   AND COL_LENGTH('course_offerings', 'IsOpen') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_offerings_semester_open' AND object_id = OBJECT_ID('course_offerings'))
@@ -155,6 +165,45 @@ END
   BEGIN
     CREATE INDEX IX_course_offerings_faculty_open
     ON course_offerings (FacultyUserId, IsOpen);
+  END
+
+  IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+  AND COL_LENGTH('course_offerings', 'IsOpen') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_offerings_scope_open' AND object_id = OBJECT_ID('course_offerings'))
+  BEGIN
+    CREATE INDEX IX_course_offerings_scope_open
+    ON course_offerings (TenantId, CampusId, InstitutionType, IsOpen);
+  END
+
+  IF OBJECT_ID(N'course_materials') IS NOT NULL
+  BEGIN
+    IF COL_LENGTH('course_materials', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'DepartmentId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'AcademicProgramId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'SemesterId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CourseId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'MaterialType') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'IsActive') IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_materials_scope_lookup' AND object_id = OBJECT_ID('course_materials'))
+    BEGIN
+      CREATE INDEX IX_course_materials_scope_lookup
+      ON course_materials (TenantId, CampusId, DepartmentId, AcademicProgramId, SemesterId, CourseId, MaterialType, IsActive);
+    END
+
+    IF COL_LENGTH('course_materials', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'DepartmentId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CourseId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'IsActive') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CreatedAt') IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_materials_scope_active_sort' AND object_id = OBJECT_ID('course_materials'))
+    BEGIN
+      CREATE INDEX IX_course_materials_scope_active_sort
+      ON course_materials (TenantId, CampusId, DepartmentId, CourseId, IsActive, CreatedAt DESC);
+    END
   END
 
   IF COL_LENGTH('student_profiles', 'DepartmentId') IS NOT NULL
@@ -309,6 +358,26 @@ END
     CREATE INDEX IX_users_scope_role_department_active
     ON users (TenantId, CampusId, RoleId, DepartmentId, IsActive)
     INCLUDE (Id, Username);
+  END
+
+  IF COL_LENGTH('buildings', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('buildings', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('buildings', 'Code') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_buildings_scope_code' AND object_id = OBJECT_ID('buildings'))
+  BEGIN
+    CREATE UNIQUE INDEX IX_buildings_scope_code
+    ON buildings (TenantId, CampusId, Code);
+  END
+
+  IF COL_LENGTH('rooms', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('rooms', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('rooms', 'BuildingId') IS NOT NULL
+  AND COL_LENGTH('rooms', 'Number') IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_rooms_scope_building_number' AND object_id = OBJECT_ID('rooms'))
+  BEGIN
+    CREATE UNIQUE INDEX IX_rooms_scope_building_number
+    ON rooms (TenantId, CampusId, BuildingId, Number)
+    WHERE TenantId IS NOT NULL AND CampusId IS NOT NULL;
   END
 
   IF COL_LENGTH('registration_whitelist', 'IdentifierType') IS NOT NULL

@@ -181,6 +181,155 @@ BEGIN
       AND [CampusId] IS NOT NULL;
 END;
 
+IF COL_LENGTH('buildings', 'TenantId') IS NOT NULL AND COL_LENGTH('buildings', 'CampusId') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Buildings.ScopeColumnsPresent',
+        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'3'
+    FROM [buildings]
+    WHERE [Id] IN (
+            '23232323-2323-2323-2323-232323232301',
+            '23232323-2323-2323-2323-232323232302',
+            '23232323-2323-2323-2323-232323232303'
+    )
+      AND [TenantId] IS NOT NULL
+      AND [CampusId] IS NOT NULL;
+END;
+
+IF COL_LENGTH('rooms', 'TenantId') IS NOT NULL AND COL_LENGTH('rooms', 'CampusId') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Rooms.ScopeColumnsPresent',
+        CASE WHEN COUNT(1) = 6 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'6'
+    FROM [rooms]
+    WHERE [Id] IN (
+            '24242424-2424-2424-2424-242424242401',
+            '24242424-2424-2424-2424-242424242402',
+            '24242424-2424-2424-2424-242424242403',
+            '24242424-2424-2424-2424-242424242404',
+            '24242424-2424-2424-2424-242424242405',
+            '24242424-2424-2424-2424-242424242406'
+    )
+      AND [TenantId] IS NOT NULL
+      AND [CampusId] IS NOT NULL;
+END;
+
+IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
+   AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+   AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'Courses.ScopeColumnsPresent',
+        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'3'
+    FROM (VALUES
+        (COL_LENGTH('courses', 'TenantId')),
+        (COL_LENGTH('courses', 'CampusId')),
+        (COL_LENGTH('courses', 'InstitutionType'))
+    ) v([len])
+    WHERE v.[len] IS NOT NULL;
+END;
+
+IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+   AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+   AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'CourseOfferings.ScopeColumnsPresent',
+        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'3'
+    FROM (VALUES
+        (COL_LENGTH('course_offerings', 'TenantId')),
+        (COL_LENGTH('course_offerings', 'CampusId')),
+        (COL_LENGTH('course_offerings', 'InstitutionType'))
+    ) v([len])
+    WHERE v.[len] IS NOT NULL;
+END;
+
+IF OBJECT_ID(N'[course_materials]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'CourseMaterials.TablePresent',
+        1,
+        N'1',
+        N'1';
+
+    IF COL_LENGTH('course_materials', 'TenantId') IS NOT NULL
+       AND COL_LENGTH('course_materials', 'CampusId') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'CourseMaterials.ScopeColumnsPresent',
+            CASE WHEN COUNT(1) = 2 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'2'
+        FROM (VALUES
+            (COL_LENGTH('course_materials', 'TenantId')),
+            (COL_LENGTH('course_materials', 'CampusId'))
+        ) v([len])
+        WHERE v.[len] IS NOT NULL;
+    END;
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'IndexExists.IX_course_materials_scope_lookup',
+        CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_materials_scope_lookup' AND [object_id] = OBJECT_ID(N'course_materials')) THEN 1 ELSE 0 END,
+        CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_materials_scope_lookup' AND [object_id] = OBJECT_ID(N'course_materials')) THEN N'1' ELSE N'0' END,
+        N'1';
+
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'IndexExists.IX_course_materials_scope_active_sort',
+        CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_materials_scope_active_sort' AND [object_id] = OBJECT_ID(N'course_materials')) THEN 1 ELSE 0 END,
+        CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_materials_scope_active_sort' AND [object_id] = OBJECT_ID(N'course_materials')) THEN N'1' ELSE N'0' END,
+        N'1';
+
+    IF COL_LENGTH('course_materials', 'FilePath') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'CourseMaterials.UnsupportedFileExtensions',
+            CASE WHEN COUNT(1) = 0 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'0'
+        FROM [course_materials]
+        WHERE [FilePath] IS NOT NULL
+          AND LTRIM(RTRIM([FilePath])) <> N''
+          AND LOWER(
+                CASE
+                    WHEN CHARINDEX(N'.', REVERSE([FilePath])) > 0
+                    THEN RIGHT([FilePath], CHARINDEX(N'.', REVERSE([FilePath])))
+                    ELSE N''
+                END
+              ) NOT IN (N'.doc', N'.docx', N'.ppt', N'.pptx', N'.pdf', N'.txt', N'.xls', N'.xlsx', N'.jpg', N'.jpeg', N'.png');
+    END;
+END;
+
+IF OBJECT_ID(N'[admin_department_assignments]') IS NOT NULL
+BEGIN
+    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+    SELECT
+        N'AdminAssignments.CoreAdminPresent',
+        CASE WHEN COUNT(1) >= 1 THEN 1 ELSE 0 END,
+        CAST(COUNT(1) AS NVARCHAR(20)),
+        N'>=1'
+    FROM [admin_department_assignments] a
+    WHERE a.[AdminUserId] = '66666666-6666-6666-6666-666666666602'
+      AND a.[DepartmentId] = '21000000-0000-0000-0000-000000000001'
+      AND a.[RemovedAt] IS NULL;
+END;
+
 /* 4) Modules + status */
 DECLARE @RequiredModules TABLE ([Key] NVARCHAR(50) PRIMARY KEY);
 INSERT INTO @RequiredModules ([Key]) VALUES

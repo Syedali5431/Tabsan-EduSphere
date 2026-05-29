@@ -813,31 +813,31 @@ WHERE NOT EXISTS (SELECT 1 FROM [courses] x WHERE x.[Id] = c.Id);
 /* 6.1) Buildings, rooms, and timetable parity coverage */
 IF OBJECT_ID(N'[buildings]') IS NOT NULL
 BEGIN
-    DECLARE @Buildings TABLE (Id UNIQUEIDENTIFIER, [Name] NVARCHAR(100), [Code] NVARCHAR(20));
+    DECLARE @Buildings TABLE (Id UNIQUEIDENTIFIER, [Name] NVARCHAR(100), [Code] NVARCHAR(20), InstitutionType INT, TenantId UNIQUEIDENTIFIER, CampusId UNIQUEIDENTIFIER);
     INSERT INTO @Buildings VALUES
-    ('23232323-2323-2323-2323-232323232301', N'University Block A', N'BLD-U1'),
-    ('23232323-2323-2323-2323-232323232302', N'College Commerce Block', N'BLD-C1'),
-    ('23232323-2323-2323-2323-232323232303', N'School Language Block', N'BLD-S1');
+    ('23232323-2323-2323-2323-232323232301', N'University Block A', N'BLD-U1', 2, @UniTenantId, @UniCampusId),
+    ('23232323-2323-2323-2323-232323232302', N'College Commerce Block', N'BLD-C1', 1, @ColTenantId, @ColCampusId),
+    ('23232323-2323-2323-2323-232323232303', N'School Language Block', N'BLD-S1', 0, @SchTenantId, @SchCampusId);
 
-    INSERT INTO [buildings] ([Id], [Name], [Code], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT b.[Id], b.[Name], b.[Code], 1, @Now, NULL, 0, NULL
+    INSERT INTO [buildings] ([Id], [TenantId], [CampusId], [Name], [Code], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT b.[Id], b.[TenantId], b.[CampusId], b.[Name], b.[Code], 1, @Now, NULL, 0, NULL
     FROM @Buildings b
     WHERE NOT EXISTS (SELECT 1 FROM [buildings] x WHERE x.[Id] = b.[Id]);
 END
 
 IF OBJECT_ID(N'[rooms]') IS NOT NULL
 BEGIN
-    DECLARE @Rooms TABLE (Id UNIQUEIDENTIFIER, [Number] NVARCHAR(50), BuildingId UNIQUEIDENTIFIER, Capacity INT);
+    DECLARE @Rooms TABLE (Id UNIQUEIDENTIFIER, [Number] NVARCHAR(50), BuildingId UNIQUEIDENTIFIER, Capacity INT, TenantId UNIQUEIDENTIFIER, CampusId UNIQUEIDENTIFIER);
     INSERT INTO @Rooms VALUES
-    ('24242424-2424-2424-2424-242424242401', N'U-101', '23232323-2323-2323-2323-232323232301', 70),
-    ('24242424-2424-2424-2424-242424242402', N'U-201', '23232323-2323-2323-2323-232323232301', 55),
-    ('24242424-2424-2424-2424-242424242403', N'C-101', '23232323-2323-2323-2323-232323232302', 60),
-    ('24242424-2424-2424-2424-242424242404', N'C-202', '23232323-2323-2323-2323-232323232302', 45),
-    ('24242424-2424-2424-2424-242424242405', N'S-101', '23232323-2323-2323-2323-232323232303', 40),
-    ('24242424-2424-2424-2424-242424242406', N'S-102', '23232323-2323-2323-2323-232323232303', 35);
+    ('24242424-2424-2424-2424-242424242401', N'U-101', '23232323-2323-2323-2323-232323232301', 70, @UniTenantId, @UniCampusId),
+    ('24242424-2424-2424-2424-242424242402', N'U-201', '23232323-2323-2323-2323-232323232301', 55, @UniTenantId, @UniCampusId),
+    ('24242424-2424-2424-2424-242424242403', N'C-101', '23232323-2323-2323-2323-232323232302', 60, @ColTenantId, @ColCampusId),
+    ('24242424-2424-2424-2424-242424242404', N'C-202', '23232323-2323-2323-2323-232323232302', 45, @ColTenantId, @ColCampusId),
+    ('24242424-2424-2424-2424-242424242405', N'S-101', '23232323-2323-2323-2323-232323232303', 40, @SchTenantId, @SchCampusId),
+    ('24242424-2424-2424-2424-242424242406', N'S-102', '23232323-2323-2323-2323-232323232303', 35, @SchTenantId, @SchCampusId);
 
-    INSERT INTO [rooms] ([Id], [Number], [BuildingId], [Capacity], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT r.[Id], r.[Number], r.[BuildingId], r.[Capacity], 1, @Now, NULL, 0, NULL
+    INSERT INTO [rooms] ([Id], [TenantId], [CampusId], [Number], [BuildingId], [Capacity], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT r.[Id], r.[TenantId], r.[CampusId], r.[Number], r.[BuildingId], r.[Capacity], 1, @Now, NULL, 0, NULL
     FROM @Rooms r
     WHERE NOT EXISTS (SELECT 1 FROM [rooms] x WHERE x.[Id] = r.[Id]);
 END
@@ -1080,6 +1080,123 @@ BEGIN
     SELECT te.[Id], te.[TimetableId], te.[DayOfWeek], te.[StartTime], te.[EndTime], te.[SubjectName], te.[RoomNumber], te.[FacultyName], te.[RoomId], @Now, NULL, te.[BuildingId], te.[CourseId], te.[FacultyUserId]
     FROM @TargetClassEntries te
     WHERE NOT EXISTS (SELECT 1 FROM [timetable_entries] x WHERE x.[Id] = te.[Id]);
+END
+
+/* 6.4) Timetable Admin-focused demo pack (draft + publish workflow friendly) */
+IF OBJECT_ID(N'[timetables]') IS NOT NULL
+BEGIN
+    DECLARE @TimetableAdminDemo TABLE
+    (
+        Id UNIQUEIDENTIFIER,
+        DepartmentId UNIQUEIDENTIFIER,
+        AcademicProgramId UNIQUEIDENTIFIER,
+        SemesterId UNIQUEIDENTIFIER,
+        EffectiveDate DATE,
+        SemesterNumber INT,
+        IsPublished BIT
+    );
+
+    INSERT INTO @TimetableAdminDemo VALUES
+    ('25252525-2525-2525-2525-252525252701', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '2026-08-15', 3, 0),
+    ('25252525-2525-2525-2525-252525252702', '11111111-1111-1111-1111-111111111112', '22222222-2222-2222-2222-222222222214', '33333333-3333-3333-3333-333333333335', '2026-08-15', 3, 0);
+
+    INSERT INTO [timetables] ([Id], [DepartmentId], [AcademicProgramId], [SemesterId], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [EffectiveDate], [SemesterNumber])
+    SELECT
+        t.[Id],
+        t.[DepartmentId],
+        t.[AcademicProgramId],
+        t.[SemesterId],
+        t.[IsPublished],
+        CASE WHEN t.[IsPublished] = 1 THEN @Now ELSE NULL END,
+        @Now,
+        NULL,
+        0,
+        NULL,
+        t.[EffectiveDate],
+        t.[SemesterNumber]
+    FROM @TimetableAdminDemo t
+    WHERE NOT EXISTS (SELECT 1 FROM [timetables] x WHERE x.[Id] = t.[Id]);
+END
+
+IF OBJECT_ID(N'[timetable_entries]') IS NOT NULL
+BEGIN
+    DECLARE @TimetableAdminDemoEntries TABLE
+    (
+        Id UNIQUEIDENTIFIER,
+        TimetableId UNIQUEIDENTIFIER,
+        DayOfWeek INT,
+        StartTime TIME,
+        EndTime TIME,
+        SubjectName NVARCHAR(200),
+        RoomNumber NVARCHAR(50),
+        FacultyName NVARCHAR(200),
+        RoomId UNIQUEIDENTIFIER,
+        BuildingId UNIQUEIDENTIFIER,
+        CourseId UNIQUEIDENTIFIER,
+        FacultyUserId UNIQUEIDENTIFIER
+    );
+
+    INSERT INTO @TimetableAdminDemoEntries VALUES
+    ('26262626-2626-2626-2626-262626262801', '25252525-2525-2525-2525-252525252701', 1, '09:00:00', '10:30:00', N'Timetable Admin Demo - Programming Fundamentals', N'U-101', N'faculty.cs.1', '24242424-2424-2424-2424-242424242401', '23232323-2323-2323-2323-232323232301', '44444444-4444-4444-4444-444444444401', '77777777-7777-7777-7777-777777777711'),
+    ('26262626-2626-2626-2626-262626262802', '25252525-2525-2525-2525-252525252701', 3, '10:45:00', '12:15:00', N'Timetable Admin Demo - Data Structures', N'U-201', N'faculty.cs.2', '24242424-2424-2424-2424-242424242402', '23232323-2323-2323-2323-232323232301', '44444444-4444-4444-4444-444444444402', '77777777-7777-7777-7777-777777777712'),
+    ('26262626-2626-2626-2626-262626262803', '25252525-2525-2525-2525-252525252702', 2, '11:00:00', '12:30:00', N'Timetable Admin Demo - Principles of Management', N'C-101', N'faculty.bus.1', '24242424-2424-2424-2424-242424242403', '23232323-2323-2323-2323-232323232302', '44444444-4444-4444-4444-444444444408', '77777777-7777-7777-7777-777777777714');
+
+    INSERT INTO [timetable_entries] ([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName], [RoomId], [CreatedAt], [UpdatedAt], [BuildingId], [CourseId], [FacultyUserId])
+    SELECT te.[Id], te.[TimetableId], te.[DayOfWeek], te.[StartTime], te.[EndTime], te.[SubjectName], te.[RoomNumber], te.[FacultyName], te.[RoomId], @Now, NULL, te.[BuildingId], te.[CourseId], te.[FacultyUserId]
+    FROM @TimetableAdminDemoEntries te
+    WHERE NOT EXISTS (SELECT 1 FROM [timetable_entries] x WHERE x.[Id] = te.[Id]);
+END
+
+/* 6.5) Course Materials demo pack for portal testing */
+IF OBJECT_ID(N'[course_materials]') IS NOT NULL
+BEGIN
+    DECLARE @CourseMaterialsDemo TABLE
+    (
+        Id UNIQUEIDENTIFIER,
+        TenantId UNIQUEIDENTIFIER,
+        CampusId UNIQUEIDENTIFIER,
+        DepartmentId UNIQUEIDENTIFIER,
+        AcademicProgramId UNIQUEIDENTIFIER,
+        SemesterId UNIQUEIDENTIFIER,
+        CourseId UNIQUEIDENTIFIER,
+        [Name] NVARCHAR(300),
+        [Description] NVARCHAR(MAX),
+        LinkUrl NVARCHAR(1024),
+        FilePath NVARCHAR(1024),
+        MaterialType INT,
+        CreatedByUserId UNIQUEIDENTIFIER,
+        IsActive BIT
+    );
+
+    INSERT INTO @CourseMaterialsDemo VALUES
+    ('27272727-2727-2727-2727-272727272701', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444401', N'Programming Fundamentals - Demo Outline', N'Demo handout for Course Material page tests.', N'https://demo.tabsan.local/materials/pf-outline', N'dev/course-materials/demo/pf-outline.pdf', 3, '66666666-6666-6666-6666-666666666611', 1),
+    ('27272727-2727-2727-2727-272727272702', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444402', N'Data Structures - Demo Slides', N'Slides file for demo download checks.', NULL, N'dev/course-materials/demo/data-structures-slides.pptx', 1, '66666666-6666-6666-6666-666666666611', 1),
+    ('27272727-2727-2727-2727-272727272703', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444403', N'Algorithms - External Reference', N'Link-only material used to validate Link mode rendering.', N'https://demo.tabsan.local/materials/algorithms-reference', NULL, 2, '66666666-6666-6666-6666-666666666611', 1),
+    ('27272727-2727-2727-2727-272727272704', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333336', '44444444-4444-4444-4444-444444444404', N'Database Systems - Lab Sheet', N'Lab sheet file for semester filter scenarios.', NULL, N'dev/course-materials/demo/database-lab-sheet.docx', 1, '66666666-6666-6666-6666-666666666611', 1),
+    ('27272727-2727-2727-2727-272727272705', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444405', N'Web Development - Archive Sample', N'Inactive material used for ActiveOnly filter checks.', N'https://demo.tabsan.local/materials/web-archive', N'dev/course-materials/demo/web-archive.txt', 3, '66666666-6666-6666-6666-666666666611', 0);
+
+    INSERT INTO [course_materials] ([Id], [TenantId], [CampusId], [DepartmentId], [AcademicProgramId], [SemesterId], [CourseId], [Name], [Description], [LinkUrl], [FilePath], [MaterialType], [CreatedByUserId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        cm.[Id],
+        cm.[TenantId],
+        cm.[CampusId],
+        cm.[DepartmentId],
+        cm.[AcademicProgramId],
+        cm.[SemesterId],
+        cm.[CourseId],
+        cm.[Name],
+        cm.[Description],
+        NULLIF(cm.[LinkUrl], N''),
+        NULLIF(cm.[FilePath], N''),
+        cm.[MaterialType],
+        cm.[CreatedByUserId],
+        cm.[IsActive],
+        @Now,
+        NULL,
+        0,
+        NULL
+    FROM @CourseMaterialsDemo cm
+    WHERE NOT EXISTS (SELECT 1 FROM [course_materials] x WHERE x.[Id] = cm.[Id]);
 END
 
 /* 7) Course offerings (Spring 2026 and beyond) - Massively expanded */

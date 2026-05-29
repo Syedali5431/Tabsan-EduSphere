@@ -176,6 +176,81 @@ SELECT 'DepartmentsTenantIdColumnExists' AS [CheckName],
 SELECT 'DepartmentsCampusIdColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('departments', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
 
+SELECT 'BuildingsTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('buildings', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'BuildingsCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('buildings', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'RoomsTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('rooms', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'RoomsCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('rooms', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CoursesTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('courses', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CoursesCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('courses', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CoursesInstitutionTypeColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('courses', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseOfferingsTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('course_offerings', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseOfferingsCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('course_offerings', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseOfferingsInstitutionTypeColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('course_offerings', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseMaterialsTableExists' AS [CheckName],
+	CASE WHEN OBJECT_ID('course_materials') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseMaterialsTenantIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('course_materials', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'CourseMaterialsCampusIdColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('course_materials', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+IF OBJECT_ID(N'course_materials') IS NOT NULL
+AND COL_LENGTH('course_materials', 'FilePath') IS NOT NULL
+BEGIN
+	SELECT 'CourseMaterialsUnsupportedFileExtensionCount' AS [CheckName],
+		COUNT(1) AS [Value]
+	FROM course_materials
+	WHERE FilePath IS NOT NULL
+	  AND LTRIM(RTRIM(FilePath)) <> N''
+	  AND LOWER(
+		CASE
+			WHEN CHARINDEX(N'.', REVERSE(FilePath)) > 0
+			THEN RIGHT(FilePath, CHARINDEX(N'.', REVERSE(FilePath)))
+			ELSE N''
+		END
+	  ) NOT IN (N'.doc', N'.docx', N'.ppt', N'.pptx', N'.pdf', N'.txt', N'.xls', N'.xlsx', N'.jpg', N'.jpeg', N'.png');
+
+	SELECT
+		'CourseMaterialsAllowedFileExtensionCount_' + ext.[Extension] AS [CheckName],
+		COUNT(1) AS [Value]
+	FROM course_materials cm
+	CROSS APPLY
+	(
+		SELECT LOWER(
+			CASE
+				WHEN cm.FilePath IS NULL OR LTRIM(RTRIM(cm.FilePath)) = N'' THEN N''
+				WHEN CHARINDEX(N'.', REVERSE(cm.FilePath)) > 0
+				THEN RIGHT(cm.FilePath, CHARINDEX(N'.', REVERSE(cm.FilePath)))
+				ELSE N''
+			END
+		) AS [Extension]
+	) ext
+	WHERE ext.[Extension] IN (N'.doc', N'.docx', N'.ppt', N'.pptx', N'.pdf', N'.txt', N'.xls', N'.xlsx', N'.jpg', N'.jpeg', N'.png')
+	GROUP BY ext.[Extension]
+	ORDER BY ext.[Extension];
+END;
+
 SELECT
 	'DepartmentsInstitutionTypeColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('departments', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
@@ -201,6 +276,32 @@ SELECT 'IndexExists_IX_users_active_phone' AS [CheckName],
 
 SELECT 'IndexExists_IX_departments_scope_institution' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_scope_institution' AND object_id = OBJECT_ID('departments')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_buildings_scope_code' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_buildings_scope_code' AND object_id = OBJECT_ID('buildings')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_rooms_scope_building_number' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_rooms_scope_building_number' AND object_id = OBJECT_ID('rooms')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_courses_scope_active' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_courses_scope_active' AND object_id = OBJECT_ID('courses')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_course_offerings_scope_open' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_offerings_scope_open' AND object_id = OBJECT_ID('course_offerings')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_course_materials_scope_lookup' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_materials_scope_lookup' AND object_id = OBJECT_ID('course_materials')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'IndexExists_IX_course_materials_scope_active_sort' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_course_materials_scope_active_sort' AND object_id = OBJECT_ID('course_materials')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'CoreAdminAssignmentExists' AS [CheckName],
+	CASE WHEN EXISTS (
+		SELECT 1
+		FROM admin_department_assignments a
+		WHERE a.AdminUserId = '66666666-6666-6666-6666-666666666602'
+		  AND a.DepartmentId = '21000000-0000-0000-0000-000000000001'
+		  AND a.RemovedAt IS NULL) THEN 1 ELSE 0 END AS [Value];
 
 SELECT 'IndexExists_IX_users_scope_role_department_active' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_scope_role_department_active' AND object_id = OBJECT_ID('users')) THEN 1 ELSE 0 END AS [Value];

@@ -873,6 +873,65 @@ GO
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
+)
+BEGIN
+    IF COL_LENGTH('courses', 'CampusId') IS NULL
+        ALTER TABLE [courses] ADD [CampusId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('courses', 'InstitutionType') IS NULL
+        ALTER TABLE [courses] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_courses_InstitutionType] DEFAULT(3);
+
+    IF COL_LENGTH('courses', 'TenantId') IS NULL
+        ALTER TABLE [courses] ADD [TenantId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('course_offerings', 'CampusId') IS NULL
+        ALTER TABLE [course_offerings] ADD [CampusId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
+        ALTER TABLE [course_offerings] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_course_offerings_InstitutionType] DEFAULT(3);
+
+    IF COL_LENGTH('course_offerings', 'TenantId') IS NULL
+        ALTER TABLE [course_offerings] ADD [TenantId] uniqueidentifier NULL;
+
+    UPDATE c
+    SET
+        c.[TenantId] = d.[TenantId],
+        c.[CampusId] = d.[CampusId],
+        c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
+    FROM [courses] c
+    INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+    WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
+
+    UPDATE o
+    SET
+        o.[TenantId] = c.[TenantId],
+        o.[CampusId] = c.[CampusId],
+        o.[InstitutionType] = c.[InstitutionType]
+    FROM [course_offerings] o
+    INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
+    WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
+
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_scope_active' AND [object_id] = OBJECT_ID(N'[courses]'))
+        CREATE INDEX [IX_courses_scope_active] ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
+
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_scope_open' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
+        CREATE INDEX [IX_course_offerings_scope_open] ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260523021000_Phase47_CourseInstitutionScope', N'8.0.4');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
@@ -2778,6 +2837,8 @@ IF NOT EXISTS (
 BEGIN
     CREATE TABLE [buildings] (
         [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
         [Name] nvarchar(100) NOT NULL,
         [Code] nvarchar(20) NOT NULL,
         [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit),
@@ -2798,6 +2859,8 @@ IF NOT EXISTS (
 BEGIN
     CREATE TABLE [rooms] (
         [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
         [Number] nvarchar(50) NOT NULL,
         [BuildingId] uniqueidentifier NOT NULL,
         [Capacity] int NULL,
@@ -2890,9 +2953,9 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_buildings_code' AND [object_id] = OBJECT_ID(N'[buildings]'))
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_buildings_scope_code' AND [object_id] = OBJECT_ID(N'[buildings]'))
     BEGIN
-        CREATE UNIQUE INDEX [IX_buildings_code] ON [buildings] ([Code]);
+        CREATE UNIQUE INDEX [IX_buildings_scope_code] ON [buildings] ([TenantId], [CampusId], [Code]);
     END;
 END;
 GO
@@ -2902,9 +2965,10 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260429230253_Phase9TimetableRedesign'
 )
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rooms_building_number' AND [object_id] = OBJECT_ID(N'[rooms]'))
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_rooms_scope_building_number' AND [object_id] = OBJECT_ID(N'[rooms]'))
     BEGIN
-        CREATE UNIQUE INDEX [IX_rooms_building_number] ON [rooms] ([BuildingId], [Number]);
+        CREATE UNIQUE INDEX [IX_rooms_scope_building_number] ON [rooms] ([TenantId], [CampusId], [BuildingId], [Number])
+            WHERE [TenantId] IS NOT NULL AND [CampusId] IS NOT NULL;
     END;
 END;
 GO

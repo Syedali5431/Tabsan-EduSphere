@@ -270,6 +270,26 @@ BEGIN
     );
 END
 
+/* 4.2) Baseline admin-to-department assignment for menu-scoped pages */
+IF OBJECT_ID(N'[admin_department_assignments]') IS NOT NULL
+BEGIN
+    DECLARE @CoreAdminUserId UNIQUEIDENTIFIER = CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER);
+    DECLARE @CoreAdminDepartmentId UNIQUEIDENTIFIER = CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+
+    IF EXISTS (SELECT 1 FROM [users] WHERE [Id] = @CoreAdminUserId)
+       AND EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @CoreAdminDepartmentId)
+       AND NOT EXISTS (
+           SELECT 1
+           FROM [admin_department_assignments] a
+           WHERE a.[AdminUserId] = @CoreAdminUserId
+             AND a.[DepartmentId] = @CoreAdminDepartmentId
+             AND a.[RemovedAt] IS NULL)
+    BEGIN
+        INSERT INTO [admin_department_assignments] ([Id], [AdminUserId], [DepartmentId], [AssignedAt], [RemovedAt], [CreatedAt], [UpdatedAt])
+        VALUES (NEWID(), @CoreAdminUserId, @CoreAdminDepartmentId, @Now, NULL, @Now, NULL);
+    END
+END
+
 /* 5) Baseline report definitions + role assignments */
 -- Normalize legacy report keys from older seed scripts to current underscore keys.
 UPDATE [report_definitions]

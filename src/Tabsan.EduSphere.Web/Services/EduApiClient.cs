@@ -652,9 +652,35 @@ public class EduApiClient : IEduApiClient
     public SessionIdentity? GetSessionIdentity()
     {
         var raw = ReadCookie(IdentityKey);
-        if (string.IsNullOrWhiteSpace(raw)) return null;
-        try { return JsonSerializer.Deserialize<SessionIdentity>(raw, _jsonOptions); }
-        catch { return null; }
+        if (!string.IsNullOrWhiteSpace(raw))
+        {
+            try
+            {
+                var cached = JsonSerializer.Deserialize<SessionIdentity>(raw, _jsonOptions);
+                if (cached is not null)
+                    return cached;
+            }
+            catch
+            {
+                // Fall through to token-based reconstruction.
+            }
+        }
+
+        // Session cookies can become stale after restarts; recover identity from current access token.
+        var token = GetConnection().AccessToken;
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        var reconstructed = DecodeJwtIdentity(token);
+        if (string.IsNullOrWhiteSpace(reconstructed.UserName)
+            && string.IsNullOrWhiteSpace(reconstructed.Email)
+            && reconstructed.Roles.Count == 0)
+        {
+            return null;
+        }
+
+        WriteCookie(IdentityKey, JsonSerializer.Serialize(reconstructed, _jsonOptions));
+        return reconstructed;
     }
 
     public async Task<StudentProfileSummaryItem?> GetMyStudentProfileAsync(CancellationToken ct)
@@ -785,7 +811,14 @@ public class EduApiClient : IEduApiClient
             ? "api/v1/course"
             : $"api/v1/course?{string.Join("&", query)}";
 
-        return await GetAsync<List<LookupItem>>(path, ct) ?? new();
+        var raw = await GetAsync<List<CourseDetailDto>>(path, ct) ?? new();
+        return raw.Select(c => new LookupItem
+        {
+            Id = c.Id,
+            Name = !string.IsNullOrWhiteSpace(c.Title)
+                ? c.Title
+                : (c.Code ?? string.Empty)
+        }).ToList();
     }
 
     public Task<List<FacultyLookupItem>> GetFacultyAsync(CancellationToken ct)

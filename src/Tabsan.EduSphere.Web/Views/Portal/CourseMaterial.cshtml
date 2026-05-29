@@ -240,8 +240,8 @@ else
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Upload File</label>
-                                                        <input type="file" name="materialFile" class="form-control" />
-                                                        <div class="form-text">Optional. Uploading replaces the current file path.</div>
+                                                        <input type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
+                                                        <div class="form-text">Optional. Uploading replaces the current file path. Allowed: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG.</div>
                                                     </div>
                                                     <div class="form-check">
                                                         <input type="hidden" name="isActive" value="false" />
@@ -351,8 +351,8 @@ else
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Upload File</label>
-                        <input type="file" name="materialFile" class="form-control" />
-                        <div class="form-text">Allowed types: PDF, DOC, DOCX, JPG, PNG. Max 5 MB.</div>
+                        <input type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
+                        <div class="form-text">Allowed types: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG. Max 5 MB.</div>
                     </div>
                     <input type="hidden" name="fileName" value="" />
                     <input type="hidden" name="fileSizeBytes" value="" />
