@@ -1,3 +1,13 @@
+## Execution Update - 2026-05-29 (Rubric/Gradebook Demo Data Expansion)
+
+### Module impact summary
+- No new module introduced; updates remain within existing Rubric Management and Gradebook module data surfaces.
+- Demo seed now includes graded submissions for offering `55555555-5555-5555-5555-555555555513` to stabilize rubric demo visibility.
+- Demo seed now includes offering-513 `Practical` result rows to improve fallback-component gradebook verification.
+
+### Validation summary
+- Post-deployment checks now include dataset-version v17 and offering-513 rubric/practical data assertions.
+
 ## Execution Update - 2026-05-28 (Enter Results Acceptance Criteria Closure)
 
 ## Execution Update - 2026-05-29 (Institution-Aware Gradebook Metrics)

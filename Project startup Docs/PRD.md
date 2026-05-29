@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-29 - Product Requirements Synchronization (Rubric/Gradebook Demo Data Depth)
+- Runtime delivery in this slice:
+  - Expanded full dummy seed with rubric-friendly graded submissions for offering `55555555-5555-5555-5555-555555555513`.
+  - Added offering-513 `Practical` result rows to support gradebook fallback-component demo/testing behavior.
+  - Updated demo dataset marker to `FullDummyData-v17`.
+- Compatibility boundary:
+  - No API contract, route, or schema structure changes.
+  - Update is additive seed-data coverage for demo and QA reliability.
+- Validation Summary:
+  - Post-deployment checks now assert v17 dataset marker plus new offering-513 rubric/practical sample coverage.
+
 ### 2026-05-29 - Product Requirements Synchronization (Institution-Aware Gradebook Output)
 - Runtime delivery in this slice:
   - Enforced institution-driven gradebook output mode.

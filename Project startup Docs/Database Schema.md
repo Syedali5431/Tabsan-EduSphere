@@ -1,3 +1,16 @@
+## 2026-05-29 Update - Demo Seed v17 Rubric/Gradebook Coverage (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v17`.
+	- Added additive rows only:
+		- graded submissions for offering `55555555-5555-5555-5555-555555555513`,
+		- `Practical` result rows for offering `55555555-5555-5555-5555-555555555513`.
+	- Updated `Scripts/05-PostDeployment-Checks.sql` to verify the new dataset marker and seeded rows.
+- Validation Summary:
+	- SQL changes remain idempotent and data-only.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure (Schema Posture)
 
 ## 2026-05-29 Update - Institution-Aware Gradebook Demo Seed Coverage (Schema Posture)

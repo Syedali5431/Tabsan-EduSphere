@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - Demo Seed Expansion (Rubric/Gradebook)
+
+### Runtime additions
+- No new application-layer function signature was added in this synchronization slice.
+- Existing `GradebookService.GetGradebookAsync` fallback behavior is now backed by additional demo rows in SQL seed data for validation scenarios.
+
+### Validation Summary
+- Extended `Scripts/03-FullDummyData.sql` with offering `55555555-5555-5555-5555-555555555513` sample submissions and `Practical` result rows.
+- Extended `Scripts/05-PostDeployment-Checks.sql` with rubric submission and offering-513 practical-result verification checks.
+
 ## 2026-05-29 Update - Institution-Aware Gradebook Function Inventory
 
 ### Runtime additions

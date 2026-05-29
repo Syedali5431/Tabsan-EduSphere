@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV15' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV17' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v15';
+	AND DemoValue = N'FullDummyData-v17';
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
@@ -737,6 +737,29 @@ SELECT 'DummySeed_ResultRows_CollegeSessionalCount' AS [CheckName], COUNT(1) AS 
 FROM [results]
 WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555516' AS UNIQUEIDENTIFIER)
 	AND [ResultType] = N'Sessional';
+
+SELECT 'DummySeed_RubricManage_Offering513_AssignmentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [assignments]
+WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+	AND [IsDeleted] = 0;
+
+SELECT 'DummySeed_RubricManage_Offering513_RubricCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [rubrics] r
+INNER JOIN [assignments] a ON a.[Id] = r.[AssignmentId]
+WHERE a.[CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+	AND r.[IsActive] = 1
+	AND r.[IsDeleted] = 0;
+
+SELECT 'DummySeed_RubricManage_Offering513_SubmissionCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [assignment_submissions] s
+INNER JOIN [assignments] a ON a.[Id] = s.[AssignmentId]
+WHERE a.[CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+    AND s.[Status] = N'Graded';
+
+SELECT 'DummySeed_ResultRows_Offering513_PracticalCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
+    AND [ResultType] = N'Practical';
 
 SELECT 'DummySeed_ResultModificationRequests_ResultEntrySectionCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [teacher_modification_requests]
@@ -1103,10 +1126,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v15' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v17' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v15';
+			AND [DemoValue] = N'FullDummyData-v17';
 END;
 
 PRINT 'Post-deployment checks completed.';

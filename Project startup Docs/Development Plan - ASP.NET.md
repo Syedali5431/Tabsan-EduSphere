@@ -1,3 +1,16 @@
+## 2026-05-29 Update - Demo Seed v17 (Rubric/Gradebook Stability)
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v17`.
+- Added seeded graded assignment submissions for offering `55555555-5555-5555-5555-555555555513`.
+- Added offering-513 `Practical` result rows to improve fallback-component gradebook demo/testing.
+
+### Validation Summary:
+- Updated `Scripts/05-PostDeployment-Checks.sql` to verify:
+  - dataset marker `FullDummyData-v17`,
+  - offering-513 rubric submission availability,
+  - offering-513 practical result availability.
+
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure
 
 ## 2026-05-29 Update - Institution-Aware Gradebook Metrics

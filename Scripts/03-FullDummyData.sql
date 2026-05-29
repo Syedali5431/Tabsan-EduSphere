@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v15', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v17', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v15',
+    SET [DemoValue] = N'FullDummyData-v17',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1486,6 +1486,7 @@ INSERT INTO @Assignments VALUES
 ('99999999-9999-9999-9999-999999999905', '55555555-5555-5555-5555-555555555505', N'Web Development Project', DATEADD(day, 28, @Now), 40.00),
 ('99999999-9999-9999-9999-999999999906', '55555555-5555-5555-5555-555555555507', N'Management Case Study', DATEADD(day, 14, @Now), 30.00),
 ('99999999-9999-9999-9999-999999999907', '55555555-5555-5555-5555-555555555508', N'Marketing Plan', DATEADD(day, 16, @Now), 35.00),
+('99999999-9999-9999-9999-999999999911', '55555555-5555-5555-5555-555555555513', N'Biology Practical Workbook', DATEADD(day, 11, @Now), 25.00),
 ('99999999-9999-9999-9999-999999999908', '55555555-5555-5555-5555-555555555514', N'Commerce Assignment', DATEADD(day, 12, @Now), 20.00),
 ('99999999-9999-9999-9999-999999999909', '55555555-5555-5555-5555-555555555517', N'Mathematics Problem Set', DATEADD(day, 8, @Now), 15.00),
 ('99999999-9999-9999-9999-999999999910', '55555555-5555-5555-5555-555555555518', N'Science Experiment Report', DATEADD(day, 18, @Now), 20.00);
@@ -1518,7 +1519,10 @@ INSERT INTO @Submissions VALUES
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa13', '99999999-9999-9999-9999-999999999908', '99999999-9999-9999-9999-999999999932', 18.00, '77777777-7777-7777-7777-777777777721'),
 -- SCHOOL assignments
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa14', '99999999-9999-9999-9999-999999999909', '99999999-9999-9999-9999-999999999941', 14.00, '77777777-7777-7777-7777-777777777731'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa15', '99999999-9999-9999-9999-999999999909', '99999999-9999-9999-9999-999999999942', 13.00, '77777777-7777-7777-7777-777777777731');
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa15', '99999999-9999-9999-9999-999999999909', '99999999-9999-9999-9999-999999999942', 13.00, '77777777-7777-7777-7777-777777777731'),
+-- RUBRIC manage demo submissions for offering 513 (Biology practical workbook)
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa16', '99999999-9999-9999-9999-999999999911', '99999999-9999-9999-9999-999999999934', 21.00, '77777777-7777-7777-7777-777777777719'),
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa17', '99999999-9999-9999-9999-999999999911', '99999999-9999-9999-9999-999999999935', 23.00, '77777777-7777-7777-7777-777777777719');
 
 INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [MarksAwarded], [Feedback], [GradedAt], [GradedByUserId], [Status], [CreatedAt], [UpdatedAt])
 SELECT s.Id, s.AssignmentId, s.StudentProfileId, NULL, N'Demo answer content', @Now, s.Marks, N'Good work', @Now, s.GradedByUserId, N'Graded', @Now, NULL
@@ -1681,7 +1685,10 @@ BEGIN
     ('cccccccc-cccc-cccc-cccc-cccccccccc34', '99999999-9999-9999-9999-999999999934', '55555555-5555-5555-5555-555555555516', N'Sessional', 38.00, 50.00, '77777777-7777-7777-7777-777777777723'),
     ('cccccccc-cccc-cccc-cccc-cccccccccc35', '99999999-9999-9999-9999-999999999935', '55555555-5555-5555-5555-555555555516', N'Sessional', 42.00, 50.00, '77777777-7777-7777-7777-777777777723'),
     ('cccccccc-cccc-cccc-cccc-cccccccccc36', '99999999-9999-9999-9999-999999999941', '55555555-5555-5555-5555-555555555517', N'ClassTest', 18.00, 20.00, '77777777-7777-7777-7777-777777777731'),
-    ('cccccccc-cccc-cccc-cccc-cccccccccc37', '99999999-9999-9999-9999-999999999942', '55555555-5555-5555-5555-555555555517', N'ClassTest', 16.00, 20.00, '77777777-7777-7777-7777-777777777731');
+    ('cccccccc-cccc-cccc-cccc-cccccccccc37', '99999999-9999-9999-9999-999999999942', '55555555-5555-5555-5555-555555555517', N'ClassTest', 16.00, 20.00, '77777777-7777-7777-7777-777777777731'),
+    -- Practical rows intentionally rely on fallback component derivation when no explicit rule exists
+    ('cccccccc-cccc-cccc-cccc-cccccccccc38', '99999999-9999-9999-9999-999999999934', '55555555-5555-5555-5555-555555555513', N'Practical', 21.00, 25.00, '77777777-7777-7777-7777-777777777719'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc39', '99999999-9999-9999-9999-999999999935', '55555555-5555-5555-5555-555555555513', N'Practical', 23.00, 25.00, '77777777-7777-7777-7777-777777777719');
 
     INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
     SELECT r.Id, r.StudentProfileId, r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks, 1, @Now, r.PublishedByUserId, @Now, NULL

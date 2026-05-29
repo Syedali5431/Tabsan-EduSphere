@@ -1,3 +1,16 @@
+## 2026-05-29 Update - Rubric/Gradebook Demo Data Expansion
+
+### Implementation sync
+- Added explicit rubric demo submissions for offering `55555555-5555-5555-5555-555555555513` so Rubric Management assignment data always appears for seeded demo runs.
+- Added offering-513 `Practical` result rows to strengthen fallback-component gradebook demo/testing coverage.
+- Bumped dummy seed metadata version to `FullDummyData-v17`.
+
+### Validation sync
+- Post-deployment checks now validate:
+	- dataset version `FullDummyData-v17`,
+	- rubric submissions for offering 513,
+	- practical result rows for offering 513.
+
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure
 
 ## 2026-05-29 Update - Institution-Aware Gradebook Metrics
