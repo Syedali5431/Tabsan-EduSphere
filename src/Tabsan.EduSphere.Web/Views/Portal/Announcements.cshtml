@@ -58,17 +58,29 @@
     }
     <div class="col-md-4">
         <label class="form-label">Course Offering</label>
-        <select name="offeringId" class="form-select" onchange="this.form.submit()">
-            @foreach (var o in Model.Offerings)
-            {
-                <option value="@o.Id" selected="@(Model.OfferingId == o.Id ? "selected" : null)">@o.Name</option>
-            }
-        </select>
+        @if (Model.Offerings.Any())
+        {
+            var hasCurrentOffering = Model.Offerings.Any(o => o.Id == Model.OfferingId);
+            <select name="offeringId" class="form-select" onchange="this.form.submit()">
+                @if (!hasCurrentOffering && Model.OfferingId != System.Guid.Empty)
+                {
+                    <option value="@Model.OfferingId" selected="selected">Current offering (@Model.OfferingId)</option>
+                }
+                @foreach (var o in Model.Offerings)
+                {
+                    <option value="@o.Id" selected="@(Model.OfferingId == o.Id ? "selected" : null)">@o.Name</option>
+                }
+            </select>
+        }
+        else
+        {
+            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <input class="form-control" value="Current offering (@Model.OfferingId)" readonly />
+        }
     </div>
     <div class="col-md-2">
         <div class="form-check mt-2">
-            <input type="hidden" name="includeInactive" value="false" />
-            <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" checked="@(Model.IncludeInactive ? "checked" : null)" onchange="this.form.submit()" />
+            <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) onchange="this.form.submit()" />
             <label class="form-check-label" for="includeInactive">Show inactive</label>
         </div>
     </div>

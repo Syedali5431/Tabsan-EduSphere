@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v21', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v22', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v21',
+    SET [DemoValue] = N'FullDummyData-v22',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2581,6 +2581,29 @@ BEGIN
         FROM [course_announcements] x
         WHERE x.[OfferingId] = ob.[Id] AND x.[Title] = a.[Title]
     );
+
+    /* Deterministic announcement rows for Show inactive demo/testing coverage */
+    INSERT INTO [course_announcements] ([Id], [OfferingId], [AuthorId], [Title], [Body], [PostedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        a.[Id],
+        a.[OfferingId],
+        COALESCE((SELECT TOP 1 o.[FacultyUserId] FROM [course_offerings] o WHERE o.[Id] = a.[OfferingId]), @SuperAdminUserId),
+        a.[Title],
+        a.[Body],
+        a.[PostedAt],
+        a.[CreatedAt],
+        NULL,
+        a.[IsDeleted],
+        a.[DeletedAt]
+    FROM
+    (
+        VALUES
+            (CAST('A1010101-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER), N'QA Active Announcement A', N'Dummy data for filter verification (active, offering A).', DATEADD(minute, -20, @Now), DATEADD(minute, -20, @Now), CAST(0 AS BIT), CAST(NULL AS DATETIME2)),
+            (CAST('A1010101-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER), N'QA Inactive Announcement A', N'Dummy data for filter verification (inactive, offering A).', DATEADD(minute, -15, @Now), DATEADD(minute, -15, @Now), CAST(1 AS BIT), DATEADD(minute, -10, @Now)),
+            (CAST('A1010101-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), CAST('55555555-5555-5555-5555-555555555502' AS UNIQUEIDENTIFIER), N'QA Active Announcement B', N'Dummy data for filter verification (active, offering B).', DATEADD(minute, -12, @Now), DATEADD(minute, -12, @Now), CAST(0 AS BIT), CAST(NULL AS DATETIME2))
+    ) a([Id], [OfferingId], [Title], [Body], [PostedAt], [CreatedAt], [IsDeleted], [DeletedAt])
+    WHERE EXISTS (SELECT 1 FROM [course_offerings] o WHERE o.[Id] = a.[OfferingId])
+      AND NOT EXISTS (SELECT 1 FROM [course_announcements] x WHERE x.[Id] = a.[Id]);
 END
 
 IF OBJECT_ID(N'[course_content_modules]') IS NOT NULL

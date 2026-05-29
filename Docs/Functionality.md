@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Announcements Demo Seed v22 and Show Inactive Reliability
+
+### Implementation sync
+- Upgraded `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v22`.
+- Added deterministic announcement demo rows (active/inactive across two offerings) so Show inactive and offering filters are consistently testable.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v22 dataset assertion and deterministic announcement filter-demo checks.
+- Updated Announcements web filter form binding to prevent false override when Show inactive is checked.
+
+### Validation sync
+- Show inactive now consistently returns inactive announcements when checked.
+- Offering-specific filter behavior is deterministic with seeded demo rows and explicit post-deployment assertions.
+
 ## 2026-05-29 Update - Discussion Demo Seed v21 (Offering Filter Coverage)
 
 ### Implementation sync

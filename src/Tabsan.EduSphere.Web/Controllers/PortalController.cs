@@ -9048,7 +9048,7 @@ public class PortalController : Controller
 
     // Final-Touches Phase 20 Stage 20.4 — announcements
     [HttpGet]
-    public async Task<IActionResult> Announcements(Guid offeringId, bool includeInactive = true, CancellationToken ct = default)
+    public async Task<IActionResult> Announcements(Guid offeringId, bool includeInactive = false, CancellationToken ct = default)
     {
         ViewData["Title"] = "Announcements";
         var session = _api.GetSessionIdentity();

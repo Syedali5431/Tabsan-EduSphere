@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Announcements Demo Seed v22 and Filter Reliability Sync (2026-05-30)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v22` and added deterministic announcements sample rows for active/inactive filter testing.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v22 dataset marker checks and deterministic announcement seed verification checks.
+  - Fixed Announcements filter binding conflict by removing duplicate GET parameter submission path and setting `PortalController.Announcements` default `includeInactive=false`.
+- Validation Summary:
+  - `dotnet build src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj -v minimal`.
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -Q "SET NOCOUNT ON; SELECT CONVERT(varchar(36), Id) AS Id, CONVERT(varchar(36), OfferingId) AS OfferingId, Title, IsDeleted FROM course_announcements WHERE Id IN ('A1010101-0000-0000-0000-000000000001','A1010101-0000-0000-0000-000000000002','A1010101-0000-0000-0000-000000000003') ORDER BY Title;"`.
+  - Browser verification: `/Portal/Announcements` offering filter + Show inactive checked/unchecked states.
+
 ### Enter Results Phase 0/1 Initial Completion - Access Control Navigation and Entry Route (2026-05-28)
 - Implementation Summary:
   - Added governed sidebar menu key `enter_results` with label **Enter Results** under Faculty Related.

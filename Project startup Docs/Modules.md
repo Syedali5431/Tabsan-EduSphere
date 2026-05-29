@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-30 (Announcements Demo Seed v22 + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Announcements module behavior.
+- Full dummy seed now includes deterministic active/inactive announcement rows across two offerings for stable demo/test coverage.
+- Announcements filter form binding is now reliable for Show inactive toggle behavior.
+- Post-deployment checks now include v22 dataset marker validation and announcement filter-demo assertions.
+
+### Validation summary
+- Show inactive behavior now consistently returns inactive announcement rows when checked.
+- Offering-scoped announcement filtering remains stable with deterministic seeded records.
+
 ## Execution Update - 2026-05-29 (Discussion Demo Seed v21 Filter Coverage)
 
 ### Module impact summary

@@ -1,3 +1,14 @@
+## 2026-05-30 Update - Announcements Demo Seed v22 (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v22`.
+	- Added additive deterministic records in existing `course_announcements` table for active/inactive multi-offering filter demo scenarios.
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v22 marker assertion and deterministic announcements seed verification checks.
+- Validation Summary:
+	- SQL changes are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-29 Update - Discussion Demo Seed v21 Filter Coverage (Schema Posture)
 
 - Implementation Summary:

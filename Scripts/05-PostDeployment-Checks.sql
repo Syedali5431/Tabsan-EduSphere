@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV21' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV22' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v21';
+	AND DemoValue = N'FullDummyData-v22';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -751,6 +751,35 @@ WHERE [IsDeleted] = 0
 		CAST('20202020-2020-2020-2020-202020202004' AS UNIQUEIDENTIFIER),
 		CAST('20202020-2020-2020-2020-202020202005' AS UNIQUEIDENTIFIER)
 	);
+
+SELECT 'DummySeed_Announcements_FilterDemoRowsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_announcements]
+WHERE [Id] IN (
+	CAST('A1010101-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER),
+	CAST('A1010101-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER),
+	CAST('A1010101-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_Announcements_Offering501_ActiveCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_announcements]
+WHERE [IsDeleted] = 0
+	AND [OfferingId] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
+	AND [Id] IN (
+		CAST('A1010101-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER),
+		CAST('A1010101-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_Announcements_Offering501_InactiveCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_announcements]
+WHERE [IsDeleted] = 1
+	AND [OfferingId] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('A1010101-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_Announcements_Offering502_ActiveCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_announcements]
+WHERE [IsDeleted] = 0
+	AND [OfferingId] = CAST('55555555-5555-5555-5555-555555555502' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('A1010101-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER);
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
@@ -1186,10 +1215,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v21' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v22' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v21';
+			AND [DemoValue] = N'FullDummyData-v22';
 END;
 
 PRINT 'Post-deployment checks completed.';

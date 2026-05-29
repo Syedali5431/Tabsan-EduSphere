@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Announcements Demo Seed v22 + Filter Reliability)
+- Runtime delivery in this slice:
+  - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v22`.
+  - Added deterministic announcement sample rows for two offerings, including one inactive row for Show inactive verification.
+  - Fixed Announcements filter binding in web UI so checked Show inactive reliably propagates.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v22 marker assertion and announcement filter-demo dataset checks.
+- Compatibility boundary:
+  - No API route rename and no new endpoint contract.
+  - Update is additive seed/check coverage plus UI query-binding reliability fix.
+- Validation Summary:
+  - Demo and testing runs now consistently validate offering filter + Show inactive behavior using deterministic data.
+
 ### 2026-05-29 - Product Requirements Synchronization (Discussion Demo Seed v21 Filter Coverage)
 - Runtime delivery in this slice:
   - Expanded Discussion demo dataset in `Scripts/03-FullDummyData.sql` with additional offering-scoped thread/reply records.

@@ -1,3 +1,15 @@
+## 2026-05-30 Update - Announcements Demo Seed v22 Filter Coverage
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v22`.
+- Added deterministic announcement seed rows for active/inactive + multi-offering filter verification scenarios.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v22 marker checks and deterministic announcements coverage checks.
+- Applied Announcements web filter binding fix so Show inactive reliably submits true when checked.
+
+### Validation Summary:
+- Announcements offering filter and Show inactive behavior can now be validated repeatedly with deterministic seeded data.
+- Post-deployment checks now explicitly verify v22 and seeded announcement demo rows.
+
 ## 2026-05-29 Update - Discussion Demo Seed v21 Filter Coverage
 
 ### Implementation Summary:

@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Announcements Demo Seed v22 and Filter Binding Sync
+
+### Runtime additions
+- No new runtime function signature was introduced in this synchronization slice.
+- Existing Announcements runtime surfaces remain authoritative (no duplicate function inventory rows added):
+	- `PortalController.Announcements`
+	- `PortalController.CreateAnnouncement`
+	- `PortalController.SetAnnouncementActive`
+	- `PortalController.DeleteAnnouncement`
+	- `EduApiClient.GetAnnouncementsAsync`
+	- `AnnouncementController.GetAnnouncements`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` upgraded to `FullDummyData-v22` and now includes deterministic active/inactive announcement seed rows for offering filter demos.
+- `Scripts/05-PostDeployment-Checks.sql` now validates the v22 marker and deterministic announcements filter dataset counts.
+- Announcements web filter binding fix is synchronized by removing conflicting `includeInactive=false` hidden input and defaulting `PortalController.Announcements` query flag to `false`.
+
 ## 2026-05-29 Update - Discussion Demo Seed v21 and Filter Verification Sync
 
 ### Runtime additions
