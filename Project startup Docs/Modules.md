@@ -1,5 +1,18 @@
 ## Execution Update - 2026-05-28 (Enter Results Acceptance Criteria Closure)
 
+## Execution Update - 2026-05-29 (Institution-Aware Gradebook Metrics)
+
+### Module impact summary
+- Gradebook module now executes institution-aware aggregate mode selection:
+  - University context: GPA + CGPA.
+  - School/College context: Percentage.
+- Institution-scoped component rules are now used by gradebook aggregation.
+- Demo module validation now includes school ClassTest and college Sessional sample rows in full seed data.
+
+### Validation summary
+- Unit tests passed (`197/197`) after repository contract extension updates.
+- Runtime validation confirmed expected aggregate columns and non-error rendering across university and non-university offerings.
+
 ### Module impact summary
 - No new module introduced; this slice closes AC1-AC6 with evidence alignment across existing Enter Results runtime and tests.
 - Closure confirms scoped write, import report lifecycle, and publish/correction governance expectations are satisfied.

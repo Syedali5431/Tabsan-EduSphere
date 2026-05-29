@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - Institution-Aware Gradebook Function Inventory
+
+### Runtime additions
+| Function / Method | Purpose | File |
+|---|---|---|
+| IGradebookRepository.GetInstitutionTypeForOfferingAsync | Resolves offering-specific institution mode so gradebook output switches between GPA/CGPA and percentage behavior. | src/Tabsan.EduSphere.Domain/Interfaces/IGradebookRepository.cs |
+| GradebookRepository.GetInstitutionTypeForOfferingAsync | Reads institution type from the selected course offering in one scoped query. | src/Tabsan.EduSphere.Infrastructure/Repositories/GradebookRubricRepositories.cs |
+| IResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Returns active result components for the requested institution scope. | src/Tabsan.EduSphere.Domain/Interfaces/IResultRepository.cs |
+| ResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Applies institution filtering for active component rules and keeps legacy fallback behavior. | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentResultRepositories.cs |
+| GradebookService.GetGradebookAsync | Builds institution-aware aggregates: University weighted-total to GPA + CGPA, School/College percentage; includes fallback component derivation from existing result types when configured rules are missing. | src/Tabsan.EduSphere.Application/Assignments/GradebookService.cs |
+
+### Validation Summary
+- Unit test suite passed (`197/197`) after repository-contract updates in test stubs.
+- Runtime verification confirmed mixed behavior on seeded offerings:
+	- university offering renders GPA and CGPA columns,
+	- school/college offerings render Percentage column.
+
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Function Closure
 
 ### Runtime additions

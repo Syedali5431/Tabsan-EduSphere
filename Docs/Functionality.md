@@ -1,5 +1,21 @@
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure
 
+## 2026-05-29 Update - Institution-Aware Gradebook Metrics
+
+### Implementation sync
+- Gradebook output is now institution-aware:
+	- University context shows GPA and CGPA.
+	- School/College context shows Percentage.
+- Active gradebook components are now resolved per institution type.
+- Added resilience behavior for demo/testing: when no institution component rule is configured, components are inferred from existing result types in the selected offering.
+- Seed data now includes school and college component-specific result rows (ClassTest and Sessional) to verify percentage behavior with optional component mixes.
+
+### Validation sync
+- Unit tests passed (`197/197`) after repository interface alignment.
+- Runtime verification confirmed:
+	- university sample offering renders GPA/CGPA,
+	- school/college sample offerings render Percentage and load without component errors.
+
 ### Implementation sync
 - Confirmed closure of AC1-AC6 across role access, scoped manual/CSV entry, validation/error messaging, import audit/report lifecycle, token one-time+expiry behavior, and publish/correction governance.
 - No additional runtime contract was introduced in this closure slice; this phase consolidates evidence mapping and verification status.

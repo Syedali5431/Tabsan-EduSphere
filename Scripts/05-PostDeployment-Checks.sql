@@ -704,14 +704,39 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV14' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV15' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v14';
+	AND DemoValue = N'FullDummyData-v15';
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
 WHERE [Status] = N'Active';
+
+SELECT 'DummySeed_ResultComponentRules_UniversityCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [result_component_rules]
+WHERE [InstitutionType] = 0
+	AND [IsActive] = 1;
+
+SELECT 'DummySeed_ResultComponentRules_SchoolCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [result_component_rules]
+WHERE [InstitutionType] = 1
+	AND [IsActive] = 1;
+
+SELECT 'DummySeed_ResultComponentRules_CollegeCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [result_component_rules]
+WHERE [InstitutionType] = 2
+	AND [IsActive] = 1;
+
+SELECT 'DummySeed_ResultRows_SchoolClassTestCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555517' AS UNIQUEIDENTIFIER)
+	AND [ResultType] = N'ClassTest';
+
+SELECT 'DummySeed_ResultRows_CollegeSessionalCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555516' AS UNIQUEIDENTIFIER)
+	AND [ResultType] = N'Sessional';
 
 SELECT 'DummySeed_ResultModificationRequests_ResultEntrySectionCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [teacher_modification_requests]
@@ -1078,10 +1103,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v14' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v15' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v14';
+			AND [DemoValue] = N'FullDummyData-v15';
 END;
 
 PRINT 'Post-deployment checks completed.';

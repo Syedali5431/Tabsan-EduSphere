@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v14', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v15', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v14',
+    SET [DemoValue] = N'FullDummyData-v15',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1676,7 +1676,12 @@ BEGIN
     ('cccccccc-cccc-cccc-cccc-cccccccccc31', '99999999-9999-9999-9999-999999999942', '55555555-5555-5555-5555-555555555517', N'Final', 82.00, 100.00, '77777777-7777-7777-7777-777777777731'),
     -- SCHOOL Offering 2 results
     ('cccccccc-cccc-cccc-cccc-cccccccccc32', '99999999-9999-9999-9999-999999999943', '55555555-5555-5555-5555-555555555518', N'Final', 85.00, 100.00, '77777777-7777-7777-7777-777777777732'),
-    ('cccccccc-cccc-cccc-cccc-cccccccccc33', '99999999-9999-9999-9999-999999999944', '55555555-5555-5555-5555-555555555518', N'Final', 78.00, 100.00, '77777777-7777-7777-7777-777777777732');
+    ('cccccccc-cccc-cccc-cccc-cccccccccc33', '99999999-9999-9999-9999-999999999944', '55555555-5555-5555-5555-555555555518', N'Final', 78.00, 100.00, '77777777-7777-7777-7777-777777777732'),
+    -- College/sessional and school/class-test demo rows for institution-aware percentage gradebook views
+    ('cccccccc-cccc-cccc-cccc-cccccccccc34', '99999999-9999-9999-9999-999999999934', '55555555-5555-5555-5555-555555555516', N'Sessional', 38.00, 50.00, '77777777-7777-7777-7777-777777777723'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc35', '99999999-9999-9999-9999-999999999935', '55555555-5555-5555-5555-555555555516', N'Sessional', 42.00, 50.00, '77777777-7777-7777-7777-777777777723'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc36', '99999999-9999-9999-9999-999999999941', '55555555-5555-5555-5555-555555555517', N'ClassTest', 18.00, 20.00, '77777777-7777-7777-7777-777777777731'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc37', '99999999-9999-9999-9999-999999999942', '55555555-5555-5555-5555-555555555517', N'ClassTest', 16.00, 20.00, '77777777-7777-7777-7777-777777777731');
 
     INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
     SELECT r.Id, r.StudentProfileId, r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks, 1, @Now, r.PublishedByUserId, @Now, NULL
@@ -2302,13 +2307,17 @@ BEGIN
     BEGIN
         SET @ResultComponentSql = N'
             INSERT INTO [result_component_rules] ([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
-            SELECT src.[Id], 0, src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
+            SELECT src.[Id], src.[InstitutionType], src.[Name], src.[Weightage], src.[DisplayOrder], 1, @Now, NULL
             FROM (VALUES
-                (''42424242-4242-4242-4242-424242424201'', N''Assignments'', CAST(25.00 AS DECIMAL(5,2)), 1),
-                (''42424242-4242-4242-4242-424242424202'', N''Quizzes'', CAST(15.00 AS DECIMAL(5,2)), 2),
-                (''42424242-4242-4242-4242-424242424203'', N''Midterm'', CAST(25.00 AS DECIMAL(5,2)), 3),
-                (''42424242-4242-4242-4242-424242424204'', N''Final'', CAST(35.00 AS DECIMAL(5,2)), 4)
-            ) src([Id], [Name], [Weightage], [DisplayOrder])
+                (''42424242-4242-4242-4242-424242424201'', 0, N''Assignments'', CAST(25.00 AS DECIMAL(5,2)), 1),
+                (''42424242-4242-4242-4242-424242424202'', 0, N''Quizzes'', CAST(15.00 AS DECIMAL(5,2)), 2),
+                (''42424242-4242-4242-4242-424242424203'', 0, N''Midterm'', CAST(25.00 AS DECIMAL(5,2)), 3),
+                (''42424242-4242-4242-4242-424242424204'', 0, N''Final'', CAST(35.00 AS DECIMAL(5,2)), 4),
+                (''42424242-4242-4242-4242-424242424211'', 1, N''ClassTest'', CAST(40.00 AS DECIMAL(5,2)), 1),
+                (''42424242-4242-4242-4242-424242424212'', 1, N''Final'', CAST(60.00 AS DECIMAL(5,2)), 2),
+                (''42424242-4242-4242-4242-424242424221'', 2, N''Sessional'', CAST(30.00 AS DECIMAL(5,2)), 1),
+                (''42424242-4242-4242-4242-424242424222'', 2, N''Final'', CAST(70.00 AS DECIMAL(5,2)), 2)
+            ) src([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder])
             WHERE NOT EXISTS (SELECT 1 FROM [result_component_rules] x WHERE x.[Id] = src.[Id]);';
     END
     ELSE

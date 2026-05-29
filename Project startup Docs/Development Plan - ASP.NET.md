@@ -1,5 +1,18 @@
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure
 
+## 2026-05-29 Update - Institution-Aware Gradebook Metrics
+
+### Implementation Summary:
+- Implemented institution-aware gradebook aggregation selection in application and web layers.
+- Added institution-specific component-rule retrieval and fallback component derivation for demo/testing stability.
+- Updated full seed and post-deployment check scripts to cover school/college gradebook sample data and verification points.
+
+### Validation Summary:
+- `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --no-build` passed (`197/197`).
+- Runtime verification confirmed:
+  - university offering renders GPA/CGPA,
+  - school/college offerings render Percentage.
+
 ### Implementation Summary:
 - Completed AC1-AC6 evidence mapping against current Enter Results runtime surfaces and governance constraints.
 - Closure slice is consolidation and verification; no new runtime endpoint or behavioral branch introduced.

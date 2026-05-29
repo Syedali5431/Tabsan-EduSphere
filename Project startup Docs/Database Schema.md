@@ -1,5 +1,17 @@
 ## 2026-05-28 Update - Enter Results Acceptance Criteria Closure (Schema Posture)
 
+## 2026-05-29 Update - Institution-Aware Gradebook Demo Seed Coverage (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` demo metadata version to `FullDummyData-v15`.
+	- Added institution-specific seed rows in existing `result_component_rules` and `results` tables for School/College gradebook demo scenarios.
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with coverage checks for institution-scoped component rules and new sample result types.
+- Validation Summary:
+	- SQL changes are additive and idempotent.
+	- Unit tests passed (`197/197`) after related contract updates in application test doubles.
+- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 - Implementation Summary:
 	- Acceptance closure confirms AC1-AC6 runtime coverage and validation evidence for Enter Results.
 	- Closure phase is verification/documentation only and introduces no schema changes.

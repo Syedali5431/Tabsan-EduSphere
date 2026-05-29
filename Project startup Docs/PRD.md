@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-29 - Product Requirements Synchronization (Institution-Aware Gradebook Output)
+- Runtime delivery in this slice:
+  - Enforced institution-driven gradebook output mode.
+  - University output contract remains GPA + CGPA.
+  - School/College output contract is Percentage-based and supports optional component sets.
+- Data and demo readiness:
+  - Updated full dummy-data seed to include school and college component-specific result rows for gradebook demo and QA runs.
+  - Added post-deployment checks for institution component-rule coverage and sample component-result presence.
+- Compatibility boundary:
+  - No regression to university GPA/CGPA behavior.
+  - No API route rename or UI route change required.
+- Validation Summary:
+  - Unit tests passed (`197/197`) after repository contract updates.
+  - Runtime validation confirmed representative university and school/college offerings render expected aggregate columns.
+
 ### 2026-05-28 - Product Requirements Synchronization (Enter Results Acceptance Criteria Closure)
 - Runtime delivery in this slice:
   - Consolidated closure verification confirms AC1-AC6 behavior is covered by current Enter Results runtime surfaces.
