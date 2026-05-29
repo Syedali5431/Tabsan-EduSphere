@@ -1,3 +1,14 @@
+## 2026-05-29 Update - Discussion Demo Seed v21 Filter Coverage
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` Discussion seed section with additional offering-scoped threads/replies to strengthen demo filter testing.
+- Upgraded demo dataset marker to `FullDummyData-v21`.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with offering-specific Discussion checks and v21 dataset assertion.
+
+### Validation Summary:
+- Demo/testing environments now receive deterministic Discussion data in multiple offerings for filter validation.
+- Post-check scripts confirm v21 marker, offering-level thread distribution, and seeded reply coverage.
+
 ## 2026-05-29 Update - Discussion Schema/Seed v20 Stability
 
 ### Implementation Summary:

@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v20', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v21', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v20',
+    SET [DemoValue] = N'FullDummyData-v21',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2207,7 +2207,9 @@ BEGIN
     INSERT INTO @DiscussionThreads VALUES
     ('20202020-2020-2020-2020-202020202001', '55555555-5555-5555-5555-555555555501', N'Week 2 Lab Preparation', '66666666-6666-6666-6666-666666666621', 1, 0, N'Issue', N'Assignment', 0, NULL, NULL, N'DISC-2026-0001', 1),
     ('20202020-2020-2020-2020-202020202002', '55555555-5555-5555-5555-555555555504', N'Case Study References', '66666666-6666-6666-6666-666666666623', 0, 0, N'FAQ', N'Academic', 0, NULL, NULL, N'DISC-2026-0002', 0),
-    ('20202020-2020-2020-2020-202020202003', '55555555-5555-5555-5555-555555555501', N'Upload issue resolved for week 2 report', '66666666-6666-6666-6666-666666666621', 0, 1, N'Issue', N'Technical', 1, '66666666-6666-6666-6666-666666666621', DATEADD(MINUTE, -20, @Now), N'DISC-2026-0003', 1);
+    ('20202020-2020-2020-2020-202020202003', '55555555-5555-5555-5555-555555555501', N'Upload issue resolved for week 2 report', '66666666-6666-6666-6666-666666666621', 0, 1, N'Issue', N'Technical', 1, '66666666-6666-6666-6666-666666666621', DATEADD(MINUTE, -20, @Now), N'DISC-2026-0003', 1),
+    ('20202020-2020-2020-2020-202020202004', '55555555-5555-5555-5555-555555555504', N'Database lab VPN not reachable', '66666666-6666-6666-6666-666666666623', 1, 0, N'Issue', N'Access', 0, NULL, NULL, N'DISC-2026-0004', 1),
+    ('20202020-2020-2020-2020-202020202005', '55555555-5555-5555-5555-555555555504', N'Assessment rubric clarification', '66666666-6666-6666-6666-666666666623', 0, 1, N'FAQ', N'Assessment', 1, '66666666-6666-6666-6666-666666666623', DATEADD(HOUR, -2, @Now), N'DISC-2026-0005', 0);
 
     INSERT INTO [discussion_threads] (
         [Id], [OfferingId], [Title], [AuthorId], [IsPinned], [IsClosed], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt],
@@ -2226,7 +2228,9 @@ BEGIN
         ('21212121-2121-2121-2121-212121212101', '20202020-2020-2020-2020-202020202001', '66666666-6666-6666-6666-666666666631', N'Should we revise loops before the lab?'),
         ('21212121-2121-2121-2121-212121212102', '20202020-2020-2020-2020-202020202001', '66666666-6666-6666-6666-666666666621', N'Yes, focus on arrays and loops.'),
         ('21212121-2121-2121-2121-212121212103', '20202020-2020-2020-2020-202020202002', '66666666-6666-6666-6666-666666666633', N'I found a useful Harvard case study on strategy.'),
-        ('21212121-2121-2121-2121-212121212104', '20202020-2020-2020-2020-202020202003', '66666666-6666-6666-6666-666666666621', N'The upload issue is fixed and this thread is now resolved.');
+        ('21212121-2121-2121-2121-212121212104', '20202020-2020-2020-2020-202020202003', '66666666-6666-6666-6666-666666666621', N'The upload issue is fixed and this thread is now resolved.'),
+        ('21212121-2121-2121-2121-212121212105', '20202020-2020-2020-2020-202020202004', '66666666-6666-6666-6666-666666666623', N'Use campus VPN profile EDU-LAB from the portal settings.'),
+        ('21212121-2121-2121-2121-212121212106', '20202020-2020-2020-2020-202020202005', '66666666-6666-6666-6666-666666666611', N'Rubric section B applies to the second milestone only.');
 
         INSERT INTO [discussion_replies] ([Id], [ThreadId], [AuthorId], [Body], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
         SELECT r.Id, r.ThreadId, r.AuthorId, r.Body, @Now, NULL, 0, NULL

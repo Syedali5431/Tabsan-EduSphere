@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - Discussion Demo Seed v21 and Filter Verification Sync
+
+### Runtime additions
+- No new application/runtime function signature was added in this synchronization slice.
+- Discussion menu/filter behavior continues to use existing runtime surfaces (no duplicate function inventory rows added):
+	- `PortalController.Discussion`
+	- `PortalController.DiscussionThreadDetail`
+	- `EduApiClient.GetDiscussionThreadsAsync`
+	- `DiscussionController.GetThreads`
+	- `DiscussionService.GetThreadsAsync`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` dataset marker updated to `FullDummyData-v21`.
+- Discussion demo seed expanded with additional offering-scoped threads/replies for filter demo/testing.
+- `Scripts/05-PostDeployment-Checks.sql` now validates v21 marker and offering-specific discussion coverage counts.
+
 ## 2026-05-29 Update - Discussion Demo Seed v20 and Schema Sync
 
 ### Runtime additions

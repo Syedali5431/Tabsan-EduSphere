@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV20' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV21' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v20';
+	AND DemoValue = N'FullDummyData-v21';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -730,6 +730,27 @@ SELECT 'DummySeed_Discussion_ResolvedThreadCount' AS [CheckName], COUNT(1) AS [V
 FROM [discussion_threads]
 WHERE [IsDeleted] = 0
 	AND [IsSolved] = 1;
+
+SELECT 'DummySeed_Discussion_Offering501_ThreadCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_threads]
+WHERE [IsDeleted] = 0
+	AND [OfferingId] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_Discussion_Offering504_ThreadCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_threads]
+WHERE [IsDeleted] = 0
+	AND [OfferingId] = CAST('55555555-5555-5555-5555-555555555504' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_Discussion_RepliesCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_replies]
+WHERE [IsDeleted] = 0
+	AND [ThreadId] IN (
+		CAST('20202020-2020-2020-2020-202020202001' AS UNIQUEIDENTIFIER),
+		CAST('20202020-2020-2020-2020-202020202002' AS UNIQUEIDENTIFIER),
+		CAST('20202020-2020-2020-2020-202020202003' AS UNIQUEIDENTIFIER),
+		CAST('20202020-2020-2020-2020-202020202004' AS UNIQUEIDENTIFIER),
+		CAST('20202020-2020-2020-2020-202020202005' AS UNIQUEIDENTIFIER)
+	);
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
@@ -1165,10 +1186,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v18' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v21' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v18';
+			AND [DemoValue] = N'FullDummyData-v21';
 END;
 
 PRINT 'Post-deployment checks completed.';

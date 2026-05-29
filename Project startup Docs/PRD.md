@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-29 - Product Requirements Synchronization (Discussion Demo Seed v21 Filter Coverage)
+- Runtime delivery in this slice:
+  - Expanded Discussion demo dataset in `Scripts/03-FullDummyData.sql` with additional offering-scoped thread/reply records.
+  - Upgraded dataset marker to `FullDummyData-v21`.
+  - Added post-deployment checks for offering-level discussion thread counts and seeded reply coverage.
+- Compatibility boundary:
+  - No API contract or route signature change.
+  - Update remains additive seed/check script coverage for demo and testing reliability.
+- Validation Summary:
+  - Demo data now supports offering filter verification with deterministic discussion rows in multiple offerings.
+
 ### 2026-05-29 - Product Requirements Synchronization (Discussion Demo + Schema Sync v20)
 - Runtime delivery in this slice:
   - Synchronized canonical SQL schema script with Discussion Phase 31 enhancements required by runtime entity/model contracts.

@@ -199,20 +199,20 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
                 continue;
 
             var cols = ParseCsvLine(rawLine);
-            if (cols.Length < 9)
+            if (cols.Length < 10)
                 continue;
 
             var menuKey = cols[1];
             if (string.IsNullOrWhiteSpace(menuKey))
                 continue;
 
-            if (!cols[4].Equals("No Access", StringComparison.OrdinalIgnoreCase))
-                roleToAllowedKeys["SuperAdmin"].Add(menuKey);
             if (!cols[5].Equals("No Access", StringComparison.OrdinalIgnoreCase))
-                roleToAllowedKeys["Admin"].Add(menuKey);
+                roleToAllowedKeys["SuperAdmin"].Add(menuKey);
             if (!cols[6].Equals("No Access", StringComparison.OrdinalIgnoreCase))
-                roleToAllowedKeys["Faculty"].Add(menuKey);
+                roleToAllowedKeys["Admin"].Add(menuKey);
             if (!cols[7].Equals("No Access", StringComparison.OrdinalIgnoreCase))
+                roleToAllowedKeys["Faculty"].Add(menuKey);
+            if (!cols[8].Equals("No Access", StringComparison.OrdinalIgnoreCase))
                 roleToAllowedKeys["Student"].Add(menuKey);
         }
 
@@ -221,15 +221,8 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 
     private HashSet<string> BuildExpectedVisibleKeysForRole(string role, IEnumerable<MenuDto> superAdminMenus)
     {
-        var allSeededItems = FlatItems(superAdminMenus).ToList();
-        var seededKeys = allSeededItems
-            .Select(m => m.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         var expected = _sidebarRoleAllowMatrix.TryGetValue(role, out var allowedByRole)
-            ? allowedByRole
-                .Where(k => seededKeys.Contains(k))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            ? allowedByRole.ToHashSet(StringComparer.OrdinalIgnoreCase)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Parent carriers can be visible even when only child keys are role-allowed.

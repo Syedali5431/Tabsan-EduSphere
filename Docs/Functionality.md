@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - Discussion Demo Seed v21 (Offering Filter Coverage)
+
+### Implementation sync
+- Expanded `Scripts/03-FullDummyData.sql` Discussion section with additional mixed-state rows for offering-level demo/testing.
+- Upgraded demo dataset marker to `FullDummyData-v21`.
+- Added post-check assertions for discussion coverage by offering and reply population.
+
+### Validation sync
+- Discussion screen expected states are now seeded for two offerings with distinct thread sets.
+- Post-deployment checks now validate v21 dataset marker and offering-specific discussion thread counts.
+
 ## 2026-05-29 Update - Discussion Menu Data and Schema Reliability (v20)
 
 ### Implementation sync

@@ -1,3 +1,14 @@
+## 2026-05-29 Update - Discussion Demo Seed v21 Filter Coverage (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v21`.
+	- Expanded `discussion_threads` and `discussion_replies` seed rows with additional offering-scoped records for demo/testing coverage.
+	- Updated `Scripts/05-PostDeployment-Checks.sql` to validate v21 marker and offering-specific Discussion thread/reply counts.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-29 Update - Discussion Phase 31 Schema Alignment (v20)
 
 - Implementation Summary:

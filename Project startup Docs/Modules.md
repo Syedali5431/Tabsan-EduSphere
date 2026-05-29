@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-29 (Discussion Demo Seed v21 Filter Coverage)
+
+### Module impact summary
+- No new module introduced; update remains within existing Discussion module behavior.
+- Full dummy seed now includes additional offering-specific discussion threads/replies to support menu filter demo/testing.
+- Post-deployment checks include offering-level discussion thread coverage and reply population checks.
+
+### Validation summary
+- Dataset marker upgraded to `FullDummyData-v21`.
+- Discussion filter demos can now validate distinct thread sets across multiple offerings.
+
 ## Execution Update - 2026-05-29 (Discussion Demo Seed v20 + Schema Sync)
 
 ### Module impact summary
