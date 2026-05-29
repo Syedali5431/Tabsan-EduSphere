@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Domain.Assignments;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -29,19 +30,32 @@ public class GradebookRepository : IGradebookRepository
             .Join(_db.StudentProfiles,
                   e  => e.StudentProfileId,
                   sp => sp.Id,
-                  (e, sp) => new { sp.Id, sp.RegistrationNumber, sp.UserId })
+                  (e, sp) => new { sp.Id, sp.RegistrationNumber, sp.UserId, sp.Cgpa })
             .Join(_db.Users,
                   sp  => sp.UserId,
                   u   => u.Id,
-                (sp, u) => new { sp.Id, sp.RegistrationNumber, u.Username })
+                (sp, u) => new { sp.Id, sp.RegistrationNumber, u.Username, sp.Cgpa })
             .OrderBy(r => r.RegistrationNumber)
             .Select(r => new GradebookStudentInfo(
                 r.Id,
                 r.RegistrationNumber,
-                r.Username))
+                r.Username,
+                r.Cgpa))
             .ToListAsync(ct);
 
         return rows;
+    }
+
+    public async Task<InstitutionType> GetInstitutionTypeForOfferingAsync(
+        Guid courseOfferingId,
+        CancellationToken ct = default)
+    {
+        var institutionType = await _db.CourseOfferings
+            .Where(o => o.Id == courseOfferingId)
+            .Select(o => (InstitutionType?)o.Course.Department.InstitutionType)
+            .FirstOrDefaultAsync(ct);
+
+        return institutionType ?? InstitutionType.University;
     }
 }
 

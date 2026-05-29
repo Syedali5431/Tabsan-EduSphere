@@ -202,6 +202,7 @@ file sealed class StubResultRepository : IResultRepository
     public Task AddRangeAsync(IEnumerable<Result> results, CancellationToken ct = default) => Task.CompletedTask;
     public void Update(Result result) { }
     public Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
+    public Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
     public Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
     public Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ResultComponentRule>>([]);
     public Task<IReadOnlyList<GpaScaleRule>> GetGpaScaleRulesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<GpaScaleRule>>([]);

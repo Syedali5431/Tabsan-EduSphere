@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v13', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v14', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v13',
+    SET [DemoValue] = N'FullDummyData-v14',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1388,7 +1388,9 @@ INSERT INTO @Enrollments VALUES
 ('88888888-8888-8888-8888-888888888132', '99999999-9999-9999-9999-999999999944', '55555555-5555-5555-5555-555555555518', N'Enrolled');
 
 INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
-SELECT e.Id, e.StudentProfileId, e.CourseOfferingId, @Now, NULL, e.Status, @Now, NULL
+SELECT e.Id, e.StudentProfileId, e.CourseOfferingId, @Now, NULL,
+       CASE WHEN e.Status = N'Enrolled' THEN N'Active' ELSE e.Status END,
+       @Now, NULL
 FROM @Enrollments e
 WHERE NOT EXISTS (SELECT 1 FROM [enrollments] x WHERE x.[Id] = e.Id);
 
@@ -1416,7 +1418,7 @@ SELECT
     dof.[CourseOfferingId],
     DATEADD(day, -((bs.[StudentOrdinal] + dof.[OfferingOrdinal]) % 30), @Now),
     NULL,
-    N'Enrolled',
+    N'Active',
     @Now,
     NULL
 FROM BulkStudents bs
@@ -1453,7 +1455,7 @@ SELECT
     so.[CourseOfferingId],
     DATEADD(day, -((ds.[StudentOrdinal] + so.[OfferingOrdinal]) % 28), @Now),
     NULL,
-    N'Enrolled',
+    N'Active',
     @Now,
     NULL
 FROM SemesterOfferings so
@@ -1468,6 +1470,11 @@ WHERE so.[OfferingOrdinal] <= 2
     WHERE e.[StudentProfileId] = ds.[StudentProfileId]
       AND e.[CourseOfferingId] = so.[CourseOfferingId]
 );
+
+UPDATE [enrollments]
+SET [Status] = N'Active',
+    [UpdatedAt] = @Now
+WHERE [Status] = N'Enrolled';
 
 /* 9) Assignments - Expanded (20+ assignments) */
 DECLARE @Assignments TABLE (Id UNIQUEIDENTIFIER, CourseOfferingId UNIQUEIDENTIFIER, Title NVARCHAR(300), DueDate DATETIME2, MaxMarks DECIMAL(8,2));

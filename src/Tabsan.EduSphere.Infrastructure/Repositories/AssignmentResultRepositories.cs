@@ -178,8 +178,11 @@ public class ResultRepository : IResultRepository
     public void Update(Result result) => _db.Results.Update(result);
 
     public async Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(CancellationToken ct = default)
+        => await GetActiveComponentRulesAsync(InstitutionType.University, ct);
+
+    public async Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default)
         => await _db.ResultComponentRules
-                    .Where(r => r.IsActive)
+                    .Where(r => r.InstitutionType == institutionType && r.IsActive)
                     .OrderBy(r => r.DisplayOrder)
                     .ToListAsync(ct);
 

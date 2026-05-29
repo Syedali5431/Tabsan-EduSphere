@@ -1901,6 +1901,8 @@ public class CoursePrerequisiteGroup
 public class GradebookGridWebModel
 {
     public Guid                           CourseOfferingId { get; set; }
+    public int                            InstitutionType  { get; set; }
+    public bool                           UsesGpa          { get; set; }
     public List<GradebookColumnWebModel>  Columns          { get; set; } = new();
     public List<GradebookStudentRowWeb>   Rows             { get; set; } = new();
 }
@@ -1918,6 +1920,9 @@ public class GradebookStudentRowWeb
     public string                      StudentName        { get; set; } = "";
     public List<GradebookCellWebModel> Cells              { get; set; } = new();
     public decimal?                    WeightedTotal      { get; set; }
+    public decimal?                    PercentageTotal    { get; set; }
+    public decimal?                    Gpa                { get; set; }
+    public decimal?                    Cgpa               { get; set; }
 }
 
 public class GradebookCellWebModel

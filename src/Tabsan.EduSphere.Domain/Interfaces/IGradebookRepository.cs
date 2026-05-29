@@ -2,6 +2,8 @@
 
 namespace Tabsan.EduSphere.Domain.Interfaces;
 
+using Tabsan.EduSphere.Domain.Enums;
+
 /// <summary>
 /// Provides efficient queries for the gradebook grid, joining enrollments,
 /// student profiles, and users in a single database round-trip.
@@ -13,6 +15,11 @@ public interface IGradebookRepository
     Task<IReadOnlyList<GradebookStudentInfo>> GetStudentsForOfferingAsync(
         Guid courseOfferingId,
         CancellationToken ct = default);
+
+    // Final-Touches Phase 16 enhancement — resolve institution type for offering-specific gradebook logic.
+    Task<InstitutionType> GetInstitutionTypeForOfferingAsync(
+        Guid courseOfferingId,
+        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -21,4 +28,5 @@ public interface IGradebookRepository
 public sealed record GradebookStudentInfo(
     Guid   StudentProfileId,
     string RegistrationNumber,
-    string StudentName);
+    string StudentName,
+    decimal Cgpa);

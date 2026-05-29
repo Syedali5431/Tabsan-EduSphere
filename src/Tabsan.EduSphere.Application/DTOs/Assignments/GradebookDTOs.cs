@@ -12,6 +12,8 @@ public sealed class GradebookGridResponse
 {
     // Final-Touches Phase 16 Stage 16.1 — grid metadata
     public Guid                      CourseOfferingId { get; init; }
+    public int                       InstitutionType  { get; init; }
+    public bool                      UsesGpa          { get; init; }
     public List<GradebookColumnDto>  Columns          { get; init; } = new();
     public List<GradebookStudentRow> Rows             { get; init; } = new();
 }
@@ -31,6 +33,9 @@ public sealed class GradebookStudentRow
     public string                       StudentName        { get; init; } = string.Empty;
     public List<GradebookCellDto>       Cells              { get; init; } = new();
     public decimal?                     WeightedTotal      { get; init; }
+    public decimal?                     PercentageTotal    { get; init; }
+    public decimal?                     Gpa                { get; init; }
+    public decimal?                     Cgpa               { get; init; }
 }
 
 /// <summary>One result-component cell value for a student.</summary>

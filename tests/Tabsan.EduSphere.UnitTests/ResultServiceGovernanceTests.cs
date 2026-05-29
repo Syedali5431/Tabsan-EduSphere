@@ -145,6 +145,9 @@ public class ResultServiceGovernanceTests
         public Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(CancellationToken ct = default)
             => Task.FromResult((IReadOnlyList<ResultComponentRule>)new List<ResultComponentRule>());
 
+        public Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default)
+            => Task.FromResult((IReadOnlyList<ResultComponentRule>)new List<ResultComponentRule>());
+
         public Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default)
             => Task.FromResult((IReadOnlyList<ResultComponentRule>)new List<ResultComponentRule>());
 

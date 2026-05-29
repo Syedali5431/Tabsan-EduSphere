@@ -35,6 +35,7 @@ else
     {
         var grid = Model.Grid;
         var components = grid.Columns.Select(c => c.ComponentName).ToList();
+        var isUniversity = grid.UsesGpa;
 
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -68,7 +69,15 @@ else
                             {
                                 <th>@col.ComponentName<br/><small class="text-muted">(@col.Weightage%)</small></th>
                             }
-                            <th>Weighted Total</th>
+                            @if (isUniversity)
+                            {
+                                <th>GPA</th>
+                                <th>CGPA</th>
+                            }
+                            else
+                            {
+                                <th>Percentage</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
@@ -93,7 +102,15 @@ else
                                         { <span class="badge bg-success ms-1">Published</span> }
                                     </td>
                                 }
-                                <td><strong>@(row.WeightedTotal?.ToString("0.##") ?? "-")</strong></td>
+                                @if (isUniversity)
+                                {
+                                    <td><strong>@(row.Gpa?.ToString("0.##") ?? "-")</strong></td>
+                                    <td><strong>@(row.Cgpa?.ToString("0.##") ?? "-")</strong></td>
+                                }
+                                else
+                                {
+                                    <td><strong>@(row.PercentageTotal?.ToString("0.##") ?? "-")%</strong></td>
+                                }
                             </tr>
                         }
                     </tbody>

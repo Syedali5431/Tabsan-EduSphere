@@ -4,6 +4,7 @@ using System.Text;
 using Tabsan.EduSphere.Application.DTOs.Assignments;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Assignments;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 
 namespace Tabsan.EduSphere.Application.Assignments;
@@ -28,13 +29,40 @@ public class GradebookService : IGradebookService
 
     public async Task<GradebookGridResponse> GetGradebookAsync(Guid courseOfferingId, CancellationToken ct = default)
     {
+        var institutionType = await _gradebookRepo.GetInstitutionTypeForOfferingAsync(courseOfferingId, ct);
+        var usesGpa = institutionType == InstitutionType.University;
+
         // Query sequentially because scoped repositories can share one DbContext instance.
         // Running these queries in parallel can trigger EF Core's "second operation" exception.
         var students = await _gradebookRepo.GetStudentsForOfferingAsync(courseOfferingId, ct);
-        var components = (await _resultRepo.GetActiveComponentRulesAsync(ct))
+        var components = (await _resultRepo.GetActiveComponentRulesAsync(institutionType, ct))
             .OrderBy(c => c.DisplayOrder)
             .ToList();
         var results = await _resultRepo.GetByOfferingAsync(courseOfferingId, ct);
+
+        if (components.Count == 0)
+        {
+            var resultTypes = results
+                .Select(r => r.ResultType)
+                .Where(rt => !string.IsNullOrWhiteSpace(rt))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(rt => rt)
+                .ToList();
+
+            if (resultTypes.Count > 0)
+            {
+                var fallbackWeight = Math.Round(100m / resultTypes.Count, 2, MidpointRounding.AwayFromZero);
+                components = resultTypes
+                    .Select((rt, index) => new ResultComponentRule(rt, fallbackWeight, index + 1, true, institutionType))
+                    .ToList();
+            }
+        }
+
+        var gpaRules = usesGpa
+            ? (await _resultRepo.GetGpaScaleRulesAsync(institutionType, ct))
+                .OrderByDescending(r => r.MinimumScore)
+                .ToList()
+            : new List<GpaScaleRule>();
 
         // Index results by (studentProfileId, resultType) for O(1) lookup
         var resultIndex = results.ToDictionary(
@@ -61,14 +89,35 @@ public class GradebookService : IGradebookService
                 };
             }).ToList();
 
-            // Compute weighted total only when all components have a result
+            // University: weighted aggregate converted to GPA + show stored CGPA.
+            // School/College: percentage is computed from available scored components.
             decimal? weightedTotal = null;
-            if (components.Count > 0 && cells.All(c => c.MarksObtained.HasValue && c.MaxMarks.HasValue && c.MaxMarks > 0))
+            decimal? percentageTotal = null;
+            decimal? gpa = null;
+
+            if (usesGpa && components.Count > 0 && cells.All(c => c.MarksObtained.HasValue && c.MaxMarks.HasValue && c.MaxMarks > 0))
             {
                 weightedTotal = 0m;
                 foreach (var (comp, cell) in components.Zip(cells))
                 {
                     weightedTotal += (cell.MarksObtained!.Value / cell.MaxMarks!.Value) * comp.Weightage;
+                }
+
+                var matchingRule = gpaRules.FirstOrDefault(r => weightedTotal.Value >= r.MinimumScore);
+                gpa = matchingRule?.GradePoint;
+            }
+
+            if (!usesGpa)
+            {
+                var scoredCells = cells.Where(c => c.MarksObtained.HasValue && c.MaxMarks.HasValue && c.MaxMarks > 0).ToList();
+                if (scoredCells.Count > 0)
+                {
+                    var marksSum = scoredCells.Sum(c => c.MarksObtained!.Value);
+                    var maxSum = scoredCells.Sum(c => c.MaxMarks!.Value);
+                    if (maxSum > 0)
+                    {
+                        percentageTotal = (marksSum / maxSum) * 100m;
+                    }
                 }
             }
 
@@ -78,13 +127,18 @@ public class GradebookService : IGradebookService
                 RegistrationNumber = student.RegistrationNumber,
                 StudentName        = student.StudentName,
                 Cells              = cells,
-                WeightedTotal      = weightedTotal
+                WeightedTotal      = weightedTotal,
+                PercentageTotal    = percentageTotal,
+                Gpa                = gpa,
+                Cgpa               = usesGpa ? student.Cgpa : null
             };
         }).ToList();
 
         return new GradebookGridResponse
         {
             CourseOfferingId = courseOfferingId,
+            InstitutionType  = (int)institutionType,
+            UsesGpa          = usesGpa,
             Columns          = columns,
             Rows             = rows
         };

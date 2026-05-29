@@ -43,6 +43,7 @@ public interface IResultRepository
 
     /// <summary>Returns the currently active assessment component rules.</summary>
     Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<ResultComponentRule>> GetActiveComponentRulesAsync(InstitutionType institutionType, CancellationToken ct = default);
 
     /// <summary>Returns all result calculation component rules.</summary>
     Task<IReadOnlyList<ResultComponentRule>> GetAllComponentRulesAsync(CancellationToken ct = default);

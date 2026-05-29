@@ -5415,6 +5415,8 @@ public class EduApiClient : IEduApiClient
         return new GradebookGridWebModel
         {
             CourseOfferingId = raw.CourseOfferingId,
+            InstitutionType  = raw.InstitutionType,
+            UsesGpa          = raw.UsesGpa,
             Columns = raw.Columns?.Select(c => new GradebookColumnWebModel
             {
                 ComponentName = c.ComponentName ?? "",
@@ -5426,6 +5428,9 @@ public class EduApiClient : IEduApiClient
                 RegistrationNumber = r.RegistrationNumber ?? "",
                 StudentName        = r.StudentName ?? "",
                 WeightedTotal      = r.WeightedTotal,
+                PercentageTotal    = r.PercentageTotal,
+                Gpa                = r.Gpa,
+                Cgpa               = r.Cgpa,
                 Cells = r.Cells?.Select(cell => new GradebookCellWebModel
                 {
                     ComponentName = cell.ComponentName ?? "",
@@ -5758,6 +5763,8 @@ public class EduApiClient : IEduApiClient
     private sealed class GradebookGridApiDto
     {
         public Guid CourseOfferingId { get; set; }
+        public int InstitutionType { get; set; }
+        public bool UsesGpa { get; set; }
         public List<GradebookColumnApiDto>?      Columns { get; set; }
         public List<GradebookStudentRowApiDto>?  Rows    { get; set; }
     }
@@ -5773,6 +5780,9 @@ public class EduApiClient : IEduApiClient
         public string? StudentName        { get; set; }
         public List<GradebookCellApiDto>? Cells { get; set; }
         public decimal? WeightedTotal { get; set; }
+        public decimal? PercentageTotal { get; set; }
+        public decimal? Gpa { get; set; }
+        public decimal? Cgpa { get; set; }
     }
     private sealed class GradebookCellApiDto
     {
