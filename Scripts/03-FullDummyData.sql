@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v12', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v13', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v12',
+    SET [DemoValue] = N'FullDummyData-v13',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2956,8 +2956,20 @@ BEGIN
         n.n % 5,
         NEWID(),
         CASE WHEN n.n % 4 = 0 THEN 2 WHEN n.n % 2 = 0 THEN 1 ELSE 0 END,
-        N'Marks correction and activity update request.',
-        N'{"requestedChange":"score-adjustment","source":"dummy-seed"}',
+        CASE n.n % 5
+            WHEN 0 THEN N'Marks correction and grade recalculation request.'
+            WHEN 1 THEN N'Assignment score revision based on rubric review.'
+            WHEN 2 THEN N'Quiz marks update requested after answer-key correction.'
+            WHEN 3 THEN N'Final exam max-mark alignment and normalization request.'
+            ELSE N'Result entry update requested after departmental moderation.'
+        END,
+        CASE n.n % 5
+            WHEN 0 THEN N'{"requestedChange":"score-adjustment","source":"dummy-seed","section":"result-entry","examType":"Final","assessmentComponent":"Theory"}'
+            WHEN 1 THEN N'{"requestedChange":"assignment-rescore","source":"dummy-seed","section":"result-entry","examType":"Assignment","assessmentComponent":"Practical"}'
+            WHEN 2 THEN N'{"requestedChange":"quiz-regrade","source":"dummy-seed","section":"result-entry","examType":"Quiz","assessmentComponent":"Theory"}'
+            WHEN 3 THEN N'{"requestedChange":"max-marks-correction","source":"dummy-seed","section":"result-entry","examType":"Final","assessmentComponent":"Viva"}'
+            ELSE N'{"requestedChange":"grade-override-request","source":"dummy-seed","section":"result-entry","examType":"Midterm","assessmentComponent":"Theory"}'
+        END,
         CASE WHEN n.n % 2 = 0 THEN N'Reviewed and synchronized.' ELSE NULL END,
         CASE WHEN n.n % 2 = 0 THEN DATEADD(day, -2, @Now) ELSE NULL END,
         DATEADD(day, -n.n, @Now),
