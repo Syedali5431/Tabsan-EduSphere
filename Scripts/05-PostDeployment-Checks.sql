@@ -704,10 +704,32 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV18' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV20' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v18';
+	AND DemoValue = N'FullDummyData-v20';
+
+SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = N'discussion_threads'
+	AND COLUMN_NAME IN (N'ThreadType', N'IssueSubType', N'IsSolved', N'ResolvedBy', N'ResolvedAt', N'TicketNumber', N'IsVisibleToAll');
+
+SELECT 'DummySeed_Discussion_ThreadTypePopulatedCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_threads]
+WHERE [IsDeleted] = 0
+	AND [ThreadType] IS NOT NULL
+	AND [ThreadType] <> N'';
+
+SELECT 'DummySeed_Discussion_TicketNumberPopulatedCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_threads]
+WHERE [IsDeleted] = 0
+	AND [TicketNumber] IS NOT NULL
+	AND [TicketNumber] <> N'';
+
+SELECT 'DummySeed_Discussion_ResolvedThreadCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [discussion_threads]
+WHERE [IsDeleted] = 0
+	AND [IsSolved] = 1;
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]

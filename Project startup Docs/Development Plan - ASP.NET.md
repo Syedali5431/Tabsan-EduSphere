@@ -1,3 +1,14 @@
+## 2026-05-29 Update - Discussion Schema/Seed v20 Stability
+
+### Implementation Summary:
+- Updated `Scripts/01-Schema-Current.sql` with Phase 31 Discussion enhancement migration block and related index creation.
+- Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v20` and expanded Discussion seed data for mixed-state demo/testing.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v20 marker assertion and Discussion resolved-thread verification.
+
+### Validation Summary:
+- Discussion runtime path loads successfully after schema alignment.
+- API offering-scope verification confirms seeded offering returns Discussion rows while non-seeded offering remains isolated.
+
 ## 2026-05-29 Update - LMS Demo Seed v18 Stability
 
 ### Implementation Summary:

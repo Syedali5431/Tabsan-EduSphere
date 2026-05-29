@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-29 Update - Discussion Demo Seed v20 and Schema Sync
+
+### Runtime additions
+- No new C# application-layer function signature was introduced in this synchronization slice.
+- Existing Discussion runtime surfaces remain the active behavior path (no duplicate function inventory entries added):
+	- `PortalController.Discussion`
+	- `PortalController.DiscussionThreadDetail`
+	- `EduApiClient.GetDiscussionThreadsAsync`
+	- `DiscussionController.GetThreads`
+	- `DiscussionService.GetThreadsAsync`
+
+### Validation Summary
+- `Scripts/01-Schema-Current.sql` now includes Phase 31 Discussion enhancement migration coverage (`ThreadType`, `IssueSubType`, `IsSolved`, `ResolvedBy`, `ResolvedAt`, `TicketNumber`, `IsVisibleToAll`) and related indexes.
+- `Scripts/03-FullDummyData.sql` upgraded dataset marker to `FullDummyData-v20` and expanded Discussion sample rows with mixed states (pinned/open, FAQ, solved/closed) for demo/testing.
+- `Scripts/05-PostDeployment-Checks.sql` upgraded to v20 marker assertion and added resolved-discussion count verification.
+
 ## 2026-05-29 Update - LMS Demo Seed v18 Function Inventory Sync
 
 ### Runtime additions

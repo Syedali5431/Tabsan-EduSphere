@@ -1,3 +1,23 @@
+<!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
+
+## 2026-05-29 Update - Discussion Menu Data and Schema Reliability (v20)
+
+### Implementation sync
+- Added Phase 31 Discussion schema coverage in the canonical schema script so fresh/rebuilt environments include all runtime-required columns.
+- Upgraded dummy dataset marker to `FullDummyData-v20`.
+- Expanded Discussion demo seed with mixed thread states for stable menu/demo verification:
+	- pinned open issue,
+	- open FAQ,
+	- resolved + closed technical issue,
+	- populated ticket numbers and replies.
+
+### Validation sync
+- Post-deployment checks now validate:
+	- dataset version `FullDummyData-v20`,
+	- Discussion Phase 31 column presence,
+	- Discussion ticket population,
+	- Discussion resolved-thread count.
+
 ## 2026-05-29 Update - LMS Demo Seed v18 Coverage
 
 ### Implementation sync

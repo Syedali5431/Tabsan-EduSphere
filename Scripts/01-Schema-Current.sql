@@ -386,6 +386,121 @@ GO
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [ThreadType] nvarchar(50) NOT NULL DEFAULT N'Issue';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [IssueSubType] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [IsSolved] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [ResolvedBy] uniqueidentifier NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [ResolvedAt] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [TicketNumber] nvarchar(100) NOT NULL DEFAULT N'';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    ALTER TABLE [discussion_threads] ADD [IsVisibleToAll] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_TicketNumber' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_discussion_threads_TicketNumber] ON [discussion_threads] ([TicketNumber]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_IsSolved' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
+    BEGIN
+        CREATE INDEX [IX_discussion_threads_IsSolved] ON [discussion_threads] ([IsSolved]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_IsVisibleToAll' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
+    BEGIN
+        CREATE INDEX [IX_discussion_threads_IsVisibleToAll] ON [discussion_threads] ([IsVisibleToAll]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260518_Phase31_Stage31_3_DiscussionEnhancements', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260525090000_Phase40_TenantCampusScope'
 )
 BEGIN

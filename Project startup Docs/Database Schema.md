@@ -1,3 +1,15 @@
+## 2026-05-29 Update - Discussion Phase 31 Schema Alignment (v20)
+
+- Implementation Summary:
+	- Updated `Scripts/01-Schema-Current.sql` to include the Discussion enhancement migration block:
+		- added columns: `ThreadType`, `IssueSubType`, `IsSolved`, `ResolvedBy`, `ResolvedAt`, `TicketNumber`, `IsVisibleToAll`.
+		- added indexes: `IX_discussion_threads_TicketNumber`, `IX_discussion_threads_IsSolved`, `IX_discussion_threads_IsVisibleToAll`.
+	- Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v20` with expanded mixed-state Discussion demo rows.
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v20 marker assertion and discussion resolved-thread check.
+- Validation Summary:
+	- Schema and runtime model are now aligned for Discussion query materialization.
+	- EF migration impact: reflected in canonical SQL script for deployment consistency.
+
 ## 2026-05-29 Update - LMS Demo Seed v18 Coverage (Schema Posture)
 
 - Implementation Summary:

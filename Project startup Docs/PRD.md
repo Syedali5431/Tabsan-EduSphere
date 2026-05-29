@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-29 - Product Requirements Synchronization (Discussion Demo + Schema Sync v20)
+- Runtime delivery in this slice:
+  - Synchronized canonical SQL schema script with Discussion Phase 31 enhancements required by runtime entity/model contracts.
+  - Expanded full dummy seed for Discussion with mixed-status thread data (pinned/open, FAQ, resolved/closed) and ticket/reply coverage.
+  - Upgraded demo dataset marker to `FullDummyData-v20`.
+- Compatibility boundary:
+  - No route rename and no controller signature change.
+  - Update is schema-alignment + additive demo/test seed coverage.
+- Validation Summary:
+  - Post-deployment checks now include v20 marker, discussion column-presence, ticket population, and resolved-thread assertions.
+
 ### 2026-05-29 - Product Requirements Synchronization (LMS Demo Seed v18)
 - Runtime delivery in this slice:
   - Expanded LMS demo data in full seed for offering `55555555-5555-5555-5555-555555555513` with draft/published mixed module states.

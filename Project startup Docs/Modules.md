@@ -1,3 +1,14 @@
+## Execution Update - 2026-05-29 (Discussion Demo Seed v20 + Schema Sync)
+
+### Module impact summary
+- No new module introduced; update remains within the existing Discussion module surface.
+- Canonical schema script now includes Discussion Phase 31 enhancement coverage required by the current runtime model.
+- Discussion dummy seed now includes mixed moderation/demo states (pinned/open, FAQ, solved/closed) with ticket and reply data for reliable menu validation.
+
+### Validation summary
+- Dataset marker upgraded to `FullDummyData-v20`.
+- Post-check coverage now includes discussion schema-column presence, ticket population, and resolved-thread count assertions.
+
 ## Execution Update - 2026-05-29 (LMS Demo Seed v18)
 
 ### Module impact summary
