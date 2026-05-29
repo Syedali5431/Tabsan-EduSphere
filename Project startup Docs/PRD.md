@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Student Timetable Demo Seed v24 + Filter Reliability)
+- Runtime delivery in this slice:
+  - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v24`.
+  - Added deterministic Student Timetable demo records for Dummy Engineering (two published timetables + three timetable entries across multiple days) to stabilize filter demos.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v24 assertion and Student Timetable demo row/day coverage checks.
+  - Improved web API error message rendering by extracting JSON `message`/`title` payload fields before displaying to users.
+- Compatibility boundary:
+  - No API route rename and no new endpoint contract.
+  - Update is additive seed/check coverage plus UI-facing error-text normalization.
+- Validation Summary:
+  - Student Timetable menu + filter path validated for timetable switch and day filtering with deterministic seeded data.
+  - Invalid timetable query now renders readable message text (not raw JSON payload).
+
 ### 2026-05-30 - Product Requirements Synchronization (Attendance Demo Seed v23 + Student Filter Reliability)
 - Runtime delivery in this slice:
   - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v23`.

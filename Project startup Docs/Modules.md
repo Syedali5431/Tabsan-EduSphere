@@ -1,3 +1,17 @@
+## Execution Update - 2026-05-30 (Student Timetable Demo Seed v24 + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Student Timetable module behavior.
+- Full dummy seed now includes deterministic Student Timetable demo rows for Dummy Engineering:
+  - 2 published timetables,
+  - 3 entries across Monday/Wednesday/Thursday to exercise day-filter behavior.
+- Post-deployment checks now include v24 dataset marker and Student Timetable demo count/day assertions.
+- Web API client error messaging now renders readable text when backend returns JSON error payloads.
+
+### Validation summary
+- Student Timetable menu route renders deterministic seeded records.
+- Day filter and timetable selection produce expected row sets without UI/runtime errors.
+
 ## Execution Update - 2026-05-30 (Attendance Filter Demo Seed v23 + Student Filter Mapping)
 
 ### Module impact summary

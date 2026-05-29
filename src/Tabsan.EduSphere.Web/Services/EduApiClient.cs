@@ -1682,8 +1682,40 @@ public class EduApiClient : IEduApiClient
     {
         var message = string.IsNullOrWhiteSpace(body)
             ? $"API request failed with status {(int)statusCode}."
-            : body;
+            : TryExtractApiErrorMessage(body) ?? body;
         return new InvalidOperationException(message);
+    }
+
+    private static string? TryExtractApiErrorMessage(string body)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Object)
+                return null;
+
+            if (root.TryGetProperty("message", out var messageElement))
+            {
+                var message = messageElement.GetString();
+                if (!string.IsNullOrWhiteSpace(message))
+                    return message;
+            }
+
+            if (root.TryGetProperty("title", out var titleElement))
+            {
+                var title = titleElement.GetString();
+                if (!string.IsNullOrWhiteSpace(title))
+                    return title;
+            }
+        }
+        catch (JsonException)
+        {
+            // Keep original body when response is not JSON.
+        }
+
+        return null;
     }
 
     private static string? ExtractQueryValue(string uri, string key)

@@ -704,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV23' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV24' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v23';
+	AND DemoValue = N'FullDummyData-v24';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -824,6 +824,38 @@ WHERE [CourseOfferingId] = CAST('66666666-6666-6666-6666-666666666662' AS UNIQUE
 		CAST('96969696-9696-9696-9696-969696969805' AS UNIQUEIDENTIFIER),
 		CAST('96969696-9696-9696-9696-969696969806' AS UNIQUEIDENTIFIER)
 	);
+
+SELECT 'DummySeed_StudentTimetableDemo_TimetablesCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetables]
+WHERE [Id] IN (
+	CAST('25252525-2525-2525-2525-252525252901' AS UNIQUEIDENTIFIER),
+	CAST('25252525-2525-2525-2525-252525252902' AS UNIQUEIDENTIFIER)
+)
+	AND [DepartmentId] = CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER)
+	AND [IsPublished] = 1;
+
+SELECT 'DummySeed_StudentTimetableDemo_EntriesCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [Id] IN (
+	CAST('26262626-2626-2626-2626-262626262901' AS UNIQUEIDENTIFIER),
+	CAST('26262626-2626-2626-2626-262626262902' AS UNIQUEIDENTIFIER),
+	CAST('26262626-2626-2626-2626-262626262903' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_StudentTimetableDemo_MondayRows_Timetable901' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252901' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 1;
+
+SELECT 'DummySeed_StudentTimetableDemo_WednesdayRows_Timetable901' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252901' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 3;
+
+SELECT 'DummySeed_StudentTimetableDemo_ThursdayRows_Timetable902' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries]
+WHERE [TimetableId] = CAST('25252525-2525-2525-2525-252525252902' AS UNIQUEIDENTIFIER)
+	AND [DayOfWeek] = 4;
 
 SELECT 'DummySeed_Enrollments_ActiveForGradebook' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
@@ -1259,10 +1291,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v23' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v24' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v23';
+			AND [DemoValue] = N'FullDummyData-v24';
 END;
 
 PRINT 'Post-deployment checks completed.';

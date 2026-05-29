@@ -1,3 +1,17 @@
+## 2026-05-30 Update - Student Timetable Demo Seed v24 and Filter Verification
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v24`.
+- Added deterministic Student Timetable demo data for Dummy Engineering:
+  - timetables: `2525...2901`, `2525...2902` (published),
+  - entries: `2626...2901` to `2626...2903` (Monday/Wednesday/Thursday coverage).
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v24 marker assertions and Student Timetable demo checks.
+- Updated web API client error formatting so JSON error payloads are displayed as readable text in portal messages.
+
+### Validation Summary:
+- Student Timetable menu and filter flow verified with deterministic data.
+- Timetable switch and day-of-week filtering produced expected subsets during runtime checks.
+
 ## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Mapping Reliability
 
 ### Implementation Summary:

@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Student Timetable Demo Seed v24 and Error Message Normalization
+
+### Runtime additions
+- Added one new internal helper in existing API client flow (no endpoint contract change):
+	- `EduApiClient.TryExtractApiErrorMessage` (extracts `message`/`title` from JSON API error payloads so portal alerts show readable text).
+- Existing runtime surface retained for Student Timetable filter behavior:
+	- `PortalController.TimetableStudent`
+	- `EduApiClient.GetTimetablesByDepartmentAsync`
+	- `EduApiClient.GetTimetableByIdAsync`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v24` and now includes deterministic Student Timetable demo pack rows for Dummy Engineering.
+- `Scripts/05-PostDeployment-Checks.sql` extended with v24 and Student Timetable demo assertions (timetable count + day-of-week entry checks).
+- Menu-path runtime validation confirmed Student Timetable filter behavior for timetable switch and day-of-week narrowing.
+
 ## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Filter Mapping Sync
 
 ### Runtime additions

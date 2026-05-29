@@ -1,3 +1,16 @@
+## 2026-05-30 Update - Student Timetable Demo Seed v24 (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v24`.
+	- Added additive deterministic demo records in existing tables only:
+		- `timetables` (2 published Dummy Engineering rows),
+		- `timetable_entries` (3 rows for Monday/Wednesday/Thursday filter verification).
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v24 marker checks and Student Timetable demo count/day assertions.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Attendance Filter Demo Seed v23 (Schema Posture)
 
 - Implementation Summary:
