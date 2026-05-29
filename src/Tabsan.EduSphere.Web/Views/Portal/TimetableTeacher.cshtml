@@ -49,6 +49,31 @@ else
                 @if (canManage)
                 {
                     <div class="col-12 col-md-3">
+                        <label class="form-label">Department</label>
+                        <select class="form-select" name="departmentId">
+                            <option value="">All departments</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Faculty</label>
+                        <select class="form-select" name="facultyUserId">
+                            <option value="">Select faculty</option>
+                            @foreach (var f in Model.Faculty)
+                            {
+                                <option value="@f.Id" selected="@(Model.SelectedFacultyUserId == f.Id ? "selected" : null)">@f.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                @if (canManage)
+                {
+                    <div class="col-12 col-md-2">
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) />
                             <label class="form-check-label" for="includeInactive">Show deactivated</label>
@@ -118,6 +143,8 @@ else
                                                     <input type="hidden" name="timetableId" value="@e.TimetableId" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                    <input type="hidden" name="facultyUserId" value="@Model.SelectedFacultyUserId" />
                                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                                     <button type="submit" class="btn btn-sm btn-outline-secondary">Deactivate</button>
                                                 </form>
@@ -129,6 +156,8 @@ else
                                                     <input type="hidden" name="timetableId" value="@e.TimetableId" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                    <input type="hidden" name="facultyUserId" value="@Model.SelectedFacultyUserId" />
                                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                                     <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
                                                 </form>

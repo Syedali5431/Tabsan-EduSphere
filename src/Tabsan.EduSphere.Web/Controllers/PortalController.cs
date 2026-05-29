@@ -771,6 +771,12 @@ public class PortalController : Controller
             return View(vm);
         }
 
+        if (identity?.IsSuperAdmin != true)
+        {
+            vm.SelectedTenantId ??= identity?.TenantId;
+            vm.SelectedCampusId ??= identity?.CampusId;
+        }
+
         try
         {
             if (identity?.IsSuperAdmin == true)
@@ -1027,17 +1033,22 @@ public class PortalController : Controller
     public async Task<IActionResult> TimetableTeacher(
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId,
+        Guid? facultyUserId,
         bool includeInactive,
         CancellationToken ct)
     {
         ViewData["Title"] = "Teacher Timetable";
         var identity = _api.GetSessionIdentity();
+        var canManage = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         var vm = new TimetableTeacherPageModel
         {
             IsConnected = _api.IsConnected(),
             Identity = identity,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedFacultyUserId = facultyUserId,
             IncludeInactive = includeInactive,
             Message = TempData["PortalMessage"]?.ToString()
         };
@@ -1057,7 +1068,28 @@ public class PortalController : Controller
                     vm.Campuses = await _api.GetCampusesAsync(vm.SelectedTenantId, ct);
             }
 
-            vm.Entries = await _api.GetTeacherEntriesAsync(vm.SelectedTenantId, vm.SelectedCampusId, vm.IncludeInactive, ct);
+            if (canManage)
+            {
+                if (vm.SelectedCampusId.HasValue)
+                    vm.Departments = await _api.GetDepartmentsAsync(vm.SelectedTenantId, vm.SelectedCampusId, ct);
+
+                if (vm.SelectedDepartmentId.HasValue)
+                    vm.Faculty = await _api.GetFacultyAsync(vm.SelectedTenantId, vm.SelectedCampusId, vm.SelectedDepartmentId, ct);
+
+                if (!vm.SelectedFacultyUserId.HasValue)
+                {
+                    vm.Message ??= "Select a faculty to view timetable.";
+                    return View(vm);
+                }
+            }
+
+            vm.Entries = await _api.GetTeacherEntriesAsync(
+                vm.SelectedTenantId,
+                vm.SelectedCampusId,
+                vm.SelectedDepartmentId,
+                vm.SelectedFacultyUserId,
+                vm.IncludeInactive,
+                ct);
         }
         catch (Exception ex)
         {
@@ -1069,13 +1101,13 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ActivateTeacherTimetable(Guid timetableId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> ActivateTeacherTimetable(Guid timetableId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? facultyUserId, bool includeInactive, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
         {
             TempData["PortalMessage"] = "Only Admin or SuperAdmin can activate timetables.";
-            return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, includeInactive });
+            return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, departmentId, facultyUserId, includeInactive });
         }
 
         try
@@ -1088,18 +1120,18 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, includeInactive });
+        return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, departmentId, facultyUserId, includeInactive });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeactivateTeacherTimetable(Guid timetableId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> DeactivateTeacherTimetable(Guid timetableId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? facultyUserId, bool includeInactive, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
         {
             TempData["PortalMessage"] = "Only Admin or SuperAdmin can deactivate timetables.";
-            return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, includeInactive });
+            return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, departmentId, facultyUserId, includeInactive });
         }
 
         try
@@ -1112,7 +1144,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, includeInactive });
+        return RedirectToAction(nameof(TimetableTeacher), new { tenantId, campusId, departmentId, facultyUserId, includeInactive });
     }
 
     // ── Buildings ───────────────────────────────────────────────────────────

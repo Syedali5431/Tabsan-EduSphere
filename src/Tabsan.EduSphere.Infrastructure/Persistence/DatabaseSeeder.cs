@@ -435,8 +435,8 @@ public static class DatabaseSeeder
         EnsureRoleAccess(timetableAdmin.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(timetableAdmin.Id, "Student", isAllowed: false);
 
-        // Teacher Timetable: Faculty only
-        EnsureRoleAccess(timetableFaculty.Id, "Admin",   isAllowed: false);
+        // Teacher Timetable: Faculty and Admin
+        EnsureRoleAccess(timetableFaculty.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(timetableFaculty.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(timetableFaculty.Id, "Student", isAllowed: false);
 

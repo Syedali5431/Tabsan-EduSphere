@@ -535,6 +535,19 @@ BEGIN
         INNER JOIN [sidebar_menu_items] smi ON smi.[Id] = sra.[SidebarMenuItemId]
         WHERE smi.[Key] IN (N'dashboard', N'academic', N'courses', N'attendance', N'programs', N'settings', N'admin_users', N'tenant_management', N'campus_management')
           AND smi.[IsDeleted] = 0;
+
+                INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+                SELECT
+                        N'Sidebar.TeacherTimetableAdminAllowed',
+                        CASE WHEN COUNT(1) = 1 THEN 1 ELSE 0 END,
+                        CAST(COUNT(1) AS NVARCHAR(20)),
+                        N'1'
+                FROM [sidebar_menu_role_accesses] sra
+                INNER JOIN [sidebar_menu_items] smi ON smi.[Id] = sra.[SidebarMenuItemId]
+                WHERE smi.[Key] = N'timetable_teacher'
+                    AND sra.[RoleName] = N'Admin'
+                    AND sra.[IsAllowed] = 1
+                    AND smi.[IsDeleted] = 0;
     END;
 END;
 

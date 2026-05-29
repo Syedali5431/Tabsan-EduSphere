@@ -692,10 +692,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV9' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV10' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v9';
+	AND DemoValue = N'FullDummyData-v10';
 
 SELECT 'SidebarMenu_GenerateCertificates_Count' AS [CheckName], COUNT(1) AS [Value]
 FROM [sidebar_menu_items]
@@ -704,6 +704,13 @@ WHERE [Key] = N'generate_certificates';
 SELECT 'SidebarMenu_CourseMaterial_Count' AS [CheckName], COUNT(1) AS [Value]
 FROM [sidebar_menu_items]
 WHERE [Key] = N'course_material';
+
+SELECT 'SidebarMenu_TeacherTimetable_AdminAllowed_Count' AS [CheckName], COUNT(1) AS [Value]
+FROM [sidebar_menu_role_accesses] sra
+INNER JOIN [sidebar_menu_items] smi ON smi.[Id] = sra.[SidebarMenuItemId]
+WHERE smi.[Key] = N'timetable_teacher'
+	AND sra.[RoleName] = N'Admin'
+	AND sra.[IsAllowed] = 1;
 
 SELECT 'DummySeed_AllInstitutionTypes_HaveTimetableCoverage' AS [CheckName], COUNT(1) AS [Value]
 FROM
@@ -751,6 +758,14 @@ WHERE te.[SubjectName] LIKE N'Class %';
 SELECT 'DummySeed_CollegeClassEntryCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [timetable_entries] te
 WHERE te.[SubjectName] LIKE N'College Semester %';
+
+SELECT 'DummySeed_TeacherTimetableFilterDemoCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [timetable_entries] te
+WHERE te.[Id] IN
+(
+		CAST('26262626-2626-2626-2626-262626262804' AS UNIQUEIDENTIFIER),
+		CAST('26262626-2626-2626-2626-262626262805' AS UNIQUEIDENTIFIER)
+);
 
 SELECT 'DummySeed_TargetSchoolScienceClassCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [timetable_entries] te
@@ -1024,10 +1039,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v9' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v10' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v9';
+			AND [DemoValue] = N'FullDummyData-v10';
 END;
 
 PRINT 'Post-deployment checks completed.';

@@ -161,9 +161,13 @@ public class TimetableTeacherPageModel
     public SessionIdentity? Identity { get; set; }
     public Guid? SelectedTenantId { get; set; }
     public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedFacultyUserId { get; set; }
     public bool IncludeInactive { get; set; }
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<FacultyLookupItem> Faculty { get; set; } = new();
     public List<TeacherTimetableEntryItem> Entries { get; set; } = new();
 }
 

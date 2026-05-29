@@ -406,6 +406,7 @@ public class TimetableController : ControllerBase
     public async Task<IActionResult> GetMyTeacherTimetable(
         [FromQuery] Guid? tenantId,
         [FromQuery] Guid? campusId,
+        [FromQuery] Guid? facultyUserId,
         [FromQuery] bool includeInactive,
         CancellationToken ct)
     {
@@ -420,7 +421,12 @@ public class TimetableController : ControllerBase
         // Only admins can include inactive (unpublished) timetables.
         var canIncludeInactive = includeInactive && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"));
 
-        var entries = await _service.GetForTeacherAsync(userId, scope.TenantId, scope.CampusId, canIncludeInactive, ct);
+        var isManageRole = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+        var effectiveFacultyUserId = isManageRole
+            ? (facultyUserId ?? userId)
+            : userId;
+
+        var entries = await _service.GetForTeacherAsync(effectiveFacultyUserId, scope.TenantId, scope.CampusId, canIncludeInactive, ct);
         return Ok(entries);
     }
 

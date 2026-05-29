@@ -47,7 +47,7 @@ public interface IEduApiClient
     Task AddTimetableEntryAsync(AddTimetableEntryForm form, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task PublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task UnpublishTimetableAsync(Guid timetableId, Guid? tenantId, Guid? campusId, CancellationToken ct);
-    Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct);
+    Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? facultyUserId, bool includeInactive, CancellationToken ct);
     Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct);
 
     // Buildings
@@ -989,15 +989,19 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(CancellationToken ct)
-        => await GetTeacherEntriesAsync(null, null, false, ct);
+        => await GetTeacherEntriesAsync(null, null, null, null, false, ct);
 
-    public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct)
+    public async Task<List<TeacherTimetableEntryItem>> GetTeacherEntriesAsync(Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? facultyUserId, bool includeInactive, CancellationToken ct)
     {
         var queryParts = new List<string>();
         if (tenantId.HasValue)
             queryParts.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue)
             queryParts.Add($"campusId={campusId.Value}");
+        if (departmentId.HasValue)
+            queryParts.Add($"departmentId={departmentId.Value}");
+        if (facultyUserId.HasValue)
+            queryParts.Add($"facultyUserId={facultyUserId.Value}");
         if (includeInactive)
             queryParts.Add("includeInactive=true");
 
