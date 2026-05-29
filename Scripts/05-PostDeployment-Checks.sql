@@ -321,6 +321,18 @@ SELECT 'IndexExists_IX_results_offering_publish_type' AS [CheckName],
 SELECT 'IndexExists_IX_results_student_publish_type' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_results_student_publish_type' AND object_id = OBJECT_ID('results')) THEN 1 ELSE 0 END AS [Value];
 
+SELECT 'ResultComponentRulesInstitutionTypeColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('result_component_rules', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'IndexExists_IX_result_component_rules_institution_name' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_result_component_rules_institution_name' AND object_id = OBJECT_ID('result_component_rules')) THEN 1 ELSE 0 END AS [Value];
+
+SELECT 'GpaScaleRulesInstitutionTypeColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('gpa_scale_rules', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT 'IndexExists_IX_gpa_scale_rules_institution_minimum_score' AS [CheckName],
+	CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_gpa_scale_rules_institution_minimum_score' AND object_id = OBJECT_ID('gpa_scale_rules')) THEN 1 ELSE 0 END AS [Value];
+
 SELECT 'MigrationExists_Stage11_DepartmentInstitutionType' AS [CheckName],
 	CASE WHEN EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId = '20260513121000_Phase1Stage11DepartmentInstitutionType') THEN 1 ELSE 0 END AS [Value];
 
@@ -692,10 +704,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV10' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV11' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v10';
+	AND DemoValue = N'FullDummyData-v11';
 
 SELECT 'SidebarMenu_GenerateCertificates_Count' AS [CheckName], COUNT(1) AS [Value]
 FROM [sidebar_menu_items]
@@ -1039,10 +1051,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v10' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v11' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v10';
+			AND [DemoValue] = N'FullDummyData-v11';
 END;
 
 PRINT 'Post-deployment checks completed.';

@@ -106,6 +106,46 @@ BEGIN
   ON results (StudentProfileId, IsPublished, ResultType);
 END
 
+IF OBJECT_ID(N'result_component_rules') IS NOT NULL
+BEGIN
+  IF COL_LENGTH('result_component_rules', 'InstitutionType') IS NULL
+  BEGIN
+    ALTER TABLE result_component_rules
+    ADD InstitutionType int NOT NULL CONSTRAINT DF_result_component_rules_InstitutionType DEFAULT(0);
+  END
+
+  IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_result_component_rules_name' AND object_id = OBJECT_ID('result_component_rules'))
+  BEGIN
+    DROP INDEX IX_result_component_rules_name ON result_component_rules;
+  END
+
+  IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_result_component_rules_institution_name' AND object_id = OBJECT_ID('result_component_rules'))
+  BEGIN
+    CREATE UNIQUE INDEX IX_result_component_rules_institution_name
+    ON result_component_rules (InstitutionType, Name);
+  END
+END
+
+IF OBJECT_ID(N'gpa_scale_rules') IS NOT NULL
+BEGIN
+  IF COL_LENGTH('gpa_scale_rules', 'InstitutionType') IS NULL
+  BEGIN
+    ALTER TABLE gpa_scale_rules
+    ADD InstitutionType int NOT NULL CONSTRAINT DF_gpa_scale_rules_InstitutionType DEFAULT(0);
+  END
+
+  IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_gpa_scale_rules_minimum_score' AND object_id = OBJECT_ID('gpa_scale_rules'))
+  BEGIN
+    DROP INDEX IX_gpa_scale_rules_minimum_score ON gpa_scale_rules;
+  END
+
+  IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_gpa_scale_rules_institution_minimum_score' AND object_id = OBJECT_ID('gpa_scale_rules'))
+  BEGIN
+    CREATE UNIQUE INDEX IX_gpa_scale_rules_institution_minimum_score
+    ON gpa_scale_rules (InstitutionType, MinimumScore);
+  END
+END
+
   /* Stage 1.3 parity hardening indexes */
   IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_institution_type' AND object_id = OBJECT_ID('departments'))

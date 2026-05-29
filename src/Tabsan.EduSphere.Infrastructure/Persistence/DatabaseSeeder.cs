@@ -516,8 +516,8 @@ public static class DatabaseSeeder
         EnsureRoleAccess(prerequisites.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(prerequisites.Id, "Student", isAllowed: false);
 
-        // Assignments: Faculty + Student
-        EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: false);
+        // Assignments: Admin + Faculty + Student
+        EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(assignments.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(assignments.Id, "Student", isAllowed: true);
 

@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v10', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v11', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v10',
+    SET [DemoValue] = N'FullDummyData-v11',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1760,6 +1760,52 @@ BEGIN
                 AND x.[CourseOfferingId] = r.[CourseOfferingId]
                 AND x.[ResultType] = N'FinalReview'
             );
+
+        /* 12.0.3) Assignment-derived published results for demo/testing lifecycle */
+        IF OBJECT_ID(N'[assignment_submissions]') IS NOT NULL AND OBJECT_ID(N'[assignments]') IS NOT NULL
+        BEGIN
+            ;WITH RankedAssignmentSubmissions AS
+            (
+                SELECT
+                    s.[StudentProfileId],
+                    a.[CourseOfferingId],
+                    CAST(COALESCE(s.[MarksAwarded], a.[MaxMarks] * CAST(0.80 AS DECIMAL(8,2))) AS DECIMAL(8,2)) AS [MarksObtained],
+                    CAST(a.[MaxMarks] AS DECIMAL(8,2)) AS [MaxMarks],
+                    COALESCE(s.[GradedByUserId], co.[FacultyUserId], @SuperAdminUserId) AS [PublishedByUserId],
+                    ROW_NUMBER() OVER
+                    (
+                        PARTITION BY s.[StudentProfileId], a.[CourseOfferingId]
+                        ORDER BY COALESCE(s.[GradedAt], s.[SubmittedAt]) DESC, s.[Id] DESC
+                    ) AS [RowNum]
+                FROM [assignment_submissions] s
+                INNER JOIN [assignments] a ON a.[Id] = s.[AssignmentId]
+                INNER JOIN [course_offerings] co ON co.[Id] = a.[CourseOfferingId]
+                WHERE s.[Status] = N'Graded'
+            )
+            INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+            SELECT
+                NEWID(),
+                ras.[StudentProfileId],
+                ras.[CourseOfferingId],
+                N'Assignments',
+                ras.[MarksObtained],
+                ras.[MaxMarks],
+                1,
+                @Now,
+                ras.[PublishedByUserId],
+                @Now,
+                NULL
+            FROM RankedAssignmentSubmissions ras
+            WHERE ras.[RowNum] = 1
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM [results] x
+                    WHERE x.[StudentProfileId] = ras.[StudentProfileId]
+                      AND x.[CourseOfferingId] = ras.[CourseOfferingId]
+                      AND x.[ResultType] = N'Assignments'
+                );
+        END
 END
 
 /* 12.1) Payments - Expanded */

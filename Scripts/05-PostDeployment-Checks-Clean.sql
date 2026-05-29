@@ -256,6 +256,34 @@ BEGIN
     WHERE v.[len] IS NOT NULL;
 END;
 
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'ResultComponentRules.InstitutionTypeColumnPresent',
+    CASE WHEN COL_LENGTH('result_component_rules', 'InstitutionType') IS NOT NULL THEN 1 ELSE 0 END,
+    CASE WHEN COL_LENGTH('result_component_rules', 'InstitutionType') IS NOT NULL THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_result_component_rules_institution_name',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_institution_name' AND [object_id] = OBJECT_ID(N'result_component_rules')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_result_component_rules_institution_name' AND [object_id] = OBJECT_ID(N'result_component_rules')) THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'GpaScaleRules.InstitutionTypeColumnPresent',
+    CASE WHEN COL_LENGTH('gpa_scale_rules', 'InstitutionType') IS NOT NULL THEN 1 ELSE 0 END,
+    CASE WHEN COL_LENGTH('gpa_scale_rules', 'InstitutionType') IS NOT NULL THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_gpa_scale_rules_institution_minimum_score',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_institution_minimum_score' AND [object_id] = OBJECT_ID(N'gpa_scale_rules')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_gpa_scale_rules_institution_minimum_score' AND [object_id] = OBJECT_ID(N'gpa_scale_rules')) THEN N'1' ELSE N'0' END,
+    N'1';
+
 IF OBJECT_ID(N'[course_materials]') IS NOT NULL
 BEGIN
     INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])

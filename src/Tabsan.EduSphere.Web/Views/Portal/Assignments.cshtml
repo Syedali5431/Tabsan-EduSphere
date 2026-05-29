@@ -12,34 +12,52 @@
 }
 else
 {
-    @if (Model.Identity?.IsSuperAdmin == true)
+    @if (Model.Identity?.IsSuperAdmin == true || Model.Identity?.IsAdmin == true)
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <form method="get" asp-action="Assignments" class="row g-2 align-items-end">
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
-                    <div class="col-md-3">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All tenants</option>
-                            @foreach (var t in Model.Tenants)
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
+                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true ? "3" : "6")">
+                        <label class="form-label">Department</label>
+                        <select name="departmentId" class="form-select" onchange="this.form.submit()" @(Model.SelectedCampusId.HasValue ? null : "disabled")>
+                            <option value="">All departments</option>
+                            @foreach (var d in Model.Departments)
                             {
-                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
                             }
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All campuses</option>
-                            @foreach (var c in Model.Campuses)
-                            {
-                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true ? "3" : "6")">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) onchange="this.form.submit()" />
@@ -58,6 +76,7 @@ else
                 <form method="get" asp-action="Assignments" class="row g-2 align-items-end">
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                     @if (User.IsInRole("Student") && Model.SemesterOptions.Count > 0)
                     {
@@ -125,7 +144,10 @@ else
                                         @if (Model.SelectedOfferingId.HasValue)
                                         {
                                             <a asp-action="Assignments"
-                                                              asp-route-semesterName="@Model.SelectedSemesterName"
+                                                 asp-route-tenantId="@Model.SelectedTenantId"
+                                                 asp-route-campusId="@Model.SelectedCampusId"
+                                                 asp-route-departmentId="@Model.SelectedDepartmentId"
+                                                 asp-route-semesterName="@Model.SelectedSemesterName"
                                                asp-route-offeringId="@Model.SelectedOfferingId"
                                                asp-route-selectedAssignmentId="@a.Id">@a.Title</a>
                                         }
@@ -171,6 +193,7 @@ else
                                                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                     <button type="submit" class="btn btn-xs btn-outline-success btn-sm">Publish</button>
                                                 </form>
                                             }
@@ -181,6 +204,7 @@ else
                                                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                 <input type="hidden" name="includeInactive" value="true" />
                                                 <input type="hidden" name="activate" value="@(!a.IsActive)" />
                                                 @if (a.IsActive)
@@ -275,6 +299,7 @@ else
             <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Create Assignment</h5>
@@ -317,6 +342,7 @@ else
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Edit Assignment</h5>
