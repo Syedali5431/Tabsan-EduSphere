@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Demo Seed v31 + Filter Validation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v31 with deterministic Generate Certificates demo cohort:
+    - DEMO-CERT-CS-901,
+    - DEMO-CERT-BUS-902,
+    - DEMO-CERT-ENG-903.
+  - Added deterministic enrollment rows for the above demo students to support course-filtered certificate list validation.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Generate Certificates demo assertions and v31 marker checks.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive seed/check coverage only for existing Generate Certificates filter flow.
+- Validation Summary:
+  - SQL checks confirmed dataset marker v31 and deterministic profile/enrollment row coverage.
+  - SQL filter verification confirmed expected department/course filter behavior for the seeded demo cohort.
+
 ### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Template Import + University Runtime Validation)
 - Runtime delivery in this slice:
   - Added transcript template API endpoints in existing degree-template domain:

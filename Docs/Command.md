@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Generate Certificates Demo Seed v31 and Filter Validation Sync (2026-05-31)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v31` and added deterministic Generate Certificates demo cohort (`DEMO-CERT-CS-901`, `DEMO-CERT-BUS-902`, `DEMO-CERT-ENG-903`).
+  - Added deterministic enrollment rows for the above demo students.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v31 marker and Generate Certificates demo assertions.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Validation Summary:
+  - SQL checks confirmed marker `FullDummyData-v31` and deterministic profile/enrollment row coverage.
+  - SQL filter verification confirmed expected department/course filter behavior for seeded DEMO-CERT rows.
+
 ### Generate Certificates Template Import/Export and Runtime Validation Sync (2026-05-31)
 - Implementation Summary:
   - Added transcript template endpoints in API degree-template controller:

@@ -1,3 +1,18 @@
+## Execution Update - 2026-05-31 (Generate Certificates Demo Seed v31 + Filter Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Generate Certificates module behavior.
+- Full dummy seed now includes deterministic Generate Certificates demo rows for:
+  - School of Computer Science,
+  - School of Business Administration,
+  - School of Engineering.
+- Full dummy seed now includes deterministic enrollment rows for the above certificate demo students.
+- Post-deployment checks now include Generate Certificates demo assertions and FullDummyData-v31 marker validation.
+
+### Validation summary
+- SQL checks confirmed deterministic DEMO-CERT profile/enrollment coverage and v31 marker assertions.
+- SQL filter validation confirmed expected visibility behavior for department/course filtered certificate scenarios.
+
 ## Execution Update - 2026-05-31 (Generate Certificates Template Import/Export + Runtime Validation)
 
 ### Module impact summary

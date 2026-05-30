@@ -1,5 +1,30 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation Synchronization
+
+### Generate Certificates runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Generate Certificates runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.GenerateCertificates
+	- EduApiClient.GetGraduatedCertificateStudentsAsync
+	- CertificateGenerationController.GetGraduatedStudents
+
+### Generate Certificates validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Generate Certificates filter demo rows and metadata marker FullDummyData-v31:
+	- DEMO-CERT-CS-901 (School of Computer Science)
+	- DEMO-CERT-BUS-902 (School of Business Administration)
+	- DEMO-CERT-ENG-903 (School of Engineering)
+- Scripts/03-FullDummyData.sql now includes deterministic enrollment rows for the above students.
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_DemoDatasetVersionIsV31
+	- DummySeed_GenerateCertificatesDemo_ProfilesByIdCount
+	- DummySeed_GenerateCertificatesDemo_GraduatedCount
+	- DummySeed_GenerateCertificatesDemo_ComputerScienceCount
+	- DummySeed_GenerateCertificatesDemo_BusinessCount
+	- DummySeed_GenerateCertificatesDemo_EngineeringCount
+	- DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount
+- SQL filter verification confirmed deterministic demo rows resolve correctly by department/course filter targets.
+
 ## 2026-05-31 Update - Generate Certificates Template Import/Export and Runtime Validation Synchronization
 
 ### Generate Certificates runtime additions

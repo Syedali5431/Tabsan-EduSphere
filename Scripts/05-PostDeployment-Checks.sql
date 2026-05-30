@@ -727,10 +727,54 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV30' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV31' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v30';
+	AND DemoValue = N'FullDummyData-v31';
+
+SELECT 'DummySeed_GenerateCertificatesDemo_ProfilesByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [Id] IN
+(
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_GenerateCertificatesDemo_GraduatedCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [Id] IN
+(
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903' AS UNIQUEIDENTIFIER)
+)
+	AND [Status] = 3
+	AND [GraduatedDate] IS NOT NULL;
+
+SELECT 'DummySeed_GenerateCertificatesDemo_ComputerScienceCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_GenerateCertificatesDemo_BusinessCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_GenerateCertificatesDemo_EngineeringCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [enrollments]
+WHERE [Id] IN
+(
+	CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9901' AS UNIQUEIDENTIFIER),
+	CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9902' AS UNIQUEIDENTIFIER),
+	CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9903' AS UNIQUEIDENTIFIER)
+);
 
 SELECT 'DummySeed_CoursesFilterDemo_CourseRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [courses]

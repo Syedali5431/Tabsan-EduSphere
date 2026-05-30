@@ -1,3 +1,24 @@
+## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to FullDummyData-v31 and added deterministic Generate Certificates demo rows:
+  - DEMO-CERT-CS-901,
+  - DEMO-CERT-BUS-902,
+  - DEMO-CERT-ENG-903.
+- Added deterministic enrollment rows for the above Generate Certificates demo students.
+- Updated Scripts/05-PostDeployment-Checks.sql with Generate Certificates and version assertions:
+  - DummySeed_DemoDatasetVersionIsV31,
+  - DummySeed_GenerateCertificatesDemo_ProfilesByIdCount,
+  - DummySeed_GenerateCertificatesDemo_GraduatedCount,
+  - DummySeed_GenerateCertificatesDemo_ComputerScienceCount,
+  - DummySeed_GenerateCertificatesDemo_BusinessCount,
+  - DummySeed_GenerateCertificatesDemo_EngineeringCount,
+  - DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount.
+
+### Validation Summary:
+- SQL verification confirmed deterministic Generate Certificates demo rows and enrollment coverage.
+- SQL filter verification confirmed department/course filter targets return expected deterministic data.
+
 ## 2026-05-31 Update - Generate Certificates Template Import/Export and Runtime Validation
 
 ### Implementation Summary:
