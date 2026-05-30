@@ -1,3 +1,17 @@
+## 2026-05-31 Update - Generate Certificates Demo Seed v32 (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to FullDummyData-v32.
+	- Expanded additive deterministic Generate Certificates demo rows in existing tables only:
+		- users,
+		- student_profiles,
+		- enrollments.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive v32 marker and expanded deterministic cohort assertions.
+- Validation Summary:
+	- SQL updates are additive and idempotent at row level for deterministic IDs.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v31 (Schema Posture)
 
 - Implementation Summary:

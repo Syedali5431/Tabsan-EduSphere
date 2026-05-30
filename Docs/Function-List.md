@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation Synchronization
+
+### Generate Certificates runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Generate Certificates runtime surface remains authoritative (no duplicate function inventory rows added).
+
+### Generate Certificates validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Generate Certificates filter demo rows and metadata marker FullDummyData-v32:
+	- DEMO-CERT-CS-901, DEMO-CERT-CS-904 (School of Computer Science)
+	- DEMO-CERT-BUS-902, DEMO-CERT-BUS-905 (School of Business Administration)
+	- DEMO-CERT-ENG-903, DEMO-CERT-ENG-906 (School of Engineering)
+- Scripts/05-PostDeployment-Checks.sql now validates v32 expanded assertions:
+	- DummySeed_DemoDatasetVersionIsV32
+	- DummySeed_GenerateCertificatesDemo_ProfilesByIdCount
+	- DummySeed_GenerateCertificatesDemo_GraduatedCount
+	- DummySeed_GenerateCertificatesDemo_ComputerScienceCount
+	- DummySeed_GenerateCertificatesDemo_BusinessCount
+	- DummySeed_GenerateCertificatesDemo_EngineeringCount
+	- DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount
+- SQL verification confirmed deterministic counts for marker/profile/graduated/department/enrollment checks at 1/6/6/2/2/2/6 respectively.
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation Synchronization
 
 ### Generate Certificates runtime additions

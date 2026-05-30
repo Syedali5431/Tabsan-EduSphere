@@ -1,3 +1,20 @@
+## Execution Update - 2026-05-31 (Generate Certificates Demo Seed v32 + Filter Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Generate Certificates module behavior.
+- Full dummy seed now expands deterministic Generate Certificates demo rows to six graduated students:
+  - 2 in School of Computer Science,
+  - 2 in School of Business Administration,
+  - 2 in School of Engineering.
+- Post-deployment checks now validate v32 marker and expanded deterministic cohort assertions.
+
+### Validation summary
+- SQL checks confirmed marker FullDummyData-v32 with deterministic cohort totals:
+  - profiles=6,
+  - graduated=6,
+  - enrollments=6.
+- SQL filter validation confirmed expected per-department visibility distribution (2 each).
+
 ## Execution Update - 2026-05-31 (Generate Certificates Demo Seed v31 + Filter Validation)
 
 ### Module impact summary

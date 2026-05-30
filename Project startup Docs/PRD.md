@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Demo Seed v32 + Filter Validation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v32 with expanded deterministic Generate Certificates demo cohort:
+    - DEMO-CERT-CS-901, DEMO-CERT-CS-904,
+    - DEMO-CERT-BUS-902, DEMO-CERT-BUS-905,
+    - DEMO-CERT-ENG-903, DEMO-CERT-ENG-906.
+  - Updated Scripts/05-PostDeployment-Checks.sql with v32 marker and expanded deterministic cohort assertions.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive seed/check coverage only for existing Generate Certificates filter flow.
+- Validation Summary:
+  - SQL checks confirmed dataset marker v32 and deterministic cohort/enrollment coverage (6 profiles, 6 graduated, 6 enrollments).
+  - SQL filter verification confirmed expected department distribution for the seeded cohort (2 per department).
+
 ### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Demo Seed v31 + Filter Validation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v31 with deterministic Generate Certificates demo cohort:

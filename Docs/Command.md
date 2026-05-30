@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Generate Certificates Demo Seed v32 and Filter Validation Sync (2026-05-31)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v32` and expanded deterministic Generate Certificates demo cohort to six rows (two each in CS/Business/Engineering).
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v32 marker assertion and expanded deterministic cohort checks.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Commands Executed:
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -i "Scripts/03-FullDummyData.sql"` (encountered unrelated duplicate key in `course_announcements`; existing data conflict outside v32 scope).
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -i "Artifacts/temp-generate-cert-v32-seed.sql"` (targeted idempotent v32 Generate Certificates rows applied).
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -Q "...v32 marker/profile/graduated/department/enrollment verification queries..."`.
+- Validation Summary:
+  - SQL checks confirmed marker `FullDummyData-v32` and deterministic counts: profiles=6, graduated=6, CS=2, Business=2, Engineering=2, enrollments=6.
+
 ### Generate Certificates Demo Seed v31 and Filter Validation Sync (2026-05-31)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v31` and added deterministic Generate Certificates demo cohort (`DEMO-CERT-CS-901`, `DEMO-CERT-BUS-902`, `DEMO-CERT-ENG-903`).

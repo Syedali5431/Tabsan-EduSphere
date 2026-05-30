@@ -1,3 +1,21 @@
+## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to FullDummyData-v32 and expanded deterministic Generate Certificates demo rows to a six-student cohort.
+- Added deterministic user/profile/enrollment support rows for the second CS/Business/Engineering demo set.
+- Updated Scripts/05-PostDeployment-Checks.sql with v32 assertions:
+  - DummySeed_DemoDatasetVersionIsV32,
+  - DummySeed_GenerateCertificatesDemo_ProfilesByIdCount,
+  - DummySeed_GenerateCertificatesDemo_GraduatedCount,
+  - DummySeed_GenerateCertificatesDemo_ComputerScienceCount,
+  - DummySeed_GenerateCertificatesDemo_BusinessCount,
+  - DummySeed_GenerateCertificatesDemo_EngineeringCount,
+  - DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount.
+
+### Validation Summary:
+- SQL verification confirmed v32 marker and deterministic row coverage for profile/graduated/enrollment counts.
+- SQL filter verification confirmed expected per-department split (2 each for CS/Business/Engineering).
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation
 
 ### Implementation Summary:

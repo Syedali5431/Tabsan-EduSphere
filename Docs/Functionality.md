@@ -1,5 +1,30 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Generate Certificates demo/filter data synchronization:
+	- advanced dataset marker to FullDummyData-v32,
+	- expanded deterministic graduated student cohort from 3 to 6 total rows,
+	- added deterministic users, student_profiles, and enrollments for CS/Business/Engineering second demo pair.
+- Updated Scripts/05-PostDeployment-Checks.sql with v32 Generate Certificates demo assertions:
+	- DummySeed_DemoDatasetVersionIsV32,
+	- DummySeed_GenerateCertificatesDemo_ProfilesByIdCount,
+	- DummySeed_GenerateCertificatesDemo_GraduatedCount,
+	- DummySeed_GenerateCertificatesDemo_ComputerScienceCount,
+	- DummySeed_GenerateCertificatesDemo_BusinessCount,
+	- DummySeed_GenerateCertificatesDemo_EngineeringCount,
+	- DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount.
+
+### Validation sync
+- SQL verification confirmed deterministic v32 counts:
+	- marker=1,
+	- profiles=6,
+	- graduated=6,
+	- department slices (CS/Business/Engineering)=2 each,
+	- enrollments=6.
+- Runtime behavior remains additive and data-only for existing Generate Certificates filter flow.
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation
 
 ### Implementation sync
