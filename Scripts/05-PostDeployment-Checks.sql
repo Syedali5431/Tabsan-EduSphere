@@ -727,10 +727,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV32' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV33' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v32';
+	AND DemoValue = N'FullDummyData-v33';
 
 SELECT 'DummySeed_GenerateCertificatesDemo_ProfilesByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
@@ -796,6 +796,36 @@ WHERE [Id] IN
 	CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9905' AS UNIQUEIDENTIFIER),
 	CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9906' AS UNIQUEIDENTIFIER)
 );
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_ProfilesByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [Id] IN
+(
+	CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8911' AS UNIQUEIDENTIFIER),
+	CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8912' AS UNIQUEIDENTIFIER),
+	CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8913' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_GraduatedStatusCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [Status] = 3
+	AND [GraduatedDate] IS NOT NULL
+	AND [Id] IN
+	(
+		CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8911' AS UNIQUEIDENTIFIER),
+		CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8912' AS UNIQUEIDENTIFIER),
+		CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8913' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_QueryCount_CS' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE d.[InstitutionType] = 2
+	AND sp.[Status] = 3
+	AND d.[TenantId] = CAST('F1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
+	AND d.[CampusId] = CAST('F2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
+	AND d.[Id] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+	AND sp.[Id] = CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8911' AS UNIQUEIDENTIFIER);
 
 SELECT 'DummySeed_CoursesFilterDemo_CourseRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [courses]

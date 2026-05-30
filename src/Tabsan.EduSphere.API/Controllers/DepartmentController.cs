@@ -56,6 +56,7 @@ public class DepartmentController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? tenantId,
         [FromQuery] Guid? campusId,
+        [FromQuery] InstitutionType? institutionType,
         CancellationToken ct)
     {
         var scope = ResolveEffectiveScope(tenantId, campusId);
@@ -76,6 +77,9 @@ public class DepartmentController : ControllerBase
             var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(GetUserId(), ct);
             depts = depts.Where(d => allowedDepartmentIds.Contains(d.Id));
         }
+
+        if (institutionType.HasValue)
+            depts = depts.Where(d => d.InstitutionType == institutionType.Value);
 
         return Ok(depts.Select(d => new { d.Id, d.Name, d.Code, d.IsActive, d.InstitutionType, d.TenantId, d.CampusId }));
     }

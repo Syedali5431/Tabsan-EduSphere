@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Filter Demo Seed v33 + Departments Institution Filter)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v33 with deterministic Generate Certificates filter-demo cohort:
+    - DEMO-CERT-FILTER-CS-911,
+    - DEMO-CERT-FILTER-BUS-912,
+    - DEMO-CERT-FILTER-ENG-913.
+  - Updated Scripts/05-PostDeployment-Checks.sql with deterministic v33 marker and filter-demo assertions.
+  - Updated Departments API list behavior to support optional institution-type filtering on existing endpoint:
+    - `GET /api/v1/department?...&institutionType={0|1|2}`
+- Compatibility boundary:
+  - No menu key change.
+  - No route rename.
+  - Update remains additive in seed/check scope and query behavior on existing endpoint.
+- Validation Summary:
+  - SQL checks confirmed deterministic filter-demo row integrity and scoped query count behavior.
+  - Generate Certificates menu/filter validation confirmed seeded rows appear and CS filter excludes BUS/ENG rows.
+  - Departments institutionType filtering verified in runtime API checks.
+
 ### 2026-05-31 - Product Requirements Synchronization (Result Calculation Course-Type Filter Dummy Seed + Runtime Validation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to align deterministic Result Calculation course filter demo rows with semester type behavior:

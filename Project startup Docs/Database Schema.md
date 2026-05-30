@@ -1,5 +1,19 @@
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed (Schema Posture)
 
+## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql marker to `FullDummyData-v33`.
+	- Added additive deterministic Generate Certificates demo/filter rows in existing tables only:
+		- `users`,
+		- `student_profiles`.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive v33 marker/filter assertions.
+	- Updated existing Departments list API query behavior with optional `institutionType` parameter; no table/index/constraint/view/procedure mutation.
+- Validation Summary:
+	- SQL changes are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 - Implementation Summary:
 	- Updated Scripts/03-FullDummyData.sql deterministic demo rows in existing table only:
 		- courses (HasSemesters/TotalSemesters alignment for CRSFILENG, CRSFILBUS, CRSFILMAT).

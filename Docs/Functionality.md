@@ -1,5 +1,27 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Generate Certificates filter demo additions and marker upgrade to `FullDummyData-v33`:
+	- DEMO-CERT-FILTER-CS-911,
+	- DEMO-CERT-FILTER-BUS-912,
+	- DEMO-CERT-FILTER-ENG-913.
+- Updated Scripts/05-PostDeployment-Checks.sql with matching v33 assertions:
+	- DummySeed_DemoDatasetVersionIsV33,
+	- DummySeed_GenerateCertificatesFilterDemo_ProfilesByIdCount,
+	- DummySeed_GenerateCertificatesFilterDemo_GraduatedStatusCount,
+	- DummySeed_GenerateCertificatesFilterDemo_QueryCount_CS.
+- Updated Departments list API behavior by extending `GET /api/v1/department` with optional `institutionType` filtering while preserving existing tenant/campus/role scope logic.
+
+### Validation sync
+- SQL verification confirmed deterministic filter-demo rows exist with graduated status and expected department/tenant/campus alignment.
+- Generate Certificates menu load and filter verification confirmed:
+	- all three new rows visible in scoped university context,
+	- CS department filter includes CS row and excludes BUS/ENG rows,
+	- no page-load error after runtime schema alignment.
+- Departments API verification confirmed institutionType-filtered results return correctly segmented datasets.
+
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation
 
 ### Implementation sync

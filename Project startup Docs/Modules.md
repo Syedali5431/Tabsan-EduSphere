@@ -1,5 +1,21 @@
 ## Execution Update - 2026-05-31 (Result Calculation Course-Type Filter Dummy Seed + Runtime Validation)
 
+## Execution Update - 2026-05-31 (Generate Certificates Filter Demo Seed v33 + Departments Institution Filter)
+
+### Module impact summary
+- No new module introduced; update remains within existing Generate Certificates and Departments module behavior.
+- Full dummy seed now includes deterministic Generate Certificates filter-demo cohort for university scope validation:
+  - DEMO-CERT-FILTER-CS-911,
+  - DEMO-CERT-FILTER-BUS-912,
+  - DEMO-CERT-FILTER-ENG-913.
+- Post-deployment checks now validate v33 marker and filter-demo deterministic assertions.
+- Departments list endpoint now supports optional institution-type filtering while preserving tenant/campus and role-based scoping.
+
+### Validation summary
+- SQL checks confirmed deterministic filter-demo row presence, graduated status, and scoped query behavior.
+- Generate Certificates menu filter validation confirmed new rows are visible and CS department filter isolates only CS row.
+- Departments API validation confirmed institutionType-filtered result segmentation works as expected.
+
 ### Module impact summary
 - No new module introduced; update remains within existing Result Calculation module behavior.
 - Full dummy seed now aligns deterministic Result Calculation filter demo rows for course type behavior:

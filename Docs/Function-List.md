@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Synchronization
+
+### Function inventory delta
+- No new public controller/service/API function signature was introduced in the Generate Certificates v33 seed/check slice.
+- Existing function updated (no duplicate row added):
+	- DepartmentController.GetAll
+		- Added optional query parameter `institutionType` and applied institution-type filtering after existing scope/role filtering.
+
+### Seed/check runtime surface synchronization
+- Scripts/03-FullDummyData.sql updated to `FullDummyData-v33` and now includes deterministic Generate Certificates filter demo rows:
+	- DEMO-CERT-FILTER-CS-911
+	- DEMO-CERT-FILTER-BUS-912
+	- DEMO-CERT-FILTER-ENG-913
+- Scripts/05-PostDeployment-Checks.sql updated with matching v33 and filter-demo assertions:
+	- DummySeed_DemoDatasetVersionIsV33
+	- DummySeed_GenerateCertificatesFilterDemo_ProfilesByIdCount
+	- DummySeed_GenerateCertificatesFilterDemo_GraduatedStatusCount
+	- DummySeed_GenerateCertificatesFilterDemo_QueryCount_CS
+- Runtime verification confirmed Generate Certificates menu/filter visibility for the new deterministic rows and correct CS department filter isolation.
+
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation Synchronization
 
 ### Result Calculation runtime additions

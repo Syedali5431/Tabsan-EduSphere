@@ -1,5 +1,24 @@
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation
 
+## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v33` and added deterministic Generate Certificates filter demo rows:
+  - `DEMO-CERT-FILTER-CS-911`
+  - `DEMO-CERT-FILTER-BUS-912`
+  - `DEMO-CERT-FILTER-ENG-913`
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v33 validation checks:
+  - `DummySeed_DemoDatasetVersionIsV33`
+  - `DummySeed_GenerateCertificatesFilterDemo_ProfilesByIdCount`
+  - `DummySeed_GenerateCertificatesFilterDemo_GraduatedStatusCount`
+  - `DummySeed_GenerateCertificatesFilterDemo_QueryCount_CS`
+- Updated Departments API list operation to accept optional `institutionType` query parameter and apply institution filter after existing scope/role filters.
+
+### Validation Summary:
+- SQL verification confirmed deterministic v33 filter-demo row integrity.
+- Runtime Generate Certificates validation confirmed new rows appear in scoped view and department filter isolation behaves correctly.
+- Runtime Departments API verification confirmed institution-type filtered list behavior.
+
 ### Implementation Summary:
 - Updated Scripts/03-FullDummyData.sql to enforce deterministic HasSemesters and TotalSemesters values for Result Calculation demo course rows:
   - CRSFILENG => HasSemesters=1, TotalSemesters=8,
