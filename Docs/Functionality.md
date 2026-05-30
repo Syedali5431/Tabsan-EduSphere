@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Students Demo Seed v26 and Filter Validation
+
+### Implementation sync
+- Upgraded `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v26`.
+- Added deterministic Students demo rows for menu/filter verification:
+	- `STUFILT-CS-901`, `STUFILT-CS-902` in `School of Computer Science`.
+	- `STUFILT-BUS-903` in `School of Business Administration`.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v26 assertion and Students filter demo checks.
+- Hardened Students menu runtime behavior so temporary API unavailability shows user-facing warning instead of unhandled exception.
+
+### Validation sync
+- SQL verification confirmed deterministic Students demo split (`2` CS + `1` Business).
+- Students menu loaded and rendered seeded records; department filter URL and list behavior remained stable under scoped role context.
+- Outage-mode runtime now returns graceful UI messaging for Students page load.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
 
 ### Implementation sync

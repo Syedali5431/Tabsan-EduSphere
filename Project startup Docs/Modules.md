@@ -1,3 +1,17 @@
+## Execution Update - 2026-05-30 (Students Demo Seed v26 + Filter Runtime Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Students module behavior.
+- Full dummy seed now includes deterministic Students filter demo data across two departments:
+  - `STUFILT-CS-901`, `STUFILT-CS-902` (Computer Science),
+  - `STUFILT-BUS-903` (Business).
+- Post-deployment checks now include v26 dataset marker assertion and Students demo cohort checks.
+- Students menu load is now outage-resilient and displays user-facing warning when API is temporarily unavailable.
+
+### Validation summary
+- SQL checks confirmed demo cohort split (`2` CS + `1` Business).
+- Students menu and department filter behavior validated against seeded dataset in runtime.
+
 ## Execution Update - 2026-05-30 (Student Timetable Demo Seed v25 Expansion)
 
 ### Module impact summary

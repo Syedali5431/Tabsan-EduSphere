@@ -1,3 +1,16 @@
+## 2026-05-30 Update - Students Demo Seed v26 (Schema Posture)
+
+- Implementation Summary:
+	- Updated `Scripts/03-FullDummyData.sql` dataset marker to `FullDummyData-v26`.
+	- Added additive deterministic Students demo rows in existing tables only:
+		- `users` (3 demo student users),
+		- `student_profiles` (3 demo student profiles for filter testing across two departments).
+	- Updated `Scripts/05-PostDeployment-Checks.sql` with v26 marker assertion and Students demo cohort verification checks.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion (Schema Posture)
 
 - Implementation Summary:

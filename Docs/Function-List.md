@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Students Demo Seed v26 and Outage-Resilient Menu Load
+
+### Runtime additions
+- Added one new helper in existing web controller flow:
+	- `PortalController.IsApiConnectivityException` (classifies HTTP/socket/timeout failures so menu guard and Students view handle temporary API outage gracefully).
+- Existing Students runtime surface remains authoritative:
+	- `PortalController.Students`
+	- `EduApiClient.GetDepartmentsAsync`
+	- `EduApiClient.GetStudentsAsync`
+
+### Validation Summary
+- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v26`.
+- Added deterministic Students filter demo records:
+	- `STUFILT-CS-901`, `STUFILT-CS-902` (Computer Science department)
+	- `STUFILT-BUS-903` (Business department)
+- `Scripts/05-PostDeployment-Checks.sql` extended with Students filter demo assertions and v26 marker checks.
+- Students page now shows friendly warning when API is unavailable instead of a developer exception page.
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
 
 ### Runtime additions

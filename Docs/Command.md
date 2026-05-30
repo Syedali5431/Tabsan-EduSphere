@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Students Demo Seed v26 and Filter Validation Sync (2026-05-30)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v26` and added deterministic Students demo cohort (`STUFILT-CS-901`, `STUFILT-CS-902`, `STUFILT-BUS-903`).
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v26 marker assertions and Students demo cohort checks.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Validation Summary:
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -i "Scripts/03-FullDummyData.sql"`.
+  - `sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -E -Q "SET NOCOUNT ON; SELECT 'StudentsFilterDemo_Total' AS CheckName, COUNT(1) AS [Value] FROM student_profiles WHERE Id IN ('98989898-9898-9898-9898-989898989901','98989898-9898-9898-9898-989898989902','98989898-9898-9898-9898-989898989903'); SELECT 'StudentsFilterDemo_CS' AS CheckName, COUNT(1) AS [Value] FROM student_profiles WHERE DepartmentId='11111111-1111-1111-1111-111111111111' AND Id IN ('98989898-9898-9898-9898-989898989901','98989898-9898-9898-9898-989898989902'); SELECT 'StudentsFilterDemo_BUS' AS CheckName, COUNT(1) AS [Value] FROM student_profiles WHERE DepartmentId='11111111-1111-1111-1111-111111111112' AND Id='98989898-9898-9898-9898-989898989903';"`.
+  - Browser verification: `/Portal/Students` default + department filter path with seeded `STUFILT-*` rows.
+
 ### Student Timetable Demo Seed v25 Expansion (2026-05-30)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v25` and expanded Dummy Engineering Student Timetable demo rows (3 timetables, 6 entries).

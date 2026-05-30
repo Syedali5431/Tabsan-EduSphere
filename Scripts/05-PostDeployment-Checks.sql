@@ -548,6 +548,29 @@ FROM graduation_applications;
 SELECT 'DummySeed_CriticalEntityCount_GraduationApprovals' AS [CheckName], COUNT(1) AS [Value]
 FROM graduation_application_approvals;
 
+SELECT 'DummySeed_StudentsFilterDemoProfiles_Total' AS [CheckName], COUNT(1) AS [Value]
+FROM student_profiles
+WHERE Id IN
+(
+		CAST('98989898-9898-9898-9898-989898989901' AS UNIQUEIDENTIFIER),
+		CAST('98989898-9898-9898-9898-989898989902' AS UNIQUEIDENTIFIER),
+		CAST('98989898-9898-9898-9898-989898989903' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_StudentsFilterDemoProfiles_CSDept' AS [CheckName], COUNT(1) AS [Value]
+FROM student_profiles
+WHERE DepartmentId = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+	AND Id IN
+	(
+			CAST('98989898-9898-9898-9898-989898989901' AS UNIQUEIDENTIFIER),
+			CAST('98989898-9898-9898-9898-989898989902' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_StudentsFilterDemoProfiles_BUSDept' AS [CheckName], COUNT(1) AS [Value]
+FROM student_profiles
+WHERE DepartmentId = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+	AND Id = CAST('98989898-9898-9898-9898-989898989903' AS UNIQUEIDENTIFIER);
+
 SELECT 'GraduationApply_InvalidRows_NotFinalSemesterOrFypIncomplete' AS [CheckName], COUNT(1) AS [Value]
 FROM graduation_applications ga
 INNER JOIN student_profiles sp ON sp.Id = ga.StudentProfileId
@@ -704,10 +727,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV25' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV26' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v25';
+	AND DemoValue = N'FullDummyData-v26';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -1321,10 +1344,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v25' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v26' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v25';
+			AND [DemoValue] = N'FullDummyData-v26';
 END;
 
 PRINT 'Post-deployment checks completed.';

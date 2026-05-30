@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
@@ -178,6 +180,15 @@ public class PortalController : Controller
                 context.Result = RedirectToAction("Index", "Login", new { returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString });
                 return;
             }
+            catch (Exception ex) when (IsApiConnectivityException(ex))
+            {
+                _logger.LogWarning(ex, "Unable to load visible menu keys for action {ActionName} due to API connectivity issue.", action);
+                TempData["PortalMessage"] = "API service is temporarily unavailable. Some menu checks were skipped for this request.";
+                visibleMenuKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    requiredMenuKey
+                };
+            }
 
             if (!visibleMenuKeys.Contains(requiredMenuKey))
             {
@@ -235,6 +246,17 @@ public class PortalController : Controller
     private static bool IsUnauthorizedApiException(InvalidOperationException ex)
         => ex.Message.Contains("status 401", StringComparison.OrdinalIgnoreCase)
            || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsApiConnectivityException(Exception ex)
+    {
+        if (ex is HttpRequestException || ex is SocketException || ex is TimeoutException)
+            return true;
+
+        if (ex.InnerException is not null)
+            return IsApiConnectivityException(ex.InnerException);
+
+        return false;
+    }
 
     private async Task<(bool Allowed, string Message)> CanUseDegreeAuditAsync(CancellationToken ct)
     {
@@ -1764,7 +1786,15 @@ public class PortalController : Controller
             model.Departments = await _api.GetDepartmentsAsync(ct);
             model.Students    = await _api.GetStudentsAsync(departmentId, ct);
         }
-        catch (Exception ex) { model.Message = ex.Message; }
+        catch (Exception ex) when (IsApiConnectivityException(ex))
+        {
+            _logger.LogWarning(ex, "Students page failed to load because the API service is unreachable.");
+            model.Message = "Unable to load students right now because the API service is temporarily unavailable. Please try again shortly.";
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
         return View(model);
     }
 

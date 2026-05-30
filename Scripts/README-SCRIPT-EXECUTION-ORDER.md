@@ -23,7 +23,7 @@ Run scripts in this exact order.
 - Other scripts run against `Tabsan-EduSphere` database.
 - The core seed step uses `02-Seed-Core.sql` as the maintained entry point.
 - Seeded user password in both core and dummy seed scripts: `EduSphere147`.
-- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v25`.
+- Full demo dataset marker after successful script 03 run: `DemoDatasetVersion = FullDummyData-v26`.
 - Full demo now includes mixed attendance timeline rows and results lifecycle rows (`Midterm`, published `Final`, and draft `FinalReview`) for training and validation.
 - Script 04 now adds results lifecycle indexes for publish/draft-heavy query paths.
 - Script 05 now validates attendance/results institution coverage and lifecycle status distribution checks.

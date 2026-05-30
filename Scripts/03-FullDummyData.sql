@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v25', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v26', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v25',
+    SET [DemoValue] = N'FullDummyData-v26',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -753,6 +753,47 @@ INNER JOIN @Departments d ON d.[Id] = s.[DepartmentId]
 INNER JOIN DepartmentPrograms p
     ON p.[DepartmentId] = s.[DepartmentId]
    AND p.[ProgramOrdinal] = ((s.[StudentOrdinal] - 1) % p.[ProgramCount]) + 1;
+
+/* 5.3) Students menu/filter deterministic demo cohort */
+IF OBJECT_ID(N'[users]') IS NOT NULL
+AND OBJECT_ID(N'[student_profiles]') IS NOT NULL
+AND EXISTS (SELECT 1 FROM [departments] WHERE [Id] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER))
+AND EXISTS (SELECT 1 FROM [departments] WHERE [Id] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER))
+AND EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER))
+AND EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER))
+BEGIN
+        DECLARE @StudentFilterDeptCs UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER);
+        DECLARE @StudentFilterDeptBus UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER);
+        DECLARE @StudentFilterProgramCs UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER);
+        DECLARE @StudentFilterProgramBus UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER);
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('97979797-9797-9797-9797-979797979901' AS UNIQUEIDENTIFIER), N'demo.students.filter.cs.901', N'demo.students.filter.cs.901@tabsan.local', @PwdHash, @RoleStudent, @StudentFilterDeptCs, 2, 1, NULL, @Now, NULL, 0, NULL
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] WHERE [Id] = CAST('97979797-9797-9797-9797-979797979901' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('97979797-9797-9797-9797-979797979902' AS UNIQUEIDENTIFIER), N'demo.students.filter.cs.902', N'demo.students.filter.cs.902@tabsan.local', @PwdHash, @RoleStudent, @StudentFilterDeptCs, 2, 1, NULL, @Now, NULL, 0, NULL
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] WHERE [Id] = CAST('97979797-9797-9797-9797-979797979902' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('97979797-9797-9797-9797-979797979903' AS UNIQUEIDENTIFIER), N'demo.students.filter.bus.903', N'demo.students.filter.bus.903@tabsan.local', @PwdHash, @RoleStudent, @StudentFilterDeptBus, 2, 1, NULL, @Now, NULL, 0, NULL
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] WHERE [Id] = CAST('97979797-9797-9797-9797-979797979903' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('98989898-9898-9898-9898-989898989901' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979901' AS UNIQUEIDENTIFIER), N'STUFILT-CS-901', @StudentFilterProgramCs, @StudentFilterDeptCs, DATEADD(day, -120, @Now), 3.21, 2, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] WHERE [Id] = CAST('98989898-9898-9898-9898-989898989901' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('98989898-9898-9898-9898-989898989902' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979902' AS UNIQUEIDENTIFIER), N'STUFILT-CS-902', @StudentFilterProgramCs, @StudentFilterDeptCs, DATEADD(day, -110, @Now), 3.37, 3, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] WHERE [Id] = CAST('98989898-9898-9898-9898-989898989902' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT CAST('98989898-9898-9898-9898-989898989903' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979903' AS UNIQUEIDENTIFIER), N'STUFILT-BUS-903', @StudentFilterProgramBus, @StudentFilterDeptBus, DATEADD(day, -100, @Now), 3.05, 1, @Now, NULL, 0, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] WHERE [Id] = CAST('98989898-9898-9898-9898-989898989903' AS UNIQUEIDENTIFIER));
+END;
 
 /* 6) Courses - Massive expansion (50+ courses) */
 DECLARE @Courses TABLE (Id UNIQUEIDENTIFIER, DepartmentId UNIQUEIDENTIFIER, Title NVARCHAR(200), Code NVARCHAR(20), CreditHours INT);

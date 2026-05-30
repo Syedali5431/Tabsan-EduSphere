@@ -1,3 +1,18 @@
+## 2026-05-30 Update - Students Demo Seed v26 and Filter Runtime Validation
+
+### Implementation Summary:
+- Updated `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v26`.
+- Added deterministic Students menu/filter demo data:
+  - `STUFILT-CS-901`, `STUFILT-CS-902` in Computer Science,
+  - `STUFILT-BUS-903` in Business Administration.
+- Updated `Scripts/05-PostDeployment-Checks.sql` with v26 marker assertion and Students demo cohort checks.
+- Updated Students menu controller flow to handle temporary API outage gracefully and show a user-facing warning.
+
+### Validation Summary:
+- SQL checks confirmed deterministic demo row coverage and department split.
+- Students menu and department filter flow loaded seeded records successfully in runtime verification.
+- Outage-mode Students load now remains stable (no developer exception page).
+
 ## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
 
 ### Implementation Summary:

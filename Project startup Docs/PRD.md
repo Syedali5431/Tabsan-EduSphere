@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Students Demo Seed v26 + Filter Runtime Validation)
+- Runtime delivery in this slice:
+  - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v26`.
+  - Added deterministic Students demo/filter data in existing `users` and `student_profiles` tables:
+    - `STUFILT-CS-901`, `STUFILT-CS-902` (Computer Science),
+    - `STUFILT-BUS-903` (Business).
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with v26 marker checks and Students demo cohort assertions.
+  - Added graceful Students page handling when API is temporarily unavailable to avoid unhandled exception page during demo/testing runs.
+- Compatibility boundary:
+  - No API route rename and no endpoint contract expansion.
+  - Update is additive demo seed/check coverage plus resilience handling in existing web controller flow.
+- Validation Summary:
+  - Seed and check scripts verified deterministic Students demo records and department split.
+  - Students menu and department filter loaded and rendered expected seeded data under current role scope.
+
 ### 2026-05-30 - Product Requirements Synchronization (Student Timetable Demo Seed v25 Expansion)
 - Runtime delivery in this slice:
   - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v25`.
