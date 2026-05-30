@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Result Calculation course-type filter demo alignment:
+	- set HasSemesters for deterministic demo rows (CRSFILENG=1, CRSFILBUS=0, CRSFILMAT=1),
+	- set aligned TotalSemesters values for deterministic demo rows.
+- Updated Scripts/05-PostDeployment-Checks.sql with Result Calculation course-type filter assertions:
+	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount,
+	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount.
+- Added web runtime proxy action for Result Calculation filter data:
+	- GET /Portal/ResultCalculationCourseFilterData?hasSemesters={true|false}
+- Updated ResultCalculation.cshtml filter fetch path to consume the web proxy action.
+
+### Validation sync
+- Authenticated menu validation confirmed Result Calculation screen loads and filter controls are present.
+- Runtime filter dataset validation confirmed expected deterministic split:
+	- true => CRSFILENG + CRSFILMAT,
+	- false => CRSFILBUS.
+- SQL verification confirmed deterministic counts for the new HasSemesters assertions (true=2, false=1).
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation
 
 ### Implementation sync

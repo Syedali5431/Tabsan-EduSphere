@@ -1,5 +1,28 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation Synchronization
+
+### Result Calculation runtime additions
+- Added one new web runtime function for Result Calculation filter data loading:
+	- PortalController.ResultCalculationCourseFilterData
+- Existing Result Calculation runtime surfaces remain authoritative (no duplicate function rows added in this slice):
+	- PortalController.ResultCalculation
+	- PortalController.SaveResultCalculation
+	- EduApiClient.GetResultCalculationSettingsAsync
+	- EduApiClient.SaveResultCalculationSettingsAsync
+
+### Result Calculation validation summary
+- Scripts/03-FullDummyData.sql now enforces deterministic course-type filter demo flags for existing filter-demo course IDs:
+	- CRSFILENG -> HasSemesters=1
+	- CRSFILBUS -> HasSemesters=0
+	- CRSFILMAT -> HasSemesters=1
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount
+	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount
+- Runtime verification confirmed Result Calculation menu loads and course-type filter data endpoint returns expected split:
+	- hasSemesters=true includes CRSFILENG and CRSFILMAT, excludes CRSFILBUS
+	- hasSemesters=false includes CRSFILBUS, excludes CRSFILENG
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation Synchronization
 
 ### Generate Certificates runtime additions

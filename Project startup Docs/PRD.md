@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Result Calculation Course-Type Filter Dummy Seed + Runtime Validation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to align deterministic Result Calculation course filter demo rows with semester type behavior:
+    - CRSFILENG and CRSFILMAT are semester-based,
+    - CRSFILBUS is non-semester-based.
+  - Updated Scripts/05-PostDeployment-Checks.sql with deterministic HasSemesters validation checks.
+  - Added web runtime endpoint for filter data retrieval from Result Calculation page:
+    - `GET /Portal/ResultCalculationCourseFilterData?hasSemesters={true|false}`
+- Compatibility boundary:
+  - No API route rename in existing Result Calculation settings contracts.
+  - No menu key change.
+  - Update is additive seed/check coverage plus web filter data routing for existing Result Calculation workflow.
+- Validation Summary:
+  - Result Calculation menu/screen load verified successfully in authenticated session.
+  - Filter payload verification confirmed expected deterministic split (semester=true: CRSFILENG/CRSFILMAT; semester=false: CRSFILBUS).
+  - SQL checks confirmed deterministic HasSemesters row counts (true=2, false=1).
+
 ### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Demo Seed v32 + Filter Validation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v32 with expanded deterministic Generate Certificates demo cohort:

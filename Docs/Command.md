@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Result Calculation Course-Type Filter Dummy Seed and Runtime Validation Sync (2026-05-31)
+- Implementation Summary:
+  - Updated `Scripts/03-FullDummyData.sql` to enforce deterministic `HasSemesters` filter behavior on `CRSFILENG`, `CRSFILBUS`, `CRSFILMAT` demo rows.
+  - Updated `Scripts/05-PostDeployment-Checks.sql` with deterministic Result Calculation HasSemesters checks.
+  - Added web route `GET /Portal/ResultCalculationCourseFilterData` in `PortalController` and updated `ResultCalculation.cshtml` fetch path to use this endpoint.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Validation Summary:
+  - Runtime checks confirmed Result Calculation menu loads and filter controls are present.
+  - Endpoint checks confirmed expected deterministic split:
+    - `hasSemesters=true` includes `CRSFILENG` + `CRSFILMAT`.
+    - `hasSemesters=false` includes `CRSFILBUS`.
+  - SQL checks confirmed deterministic counts: true=2, false=1.
+
 ### Generate Certificates Demo Seed v32 and Filter Validation Sync (2026-05-31)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v32` and expanded deterministic Generate Certificates demo cohort to six rows (two each in CS/Business/Engineering).

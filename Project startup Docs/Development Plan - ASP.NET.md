@@ -1,3 +1,20 @@
+## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to enforce deterministic HasSemesters and TotalSemesters values for Result Calculation demo course rows:
+  - CRSFILENG => HasSemesters=1, TotalSemesters=8,
+  - CRSFILBUS => HasSemesters=0, TotalSemesters=NULL,
+  - CRSFILMAT => HasSemesters=1, TotalSemesters=2.
+- Updated Scripts/05-PostDeployment-Checks.sql with deterministic Result Calculation course-type checks:
+  - DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount,
+  - DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount.
+- Added web runtime endpoint in PortalController for Result Calculation course-type filter data retrieval and wired ResultCalculation.cshtml filter fetch to this route.
+
+### Validation Summary:
+- Result Calculation page load and filter controls verified in authenticated runtime session.
+- Filter responses verified for semester=true/false split using deterministic demo rows.
+- SQL verification confirmed HasSemesters deterministic counts (true=2, false=1).
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation
 
 ### Implementation Summary:

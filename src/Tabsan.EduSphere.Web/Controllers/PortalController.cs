@@ -1633,6 +1633,32 @@ public class PortalController : Controller
         return View(model);
     }
 
+    // Final-Touches Phase 19 Stage 19.3 — web-side proxy endpoint for Result Calculation course-type filter.
+    [HttpGet]
+    public async Task<IActionResult> ResultCalculationCourseFilterData([FromQuery] bool? hasSemesters, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return Unauthorized();
+
+        try
+        {
+            var courses = hasSemesters.HasValue
+                ? await _api.GetCourseDetailsByTypeAsync(hasSemesters.Value, ct)
+                : await _api.GetCourseDetailsAsync(null, null, null, null, ct);
+
+            var response = courses
+                .Select(c => new { id = c.Id, code = c.Code, title = c.Title })
+                .ToList();
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load courses for Result Calculation filter endpoint.");
+            return StatusCode(500, new { message = "Failed to load courses." });
+        }
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveResultCalculation(ResultCalculationSettingsPageModel model, CancellationToken ct)
@@ -8186,6 +8212,7 @@ public class PortalController : Controller
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        int? institutionType,
         Guid? semesterId,
         CancellationToken ct)
     {
@@ -8203,6 +8230,7 @@ public class PortalController : Controller
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
             SelectedSemesterId = semesterId,
+            SelectedInstitutionType = institutionType,
             Message = TempData["PortalMessage"]?.ToString()
         };
 
@@ -8231,7 +8259,7 @@ public class PortalController : Controller
                 .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
                 .ToList();
 
-            model.SelectedInstitutionType = ResolveCertificateInstitutionType(identity, departmentDetails, model.SelectedDepartmentId);
+            model.SelectedInstitutionType ??= ResolveCertificateInstitutionType(identity, departmentDetails, model.SelectedDepartmentId);
             model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.SelectedInstitutionType);
             model.Semesters = await _api.GetSemestersAsync(ct);
 

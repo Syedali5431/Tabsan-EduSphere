@@ -1,3 +1,18 @@
+## Execution Update - 2026-05-31 (Result Calculation Course-Type Filter Dummy Seed + Runtime Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Result Calculation module behavior.
+- Full dummy seed now aligns deterministic Result Calculation filter demo rows for course type behavior:
+  - semester-based: CRSFILENG, CRSFILMAT,
+  - non-semester-based: CRSFILBUS.
+- Added Result Calculation web-side filter data endpoint used by the page filter controls.
+- Post-deployment checks now include deterministic HasSemesters assertions for Result Calculation demo rows.
+
+### Validation summary
+- Authenticated runtime checks confirmed Result Calculation page loads and filter controls are available.
+- Filter endpoint checks confirmed expected deterministic split by hasSemesters query.
+- SQL checks confirmed deterministic HasSemesters counts (true=2, false=1).
+
 ## Execution Update - 2026-05-31 (Generate Certificates Demo Seed v32 + Filter Validation)
 
 ### Module impact summary

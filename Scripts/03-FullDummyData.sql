@@ -957,6 +957,40 @@ BEGIN
                 OR c.[CampusId] <> d.[CampusId]
             );
     END;
+
+    IF COL_LENGTH('courses', 'HasSemesters') IS NOT NULL
+    BEGIN
+        UPDATE c
+        SET c.[HasSemesters] = src.[HasSemesters],
+            c.[UpdatedAt] = @Now
+        FROM [courses] c
+        INNER JOIN
+        (
+            VALUES
+            (CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER), CAST(1 AS BIT)),
+            (CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER), CAST(0 AS BIT)),
+            (CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER), CAST(1 AS BIT))
+        ) src([Id], [HasSemesters]) ON src.[Id] = c.[Id]
+        WHERE c.[HasSemesters] <> src.[HasSemesters];
+    END;
+
+    IF COL_LENGTH('courses', 'TotalSemesters') IS NOT NULL
+    BEGIN
+        UPDATE c
+        SET c.[TotalSemesters] = src.[TotalSemesters],
+            c.[UpdatedAt] = @Now
+        FROM [courses] c
+        INNER JOIN
+        (
+            VALUES
+            (CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER), CAST(8 AS INT)),
+            (CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER), CAST(NULL AS INT)),
+            (CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER), CAST(2 AS INT))
+        ) src([Id], [TotalSemesters]) ON src.[Id] = c.[Id]
+        WHERE (c.[TotalSemesters] <> src.[TotalSemesters])
+           OR (c.[TotalSemesters] IS NULL AND src.[TotalSemesters] IS NOT NULL)
+           OR (c.[TotalSemesters] IS NOT NULL AND src.[TotalSemesters] IS NULL);
+    END;
 END;
 
 /* 6.1) Buildings, rooms, and timetable parity coverage */

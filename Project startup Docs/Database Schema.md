@@ -1,3 +1,15 @@
+## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql deterministic demo rows in existing table only:
+		- courses (HasSemesters/TotalSemesters alignment for CRSFILENG, CRSFILBUS, CRSFILMAT).
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive deterministic HasSemesters assertions for Result Calculation demo rows.
+	- Added web controller route for filter data retrieval; no database object additions/removals.
+- Validation Summary:
+	- SQL updates are additive and idempotent on existing deterministic course rows.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Generate Certificates Demo Seed v32 (Schema Posture)
 
 - Implementation Summary:

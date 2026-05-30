@@ -843,6 +843,28 @@ FROM [courses]
 WHERE [DepartmentId] = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER)
 	AND [Id] = CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER);
 
+IF COL_LENGTH('courses', 'HasSemesters') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [courses]
+	WHERE [HasSemesters] = 1
+		AND [Id] IN
+		(
+			CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
+			CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
+		);
+
+	SELECT 'DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [courses]
+	WHERE [HasSemesters] = 0
+		AND [Id] = CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER);
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
+
 IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
 AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
 AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL

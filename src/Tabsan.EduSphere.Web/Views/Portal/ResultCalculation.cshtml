@@ -256,7 +256,7 @@ else
         var _allCourses = [];
         async function loadCoursesForType() {
             var type = document.getElementById('courseTypeFilter').value;
-            var url = '/api/v1/course' + (type !== '' ? '?hasSemesters=' + type : '');
+            var url = '/Portal/ResultCalculationCourseFilterData' + (type !== '' ? '?hasSemesters=' + type : '');
             try {
                 var r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 if (r.ok) {
