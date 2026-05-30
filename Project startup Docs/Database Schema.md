@@ -1,3 +1,17 @@
+## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to FullDummyData-v30.
+	- Added additive deterministic Courses demo/filter rows in existing tables only:
+		- courses (three deterministic demo rows for Engineering, Business, Mathematics filter verification),
+		- course_offerings (three deterministic demo offering rows bound to the above courses).
+	- Added deterministic reseed normalization and scope-alignment updates in existing courses and course_offerings rows for tenant/campus/institution scoped filtering.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive Courses demo assertions and v30 marker checks.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation (Schema Posture)
 
 - Implementation Summary:

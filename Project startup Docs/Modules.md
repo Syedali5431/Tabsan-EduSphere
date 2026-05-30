@@ -1,3 +1,18 @@
+## Execution Update - 2026-05-31 (Courses Demo Seed v30 + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Courses module behavior.
+- Full dummy seed now includes deterministic Courses filter demo rows for:
+  - Dummy Engineering,
+  - School of Business Administration,
+  - Mathematics Department.
+- Full dummy seed now includes deterministic offering rows for each demo course and scope-alignment normalization for filter compatibility.
+- Post-deployment checks now include Courses filter-demo assertions and FullDummyData-v30 marker validation.
+
+### Validation summary
+- SQL checks confirmed deterministic Courses demo counts, offering counts, and scope alignment counts.
+- Courses menu and department filter workflow validated in runtime with expected seeded demo codes and no page-load errors.
+
 ## Execution Update - 2026-05-31 (Programs Demo Seed v29 + Filter Reliability)
 
 ### Module impact summary

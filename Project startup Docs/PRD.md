@@ -1,5 +1,28 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Courses Demo Seed v30 + Filter Runtime Validation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v30 with deterministic Courses filter demo rows for Engineering, Business, and Mathematics department scenarios.
+  - Updated Scripts/03-FullDummyData.sql with deterministic offering rows and idempotent scope alignment for demo course/offering rows.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Courses-specific deterministic assertions:
+    - DummySeed_DemoDatasetVersionIsV30
+    - DummySeed_CoursesFilterDemo_CourseRowsByIdCount
+    - DummySeed_CoursesFilterDemo_ActiveCourseCount
+    - DummySeed_CoursesFilterDemo_OfferingsByIdCount
+    - DummySeed_CoursesFilterDemo_EngineeringCourseCount
+    - DummySeed_CoursesFilterDemo_BusinessCourseCount
+    - DummySeed_CoursesFilterDemo_MathCourseCount
+    - DummySeed_CoursesFilterDemo_CourseScopeAlignedCount
+    - DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount
+    - DummySeed_DemoDatasetVersion_v30
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive seed/check coverage plus scope-alignment synchronization for existing Courses filter flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic Courses demo rows, offering rows, scope alignment, and dataset marker v30.
+  - Courses menu runtime verification confirmed department filter behavior and seeded data rendering without load errors.
+
 ### 2026-05-31 - Product Requirements Synchronization (Programs Demo Seed v29 + Filter Runtime Validation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v29 with deterministic Programs filter demo data for Engineering, Business, and Mathematics departments.

@@ -1,5 +1,29 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Courses demo/filter data synchronization:
+	- advanced dataset marker to FullDummyData-v30,
+	- added deterministic course rows for Engineering, Business, and Mathematics department filter scenarios,
+	- added deterministic offering rows for the above course demo IDs,
+	- added idempotent normalization plus scope-alignment logic (tenant/campus/institution type) for course and offering demo rows.
+- Updated Scripts/05-PostDeployment-Checks.sql with Courses demo assertions:
+	- DummySeed_DemoDatasetVersionIsV30,
+	- DummySeed_CoursesFilterDemo_CourseRowsByIdCount,
+	- DummySeed_CoursesFilterDemo_ActiveCourseCount,
+	- DummySeed_CoursesFilterDemo_OfferingsByIdCount,
+	- DummySeed_CoursesFilterDemo_EngineeringCourseCount,
+	- DummySeed_CoursesFilterDemo_BusinessCourseCount,
+	- DummySeed_CoursesFilterDemo_MathCourseCount,
+	- DummySeed_CoursesFilterDemo_CourseScopeAlignedCount,
+	- DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount,
+	- DummySeed_DemoDatasetVersion_v30.
+
+### Validation sync
+- SQL verification confirmed deterministic Courses demo counts, scope alignment, and v30 marker checks.
+- Runtime menu validation confirmed Courses page loads and department filters show expected deterministic demo codes (CRSFILENG, CRSFILBUS, CRSFILMAT) without blocking errors.
+
 ## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation
 
 ### Implementation sync

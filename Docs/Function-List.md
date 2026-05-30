@@ -1,5 +1,41 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation Synchronization
+
+### Courses runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Courses runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.Courses
+	- PortalController.CreateCourse
+	- PortalController.DeactivateCourse
+	- PortalController.CreateOffering
+	- PortalController.DeleteOffering
+	- EduApiClient.GetCourseDetailsAsync
+	- EduApiClient.GetCourseOfferingsAsync
+	- EduApiClient.CreateCourseAsync
+	- EduApiClient.DeactivateCourseAsync
+	- EduApiClient.CreateOfferingAsync
+	- EduApiClient.DeleteOfferingAsync
+
+### Courses validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Courses filter demo rows and metadata marker FullDummyData-v30:
+	- CRSFILENG (Dummy Engineering)
+	- CRSFILBUS (School of Business Administration)
+	- CRSFILMAT (Mathematics Department)
+- Scripts/03-FullDummyData.sql now includes deterministic offering rows for the above course demo IDs and scope-alignment normalization for courses and offerings.
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_DemoDatasetVersionIsV30
+	- DummySeed_CoursesFilterDemo_CourseRowsByIdCount
+	- DummySeed_CoursesFilterDemo_ActiveCourseCount
+	- DummySeed_CoursesFilterDemo_OfferingsByIdCount
+	- DummySeed_CoursesFilterDemo_EngineeringCourseCount
+	- DummySeed_CoursesFilterDemo_BusinessCourseCount
+	- DummySeed_CoursesFilterDemo_MathCourseCount
+	- DummySeed_CoursesFilterDemo_CourseScopeAlignedCount
+	- DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount
+	- DummySeed_DemoDatasetVersion_v30
+- Runtime verification confirmed Courses menu loads and department filters isolate deterministic demo rows without load-time errors.
+
 ## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation Synchronization
 
 ### Programs runtime additions

@@ -1,3 +1,28 @@
+## 2026-05-31 Update - Courses Demo Seed v30 and Filter Runtime Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to FullDummyData-v30 and added deterministic Courses filter demo rows:
+  - CRSFILENG (Dummy Engineering),
+  - CRSFILBUS (School of Business Administration),
+  - CRSFILMAT (Mathematics Department).
+- Added deterministic course-offering demo rows for the above course IDs in Scripts/03-FullDummyData.sql.
+- Added idempotent normalization and scope-alignment logic in Scripts/03-FullDummyData.sql so course/offering demo rows match tenant/campus/institution scoped filters.
+- Updated Scripts/05-PostDeployment-Checks.sql with Courses and version assertions:
+  - DummySeed_DemoDatasetVersionIsV30,
+  - DummySeed_CoursesFilterDemo_CourseRowsByIdCount,
+  - DummySeed_CoursesFilterDemo_ActiveCourseCount,
+  - DummySeed_CoursesFilterDemo_OfferingsByIdCount,
+  - DummySeed_CoursesFilterDemo_EngineeringCourseCount,
+  - DummySeed_CoursesFilterDemo_BusinessCourseCount,
+  - DummySeed_CoursesFilterDemo_MathCourseCount,
+  - DummySeed_CoursesFilterDemo_CourseScopeAlignedCount,
+  - DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount,
+  - DummySeed_DemoDatasetVersion_v30.
+
+### Validation Summary:
+- SQL verification confirmed deterministic Courses demo counts, scope alignment, and v30 marker checks.
+- Runtime verification confirmed Courses menu department filters display expected deterministic demo codes without blocking errors.
+
 ## 2026-05-31 Update - Programs Demo Seed v29 and Filter Runtime Validation
 
 ### Implementation Summary:

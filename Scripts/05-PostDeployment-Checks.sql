@@ -727,10 +727,100 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV29' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV30' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v29';
+	AND DemoValue = N'FullDummyData-v30';
+
+SELECT 'DummySeed_CoursesFilterDemo_CourseRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [Id] IN
+(
+	CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
+	CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER),
+	CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_CoursesFilterDemo_ActiveCourseCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [IsDeleted] = 0
+	AND [IsActive] = 1
+	AND [Id] IN
+	(
+		CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
+		CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER),
+		CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_CoursesFilterDemo_OfferingsByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_offerings]
+WHERE [Id] IN
+(
+	CAST('57575757-5757-5757-5757-575757575901' AS UNIQUEIDENTIFIER),
+	CAST('57575757-5757-5757-5757-575757575902' AS UNIQUEIDENTIFIER),
+	CAST('57575757-5757-5757-5757-575757575903' AS UNIQUEIDENTIFIER)
+)
+	AND [IsDeleted] = 0
+	AND [IsOpen] = 1;
+
+SELECT 'DummySeed_CoursesFilterDemo_EngineeringCourseCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [DepartmentId] = CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_CoursesFilterDemo_BusinessCourseCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_CoursesFilterDemo_MathCourseCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [DepartmentId] = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER);
+
+IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
+AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_CoursesFilterDemo_CourseScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [courses] c
+	INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+	WHERE c.[Id] IN
+	(
+		CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
+		CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER),
+		CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
+	)
+		AND c.[TenantId] = d.[TenantId]
+		AND c.[CampusId] = d.[CampusId]
+		AND c.[InstitutionType] = d.[InstitutionType];
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_CoursesFilterDemo_CourseScopeAlignedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
+
+IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_offerings] co
+	INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+	WHERE co.[Id] IN
+	(
+		CAST('57575757-5757-5757-5757-575757575901' AS UNIQUEIDENTIFIER),
+		CAST('57575757-5757-5757-5757-575757575902' AS UNIQUEIDENTIFIER),
+		CAST('57575757-5757-5757-5757-575757575903' AS UNIQUEIDENTIFIER)
+	)
+		AND co.[TenantId] = c.[TenantId]
+		AND co.[CampusId] = c.[CampusId]
+		AND co.[InstitutionType] = c.[InstitutionType];
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_ProgramsFilterDemo_ByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [academic_programs]
@@ -1628,10 +1718,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v29' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v30' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v29';
+			AND [DemoValue] = N'FullDummyData-v30';
 END;
 
 PRINT 'Post-deployment checks completed.';
