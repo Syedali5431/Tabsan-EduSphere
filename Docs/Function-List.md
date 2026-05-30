@@ -1,5 +1,40 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation Synchronization
+
+### Programs runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Programs runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.Programs
+	- PortalController.CreateProgram
+	- PortalController.UpdateProgram
+	- PortalController.SetProgramActive
+	- EduApiClient.GetProgramDetailsAsync
+	- EduApiClient.CreateProgramAsync
+	- EduApiClient.UpdateProgramAsync
+	- EduApiClient.ActivateProgramAsync
+	- EduApiClient.DeactivateProgramAsync
+	- ProgramController.GetAll
+	- ProgramController.Create
+	- ProgramController.Update
+	- ProgramController.Activate
+	- ProgramController.Deactivate
+
+### Programs validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Programs filter demo rows and metadata marker FullDummyData-v29:
+	- PRGFILENG (Dummy Engineering)
+	- PRGFILBUS (School of Business Administration)
+	- PRGFILMAT (Mathematics Department)
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_DemoDatasetVersionIsV29
+	- DummySeed_ProgramsFilterDemo_ByIdCount
+	- DummySeed_ProgramsFilterDemo_ActiveCount
+	- DummySeed_ProgramsFilterDemo_DummyEngineeringCount
+	- DummySeed_ProgramsFilterDemo_BusinessCount
+	- DummySeed_ProgramsFilterDemo_MathCount
+	- DummySeed_DemoDatasetVersion_v29
+- Runtime verification confirmed Programs menu loads and department filtering isolates seeded demo rows correctly without page-load errors.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Runtime Reliability Synchronization
 
 ### Degree Audit runtime additions

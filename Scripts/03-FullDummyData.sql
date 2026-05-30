@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v28', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v29', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v28',
+    SET [DemoValue] = N'FullDummyData-v29',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -234,6 +234,47 @@ INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSem
 SELECT p.Id, p.Name, p.Code, p.DepartmentId, p.TotalSemesters, 1, @Now, NULL, 0, NULL
 FROM @Programs p
 WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = p.Id);
+
+/* 2.1) Programs filter demo pack - deterministic rows for menu filter testing */
+IF OBJECT_ID(N'[academic_programs]') IS NOT NULL
+BEGIN
+    INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Engineering', N'PRGFILENG', CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER), 8, 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER));
+
+    INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Business', N'PRGFILBUS', CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER), 8, 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER));
+
+    INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Mathematics', N'PRGFILMAT', CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER), 12, 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER));
+
+    UPDATE ap
+    SET ap.[Name] = src.[Name],
+        ap.[Code] = src.[Code],
+        ap.[DepartmentId] = src.[DepartmentId],
+        ap.[TotalSemesters] = src.[TotalSemesters],
+        ap.[IsActive] = 1,
+        ap.[IsDeleted] = 0,
+        ap.[DeletedAt] = NULL,
+        ap.[UpdatedAt] = @Now
+    FROM [academic_programs] ap
+    INNER JOIN (
+        VALUES
+        (CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Engineering', N'PRGFILENG', CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER), 8),
+        (CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Business', N'PRGFILBUS', CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER), 8),
+        (CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER), N'Programs Filter Demo - Mathematics', N'PRGFILMAT', CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER), 12)
+    ) src([Id], [Name], [Code], [DepartmentId], [TotalSemesters])
+        ON src.[Id] = ap.[Id]
+    WHERE ap.[Name] <> src.[Name]
+       OR ap.[Code] <> src.[Code]
+       OR ap.[DepartmentId] <> src.[DepartmentId]
+       OR ap.[TotalSemesters] <> src.[TotalSemesters]
+       OR ap.[IsActive] = 0
+       OR ap.[IsDeleted] = 1
+       OR ap.[DeletedAt] IS NOT NULL;
+END;
 
 /* 3) Semesters - Expanded time range */
 DECLARE @Semesters TABLE (Id UNIQUEIDENTIFIER, Name NVARCHAR(100), StartDate DATETIME2, EndDate DATETIME2, IsClosed BIT);

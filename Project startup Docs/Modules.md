@@ -1,3 +1,18 @@
+## Execution Update - 2026-05-31 (Programs Demo Seed v29 + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Programs module behavior.
+- Full dummy seed now includes deterministic Programs filter demo rows for:
+  - Dummy Engineering,
+  - School of Business Administration,
+  - Mathematics Department.
+- Post-deployment checks now include Programs filter-demo assertions and FullDummyData-v29 marker validation.
+- Programs demo rows are normalized on reseed to remain active and deterministic for repeated QA/UAT filter walkthroughs.
+
+### Validation summary
+- SQL checks confirmed deterministic Programs demo counts and v29 marker assertions.
+- Programs menu and department filter workflow validated in runtime with expected seeded rows and no page-load errors.
+
 ## Execution Update - 2026-05-31 (Degree Audit Demo Seed v28 + Filter Reliability)
 
 ### Module impact summary

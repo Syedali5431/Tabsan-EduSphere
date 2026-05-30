@@ -727,10 +727,43 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV28' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV29' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v28';
+	AND DemoValue = N'FullDummyData-v29';
+
+SELECT 'DummySeed_ProgramsFilterDemo_ByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [academic_programs]
+WHERE [Id] IN (
+	CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER),
+	CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER),
+	CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_ProgramsFilterDemo_ActiveCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [academic_programs]
+WHERE [IsDeleted] = 0
+	AND [IsActive] = 1
+	AND [Id] IN (
+		CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER),
+		CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER),
+		CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_ProgramsFilterDemo_DummyEngineeringCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [academic_programs]
+WHERE [DepartmentId] = CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('46464646-4646-4646-4646-464646464801' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_ProgramsFilterDemo_BusinessCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [academic_programs]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('46464646-4646-4646-4646-464646464802' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_ProgramsFilterDemo_MathCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [academic_programs]
+WHERE [DepartmentId] = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER);
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -1595,10 +1628,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v28' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v29' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v28';
+			AND [DemoValue] = N'FullDummyData-v29';
 END;
 
 PRINT 'Post-deployment checks completed.';

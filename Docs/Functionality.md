@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Programs demo/filter data synchronization:
+	- advanced dataset marker to FullDummyData-v29,
+	- added deterministic Programs filter-demo rows for Engineering, Business, and Mathematics departments,
+	- added idempotent normalization updates so demo rows remain active and consistent across reseed runs.
+- Updated Scripts/05-PostDeployment-Checks.sql with Programs demo assertions:
+	- DummySeed_DemoDatasetVersionIsV29,
+	- DummySeed_ProgramsFilterDemo_ByIdCount,
+	- DummySeed_ProgramsFilterDemo_ActiveCount,
+	- DummySeed_ProgramsFilterDemo_DummyEngineeringCount,
+	- DummySeed_ProgramsFilterDemo_BusinessCount,
+	- DummySeed_ProgramsFilterDemo_MathCount,
+	- DummySeed_DemoDatasetVersion_v29.
+
+### Validation sync
+- SQL verification confirmed Programs deterministic demo counts and v29 marker checks pass.
+- Runtime menu validation confirmed Programs page loads successfully and department filters show the expected seeded demo rows without blocking errors.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Validation
 
 ### Implementation sync

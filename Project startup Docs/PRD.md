@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Programs Demo Seed v29 + Filter Runtime Validation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v29 with deterministic Programs filter demo data for Engineering, Business, and Mathematics departments.
+  - Updated Scripts/03-FullDummyData.sql with idempotent normalization for deterministic Programs demo rows so repeated reseeds preserve active/consistent demo behavior.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Programs-specific deterministic assertions:
+    - DummySeed_DemoDatasetVersionIsV29
+    - DummySeed_ProgramsFilterDemo_ByIdCount
+    - DummySeed_ProgramsFilterDemo_ActiveCount
+    - DummySeed_ProgramsFilterDemo_DummyEngineeringCount
+    - DummySeed_ProgramsFilterDemo_BusinessCount
+    - DummySeed_ProgramsFilterDemo_MathCount
+    - DummySeed_DemoDatasetVersion_v29
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive seed/check coverage for existing Programs menu/filter flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic Programs demo rows and dataset marker v29.
+  - Programs menu runtime verification confirmed filter behavior and seeded data rendering without blocking load errors.
+
 ### 2026-05-31 - Product Requirements Synchronization (Degree Audit Demo Seed v28 + Filter Runtime Reliability)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v28 with deterministic Degree Audit demo/filter seed alignment and grade-point coverage for audit aggregation display.

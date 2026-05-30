@@ -1,3 +1,24 @@
+## 2026-05-31 Update - Programs Demo Seed v29 and Filter Runtime Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to FullDummyData-v29 and added deterministic Programs filter demo rows:
+  - PRGFILENG (Dummy Engineering),
+  - PRGFILBUS (School of Business Administration),
+  - PRGFILMAT (Mathematics Department).
+- Added idempotent normalization logic in Scripts/03-FullDummyData.sql so deterministic Programs demo rows stay active/consistent during reseed.
+- Updated Scripts/05-PostDeployment-Checks.sql with Programs and version assertions:
+  - DummySeed_DemoDatasetVersionIsV29,
+  - DummySeed_ProgramsFilterDemo_ByIdCount,
+  - DummySeed_ProgramsFilterDemo_ActiveCount,
+  - DummySeed_ProgramsFilterDemo_DummyEngineeringCount,
+  - DummySeed_ProgramsFilterDemo_BusinessCount,
+  - DummySeed_ProgramsFilterDemo_MathCount,
+  - DummySeed_DemoDatasetVersion_v29.
+
+### Validation Summary:
+- SQL verification confirmed v29 marker and Programs deterministic demo counts.
+- Runtime verification confirmed Programs menu filter behavior and seeded row visibility for target departments without blocking errors.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Runtime Validation
 
 ### Implementation Summary:

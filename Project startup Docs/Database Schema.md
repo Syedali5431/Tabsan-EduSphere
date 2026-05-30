@@ -1,3 +1,16 @@
+## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to FullDummyData-v29.
+	- Added additive deterministic Programs demo/filter rows in existing table only:
+		- academic_programs (three deterministic rows for Engineering, Business, Mathematics filter verification).
+	- Added deterministic reseed normalization updates for those program rows in academic_programs to preserve active state and consistency.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive Programs demo assertions and v29 marker checks.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Validation (Schema Posture)
 
 - Implementation Summary:
