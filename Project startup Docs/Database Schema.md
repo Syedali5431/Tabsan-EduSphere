@@ -1,3 +1,17 @@
+## 2026-05-30 Update - Enrollments Demo Seed and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql with additive deterministic Enrollments demo rows in existing tables only:
+		- users (2 additional demo student rows),
+		- student_profiles (2 additional demo profile rows),
+		- enrollments (2 additional deterministic DB-201 rows plus deterministic reseed normalization for demo IDs).
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive Enrollments demo assertions and v27 dataset marker checks.
+	- All updates are data-seed/check level; no new schema object introduced.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation (Schema Posture)
 
 - Implementation Summary:

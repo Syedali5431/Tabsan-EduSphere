@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Enrollments Demo Seed + Filter Reliability)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql with deterministic Enrollments demo/filter expansion for DS-101 and DB-201 (2026-S2) including two additional demo students.
+  - Added deterministic reseed normalization for Enrollments demo rows so repeated demo runs remain stable after drop/enroll actions.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Enrollments demo assertions for student profile coverage and active-enrollment counts by offering.
+  - Updated dataset marker checks to FullDummyData-v27.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive demo seed/check coverage and reliability stabilization on existing Enrollments flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic Enrollments demo counts (DS-101=3 active, DB-201=5 active, profiles=5).
+  - Enrollments menu load and offering filter behavior verified in runtime without screen-load errors.
+
 ### 2026-05-30 - Product Requirements Synchronization (Student Lifecycle Demo Seed + Filter Reliability)
 - Runtime delivery in this slice:
   - Added deterministic Student Lifecycle demo/filter rows in `Scripts/03-FullDummyData.sql` for two departments and multiple semesters:

@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v26', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v27', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v26',
+    SET [DemoValue] = N'FullDummyData-v27',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1735,6 +1735,16 @@ BEGIN
         WHERE @RoleStudent IS NOT NULL
             AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('93939393-9393-9393-9393-939393939703' AS UNIQUEIDENTIFIER));
 
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [FailedLoginAttempts], [IsLockedOut], [LockedOutUntil], [ThemeKey], [MustChangePassword], [InstitutionType], [MfaIsEnabled], [MfaRecoveryCodesHashJson], [MfaTotpSecret], [PhoneNumber], [CampusId], [TenantId])
+        SELECT CAST('93939393-9393-9393-9393-939393939704' AS UNIQUEIDENTIFIER), N'demo.student.704', N'demo.student.704@tabsan.local', @PwdHash, @RoleStudent, @AttendanceDemoDeptId, 1, NULL, @Now, NULL, 0, NULL, 0, 0, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, @AttendanceDemoCampusId, @AttendanceDemoTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('93939393-9393-9393-9393-939393939704' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [FailedLoginAttempts], [IsLockedOut], [LockedOutUntil], [ThemeKey], [MustChangePassword], [InstitutionType], [MfaIsEnabled], [MfaRecoveryCodesHashJson], [MfaTotpSecret], [PhoneNumber], [CampusId], [TenantId])
+        SELECT CAST('93939393-9393-9393-9393-939393939705' AS UNIQUEIDENTIFIER), N'demo.student.705', N'demo.student.705@tabsan.local', @PwdHash, @RoleStudent, @AttendanceDemoDeptId, 1, NULL, @Now, NULL, 0, NULL, 0, 0, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, @AttendanceDemoCampusId, @AttendanceDemoTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('93939393-9393-9393-9393-939393939705' AS UNIQUEIDENTIFIER));
+
         INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
         SELECT CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER), CAST('93939393-9393-9393-9393-939393939701' AS UNIQUEIDENTIFIER), N'DEMO-ENG-701', @AttendanceDemoProgramId, @AttendanceDemoDeptId, DATEADD(day, -150, @Now), 3.10, 2, @Now, NULL, 0, NULL, NULL, 0, 3.20
         WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @AttendanceDemoProgramId)
@@ -1749,6 +1759,16 @@ BEGIN
         SELECT CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER), CAST('93939393-9393-9393-9393-939393939703' AS UNIQUEIDENTIFIER), N'DEMO-ENG-703', @AttendanceDemoProgramId, @AttendanceDemoDeptId, DATEADD(day, -130, @Now), 2.95, 2, @Now, NULL, 0, NULL, NULL, 0, 3.00
         WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @AttendanceDemoProgramId)
             AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('94949494-9494-9494-9494-949494949704' AS UNIQUEIDENTIFIER), CAST('93939393-9393-9393-9393-939393939704' AS UNIQUEIDENTIFIER), N'DEMO-ENG-704', @AttendanceDemoProgramId, @AttendanceDemoDeptId, DATEADD(day, -120, @Now), 3.25, 2, @Now, NULL, 0, NULL, NULL, 0, 3.30
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @AttendanceDemoProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('94949494-9494-9494-9494-949494949704' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('94949494-9494-9494-9494-949494949705' AS UNIQUEIDENTIFIER), CAST('93939393-9393-9393-9393-939393939705' AS UNIQUEIDENTIFIER), N'DEMO-ENG-705', @AttendanceDemoProgramId, @AttendanceDemoDeptId, DATEADD(day, -110, @Now), 3.12, 2, @Now, NULL, 0, NULL, NULL, 0, 3.18
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @AttendanceDemoProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('94949494-9494-9494-9494-949494949705' AS UNIQUEIDENTIFIER));
 
         INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
         SELECT CAST('95959595-9595-9595-9595-959595959711' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER), @AttendanceDemoDsOfferingId, DATEADD(day, -21, @Now), NULL, N'Active', @Now, NULL
@@ -1773,6 +1793,31 @@ BEGIN
         INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
         SELECT CAST('95959595-9595-9595-9595-959595959716' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, DATEADD(day, -16, @Now), NULL, N'Active', @Now, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('95959595-9595-9595-9595-959595959716' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+        SELECT CAST('95959595-9595-9595-9595-959595959717' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949704' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, DATEADD(day, -15, @Now), NULL, N'Active', @Now, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('95959595-9595-9595-9595-959595959717' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+        SELECT CAST('95959595-9595-9595-9595-959595959718' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949705' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, DATEADD(day, -14, @Now), NULL, N'Active', @Now, NULL
+        WHERE NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('95959595-9595-9595-9595-959595959718' AS UNIQUEIDENTIFIER));
+
+        -- Keep deterministic Enrollments menu demo rows active on re-run even after manual drop testing.
+        UPDATE e
+        SET e.[Status] = N'Active',
+            e.[DroppedAt] = NULL,
+            e.[UpdatedAt] = @Now
+        FROM [enrollments] e
+        WHERE e.[Id] IN (
+            CAST('95959595-9595-9595-9595-959595959711' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959712' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959713' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959714' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959715' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959716' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959717' AS UNIQUEIDENTIFIER),
+            CAST('95959595-9595-9595-9595-959595959718' AS UNIQUEIDENTIFIER)
+        );
 
         INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
         SELECT CAST('96969696-9696-9696-9696-969696969801' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER), @AttendanceDemoDsOfferingId, DATEADD(day, -2, CAST(@Now AS date)), N'Present', @AttendanceDemoFacultyUserId, N'Demo attendance seed DS-101', @Now, NULL

@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Enrollments Demo Seed and Filter Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Enrollments filter-demo expansion:
+	- Added DEMO-ENG-704 and DEMO-ENG-705 profile/user rows.
+	- Added deterministic active enrollments for DB-201 filter path so DS-101 and DB-201 produce distinct roster sizes.
+	- Added reseed normalization so Enrollments demo rows are reset to Active and not dropped.
+- Updated Scripts/05-PostDeployment-Checks.sql with Enrollments-specific assertions:
+	- DummySeed_EnrollmentsFilterDemo_StudentProfilesCount
+	- DummySeed_EnrollmentsFilterDemo_DS101_ActiveCount
+	- DummySeed_EnrollmentsFilterDemo_DB201_ActiveCount
+	- dataset marker checks upgraded to FullDummyData-v27.
+
+### Validation sync
+- SQL verification confirmed deterministic Enrollments demo counts:
+	- DS-101 active demo enrollments = 3,
+	- DB-201 active demo enrollments = 5,
+	- Enrollments demo student profiles = 5.
+- Enrollments menu verification confirmed page load stability and offering filter changes roster rows correctly between DS-101 and DB-201.
+
 ## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation
 
 ### Implementation sync

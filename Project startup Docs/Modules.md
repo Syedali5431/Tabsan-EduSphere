@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-30 (Enrollments Demo Seed + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Enrollments module behavior.
+- Full dummy seed now includes deterministic Enrollments filter-demo expansion for DS-101/DB-201 with five fixed demo student profiles.
+- Full dummy seed now enforces deterministic demo enrollment reset (Active + non-dropped) to keep repeated demo cycles reproducible.
+- Post-deployment checks now include Enrollments demo profile count and offering-wise active count assertions.
+
+### Validation summary
+- SQL checks confirmed deterministic Enrollments demo distribution (DS-101 active 3, DB-201 active 5).
+- Enrollments menu and offering filter behavior validated in runtime with deterministic roster rendering and no page-load error.
+
 ## Execution Update - 2026-05-30 (Student Lifecycle Demo Seed + Filter Reliability)
 
 ### Module impact summary

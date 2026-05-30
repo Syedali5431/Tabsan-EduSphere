@@ -1,3 +1,14 @@
+## 2026-05-30 Update - Enrollments Demo Seed and Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql with deterministic Enrollments demo expansion for DS-101 and DB-201 offering filters by adding DEMO-ENG-704 and DEMO-ENG-705.
+- Added Enrollments demo normalization in Scripts/03-FullDummyData.sql so deterministic Enrollments rows are reactivated on reseed (Active + DroppedAt NULL).
+- Updated Scripts/05-PostDeployment-Checks.sql with Enrollments filter-demo assertions and upgraded dataset marker checks to FullDummyData-v27.
+
+### Validation Summary:
+- SQL checks confirmed Enrollments deterministic filter coverage (profiles=5, DS-101 active=3, DB-201 active=5).
+- Enrollments menu runtime validation confirmed stable page load and correct roster changes when switching offering filter between DS-101 and DB-201.
+
 ## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation
 
 ### Implementation Summary:

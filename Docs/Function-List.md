@@ -1,5 +1,35 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Enrollments Demo Seed and Filter Reliability Synchronization
+
+### Enrollments runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Enrollments runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.Enrollments
+	- PortalController.SetEnrollmentActive
+	- PortalController.EnrollStudent
+	- PortalController.AdminDropEnrollment
+	- PortalController.StudentEnroll
+	- PortalController.StudentDropEnrollment
+	- EduApiClient.GetEnrollmentRosterAsync
+	- EduApiClient.AdminEnrollStudentAsync
+	- EduApiClient.AdminDropEnrollmentAsync
+	- EnrollmentController.GetRoster
+- Internal synchronization added for reliability:
+	- deterministic Enrollments filter-demo students extended to include DEMO-ENG-704 and DEMO-ENG-705,
+	- deterministic Enrollments demo rows are normalized back to Active/DroppedAt=NULL on reseed for repeatable demo runs.
+
+### Enrollments validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Enrollments demo coverage:
+	- DS-101 offering 66666666-6666-6666-6666-666666666661 with 3 active demo rows,
+	- DB-201 offering 66666666-6666-6666-6666-666666666662 with 5 active demo rows.
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_EnrollmentsFilterDemo_StudentProfilesCount
+	- DummySeed_EnrollmentsFilterDemo_DS101_ActiveCount
+	- DummySeed_EnrollmentsFilterDemo_DB201_ActiveCount
+	- dataset marker checks upgraded to FullDummyData-v27.
+- Runtime verification confirmed Enrollments menu loads and offering filter changes roster counts from 3 (DS-101) to 5 (DB-201) with deterministic rows displayed.
+
 ## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Reliability Synchronization
 
 ### Student Lifecycle runtime additions
