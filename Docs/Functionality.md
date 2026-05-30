@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - FYP Demo Seed and Menu Filter Validation
+
+### Implementation sync
+- Added deterministic FYP filter demo rows in Scripts/03-FullDummyData.sql:
+	- 2 rows in School of Computer Science (Proposed + InProgress)
+	- 1 row in School of Engineering (Completed)
+- Added deterministic upcoming FYP meeting row in Scripts/03-FullDummyData.sql for menu-panel verification.
+- Updated Scripts/05-PostDeployment-Checks.sql with FYP-specific assertions:
+	- DummySeed_FypFilterDemoRows_ByIdCount
+	- DummySeed_FypFilterDemo_CS_DepartmentCount
+	- DummySeed_FypFilterDemo_Engineering_DepartmentCount
+	- DummySeed_FypFilterDemo_UpcomingMeetingCount
+
+### Validation sync
+- SQL verification confirmed deterministic FYP demo projects and meeting row are present.
+- FYP menu load verification confirmed no runtime screen-load errors.
+- Department filter verification confirmed:
+	- CS filter shows CS demo projects and excludes Engineering demo row.
+	- Engineering filter shows Engineering demo project and excludes CS demo rows.
+
 ## 2026-05-30 Update - Quizzes Demo Seed and Filter Validation
 
 ### Implementation sync

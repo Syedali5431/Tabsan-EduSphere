@@ -1,5 +1,24 @@
 ## 2026-05-30 Update - Results Internal Demo Seed and Scoped Filter Validation
 
+## 2026-05-30 Update - FYP Demo Seed and Department Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql with deterministic FYP demo seed rows:
+  - 61616161-6161-6161-6161-616161616101 (CS Proposed)
+  - 61616161-6161-6161-6161-616161616102 (CS InProgress)
+  - 61616161-6161-6161-6161-616161616103 (Engineering Completed)
+- Updated Scripts/03-FullDummyData.sql with deterministic FYP meeting seed row:
+  - 62626262-6262-6262-6262-626262626201 (Scheduled)
+- Updated Scripts/05-PostDeployment-Checks.sql with FYP demo/filter assertions:
+  - DummySeed_FypFilterDemoRows_ByIdCount
+  - DummySeed_FypFilterDemo_CS_DepartmentCount
+  - DummySeed_FypFilterDemo_Engineering_DepartmentCount
+  - DummySeed_FypFilterDemo_UpcomingMeetingCount
+
+### Validation Summary:
+- SQL checks confirmed deterministic FYP demo rows and meeting seed are present.
+- FYP menu load and department filter behavior were validated with no runtime screen-load errors.
+
 ## 2026-05-30 Update - Quizzes Demo Seed and Filter Reliability Validation
 
 ### Implementation Summary:

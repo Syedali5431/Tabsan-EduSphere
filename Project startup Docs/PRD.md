@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (FYP Demo Seed + Department Filter Validation)
+- Runtime delivery in this slice:
+  - Added deterministic FYP demo/filter rows in Scripts/03-FullDummyData.sql for two departments:
+    - School of Computer Science: Proposed + InProgress
+    - School of Engineering: Completed
+  - Added one deterministic upcoming FYP meeting seed row for menu panel verification.
+  - Added FYP post-deployment checks in Scripts/05-PostDeployment-Checks.sql for row presence, department split, and upcoming meeting coverage.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive demo seed/check coverage on existing FYP flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic FYP demo rows and upcoming meeting row.
+  - FYP menu load and department filter behavior verified in runtime without screen-load errors.
+
 ### 2026-05-30 - Product Requirements Synchronization (Quizzes Demo Seed + Filter Reliability)
 - Runtime delivery in this slice:
   - Added deterministic Quizzes demo/filter rows for offering `55555555-5555-5555-5555-555555555501` in `Scripts/03-FullDummyData.sql` with explicit active/inactive coverage.

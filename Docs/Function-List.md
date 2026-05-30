@@ -1,5 +1,31 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - FYP Demo Seed and Menu Filter Synchronization
+
+### FYP runtime additions
+- No new API/controller/service method signature was introduced in this slice.
+- Existing FYP runtime surface remains authoritative (no duplicate function inventory rows added):
+  - PortalController.Fyp
+  - PortalController.CreateFypProject
+  - PortalController.AssignFypSupervisor
+  - EduApiClient.GetAllFypProjectsAsync
+  - EduApiClient.GetFypByDepartmentAsync
+  - FypController.GetByDepartment
+
+### FYP validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic FYP filter demo rows:
+  - 61616161-6161-6161-6161-616161616101 (CS Proposed)
+  - 61616161-6161-6161-6161-616161616102 (CS InProgress)
+  - 61616161-6161-6161-6161-616161616103 (Engineering Completed)
+- Scripts/03-FullDummyData.sql now includes one deterministic upcoming FYP meeting row:
+  - 62626262-6262-6262-6262-626262626201
+- Scripts/05-PostDeployment-Checks.sql now validates:
+  - DummySeed_FypFilterDemoRows_ByIdCount
+  - DummySeed_FypFilterDemo_CS_DepartmentCount
+  - DummySeed_FypFilterDemo_Engineering_DepartmentCount
+  - DummySeed_FypFilterDemo_UpcomingMeetingCount
+- Runtime verification confirmed FYP menu load succeeds and department filters isolate deterministic CS and Engineering demo projects correctly.
+
 ## 2026-05-30 Update - Quizzes Demo Seed and Filter Reliability Synchronization
 
 ### Quizzes runtime additions

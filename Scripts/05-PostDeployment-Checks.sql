@@ -1288,6 +1288,34 @@ SELECT 'DummySeed_FypPanelLegacyRoleRowsCount' AS [CheckName], COUNT(1) AS [Valu
 FROM [fyp_panel_members]
 WHERE [Role] IN (N'Internal', N'External');
 
+SELECT 'DummySeed_FypFilterDemoRows_ByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_projects]
+WHERE [Id] IN
+(
+		CAST('61616161-6161-6161-6161-616161616101' AS UNIQUEIDENTIFIER),
+		CAST('61616161-6161-6161-6161-616161616102' AS UNIQUEIDENTIFIER),
+		CAST('61616161-6161-6161-6161-616161616103' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_FypFilterDemo_CS_DepartmentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_projects]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+	AND [Id] IN
+	(
+		CAST('61616161-6161-6161-6161-616161616101' AS UNIQUEIDENTIFIER),
+		CAST('61616161-6161-6161-6161-616161616102' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_FypFilterDemo_Engineering_DepartmentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_projects]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER)
+	AND [Id] = CAST('61616161-6161-6161-6161-616161616103' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_FypFilterDemo_UpcomingMeetingCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [fyp_meetings]
+WHERE [Id] = CAST('62626262-6262-6262-6262-626262626201' AS UNIQUEIDENTIFIER)
+	AND [Status] = N'Scheduled';
+
 SELECT 'Lifecycle_School_Class1To10_ProfileCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] = N'LCYC-SCH-001'

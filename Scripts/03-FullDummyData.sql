@@ -3043,6 +3043,74 @@ BEGIN
     END
 END
 
+IF OBJECT_ID(N'[fyp_projects]') IS NOT NULL
+BEGIN
+    DECLARE @FypFilterDemo TABLE
+    (
+        [Id] UNIQUEIDENTIFIER,
+        [StudentProfileId] UNIQUEIDENTIFIER,
+        [DepartmentId] UNIQUEIDENTIFIER,
+        [Title] NVARCHAR(500),
+        [Description] NVARCHAR(MAX),
+        [Status] NVARCHAR(20),
+        [SupervisorUserId] UNIQUEIDENTIFIER NULL,
+        [CoordinatorRemarks] NVARCHAR(2000) NULL
+    );
+
+    INSERT INTO @FypFilterDemo ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks])
+    VALUES
+        (
+            CAST('61616161-6161-6161-6161-616161616101' AS UNIQUEIDENTIFIER),
+            CAST('885BB3B8-9AEB-4F7B-8BB1-7C43ADCD1AC1' AS UNIQUEIDENTIFIER),
+            CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER),
+            N'FYP Filter Demo - CS Proposed',
+            N'Deterministic demo project for Computer Science department filter (Proposed state).',
+            N'Proposed',
+            NULL,
+            N'Demo record for FYP filter verification.'
+        ),
+        (
+            CAST('61616161-6161-6161-6161-616161616102' AS UNIQUEIDENTIFIER),
+            CAST('3D2AD548-0C0A-45B7-A259-2D961DAF0980' AS UNIQUEIDENTIFIER),
+            CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER),
+            N'FYP Filter Demo - CS InProgress',
+            N'Deterministic demo project for Computer Science department filter (InProgress state).',
+            N'InProgress',
+            CAST('77777777-7777-7777-7777-777777777711' AS UNIQUEIDENTIFIER),
+            N'Active implementation demo for menu verification.'
+        ),
+        (
+            CAST('61616161-6161-6161-6161-616161616103' AS UNIQUEIDENTIFIER),
+            CAST('E8257445-4683-4117-A03D-A6A3DF2A1C09' AS UNIQUEIDENTIFIER),
+            CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER),
+            N'FYP Filter Demo - Engineering Completed',
+            N'Deterministic demo project for Engineering department filter (Completed state).',
+            N'Completed',
+            CAST('77777777-7777-7777-7777-777777777712' AS UNIQUEIDENTIFIER),
+            N'Pass with distinction - deterministic completed demo result.'
+        );
+
+    INSERT INTO [fyp_projects]
+        ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt], [CompletionApprovedByUserIdsCsv], [CompletionRequestedAt], [CompletionRequestedByStudentProfileId], [IsCompletionRequested])
+    SELECT
+        d.[Id],
+        d.[StudentProfileId],
+        d.[DepartmentId],
+        d.[Title],
+        d.[Description],
+        d.[Status],
+        d.[SupervisorUserId],
+        d.[CoordinatorRemarks],
+        @Now,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        0
+    FROM @FypFilterDemo d
+    WHERE NOT EXISTS (SELECT 1 FROM [fyp_projects] x WHERE x.[Id] = d.[Id]);
+END
+
 IF OBJECT_ID(N'[fyp_meetings]') IS NOT NULL
 BEGIN
     INSERT INTO [fyp_meetings] ([Id], [FypProjectId], [ScheduledAt], [Venue], [Agenda], [Status], [OrganiserUserId], [Minutes], [CreatedAt], [UpdatedAt])
@@ -3050,6 +3118,24 @@ BEGIN
            COALESCE(p.[SupervisorUserId], @SuperAdminUserId), N'Initial progress meeting completed with action items.', @Now, NULL
     FROM [fyp_projects] p
     WHERE NOT EXISTS (SELECT 1 FROM [fyp_meetings] x WHERE x.[FypProjectId] = p.[Id]);
+END
+
+IF OBJECT_ID(N'[fyp_meetings]') IS NOT NULL
+BEGIN
+    INSERT INTO [fyp_meetings] ([Id], [FypProjectId], [ScheduledAt], [Venue], [Agenda], [Status], [OrganiserUserId], [Minutes], [CreatedAt], [UpdatedAt])
+    SELECT
+        CAST('62626262-6262-6262-6262-626262626201' AS UNIQUEIDENTIFIER),
+        CAST('61616161-6161-6161-6161-616161616102' AS UNIQUEIDENTIFIER),
+        DATEADD(day, 5, @Now),
+        N'Innovation Lab 4',
+        N'Sprint checkpoint and architecture review for CS InProgress demo project.',
+        N'Scheduled',
+        CAST('77777777-7777-7777-7777-777777777711' AS UNIQUEIDENTIFIER),
+        NULL,
+        @Now,
+        NULL
+    WHERE EXISTS (SELECT 1 FROM [fyp_projects] p WHERE p.[Id] = CAST('61616161-6161-6161-6161-616161616102' AS UNIQUEIDENTIFIER))
+      AND NOT EXISTS (SELECT 1 FROM [fyp_meetings] m WHERE m.[Id] = CAST('62626262-6262-6262-6262-626262626201' AS UNIQUEIDENTIFIER));
 END
 
 IF OBJECT_ID(N'[fyp_panel_members]') IS NOT NULL

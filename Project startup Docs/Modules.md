@@ -1,5 +1,17 @@
 ## Execution Update - 2026-05-30 (Results Internal Demo Seed + Scoped Filter Validation)
 
+## Execution Update - 2026-05-30 (FYP Demo Seed + Department Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing FYP module behavior.
+- Full dummy seed now includes deterministic FYP demo rows split across CS and Engineering for menu/filter testing.
+- Full dummy seed now includes one deterministic scheduled FYP meeting for upcoming-meetings panel coverage.
+- Post-deployment checks now include FYP demo-by-id, department split, and upcoming-meeting assertions.
+
+### Validation summary
+- SQL checks confirmed deterministic FYP demo rows and meeting coverage.
+- FYP menu loaded successfully and department filters isolated CS and Engineering demo rows without runtime errors.
+
 ## Execution Update - 2026-05-30 (Quizzes Demo Seed + Filter Reliability)
 
 ### Module impact summary
