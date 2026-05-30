@@ -2,6 +2,26 @@
 
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Validation
 
+## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Runtime Payload Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v34` and added deterministic Prerequisites demo rows:
+  - PRQ-101 (`58585858-5858-5858-5858-585858585801`),
+  - PRQ-201 (`59595959-5959-5959-5959-595959595901`),
+  - deterministic prerequisite link (`5A5A5A5A-5A5A-5A5A-5A5A-5A5A5A5A5A01`).
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v34 and prerequisites assertions:
+  - DummySeed_DemoDatasetVersionIsV34,
+  - DummySeed_PrerequisitesFilterDemo_CourseRowsByIdCount,
+  - DummySeed_PrerequisitesFilterDemo_LinkCount,
+  - DummySeed_PrerequisitesFilterDemo_DepartmentScopedCourseCount,
+  - DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount.
+- Updated prerequisite repository query composition to return complete payload fields by including both parent and prerequisite course navigations.
+
+### Validation Summary:
+- SQL checks confirmed deterministic prerequisites data insertion and link integrity.
+- API checks confirmed scoped prerequisites filter path returns seeded rows.
+- Menu/runtime checks confirmed Prerequisites page load and department-filter route rendering with deterministic relationship data.
+
 ### Implementation Summary:
 - Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v33` and added deterministic Generate Certificates filter demo rows:
   - `DEMO-CERT-FILTER-CS-911`

@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Repository Payload Synchronization
+
+### Function inventory delta
+- No new public controller/service/API function signature was introduced in this Prerequisites v34 seed/check slice.
+- Existing function updated (no duplicate row added):
+	- PrerequisiteRepository.GetByCourseIdAsync
+		- Added eager loading of `Course` navigation in addition to `PrerequisiteCourse` so prerequisite list payload returns non-empty `CourseCode` and `CourseTitle`.
+
+### Seed/check runtime surface synchronization
+- Scripts/03-FullDummyData.sql updated to `FullDummyData-v34` and now includes deterministic Prerequisites filter demo rows:
+	- PRQ-101 (`58585858-5858-5858-5858-585858585801`)
+	- PRQ-201 (`59595959-5959-5959-5959-595959595901`)
+	- Prerequisite link (`5A5A5A5A-5A5A-5A5A-5A5A-5A5A5A5A5A01`): PRQ-201 requires PRQ-101
+- Scripts/05-PostDeployment-Checks.sql updated with matching v34 and prerequisites assertions:
+	- DummySeed_DemoDatasetVersionIsV34
+	- DummySeed_PrerequisitesFilterDemo_CourseRowsByIdCount
+	- DummySeed_PrerequisitesFilterDemo_LinkCount
+	- DummySeed_PrerequisitesFilterDemo_DepartmentScopedCourseCount
+	- DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount
+- Runtime verification confirmed Prerequisites menu/filter loads deterministic rows and department-filter route rendering without page-load errors.
+
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Synchronization
 
 ### Function inventory delta

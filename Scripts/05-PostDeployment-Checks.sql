@@ -727,10 +727,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV33' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV34' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v33';
+	AND DemoValue = N'FullDummyData-v34';
 
 SELECT 'DummySeed_GenerateCertificatesDemo_ProfilesByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
@@ -937,6 +937,52 @@ END
 ELSE
 BEGIN
 	SELECT 'DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
+
+SELECT 'DummySeed_PrerequisitesFilterDemo_CourseRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [Id] IN
+(
+	CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
+	CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+)
+	AND [IsDeleted] = 0
+	AND [IsActive] = 1;
+
+SELECT 'DummySeed_PrerequisitesFilterDemo_LinkCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_prerequisites]
+WHERE [CourseId] = CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+	AND [PrerequisiteCourseId] = CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER);
+
+SELECT 'DummySeed_PrerequisitesFilterDemo_DepartmentScopedCourseCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [courses]
+WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+	AND [Id] IN
+	(
+		CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
+		CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+	)
+	AND [IsDeleted] = 0;
+
+IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
+AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [courses] c
+	INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+	WHERE c.[Id] IN
+	(
+		CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
+		CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+	)
+		AND c.[TenantId] = d.[TenantId]
+		AND c.[CampusId] = d.[CampusId]
+		AND c.[InstitutionType] = d.[InstitutionType];
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
 END;
 
 SELECT 'DummySeed_ProgramsFilterDemo_ByIdCount' AS [CheckName], COUNT(1) AS [Value]

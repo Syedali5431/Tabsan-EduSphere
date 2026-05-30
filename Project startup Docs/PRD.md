@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Prerequisites Filter Demo Seed v34 + Payload Reliability)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v34 with deterministic Prerequisites demo/filter cohort:
+    - PRQ-101,
+    - PRQ-201,
+    - deterministic prerequisite link: PRQ-201 requires PRQ-101.
+  - Updated Scripts/05-PostDeployment-Checks.sql with deterministic v34 marker and prerequisites assertions.
+  - Updated prerequisite list data shaping in existing repository method to include both course sides so list payload contains parent-course display metadata.
+- Compatibility boundary:
+  - No menu key change.
+  - No route rename.
+  - Update remains additive in seed/check scope with reliability correction for existing prerequisite list payload fields.
+- Validation Summary:
+  - SQL checks confirmed deterministic rows and prerequisite-link integrity.
+  - API verification confirmed department-scoped prerequisites demo data retrieval.
+  - Prerequisites menu/filter verification confirmed seeded data appears and relationship rendering is stable.
+
 ### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Filter Demo Seed v33 + Departments Institution Filter)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v33 with deterministic Generate Certificates filter-demo cohort:

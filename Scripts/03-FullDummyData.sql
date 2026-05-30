@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v33', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v34', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v33',
+    SET [DemoValue] = N'FullDummyData-v34',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -3205,6 +3205,84 @@ BEGIN
         WHERE x.[CourseId] = c2.[Id] AND x.[PrerequisiteCourseId] = c1.[Id]
     );
 END
+
+/* 24.4) Prerequisites menu/filter deterministic demo cohort */
+IF OBJECT_ID(N'[courses]') IS NOT NULL
+BEGIN
+    INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER), N'Prereq Demo - Foundation Programming', N'PRQ-101', 3, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [courses] x WHERE x.[Id] = CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER));
+
+    INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER), N'Prereq Demo - Data Structures', N'PRQ-201', 3, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), 1, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [courses] x WHERE x.[Id] = CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER));
+
+    UPDATE c
+    SET c.[Title] = src.[Title],
+        c.[Code] = src.[Code],
+        c.[CreditHours] = src.[CreditHours],
+        c.[DepartmentId] = src.[DepartmentId],
+        c.[IsActive] = 1,
+        c.[IsDeleted] = 0,
+        c.[DeletedAt] = NULL,
+        c.[UpdatedAt] = @Now
+    FROM [courses] c
+    INNER JOIN (
+        VALUES
+        (CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER), N'Prereq Demo - Foundation Programming', N'PRQ-101', 3, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)),
+        (CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER), N'Prereq Demo - Data Structures', N'PRQ-201', 3, CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER))
+    ) src([Id], [Title], [Code], [CreditHours], [DepartmentId])
+        ON src.[Id] = c.[Id]
+    WHERE c.[Title] <> src.[Title]
+       OR c.[Code] <> src.[Code]
+       OR c.[CreditHours] <> src.[CreditHours]
+       OR c.[DepartmentId] <> src.[DepartmentId]
+       OR c.[IsActive] = 0
+       OR c.[IsDeleted] = 1
+       OR c.[DeletedAt] IS NOT NULL;
+
+    IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+    BEGIN
+        UPDATE c
+        SET c.[TenantId] = d.[TenantId],
+            c.[CampusId] = d.[CampusId],
+            c.[InstitutionType] = d.[InstitutionType],
+            c.[UpdatedAt] = @Now
+        FROM [courses] c
+        INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+        WHERE c.[Id] IN
+        (
+            CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
+            CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+        )
+        AND (
+            c.[TenantId] IS NULL
+            OR c.[CampusId] IS NULL
+            OR c.[InstitutionType] <> d.[InstitutionType]
+            OR c.[TenantId] <> d.[TenantId]
+            OR c.[CampusId] <> d.[CampusId]
+        );
+    END;
+END;
+
+IF OBJECT_ID(N'[course_prerequisites]') IS NOT NULL
+BEGIN
+    INSERT INTO [course_prerequisites] ([Id], [CourseId], [PrerequisiteCourseId], [CreatedAt], [UpdatedAt])
+    SELECT CAST('5A5A5A5A-5A5A-5A5A-5A5A-5A5A5A5A5A01' AS UNIQUEIDENTIFIER),
+           CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER),
+           CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
+           @Now,
+           NULL
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM [course_prerequisites] x
+        WHERE x.[CourseId] = CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
+          AND x.[PrerequisiteCourseId] = CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER)
+    );
+END;
 
 IF OBJECT_ID(N'[degree_rules]') IS NOT NULL
 BEGIN

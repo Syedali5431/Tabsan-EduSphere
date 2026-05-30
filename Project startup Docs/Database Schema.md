@@ -2,6 +2,20 @@
 
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter (Schema Posture)
 
+## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Payload Reliability (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v34`.
+	- Added additive deterministic Prerequisites demo rows in existing tables only:
+		- `courses` (PRQ-101, PRQ-201),
+		- `course_prerequisites` (deterministic PRQ-201 -> PRQ-101 link).
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive deterministic prerequisites assertions and v34 marker check.
+	- Updated existing repository query composition for prerequisite payload shaping; no table/index/constraint/view/procedure mutation.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 - Implementation Summary:
 	- Updated Scripts/03-FullDummyData.sql marker to `FullDummyData-v33`.
 	- Added additive deterministic Generate Certificates demo/filter rows in existing tables only:

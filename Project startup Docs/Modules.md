@@ -2,6 +2,22 @@
 
 ## Execution Update - 2026-05-31 (Generate Certificates Filter Demo Seed v33 + Departments Institution Filter)
 
+## Execution Update - 2026-05-31 (Prerequisites Filter Demo Seed v34 + Payload Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Prerequisites/Courses module behavior.
+- Full dummy seed now includes deterministic Prerequisites demo/filter rows:
+  - PRQ-101,
+  - PRQ-201,
+  - deterministic prerequisite link between the two courses.
+- Post-deployment checks now validate v34 marker and prerequisites deterministic assertions.
+- Existing prerequisite repository list query now eagerly loads both `Course` and `PrerequisiteCourse` navigations for complete runtime payload display fields.
+
+### Validation summary
+- SQL checks confirmed deterministic course/link counts and scope alignment.
+- API verification confirmed scoped courses and prerequisite list response consistency for seeded IDs.
+- Prerequisites menu/filter route validation confirmed seeded rows render and relationship data appears correctly.
+
 ### Module impact summary
 - No new module introduced; update remains within existing Generate Certificates and Departments module behavior.
 - Full dummy seed now includes deterministic Generate Certificates filter-demo cohort for university scope validation:

@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Runtime Payload Validation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql with deterministic Prerequisites filter-demo additions and marker upgrade to `FullDummyData-v34`:
+	- PRQ-101 (`58585858-5858-5858-5858-585858585801`),
+	- PRQ-201 (`59595959-5959-5959-5959-595959595901`),
+	- deterministic prerequisite link (`5A5A5A5A-5A5A-5A5A-5A5A-5A5A5A5A5A01`).
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v34 marker and prerequisites assertions:
+	- DummySeed_DemoDatasetVersionIsV34,
+	- DummySeed_PrerequisitesFilterDemo_CourseRowsByIdCount,
+	- DummySeed_PrerequisitesFilterDemo_LinkCount,
+	- DummySeed_PrerequisitesFilterDemo_DepartmentScopedCourseCount,
+	- DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount.
+- Updated prerequisites repository payload shaping by loading both course sides in prerequisite query:
+	- PrerequisiteRepository.GetByCourseIdAsync now includes `Course` and `PrerequisiteCourse` navigation.
+
+### Validation sync
+- SQL verification confirmed deterministic prerequisites demo rows, department scoping, and link integrity.
+- API verification confirmed department-scoped course filtering returns seeded rows for the Prerequisites menu path.
+- Prerequisites menu/filter runtime validation confirmed seeded rows appear and relationship rendering works in department-scoped route.
+
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Validation
 
 ### Implementation sync

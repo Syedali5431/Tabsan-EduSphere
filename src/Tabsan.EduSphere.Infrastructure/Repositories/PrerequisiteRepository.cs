@@ -16,6 +16,7 @@ public class PrerequisiteRepository : IPrerequisiteRepository
     /// <summary>Returns all prerequisites for the given course with PrerequisiteCourse navigation loaded.</summary>
     public async Task<IReadOnlyList<CoursePrerequisite>> GetByCourseIdAsync(Guid courseId, CancellationToken ct = default)
         => await _db.CoursePrerequisites
+                    .Include(p => p.Course)
                     .Include(p => p.PrerequisiteCourse)
                     .Where(p => p.CourseId == courseId)
                     .OrderBy(p => p.PrerequisiteCourse.Code)
