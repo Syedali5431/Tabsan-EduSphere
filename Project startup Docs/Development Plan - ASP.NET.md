@@ -1,3 +1,24 @@
+## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Runtime Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v28` and added deterministic Degree Audit demo/filter seed synchronization for repeatable menu testing.
+- Added deterministic Degree Audit grade-point population coverage in FullDummyData.sql so completed credits and eligibility calculations render in seeded demos.
+- Updated Scripts/05-PostDeployment-Checks.sql with Degree Audit assertions:
+  - DummySeed_DemoDatasetVersionIsV28
+  - DummySeed_DegreeAuditFilterDemo_ResultRowsCount
+  - DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount
+  - DummySeed_DegreeAuditUniversityDemo_ResultRowsCount
+  - DummySeed_DegreeAuditUniversityDemo_StudentProfileCount
+  - DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount
+- Synchronized Degree Audit runtime behavior in web/API/application layers:
+  - non-student flow now uses explicit student selection before detail load,
+  - institution guards now handle missing navigation safely,
+  - non-student initial-state UX now avoids misleading no-data output.
+
+### Validation Summary:
+- SQL verification confirmed deterministic Degree Audit seed checks and dataset marker v28.
+- Runtime verification confirmed Degree Audit student filter changes context correctly and seeded audit sections render with no blocking error state.
+
 ## 2026-05-30 Update - Enrollments Demo Seed and Filter Validation
 
 ### Implementation Summary:

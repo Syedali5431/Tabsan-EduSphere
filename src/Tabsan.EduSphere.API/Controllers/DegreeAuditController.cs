@@ -68,7 +68,7 @@ public class DegreeAuditController : ControllerBase
         var profile = await _studentRepo.GetByUserIdAsync(userId, ct);
         if (profile is null) return NotFound("Student profile not found.");
 
-        if (profile.Department?.InstitutionType != InstitutionType.University)
+        if (profile.Department is { InstitutionType: not InstitutionType.University })
             return BadRequest("Degree audit is available only for university institution type.");
 
         if (scope.TenantId.HasValue && profile.Department?.TenantId != scope.TenantId.Value)
@@ -108,7 +108,7 @@ public class DegreeAuditController : ControllerBase
         if (student is null)
             return NotFound($"Student profile {studentProfileId} not found.");
 
-        if (student.Department?.InstitutionType != InstitutionType.University)
+        if (student.Department is { InstitutionType: not InstitutionType.University })
             return BadRequest("Degree audit is available only for university institution type.");
 
         try

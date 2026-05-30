@@ -11,6 +11,31 @@
     <div class="alert alert-info">@msg</div>
 }
 
+@if (!User.IsInRole("Student"))
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="DegreeAudit" class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label">Student</label>
+                    <select class="form-select" name="studentProfileId" required>
+                        <option value="">Select student</option>
+                        @foreach (var s in Model.Students)
+                        {
+                            <option value="@s.Id" selected="@(Model.SelectedStudentProfileId == s.Id ? "selected" : null)">
+                                @s.FullName (@s.RegistrationNumber)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Load Audit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 @if (Model.Audit is { } audit)
 {
     <div class="card mb-4">
@@ -125,5 +150,8 @@
 }
 else
 {
-    <div class="alert alert-secondary">No audit data available.</div>
+    @if (User.IsInRole("Student") || Model.SelectedStudentProfileId.HasValue)
+    {
+        <div class="alert alert-secondary">No audit data available.</div>
+    }
 }

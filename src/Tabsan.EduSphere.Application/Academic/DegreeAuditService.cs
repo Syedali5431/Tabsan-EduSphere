@@ -38,7 +38,7 @@ public class DegreeAuditService : IDegreeAuditService
         var student = await _studentRepo.GetByIdAsync(studentProfileId, ct)
             ?? throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
 
-        if (student.Department?.InstitutionType != InstitutionType.University)
+        if (student.Department is { InstitutionType: not InstitutionType.University })
             throw new InvalidOperationException("Degree audit is available only for university institution type.");
 
         if (tenantId.HasValue && student.Department?.TenantId != tenantId.Value)

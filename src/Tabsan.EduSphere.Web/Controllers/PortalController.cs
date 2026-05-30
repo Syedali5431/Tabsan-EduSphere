@@ -7876,15 +7876,26 @@ public class PortalController : Controller
         var model = new DegreeAuditPageModel();
         try
         {
+            var isStudent = User.IsInRole("Student");
+
+            if (!isStudent)
+            {
+                model.Students = await _api.GetStudentsAsync(null, ct);
+            }
+
             if (studentProfileId.HasValue)
             {
                 model.SelectedStudentProfileId = studentProfileId;
                 model.Audit = await _api.GetStudentDegreeAuditAsync(studentProfileId.Value, ct);
             }
-            else
+            else if (isStudent)
             {
                 // Student self-audit
                 model.Audit = await _api.GetMyDegreeAuditAsync(ct);
+            }
+            else
+            {
+                TempData["Message"] = "Select a student to view degree audit.";
             }
         }
         catch (Exception ex) { TempData["Message"] = "Error: " + ex.Message; }

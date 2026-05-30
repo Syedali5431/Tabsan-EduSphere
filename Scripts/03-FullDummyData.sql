@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v27', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v28', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v27',
+    SET [DemoValue] = N'FullDummyData-v28',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1842,6 +1842,50 @@ BEGIN
         INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
         SELECT CAST('96969696-9696-9696-9696-969696969806' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, DATEADD(day, -1, CAST(@Now AS date)), N'Late', @AttendanceDemoFacultyUserId, N'Demo attendance seed DB-201', @Now, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [attendance_records] ar WHERE ar.[Id] = CAST('96969696-9696-9696-9696-969696969806' AS UNIQUEIDENTIFIER));
+
+        /* 11.3.1) Degree Audit filter deterministic demo cohort (published results + grade points) */
+        IF OBJECT_ID(N'[results]') IS NOT NULL
+        BEGIN
+            INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
+            SELECT src.[Id], src.[StudentProfileId], src.[CourseOfferingId], N'Final', src.[MarksObtained], CAST(100.00 AS DECIMAL(8,2)), 1, @Now, @AttendanceDemoFacultyUserId, @Now, NULL
+            FROM (VALUES
+                (CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER), @AttendanceDemoDsOfferingId, CAST(88.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, CAST(82.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949702' AS UNIQUEIDENTIFIER), @AttendanceDemoDsOfferingId, CAST(91.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979804' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949702' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, CAST(86.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979805' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER), @AttendanceDemoDsOfferingId, CAST(74.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979806' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949703' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, CAST(78.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979807' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949704' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, CAST(83.00 AS DECIMAL(8,2))),
+                (CAST('97979797-9797-9797-9797-979797979808' AS UNIQUEIDENTIFIER), CAST('94949494-9494-9494-9494-949494949705' AS UNIQUEIDENTIFIER), @AttendanceDemoDbOfferingId, CAST(76.00 AS DECIMAL(8,2)))
+            ) src([Id], [StudentProfileId], [CourseOfferingId], [MarksObtained])
+            WHERE NOT EXISTS (SELECT 1 FROM [results] r WHERE r.[Id] = src.[Id]);
+
+            IF COL_LENGTH('results', 'GradePoint') IS NOT NULL
+            BEGIN
+                UPDATE r
+                SET r.[GradePoint] = CASE
+                        WHEN r.[MarksObtained] >= 85 THEN CAST(4.00 AS DECIMAL(4,2))
+                        WHEN r.[MarksObtained] >= 80 THEN CAST(3.70 AS DECIMAL(4,2))
+                        WHEN r.[MarksObtained] >= 75 THEN CAST(3.30 AS DECIMAL(4,2))
+                        WHEN r.[MarksObtained] >= 70 THEN CAST(3.00 AS DECIMAL(4,2))
+                        WHEN r.[MarksObtained] >= 65 THEN CAST(2.70 AS DECIMAL(4,2))
+                        WHEN r.[MarksObtained] >= 60 THEN CAST(2.30 AS DECIMAL(4,2))
+                        ELSE CAST(1.00 AS DECIMAL(4,2))
+                    END,
+                    r.[UpdatedAt] = @Now
+                FROM [results] r
+                WHERE r.[Id] IN (
+                    CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979804' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979805' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979806' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979807' AS UNIQUEIDENTIFIER),
+                    CAST('97979797-9797-9797-9797-979797979808' AS UNIQUEIDENTIFIER)
+                );
+            END;
+        END;
 END;
 
 /* 11.4) Results demo offering scope alignment (tenant/campus/institution) */
@@ -1940,6 +1984,29 @@ BEGIN
     SELECT r.Id, r.StudentProfileId, r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks, 1, @Now, r.PublishedByUserId, @Now, NULL
     FROM @Results r
     WHERE NOT EXISTS (SELECT 1 FROM [results] x WHERE x.[Id] = r.Id);
+
+        /* 12.0.0) Degree Audit university deterministic demo rows (filters + UI validation) */
+        IF COL_LENGTH('results', 'GradePoint') IS NOT NULL
+        BEGIN
+            UPDATE r
+            SET r.[GradePoint] = CASE
+                    WHEN r.[MarksObtained] >= 85 THEN CAST(4.00 AS DECIMAL(4,2))
+                    WHEN r.[MarksObtained] >= 80 THEN CAST(3.70 AS DECIMAL(4,2))
+                    WHEN r.[MarksObtained] >= 75 THEN CAST(3.30 AS DECIMAL(4,2))
+                    WHEN r.[MarksObtained] >= 70 THEN CAST(3.00 AS DECIMAL(4,2))
+                    WHEN r.[MarksObtained] >= 65 THEN CAST(2.70 AS DECIMAL(4,2))
+                    WHEN r.[MarksObtained] >= 60 THEN CAST(2.30 AS DECIMAL(4,2))
+                    ELSE CAST(1.00 AS DECIMAL(4,2))
+                END,
+                r.[UpdatedAt] = @Now
+            FROM [results] r
+            WHERE r.[Id] IN (
+                CAST('cccccccc-cccc-cccc-cccc-cccccccccc30' AS UNIQUEIDENTIFIER),
+                CAST('cccccccc-cccc-cccc-cccc-cccccccccc31' AS UNIQUEIDENTIFIER),
+                CAST('cccccccc-cccc-cccc-cccc-cccccccccc32' AS UNIQUEIDENTIFIER),
+                CAST('cccccccc-cccc-cccc-cccc-cccccccccc33' AS UNIQUEIDENTIFIER)
+            );
+        END;
 
         /* 12.0.1) High-volume results for bulk enrollments */
         INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])

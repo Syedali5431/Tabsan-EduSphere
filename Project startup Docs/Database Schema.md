@@ -1,3 +1,17 @@
+## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v28`.
+	- Added additive deterministic Degree Audit demo/filter data synchronization in existing tables only:
+		- `results` (deterministic grade-point coverage for Degree Audit filter demo cohorts),
+		- deterministic existing-row update logic for university demo grade-point population.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive Degree Audit verification queries and v28 marker assertion.
+	- Runtime Degree Audit reliability changes were implemented in controller/service/web layers without schema changes.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Enrollments Demo Seed and Filter Validation (Schema Posture)
 
 - Implementation Summary:

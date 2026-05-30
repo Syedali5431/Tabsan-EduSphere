@@ -1,5 +1,27 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Degree Audit Demo Seed v28 + Filter Runtime Reliability)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v28 with deterministic Degree Audit demo/filter seed alignment and grade-point coverage for audit aggregation display.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Degree Audit-focused deterministic assertions:
+    - DummySeed_DemoDatasetVersionIsV28
+    - DummySeed_DegreeAuditFilterDemo_ResultRowsCount
+    - DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount
+    - DummySeed_DegreeAuditUniversityDemo_ResultRowsCount
+    - DummySeed_DegreeAuditUniversityDemo_StudentProfileCount
+    - DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount
+  - Synchronized Degree Audit web and API runtime flow for role-safe loading and filter behavior:
+    - non-student route now prompts deterministic student selection before loading audit,
+    - Degree Audit institution checks now fail safely when related navigation data is missing,
+    - initial non-student empty state messaging aligned for demo/testing clarity.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive seed/check coverage plus reliability synchronization on existing Degree Audit flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic Degree Audit demo counts and dataset marker v28.
+  - Degree Audit menu runtime verification confirmed student filter selection and seeded data rendering without blocking error states.
+
 ### 2026-05-30 - Product Requirements Synchronization (Enrollments Demo Seed + Filter Reliability)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql with deterministic Enrollments demo/filter expansion for DS-101 and DB-201 (2026-S2) including two additional demo students.

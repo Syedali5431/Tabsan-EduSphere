@@ -1,5 +1,34 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Runtime Reliability Synchronization
+
+### Degree Audit runtime additions
+- No new public API route signature was introduced; existing runtime surfaces were stabilized for role-safe loading and deterministic demo/testing data:
+	- PortalController.DegreeAudit
+	- EduApiClient.GetMyDegreeAuditAsync
+	- EduApiClient.GetStudentDegreeAuditAsync
+	- DegreeAuditController.GetMyAudit
+	- DegreeAuditController.GetStudentAudit
+	- DegreeAuditService.GetAuditAsync
+- Existing Degree Audit UI/runtime flow enhancements added in this slice:
+	- non-student flow now loads a student picker and avoids student-only self-audit call path,
+	- Degree Audit page exposes deterministic student selection for admin/superadmin filter validation,
+	- institution-type guards were synchronized to avoid false negative checks when department navigation data is not populated.
+
+### Degree Audit validation summary
+- Scripts/03-FullDummyData.sql advanced to FullDummyData-v28 and now includes deterministic Degree Audit filter-demo data handling:
+	- grade-point population for deterministic Degree Audit cohorts,
+	- university deterministic grade-point coverage for menu/filter testing,
+	- idempotent reseed behavior preserved.
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_DemoDatasetVersionIsV28,
+	- DummySeed_DegreeAuditFilterDemo_ResultRowsCount,
+	- DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount,
+	- DummySeed_DegreeAuditUniversityDemo_ResultRowsCount,
+	- DummySeed_DegreeAuditUniversityDemo_StudentProfileCount,
+	- DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount.
+- Runtime verification confirmed Degree Audit menu loads, student filter selection changes context correctly, and completed-course/audit cards render seeded data for selected deterministic students.
+
 ## 2026-05-30 Update - Enrollments Demo Seed and Filter Reliability Synchronization
 
 ### Enrollments runtime additions

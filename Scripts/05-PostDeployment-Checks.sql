@@ -727,10 +727,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV27' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV28' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v27';
+	AND DemoValue = N'FullDummyData-v28';
 
 SELECT 'Schema_DiscussionThreads_Phase31ColumnsPresent' AS [CheckName], COUNT(1) AS [Value]
 FROM INFORMATION_SCHEMA.COLUMNS
@@ -881,6 +881,87 @@ WHERE [CourseOfferingId] = CAST('66666666-6666-6666-6666-666666666662' AS UNIQUE
 		CAST('96969696-9696-9696-9696-969696969805' AS UNIQUEIDENTIFIER),
 		CAST('96969696-9696-9696-9696-969696969806' AS UNIQUEIDENTIFIER)
 	);
+
+SELECT 'DummySeed_DegreeAuditFilterDemo_ResultRowsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [Id] IN (
+	CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979804' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979805' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979806' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979807' AS UNIQUEIDENTIFIER),
+	CAST('97979797-9797-9797-9797-979797979808' AS UNIQUEIDENTIFIER)
+)
+	AND [IsPublished] = 1;
+
+IF COL_LENGTH('results', 'GradePoint') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [results]
+	WHERE [Id] IN (
+		CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979804' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979805' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979806' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979807' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979808' AS UNIQUEIDENTIFIER)
+	)
+		AND [GradePoint] IS NOT NULL
+		AND [GradePoint] >= CAST(1.00 AS DECIMAL(4,2));
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
+
+SELECT 'DummySeed_DegreeAuditFilterDemo_Student701_ResultRows' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [StudentProfileId] = CAST('94949494-9494-9494-9494-949494949701' AS UNIQUEIDENTIFIER)
+	AND [Id] IN (
+		CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER),
+		CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER)
+	);
+
+SELECT 'DummySeed_DegreeAuditUniversityDemo_ResultRowsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [Id] IN (
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc30' AS UNIQUEIDENTIFIER),
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc31' AS UNIQUEIDENTIFIER),
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc32' AS UNIQUEIDENTIFIER),
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc33' AS UNIQUEIDENTIFIER)
+)
+	AND [IsPublished] = 1;
+
+SELECT 'DummySeed_DegreeAuditUniversityDemo_StudentProfileCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE sp.[Id] IN (
+	CAST('99999999-9999-9999-9999-999999999941' AS UNIQUEIDENTIFIER),
+	CAST('99999999-9999-9999-9999-999999999942' AS UNIQUEIDENTIFIER)
+)
+	AND d.[InstitutionType] = 0;
+
+IF COL_LENGTH('results', 'GradePoint') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM [results]
+	WHERE [Id] IN (
+		CAST('cccccccc-cccc-cccc-cccc-cccccccccc30' AS UNIQUEIDENTIFIER),
+		CAST('cccccccc-cccc-cccc-cccc-cccccccccc31' AS UNIQUEIDENTIFIER),
+		CAST('cccccccc-cccc-cccc-cccc-cccccccccc32' AS UNIQUEIDENTIFIER),
+		CAST('cccccccc-cccc-cccc-cccc-cccccccccc33' AS UNIQUEIDENTIFIER)
+	)
+		AND [GradePoint] IS NOT NULL
+		AND [GradePoint] >= CAST(1.00 AS DECIMAL(4,2));
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_StudentTimetableDemo_TimetablesCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [timetables]
@@ -1514,10 +1595,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v27' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v28' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v27';
+			AND [DemoValue] = N'FullDummyData-v28';
 END;
 
 PRINT 'Post-deployment checks completed.';
