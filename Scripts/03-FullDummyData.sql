@@ -2137,10 +2137,24 @@ BEGIN
     ('13131313-1313-1313-1313-131313131303', '55555555-5555-5555-5555-555555555504', N'Database Systems Quiz 1', '77777777-7777-7777-7777-777777777711'),
     ('13131313-1313-1313-1313-131313131304', '55555555-5555-5555-5555-555555555507', N'Management Principles Quiz 1', '77777777-7777-7777-7777-777777777714'),
     ('13131313-1313-1313-1313-131313131305', '55555555-5555-5555-5555-555555555514', N'Commerce Fundamentals Quiz 1', '77777777-7777-7777-7777-777777777721'),
-    ('13131313-1313-1313-1313-131313131306', '55555555-5555-5555-5555-555555555517', N'Mathematics Basics Quiz 1', '77777777-7777-7777-7777-777777777731');
+    ('13131313-1313-1313-1313-131313131306', '55555555-5555-5555-5555-555555555517', N'Mathematics Basics Quiz 1', '77777777-7777-7777-7777-777777777731'),
+    ('13131313-1313-1313-1313-131313131307', '55555555-5555-5555-5555-555555555501', N'Programming Fundamentals Quiz 2 (Filter Active Demo)', '77777777-7777-7777-7777-777777777711'),
+    ('13131313-1313-1313-1313-131313131308', '55555555-5555-5555-5555-555555555501', N'Programming Fundamentals Quiz 3 (Filter Inactive Demo)', '77777777-7777-7777-7777-777777777711');
 
-    INSERT INTO [quizzes] ([Id], [CourseOfferingId], [Title], [Instructions], [TimeLimitMinutes], [MaxAttempts], [AvailableFrom], [AvailableUntil], [IsPublished], [IsActive], [CreatedByUserId], [CreatedAt], [UpdatedAt])
-    SELECT q.Id, q.CourseOfferingId, q.Title, N'Complete all questions. Select best answer for MCQ.', 20, 1, DATEADD(day, -2, @Now), DATEADD(day, 7, @Now), 1, 1, q.CreatedByUserId, @Now, NULL
+        INSERT INTO [quizzes] ([Id], [CourseOfferingId], [Title], [Instructions], [TimeLimitMinutes], [MaxAttempts], [AvailableFrom], [AvailableUntil], [IsPublished], [IsActive], [CreatedByUserId], [CreatedAt], [UpdatedAt])
+        SELECT q.Id,
+            q.CourseOfferingId,
+            q.Title,
+            N'Complete all questions. Select best answer for MCQ.',
+            20,
+            1,
+            DATEADD(day, -2, @Now),
+            DATEADD(day, 7, @Now),
+            CASE WHEN q.Id = '13131313-1313-1313-1313-131313131308' THEN 0 ELSE 1 END,
+            CASE WHEN q.Id = '13131313-1313-1313-1313-131313131308' THEN 0 ELSE 1 END,
+            q.CreatedByUserId,
+            @Now,
+            NULL
     FROM @Quizzes q
     WHERE NOT EXISTS (SELECT 1 FROM [quizzes] x WHERE x.[Id] = q.Id);
 

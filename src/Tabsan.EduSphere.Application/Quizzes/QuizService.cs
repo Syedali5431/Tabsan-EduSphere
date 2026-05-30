@@ -292,7 +292,7 @@ public sealed class QuizService : IQuizService
     private static QuizSummaryResponse ToSummary(Quiz q) => new(
         q.Id, q.CourseOfferingId, q.Title,
         q.TimeLimitMinutes, q.MaxAttempts,
-        q.AvailableFrom, q.AvailableUntil, q.IsPublished);
+        q.AvailableFrom, q.AvailableUntil, q.IsPublished, q.IsActive);
 
     /// <summary>Maps a <see cref="Quiz"/> (with questions loaded) to a <see cref="QuizDetailResponse"/>.</summary>
     private static QuizDetailResponse ToDetail(Quiz q) => new(

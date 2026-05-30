@@ -1,5 +1,28 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Quizzes Demo Seed and Filter Validation
+
+### Implementation sync
+- Added deterministic Quizzes filter demo rows in Scripts/03-FullDummyData.sql for offering 55555555-5555-5555-5555-555555555501:
+	- 13131313-1313-1313-1313-131313131307 (active)
+	- 13131313-1313-1313-1313-131313131308 (inactive)
+- Updated Scripts/05-PostDeployment-Checks.sql with Quizzes-specific assertions:
+	- DummySeed_QuizRows_FilterDemoByIdCount
+	- DummySeed_QuizRows_Offering501_ActiveCount
+	- DummySeed_QuizRows_Offering501_InactiveCount
+- Synchronized Quizzes runtime behavior:
+	- web quiz list mapping now consumes API `quizId` identity,
+	- activate flow guards empty quiz id payload,
+	- hidden bool filter/action payloads submit explicit true/false,
+	- quiz listing includes IsActive state for stable action labels.
+
+### Validation sync
+- SQL verification confirmed deterministic quiz demo rows and active/inactive split for offering 501.
+- Quizzes menu filter path verified:
+	- includeInactive=false: inactive demo quiz excluded,
+	- includeInactive=true: inactive demo quiz included with Inactive badge.
+- Activate action no longer triggers zero-guid not-found error in validated flow.
+
 ## 2026-05-30 Update - Results Internal Demo Seed and Filter Validation
 
 ### Implementation sync

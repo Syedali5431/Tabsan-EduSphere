@@ -1,5 +1,25 @@
 ## 2026-05-30 Update - Results Internal Demo Seed and Scoped Filter Validation
 
+## 2026-05-30 Update - Quizzes Demo Seed and Filter Reliability Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql with deterministic Quizzes demo rows for offering 55555555-5555-5555-5555-555555555501:
+  - 13131313-1313-1313-1313-131313131307 (active)
+  - 13131313-1313-1313-1313-131313131308 (inactive)
+- Updated Scripts/05-PostDeployment-Checks.sql with Quizzes demo assertions:
+  - DummySeed_QuizRows_FilterDemoByIdCount
+  - DummySeed_QuizRows_Offering501_ActiveCount
+  - DummySeed_QuizRows_Offering501_InactiveCount
+- Synchronized Quizzes runtime flow for reliable menu/demo usage:
+  - quiz listing maps API `quizId`,
+  - activate action blocks empty quiz id payload,
+  - hidden bool form values now submit explicit true/false,
+  - quiz listing includes `IsActive` to keep action labels and filter state consistent.
+
+### Validation Summary:
+- SQL checks confirmed deterministic seed rows and active/inactive distribution for offering 501.
+- Quizzes filter verification passed for includeInactive false/true behavior and action flow no longer reproduces zero-guid not-found error.
+
 ### Implementation Summary:
 - Updated Scripts/03-FullDummyData.sql with deterministic Internal Results demo rows for offering 55555555-5555-5555-5555-555555555501 (3 stable records for demo/testing).
 - Updated Scripts/03-FullDummyData.sql with offering-scope alignment for 555...501 (TenantId/CampusId/InstitutionType) so scoped Results filtering works consistently.

@@ -1,5 +1,22 @@
 ## 2026-05-30 Update - Results Internal Demo Seed and Offering Scope Alignment (Schema Posture)
 
+## 2026-05-30 Update - Quizzes Demo Seed and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql with additive deterministic rows in existing quizzes table for offering 55555555-5555-5555-5555-555555555501:
+		- 13131313-1313-1313-1313-131313131307 (active),
+		- 13131313-1313-1313-1313-131313131308 (inactive).
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive quiz demo assertions:
+		- DummySeed_QuizRows_FilterDemoByIdCount,
+		- DummySeed_QuizRows_Offering501_ActiveCount,
+		- DummySeed_QuizRows_Offering501_InactiveCount.
+	- Runtime synchronization for quiz identity/action/filter behavior used existing contracts and existing tables.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Quizzes filter checks now have deterministic seeded active/inactive rows for demo/testing.
+- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 - Implementation Summary:
 	- Updated Scripts/03-FullDummyData.sql with additive deterministic rows in existing results table for Internal filter demo coverage (offering 55555555-5555-5555-5555-555555555501).
 	- Updated Scripts/03-FullDummyData.sql with additive scope metadata alignment on existing course_offerings row 555...501:

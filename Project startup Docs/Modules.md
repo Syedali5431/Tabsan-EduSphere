@@ -1,5 +1,23 @@
 ## Execution Update - 2026-05-30 (Results Internal Demo Seed + Scoped Filter Validation)
 
+## Execution Update - 2026-05-30 (Quizzes Demo Seed + Filter Reliability)
+
+### Module impact summary
+- No new module introduced; update remains within existing Quizzes module behavior.
+- Full dummy seed now includes deterministic offering-501 quiz rows for filter demos:
+  - one active row,
+  - one inactive row.
+- Post-deployment checks now include quiz filter demo assertions for deterministic row presence and active/inactive counts.
+- Quizzes runtime reliability is synchronized for listing/action flows:
+  - quiz list identity maps API `quizId`,
+  - activate action guards empty quiz ids,
+  - bool form payloads submit explicit true/false,
+  - listing includes `IsActive` state for correct Activate/Deactivate label behavior.
+
+### Validation summary
+- SQL checks confirmed deterministic offering-501 quiz demo rows and active/inactive split.
+- Quizzes menu verified with includeInactive off/on and action flow validation completed without zero-guid error.
+
 ### Module impact summary
 - No new module introduced; update remains within existing Results module behavior.
 - Full dummy seed now includes deterministic Internal Results demo rows (3 stable IDs) for offering 55555555-5555-5555-5555-555555555501.

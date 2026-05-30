@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Quizzes Demo Seed + Filter Reliability)
+- Runtime delivery in this slice:
+  - Added deterministic Quizzes demo/filter rows for offering `55555555-5555-5555-5555-555555555501` in `Scripts/03-FullDummyData.sql` with explicit active/inactive coverage.
+  - Added post-deployment checks in `Scripts/05-PostDeployment-Checks.sql` for quiz filter demo row presence and active/inactive distribution.
+  - Synchronized Quizzes runtime behavior to prevent action failures and improve filter consistency:
+    - list identity mapping now reads API `quizId`,
+    - activate action guards empty quiz id payload,
+    - hidden bool payloads use explicit true/false,
+    - quiz listing includes `IsActive` for consistent action state rendering.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive demo seed/check coverage plus reliability fixes on existing Quizzes flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic quiz demo rows and active/inactive counts.
+  - Quizzes menu verification confirmed includeInactive toggle behavior and successful activate flow without zero-guid error.
+
 ### 2026-05-30 - Product Requirements Synchronization (Results Internal Demo Seed + Scoped Filter Validation)
 - Runtime delivery in this slice:
   - Added deterministic Internal Results demo rows in Scripts/03-FullDummyData.sql for offering 55555555-5555-5555-5555-555555555501 (three stable IDs for repeatable demos).

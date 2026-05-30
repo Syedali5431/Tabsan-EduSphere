@@ -3733,13 +3733,13 @@ public class EduApiClient : IEduApiClient
         var raw = await GetAsync<List<QuizApiDto>>(path, ct) ?? new();
         return raw.Select(q => new QuizItem
         {
-            Id                  = q.Id,
+            Id                  = q.QuizId != Guid.Empty ? q.QuizId : q.Id,
             Title               = q.Title ?? "",
-            Description         = q.Description,
+            Description         = q.Instructions ?? q.Description,
             IsPublished         = q.IsPublished,
             IsActive            = q.IsActive,
             AvailableFrom       = q.AvailableFrom,
-            AvailableTo         = q.AvailableTo,
+            AvailableTo         = q.AvailableUntil ?? q.AvailableTo,
             MaxAttempts         = q.MaxAttempts,
             TimeLimitMinutes    = q.TimeLimitMinutes,
             QuestionCount       = q.QuestionCount,
@@ -3765,12 +3765,18 @@ public class EduApiClient : IEduApiClient
 
     private sealed class QuizApiDto
     {
+        [JsonPropertyName("quizId")]
+        public Guid      QuizId              { get; set; }
         public Guid      Id                  { get; set; }
         public string?   Title               { get; set; }
+        [JsonPropertyName("instructions")]
+        public string?   Instructions        { get; set; }
         public string?   Description         { get; set; }
         public bool      IsPublished         { get; set; }
         public bool      IsActive            { get; set; }
         public DateTime? AvailableFrom       { get; set; }
+        [JsonPropertyName("availableUntil")]
+        public DateTime? AvailableUntil      { get; set; }
         public DateTime? AvailableTo         { get; set; }
         public int       MaxAttempts         { get; set; }
         public int?      TimeLimitMinutes    { get; set; }

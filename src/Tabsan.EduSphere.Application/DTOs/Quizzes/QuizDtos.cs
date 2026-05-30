@@ -71,7 +71,8 @@ public record QuizSummaryResponse(
     int MaxAttempts,
     DateTime? AvailableFrom,
     DateTime? AvailableUntil,
-    bool IsPublished);
+    bool IsPublished,
+    bool IsActive);
 
 /// <summary>Full quiz detail with questions and options (faculty view).</summary>
 public record QuizDetailResponse(

@@ -3172,6 +3172,17 @@ public class PortalController : Controller
             var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
 
+            var hasPartialSuperAdminScope = identity?.IsSuperAdmin == true
+                && (model.SelectedTenantId.HasValue ^ model.SelectedCampusId.HasValue);
+
+            if (hasPartialSuperAdminScope)
+            {
+                // API scope contracts require tenant/campus to be provided together.
+                effectiveTenantId = null;
+                effectiveCampusId = null;
+                model.Message = "Select both tenant and campus to apply scoped quiz filters.";
+            }
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -3413,6 +3424,16 @@ public class PortalController : Controller
             var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
 
+            var hasPartialSuperAdminScope = identity?.IsSuperAdmin == true
+                && (model.SelectedTenantId.HasValue ^ model.SelectedCampusId.HasValue);
+
+            if (hasPartialSuperAdminScope)
+            {
+                effectiveTenantId = null;
+                effectiveCampusId = null;
+                model.Message = "Select both tenant and campus to apply scoped quiz filters.";
+            }
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -3424,7 +3445,7 @@ public class PortalController : Controller
             model.SemesterOptions = BuildSemesterOptions(allOfferings);
             model.CourseOfferings = FilterOfferingsBySemester(allOfferings, semesterName);
 
-            if (offeringId.HasValue)
+            if (offeringId.HasValue && !hasPartialSuperAdminScope)
                 model.Quizzes = await _api.GetQuizzesByOfferingAsync(offeringId.Value, effectiveTenantId, effectiveCampusId, model.IncludeInactive, ct);
             else if (identity?.IsStudent == true && !string.IsNullOrWhiteSpace(semesterName))
             {
@@ -5564,6 +5585,12 @@ public class PortalController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SetQuizActive(Guid id, bool activate, Guid? offeringId, Guid? tenantId, Guid? campusId, bool includeInactive = true, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+        {
+            TempData["PortalMessage"] = "Quiz identifier is missing. Refresh the Quizzes page and try again.";
+            return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
+        }
+
         if (_api.IsConnected())
         {
             try

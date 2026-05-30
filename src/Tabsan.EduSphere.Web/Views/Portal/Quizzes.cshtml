@@ -151,7 +151,7 @@ else
                                                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                    <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                                    <input type="hidden" name="includeInactive" value="@(Model.IncludeInactive ? "true" : "false")" />
                                                     <button type="submit" class="btn btn-xs btn-outline-success btn-sm">Publish</button>
                                                 </form>
                                             }
@@ -162,8 +162,8 @@ else
                                                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
-                                                <input type="hidden" name="activate" value="@(!q.IsActive)" />
+                                                <input type="hidden" name="includeInactive" value="@(Model.IncludeInactive ? "true" : "false")" />
+                                                <input type="hidden" name="activate" value="@(!q.IsActive ? "true" : "false")" />
                                                 <button type="submit" class="btn btn-xs @(q.IsActive ? "btn-outline-warning" : "btn-outline-success") btn-sm">
                                                     @(q.IsActive ? "Deactivate" : "Activate")
                                                 </button>
@@ -176,7 +176,7 @@ else
                                                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                                                <input type="hidden" name="includeInactive" value="@(Model.IncludeInactive ? "true" : "false")" />
                                                 <button type="submit" class="btn btn-xs btn-outline-danger btn-sm">Delete</button>
                                             </form>
                                         </div>
@@ -245,7 +245,7 @@ else
                 <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
+                <input type="hidden" name="includeInactive" value="@(Model.IncludeInactive ? "true" : "false")" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Create Quiz</h5>

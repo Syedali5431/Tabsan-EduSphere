@@ -1,5 +1,32 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Quizzes Demo Seed and Filter Reliability Synchronization
+
+### Quizzes runtime additions
+- No new API/controller/service method signature was introduced in this slice.
+- Existing Quizzes runtime surface remains authoritative (no duplicate function inventory rows added):
+  - PortalController.Quizzes
+  - PortalController.SetQuizActive
+  - EduApiClient.GetQuizzesByOfferingAsync
+  - QuizController.GetByOffering
+
+### Runtime behavior synchronization
+- Existing mappings and payload handling were synchronized so Quizzes UI actions post stable values:
+  - API quiz identifier mapping now prefers `quizId` for web quiz item identity.
+  - Activate action now guards against empty quiz id payload before issuing API write.
+  - Quizzes form hidden boolean payloads now submit explicit true/false values.
+  - Quiz summary contract now carries `IsActive` in listing responses for consistent Activate/Deactivate rendering.
+
+### Quizzes validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic offering-501 Quizzes filter demo rows:
+  - 13131313-1313-1313-1313-131313131307 (active)
+  - 13131313-1313-1313-1313-131313131308 (inactive)
+- Scripts/05-PostDeployment-Checks.sql now validates:
+  - DummySeed_QuizRows_FilterDemoByIdCount
+  - DummySeed_QuizRows_Offering501_ActiveCount
+  - DummySeed_QuizRows_Offering501_InactiveCount
+- Runtime verification confirmed includeInactive=false excludes inactive demo quiz and includeInactive=true includes it.
+
 ## 2026-05-30 Update - Results Internal Demo Seed and Filter Scope Alignment
 
 ### Runtime additions
