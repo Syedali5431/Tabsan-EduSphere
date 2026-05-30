@@ -1,3 +1,20 @@
+## 2026-05-30 Update - Results Internal Demo Seed and Offering Scope Alignment (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql with additive deterministic rows in existing results table for Internal filter demo coverage (offering 55555555-5555-5555-5555-555555555501).
+	- Updated Scripts/03-FullDummyData.sql with additive scope metadata alignment on existing course_offerings row 555...501:
+		- TenantId set to University tenant,
+		- CampusId set to University campus,
+		- InstitutionType set to University (2).
+	- Updated Scripts/05-PostDeployment-Checks.sql with Results demo and scope assertions:
+		- DummySeed_ResultRows_InternalDemoRowCount,
+		- DummySeed_ResultRows_Offering501_InternalCount,
+		- DummySeed_ResultOffering501_ScopeAligned.
+- Validation Summary:
+	- SQL changes are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Students Demo Seed v26 (Schema Posture)
 
 - Implementation Summary:

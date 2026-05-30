@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Results Internal Demo Seed and Filter Validation
+
+### Implementation sync
+- Added deterministic Results demo rows in Scripts/03-FullDummyData.sql for Internal exam filtering on offering 55555555-5555-5555-5555-555555555501:
+	- cccccccc-cccc-cccc-cccc-cccccccccc40
+	- cccccccc-cccc-cccc-cccc-cccccccccc41
+	- cccccccc-cccc-cccc-cccc-cccccccccc42
+- Added offering-scope alignment in Scripts/03-FullDummyData.sql so offering 555...501 is consistently bound to University tenant/campus context for scoped Results UI filters.
+- Updated Scripts/05-PostDeployment-Checks.sql with Results-specific assertions:
+	- DummySeed_ResultRows_InternalDemoRowCount
+	- DummySeed_ResultRows_Offering501_InternalCount
+	- DummySeed_ResultOffering501_ScopeAligned
+
+### Validation sync
+- SQL verification confirmed Internal demo rows exist (count 3) and offering scope alignment is in place (count 1).
+- Results menu filter path (Internal/Internal + scoped offering context) rendered deterministic rows with Results 3 and expected seeded registration numbers.
+- No runtime load error was observed for the validated Results filter path.
+
 ## 2026-05-30 Update - Students Demo Seed v26 and Filter Validation
 
 ### Implementation sync

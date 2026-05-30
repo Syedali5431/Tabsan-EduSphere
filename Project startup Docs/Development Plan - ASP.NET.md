@@ -1,3 +1,17 @@
+## 2026-05-30 Update - Results Internal Demo Seed and Scoped Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql with deterministic Internal Results demo rows for offering 55555555-5555-5555-5555-555555555501 (3 stable records for demo/testing).
+- Updated Scripts/03-FullDummyData.sql with offering-scope alignment for 555...501 (TenantId/CampusId/InstitutionType) so scoped Results filtering works consistently.
+- Updated Scripts/05-PostDeployment-Checks.sql with Results-focused assertions:
+  - DummySeed_ResultRows_InternalDemoRowCount
+  - DummySeed_ResultRows_Offering501_InternalCount
+  - DummySeed_ResultOffering501_ScopeAligned
+
+### Validation Summary:
+- SQL checks confirmed seeded Internal demo rows and scope metadata alignment.
+- Results filter validation confirmed scoped Internal/Internal path resolves and renders expected seeded records.
+
 ## 2026-05-30 Update - Students Demo Seed v26 and Filter Runtime Validation
 
 ### Implementation Summary:

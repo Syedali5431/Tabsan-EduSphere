@@ -962,6 +962,27 @@ FROM [results]
 WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)
     AND [ResultType] = N'Practical';
 
+SELECT 'DummySeed_ResultRows_InternalDemoRowCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [Id] IN
+(
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc40' AS UNIQUEIDENTIFIER),
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc41' AS UNIQUEIDENTIFIER),
+	CAST('cccccccc-cccc-cccc-cccc-cccccccccc42' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_ResultRows_Offering501_InternalCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
+	AND [ResultType] = N'Internal';
+
+SELECT 'DummySeed_ResultOffering501_ScopeAligned' AS [CheckName], COUNT(1) AS [Value]
+FROM [course_offerings]
+WHERE [Id] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
+	AND [TenantId] = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
+	AND [CampusId] = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
+	AND [InstitutionType] = 2;
+
 SELECT 'DummySeed_LmsManage_Offering513_ModuleCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [course_content_modules]
 WHERE [OfferingId] = CAST('55555555-5555-5555-5555-555555555513' AS UNIQUEIDENTIFIER)

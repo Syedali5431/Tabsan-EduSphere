@@ -1799,6 +1799,20 @@ BEGIN
         WHERE NOT EXISTS (SELECT 1 FROM [attendance_records] ar WHERE ar.[Id] = CAST('96969696-9696-9696-9696-969696969806' AS UNIQUEIDENTIFIER));
 END;
 
+/* 11.4) Results demo offering scope alignment (tenant/campus/institution) */
+UPDATE co
+SET co.[TenantId] = @UniTenantId,
+        co.[CampusId] = @UniCampusId,
+        co.[InstitutionType] = 2,
+        co.[UpdatedAt] = @Now
+FROM [course_offerings] co
+WHERE co.[Id] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
+    AND (
+                co.[TenantId] IS NULL
+                OR co.[CampusId] IS NULL
+                OR co.[InstitutionType] IS NULL
+            );
+
 /* 12) Results - Massively Expanded */
 IF OBJECT_ID(N'[results]') IS NOT NULL
 BEGIN
@@ -1871,7 +1885,11 @@ BEGIN
     ('cccccccc-cccc-cccc-cccc-cccccccccc37', '99999999-9999-9999-9999-999999999942', '55555555-5555-5555-5555-555555555517', N'ClassTest', 16.00, 20.00, '77777777-7777-7777-7777-777777777731'),
     -- Practical rows intentionally rely on fallback component derivation when no explicit rule exists
     ('cccccccc-cccc-cccc-cccc-cccccccccc38', '99999999-9999-9999-9999-999999999934', '55555555-5555-5555-5555-555555555513', N'Practical', 21.00, 25.00, '77777777-7777-7777-7777-777777777719'),
-    ('cccccccc-cccc-cccc-cccc-cccccccccc39', '99999999-9999-9999-9999-999999999935', '55555555-5555-5555-5555-555555555513', N'Practical', 23.00, 25.00, '77777777-7777-7777-7777-777777777719');
+    ('cccccccc-cccc-cccc-cccc-cccccccccc39', '99999999-9999-9999-9999-999999999935', '55555555-5555-5555-5555-555555555513', N'Practical', 23.00, 25.00, '77777777-7777-7777-7777-777777777719'),
+    -- Deterministic Results filter demo rows (Exam Type = Internal)
+    ('cccccccc-cccc-cccc-cccc-cccccccccc40', '99999999-9999-9999-9999-999999999911', '55555555-5555-5555-5555-555555555501', N'Internal', 17.00, 20.00, '77777777-7777-7777-7777-777777777711'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc41', '99999999-9999-9999-9999-999999999912', '55555555-5555-5555-5555-555555555501', N'Internal', 15.00, 20.00, '77777777-7777-7777-7777-777777777711'),
+    ('cccccccc-cccc-cccc-cccc-cccccccccc42', '99999999-9999-9999-9999-999999999913', '55555555-5555-5555-5555-555555555501', N'Internal', 18.00, 20.00, '77777777-7777-7777-7777-777777777711');
 
     INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType], [MarksObtained], [MaxMarks], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt], [UpdatedAt])
     SELECT r.Id, r.StudentProfileId, r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks, 1, @Now, r.PublishedByUserId, @Now, NULL

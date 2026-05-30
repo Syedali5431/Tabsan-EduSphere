@@ -1,3 +1,15 @@
+## Execution Update - 2026-05-30 (Results Internal Demo Seed + Scoped Filter Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Results module behavior.
+- Full dummy seed now includes deterministic Internal Results demo rows (3 stable IDs) for offering 55555555-5555-5555-5555-555555555501.
+- Full dummy seed now aligns offering 555...501 scope metadata (TenantId/CampusId/InstitutionType) so scoped Results filtering resolves correctly in admin/super-admin runtime paths.
+- Post-deployment checks now include Internal Results demo row-count and offering scope-alignment checks.
+
+### Validation summary
+- SQL checks confirmed deterministic Internal rows and scope alignment.
+- Results menu filter workflow validated with seeded data and returned the expected Internal dataset.
+
 ## Execution Update - 2026-05-30 (Students Demo Seed v26 + Filter Runtime Validation)
 
 ### Module impact summary

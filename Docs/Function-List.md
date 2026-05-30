@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Results Internal Demo Seed and Filter Scope Alignment
+
+### Runtime additions
+- No new API/controller method signature was introduced in this slice.
+- Existing Results runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.Results
+	- EduApiClient.GetResultsByOfferingAsync
+	- ResultController.GetResultsByOffering
+
+### Validation Summary
+- Scripts/03-FullDummyData.sql now includes deterministic Internal Results demo rows for offering 55555555-5555-5555-5555-555555555501:
+	- cccccccc-cccc-cccc-cccc-cccccccccc40
+	- cccccccc-cccc-cccc-cccc-cccccccccc41
+	- cccccccc-cccc-cccc-cccc-cccccccccc42
+- Scripts/03-FullDummyData.sql includes a scope-alignment block for offering 555...501 so TenantId/CampusId/InstitutionType are set for scoped Results filtering.
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_ResultRows_InternalDemoRowCount
+	- DummySeed_ResultRows_Offering501_InternalCount
+	- DummySeed_ResultOffering501_ScopeAligned
+- Runtime verification confirmed Results page renders Results 3 and includes registration numbers 2026-CS-0001, 2026-CS-0002, 2026-CS-0003 under Internal/Internal scoped filters.
+
 ## 2026-05-30 Update - Students Demo Seed v26 and Outage-Resilient Menu Load
 
 ### Runtime additions

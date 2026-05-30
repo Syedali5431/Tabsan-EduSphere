@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Results Internal Demo Seed + Scoped Filter Validation)
+- Runtime delivery in this slice:
+  - Added deterministic Internal Results demo rows in Scripts/03-FullDummyData.sql for offering 55555555-5555-5555-5555-555555555501 (three stable IDs for repeatable demos).
+  - Added offering-scope alignment for offering 555...501 (TenantId/CampusId/InstitutionType) in Scripts/03-FullDummyData.sql to satisfy scoped Results filtering behavior.
+  - Updated Scripts/05-PostDeployment-Checks.sql with Internal demo row-count and scope-alignment checks.
+- Compatibility boundary:
+  - No endpoint rename and no API contract expansion.
+  - Update is additive demo seed/check coverage using existing schema entities.
+- Validation Summary:
+  - SQL checks confirmed deterministic Internal result rows and scope metadata alignment.
+  - Results menu runtime validation confirmed Internal/Internal scoped filter path renders expected seeded records.
+
 ### 2026-05-30 - Product Requirements Synchronization (Students Demo Seed v26 + Filter Runtime Validation)
 - Runtime delivery in this slice:
   - Upgraded `Scripts/03-FullDummyData.sql` marker to `FullDummyData-v26`.
