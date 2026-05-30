@@ -2371,6 +2371,60 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM [student_stream_assignments] x WHERE x.[Id] = a.[Id]);
 END
 
+/* 13.2) Student Lifecycle deterministic filter/graduation demo cohort */
+IF OBJECT_ID(N'[users]') IS NOT NULL
+AND OBJECT_ID(N'[student_profiles]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
+BEGIN
+        DECLARE @LifecycleDemoCsDeptId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER);
+        DECLARE @LifecycleDemoEngDeptId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER);
+        DECLARE @LifecycleDemoCsProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER);
+        DECLARE @LifecycleDemoEngProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222216' AS UNIQUEIDENTIFIER);
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [FailedLoginAttempts], [IsLockedOut], [LockedOutUntil], [ThemeKey], [MustChangePassword], [InstitutionType], [MfaIsEnabled], [MfaRecoveryCodesHashJson], [MfaTotpSecret], [PhoneNumber], [CampusId], [TenantId])
+        SELECT CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER), N'demo.lifecycle.cs.final', N'demo.lifecycle.cs.final@tabsan.local', @PwdHash, @RoleStudent, @LifecycleDemoCsDeptId, 1, NULL, @Now, NULL, 0, NULL, 0, 0, NULL, NULL, 0, 2, 0, NULL, NULL, NULL, @UniCampusId, @UniTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [FailedLoginAttempts], [IsLockedOut], [LockedOutUntil], [ThemeKey], [MustChangePassword], [InstitutionType], [MfaIsEnabled], [MfaRecoveryCodesHashJson], [MfaTotpSecret], [PhoneNumber], [CampusId], [TenantId])
+        SELECT CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER), N'demo.lifecycle.cs.sem1', N'demo.lifecycle.cs.sem1@tabsan.local', @PwdHash, @RoleStudent, @LifecycleDemoCsDeptId, 1, NULL, @Now, NULL, 0, NULL, 0, 0, NULL, NULL, 0, 2, 0, NULL, NULL, NULL, @UniCampusId, @UniTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [FailedLoginAttempts], [IsLockedOut], [LockedOutUntil], [ThemeKey], [MustChangePassword], [InstitutionType], [MfaIsEnabled], [MfaRecoveryCodesHashJson], [MfaTotpSecret], [PhoneNumber], [CampusId], [TenantId])
+        SELECT CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER), N'demo.lifecycle.eng.sem2', N'demo.lifecycle.eng.sem2@tabsan.local', @PwdHash, @RoleStudent, @LifecycleDemoEngDeptId, 1, NULL, @Now, NULL, 0, NULL, 0, 0, NULL, NULL, 0, 2, 0, NULL, NULL, NULL, @UniCampusId, @UniTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('98989898-9898-9898-9898-989898989811' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979801' AS UNIQUEIDENTIFIER), N'DEMO-LIFE-CS-801', @LifecycleDemoCsProgramId, @LifecycleDemoCsDeptId, DATEADD(day, -1000, @Now), 3.62, 8, @Now, NULL, 0, NULL, NULL, 1, 3.70
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @LifecycleDemoCsProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('98989898-9898-9898-9898-989898989811' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('98989898-9898-9898-9898-989898989812' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979802' AS UNIQUEIDENTIFIER), N'DEMO-LIFE-CS-101', @LifecycleDemoCsProgramId, @LifecycleDemoCsDeptId, DATEADD(day, -120, @Now), 3.11, 1, @Now, NULL, 0, NULL, NULL, 1, 3.10
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @LifecycleDemoCsProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('98989898-9898-9898-9898-989898989812' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('98989898-9898-9898-9898-989898989813' AS UNIQUEIDENTIFIER), CAST('97979797-9797-9797-9797-979797979803' AS UNIQUEIDENTIFIER), N'DEMO-LIFE-ENG-201', @LifecycleDemoEngProgramId, @LifecycleDemoEngDeptId, DATEADD(day, -180, @Now), 3.28, 2, @Now, NULL, 0, NULL, NULL, 1, 3.25
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @LifecycleDemoEngProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('98989898-9898-9898-9898-989898989813' AS UNIQUEIDENTIFIER));
+
+        UPDATE sp
+        SET sp.[Status] = 1,
+                sp.[UpdatedAt] = @Now
+        FROM [student_profiles] sp
+        WHERE sp.[Id] IN
+        (
+                CAST('98989898-9898-9898-9898-989898989811' AS UNIQUEIDENTIFIER),
+                CAST('98989898-9898-9898-9898-989898989812' AS UNIQUEIDENTIFIER),
+                CAST('98989898-9898-9898-9898-989898989813' AS UNIQUEIDENTIFIER)
+        )
+            AND ISNULL(sp.[Status], 0) <> 1;
+END
+
 /* 14) Helpdesk demo tickets */
 IF OBJECT_ID(N'[support_tickets]') IS NOT NULL
 BEGIN

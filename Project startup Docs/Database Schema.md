@@ -1,3 +1,16 @@
+## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql with additive deterministic Student Lifecycle demo rows in existing tables only:
+		- `users` (lifecycle demo user records),
+		- `student_profiles` (lifecycle demo profile records for CS/Engineering and semester filter coverage).
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive Student Lifecycle assertions for deterministic row presence and filter-specific counts.
+	- Runtime lifecycle compatibility changes use existing columns and enums; no new table/column/index/constraint introduced.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: `No schema mutation`.
+- EF migration impact: none.
+
 ## 2026-05-30 Update - Results Internal Demo Seed and Offering Scope Alignment (Schema Posture)
 
 ## 2026-05-30 Update - FYP Demo Seed and Department Filter Validation (Schema Posture)

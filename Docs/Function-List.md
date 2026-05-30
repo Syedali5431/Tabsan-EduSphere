@@ -1,5 +1,38 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Reliability Synchronization
+
+### Student Lifecycle runtime additions
+- No new public API/controller/service signature was introduced in this slice.
+- Existing Student Lifecycle runtime surface remains authoritative (no duplicate function inventory rows added):
+	- PortalController.StudentLifecycle
+	- PortalController.GraduateStudent
+	- PortalController.PromoteStudent
+	- EduApiClient.GetGraduationCandidatesAsync
+	- EduApiClient.GetStudentsByAcademicLevelAsync
+	- StudentLifecycleController.GetGraduationCandidates
+	- StudentLifecycleController.GetStudentsByAcademicLevel
+- Internal synchronization added for reliability:
+	- StudentLifecycleRepository compatibility handling for legacy active status value `0` plus canonical `1`.
+	- StudentLifecycleService now resolves graduation candidate display names from linked user records.
+	- StudentLifecycleService enforces active-status compatibility in promotion validation.
+
+### Student Lifecycle validation summary
+- Scripts/03-FullDummyData.sql now includes deterministic Student Lifecycle filter demo rows:
+	- 98989898-9898-9898-9898-989898989811 (DEMO-LIFE-CS-801, CS, semester 8, active)
+	- 98989898-9898-9898-9898-989898989812 (DEMO-LIFE-CS-101, CS, semester 1, active)
+	- 98989898-9898-9898-9898-989898989813 (DEMO-LIFE-ENG-201, Engineering, semester 2, active)
+- Scripts/05-PostDeployment-Checks.sql now validates:
+	- DummySeed_StudentLifecycleFilterDemo_ProfileCount
+	- DummySeed_StudentLifecycleFilterDemo_CSDeptCount
+	- DummySeed_StudentLifecycleFilterDemo_EngineeringDeptCount
+	- DummySeed_StudentLifecycleFilterDemo_StatusActiveCount
+	- DummySeed_StudentLifecycleFilterDemo_GraduationCandidateCount
+	- DummySeed_StudentLifecycleFilterDemo_Semester1Count
+	- DummySeed_StudentLifecycleFilterDemo_Semester2Count
+	- StudentLifecycle_LegacyStatus0Count
+- Runtime verification confirmed Student Lifecycle menu loads, filter states change result sets by department/semester, and seeded rows appear without screen-load exceptions.
+
 ## 2026-05-30 Update - FYP Demo Seed and Menu Filter Synchronization
 
 ### FYP runtime additions

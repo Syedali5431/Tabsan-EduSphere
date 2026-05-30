@@ -16,6 +16,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
 {
     private readonly ApplicationDbContext _db;
     private readonly IAccessScopeResolver? _accessScope;
+    private const int LegacyActiveStatusValue = 0;
 
     public StudentLifecycleRepository(ApplicationDbContext db, IAccessScopeResolver? accessScope = null)
     {
@@ -64,7 +65,9 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
     {
         return await _db.StudentProfiles
             .AsNoTracking()
-            .Where(sp => sp.DepartmentId == departmentId && sp.Status == StudentStatus.Active)
+            .Where(sp => sp.DepartmentId == departmentId
+                      && ((int)sp.Status == (int)StudentStatus.Active || (int)sp.Status == LegacyActiveStatusValue)
+                      && sp.CurrentSemesterNumber >= sp.Program.TotalSemesters)
             .Include(sp => sp.Program)
             .ToListAsync(ct);
     }
@@ -74,6 +77,17 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         StudentStatus status,
         CancellationToken ct = default)
     {
+        if (status == StudentStatus.Active)
+        {
+            return await _db.StudentProfiles
+                .AsNoTracking()
+                .Where(sp => sp.DepartmentId == departmentId
+                          && ((int)sp.Status == (int)StudentStatus.Active || (int)sp.Status == LegacyActiveStatusValue))
+                .Include(sp => sp.Program)
+                .Include(sp => sp.Department)
+                .ToListAsync(ct);
+        }
+
         return await _db.StudentProfiles
             .AsNoTracking()
             .Where(sp => sp.DepartmentId == departmentId && sp.Status == status)
@@ -99,7 +113,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         return await _db.StudentProfiles
             .AsNoTracking()
             .Where(sp => sp.DepartmentId == departmentId
-                      && sp.Status == StudentStatus.Active
+                      && ((int)sp.Status == (int)StudentStatus.Active || (int)sp.Status == LegacyActiveStatusValue)
                       && sp.CurrentSemesterNumber == semesterNumber)
             .Include(sp => sp.Program)
             .ToListAsync(ct);
@@ -114,7 +128,7 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
         return await _db.StudentProfiles
             .AsNoTracking()
             .Where(sp => sp.DepartmentId == departmentId
-                      && sp.Status == StudentStatus.Active
+                      && ((int)sp.Status == (int)StudentStatus.Active || (int)sp.Status == LegacyActiveStatusValue)
                       && sp.CurrentSemesterNumber >= startSemesterNumber
                       && sp.CurrentSemesterNumber <= endSemesterNumber)
             .Include(sp => sp.Program)

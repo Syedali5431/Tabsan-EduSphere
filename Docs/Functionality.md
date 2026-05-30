@@ -1,5 +1,31 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation
+
+### Implementation sync
+- Added deterministic Student Lifecycle filter demo rows in Scripts/03-FullDummyData.sql:
+	- DEMO-LIFE-CS-801 (CS, semester 8, active graduation-candidate path)
+	- DEMO-LIFE-CS-101 (CS, semester 1, active semester-tab path)
+	- DEMO-LIFE-ENG-201 (Engineering, semester 2, active department filter path)
+- Updated Scripts/05-PostDeployment-Checks.sql with Student Lifecycle-specific assertions:
+	- DummySeed_StudentLifecycleFilterDemo_ProfileCount
+	- DummySeed_StudentLifecycleFilterDemo_CSDeptCount
+	- DummySeed_StudentLifecycleFilterDemo_EngineeringDeptCount
+	- DummySeed_StudentLifecycleFilterDemo_StatusActiveCount
+	- DummySeed_StudentLifecycleFilterDemo_GraduationCandidateCount
+	- DummySeed_StudentLifecycleFilterDemo_Semester1Count
+	- DummySeed_StudentLifecycleFilterDemo_Semester2Count
+	- StudentLifecycle_LegacyStatus0Count
+- Synchronized runtime lifecycle data handling:
+	- legacy active status (`0`) is now accepted alongside canonical active (`1`) for lifecycle filtering,
+	- graduation candidates now populate display names from linked user records,
+	- graduation candidate selection now enforces final-semester eligibility.
+
+### Validation sync
+- SQL verification confirmed deterministic Student Lifecycle demo rows and department split are present.
+- Student Lifecycle menu load verification confirmed no runtime screen-load errors.
+- Department/semester filter verification confirmed result-set changes and seeded data visibility across CS/Engineering scenarios.
+
 ## 2026-05-30 Update - FYP Demo Seed and Menu Filter Validation
 
 ### Implementation sync

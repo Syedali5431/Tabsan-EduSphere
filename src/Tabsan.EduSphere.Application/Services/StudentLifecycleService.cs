@@ -40,15 +40,24 @@ public class StudentLifecycleService : IStudentLifecycleService
         CancellationToken ct = default)
     {
         var students = await _repository.GetFinalSemesterStudentsByDepartmentAsync(departmentId, ct);
-        
-        return students.Select(s => new GraduationSummaryDto(
-            s.Id,
-            s.RegistrationNumber,
-            "", // Student name loaded separately from User table via JOIN
-            s.Program.Name,
-            s.CurrentSemesterNumber,
-            s.GraduatedDate
-        )).ToList();
+
+        var candidates = new List<GraduationSummaryDto>(students.Count);
+        foreach (var student in students)
+        {
+            var user = await _users.GetByIdAsync(student.UserId, ct);
+            var displayName = user?.Username ?? user?.Email ?? student.RegistrationNumber;
+
+            candidates.Add(new GraduationSummaryDto(
+                student.Id,
+                student.RegistrationNumber,
+                displayName,
+                student.Program?.Name ?? string.Empty,
+                student.CurrentSemesterNumber,
+                student.GraduatedDate
+            ));
+        }
+
+        return candidates;
     }
 
     public async Task GraduateStudentAsync(Guid studentProfileId, CancellationToken ct = default)
@@ -137,7 +146,7 @@ public class StudentLifecycleService : IStudentLifecycleService
         if (student == null)
             throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
 
-        if (student.Status != Domain.Enums.StudentStatus.Active)
+        if (!IsLifecycleActiveStatus(student.Status))
             throw new InvalidOperationException($"Only Active students can be promoted. Student {studentProfileId} has status {student.Status}.");
 
         if (student.Department?.InstitutionType is InstitutionType.School or InstitutionType.College)
@@ -185,6 +194,9 @@ public class StudentLifecycleService : IStudentLifecycleService
 
         return new PromotionBatchResultDto(promoted, errors.Count, errors);
     }
+
+    private static bool IsLifecycleActiveStatus(StudentStatus status)
+        => status == StudentStatus.Active || (int)status == 0;
 
     // ── Student Status Management ──────────────────────────────────────────
     public async Task DeactivateStudentAsync(Guid studentProfileId, CancellationToken ct = default)

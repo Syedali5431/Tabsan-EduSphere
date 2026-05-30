@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-30 - Product Requirements Synchronization (Student Lifecycle Demo Seed + Filter Reliability)
+- Runtime delivery in this slice:
+  - Added deterministic Student Lifecycle demo/filter rows in `Scripts/03-FullDummyData.sql` for two departments and multiple semesters:
+    - CS semester 8 candidate,
+    - CS semester 1 student,
+    - Engineering semester 2 student.
+  - Added Student Lifecycle post-deployment checks in `Scripts/05-PostDeployment-Checks.sql` for row presence, department split, status active counts, semester counts, and graduation-candidate coverage.
+  - Synchronized lifecycle runtime compatibility so legacy active status values are included in Student Lifecycle filtering paths.
+  - Synchronized lifecycle graduation candidate output so candidate names are populated for portal rendering.
+- Compatibility boundary:
+  - No API route rename.
+  - No menu key change.
+  - Update is additive demo seed/check coverage plus reliability synchronization on existing Student Lifecycle flow.
+- Validation Summary:
+  - SQL checks confirmed deterministic Student Lifecycle demo rows and expected split.
+  - Student Lifecycle menu load and department/semester filter behavior verified in runtime without screen-load errors.
+
 ### 2026-05-30 - Product Requirements Synchronization (FYP Demo Seed + Department Filter Validation)
 - Runtime delivery in this slice:
   - Added deterministic FYP demo/filter rows in Scripts/03-FullDummyData.sql for two departments:

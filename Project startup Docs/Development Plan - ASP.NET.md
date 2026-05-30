@@ -1,3 +1,17 @@
+## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Validation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql with deterministic Student Lifecycle demo rows for repeatable department/semester filtering and graduation-candidate demonstrations.
+- Updated Scripts/05-PostDeployment-Checks.sql with Student Lifecycle demo assertions for profile count, department split, active-status count, semester counts, graduation-candidate count, and legacy-status observation.
+- Synchronized Student Lifecycle runtime handling:
+  - accepted legacy active status value compatibility in lifecycle filtering paths,
+  - populated graduation candidate display names from linked user records,
+  - enforced final-semester eligibility for graduation-candidate behavior.
+
+### Validation Summary:
+- SQL checks confirmed deterministic Student Lifecycle demo coverage and expected counts.
+- Student Lifecycle menu load and department/semester filters validated in runtime and displayed seeded data correctly.
+
 ## 2026-05-30 Update - Results Internal Demo Seed and Scoped Filter Validation
 
 ## 2026-05-30 Update - FYP Demo Seed and Department Filter Validation

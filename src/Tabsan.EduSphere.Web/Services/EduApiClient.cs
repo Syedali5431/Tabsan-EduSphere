@@ -4177,10 +4177,10 @@ public class EduApiClient : IEduApiClient
         return raw.Select(g => new GraduationCandidateItem
         {
             Id                 = g.Id,
-            FullName           = g.FullName ?? "",
+            FullName           = g.FullName ?? g.StudentName ?? "",
             RegistrationNumber = g.RegistrationNumber ?? "",
             ProgramName        = g.ProgramName ?? "",
-            SemesterNumber     = g.SemesterNumber,
+            SemesterNumber     = g.SemesterNumber > 0 ? g.SemesterNumber : g.CurrentSemester,
             Cgpa               = g.Cgpa
         }).ToList();
     }
@@ -4218,9 +4218,11 @@ public class EduApiClient : IEduApiClient
     {
         public Guid    Id                 { get; set; }
         public string? FullName           { get; set; }
+        public string? StudentName        { get; set; }
         public string? RegistrationNumber { get; set; }
         public string? ProgramName        { get; set; }
         public int     SemesterNumber     { get; set; }
+        public int     CurrentSemester    { get; set; }
         public double? Cgpa               { get; set; }
     }
 
