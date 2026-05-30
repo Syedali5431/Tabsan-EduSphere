@@ -1,3 +1,22 @@
+## 2026-05-31 Update - Degree Audit Demo Seed v35 and Sidebar Completion (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/02-Seed-Core.sql with additive seed rows in existing tables only:
+		- `sidebar_menu_items` (`graduation_eligibility`, `degree_rules`)
+		- `sidebar_menu_role_accesses` (allowed-role rows for the above keys)
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v35`.
+	- Added additive deterministic Degree Audit demo rows in existing tables only:
+		- `users` (3 mathematics demo users)
+		- `student_profiles` (3 final-semester active mathematics demo profiles)
+		- `enrollments` (6 deterministic Degree Audit demo enrollments)
+		- `results` (6 deterministic published result rows with grade points)
+		- `[Tabsan-EduSphere]` metadata marker advanced to `FullDummyData-v35`
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive deterministic validation queries for dataset version, cohort rows, and Degree Audit sidebar prerequisites.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed (Schema Posture)
 
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter (Schema Posture)

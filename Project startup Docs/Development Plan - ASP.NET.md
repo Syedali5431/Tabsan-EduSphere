@@ -1,3 +1,21 @@
+## 2026-05-31 Update - Degree Audit Demo Seed v35 and Portal Filter Completion
+
+### Implementation Summary:
+- Updated Scripts/02-Seed-Core.sql with the missing sidebar menu and role-access seed rows required by the existing portal Degree Audit companion actions:
+  - `graduation_eligibility`
+  - `degree_rules`
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v35` and added deterministic university mathematics demo rows for end-to-end QA/UAT:
+  - 3 active final-semester student profiles,
+  - 6 deterministic enrollments,
+  - 6 deterministic published results with grade points.
+- Updated Scripts/05-PostDeployment-Checks.sql with v35 marker validation and assertions covering deterministic cohort presence plus Degree Audit sidebar prerequisites.
+- Documentation tracker synchronization now records the Degree Audit companion controller/client/service methods once to avoid future duplicate inventory entries.
+
+### Validation Summary:
+- API checks confirmed filtered Graduation Eligibility returns the full seeded mathematics cohort.
+- API checks confirmed deterministic audit totals of `6`, `4`, and `2` credits for the new demo students.
+- Portal checks confirmed menu visibility plus successful rendering of both Degree Audit and Graduation Eligibility filtered views.
+
 ## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation
 
 ## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Validation

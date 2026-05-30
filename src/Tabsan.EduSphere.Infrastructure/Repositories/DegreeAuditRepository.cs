@@ -88,8 +88,13 @@ public class DegreeAuditRepository : IDegreeAuditRepository
                 rco => rco.co.CourseId,
                 c   => c.Id,
                 (rco, c) => new { rco.r, rco.co, c })
-            .Where(x => !tenantId.HasValue || x.co.TenantId == tenantId.Value)
-            .Where(x => !campusId.HasValue || x.co.CampusId == campusId.Value)
+            .Join(
+                _db.Set<Department>(),
+                rcoc => rcoc.c.DepartmentId,
+                d => d.Id,
+                (rcoc, d) => new { rcoc.r, rcoc.co, rcoc.c, d })
+            .Where(x => !tenantId.HasValue || (x.co.TenantId ?? x.c.TenantId ?? x.d.TenantId) == tenantId.Value)
+            .Where(x => !campusId.HasValue || (x.co.CampusId ?? x.c.CampusId ?? x.d.CampusId) == campusId.Value)
             .Select(x => new CreditRow(
                 x.co.Id,
                 x.c.Id,

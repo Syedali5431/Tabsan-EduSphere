@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Degree Audit Demo Seed v35 + Sidebar Completion)
+- Runtime delivery in this slice:
+  - Updated Scripts/02-Seed-Core.sql to add the missing Degree Audit companion menu keys used by the portal guard and sidebar rendering:
+    - `graduation_eligibility`
+    - `degree_rules`
+  - Updated Scripts/03-FullDummyData.sql to `FullDummyData-v35` with deterministic university mathematics demo cohort for Degree Audit and Graduation Eligibility walkthroughs:
+    - `2026-MAT-AUD-001`
+    - `2026-MAT-AUD-002`
+    - `2026-MAT-AUD-003`
+  - Added deterministic enrollments and published result rows so filtered audit totals are stable and distinct during demo/testing runs.
+  - Synchronized post-deployment checks with the v35 marker and Degree Audit companion menu/data assertions.
+- Compatibility boundary:
+  - No route rename.
+  - No schema mutation.
+  - Update is additive in seed/check scope and menu visibility data for the existing Degree Audit feature set.
+- Validation Summary:
+  - Portal dashboard verification confirmed `Degree Audit` and `Graduation Eligibility` are visible to the scoped university admin.
+  - Degree Audit verification confirmed deterministic student selection renders stable audit totals.
+  - Graduation Eligibility verification confirmed filtered seeded rows render for the mathematics department/program path.
+
 ### 2026-05-31 - Product Requirements Synchronization (Prerequisites Filter Demo Seed v34 + Payload Reliability)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v34 with deterministic Prerequisites demo/filter cohort:

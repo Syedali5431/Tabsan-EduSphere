@@ -727,10 +727,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV34' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV35' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v34';
+	AND DemoValue = N'FullDummyData-v35';
 
 SELECT 'DummySeed_GenerateCertificatesDemo_ProfilesByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
@@ -1248,6 +1248,60 @@ ELSE
 BEGIN
 	SELECT 'DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
 END;
+
+SELECT 'DummySeed_DegreeAuditEligibilityFilterDemo_StudentProfileCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [Id] IN (
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902' AS UNIQUEIDENTIFIER),
+	CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903' AS UNIQUEIDENTIFIER)
+)
+	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER)
+	AND [DepartmentId] = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER)
+	AND [Status] = 1
+	AND [CurrentSemesterNumber] = 12;
+
+SELECT 'DummySeed_DegreeAuditEligibilityFilterDemo_EnrollmentCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [enrollments]
+WHERE [Id] IN (
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8001' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8002' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8003' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8004' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8005' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8006' AS UNIQUEIDENTIFIER)
+);
+
+SELECT 'DummySeed_DegreeAuditEligibilityFilterDemo_ResultRowsCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [results]
+WHERE [Id] IN (
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8101' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8102' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8103' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8104' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8105' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8106' AS UNIQUEIDENTIFIER)
+)
+	AND [IsPublished] = 1;
+
+SELECT 'DummySeed_DegreeAuditSidebarKeysCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [sidebar_menu_items]
+WHERE [Key] IN (
+	N'degree_audit',
+	N'graduation_eligibility',
+	N'degree_rules'
+)
+	AND [IsActive] = 1;
+
+SELECT 'DummySeed_DegreeAuditSidebarRoleAccessCount' AS [CheckName], COUNT(1) AS [Value]
+FROM [sidebar_menu_role_accesses] sra
+INNER JOIN [sidebar_menu_items] smi ON smi.[Id] = sra.[SidebarMenuItemId]
+WHERE smi.[Key] IN (
+	N'degree_audit',
+	N'graduation_eligibility',
+	N'degree_rules'
+)
+	AND sra.[IsAllowed] = 1;
 
 SELECT 'DummySeed_StudentTimetableDemo_TimetablesCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [timetables]

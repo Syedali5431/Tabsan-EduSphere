@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Degree Audit Demo Seed v35, Sidebar Completion, and Portal Filter Validation
+
+### Implementation sync
+- Updated Scripts/02-Seed-Core.sql with the missing Degree Audit companion sidebar/menu entries and role access rows:
+	- `graduation_eligibility`
+	- `degree_rules`
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v35` with deterministic university math demo coverage for menu/filter validation:
+	- `2026-MAT-AUD-001`
+	- `2026-MAT-AUD-002`
+	- `2026-MAT-AUD-003`
+	- deterministic enrollments across Algebra, Geometry, and bridge-course offerings
+	- deterministic published result rows with grade-point-backed credit totals
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v35 checks for dataset marker, deterministic cohort presence, and Degree Audit sidebar/menu visibility prerequisites.
+- Runtime credit aggregation remains aligned with the current repository fix in `DegreeAuditRepository.GetEarnedCreditsAsync`, which now tolerates legacy scope data stored on departments.
+
+### Validation sync
+- API verification confirmed filtered eligibility results for the mathematics university slice return all three seeded demo rows.
+- API verification confirmed the deterministic audit totals resolve as `6`, `4`, and `2` earned credits with `3`, `2`, and `1` completed courses.
+- Portal verification confirmed dashboard menu visibility, Degree Audit selector rendering, and Graduation Eligibility filtered table rendering without page-load errors.
+
 ## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Runtime Payload Validation
 
 ### Implementation sync

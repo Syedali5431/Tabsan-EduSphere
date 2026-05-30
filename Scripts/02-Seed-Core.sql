@@ -405,12 +405,36 @@ BEGIN
     VALUES (@ProgramsMenuId, N'Programs', N'Program catalog and semester structure management', N'programs', @AcademicId, 3, 1, 0, @Now, NULL, 0, NULL);
 END
 
+DECLARE @DegreeAuditMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'degree_audit');
+IF @DegreeAuditMenuId IS NULL
+BEGIN
+    SET @DegreeAuditMenuId = NEWID();
+    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    VALUES (@DegreeAuditMenuId, N'Degree Audit', N'Evaluate completion progress against degree requirements.', N'degree_audit', @AcademicId, 4, 1, 0, @Now, NULL, 0, NULL);
+END
+
+DECLARE @GraduationEligibilityMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'graduation_eligibility');
+IF @GraduationEligibilityMenuId IS NULL
+BEGIN
+    SET @GraduationEligibilityMenuId = NEWID();
+    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    VALUES (@GraduationEligibilityMenuId, N'Graduation Eligibility', N'Filter and review graduation readiness for university students.', N'graduation_eligibility', @AcademicId, 5, 1, 0, @Now, NULL, 0, NULL);
+END
+
+DECLARE @DegreeRulesMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'degree_rules');
+IF @DegreeRulesMenuId IS NULL
+BEGIN
+    SET @DegreeRulesMenuId = NEWID();
+    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    VALUES (@DegreeRulesMenuId, N'Degree Rules', N'Inspect configured university degree rules and required courses.', N'degree_rules', @AcademicId, 6, 1, 0, @Now, NULL, 0, NULL);
+END
+
 DECLARE @GenerateCertificatesMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'generate_certificates');
 IF @GenerateCertificatesMenuId IS NULL
 BEGIN
     SET @GenerateCertificatesMenuId = NEWID();
     INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@GenerateCertificatesMenuId, N'Generate Certificates', N'University degree and transcript workflow plus non-university additional certificates.', N'generate_certificates', @AcademicId, 4, 1, 0, @Now, NULL, 0, NULL);
+    VALUES (@GenerateCertificatesMenuId, N'Generate Certificates', N'University degree and transcript workflow plus non-university additional certificates.', N'generate_certificates', @AcademicId, 7, 1, 0, @Now, NULL, 0, NULL);
 END
 
 DECLARE @CourseMaterialMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'course_material');
@@ -418,7 +442,7 @@ IF @CourseMaterialMenuId IS NULL
 BEGIN
     SET @CourseMaterialMenuId = NEWID();
     INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@CourseMaterialMenuId, N'Course Material', N'Course material management and learner consumption surfaces.', N'course_material', @AcademicId, 5, 1, 0, @Now, NULL, 0, NULL);
+    VALUES (@CourseMaterialMenuId, N'Course Material', N'Course material management and learner consumption surfaces.', N'course_material', @AcademicId, 8, 1, 0, @Now, NULL, 0, NULL);
 END
 
 DECLARE @SettingsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'settings');
@@ -473,6 +497,16 @@ JOIN (VALUES
     (N'programs', N'SuperAdmin', 1),
     (N'programs', N'Admin', 1),
     (N'programs', N'Faculty', 1),
+    (N'degree_audit', N'SuperAdmin', 1),
+    (N'degree_audit', N'Admin', 1),
+    (N'degree_audit', N'Faculty', 1),
+    (N'degree_audit', N'Student', 1),
+    (N'graduation_eligibility', N'SuperAdmin', 1),
+    (N'graduation_eligibility', N'Admin', 1),
+    (N'degree_rules', N'SuperAdmin', 1),
+    (N'degree_rules', N'Admin', 1),
+    (N'degree_rules', N'Faculty', 1),
+    (N'degree_rules', N'Student', 1),
     (N'generate_certificates', N'SuperAdmin', 1),
     (N'generate_certificates', N'Admin', 1),
     (N'generate_certificates', N'Faculty', 1),

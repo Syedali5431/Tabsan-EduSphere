@@ -1,5 +1,51 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Degree Audit Demo Seed v35, Sidebar Completion, and Function Inventory Synchronization
+
+### Function inventory delta
+- Newly recorded runtime functions in the tracker for the Degree Audit companion flows:
+	- PortalController.GraduationEligibility
+	- PortalController.GraduationEligibilityGraduate
+	- PortalController.DegreeRules
+	- PortalController.DegreeRuleCreate
+	- PortalController.DegreeRuleDelete
+	- EduApiClient.GetEligibilityListAsync
+	- EduApiClient.GetAllDegreeRulesAsync
+	- EduApiClient.CreateDegreeRuleAsync
+	- EduApiClient.DeleteDegreeRuleAsync
+	- DegreeAuditController.GetEligibilityList
+	- DegreeAuditController.GetAllRules
+	- DegreeAuditController.GetRuleByProgram
+	- DegreeAuditService.GetEligibilityListAsync
+	- DegreeAuditService.GetAllRulesAsync
+	- DegreeAuditService.GetRuleByProgramAsync
+- Existing function updated (no duplicate row added):
+	- DegreeAuditRepository.GetEarnedCreditsAsync
+		- Credit aggregation now falls back through course offering, course, then department tenant/campus scope so legacy university rows still contribute to earned-credit totals.
+
+### Seed/check runtime surface synchronization
+- Scripts/02-Seed-Core.sql updated to add the missing Degree Audit companion sidebar keys and role access rows:
+	- graduation_eligibility
+	- degree_rules
+- Scripts/03-FullDummyData.sql updated to `FullDummyData-v35` and now includes deterministic university Degree Audit demo rows for menu/filter walkthroughs:
+	- 2026-MAT-AUD-001 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901`)
+	- 2026-MAT-AUD-002 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902`)
+	- 2026-MAT-AUD-003 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903`)
+	- deterministic enrollment rows (`8C...8001`-`8C...8006`)
+	- deterministic published result rows (`8D...8101`-`8D...8106`)
+- Scripts/05-PostDeployment-Checks.sql updated with matching v35 and Degree Audit companion assertions:
+	- DummySeed_DemoDatasetVersionIsV35
+	- DummySeed_DegreeAuditEligibilityFilterDemo_StudentProfileCount
+	- DummySeed_DegreeAuditEligibilityFilterDemo_EnrollmentCount
+	- DummySeed_DegreeAuditEligibilityFilterDemo_ResultRowsCount
+	- DummySeed_DegreeAuditSidebarKeysCount
+	- DummySeed_DegreeAuditSidebarRoleAccessCount
+
+### Validation summary
+- Runtime verification confirmed the portal dashboard renders Degree Audit and Graduation Eligibility menu entries for `admin.math`.
+- Degree Audit page verification confirmed the deterministic selector rows render distinct seeded totals (`6`, `4`, `2` credits).
+- Graduation Eligibility filter verification confirmed the seeded three-row cohort renders correctly under the mathematics department/program filter.
+
 ## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Repository Payload Synchronization
 
 ### Function inventory delta

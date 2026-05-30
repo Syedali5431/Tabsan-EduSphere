@@ -1,3 +1,22 @@
+## Execution Update - 2026-05-31 (Degree Audit Demo Seed v35 + Sidebar Completion)
+
+### Module impact summary
+- No new module introduced; update remains within existing Degree Audit / Graduation Eligibility / Degree Rules module behavior.
+- Core seed now includes the missing Degree Audit companion sidebar menu keys required by portal action guards:
+  - `graduation_eligibility`
+  - `degree_rules`
+- Full dummy seed now includes deterministic university mathematics demo/filter rows:
+  - 3 final-semester active student profiles,
+  - 6 deterministic enrollments,
+  - 6 deterministic published result rows with grade points.
+- Existing audit aggregation remains aligned with the repository fix that falls back to department tenant/campus scope for legacy rows.
+- Post-deployment checks now include v35 marker validation plus Degree Audit sidebar/data assertions.
+
+### Validation summary
+- Dashboard menu verification confirmed Degree Audit and Graduation Eligibility are visible in the scoped portal session.
+- Degree Audit page verification confirmed deterministic `6 / 4 / 2` earned-credit totals across the three demo students.
+- Graduation Eligibility filter verification confirmed all three seeded rows render on the filtered page without redirect or load-time error.
+
 ## Execution Update - 2026-05-31 (Result Calculation Course-Type Filter Dummy Seed + Runtime Validation)
 
 ## Execution Update - 2026-05-31 (Generate Certificates Filter Demo Seed v33 + Departments Institution Filter)
