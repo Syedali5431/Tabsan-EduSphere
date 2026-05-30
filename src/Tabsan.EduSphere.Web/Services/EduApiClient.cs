@@ -481,6 +481,8 @@ public interface IEduApiClient
         CancellationToken ct);
     Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct);
     Task GenerateTranscriptCertificateAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct);
+    Task<byte[]?> DownloadCertificateTemplateAsync(string templateType, CancellationToken ct);
+    Task UploadCertificateTemplateAsync(string templateType, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
     Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct);
     Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct);
     Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
@@ -1333,6 +1335,48 @@ public class EduApiClient : IEduApiClient
             path += $"?semesterId={semesterId.Value}";
 
         return PostAsync<object, object>(path, new { }, ct);
+    }
+
+    public async Task<byte[]?> DownloadCertificateTemplateAsync(string templateType, CancellationToken ct)
+    {
+        var isTranscript = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase);
+        var path = isTranscript
+            ? "api/v1/degree/template/transcript/default"
+            : "api/v1/degree/template/default";
+
+        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
+        using var response = await CreateClient().SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadAsByteArrayAsync(ct);
+    }
+
+    public async Task UploadCertificateTemplateAsync(string templateType, Stream fileStream, string fileName, string? contentType, CancellationToken ct)
+    {
+        using var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, ct);
+        var fileBytes = buffer.ToArray();
+
+        var isTranscript = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase);
+        var path = isTranscript
+            ? "api/v1/degree/template/transcript/upload"
+            : "api/v1/degree/template/upload";
+
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, path);
+            var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+            content.Add(fileContent, "file", fileName);
+            request.Content = content;
+            return request;
+        }, ct);
+
+        var body = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw BuildException(response.StatusCode, body);
     }
 
     public async Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct)

@@ -1,5 +1,24 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Template Import + University Runtime Validation)
+- Runtime delivery in this slice:
+  - Added transcript template API endpoints in existing degree-template domain:
+    - `GET /api/v1/degree/template/transcript/default`
+    - `POST /api/v1/degree/template/transcript/upload`
+  - Added web proxy methods for certificate template lifecycle:
+    - `DownloadCertificateTemplateAsync(templateType)`
+    - `UploadCertificateTemplateAsync(templateType, file)`
+  - Added Generate Certificates template operations in portal:
+    - template download action (degree/transcript),
+    - template import action (degree/transcript, Admin/SuperAdmin only),
+    - UI controls in Generate Certificates page for degree/transcript default download and .docx template import.
+- Compatibility boundary:
+  - No route removals or breaking contract changes in existing certificate generation endpoints.
+  - Additive extension only; generation flow remains student/institution-scoped as before.
+- Validation Summary:
+  - Touched files compile cleanly with no diagnostics.
+  - Runtime verification confirmed both template download routes return file-download responses from portal context.
+
 ### 2026-05-31 - Product Requirements Synchronization (Courses Demo Seed v30 + Filter Runtime Validation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v30 with deterministic Courses filter demo rows for Engineering, Business, and Mathematics department scenarios.

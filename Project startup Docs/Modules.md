@@ -1,3 +1,17 @@
+## Execution Update - 2026-05-31 (Generate Certificates Template Import/Export + Runtime Validation)
+
+### Module impact summary
+- No new module introduced; update remains within existing Generate Certificates and Degree/Transcript generation module boundaries.
+- Added transcript template API support in existing Degree controller surface.
+- Added portal-level template lifecycle actions for Admin/SuperAdmin in university scope:
+  - download degree/transcript default templates,
+  - import degree/transcript .docx templates.
+- Added Generate Certificates UI template management section for Degree and Transcript templates.
+
+### Validation summary
+- Diagnostics validation reported no compile errors in touched controller/client/view files.
+- Runtime verification confirmed template download actions return downloadable files for both degree and transcript template types.
+
 ## Execution Update - 2026-05-31 (Courses Demo Seed v30 + Filter Reliability)
 
 ### Module impact summary

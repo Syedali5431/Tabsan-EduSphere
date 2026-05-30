@@ -1,3 +1,16 @@
+## 2026-05-31 Update - Generate Certificates Template Import/Export (Schema Posture)
+
+- Implementation Summary:
+	- Added additive API endpoints in existing `DegreeController` for transcript template lifecycle:
+		- `GET /api/v1/degree/template/transcript/default`
+		- `POST /api/v1/degree/template/transcript/upload`
+	- Added web controller/client/view wiring for template download/import operations in Generate Certificates flow.
+	- No table, column, index, constraint, trigger, view, or stored-procedure changes were introduced.
+- Validation Summary:
+	- Runtime template download endpoints validated through portal route responses.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation (Schema Posture)
 
 - Implementation Summary:

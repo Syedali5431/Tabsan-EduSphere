@@ -43,6 +43,17 @@ public class DegreeController : ControllerBase
         return File(template.Content, template.ContentType, template.FileName);
     }
 
+    [HttpGet("template/transcript/default")]
+    public async Task<IActionResult> DownloadDefaultTranscriptTemplate(CancellationToken ct)
+    {
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
+        var template = await _templateExportService.GetTranscriptTemplateAsync(ct);
+        return File(template.Content, template.ContentType, template.FileName);
+    }
+
     [HttpPost("template/upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
@@ -54,6 +65,25 @@ public class DegreeController : ControllerBase
         try
         {
             var result = await _templateUploadService.UploadDegreeTemplateAsync(file, ct);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("template/transcript/upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadTranscriptTemplate([FromForm] IFormFile file, CancellationToken ct)
+    {
+        var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
+        if (gate is not null)
+            return gate;
+
+        try
+        {
+            var result = await _templateUploadService.UploadTranscriptTemplateAsync(file, ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)

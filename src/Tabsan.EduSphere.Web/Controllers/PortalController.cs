@@ -8332,6 +8332,97 @@ public class PortalController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> DownloadCertificateTemplate(
+        string? templateType,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        var normalizedType = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase)
+            ? "transcript"
+            : "degree";
+
+        try
+        {
+            var bytes = await _api.DownloadCertificateTemplateAsync(normalizedType, ct);
+            if (bytes is null || bytes.Length == 0)
+            {
+                TempData["PortalMessage"] = "Certificate template is not available.";
+                return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            }
+
+            var fileName = normalizedType == "transcript" ? "transcript-template.docx" : "degree-template.docx";
+            return File(bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadCertificateTemplate(
+        string? templateType,
+        IFormFile? file,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Only Admin or SuperAdmin can upload certificate templates.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        if (!IsUniversityInstitutionType(institutionType))
+        {
+            TempData["PortalMessage"] = "Certificate template import is available only for university scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            TempData["PortalMessage"] = "Please select a .docx certificate template file to import.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        }
+
+        var normalizedType = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase)
+            ? "transcript"
+            : "degree";
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            await _api.UploadCertificateTemplateAsync(normalizedType, stream, file.FileName, file.ContentType, ct);
+            TempData["PortalMessage"] = normalizedType == "transcript"
+                ? "Transcript template imported successfully."
+                : "Degree template imported successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> DownloadGeneratedCertificateDocument(Guid documentId, string format, CancellationToken ct)
     {
         if (!_api.IsConnected())

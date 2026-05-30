@@ -1,5 +1,29 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Template Import/Export and Runtime Validation
+
+### Implementation sync
+- Updated certificate template API surface to support transcript template lifecycle in addition to degree template:
+	- Added GET api/v1/degree/template/transcript/default
+	- Added POST api/v1/degree/template/transcript/upload
+- Updated web API client with template lifecycle proxy methods:
+	- DownloadCertificateTemplateAsync(templateType)
+	- UploadCertificateTemplateAsync(templateType, file)
+- Updated Generate Certificates portal flow with additive university-scope template actions:
+	- DownloadCertificateTemplate action
+	- UploadCertificateTemplate action with admin guard + university-scope guard
+	- UI section for Degree/Transcript template download + import
+
+### Validation sync
+- Diagnostics check confirmed no compile errors in touched files:
+	- DegreeController.cs
+	- PortalController.cs
+	- EduApiClient.cs
+	- GenerateCertificates.cshtml
+- Runtime verification confirmed template download routes return file-download responses for both template types:
+	- /Portal/DownloadCertificateTemplate?templateType=degree
+	- /Portal/DownloadCertificateTemplate?templateType=transcript
+
 ## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation
 
 ### Implementation sync

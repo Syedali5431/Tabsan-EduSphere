@@ -1,5 +1,32 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Template Import/Export and Runtime Validation Synchronization
+
+### Generate Certificates runtime additions
+- Added new runtime functions for certificate template lifecycle wiring (University scope):
+	- PortalController.DownloadCertificateTemplate
+	- PortalController.UploadCertificateTemplate
+	- EduApiClient.DownloadCertificateTemplateAsync
+	- EduApiClient.UploadCertificateTemplateAsync
+	- DegreeController.DownloadDefaultTranscriptTemplate
+	- DegreeController.UploadTranscriptTemplate
+- Existing generation/document runtime surfaces remain authoritative:
+	- PortalController.GenerateCertificates
+	- PortalController.GenerateDegreeCertificate
+	- PortalController.GenerateTranscriptCertificate
+	- CertificateGenerationController.GenerateDegreeCertificate
+	- CertificateGenerationController.GenerateTranscriptCertificate
+
+### Generate Certificates validation summary
+- Generate Certificates page now includes template management UI for Admin/SuperAdmin in university scope:
+	- Degree template: download default + import .docx
+	- Transcript template: download default + import .docx
+- Runtime verification confirmed:
+	- /Portal/GenerateCertificates loads without compile/runtime diagnostics in updated code path.
+	- /Portal/DownloadCertificateTemplate?templateType=degree returns download response.
+	- /Portal/DownloadCertificateTemplate?templateType=transcript returns download response.
+- Behavior remains additive: no route removals and no breaking signature changes.
+
 ## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation Synchronization
 
 ### Courses runtime additions

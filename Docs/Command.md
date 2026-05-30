@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### Generate Certificates Template Import/Export and Runtime Validation Sync (2026-05-31)
+- Implementation Summary:
+  - Added transcript template endpoints in API degree-template controller:
+    - `GET /api/v1/degree/template/transcript/default`
+    - `POST /api/v1/degree/template/transcript/upload`
+  - Added web API client methods for certificate template download/upload.
+  - Added portal actions and Generate Certificates UI controls for degree/transcript template download + import.
+  - Updated required tracker/docs set: `Docs/Function-List.md`, `Docs/Functionality.md`, `Project startup Docs/PRD.md`, `Project startup Docs/Modules.md`, `Project startup Docs/Development Plan - ASP.NET.md`, `Project startup Docs/Database Schema.md`.
+- Validation Summary:
+  - Diagnostics check: no compile errors in touched files.
+  - Runtime route verification:
+    - `/Portal/DownloadCertificateTemplate?templateType=degree` (download response observed)
+    - `/Portal/DownloadCertificateTemplate?templateType=transcript` (download response observed)
+
 ### Students Demo Seed v26 and Filter Validation Sync (2026-05-30)
 - Implementation Summary:
   - Updated `Scripts/03-FullDummyData.sql` to `FullDummyData-v26` and added deterministic Students demo cohort (`STUFILT-CS-901`, `STUFILT-CS-902`, `STUFILT-BUS-903`).

@@ -102,6 +102,62 @@
             </div>
         </div>
 
+        @if (Model.ShowUniversityCertificates && Model.CanManage)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <strong>Certificate Templates</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="mb-2">Degree Template (.docx)</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "degree", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                </div>
+                                <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="templateType" value="degree" />
+                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                    <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                    <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="mb-2">Transcript Template (.docx)</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "transcript", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                </div>
+                                <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="templateType" value="transcript" />
+                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                    <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                    <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
         @if (!Model.Students.Any())
         {
             <div class="alert alert-info">No students found for the selected scope.</div>
