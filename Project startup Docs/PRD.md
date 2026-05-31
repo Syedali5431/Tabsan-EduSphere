@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Graduation Eligibility Filter Demo Seed v37 + Verification Automation)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v37 with deterministic Graduation Eligibility filter cohort expansion:
+    - added accelerated-track row `2026-MAT-ACC-002`,
+    - added deterministic user/profile/enrollment/result coverage for repeatable demo/testing.
+  - Updated Scripts/05-PostDeployment-Checks.sql with synchronized v37 marker/check names and expanded deterministic coverage lists.
+  - Added reusable secure verification scripts/tasks for role/menu/API regression checks:
+    - prompted,
+    - interactive terminal,
+    - local auto-bootstrap execution paths.
+- Compatibility boundary:
+  - No route removals.
+  - No schema mutation.
+  - Additive seed/check data and additive verification automation only.
+- Validation Summary:
+  - Graduation Eligibility filter path now resolves deterministic split of `4` base-program and `2` accelerated-program rows.
+  - Automated Degree Rules verification matrix passes for role/menu/API expectations.
+
 ### 2026-05-31 - Product Requirements Synchronization (Graduation Eligibility Filter Demo Seed v36 + Server-Side Graduation Guard)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v36 with deterministic Graduation Eligibility filter expansion:

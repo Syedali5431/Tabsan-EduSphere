@@ -1,3 +1,23 @@
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v37` and expanded deterministic Graduation Eligibility filter-demo data:
+  - added `2026-MAT-ACC-002`,
+  - added deterministic user/profile/enrollment/result rows for repeatable accelerated-program filter testing.
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v37 marker/check names and expanded deterministic ID coverage for the Graduation Eligibility demo cohort.
+- Added reusable automation scripts/tasks for role/menu/API verification:
+  - `tools/ci/verify-degree-rules-access.ps1`,
+  - `tools/ci/verify-degree-rules-access-local-bootstrap.ps1`,
+  - `tools/ci/run-degree-rules-verifier-interactive.ps1`,
+  - task entries in `.vscode/tasks.json` for prompted, interactive, and local auto-bootstrap runs.
+
+### Validation Summary:
+- Graduation Eligibility filter path validation confirmed deterministic split:
+  - base program => 4 rows,
+  - accelerated/filter-demo program => 2 rows.
+- DB checks confirmed `FullDummyData-v37` marker and expanded deterministic enrollment/result coverage.
+- Role/menu/API verification automation completed successfully for Degree Rules access matrix.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Graduation Endpoint Hardening
 
 ### Implementation Summary:

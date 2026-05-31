@@ -1,5 +1,32 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql marker to FullDummyData-v37 and expanded deterministic Graduation Eligibility filter-demo cohort:
+	- added 2026-MAT-ACC-002 in accelerated/filter-demo program,
+	- added deterministic user/profile/enrollment/result rows for filter-stability demo coverage,
+	- preserved additive idempotent reseed behavior.
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v37 check names and expanded deterministic ID coverage:
+	- DummySeed_DemoDatasetVersionIsV37,
+	- DummySeed_DegreeAuditEligibilityDemo_StudentCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV37.
+- Added reusable verification automation for secure role/menu regression checks:
+	- tools/ci/verify-degree-rules-access.ps1,
+	- tools/ci/verify-degree-rules-access-local-bootstrap.ps1,
+	- tools/ci/run-degree-rules-verifier-interactive.ps1,
+	- .vscode task entries for prompted/interactive/local-auto-bootstrap execution.
+
+### Validation sync
+- Graduation Eligibility menu/runtime filter checks confirmed deterministic split:
+	- base program filter => 4 registrations (AUD set),
+	- accelerated/filter-demo program => 2 registrations (ACC set).
+- DB checks confirmed v37 marker and expanded deterministic cohort/enrollment/result row counts.
+- Degree Rules automated verification task completed with passing role/menu/API matrix assertions.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Server-Side Graduation Enforcement
 
 ### Implementation sync

@@ -1,3 +1,20 @@
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v37`.
+	- Added additive deterministic Graduation Eligibility demo rows in existing tables only:
+		- `users` (1 deterministic row for accelerated-track expansion),
+		- `student_profiles` (1 deterministic row for accelerated-track expansion),
+		- `enrollments` (3 deterministic rows),
+		- `results` (3 deterministic published final rows),
+		- `[Tabsan-EduSphere]` marker row advanced to `FullDummyData-v37`.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive v37 marker/check assertions and expanded deterministic ID lists.
+	- Added verification automation scripts and VS Code task definitions only; no schema object mutation.
+- Validation Summary:
+	- SQL updates are additive and idempotent on deterministic IDs.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Graduation Guard (Schema Posture)
 
 - Implementation Summary:

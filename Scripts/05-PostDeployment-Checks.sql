@@ -727,12 +727,12 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v36';
+	AND DemoValue = N'FullDummyData-v37';
 
-SELECT 'DummySeed_DegreeAuditEligibilityDemo_StudentCountV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DegreeAuditEligibilityDemo_StudentCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
@@ -740,11 +740,12 @@ WHERE [RegistrationNumber] IN
 	N'2026-MAT-AUD-002',
 	N'2026-MAT-AUD-003',
 	N'2026-MAT-AUD-004',
-	N'2026-MAT-ACC-001'
+	N'2026-MAT-ACC-001',
+	N'2026-MAT-ACC-002'
 )
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
@@ -756,13 +757,13 @@ WHERE [RegistrationNumber] IN
 	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER)
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
-WHERE [RegistrationNumber] = N'2026-MAT-ACC-001'
+WHERE [RegistrationNumber] IN (N'2026-MAT-ACC-001', N'2026-MAT-ACC-002')
 	AND [ProgramId] = CAST('46464646-4646-4646-4646-464646464803' AS UNIQUEIDENTIFIER)
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
 WHERE [Id] IN
 (
@@ -776,11 +777,14 @@ WHERE [Id] IN
 	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8008' AS UNIQUEIDENTIFIER),
 	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8009' AS UNIQUEIDENTIFIER),
 	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8010' AS UNIQUEIDENTIFIER),
-	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8011' AS UNIQUEIDENTIFIER)
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8011' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8012' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8013' AS UNIQUEIDENTIFIER),
+	CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8014' AS UNIQUEIDENTIFIER)
 )
 	AND [Status] = N'Enrolled';
 
-SELECT 'DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV36' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [results]
 WHERE [Id] IN
 (
@@ -794,7 +798,10 @@ WHERE [Id] IN
 	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8108' AS UNIQUEIDENTIFIER),
 	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8109' AS UNIQUEIDENTIFIER),
 	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8110' AS UNIQUEIDENTIFIER),
-	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8111' AS UNIQUEIDENTIFIER)
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8111' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8112' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8113' AS UNIQUEIDENTIFIER),
+	CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8D8114' AS UNIQUEIDENTIFIER)
 )
 	AND [ResultType] = N'Final'
 	AND [IsPublished] = 1;

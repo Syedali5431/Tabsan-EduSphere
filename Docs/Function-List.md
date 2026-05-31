@@ -1,5 +1,44 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
+
+### Function inventory delta
+- Newly tracked utility functions in this slice (added once to avoid duplicates):
+	- verify-degree-rules-access.ps1::Add-Failure
+	- verify-degree-rules-access.ps1::Assert-True
+	- verify-degree-rules-access.ps1::Get-Title
+	- verify-degree-rules-access.ps1::ConvertFrom-SecureStringToPlainText
+	- verify-degree-rules-access.ps1::Invoke-ApiLogin
+	- verify-degree-rules-access.ps1::New-WebSessionForUser
+	- verify-degree-rules-access.ps1::Invoke-WebCheck
+	- verify-degree-rules-access.ps1::Invoke-ApiRuleAuthCheck
+	- verify-degree-rules-access-local-bootstrap.ps1::Get-SqlScalar
+	- verify-degree-rules-access-local-bootstrap.ps1::ConvertTo-SqlLiteral
+- Existing function behavior updates (no duplicate runtime inventory rows):
+	- PortalController.GraduationEligibility
+		- Deterministic demo/filter slice expanded to include second accelerated-track row.
+	- EduApiClient.GetEligibilityListAsync
+		- Verified filter split stability with expanded deterministic dataset.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v37 and expanded deterministic Graduation Eligibility cohort:
+	- added 2026-MAT-ACC-002,
+	- added deterministic user/profile/enrollment/result rows for additional accelerated-track filter coverage,
+	- retained additive/idempotent pattern for demo reloads.
+- Scripts/05-PostDeployment-Checks.sql now includes v37-specific deterministic check names and expanded ID lists:
+	- DummySeed_DemoDatasetVersionIsV37,
+	- DummySeed_DegreeAuditEligibilityDemo_StudentCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV37,
+	- DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV37.
+
+### Validation summary
+- Runtime filter validation confirmed deterministic split behavior:
+	- base program filter => 4 rows,
+	- accelerated/filter-demo program filter => 2 rows.
+- DB verification confirmed v37 marker and expanded deterministic row coverage.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Server-Side Graduation Guard
 
 ### Function inventory delta

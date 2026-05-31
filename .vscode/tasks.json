@@ -213,6 +213,41 @@
 			"type": "shell",
 			"command": "$env:ConnectionStrings__DefaultConnection='Server=A0384;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Min Pool Size=20;Max Pool Size=500;Connect Timeout=30'; dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http",
 			"isBackground": true
+		},
+		{
+			"label": "Verify Degree Rules access matrix",
+			"type": "shell",
+			"command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"tools/ci/verify-degree-rules-access.ps1\""
+		},
+		{
+			"label": "Verify Degree Rules access matrix (prompted)",
+			"type": "shell",
+			"command": "$env:EDUSPHERE_SUPERADMIN_PASSWORD='${input:degreeRulesSuperAdminPassword}'; $env:EDUSPHERE_ADMIN_PASSWORD='${input:degreeRulesAdminPassword}'; pwsh -NoProfile -ExecutionPolicy Bypass -File \"tools/ci/verify-degree-rules-access.ps1\""
+		},
+		{
+			"label": "Verify Degree Rules access matrix (interactive terminal)",
+			"type": "shell",
+			"command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"tools/ci/run-degree-rules-verifier-interactive.ps1\""
+		},
+		{
+			"label": "Verify Degree Rules access matrix (local auto-bootstrap)",
+			"type": "shell",
+			"command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"tools/ci/verify-degree-rules-access-local-bootstrap.ps1\""
+		}
+	],
+	"inputs": [
+		{
+			"id": "degreeRulesSuperAdminPassword",
+			"type": "promptString",
+			"description": "SuperAdmin password for Degree Rules verifier",
+			"password": true
+		},
+		{
+			"id": "degreeRulesAdminPassword",
+			"type": "promptString",
+			"description": "Admin password for Degree Rules verifier (default is EduSphere147 if left empty)",
+			"default": "",
+			"password": true
 		}
 	]
 }
