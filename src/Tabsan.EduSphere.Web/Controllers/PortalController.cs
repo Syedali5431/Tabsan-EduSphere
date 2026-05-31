@@ -7983,6 +7983,12 @@ public class PortalController : Controller
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
 
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            TempData["Message"] = "Only SuperAdmin can manage degree rules.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var access = await CanUseDegreeAuditAsync(ct);
         if (!access.Allowed)
         {
@@ -8006,6 +8012,12 @@ public class PortalController : Controller
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
 
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            TempData["Message"] = "Only SuperAdmin can manage degree rules.";
+            return RedirectToAction(nameof(DegreeRules));
+        }
+
         var access = await CanUseDegreeAuditAsync(ct);
         if (!access.Allowed)
         {
@@ -8027,6 +8039,12 @@ public class PortalController : Controller
     public async Task<IActionResult> DegreeRuleDelete(Guid ruleId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            TempData["Message"] = "Only SuperAdmin can manage degree rules.";
+            return RedirectToAction(nameof(DegreeRules));
+        }
 
         var access = await CanUseDegreeAuditAsync(ct);
         if (!access.Allowed)
