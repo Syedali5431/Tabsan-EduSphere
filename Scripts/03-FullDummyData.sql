@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v37', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v38', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v37',
+    SET [DemoValue] = N'FullDummyData-v38',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -1393,7 +1393,9 @@ BEGIN
     ('27272727-2727-2727-2727-272727272702', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444402', N'Data Structures - Demo Slides', N'Slides file for demo download checks.', NULL, N'dev/course-materials/demo/data-structures-slides.pptx', 1, '66666666-6666-6666-6666-666666666611', 1),
     ('27272727-2727-2727-2727-272727272703', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444403', N'Algorithms - External Reference', N'Link-only material used to validate Link mode rendering.', N'https://demo.tabsan.local/materials/algorithms-reference', NULL, 2, '66666666-6666-6666-6666-666666666611', 1),
     ('27272727-2727-2727-2727-272727272704', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333336', '44444444-4444-4444-4444-444444444404', N'Database Systems - Lab Sheet', N'Lab sheet file for semester filter scenarios.', NULL, N'dev/course-materials/demo/database-lab-sheet.docx', 1, '66666666-6666-6666-6666-666666666611', 1),
-    ('27272727-2727-2727-2727-272727272705', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444405', N'Web Development - Archive Sample', N'Inactive material used for ActiveOnly filter checks.', N'https://demo.tabsan.local/materials/web-archive', N'dev/course-materials/demo/web-archive.txt', 3, '66666666-6666-6666-6666-666666666611', 0);
+    ('27272727-2727-2727-2727-272727272705', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444405', N'Web Development - Archive Sample', N'Inactive material used for ActiveOnly filter checks.', N'https://demo.tabsan.local/materials/web-archive', N'dev/course-materials/demo/web-archive.txt', 3, '66666666-6666-6666-6666-666666666611', 0),
+    ('27272727-2727-2727-2727-272727272706', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111112', '22222222-2222-2222-2222-222222222214', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444408', N'Business Analytics - Demo Brief', N'Business demo row to verify department and program filters.', N'https://demo.tabsan.local/materials/business-analytics-brief', N'dev/course-materials/demo/business-analytics-brief.pdf', 3, '66666666-6666-6666-6666-666666666612', 1),
+    ('27272727-2727-2727-2727-272727272707', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111113', '22222222-2222-2222-2222-222222222216', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444413', N'Engineering Mechanics - Demo Notes', N'Engineering demo row to verify cross-department filter combinations.', NULL, N'dev/course-materials/demo/engineering-mechanics-notes.docx', 1, '66666666-6666-6666-6666-666666666613', 1);
 
     INSERT INTO [course_materials] ([Id], [TenantId], [CampusId], [DepartmentId], [AcademicProgramId], [SemesterId], [CourseId], [Name], [Description], [LinkUrl], [FilePath], [MaterialType], [CreatedByUserId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT

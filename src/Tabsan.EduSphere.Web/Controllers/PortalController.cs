@@ -65,6 +65,7 @@ public class PortalController : Controller
         [nameof(DegreeAudit)] = "degree_audit",
         [nameof(GraduationEligibility)] = "graduation_eligibility",
         [nameof(DegreeRules)] = "degree_rules",
+        [nameof(GenerateCertificates)] = "generate_certificates",
         [nameof(GraduationApply)] = "graduation_apply",
         [nameof(GraduationApplications)] = "graduation_applications",
         [nameof(GradingConfig)] = "grading_config",

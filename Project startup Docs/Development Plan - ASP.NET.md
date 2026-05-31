@@ -1,3 +1,18 @@
+## 2026-05-31 Update - Generate Certificates Guard/Sidebar Alignment and Course Materials Demo Seed v38
+
+### Implementation Summary:
+- Portal access consistency update:
+  - aligned Generate Certificates action-to-menu-key mapping in route guard path,
+  - removed conflicting sidebar suppression path for generate_certificates.
+- Data/verification synchronization update:
+  - Scripts/03-FullDummyData.sql marker advanced to `FullDummyData-v38`,
+  - deterministic Course Materials demo rows retained as additive/idempotent set across CS/BUS/ENG,
+  - Scripts/05-PostDeployment-Checks.sql extended with v38 marker and deterministic course-material distribution checks.
+
+### Validation Summary:
+- Portal runtime checks verified Generate Certificates visibility and navigation consistency for authorized admin users.
+- Post-deployment checks verified deterministic v38 marker and seeded course-material coverage for demo filters.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
 
 ### Implementation Summary:

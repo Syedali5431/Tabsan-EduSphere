@@ -1,3 +1,16 @@
+## 2026-05-31 Update - Generate Certificates Access Consistency and Course Materials Demo Seed v38 (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v38`.
+	- Added/retained deterministic Course Materials demo rows in existing table only:
+		- `course_materials` IDs `27272727-2727-2727-2727-272727272701` through `27272727-2727-2727-2727-272727272707` for cross-department filter validation.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive v38 marker and deterministic course-material count/distribution assertions.
+	- Generate Certificates access alignment is application-layer behavior only; no table/index/constraint/view/procedure mutation.
+- Validation Summary:
+	- SQL updates remain additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation (Schema Posture)
 
 - Implementation Summary:

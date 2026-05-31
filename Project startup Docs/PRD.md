@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Access Consistency + Course Materials Demo Seed v38)
+- Runtime delivery in this slice:
+  - Synchronized Generate Certificates access behavior between sidebar permission keys and direct-route guard mapping.
+  - Updated sidebar visibility condition so permitted admin users retain Generate Certificates access in dashboard navigation.
+  - Advanced Scripts/03-FullDummyData.sql marker to FullDummyData-v38 with deterministic, additive Course Materials demo rows across CS/BUS/ENG.
+  - Updated Scripts/05-PostDeployment-Checks.sql with matching v38 marker and deterministic course-material distribution assertions.
+- Compatibility boundary:
+  - No API route removal or rename.
+  - No schema mutation.
+  - Additive seed/check update only.
+- Validation Summary:
+  - Generate Certificates menu and direct-route access now remain consistent for authorized portal users.
+  - Course Materials demo/filter validation now has deterministic cross-department sample coverage for QA/UAT demonstrations.
+
 ### 2026-05-31 - Product Requirements Synchronization (Graduation Eligibility Filter Demo Seed v37 + Verification Automation)
 - Runtime delivery in this slice:
   - Updated Scripts/03-FullDummyData.sql to FullDummyData-v37 with deterministic Graduation Eligibility filter cohort expansion:

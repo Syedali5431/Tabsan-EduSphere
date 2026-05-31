@@ -1,5 +1,32 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Sidebar Guard Sync and Course Materials Demo Seed v38
+
+### Function inventory delta
+- No new public controller/service/API function signature was introduced in this slice.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController (ActionMenuKeyMap)
+		- Added GenerateCertificates -> generate_certificates mapping so direct route guard and sidebar visibility remain synchronized.
+	- Shared/_Layout.cshtml (sidebar render conditions)
+		- Removed over-broad suppression of generate_certificates under Degree Audit-only hide branch.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v38 while retaining additive/idempotent deterministic seed behavior.
+- Course Materials demo pack remains deterministic and now includes cross-department rows used for portal filter testing:
+	- 27272727-2727-2727-2727-272727272701 ... 27272727-2727-2727-2727-272727272707
+	- CS=5 rows, BUS=1 row, ENG=1 row, active rows=6.
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v38 checks:
+	- DummySeed_DemoDatasetVersionIsV38
+	- DummySeed_CourseMaterialsDemo_CountV38
+	- DummySeed_CourseMaterialsDemo_ActiveCountV38
+	- DummySeed_CourseMaterialsDemo_DepartmentCount_CS_V38
+	- DummySeed_CourseMaterialsDemo_DepartmentCount_BUS_V38
+	- DummySeed_CourseMaterialsDemo_DepartmentCount_ENG_V38
+
+### Validation summary
+- Portal verification confirmed Generate Certificates menu/path rendering is available for scoped admin after guard/sidebar synchronization.
+- Generate Certificates filters and Course Materials demo rows render with deterministic data across CS/BUS/ENG slices.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
 
 ### Function inventory delta

@@ -1,3 +1,19 @@
+## Execution Update - 2026-05-31 (Generate Certificates Access Consistency + Course Materials Demo Seed v38)
+
+### Module impact summary
+- No new module introduced; changes remain within existing Portal Navigation, Generate Certificates, and Course Materials module surfaces.
+- Generate Certificates access flow now stays consistent between sidebar visibility and direct-route guard enforcement.
+- Full dummy seed marker advanced to FullDummyData-v38 with deterministic Course Materials demo coverage:
+  - CS = 5 rows,
+  - Business = 1 row,
+  - Engineering = 1 row,
+  - active rows = 6.
+- Post-deployment checks now validate v38 marker and deterministic course-material distribution counts.
+
+### Validation summary
+- Portal checks confirmed Generate Certificates menu/path availability for authorized admin scope.
+- Data checks confirmed deterministic cross-department Course Materials rows are present for filter demonstrations.
+
 ## Execution Update - 2026-05-31 (Graduation Eligibility Filter Demo Seed v37 + Verification Automation)
 
 ### Module impact summary

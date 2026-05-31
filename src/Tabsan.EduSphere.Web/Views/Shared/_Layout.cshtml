@@ -416,8 +416,7 @@
                                 if (!showDegreeAuditSidebar
                                     && (sub.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
                                         || sub.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
-                                        || sub.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)
-                                        || sub.Key.Equals("generate_certificates", StringComparison.OrdinalIgnoreCase)))
+                                        || sub.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
                                 {
                                     continue;
                                 }
@@ -443,8 +442,7 @@
                             if (!showDegreeAuditSidebar
                                 && (top.Key.Equals("degree_audit", StringComparison.OrdinalIgnoreCase)
                                     || top.Key.Equals("graduation_eligibility", StringComparison.OrdinalIgnoreCase)
-                                    || top.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)
-                                    || top.Key.Equals("generate_certificates", StringComparison.OrdinalIgnoreCase)))
+                                    || top.Key.Equals("degree_rules", StringComparison.OrdinalIgnoreCase)))
                             {
                                 continue;
                             }
@@ -514,8 +512,9 @@
                             groupedLinks.Add(("Academic Related", 4, 2620, "Degree Audit", "Portal", "DegreeAudit"));
                             groupedLinks.Add(("Academic Related", 4, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
                             groupedLinks.Add(("Academic Related", 4, 2640, "Degree Rules", "Portal", "DegreeRules"));
-                            groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
                         }
+
+                        groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
 
                         foreach (var link in superAdminFallbackLinks)
                         {

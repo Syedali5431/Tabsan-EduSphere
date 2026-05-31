@@ -1,5 +1,24 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Generate Certificates Guard/Sidebar Synchronization and Course Materials Demo Seed v38
+
+### Implementation sync
+- Portal guard/sidebar synchronization for Generate Certificates:
+	- Route-guard map now explicitly resolves GenerateCertificates to sidebar key generate_certificates.
+	- Sidebar hide logic no longer suppresses generate_certificates under Degree Audit-specific hidden-key branch.
+	- Outcome: users with allowed sidebar key can access the page both from sidebar navigation and direct route entry.
+- Scripts/03-FullDummyData.sql marker advanced to FullDummyData-v38.
+- Deterministic Course Materials demo set includes cross-department rows for filtering walkthroughs:
+	- CS rows: 27272727-2727-2727-2727-272727272701..705,
+	- BUS row: 27272727-2727-2727-2727-272727272706,
+	- ENG row: 27272727-2727-2727-2727-272727272707.
+- Scripts/05-PostDeployment-Checks.sql synchronized with v38 dataset and deterministic course-material assertions.
+
+### Validation sync
+- Portal runtime checks confirmed Generate Certificates menu/path visibility after guard/sidebar synchronization.
+- Filter checks confirmed deterministic data rendering and expected narrowing behavior across department/course selections.
+- Post-deployment SQL checks now report deterministic v38 marker and cross-department course-material coverage.
+
 ## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
 
 ### Implementation sync
