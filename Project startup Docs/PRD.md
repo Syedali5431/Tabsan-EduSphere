@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-05-31 - Product Requirements Synchronization (Graduation Eligibility Filter Demo Seed v36 + Server-Side Graduation Guard)
+- Runtime delivery in this slice:
+  - Updated Scripts/03-FullDummyData.sql to FullDummyData-v36 with deterministic Graduation Eligibility filter expansion:
+    - 2026-MAT-AUD-004,
+    - 2026-MAT-ACC-001,
+    - deterministic enrollment/result rows for stable filter validation.
+  - Updated Scripts/05-PostDeployment-Checks.sql with v36 marker and deterministic expanded-cohort assertions.
+  - Enforced graduation eligibility in server-side lifecycle flow so direct graduation POST requests cannot bypass eligibility rules.
+- Compatibility boundary:
+  - No route removals.
+  - No schema mutation.
+  - Additive seed/check coverage and server-side validation hardening on existing graduation workflow.
+- Validation Summary:
+  - Graduation Eligibility menu filters now return deterministic split data for all/base/accelerated program combinations.
+  - Direct graduation POST for ineligible student returns validation error and does not alter status.
+
 ### 2026-05-31 - Product Requirements Synchronization (Degree Audit Demo Seed v35 + Sidebar Completion)
 - Runtime delivery in this slice:
   - Updated Scripts/02-Seed-Core.sql to add the missing Degree Audit companion menu keys used by the portal guard and sidebar rendering:

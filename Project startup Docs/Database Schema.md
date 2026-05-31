@@ -1,3 +1,20 @@
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Graduation Guard (Schema Posture)
+
+- Implementation Summary:
+	- Updated Scripts/03-FullDummyData.sql dataset marker to `FullDummyData-v36`.
+	- Added additive deterministic Graduation Eligibility filter-demo rows in existing tables only:
+		- `users` (2 deterministic demo users),
+		- `student_profiles` (2 deterministic demo profiles),
+		- `enrollments` (5 deterministic enrollment rows),
+		- `results` (5 deterministic published final rows),
+		- `[Tabsan-EduSphere]` metadata marker advanced to `FullDummyData-v36`.
+	- Updated Scripts/05-PostDeployment-Checks.sql with additive deterministic v36 validation queries for marker, program split, and deterministic row coverage.
+	- Graduation eligibility enforcement update is application/API behavior only; no table/index/constraint mutation.
+- Validation Summary:
+	- SQL updates are additive and idempotent.
+	- Schema impact: No schema mutation.
+- EF migration impact: none.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v35 and Sidebar Completion (Schema Posture)
 
 - Implementation Summary:

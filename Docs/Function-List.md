@@ -1,5 +1,36 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Server-Side Graduation Guard
+
+### Function inventory delta
+- Newly tracked runtime functions in this slice (added once to avoid duplicates):
+	- StudentLifecycleController.GraduateStudent
+	- StudentLifecycleController.GraduateStudentsBatch
+	- StudentLifecycleService.GraduateStudentAsync
+	- StudentLifecycleService.GraduateStudentsBatchAsync
+- Existing function behavior updates (no duplicate inventory rows):
+	- PortalController.GraduationEligibility
+		- Verified deterministic program-filter behavior with v36 sample data split.
+	- PortalController.GraduationEligibilityGraduate
+		- Continues to call API graduation route; API now rejects ineligible students.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v36 and expanded deterministic Graduation Eligibility demo/filter rows:
+	- 2026-MAT-AUD-004 (base math program)
+	- 2026-MAT-ACC-001 (math filter-demo program)
+	- additional deterministic enrollments and published results for filter/stability validation.
+- Scripts/05-PostDeployment-Checks.sql now includes v36-specific deterministic checks for:
+	- dataset marker,
+	- student/program split,
+	- deterministic enrollment/result row coverage for the expanded cohort.
+
+### Validation summary
+- Runtime menu/filter validation confirmed deterministic split behavior:
+	- All programs => 5 rows,
+	- Base program (2222...2431) => 4 rows,
+	- Filter-demo math program (4646...4803) => 1 row.
+- Server-side graduation guard validation confirmed direct graduation POST for ineligible students is blocked and does not mutate student status.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v35, Sidebar Completion, and Function Inventory Synchronization
 
 ### Function inventory delta

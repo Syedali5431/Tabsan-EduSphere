@@ -1,3 +1,21 @@
+## Execution Update - 2026-05-31 (Graduation Eligibility Filter Demo Seed v36 + Server-Side Graduation Guard)
+
+### Module impact summary
+- No new module introduced; update remains within existing Degree Audit / Graduation Eligibility / Student Lifecycle behavior.
+- Full dummy seed now includes deterministic Graduation Eligibility filter-demo expansion:
+  - base program row: 2026-MAT-AUD-004,
+  - filter-demo math program row: 2026-MAT-ACC-001,
+  - additive deterministic enrollments/results for filter stability.
+- Post-deployment checks now include v36 marker and expanded deterministic assertions for student/program split and row coverage.
+- Graduation lifecycle now enforces eligibility server-side for single and batch graduation endpoints.
+
+### Validation summary
+- Graduation Eligibility menu filter validation confirmed deterministic results:
+  - department-only => 5 rows,
+  - base program => 4 rows,
+  - filter-demo program => 1 row.
+- Direct graduation POST validation confirmed ineligible students are rejected and status is unchanged.
+
 ## Execution Update - 2026-05-31 (Degree Audit Demo Seed v35 + Sidebar Completion)
 
 ### Module impact summary

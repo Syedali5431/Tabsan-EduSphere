@@ -1,3 +1,19 @@
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Graduation Endpoint Hardening
+
+### Implementation Summary:
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v36` with additive deterministic sample data for Graduation Eligibility program-filter testing:
+  - 2026-MAT-AUD-004 (base mathematics program),
+  - 2026-MAT-ACC-001 (program-filter demo track),
+  - deterministic enrollment/result rows for stable filter rendering.
+- Updated Scripts/05-PostDeployment-Checks.sql with synchronized v36 checks for dataset marker plus expanded deterministic filter-demo assertions.
+- Hardened lifecycle graduation path with server-side eligibility enforcement:
+  - service-level eligibility validation before graduation mutation,
+  - API maps ineligible graduation attempts to validation-style client responses.
+
+### Validation Summary:
+- Menu/runtime filter checks confirmed deterministic row split across all/base/accelerated program filters.
+- Direct graduation POST check confirmed ineligible students are blocked and remain non-graduated.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v35 and Portal Filter Completion
 
 ### Implementation Summary:

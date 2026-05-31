@@ -1,5 +1,28 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Server-Side Graduation Enforcement
+
+### Implementation sync
+- Updated Scripts/03-FullDummyData.sql marker to FullDummyData-v36 and added deterministic Graduation Eligibility filter-demo cohort expansion:
+	- new registration rows: 2026-MAT-AUD-004 and 2026-MAT-ACC-001,
+	- deterministic user/profile/enrollment/result coverage for program-filter validation,
+	- additive, idempotent sample-data extension for demo/testing.
+- Updated Scripts/05-PostDeployment-Checks.sql with v36 marker and deterministic Graduation Eligibility assertions:
+	- DummySeed_DemoDatasetVersionIsV36,
+	- DummySeed_DegreeAuditEligibilityDemo_StudentCountV36,
+	- DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV36,
+	- DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV36,
+	- DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV36,
+	- DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV36.
+- Graduation endpoint behavior now enforces eligibility server-side in lifecycle flow; ineligible direct POST attempts return validation errors and do not graduate students.
+
+### Validation sync
+- Portal filter validation confirmed deterministic data rendering with expected split:
+	- department-only filter: 5 rows,
+	- base program filter: 4 rows,
+	- accelerated/filter-demo program filter: 1 row.
+- Graduation direct-post validation confirmed ineligible graduation requests are rejected and student status remains unchanged.
+
 ## 2026-05-31 Update - Degree Audit Demo Seed v35, Sidebar Completion, and Portal Filter Validation
 
 ### Implementation sync
