@@ -18,17 +18,20 @@ namespace Tabsan.EduSphere.Application.Services;
 public class StudentLifecycleService : IStudentLifecycleService
 {
     private readonly IStudentLifecycleRepository _repository;
+    private readonly IDegreeAuditService _degreeAudit;
     private readonly IProgressionService _progression;
     private readonly INotificationService _notifications;
     private readonly IUserRepository _users;
 
     public StudentLifecycleService(
         IStudentLifecycleRepository repository,
+        IDegreeAuditService degreeAudit,
         IProgressionService progression,
         INotificationService notifications,
         IUserRepository users)
     {
         _repository    = repository;
+        _degreeAudit   = degreeAudit;
         _progression   = progression;
         _notifications = notifications;
         _users         = users;
@@ -65,6 +68,20 @@ public class StudentLifecycleService : IStudentLifecycleService
         var student = await _repository.GetByIdAsync(studentProfileId, ct);
         if (student == null)
             throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
+
+        if (!IsLifecycleActiveStatus(student.Status))
+            throw new InvalidOperationException($"Only Active students can be graduated. Student {studentProfileId} has status {student.Status}.");
+
+        var audit = await _degreeAudit.GetAuditAsync(studentProfileId, ct);
+        if (!audit.IsEligible)
+        {
+            var unmet = audit.UnmetRequirements.Count > 0
+                ? string.Join(", ", audit.UnmetRequirements)
+                : "degree requirements are not met";
+
+            throw new InvalidOperationException(
+                $"Student {audit.RegistrationNumber} is not eligible for graduation: {unmet}.");
+        }
 
         student.Graduate();
         await _repository.UpdateAsync(student, ct);

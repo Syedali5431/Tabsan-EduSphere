@@ -66,6 +66,10 @@ public class StudentLifecycleController : ControllerBase
             await _service.GraduateStudentAsync(request.StudentProfileId, ct);
             return NoContent();
         }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
         catch (KeyNotFoundException e)
         {
             return NotFound(new { message = e.Message });
@@ -82,15 +86,26 @@ public class StudentLifecycleController : ControllerBase
         [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        foreach (var studentProfileId in studentProfileIds)
+        try
         {
-            var scope = await EnforceStudentScopeAsync(studentProfileId, tenantId, campusId, ct);
-            if (scope is not null)
-                return scope;
-        }
+            foreach (var studentProfileId in studentProfileIds)
+            {
+                var scope = await EnforceStudentScopeAsync(studentProfileId, tenantId, campusId, ct);
+                if (scope is not null)
+                    return scope;
+            }
 
-        await _service.GraduateStudentsBatchAsync(studentProfileIds, ct);
-        return NoContent();
+            await _service.GraduateStudentsBatchAsync(studentProfileIds, ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(new { message = e.Message });
+        }
     }
 
     // ── POST /api/v1/student-lifecycle/{id}/deactivate ────────────────────────
