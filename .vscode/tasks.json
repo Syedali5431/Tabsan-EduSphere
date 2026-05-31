@@ -161,7 +161,7 @@
 		{
 			"label": "Commit repository updates (fixed quoting)",
 			"type": "shell",
-			"command": "git commit -m 'Update course material upload, seed data, and DB validation scripts'"
+			"command": "git commit -m 'Update Generate Certificates demo seed, docs, and checks to v39'"
 		},
 		{
 			"label": "Push main to origin",
