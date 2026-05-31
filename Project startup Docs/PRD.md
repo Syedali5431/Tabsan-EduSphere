@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Generate Certificates Additional Certificate Demo Seed v39)
+- Runtime delivery in this slice:
+  - advanced Scripts/03-FullDummyData.sql to FullDummyData-v39,
+  - added deterministic college and school Generate Certificates demo rows for non-university walkthroughs,
+  - synchronized Scripts/05-PostDeployment-Checks.sql with the new v39 marker and cohort assertions,
+  - kept existing university degree/transcript flow intact while extending the additional-certificate demo surface.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive seed/check update only for existing Generate Certificates flows.
+- Validation Summary:
+  - portal checks confirmed the page loads and displays the seeded rows,
+  - filter checks confirmed institution, campus, department, course/class, and semester narrowing behave as expected.
+
 ### 2026-05-31 - Product Requirements Synchronization (Generate Certificates Access Consistency + Course Materials Demo Seed v38)
 - Runtime delivery in this slice:
   - Synchronized Generate Certificates access behavior between sidebar permission keys and direct-route guard mapping.

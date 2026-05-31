@@ -477,6 +477,7 @@ public interface IEduApiClient
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        Guid? semesterId,
         int? institutionType,
         CancellationToken ct);
     Task GenerateDegreeCertificateAsync(Guid studentProfileId, CancellationToken ct);
@@ -485,6 +486,7 @@ public interface IEduApiClient
     Task UploadCertificateTemplateAsync(string templateType, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
     Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct);
     Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct);
+    Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, CancellationToken ct);
     Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
     Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct);
 
@@ -1308,6 +1310,7 @@ public class EduApiClient : IEduApiClient
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        Guid? semesterId,
         int? institutionType,
         CancellationToken ct)
     {
@@ -1316,6 +1319,7 @@ public class EduApiClient : IEduApiClient
         if (campusId.HasValue) parts.Add($"campusId={campusId}");
         if (departmentId.HasValue) parts.Add($"departmentId={departmentId}");
         if (courseId.HasValue) parts.Add($"courseId={courseId}");
+        if (semesterId.HasValue) parts.Add($"semesterId={semesterId}");
         if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
 
         var path = "api/v1/certificate-generation/graduated-students";
@@ -1339,10 +1343,13 @@ public class EduApiClient : IEduApiClient
 
     public async Task<byte[]?> DownloadCertificateTemplateAsync(string templateType, CancellationToken ct)
     {
-        var isTranscript = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase);
-        var path = isTranscript
-            ? "api/v1/degree/template/transcript/default"
-            : "api/v1/degree/template/default";
+        var normalized = NormalizeCertificateTemplateType(templateType);
+        var path = normalized switch
+        {
+            "degree" => "api/v1/degree/template/default",
+            "transcript" => "api/v1/degree/template/transcript/default",
+            _ => $"api/v1/certificate-generation/templates/{normalized}/default"
+        };
 
         using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
         using var response = await CreateClient().SendAsync(request, ct);
@@ -1358,10 +1365,13 @@ public class EduApiClient : IEduApiClient
         await fileStream.CopyToAsync(buffer, ct);
         var fileBytes = buffer.ToArray();
 
-        var isTranscript = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase);
-        var path = isTranscript
-            ? "api/v1/degree/template/transcript/upload"
-            : "api/v1/degree/template/upload";
+        var normalized = NormalizeCertificateTemplateType(templateType);
+        var path = normalized switch
+        {
+            "degree" => "api/v1/degree/template/upload",
+            "transcript" => "api/v1/degree/template/transcript/upload",
+            _ => $"api/v1/certificate-generation/templates/{normalized}/upload"
+        };
 
         using var response = await SendWithAutoRefreshAsync(() =>
         {
@@ -1393,6 +1403,9 @@ public class EduApiClient : IEduApiClient
     public async Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct)
         => await GetAsync<List<StudentAdditionalCertificateItem>>($"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates", ct)
            ?? new List<StudentAdditionalCertificateItem>();
+
+    public Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates/generate?documentType={Uri.EscapeDataString(NormalizeCertificateTemplateType(documentType))}", new { }, ct);
 
     public async Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct)
     {
@@ -1427,6 +1440,23 @@ public class EduApiClient : IEduApiClient
             return null;
 
         return await response.Content.ReadAsByteArrayAsync(ct);
+    }
+
+    private static string NormalizeCertificateTemplateType(string? templateType)
+    {
+        if (string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase))
+            return "transcript";
+
+        if (string.Equals(templateType, "completion", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "completion-certificate", StringComparison.OrdinalIgnoreCase))
+            return "completion";
+
+        if (string.Equals(templateType, "reportcard", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report-card", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report_card", StringComparison.OrdinalIgnoreCase))
+            return "reportcard";
+
+        return "degree";
     }
 
     private static GraduationApplicationWebModel MapGradApp(GraduationApplicationApiDto raw) => new()

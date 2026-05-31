@@ -282,6 +282,44 @@ public class PortalController : Controller
     private static bool IsUniversityInstitutionType(int? institutionType)
         => institutionType.HasValue && institutionType.Value == 0;
 
+    private static bool IsUniversityDocumentType(string normalizedTemplateType)
+        => string.Equals(normalizedTemplateType, "degree", StringComparison.OrdinalIgnoreCase)
+           || string.Equals(normalizedTemplateType, "transcript", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsNonUniversityDocumentType(string normalizedTemplateType)
+        => string.Equals(normalizedTemplateType, "completion", StringComparison.OrdinalIgnoreCase)
+           || string.Equals(normalizedTemplateType, "reportcard", StringComparison.OrdinalIgnoreCase);
+
+    private static string NormalizeCertificateTemplateType(string? templateType)
+    {
+        if (string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase))
+            return "transcript";
+
+        if (string.Equals(templateType, "completion", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "completion-certificate", StringComparison.OrdinalIgnoreCase))
+            return "completion";
+
+        if (string.Equals(templateType, "reportcard", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report-card", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report_card", StringComparison.OrdinalIgnoreCase))
+            return "reportcard";
+
+        return "degree";
+    }
+
+    private static List<CertificateDocumentTypeOption> BuildCertificateDocumentTypes(int? institutionType)
+        => IsUniversityInstitutionType(institutionType)
+            ? new List<CertificateDocumentTypeOption>
+            {
+                new() { Value = "degree", Label = "Degree" },
+                new() { Value = "transcript", Label = "Transcript" }
+            }
+            : new List<CertificateDocumentTypeOption>
+            {
+                new() { Value = "completion", Label = "Completion Certificate" },
+                new() { Value = "reportcard", Label = "Report Card" }
+            };
+
     private static string ResolvePeriodFilterLabel(int? institutionType)
         => IsUniversityInstitutionType(institutionType) ? "Class" : "Semester";
 
@@ -8281,6 +8319,7 @@ public class PortalController : Controller
             model.SelectedInstitutionType ??= ResolveCertificateInstitutionType(identity, departmentDetails, model.SelectedDepartmentId);
             model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.SelectedInstitutionType);
             model.Semesters = await _api.GetSemestersAsync(ct);
+            model.AvailableDocumentTypes = BuildCertificateDocumentTypes(model.SelectedInstitutionType);
 
             model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, ct);
 
@@ -8297,6 +8336,7 @@ public class PortalController : Controller
                 model.SelectedCampusId,
                 model.SelectedDepartmentId,
                 model.SelectedCourseId,
+                model.SelectedSemesterId,
                 model.SelectedInstitutionType,
                 ct);
         }
@@ -8326,7 +8366,7 @@ public class PortalController : Controller
         if (!IsUniversityInstitutionType(institutionType))
         {
             TempData["PortalMessage"] = "Degree generation is available only for university scope.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
 
         try
@@ -8339,7 +8379,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
     }
 
     [HttpPost]
@@ -8360,7 +8400,7 @@ public class PortalController : Controller
         if (!IsUniversityInstitutionType(institutionType))
         {
             TempData["PortalMessage"] = "Transcript generation is available only for university scope.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
 
         try
@@ -8375,7 +8415,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
     }
 
     [HttpGet]
@@ -8385,15 +8425,26 @@ public class PortalController : Controller
         Guid? campusId,
         Guid? departmentId,
         Guid? courseId,
+        int? institutionType,
         Guid? semesterId,
         CancellationToken ct)
     {
         if (!_api.IsConnected())
             return RedirectToAction("Connect", "Home");
 
-        var normalizedType = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase)
-            ? "transcript"
-            : "degree";
+        var normalizedType = NormalizeCertificateTemplateType(templateType);
+        var isUniversityScope = IsUniversityInstitutionType(institutionType);
+        if (isUniversityScope && !IsUniversityDocumentType(normalizedType))
+        {
+            TempData["PortalMessage"] = "Selected template type is not available for university scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+        }
+
+        if (!isUniversityScope && !IsNonUniversityDocumentType(normalizedType))
+        {
+            TempData["PortalMessage"] = "Selected template type is not available for school/college scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+        }
 
         try
         {
@@ -8401,16 +8452,22 @@ public class PortalController : Controller
             if (bytes is null || bytes.Length == 0)
             {
                 TempData["PortalMessage"] = "Certificate template is not available.";
-                return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+                return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
             }
 
-            var fileName = normalizedType == "transcript" ? "transcript-template.docx" : "degree-template.docx";
+            var fileName = normalizedType switch
+            {
+                "transcript" => "transcript-template.docx",
+                "completion" => "completion-certificate-template.docx",
+                "reportcard" => "report-card-template.docx",
+                _ => "degree-template.docx"
+            };
             return File(bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileName);
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = ex.Message;
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
     }
 
@@ -8437,36 +8494,88 @@ public class PortalController : Controller
             return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
         }
 
-        if (!IsUniversityInstitutionType(institutionType))
+        var normalizedType = NormalizeCertificateTemplateType(templateType);
+        var isUniversityScope = IsUniversityInstitutionType(institutionType);
+        if (isUniversityScope && !IsUniversityDocumentType(normalizedType))
         {
-            TempData["PortalMessage"] = "Certificate template import is available only for university scope.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            TempData["PortalMessage"] = "Only Degree/Transcript templates are available for university scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+        }
+
+        if (!isUniversityScope && !IsNonUniversityDocumentType(normalizedType))
+        {
+            TempData["PortalMessage"] = "Only Completion Certificate and Report Card templates are available for school/college scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
 
         if (file is null || file.Length == 0)
         {
             TempData["PortalMessage"] = "Please select a .docx certificate template file to import.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
-
-        var normalizedType = string.Equals(templateType, "transcript", StringComparison.OrdinalIgnoreCase)
-            ? "transcript"
-            : "degree";
 
         try
         {
             await using var stream = file.OpenReadStream();
             await _api.UploadCertificateTemplateAsync(normalizedType, stream, file.FileName, file.ContentType, ct);
-            TempData["PortalMessage"] = normalizedType == "transcript"
-                ? "Transcript template imported successfully."
-                : "Degree template imported successfully.";
+            TempData["PortalMessage"] = normalizedType switch
+            {
+                "transcript" => "Transcript template imported successfully.",
+                "completion" => "Completion certificate template imported successfully.",
+                "reportcard" => "Report card template imported successfully.",
+                _ => "Degree template imported successfully."
+            };
         }
         catch (Exception ex)
         {
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateAdditionalCertificate(
+        Guid studentProfileId,
+        string? documentType,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        int? institutionType,
+        CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Connect", "Home");
+
+        if (IsUniversityInstitutionType(institutionType))
+        {
+            TempData["PortalMessage"] = "Completion Certificate and Report Card generation is available only for school/college scope.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+        }
+
+        var normalizedType = NormalizeCertificateTemplateType(documentType);
+        if (!IsNonUniversityDocumentType(normalizedType))
+        {
+            TempData["PortalMessage"] = "Please select Completion Certificate or Report Card before generating.";
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
+        }
+
+        try
+        {
+            await _api.GenerateAdditionalCertificateAsync(studentProfileId, normalizedType, ct);
+            TempData["PortalMessage"] = normalizedType == "completion"
+                ? "Completion certificate generated successfully."
+                : "Report card generated successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
     }
 
     [HttpGet]
@@ -8518,13 +8627,13 @@ public class PortalController : Controller
         if (IsUniversityInstitutionType(institutionType))
         {
             TempData["PortalMessage"] = "Additional certificate upload is available for school/college scope.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
 
         if (file is null || file.Length == 0)
         {
             TempData["PortalMessage"] = "Please select a certificate file to upload.";
-            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+            return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
         }
 
         try
@@ -8545,7 +8654,7 @@ public class PortalController : Controller
             TempData["PortalMessage"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId });
+        return RedirectToAction(nameof(GenerateCertificates), new { tenantId, campusId, departmentId, courseId, semesterId, institutionType });
     }
 
     [HttpGet]

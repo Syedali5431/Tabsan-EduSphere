@@ -2284,9 +2284,16 @@ public class StudentAdditionalCertificateItem
     public Guid DocumentId { get; set; }
     public Guid StudentProfileId { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string? DocumentType { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string ContentType { get; set; } = "application/octet-stream";
     public DateTime UploadedAtUtc { get; set; }
+}
+
+public class CertificateDocumentTypeOption
+{
+    public string Value { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
 }
 
 public class GenerateCertificatesPageModel
@@ -2304,6 +2311,7 @@ public class GenerateCertificatesPageModel
     public bool ShowUniversityCertificates { get; set; }
     public bool CanUploadAdditionalCertificates { get; set; }
     public string PeriodFilterLabel { get; set; } = "Semester";
+    public List<CertificateDocumentTypeOption> AvailableDocumentTypes { get; set; } = new();
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();

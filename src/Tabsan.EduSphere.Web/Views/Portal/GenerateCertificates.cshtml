@@ -78,6 +78,19 @@
                         </select>
                     </div>
 
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Institution</label>
+                            <select name="institutionType" class="form-select" onchange="this.form.submit()">
+                                <option value="">Auto</option>
+                                <option value="0" selected="@(Model.SelectedInstitutionType == 0)">University</option>
+                                <option value="1" selected="@(Model.SelectedInstitutionType == 1)">School</option>
+                                <option value="2" selected="@(Model.SelectedInstitutionType == 2)">College</option>
+                            </select>
+                        </div>
+                    }
+
                     @if (Model.ShowUniversityCertificates)
                     {
                         <div class="col-md-3">
@@ -92,7 +105,10 @@
                         </div>
                     }
 
-                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                    @if (Model.Identity?.IsSuperAdmin != true)
+                    {
+                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                    }
 
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>Apply</button>
@@ -102,58 +118,109 @@
             </div>
         </div>
 
-        @if (Model.ShowUniversityCertificates && Model.CanManage)
+        @if (Model.CanManage)
         {
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <strong>Certificate Templates</strong>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-lg-6">
-                            <div class="border rounded p-3 h-100">
-                                <h6 class="mb-2">Degree Template (.docx)</h6>
-                                <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <a class="btn btn-sm btn-outline-primary"
-                                       href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "degree", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                    @if (Model.ShowUniversityCertificates)
+                    {
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="mb-2">Degree Template (.docx)</h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "degree", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                    </div>
+                                    <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="templateType" value="degree" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                    </form>
                                 </div>
-                                <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="templateType" value="degree" />
-                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
-                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
-                                    <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
-                                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                    <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                    <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
-                                </form>
                             </div>
-                        </div>
 
-                        <div class="col-lg-6">
-                            <div class="border rounded p-3 h-100">
-                                <h6 class="mb-2">Transcript Template (.docx)</h6>
-                                <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <a class="btn btn-sm btn-outline-primary"
-                                       href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "transcript", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                            <div class="col-lg-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="mb-2">Transcript Template (.docx)</h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "transcript", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                    </div>
+                                    <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="templateType" value="transcript" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                    </form>
                                 </div>
-                                <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="templateType" value="transcript" />
-                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
-                                    <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
-                                    <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
-                                    <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                    <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                    <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
-                                </form>
                             </div>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="mb-2">Completion Certificate Template (.docx)</h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "completion", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                    </div>
+                                    <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="templateType" value="completion" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="mb-2">Report Card Template (.docx)</h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "reportcard", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                    </div>
+                                    <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="templateType" value="reportcard" />
+                                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                        <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -255,7 +322,7 @@
                                             <div class="d-flex flex-wrap gap-1 mb-2">
                                                 @if (Model.CanUploadAdditionalCertificates)
                                                 {
-                                                    <form method="post" enctype="multipart/form-data" asp-action="UploadStudentAdditionalCertificate" asp-controller="Portal" class="d-flex flex-wrap gap-1 align-items-center">
+                                                    <form method="post" asp-action="GenerateAdditionalCertificate" asp-controller="Portal" class="d-flex flex-wrap gap-1 align-items-center">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="studentProfileId" value="@student.StudentProfileId" />
                                                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
@@ -264,9 +331,14 @@
                                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="Certificate title" style="max-width: 180px;" />
-                                                        <input type="file" name="file" class="form-control form-control-sm" style="max-width: 220px;" required />
-                                                        <button type="submit" class="btn btn-sm btn-outline-success">Upload</button>
+                                                        <select name="documentType" class="form-select form-select-sm" style="max-width: 220px;" required>
+                                                            <option value="">Select Type</option>
+                                                            @foreach (var docType in Model.AvailableDocumentTypes)
+                                                            {
+                                                                <option value="@docType.Value">@docType.Label</option>
+                                                            }
+                                                        </select>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
                                                     </form>
                                                 }
                                             </div>
@@ -277,13 +349,13 @@
                                                     @foreach (var cert in student.AdditionalCertificates)
                                                     {
                                                         <a class="btn btn-sm btn-outline-primary"
-                                                           href="@Url.Action("DownloadStudentAdditionalCertificate", "Portal", new { documentId = cert.DocumentId })">@cert.Title</a>
+                                                           href="@Url.Action("DownloadStudentAdditionalCertificate", "Portal", new { documentId = cert.DocumentId })">@(string.IsNullOrWhiteSpace(cert.DocumentType) ? cert.Title : cert.Title + " (" + cert.DocumentType + ")")</a>
                                                     }
                                                 </div>
                                             }
                                             else
                                             {
-                                                <span class="text-muted">No uploaded certificates.</span>
+                                                <span class="text-muted">No generated certificates.</span>
                                             }
                                         </td>
                                     }

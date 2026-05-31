@@ -1,3 +1,17 @@
+## Execution Update - 2026-06-01 (Generate Certificates Additional Certificate Demo Seed v39)
+
+### Module impact summary
+- No new module introduced; the change stays inside the existing Generate Certificates / student filter surface.
+- Full dummy seed now includes deterministic school and college demo rows for the non-university branch of Generate Certificates:
+  - 2 college rows,
+  - 2 school rows,
+  - deterministic enrollments tied to existing spring course offerings.
+- Post-deployment checks now validate the v39 marker and additional-certificate cohort coverage.
+
+### Validation summary
+- Portal runtime checks confirmed the screen loads and the rows appear under the expected institution scope.
+- Filter validation confirmed the existing tenant/campus/department/course/class/semester chain still narrows correctly.
+
 ## Execution Update - 2026-05-31 (Generate Certificates Access Consistency + Course Materials Demo Seed v38)
 
 ### Module impact summary

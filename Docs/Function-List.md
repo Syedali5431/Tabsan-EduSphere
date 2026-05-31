@@ -1,5 +1,34 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Function Inventory Sync
+
+### Function inventory delta
+- Newly recorded runtime functions in this slice:
+	- CertificateGenerationController.DownloadDefaultAdditionalTemplate
+	- CertificateGenerationController.UploadAdditionalTemplate
+	- CertificateGenerationController.GenerateAdditionalCertificate
+	- PortalController.GenerateAdditionalCertificate
+	- EduApiClient.GenerateAdditionalCertificateAsync
+- Existing function updates (no duplicate inventory rows added):
+	- CertificateGenerationController.GetGraduatedStudents
+		- semesterId now narrows the student list for certificate walkthroughs.
+	- PortalController.GenerateCertificates
+		- now passes semesterId through to the API and exposes institution-scoped document options.
+	- PortalController.DownloadCertificateTemplate / UploadCertificateTemplate
+		- now support completion/report card template handling in addition to degree/transcript scope.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v39 and now includes deterministic additional-certificate demo rows for school/college walkthroughs:
+	- DEMO-CERT-COL-901
+	- DEMO-CERT-COL-902
+	- DEMO-CERT-SCH-911
+	- DEMO-CERT-SCH-912
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v39 assertions for the new certificate demo cohort.
+
+### Validation summary
+- API and portal checks confirmed the Generate Certificates screen still loads and the scoped student rows render for both university and non-university flows.
+- Filter checks confirmed deterministic rows remain visible with tenant, campus, department, course/class, and semester narrowing.
+
 ## 2026-05-31 Update - Generate Certificates Sidebar Guard Sync and Course Materials Demo Seed v38
 
 ### Function inventory delta

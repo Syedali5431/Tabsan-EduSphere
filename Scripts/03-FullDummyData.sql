@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v38', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v39', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v38',
+    SET [DemoValue] = N'FullDummyData-v39',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -3027,6 +3027,112 @@ BEGIN
                 SELECT CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9906' AS UNIQUEIDENTIFIER), CAST('8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8906' AS UNIQUEIDENTIFIER), @CertDemoEngOfferingId, DATEADD(day, -90, @Now), NULL, N'Active', @Now, NULL
                 WHERE @CertDemoEngOfferingId IS NOT NULL
                     AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('9A9A9A9A-9A9A-9A9A-9A9A-9A9A9A9A9906' AS UNIQUEIDENTIFIER));
+        END
+END
+
+/* 13.4) Generate Certificates deterministic additional-certificate demo cohort (School/College scope) */
+IF OBJECT_ID(N'[users]') IS NOT NULL
+AND OBJECT_ID(N'[student_profiles]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+BEGIN
+        DECLARE @CertDemoColDeptId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER);
+        DECLARE @CertDemoSchDeptId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER);
+        DECLARE @CertDemoColProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER);
+        DECLARE @CertDemoSchProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222216' AS UNIQUEIDENTIFIER);
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [CampusId], [TenantId])
+        SELECT CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7901' AS UNIQUEIDENTIFIER), N'demo.cert.col.901', N'demo.cert.col.901@tabsan.local', @PwdHash, @RoleStudent, @CertDemoColDeptId, 1, 1, NULL, @Now, NULL, 0, NULL, @ColCampusId, @ColTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7901' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [CampusId], [TenantId])
+        SELECT CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7902' AS UNIQUEIDENTIFIER), N'demo.cert.col.902', N'demo.cert.col.902@tabsan.local', @PwdHash, @RoleStudent, @CertDemoColDeptId, 1, 1, NULL, @Now, NULL, 0, NULL, @ColCampusId, @ColTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7902' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [CampusId], [TenantId])
+        SELECT CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7911' AS UNIQUEIDENTIFIER), N'demo.cert.sch.911', N'demo.cert.sch.911@tabsan.local', @PwdHash, @RoleStudent, @CertDemoSchDeptId, 0, 1, NULL, @Now, NULL, 0, NULL, @SchCampusId, @SchTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7911' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [CampusId], [TenantId])
+        SELECT CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7912' AS UNIQUEIDENTIFIER), N'demo.cert.sch.912', N'demo.cert.sch.912@tabsan.local', @PwdHash, @RoleStudent, @CertDemoSchDeptId, 0, 1, NULL, @Now, NULL, 0, NULL, @SchCampusId, @SchTenantId
+        WHERE @RoleStudent IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7912' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8901' AS UNIQUEIDENTIFIER), CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7901' AS UNIQUEIDENTIFIER), N'DEMO-CERT-COL-901', @CertDemoColProgramId, @CertDemoColDeptId, DATEADD(year, -3, @Now), 3.38, 6, @Now, NULL, 0, NULL, NULL, 1, 3.28
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @CertDemoColProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8901' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8902' AS UNIQUEIDENTIFIER), CAST('7C7C7C7C-7C7C-7C7C-7C7C-7C7C7C7C7902' AS UNIQUEIDENTIFIER), N'DEMO-CERT-COL-902', @CertDemoColProgramId, @CertDemoColDeptId, DATEADD(year, -3, @Now), 3.49, 6, @Now, NULL, 0, NULL, DATEADD(day, -12, @Now), 3, 3.42
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @CertDemoColProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8902' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8911' AS UNIQUEIDENTIFIER), CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7911' AS UNIQUEIDENTIFIER), N'DEMO-CERT-SCH-911', @CertDemoSchProgramId, @CertDemoSchDeptId, DATEADD(year, -2, @Now), 3.12, 4, @Now, NULL, 0, NULL, NULL, 1, 3.08
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @CertDemoSchProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8911' AS UNIQUEIDENTIFIER));
+
+        INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId], [AdmissionDate], [Cgpa], [CurrentSemesterNumber], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [GraduatedDate], [Status], [CurrentSemesterGpa])
+        SELECT CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8912' AS UNIQUEIDENTIFIER), CAST('7D7D7D7D-7D7D-7D7D-7D7D-7D7D7D7C7912' AS UNIQUEIDENTIFIER), N'DEMO-CERT-SCH-912', @CertDemoSchProgramId, @CertDemoSchDeptId, DATEADD(year, -2, @Now), 3.31, 4, @Now, NULL, 0, NULL, DATEADD(day, -8, @Now), 3, 3.24
+        WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = @CertDemoSchProgramId)
+            AND NOT EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8912' AS UNIQUEIDENTIFIER));
+
+        UPDATE sp
+        SET sp.[Status] = 3,
+                sp.[GraduatedDate] = ISNULL(sp.[GraduatedDate], DATEADD(day, -20, @Now)),
+                sp.[UpdatedAt] = @Now
+        FROM [student_profiles] sp
+        WHERE sp.[Id] IN
+        (
+                CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8902' AS UNIQUEIDENTIFIER),
+                CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8912' AS UNIQUEIDENTIFIER)
+        )
+            AND (ISNULL(sp.[Status], 0) <> 3 OR sp.[GraduatedDate] IS NULL);
+
+        IF OBJECT_ID(N'[enrollments]') IS NOT NULL
+        BEGIN
+                DECLARE @CertDemoColOfferingId UNIQUEIDENTIFIER;
+                DECLARE @CertDemoSchOfferingId UNIQUEIDENTIFIER;
+
+                SELECT TOP (1) @CertDemoColOfferingId = co.[Id]
+                FROM [course_offerings] co
+                INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+                WHERE c.[DepartmentId] = @CertDemoColDeptId
+                    AND co.[IsDeleted] = 0
+                    AND co.[IsOpen] = 1
+                ORDER BY co.[CreatedAt] DESC, co.[Id] DESC;
+
+                SELECT TOP (1) @CertDemoSchOfferingId = co.[Id]
+                FROM [course_offerings] co
+                INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+                WHERE c.[DepartmentId] = @CertDemoSchDeptId
+                    AND co.[IsDeleted] = 0
+                    AND co.[IsOpen] = 1
+                ORDER BY co.[CreatedAt] DESC, co.[Id] DESC;
+
+                INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+                SELECT CAST('9C9C9C9C-9C9C-9C9C-9C9C-9C9C9C9C9901' AS UNIQUEIDENTIFIER), CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8901' AS UNIQUEIDENTIFIER), @CertDemoColOfferingId, DATEADD(day, -88, @Now), NULL, N'Active', @Now, NULL
+                WHERE @CertDemoColOfferingId IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('9C9C9C9C-9C9C-9C9C-9C9C-9C9C9C9C9901' AS UNIQUEIDENTIFIER));
+
+                INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+                SELECT CAST('9C9C9C9C-9C9C-9C9C-9C9C-9C9C9C9C9902' AS UNIQUEIDENTIFIER), CAST('8C8C8C8C-8C8C-8C8C-8C8C-8C8C8C8C8902' AS UNIQUEIDENTIFIER), @CertDemoColOfferingId, DATEADD(day, -84, @Now), NULL, N'Active', @Now, NULL
+                WHERE @CertDemoColOfferingId IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('9C9C9C9C-9C9C-9C9C-9C9C-9C9C9C9C9902' AS UNIQUEIDENTIFIER));
+
+                INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+                SELECT CAST('9D9D9D9D-9D9D-9D9D-9D9D-9D9D9D9D9911' AS UNIQUEIDENTIFIER), CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8911' AS UNIQUEIDENTIFIER), @CertDemoSchOfferingId, DATEADD(day, -80, @Now), NULL, N'Active', @Now, NULL
+                WHERE @CertDemoSchOfferingId IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('9D9D9D9D-9D9D-9D9D-9D9D-9D9D9D9D9911' AS UNIQUEIDENTIFIER));
+
+                INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+                SELECT CAST('9D9D9D9D-9D9D-9D9D-9D9D-9D9D9D9D9912' AS UNIQUEIDENTIFIER), CAST('8D8D8D8D-8D8D-8D8D-8D8D-8D8D8D8C8912' AS UNIQUEIDENTIFIER), @CertDemoSchOfferingId, DATEADD(day, -76, @Now), NULL, N'Active', @Now, NULL
+                WHERE @CertDemoSchOfferingId IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[Id] = CAST('9D9D9D9D-9D9D-9D9D-9D9D-9D9D9D9D9912' AS UNIQUEIDENTIFIER));
         END
 END
 

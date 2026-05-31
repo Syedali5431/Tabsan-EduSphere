@@ -1,3 +1,14 @@
+## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Runtime Validation
+
+### Plan sync
+- Extended the existing Generate Certificates demo plan with a non-university sample cohort for school and college walkthroughs.
+- Advanced Scripts/03-FullDummyData.sql to FullDummyData-v39 and aligned post-deployment checks with the new deterministic rows.
+- Kept the feature additive: university degree/transcript behavior remains unchanged, and the new data only broadens demo coverage for additional certificates.
+
+### Validation sync
+- Authenticated runtime checks confirmed the page still loads and the seeded rows render in the filtered student list.
+- Filter checks confirmed the full selector chain remains stable for both university and non-university paths.
+
 ## 2026-05-31 Update - Generate Certificates Guard/Sidebar Alignment and Course Materials Demo Seed v38
 
 ### Implementation Summary:

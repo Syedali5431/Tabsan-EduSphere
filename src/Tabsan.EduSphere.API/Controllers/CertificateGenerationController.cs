@@ -1,5 +1,8 @@
 using System.Security.Claims;
 using System.Text.Json;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +20,11 @@ namespace Tabsan.EduSphere.API.Controllers;
 [Authorize]
 public class CertificateGenerationController : ControllerBase
 {
+    private const string CompletionDocumentType = "completion";
+    private const string ReportCardDocumentType = "reportcard";
+    private const string DocxContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    private const long MaxTemplateSizeBytes = 5 * 1024 * 1024;
+
     private readonly ApplicationDbContext _db;
     private readonly IAccessScopeResolver _accessScope;
     private readonly IAdminAssignmentRepository _adminAssignments;
@@ -50,6 +58,7 @@ public class CertificateGenerationController : ControllerBase
         [FromQuery] Guid? campusId,
         [FromQuery] Guid? departmentId,
         [FromQuery] Guid? courseId,
+        [FromQuery] Guid? semesterId,
         [FromQuery] int? institutionType,
         CancellationToken ct)
     {
@@ -135,6 +144,17 @@ public class CertificateGenerationController : ControllerBase
             query = query.Where(s => matchingStudentIds.Contains(s.Id));
         }
 
+        if (semesterId.HasValue)
+        {
+            var matchingStudentIds = await _db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.CourseOffering.SemesterId == semesterId.Value)
+                .Select(e => e.StudentProfileId)
+                .Distinct()
+                .ToListAsync(ct);
+            query = query.Where(s => matchingStudentIds.Contains(s.Id));
+        }
+
         if (User.IsInRole("Faculty"))
         {
             var facultyId = GetCurrentUserId();
@@ -192,6 +212,7 @@ public class CertificateGenerationController : ControllerBase
                             documentId = x.DocumentId,
                             studentProfileId = x.StudentProfileId,
                             title = x.Title,
+                            documentType = x.DocumentType,
                             fileName = x.FileName,
                             contentType = x.ContentType,
                             uploadedAtUtc = x.UploadedAtUtc
@@ -339,6 +360,7 @@ public class CertificateGenerationController : ControllerBase
                 d.DocumentId,
                 d.StudentProfileId,
                 d.Title,
+                d.DocumentType,
                 d.FileName,
                 d.ContentType,
                 d.UploadedAtUtc
@@ -382,6 +404,7 @@ public class CertificateGenerationController : ControllerBase
             DocumentId = Guid.NewGuid(),
             StudentProfileId = studentProfileId,
             Title = safeTitle,
+            DocumentType = null,
             FileName = originalFileName,
             ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
             FilePath = fullPath,
@@ -391,6 +414,101 @@ public class CertificateGenerationController : ControllerBase
         await SaveAdditionalCertificatesAsync(index, ct);
 
         return Ok(new { message = "Certificate uploaded successfully." });
+    }
+
+    [HttpGet("templates/{templateType}/default")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public IActionResult DownloadDefaultAdditionalTemplate(string templateType)
+    {
+        var normalizedType = NormalizeAdditionalDocumentType(templateType);
+        if (normalizedType is null)
+            return BadRequest(new { message = "Unsupported template type. Use completion or reportcard." });
+
+        var bytes = BuildAdditionalTemplateDocument(normalizedType);
+        var fileName = normalizedType == CompletionDocumentType
+            ? "completion-certificate-template.docx"
+            : "report-card-template.docx";
+
+        return File(bytes, DocxContentType, fileName);
+    }
+
+    [HttpPost("templates/{templateType}/upload")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> UploadAdditionalTemplate(string templateType, [FromForm] IFormFile? file, CancellationToken ct)
+    {
+        var normalizedType = NormalizeAdditionalDocumentType(templateType);
+        if (normalizedType is null)
+            return BadRequest(new { message = "Unsupported template type. Use completion or reportcard." });
+
+        var validationError = await ValidateDocxTemplateAsync(file);
+        if (validationError is not null)
+            return BadRequest(new { message = validationError });
+
+        var templateRoot = GetAdditionalTemplateStorageRoot();
+        var templatePath = Path.Combine(templateRoot, $"{normalizedType}.docx");
+
+        await using (var stream = file!.OpenReadStream())
+        await using (var output = new FileStream(templatePath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            await stream.CopyToAsync(output, ct);
+        }
+
+        return Ok(new
+        {
+            message = normalizedType == CompletionDocumentType
+                ? "Completion certificate template uploaded successfully."
+                : "Report card template uploaded successfully."
+        });
+    }
+
+    [HttpPost("students/{studentProfileId:guid}/additional-certificates/generate")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> GenerateAdditionalCertificate(Guid studentProfileId, [FromQuery] string? documentType, CancellationToken ct)
+    {
+        var normalizedType = NormalizeAdditionalDocumentType(documentType);
+        if (normalizedType is null)
+            return BadRequest(new { message = "Unsupported document type. Use completion or reportcard." });
+
+        var student = await GetNonUniversityStudentForAdminManagementAsync(studentProfileId, ct);
+        if (student is null)
+            return Forbid();
+
+        var templateBytes = await GetAdditionalTemplateBytesAsync(normalizedType, ct);
+        var root = GetAdditionalCertificateStorageRoot();
+        var studentFolder = Path.Combine(root, studentProfileId.ToString("N"));
+        Directory.CreateDirectory(studentFolder);
+
+        var fileName = normalizedType == CompletionDocumentType
+            ? $"completion-certificate-{DateTime.UtcNow:yyyyMMddHHmmss}.docx"
+            : $"report-card-{DateTime.UtcNow:yyyyMMddHHmmss}.docx";
+        var fullPath = Path.Combine(studentFolder, fileName);
+
+        await System.IO.File.WriteAllBytesAsync(fullPath, templateBytes, ct);
+
+        var index = await ListAdditionalCertificatesAsync(ct);
+        var currentUser = GetCurrentUserId();
+        index.Add(new AdditionalCertificateIndexEntry
+        {
+            DocumentId = Guid.NewGuid(),
+            StudentProfileId = studentProfileId,
+            Title = normalizedType == CompletionDocumentType ? "Completion Certificate" : "Report Card",
+            DocumentType = normalizedType,
+            FileName = fileName,
+            ContentType = DocxContentType,
+            FilePath = fullPath,
+            UploadedAtUtc = DateTime.UtcNow,
+            UploadedByUserId = currentUser == Guid.Empty ? null : currentUser
+        });
+        await SaveAdditionalCertificatesAsync(index, ct);
+
+        return Ok(new
+        {
+            message = normalizedType == CompletionDocumentType
+                ? "Completion certificate generated successfully."
+                : "Report card generated successfully."
+        });
     }
 
     [HttpGet("documents/custom/{documentId:guid}/download")]
@@ -660,6 +778,103 @@ public class CertificateGenerationController : ControllerBase
     private static string GetAdditionalCertificateIndexPath()
         => Path.Combine(GetAdditionalCertificateStorageRoot(), "index.json");
 
+    private static string GetAdditionalTemplateStorageRoot()
+    {
+        var root = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "Certificate-Templates");
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    private static async Task<byte[]> GetAdditionalTemplateBytesAsync(string normalizedType, CancellationToken ct)
+    {
+        var path = Path.Combine(GetAdditionalTemplateStorageRoot(), $"{normalizedType}.docx");
+        if (System.IO.File.Exists(path))
+            return await System.IO.File.ReadAllBytesAsync(path, ct);
+
+        return BuildAdditionalTemplateDocument(normalizedType);
+    }
+
+    private static string? NormalizeAdditionalDocumentType(string? templateType)
+    {
+        if (string.Equals(templateType, CompletionDocumentType, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "completion-certificate", StringComparison.OrdinalIgnoreCase))
+            return CompletionDocumentType;
+
+        if (string.Equals(templateType, ReportCardDocumentType, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report-card", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(templateType, "report_card", StringComparison.OrdinalIgnoreCase))
+            return ReportCardDocumentType;
+
+        return null;
+    }
+
+    private static async Task<string?> ValidateDocxTemplateAsync(IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+            return "No file uploaded.";
+
+        if (file.Length > MaxTemplateSizeBytes)
+            return "File exceeds the maximum allowed size of 5 MB.";
+
+        var ext = Path.GetExtension(file.FileName);
+        if (!string.Equals(ext, ".docx", StringComparison.OrdinalIgnoreCase))
+            return "Template file must be a .docx file.";
+
+        if (!string.Equals(file.ContentType, DocxContentType, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(file.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
+            return "MIME type must be application/vnd.openxmlformats-officedocument.wordprocessingml.document.";
+
+        await using var stream = file.OpenReadStream();
+        var header = new byte[4];
+        var read = await stream.ReadAsync(header.AsMemory(0, header.Length));
+        if (read < 4 || header[0] != 0x50 || header[1] != 0x4B || header[2] != 0x03 || header[3] != 0x04)
+            return "File content does not match the expected .docx format.";
+
+        return null;
+    }
+
+    private static byte[] BuildAdditionalTemplateDocument(string normalizedType)
+    {
+        var lines = normalizedType == CompletionDocumentType
+            ? new[]
+            {
+                "Completion Certificate",
+                string.Empty,
+                "This certifies that {{StudentName}} ({{RegistrationNumber}})",
+                "has successfully completed {{ProgramName}}.",
+                "Department: {{DepartmentName}}",
+                "Issued On: {{IssueDate}}"
+            }
+            : new[]
+            {
+                "Report Card",
+                string.Empty,
+                "Student: {{StudentName}}",
+                "Registration #: {{RegistrationNumber}}",
+                "Program/Class: {{ProgramName}}",
+                "Department: {{DepartmentName}}",
+                "Issued On: {{IssueDate}}"
+            };
+
+        using var stream = new MemoryStream();
+        using (var wordDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, true))
+        {
+            var mainPart = wordDocument.AddMainDocumentPart();
+            mainPart.Document = new Document();
+            var body = new Body();
+
+            foreach (var line in lines)
+            {
+                body.Append(new Paragraph(new Run(new Text(line) { Space = SpaceProcessingModeValues.Preserve })));
+            }
+
+            mainPart.Document.Append(body);
+            mainPart.Document.Save();
+        }
+
+        return stream.ToArray();
+    }
+
     private static async Task<List<AdditionalCertificateIndexEntry>> ListAdditionalCertificatesAsync(CancellationToken ct)
     {
         var path = GetAdditionalCertificateIndexPath();
@@ -701,6 +916,7 @@ public class CertificateGenerationController : ControllerBase
         public Guid DocumentId { get; set; }
         public Guid StudentProfileId { get; set; }
         public string Title { get; set; } = string.Empty;
+        public string? DocumentType { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string ContentType { get; set; } = "application/octet-stream";
         public string FilePath { get; set; } = string.Empty;

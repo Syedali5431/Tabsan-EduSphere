@@ -151,7 +151,7 @@
 		{
 			"label": "Stage repo updates",
 			"type": "shell",
-			"command": "git add Scripts/01-Schema-Current.sql Scripts/02-Seed-Core.sql Scripts/03-FullDummyData.sql Scripts/04-Maintenance-Indexes-And-Views.sql Scripts/05-PostDeployment-Checks-Clean.sql Scripts/05-PostDeployment-Checks.sql src/Tabsan.EduSphere.API/Controllers/CourseMaterialController.cs src/Tabsan.EduSphere.Web/Services/EduApiClient.cs src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml ; git status --short"
+			"command": "git add -A ; git status --short"
 		},
 		{
 			"label": "Commit repository updates",

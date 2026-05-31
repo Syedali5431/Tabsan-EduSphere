@@ -1,3 +1,17 @@
+## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 (Schema Posture)
+
+- Implementation Summary:
+	- advanced Scripts/03-FullDummyData.sql dataset marker to FullDummyData-v39,
+	- added additive deterministic school and college Generate Certificates demo rows in existing tables only:
+		- users (4 rows),
+		- student_profiles (4 rows),
+		- enrollments (4 rows),
+	- used existing academic-program, department, and course-offering keys already present in the schema for the non-university branches.
+- Validation Summary:
+	- SQL updates remain additive and idempotent on deterministic IDs,
+	- schema impact: no schema mutation,
+	- EF migration impact: none.
+
 ## 2026-05-31 Update - Generate Certificates Access Consistency and Course Materials Demo Seed v38 (Schema Posture)
 
 - Implementation Summary:

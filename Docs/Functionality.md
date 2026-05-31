@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Runtime Validation
+
+### Implementation sync
+- Portal certificate flow now covers both university and non-university document paths without changing existing navigation shape.
+- Additional certificate generation, upload, and default-template download support is now documented alongside the existing degree/transcript flow.
+- Scripts/03-FullDummyData.sql advanced to FullDummyData-v39 and adds deterministic school/college demo rows for Generate Certificates testing:
+	- college demo registrations DEMO-CERT-COL-901 and DEMO-CERT-COL-902
+	- school demo registrations DEMO-CERT-SCH-911 and DEMO-CERT-SCH-912
+- Scripts/05-PostDeployment-Checks.sql now mirrors the v39 marker and validates the additional demo cohort.
+
+### Validation sync
+- Runtime validation confirmed the Generate Certificates page loads for authenticated users and the seeded rows appear in the scoped student lists.
+- Filter validation confirmed tenant, campus, department, course/class, and semester narrowing still returns deterministic rows for both institution branches.
+
 ## 2026-05-31 Update - Generate Certificates Guard/Sidebar Synchronization and Course Materials Demo Seed v38
 
 ### Implementation sync
