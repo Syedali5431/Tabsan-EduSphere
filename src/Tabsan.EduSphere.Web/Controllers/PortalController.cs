@@ -319,7 +319,35 @@ public class PortalController : Controller
             };
 
     private static string ResolvePeriodFilterLabel(int? institutionType)
-        => IsUniversityInstitutionType(institutionType) ? "Class" : "Semester";
+        => IsUniversityInstitutionType(institutionType) ? "Semester" : "Class";
+
+    private static string ResolvePeriodFilterLabel(
+        IReadOnlyCollection<CertificateInstitutionOption>? institutionOptions,
+        int? selectedInstitutionType)
+    {
+        var options = institutionOptions ?? Array.Empty<CertificateInstitutionOption>();
+        var hasUniversity = options.Any(x => x.Value == 0);
+        var hasSchoolOrCollege = options.Any(x => x.Value is 1 or 2);
+
+        if (hasUniversity && hasSchoolOrCollege)
+            return "Semester/Class";
+
+        if (hasUniversity)
+            return "Semester";
+
+        if (hasSchoolOrCollege)
+            return "Class";
+
+        return IsUniversityInstitutionType(selectedInstitutionType) ? "Semester" : "Class";
+    }
+
+    private static string ResolvePeriodFilterPlaceholder(string periodFilterLabel)
+        => periodFilterLabel switch
+        {
+            "Class" => "All Classes",
+            "Semester/Class" => "All Semesters/Classes",
+            _ => "All Semesters"
+        };
 
     private static List<CertificateInstitutionOption> BuildLicensedInstitutionOptions(PortalCapabilityMatrixApiModel? matrix)
     {
@@ -6202,7 +6230,8 @@ public class PortalController : Controller
             SelectedCampusId = campusId,
             SelectedDepartmentId = departmentId,
             SelectedCourseId = courseId,
-            SelectedSemesterId = semesterId
+            SelectedSemesterId = semesterId,
+            AvailableInstitutionTypes = BuildLicensedInstitutionOptions(null)
         };
 
         if (!model.IsConnected)
@@ -6212,6 +6241,13 @@ public class PortalController : Controller
 
         try
         {
+            var capabilityMatrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(capabilityMatrix);
+            model.SelectedInstitutionType = ResolveLicensedInstitutionSelection(
+                model.SelectedInstitutionType,
+                identity,
+                model.AvailableInstitutionTypes);
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -6234,7 +6270,13 @@ public class PortalController : Controller
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
             {
                 model.SelectedInstitutionType = identity.InstitutionType.Value;
+                model.AvailableInstitutionTypes = model.AvailableInstitutionTypes
+                    .Where(x => x.Value == identity.InstitutionType.Value)
+                    .ToList();
             }
+
+            model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.AvailableInstitutionTypes, model.SelectedInstitutionType);
+            model.PeriodFilterPlaceholder = ResolvePeriodFilterPlaceholder(model.PeriodFilterLabel);
 
             if (model.SelectedInstitutionType.HasValue)
             {
@@ -7151,7 +7193,8 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportAttendance(
         Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Attendance Summary Report";
         var model = new ReportAttendancePageModel
         {
@@ -7160,7 +7203,10 @@ public class PortalController : Controller
             DepartmentId = departmentId,
             OfferingId   = offeringId,
             StudentId    = studentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7191,7 +7237,8 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportResults(
         Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Result Summary Report";
         var model = new ReportResultsPageModel
         {
@@ -7200,7 +7247,10 @@ public class PortalController : Controller
             DepartmentId = departmentId,
             OfferingId   = offeringId,
             StudentId    = studentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7231,7 +7281,8 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportAssignments(
         Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Assignment Summary Report";
         var model = new ReportAssignmentsPageModel
         {
@@ -7240,7 +7291,10 @@ public class PortalController : Controller
             DepartmentId = departmentId,
             OfferingId   = offeringId,
             StudentId    = studentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7271,7 +7325,8 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportQuizzes(
         Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Quiz Summary Report";
         var model = new ReportQuizzesPageModel
         {
@@ -7280,7 +7335,10 @@ public class PortalController : Controller
             DepartmentId = departmentId,
             OfferingId   = offeringId,
             StudentId    = studentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7310,14 +7368,16 @@ public class PortalController : Controller
     [HttpGet]
     public async Task<IActionResult> ReportGpa(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "GPA & CGPA Report";
         var model = new ReportGpaPageModel
         {
             IsConnected  = _api.IsConnected(),
             DepartmentId = departmentId,
             ProgramId    = programId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7338,14 +7398,18 @@ public class PortalController : Controller
     [HttpGet]
     public async Task<IActionResult> ReportEnrollment(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Enrollment Summary Report";
         var model = new ReportEnrollmentPageModel
         {
             IsConnected  = _api.IsConnected(),
             SemesterId   = semesterId,
             DepartmentId = departmentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7366,14 +7430,18 @@ public class PortalController : Controller
     [HttpGet]
     public async Task<IActionResult> ReportSemesterResults(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Semester Results Report";
         var model = new ReportSemesterResultsPageModel
         {
             IsConnected  = _api.IsConnected(),
             SemesterId   = semesterId,
             DepartmentId = departmentId,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7623,7 +7691,8 @@ public class PortalController : Controller
         decimal threshold = 75m, Guid? departmentId = null, Guid? courseOfferingId = null, int? institutionType = null, CancellationToken ct = default)
     {
         threshold = 75m;
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Low Attendance Warning";
         var model = new ReportLowAttendancePageModel
         {
@@ -7631,7 +7700,8 @@ public class PortalController : Controller
             Threshold        = threshold,
             DepartmentId     = departmentId,
             CourseOfferingId = courseOfferingId,
-            InstitutionType  = selectedInstitutionType
+            InstitutionType  = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7659,14 +7729,16 @@ public class PortalController : Controller
     public async Task<IActionResult> ReportFypStatus(
         Guid? departmentId = null, string? status = null, int? institutionType = null, CancellationToken ct = default)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "FYP Status Report";
         var model = new ReportFypStatusPageModel
         {
             IsConnected    = _api.IsConnected(),
             DepartmentId   = departmentId,
             SelectedStatus = status,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes
         };
         if (!model.IsConnected) return View(model);
         try
@@ -7694,7 +7766,8 @@ public class PortalController : Controller
         int? institutionType,
         CancellationToken ct)
     {
-        var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
+        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
         ViewData["Title"] = "Payment Summary Report";
         var model = new ReportPaymentsPageModel
         {
@@ -7705,7 +7778,10 @@ public class PortalController : Controller
             DepartmentId = departmentId,
             CourseId = courseId,
             LevelNumber = levelNumber,
-            InstitutionType = selectedInstitutionType
+            InstitutionType = selectedInstitutionType,
+            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes,
+            PeriodFilterLabel = institutionFilter.PeriodFilterLabel,
+            PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
 
@@ -7804,6 +7880,47 @@ public class PortalController : Controller
             return identity.InstitutionType.Value;
 
         return requestedInstitutionType;
+    }
+
+    private async Task<(List<CertificateInstitutionOption> AvailableInstitutionTypes, int? SelectedInstitutionType, string PeriodFilterLabel, string PeriodFilterPlaceholder)> BuildReportInstitutionFilterAsync(int? requestedInstitutionType, CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+
+        List<CertificateInstitutionOption> options;
+        try
+        {
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            options = BuildLicensedInstitutionOptions(matrix);
+        }
+        catch
+        {
+            options = BuildLicensedInstitutionOptions(null);
+        }
+
+        var selected = ResolveLicensedInstitutionSelection(requestedInstitutionType, identity, options);
+
+        if (identity is { IsSuperAdmin: false, InstitutionType: not null })
+        {
+            options = options.Where(x => x.Value == identity.InstitutionType.Value).ToList();
+            if (options.Count == 0)
+            {
+                options.Add(new CertificateInstitutionOption
+                {
+                    Value = identity.InstitutionType.Value,
+                    Label = identity.InstitutionType.Value switch
+                    {
+                        1 => "School",
+                        2 => "College",
+                        _ => "University"
+                    }
+                });
+            }
+
+            selected = identity.InstitutionType.Value;
+        }
+
+        var periodLabel = ResolvePeriodFilterLabel(options, selected);
+        return (options, selected, periodLabel, ResolvePeriodFilterPlaceholder(periodLabel));
     }
 
     private static List<LookupItem> FilterDepartmentsByInstitution(List<LookupItem> departments, int? institutionType)

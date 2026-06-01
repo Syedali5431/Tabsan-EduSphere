@@ -49,19 +49,20 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small mb-1">Institution</label>
+                        <label class="form-label small mb-1">Institute</label>
                         <select name="institutionType" class="form-select form-select-sm">
-                            @if (!Model.InstitutionType.HasValue)
+                            @if (!Model.InstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="" selected>All</option>
+                                <option value="" selected>All Institutes</option>
                             }
-                            else
+                            else if (Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="">All</option>
+                                <option value="">All Institutes</option>
                             }
-                            <option value="0" selected="@(Model.InstitutionType == 0)">University</option>
-                            <option value="1" selected="@(Model.InstitutionType == 1)">School</option>
-                            <option value="2" selected="@(Model.InstitutionType == 2)">College</option>
+                            @foreach (var institution in Model.AvailableInstitutionTypes)
+                            {
+                                <option value="@institution.Value" selected="@(Model.InstitutionType == institution.Value)">@institution.Label</option>
+                            }
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -75,9 +76,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small mb-1">Semester</label>
+                        <label class="form-label small mb-1">@Model.PeriodFilterLabel</label>
                         <select name="semesterId" class="form-select form-select-sm">
-                            <option value="">All Semesters</option>
+                            <option value="">@Model.PeriodFilterPlaceholder</option>
                             @foreach (var semester in Model.Semesters)
                             {
                                 <option value="@semester.Id" selected="@(Model.SemesterId == semester.Id)">@semester.Name</option>

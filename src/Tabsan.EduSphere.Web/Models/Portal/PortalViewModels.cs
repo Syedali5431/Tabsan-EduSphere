@@ -1080,9 +1080,12 @@ public class AnalyticsPageModel
     public Guid? SelectedSemesterId { get; set; }
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Courses { get; set; } = new();
     public List<LookupItem> Semesters { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<AnalyticsSummaryCard>   Cards       { get; set; } = new();
     public DepartmentPerformanceReport? Performance { get; set; }
     public DepartmentAttendanceReport?  Attendance  { get; set; }
@@ -1317,6 +1320,9 @@ public class ReportAttendancePageModel
     public Guid?  OfferingId   { get; set; }
     public Guid?  StudentId    { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem>          Semesters   { get; set; } = new();
     public List<LookupItem>          Departments { get; set; } = new();
     public List<CourseOfferingItem>  Offerings   { get; set; } = new();
@@ -1352,6 +1358,9 @@ public class ReportResultsPageModel
     public Guid?  OfferingId   { get; set; }
     public Guid?  StudentId    { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<LookupItem>         Departments { get; set; } = new();
     public List<CourseOfferingItem> Offerings   { get; set; } = new();
@@ -1387,6 +1396,9 @@ public class ReportAssignmentsPageModel
     public Guid?  OfferingId   { get; set; }
     public Guid?  StudentId    { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<LookupItem>         Departments { get; set; } = new();
     public List<CourseOfferingItem> Offerings   { get; set; } = new();
@@ -1422,6 +1434,9 @@ public class ReportQuizzesPageModel
     public Guid?  OfferingId   { get; set; }
     public Guid?  StudentId    { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<LookupItem>         Departments { get; set; } = new();
     public List<CourseOfferingItem> Offerings   { get; set; } = new();
@@ -1454,6 +1469,7 @@ public class ReportGpaPageModel
     public Guid?  DepartmentId { get; set; }
     public Guid?  ProgramId    { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public List<LookupItem>   Departments { get; set; } = new();
     public List<LookupItem>   Programs    { get; set; } = new();
     public GpaReportWebModel? Report      { get; set; }
@@ -1483,6 +1499,9 @@ public class ReportEnrollmentPageModel
     public Guid?  SemesterId   { get; set; }
     public Guid?  DepartmentId { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem>          Semesters   { get; set; } = new();
     public List<LookupItem>          Departments { get; set; } = new();
     public EnrollmentSummaryWebModel? Report      { get; set; }
@@ -1523,6 +1542,9 @@ public class ReportSemesterResultsPageModel
     public Guid?  SemesterId   { get; set; }
     public Guid?  DepartmentId { get; set; }
     public int?   InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem> Semesters   { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();
     public SemesterResultsWebModel? Report { get; set; }
@@ -1591,6 +1613,7 @@ public class ReportLowAttendancePageModel
     public Guid?            DepartmentId     { get; set; }
     public Guid?            CourseOfferingId { get; set; }
     public int?             InstitutionType  { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public LowAttendanceWebModel? Report     { get; set; }
 }
 
@@ -1651,6 +1674,9 @@ public class ReportPaymentsPageModel
     public Guid?            CourseId         { get; set; }
     public int?             LevelNumber      { get; set; }
     public int?             InstitutionType  { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public List<LookupItem> Semesters        { get; set; } = new();
     public List<LookupItem> Departments      { get; set; } = new();
     public List<LookupItem> Courses          { get; set; } = new();
@@ -1665,6 +1691,7 @@ public class ReportFypStatusPageModel
     public string?          SelectedStatus { get; set; }
     public Guid?            DepartmentId   { get; set; }
     public int?             InstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public FypStatusWebModel? Report       { get; set; }
 }
 

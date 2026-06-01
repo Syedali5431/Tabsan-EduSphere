@@ -28,50 +28,30 @@
             <div class="card-body p-3">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label small mb-1">Semester <span class="text-danger">*</span></label>
+                        <label class="form-label small mb-1">@Model.PeriodFilterLabel <span class="text-danger">*</span></label>
                         <select name="semesterId" class="form-select form-select-sm" required>
-                            <option value="">Select semester…</option>
+                            <option value="">Select @Model.PeriodFilterLabel.ToLowerInvariant()...</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id" selected="@(Model.SemesterId == s.Id)">@s.Name</option>
                             }
-                    <div class="col-md-2">
-                        <label class="form-label small mb-1">Institution</label>
-                        <select name="institutionType" class="form-select form-select-sm">
-                            @if (!Model.InstitutionType.HasValue)
-                            {
-                                <option value="" selected>All</option>
-                            }
-                            else
-                            {
-                                <option value="">All</option>
-                            }
-                            @if (Model.InstitutionType == 0)
-                            {
-                                <option value="0" selected>University</option>
-                            }
-                            else
-                            {
-                                <option value="0">University</option>
-                            }
-                            @if (Model.InstitutionType == 1)
-                            {
-                                <option value="1" selected>School</option>
-                            }
-                            else
-                            {
-                                <option value="1">School</option>
-                            }
-                            @if (Model.InstitutionType == 2)
-                            {
-                                <option value="2" selected>College</option>
-                            }
-                            else
-                            {
-                                <option value="2">College</option>
-                            }
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-1">Institute</label>
+                        <select name="institutionType" class="form-select form-select-sm">
+                            @if (!Model.InstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
+                            {
+                                <option value="" selected>All Institutes</option>
+                            }
+                            else if (Model.AvailableInstitutionTypes.Count > 1)
+                            {
+                                <option value="">All Institutes</option>
+                            }
+                            @foreach (var institution in Model.AvailableInstitutionTypes)
+                            {
+                                <option value="@institution.Value" selected="@(Model.InstitutionType == institution.Value)">@institution.Label</option>
+                            }
                         </select>
                     </div>
                     <div class="col-md-4">

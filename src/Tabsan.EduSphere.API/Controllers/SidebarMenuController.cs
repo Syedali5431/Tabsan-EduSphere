@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Application.Modules;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -19,13 +21,16 @@ public class SidebarMenuController : ControllerBase
     private readonly IModuleEntitlementResolver _moduleEntitlement;
     private readonly IInstitutionPolicyService _institutionPolicy;
 
-    private static readonly HashSet<string> UniversityOnlyDegreeAuditMenuKeys =
+    private static readonly HashSet<string> UniversityOnlyMenuKeys =
         new(StringComparer.OrdinalIgnoreCase)
         {
             "degree_audit",
             "graduation_eligibility",
             "degree_rules",
-            "generate_certificates"
+            "generate_certificates",
+            "graduation_apply",
+            "graduation_applications",
+            "fyp"
         };
 
     private static readonly IReadOnlyDictionary<string, string> MenuModuleKeyMap =
@@ -268,13 +273,31 @@ public class SidebarMenuController : ControllerBase
 
         foreach (var menu in menus.OrderBy(m => m.DisplayOrder))
         {
-            if (!policy.IncludeUniversity && UniversityOnlyDegreeAuditMenuKeys.Contains(menu.Key))
+            var children = ApplyInstitutionPolicyFilters(menu.SubMenus, policy);
+            var isMenuAllowed = IsAllowedByInstitutionPolicy(menu.Key, policy);
+            if (!isMenuAllowed && children.Count == 0)
                 continue;
 
-            var children = ApplyInstitutionPolicyFilters(menu.SubMenus, policy);
             result.Add(menu with { SubMenus = children.ToList() });
         }
 
         return result;
+    }
+
+    private static bool IsAllowedByInstitutionPolicy(string menuKey, InstitutionPolicySnapshot policy)
+    {
+        if (UniversityOnlyMenuKeys.Contains(menuKey) && !policy.IncludeUniversity)
+            return false;
+
+        if (!MenuModuleKeyMap.TryGetValue(menuKey, out var moduleKey))
+            return true;
+
+        var descriptor = ModuleRegistry.Get(moduleKey);
+        if (descriptor?.AllowedTypes is null || descriptor.AllowedTypes.Length == 0)
+            return true;
+
+        return descriptor.TypeMatches(InstitutionType.University) && policy.IncludeUniversity
+            || descriptor.TypeMatches(InstitutionType.School) && policy.IncludeSchool
+            || descriptor.TypeMatches(InstitutionType.College) && policy.IncludeCollege;
     }
 }

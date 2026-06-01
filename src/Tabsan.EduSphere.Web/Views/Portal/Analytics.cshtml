@@ -55,42 +55,20 @@ else
                 }
 
                 <div class="col-md-3">
-                    <label class="form-label">Institution</label>
+                    <label class="form-label">Institute</label>
                     <select class="form-select" name="institutionType" id="analyticsInstitutionType">
-                        @if (!Model.SelectedInstitutionType.HasValue)
+                        @if (!Model.SelectedInstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
                         {
-                            <option value="" selected>All Institutions</option>
+                            <option value="" selected>All Institutes</option>
                         }
-                        else
+                        else if (Model.AvailableInstitutionTypes.Count > 1)
                         {
-                            <option value="">All Institutions</option>
-                        }
-
-                        @if (Model.SelectedInstitutionType == 0)
-                        {
-                            <option value="0" selected>University</option>
-                        }
-                        else
-                        {
-                            <option value="0">University</option>
+                            <option value="">All Institutes</option>
                         }
 
-                        @if (Model.SelectedInstitutionType == 1)
+                        @foreach (var institution in Model.AvailableInstitutionTypes)
                         {
-                            <option value="1" selected>School</option>
-                        }
-                        else
-                        {
-                            <option value="1">School</option>
-                        }
-
-                        @if (Model.SelectedInstitutionType == 2)
-                        {
-                            <option value="2" selected>College</option>
-                        }
-                        else
-                        {
-                            <option value="2">College</option>
+                            <option value="@institution.Value" selected="@(Model.SelectedInstitutionType == institution.Value)">@institution.Label</option>
                         }
                     </select>
                 </div>
@@ -131,9 +109,9 @@ else
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Semester</label>
+                    <label class="form-label">@Model.PeriodFilterLabel</label>
                     <select class="form-select" name="semesterId" id="analyticsSemesterId">
-                        <option value="">All Semesters</option>
+                        <option value="">@Model.PeriodFilterPlaceholder</option>
                         @foreach (var s in Model.Semesters)
                         {
                             if (Model.SelectedSemesterId == s.Id)
