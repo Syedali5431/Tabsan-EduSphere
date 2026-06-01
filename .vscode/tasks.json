@@ -233,6 +233,26 @@
 			"label": "Verify Degree Rules access matrix (local auto-bootstrap)",
 			"type": "shell",
 			"command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"tools/ci/verify-degree-rules-access-local-bootstrap.ps1\""
+		},
+		{
+			"label": "Stage portal guard fail-closed fix",
+			"type": "shell",
+			"command": "git add src/Tabsan.EduSphere.Web/Controllers/PortalController.cs ; git status --short"
+		},
+		{
+			"label": "Commit portal guard fail-closed fix",
+			"type": "shell",
+			"command": "git commit -m \"Fail closed on portal sidebar guard API connectivity errors\""
+		},
+		{
+			"label": "Commit portal guard fail-closed fix (quoted)",
+			"type": "shell",
+			"command": "git commit -m 'Fail closed on portal sidebar guard API connectivity errors'"
+		},
+		{
+			"label": "Push portal guard fix",
+			"type": "shell",
+			"command": "git push origin main"
 		}
 	],
 	"inputs": [

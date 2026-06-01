@@ -30,8 +30,120 @@
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <h6 class="card-title mb-3">Select Course</h6>
+        <h6 class="card-title mb-3">Select Scope</h6>
         <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Institute</label>
+                <select name="institutionType" class="form-select" onchange="this.form.submit()">
+                    @if (Model.SelectedInstitutionType == 1)
+                    {
+                        <option value="1" selected>School</option>
+                    }
+                    else
+                    {
+                        <option value="1">School</option>
+                    }
+
+                    @if (Model.SelectedInstitutionType == 2)
+                    {
+                        <option value="2" selected>College</option>
+                    }
+                    else
+                    {
+                        <option value="2">College</option>
+                    }
+
+                    @if (Model.SelectedInstitutionType == 0)
+                    {
+                        <option value="0" selected>University</option>
+                    }
+                    else
+                    {
+                        <option value="0">University</option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.CanSelectTenantCampus)
+            {
+                <div class="col-md-3">
+                    <label class="form-label">Tenant</label>
+                    <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select tenant --</option>
+                        @foreach (var t in Model.Tenants)
+                        {
+                            if (Model.SelectedTenantId == t.Id)
+                            {
+                                <option value="@t.Id" selected>@t.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Campus</label>
+                    <select name="campusId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select campus --</option>
+                        @foreach (var c in Model.Campuses)
+                        {
+                            if (Model.SelectedCampusId == c.Id)
+                            {
+                                <option value="@c.Id" selected>@c.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Id">@c.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+            else
+            {
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+            }
+
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Select department --</option>
+                    @foreach (var d in Model.Departments)
+                    {
+                        if (Model.SelectedDepartmentId == d.Id)
+                        {
+                            <option value="@d.Id" selected>@d.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@d.Id">@d.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">@(Model.IsUniversitySelected ? "Semester" : "Class")</label>
+                <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Select @(Model.IsUniversitySelected ? "semester" : "class") --</option>
+                    @foreach (var s in Model.Semesters)
+                    {
+                        if (Model.SelectedSemesterId == s.Id)
+                        {
+                            <option value="@s.Id" selected>@s.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
             <div class="col-md-5">
                 <label class="form-label">Course</label>
                 <select name="courseId" class="form-select" onchange="this.form.submit()">
@@ -49,9 +161,41 @@
                     }
                 </select>
             </div>
+
+            @if (Model.IsUniversitySelected)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">Subject</label>
+                    <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select subject --</option>
+                        @foreach (var so in Model.SubjectOfferings)
+                        {
+                            if (Model.SelectedSubjectOfferingId == so.Id)
+                            {
+                                <option value="@so.Id" selected>@so.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@so.Id">@so.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="col-md-2">
+                <a class="btn btn-outline-secondary w-100" href="@Url.Action("GradingConfig", "Portal")">Clear</a>
+            </div>
         </form>
     </div>
 </div>
+
+@if (!Model.IsUniversitySelected)
+{
+    <div class="alert alert-info">
+        For school and college, saving grading applies the same configuration to all subjects in the selected scope.
+    </div>
+}
 
 @if (Model.CanManageInstitutionSections)
 {
@@ -72,7 +216,13 @@
                             <form asp-action="SaveInstitutionGradingProfile" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="institutionType" value="@(section.InstitutionType)" />
+                                <input type="hidden" name="selectedInstitutionType" value="@Model.SelectedInstitutionType" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                 <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
 
                                 <div class="mb-2">
                                     <label class="form-label">Pass Threshold</label>
@@ -130,6 +280,12 @@
             <form asp-action="SaveGradingConfig" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">

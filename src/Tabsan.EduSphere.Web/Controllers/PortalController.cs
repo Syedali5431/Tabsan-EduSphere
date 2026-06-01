@@ -2633,7 +2633,15 @@ public class PortalController : Controller
     }
 
     // Final-Touches Phase 19 Stage 19.4 — GradingConfig page (GET)
-    public async Task<IActionResult> GradingConfig(Guid? courseId, CancellationToken ct)
+    public async Task<IActionResult> GradingConfig(
+        int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? courseId,
+        Guid? semesterId,
+        Guid? subjectOfferingId,
+        CancellationToken ct)
     {
         var model = new GradingConfigPageModel { IsConnected = _api.IsConnected() };
         if (model.IsConnected)
@@ -2642,6 +2650,130 @@ public class PortalController : Controller
             {
                 var session = _api.GetSessionIdentity();
                 model.CanManageInstitutionSections = session?.IsSuperAdmin == true;
+                model.CanSelectTenantCampus = session?.IsSuperAdmin == true;
+                model.SelectedInstitutionType = ResolveReportInstitutionType(institutionType) ?? 0;
+                model.IsUniversitySelected = IsUniversityGradingInstitutionType(model.SelectedInstitutionType);
+                model.SelectedTenantId = tenantId;
+                model.SelectedCampusId = campusId;
+                model.SelectedDepartmentId = departmentId;
+                model.SelectedCourseId = courseId;
+                model.SelectedSemesterId = semesterId;
+                model.SelectedSubjectOfferingId = subjectOfferingId;
+
+                if (model.CanSelectTenantCampus)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    if (model.SelectedTenantId.HasValue)
+                        model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+                }
+                else
+                {
+                    model.SelectedTenantId ??= session?.TenantId;
+                    model.SelectedCampusId ??= session?.CampusId;
+                }
+
+                if (model.CanSelectTenantCampus && model.SelectedTenantId.HasValue && !model.SelectedCampusId.HasValue)
+                {
+                    model.ErrorMessage ??= "Select a campus to continue loading dependent filters.";
+                }
+                else
+                {
+                    var departmentDetails = await _api.GetDepartmentDetailsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+                    model.Departments = departmentDetails
+                        .Where(d => d.InstitutionType == model.SelectedInstitutionType)
+                        .Select(d => new LookupItem
+                        {
+                            Id = d.Id,
+                            Name = d.Name,
+                            InstitutionType = d.InstitutionType
+                        })
+                        .ToList();
+
+                    if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
+                        model.SelectedDepartmentId = null;
+
+                    var offerings = await _api.GetCourseOfferingsAsync(
+                        model.SelectedDepartmentId,
+                        model.SelectedTenantId,
+                        model.SelectedCampusId,
+                        model.SelectedInstitutionType,
+                        ct);
+
+                    var allSemesters = await _api.GetSemestersAsync(ct);
+                    var offeringSemesterIds = offerings
+                        .Select(o => o.SemesterId)
+                        .Distinct()
+                        .ToHashSet();
+
+                    model.Semesters = allSemesters
+                        .Where(s => !offeringSemesterIds.Any() || offeringSemesterIds.Contains(s.Id))
+                        .ToList();
+
+                    if (model.SelectedSemesterId.HasValue && model.Semesters.All(s => s.Id != model.SelectedSemesterId.Value))
+                        model.SelectedSemesterId = null;
+
+                    var courses = await _api.GetCourseDetailsAsync(
+                        model.SelectedDepartmentId,
+                        model.SelectedTenantId,
+                        model.SelectedCampusId,
+                        model.SelectedInstitutionType,
+                        ct);
+
+                    if (model.SelectedSemesterId.HasValue)
+                    {
+                        var semesterCourseIds = offerings
+                            .Where(o => o.SemesterId == model.SelectedSemesterId.Value)
+                            .Select(o => o.CourseId)
+                            .Distinct()
+                            .ToHashSet();
+
+                        courses = courses
+                            .Where(c => semesterCourseIds.Contains(c.Id))
+                            .ToList();
+                    }
+
+                    model.Courses = courses;
+                    if (model.SelectedCourseId.HasValue && model.Courses.All(c => c.Id != model.SelectedCourseId.Value))
+                        model.SelectedCourseId = null;
+
+                    if (model.IsUniversitySelected)
+                    {
+                        var subjectOfferings = offerings.AsEnumerable();
+
+                        if (model.SelectedSemesterId.HasValue)
+                            subjectOfferings = subjectOfferings.Where(o => o.SemesterId == model.SelectedSemesterId.Value);
+
+                        if (model.SelectedCourseId.HasValue)
+                            subjectOfferings = subjectOfferings.Where(o => o.CourseId == model.SelectedCourseId.Value);
+
+                        model.SubjectOfferings = subjectOfferings
+                            .Select(o => new LookupItem
+                            {
+                                Id = o.Id,
+                                Name = string.IsNullOrWhiteSpace(o.FacultyName)
+                                    ? $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                                    : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName}) [{o.FacultyName}]"
+                            })
+                            .ToList();
+
+                        if (model.SelectedSubjectOfferingId.HasValue && model.SubjectOfferings.All(s => s.Id != model.SelectedSubjectOfferingId.Value))
+                            model.SelectedSubjectOfferingId = null;
+
+                        if (model.SelectedSubjectOfferingId.HasValue)
+                        {
+                            var selectedOffering = offerings.FirstOrDefault(o => o.Id == model.SelectedSubjectOfferingId.Value);
+                            if (selectedOffering is not null)
+                            {
+                                model.SelectedCourseId = selectedOffering.CourseId;
+                                model.SelectedSemesterId = selectedOffering.SemesterId;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        model.SelectedSubjectOfferingId = null;
+                    }
+                }
 
                 if (model.CanManageInstitutionSections)
                 {
@@ -2649,12 +2781,9 @@ public class PortalController : Controller
                     model.InstitutionSections = BuildInstitutionGradingSections(profiles);
                 }
 
-                var courses = await _api.GetCourseDetailsAsync(null, null, null, null, ct);
-                model.Courses = courses;
-                model.SelectedCourseId = courseId;
-                if (courseId.HasValue)
+                if (model.SelectedCourseId.HasValue)
                 {
-                    var config = await _api.GetCourseGradingConfigAsync(courseId.Value, ct);
+                    var config = await _api.GetCourseGradingConfigAsync(model.SelectedCourseId.Value, ct);
                     if (config != null)
                     {
                         model.PassThreshold = config.PassThreshold;
@@ -2679,17 +2808,23 @@ public class PortalController : Controller
         decimal passThreshold,
         string? gradeRangesJson,
         bool isActive,
+        int? selectedInstitutionType,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
         Guid? courseId,
+        Guid? semesterId,
+        Guid? subjectOfferingId,
         CancellationToken ct)
     {
         if (!_api.IsConnected())
-            return RedirectToAction(nameof(GradingConfig), new { courseId });
+            return RedirectToAction(nameof(GradingConfig), new { institutionType = selectedInstitutionType, tenantId, campusId, departmentId, courseId, semesterId, subjectOfferingId });
 
         var session = _api.GetSessionIdentity();
         if (session?.IsSuperAdmin != true)
         {
             TempData["PortalMessage"] = "Only SuperAdmin can update institution grading sections.";
-            return RedirectToAction(nameof(GradingConfig), new { courseId });
+            return RedirectToAction(nameof(GradingConfig), new { institutionType = selectedInstitutionType, tenantId, campusId, departmentId, courseId, semesterId, subjectOfferingId });
         }
 
         try
@@ -2702,24 +2837,74 @@ public class PortalController : Controller
             TempData["PortalMessage"] = $"Error: {ex.Message}";
         }
 
-        return RedirectToAction(nameof(GradingConfig), new { courseId });
+        return RedirectToAction(nameof(GradingConfig), new { institutionType = selectedInstitutionType, tenantId, campusId, departmentId, courseId, semesterId, subjectOfferingId });
     }
 
     // Final-Touches Phase 19 Stage 19.4 — GradingConfig save (POST)
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveGradingConfig(Guid courseId, decimal passThreshold, string gradingType, string? gradeRangesJson, CancellationToken ct)
+    public async Task<IActionResult> SaveGradingConfig(
+        Guid courseId,
+        decimal passThreshold,
+        string gradingType,
+        string? gradeRangesJson,
+        int? institutionType,
+        Guid? tenantId,
+        Guid? campusId,
+        Guid? departmentId,
+        Guid? semesterId,
+        Guid? subjectOfferingId,
+        CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.SaveCourseGradingConfigAsync(courseId, passThreshold, gradingType, gradeRangesJson, ct);
-                TempData["PortalMessage"] = "Grading configuration saved.";
+                var selectedInstitutionType = ResolveReportInstitutionType(institutionType);
+
+                if (IsUniversityGradingInstitutionType(selectedInstitutionType) || !departmentId.HasValue)
+                {
+                    await _api.SaveCourseGradingConfigAsync(courseId, passThreshold, gradingType, gradeRangesJson, ct);
+                    TempData["PortalMessage"] = "Grading configuration saved.";
+                }
+                else
+                {
+                    var targetCourses = await _api.GetCourseDetailsAsync(departmentId, tenantId, campusId, selectedInstitutionType, ct);
+
+                    if (semesterId.HasValue)
+                    {
+                        var offerings = await _api.GetCourseOfferingsAsync(departmentId, tenantId, campusId, selectedInstitutionType, ct);
+                        var semesterCourseIds = offerings
+                            .Where(o => o.SemesterId == semesterId.Value)
+                            .Select(o => o.CourseId)
+                            .Distinct()
+                            .ToHashSet();
+
+                        targetCourses = targetCourses
+                            .Where(c => semesterCourseIds.Contains(c.Id))
+                            .ToList();
+                    }
+
+                    var courseIds = targetCourses
+                        .Select(c => c.Id)
+                        .Distinct()
+                        .ToList();
+
+                    if (!courseIds.Contains(courseId))
+                        courseIds.Add(courseId);
+
+                    foreach (var targetCourseId in courseIds)
+                        await _api.SaveCourseGradingConfigAsync(targetCourseId, passThreshold, gradingType, gradeRangesJson, ct);
+
+                    TempData["PortalMessage"] = $"Grading configuration applied to {courseIds.Count} subject(s) for the selected school/college scope.";
+                }
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
-        return RedirectToAction(nameof(GradingConfig), new { courseId });
+        return RedirectToAction(nameof(GradingConfig), new { institutionType, tenantId, campusId, departmentId, courseId, semesterId, subjectOfferingId });
     }
+
+    private static bool IsUniversityGradingInstitutionType(int? institutionType)
+        => !institutionType.HasValue || institutionType.Value == 0;
 
     private static List<InstitutionGradingSectionItem> BuildInstitutionGradingSections(
         IReadOnlyCollection<InstitutionGradingProfileApiModel> profiles)

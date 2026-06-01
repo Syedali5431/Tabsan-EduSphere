@@ -793,6 +793,24 @@ WHERE [Username] IN
 )
 	AND [IsDeleted] = 0;
 
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_StudentCountV40' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles]
+WHERE [RegistrationNumber] IN
+(
+	N'DEMO-CERT-COL-FILTER-943',
+	N'DEMO-CERT-SCH-FILTER-944'
+)
+	AND [IsDeleted] = 0;
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_UsernamesV40' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] IN
+(
+	N'demo.cert.filter.col.943',
+	N'demo.cert.filter.sch.944'
+)
+	AND [IsDeleted] = 0;
+
 SELECT 'DummySeed_DegreeAuditEligibilityDemo_StudentCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN

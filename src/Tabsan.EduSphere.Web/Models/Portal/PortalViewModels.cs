@@ -2343,12 +2343,24 @@ public class GradingConfigPageModel
 {
     public List<CourseItem>     Courses       { get; set; } = new();
     public List<LookupItem>     Departments   { get; set; } = new();
+    public List<TenantItem>     Tenants       { get; set; } = new();
+    public List<CampusItem>     Campuses      { get; set; } = new();
+    public List<LookupItem>     Semesters     { get; set; } = new();
+    public List<LookupItem>     SubjectOfferings { get; set; } = new();
+    public int?                 SelectedInstitutionType { get; set; }
+    public Guid?                SelectedTenantId { get; set; }
+    public Guid?                SelectedCampusId { get; set; }
+    public Guid?                SelectedDepartmentId { get; set; }
     public Guid?                SelectedCourseId  { get; set; }
+    public Guid?                SelectedSemesterId { get; set; }
+    public Guid?                SelectedSubjectOfferingId { get; set; }
     public decimal              PassThreshold     { get; set; } = 50;
     public string               GradingType       { get; set; } = "GPA";
     public List<GradeRangeItem> GradeRanges       { get; set; } = new();
     public List<InstitutionGradingSectionItem> InstitutionSections { get; set; } = new();
     public bool                 CanManageInstitutionSections { get; set; }
+    public bool                 CanSelectTenantCampus { get; set; }
+    public bool                 IsUniversitySelected { get; set; }
     public string?              SuccessMessage     { get; set; }
     public string?              ErrorMessage       { get; set; }
     public bool                 IsConnected        { get; set; }
