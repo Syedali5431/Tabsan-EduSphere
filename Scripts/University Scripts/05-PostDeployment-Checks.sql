@@ -55,6 +55,48 @@ DECLARE @UniversityResults INT =
       )
 );
 
+IF OBJECT_ID(N'[attendance_records]') IS NULL
+BEGIN
+    RAISERROR('University validation failed: table [attendance_records] is missing.', 16, 1);
+    RETURN;
+END;
+
+IF OBJECT_ID(N'[fyp_projects]') IS NULL
+BEGIN
+    RAISERROR('University validation failed: table [fyp_projects] is missing.', 16, 1);
+    RETURN;
+END;
+
+DECLARE @UniversityAttendance INT =
+(
+    SELECT COUNT(1)
+    FROM [attendance_records] ar
+    WHERE EXISTS
+    (
+        SELECT 1
+        FROM [student_profiles] sp
+        INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+        WHERE sp.[Id] = ar.[StudentProfileId]
+          AND ISNULL(u.[InstitutionType], 2) = 2
+          AND ISNULL(u.[IsDeleted], 0) = 0
+    )
+);
+
+DECLARE @UniversityFypStudents INT =
+(
+    SELECT COUNT(DISTINCT fp.[StudentProfileId])
+    FROM [fyp_projects] fp
+    WHERE EXISTS
+    (
+        SELECT 1
+        FROM [student_profiles] sp
+        INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+        WHERE sp.[Id] = fp.[StudentProfileId]
+          AND ISNULL(u.[InstitutionType], 2) = 2
+          AND ISNULL(u.[IsDeleted], 0) = 0
+    )
+);
+
 IF @UniversityCards < (@UniversityStudentCount * 8)
 BEGIN
     RAISERROR('University validation failed: expected Semester 1-8 report cards for all university students.', 16, 1);
@@ -64,6 +106,18 @@ END;
 IF @UniversityResults < (@UniversityStudentCount * 8)
 BEGIN
     RAISERROR('University validation failed: expected Semester 1-8 results for all university students.', 16, 1);
+    RETURN;
+END;
+
+IF @UniversityAttendance < (@UniversityStudentCount * 8)
+BEGIN
+    RAISERROR('University validation failed: expected attendance coverage across Semester 1-8 for all university students.', 16, 1);
+    RETURN;
+END;
+
+IF @UniversityFypStudents < @UniversityStudentCount
+BEGIN
+    RAISERROR('University validation failed: expected FYP coverage for all university students.', 16, 1);
     RETURN;
 END;
 
