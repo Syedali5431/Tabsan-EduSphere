@@ -435,13 +435,13 @@ public class AnalyticsInstituteParityIntegrationTests
         var otherProfile = new StudentProfile(otherStudentUser.Id, $"PAY-OTH-{suffix}", otherProgram.Id, otherDepartment.Id, DateTime.UtcNow.Date);
         db.StudentProfiles.AddRange(callerProfile, otherProfile);
 
-        var callerPaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 100m, "Caller paid", DateTime.UtcNow.Date.AddDays(7));
+        var callerPaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 100m, $"INT-PAY-{suffix}-001", "Caller paid", DateTime.UtcNow.Date.AddDays(7));
         callerPaid.ConfirmPayment(financeUser.Id, "paid");
-        var callerUnpaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 75m, "Caller unpaid", DateTime.UtcNow.Date.AddDays(7));
+        var callerUnpaid = new PaymentReceipt(callerProfile.Id, financeUser.Id, 75m, $"INT-PAY-{suffix}-002", "Caller unpaid", DateTime.UtcNow.Date.AddDays(7));
 
-        var otherPaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 120m, "Other paid", DateTime.UtcNow.Date.AddDays(7));
+        var otherPaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 120m, $"INT-PAY-{suffix}-003", "Other paid", DateTime.UtcNow.Date.AddDays(7));
         otherPaid.ConfirmPayment(financeUser.Id, "paid");
-        var otherUnpaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 90m, "Other unpaid", DateTime.UtcNow.Date.AddDays(7));
+        var otherUnpaid = new PaymentReceipt(otherProfile.Id, financeUser.Id, 90m, $"INT-PAY-{suffix}-004", "Other unpaid", DateTime.UtcNow.Date.AddDays(7));
 
         db.PaymentReceipts.AddRange(callerPaid, callerUnpaid, otherPaid, otherUnpaid);
         await db.SaveChangesAsync();
@@ -498,9 +498,9 @@ public class AnalyticsInstituteParityIntegrationTests
         db.Enrollments.Add(new Enrollment(matchedProfile.Id, filterOffering.Id));
         db.Enrollments.Add(new Enrollment(otherProfile.Id, otherOffering.Id));
 
-        var matchedReceipt = new PaymentReceipt(matchedProfile.Id, financeUser.Id, 110m, "Scoped matched", DateTime.UtcNow.Date.AddDays(7));
+        var matchedReceipt = new PaymentReceipt(matchedProfile.Id, financeUser.Id, 110m, $"INT-SCOPE-{suffix}-001", "Scoped matched", DateTime.UtcNow.Date.AddDays(7));
         matchedReceipt.ConfirmPayment(financeUser.Id, "paid");
-        var otherReceipt = new PaymentReceipt(otherProfile.Id, financeUser.Id, 95m, "Scoped other", DateTime.UtcNow.Date.AddDays(7));
+        var otherReceipt = new PaymentReceipt(otherProfile.Id, financeUser.Id, 95m, $"INT-SCOPE-{suffix}-002", "Scoped other", DateTime.UtcNow.Date.AddDays(7));
 
         db.PaymentReceipts.AddRange(matchedReceipt, otherReceipt);
         await db.SaveChangesAsync();

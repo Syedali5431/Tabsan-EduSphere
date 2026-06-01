@@ -310,6 +310,7 @@ public class StudentLifecycleIntegrationTests
             studentProfile.Id,
             finance.Id,
             1000m,
+            $"INT-{tenantSuffix}-001",
             $"Scoped receipt {tenantSuffix}",
             DateTime.UtcNow.Date.AddDays(14));
         db.PaymentReceipts.Add(receipt);

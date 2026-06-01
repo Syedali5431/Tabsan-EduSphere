@@ -160,6 +160,39 @@ INNER JOIN report_role_assignments rra ON rra.ReportDefinitionId = rd.Id
 WHERE rd.[Key] = N'payment_summary'
   AND rra.[RoleName] = N'Finance';
 
+SELECT
+	'PaymentReceiptsReceiptNoColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('payment_receipts', 'ReceiptNo') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
+	'PaymentReceiptsReceiptNoUniqueIndexExists' AS [CheckName],
+	CASE WHEN EXISTS
+	(
+		SELECT 1
+		FROM sys.indexes
+		WHERE [name] = N'ix_pr_receipt_no'
+		  AND [object_id] = OBJECT_ID(N'payment_receipts')
+	)
+	THEN 1 ELSE 0 END AS [Value];
+
+IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+BEGIN
+	SELECT
+		'PaymentReceiptsDuplicateReceiptNoCount' AS [CheckName],
+		COUNT(1) AS [Value]
+	FROM
+	(
+		SELECT [ReceiptNo]
+		FROM payment_receipts
+		GROUP BY [ReceiptNo]
+		HAVING COUNT(1) > 1
+	) d;
+END
+ELSE
+BEGIN
+	SELECT 'PaymentReceiptsDuplicateReceiptNoCount' AS [CheckName], CAST(0 AS int) AS [Value];
+END;
+
 SELECT 'UsersInstitutionTypeAssignedCount' AS [CheckName], COUNT(1) AS [Value]
 FROM users
 WHERE InstitutionType IS NOT NULL;

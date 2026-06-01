@@ -328,6 +328,18 @@ public class StudentLifecycleRepository : IStudentLifecycleRepository
             .FirstOrDefaultAsync(pr => pr.Id == receiptId, ct);
     }
 
+    public Task<bool> ReceiptNoExistsAsync(string receiptNo, Guid? excludeReceiptId = null, CancellationToken ct = default)
+    {
+        var normalized = receiptNo.Trim();
+        var query = ApplyPaymentAccessScope(_db.PaymentReceipts.AsNoTracking())
+            .Where(pr => pr.ReceiptNo == normalized);
+
+        if (excludeReceiptId.HasValue)
+            query = query.Where(pr => pr.Id != excludeReceiptId.Value);
+
+        return query.AnyAsync(ct);
+    }
+
     public async Task<IList<PaymentReceipt>> GetUnpaidReceiptsByStudentAsync(
         Guid studentProfileId,
         CancellationToken ct = default)

@@ -1161,6 +1161,7 @@ public class PaymentReceiptItem
     public string   StudentName        { get; set; } = "";
     public string   RegistrationNumber { get; set; } = "";
     public decimal  Amount             { get; set; }
+    public string   ReceiptNo          { get; set; } = "";
     public string   FeeType            { get; set; } = "";
     public string   Status             { get; set; } = "";
     public DateTime DueDate            { get; set; }
@@ -1184,8 +1185,18 @@ public class CreatePaymentForm
 {
     public Guid     StudentProfileId { get; set; }
     public decimal  Amount           { get; set; }
+    public string   ReceiptNo        { get; set; } = "";
     public string   Description      { get; set; } = "";
     public DateTime DueDate          { get; set; } = DateTime.Today.AddDays(30);
+}
+
+public class PaymentImportCsvRow
+{
+    public string ReceiptNo { get; set; } = "";
+    public string RegistrationNumber { get; set; } = "";
+    public decimal Amount { get; set; }
+    public string Description { get; set; } = "";
+    public DateTime DueDate { get; set; }
 }
 
 public class PaymentsPageModel
@@ -1202,9 +1213,11 @@ public class PaymentsPageModel
     public List<TenantItem> Tenants  { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
     public List<StudentItem>         Students    { get; set; } = new();
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public Guid?  SelectedStudentId { get; set; }
     public Guid?  SelectedTenantId { get; set; }
     public Guid?  SelectedCampusId { get; set; }
+    public int? SelectedInstitutionType { get; set; }
     public CreatePaymentForm CreateForm { get; set; } = new();
 }
 

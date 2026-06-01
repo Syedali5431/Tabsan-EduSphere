@@ -31,6 +31,19 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+    AND COL_LENGTH(N'payment_receipts', N'ReceiptNo') IS NULL
+BEGIN
+     ALTER TABLE [payment_receipts] ADD [ReceiptNo] nvarchar(64) NULL;
+
+     UPDATE [payment_receipts]
+         SET [ReceiptNo] = CONCAT(N'RCPT-', REPLACE(CONVERT(nvarchar(36), [Id]), N'-', N''))
+      WHERE [ReceiptNo] IS NULL;
+
+     ALTER TABLE [payment_receipts] ALTER COLUMN [ReceiptNo] nvarchar(64) NOT NULL;
+END;
+GO
+
 USE [Tabsan-EduSphere];
 GO
 
@@ -2265,6 +2278,13 @@ IF NOT EXISTS (
 )
 BEGIN
     ALTER TABLE [users] ADD [FailedLoginAttempts] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_receipt_no' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+BEGIN
+    CREATE UNIQUE INDEX [ix_pr_receipt_no] ON [payment_receipts] ([ReceiptNo]);
 END;
 GO
 

@@ -2486,6 +2486,7 @@ BEGIN
         Id UNIQUEIDENTIFIER,
         StudentProfileId UNIQUEIDENTIFIER,
         CreatedByUserId UNIQUEIDENTIFIER,
+        ReceiptNo NVARCHAR(64),
         [Status] INT,
         Amount DECIMAL(10,2),
         [Description] NVARCHAR(500),
@@ -2496,19 +2497,19 @@ BEGIN
     );
 
     INSERT INTO @PaymentReceipts VALUES
-    ('27272727-2727-2727-2727-272727272701', '99999999-9999-9999-9999-999999999911', '77777777-7777-7777-7777-777777777711', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
-    ('27272727-2727-2727-2727-272727272702', '99999999-9999-9999-9999-999999999912', '77777777-7777-7777-7777-777777777711', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
-    ('27272727-2727-2727-2727-272727272703', '99999999-9999-9999-9999-999999999913', '77777777-7777-7777-7777-777777777712', 0, 15000.00, N'Spring 2026 semester tuition', DATEADD(day, 21, @Now), NULL, NULL, N'Awaiting proof of payment.'),
-    ('27272727-2727-2727-2727-272727272704', '99999999-9999-9999-9999-999999999914', '77777777-7777-7777-7777-777777777712', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777712', DATEADD(day, -1, @Now), N'Online payment confirmed.'),
-    ('27272727-2727-2727-2727-272727272705', '99999999-9999-9999-9999-999999999931', '77777777-7777-7777-7777-777777777721', 1, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), '77777777-7777-7777-7777-777777777721', DATEADD(day, -3, @Now), N'Paid at college office.'),
-    ('27272727-2727-2727-2727-272727272706', '99999999-9999-9999-9999-999999999932', '77777777-7777-7777-7777-777777777721', 0, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), NULL, NULL, N'Pending student submission.'),
-    ('27272727-2727-2727-2727-272727272707', '99999999-9999-9999-9999-999999999933', '77777777-7777-7777-7777-777777777722', 1, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), '77777777-7777-7777-7777-777777777722', DATEADD(day, -1, @Now), N'Confirmed by college.'),
-    ('27272727-2727-2727-2727-272727272708', '99999999-9999-9999-9999-999999999941', '77777777-7777-7777-7777-777777777731', 1, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), '77777777-7777-7777-7777-777777777731', DATEADD(day, -2, @Now), N'Confirmed by school admin.'),
-    ('27272727-2727-2727-2727-272727272709', '99999999-9999-9999-9999-999999999942', '77777777-7777-7777-7777-777777777732', 1, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), '77777777-7777-7777-7777-777777777732', DATEADD(day, -2, @Now), N'Confirmed by school admin.'),
-    ('27272727-2727-2727-2727-272727272710', '99999999-9999-9999-9999-999999999943', '77777777-7777-7777-7777-777777777732', 0, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), NULL, NULL, N'Awaiting payment.');
+    ('27272727-2727-2727-2727-272727272701', '99999999-9999-9999-9999-999999999911', '77777777-7777-7777-7777-777777777711', N'RCPT-SEED-0001', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
+    ('27272727-2727-2727-2727-272727272702', '99999999-9999-9999-9999-999999999912', '77777777-7777-7777-7777-777777777711', N'RCPT-SEED-0002', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
+    ('27272727-2727-2727-2727-272727272703', '99999999-9999-9999-9999-999999999913', '77777777-7777-7777-7777-777777777712', N'RCPT-SEED-0003', 0, 15000.00, N'Spring 2026 semester tuition', DATEADD(day, 21, @Now), NULL, NULL, N'Awaiting proof of payment.'),
+    ('27272727-2727-2727-2727-272727272704', '99999999-9999-9999-9999-999999999914', '77777777-7777-7777-7777-777777777712', N'RCPT-SEED-0004', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777712', DATEADD(day, -1, @Now), N'Online payment confirmed.'),
+    ('27272727-2727-2727-2727-272727272705', '99999999-9999-9999-9999-999999999931', '77777777-7777-7777-7777-777777777721', N'RCPT-SEED-0005', 1, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), '77777777-7777-7777-7777-777777777721', DATEADD(day, -3, @Now), N'Paid at college office.'),
+    ('27272727-2727-2727-2727-272727272706', '99999999-9999-9999-9999-999999999932', '77777777-7777-7777-7777-777777777721', N'RCPT-SEED-0006', 0, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), NULL, NULL, N'Pending student submission.'),
+    ('27272727-2727-2727-2727-272727272707', '99999999-9999-9999-9999-999999999933', '77777777-7777-7777-7777-777777777722', N'RCPT-SEED-0007', 1, 12000.00, N'College Spring 2026 semester fee', DATEADD(day, 21, @Now), '77777777-7777-7777-7777-777777777722', DATEADD(day, -1, @Now), N'Confirmed by college.'),
+    ('27272727-2727-2727-2727-272727272708', '99999999-9999-9999-9999-999999999941', '77777777-7777-7777-7777-777777777731', N'RCPT-SEED-0008', 1, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), '77777777-7777-7777-7777-777777777731', DATEADD(day, -2, @Now), N'Confirmed by school admin.'),
+    ('27272727-2727-2727-2727-272727272709', '99999999-9999-9999-9999-999999999942', '77777777-7777-7777-7777-777777777732', N'RCPT-SEED-0009', 1, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), '77777777-7777-7777-7777-777777777732', DATEADD(day, -2, @Now), N'Confirmed by school admin.'),
+    ('27272727-2727-2727-2727-272727272710', '99999999-9999-9999-9999-999999999943', '77777777-7777-7777-7777-777777777732', N'RCPT-SEED-0010', 0, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), NULL, NULL, N'Awaiting payment.');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[ReceiptNo], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
     FROM @PaymentReceipts p
     WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] x WHERE x.[Id] = p.[Id]);
 
@@ -2517,7 +2518,7 @@ BEGIN
     DECLARE @FinanceColUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.col.1');
     DECLARE @FinanceSchUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.sch.1');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT
         NEWID(),
         sp.[Id],
@@ -2526,6 +2527,7 @@ BEGIN
             WHEN 1 THEN COALESCE(@FinanceColUserId, @SuperAdminUserId)
             ELSE COALESCE(@FinanceSchUserId, @SuperAdminUserId)
         END,
+        CONCAT(N'RCPT-BULK-', RIGHT(REPLACE(CONVERT(NVARCHAR(36), NEWID()), N'-', N''), 12)),
         CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN 0 ELSE 1 END,
         CASE u.[InstitutionType]
             WHEN 2 THEN CAST(15000 + (ABS(CHECKSUM(sp.[Id])) % 6000) AS DECIMAL(10,2))
@@ -4930,7 +4932,7 @@ BEGIN
         SELECT s.[Id], s.[Name], s.[StartDate], ROW_NUMBER() OVER (ORDER BY s.[StartDate], s.[Id]) AS SemesterRn
         FROM [semesters] s
     )
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
     SELECT
         NEWID(),
         st.[StudentProfileId],
@@ -4939,6 +4941,7 @@ BEGIN
             WHEN 1 THEN COALESCE(@FinanceColUserId2, @SuperAdminUserId)
             ELSE COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
         END,
+        CONCAT(N'RCPT-SEM-', RIGHT(REPLACE(CONVERT(NVARCHAR(36), NEWID()), N'-', N''), 12)),
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN 0 ELSE 1 END,
         CASE st.[InstitutionType]
             WHEN 0 THEN CAST(9800 + (sm.[SemesterRn] * 85) AS DECIMAL(10,2))

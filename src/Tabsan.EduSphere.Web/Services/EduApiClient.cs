@@ -364,12 +364,13 @@ public interface IEduApiClient
     Task PromoteStudentAsync(Guid studentId, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
     // Payments
-    Task<PaymentReceiptPageItem> GetPaymentsByStudentAsync(Guid studentId, int page, int pageSize, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<PaymentReceiptPageItem> GetPaymentsByStudentAsync(Guid studentId, int page, int pageSize, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     // Final-Touches Phase 7 — admin all-receipts, student own, create, confirm, cancel, submit proof
-    Task<PaymentReceiptPageItem> GetAllPaymentsAsync(int page, int pageSize, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<PaymentReceiptPageItem> GetAllPaymentsAsync(int page, int pageSize, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct);
     Task<PaymentReceiptPageItem> GetMyPaymentsAsync(int page, int pageSize, CancellationToken ct);
-    Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string description, DateTime dueDate, Guid? tenantId, Guid? campusId, CancellationToken ct);
-    Task UpdatePaymentAsync(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string receiptNo, string description, DateTime dueDate, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task CreatePaymentsBatchAsync(List<PaymentImportCsvRow> rows, Dictionary<string, Guid> registrationToStudentProfileMap, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task UpdatePaymentAsync(Guid receiptId, decimal amount, string receiptNo, string description, DateTime dueDate, string? notes, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task ConfirmPaymentAsync(Guid receiptId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CancelPaymentAsync(Guid receiptId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task SubmitProofAsync(Guid receiptId, string proofNote, Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -4320,9 +4321,9 @@ public class EduApiClient : IEduApiClient
 
     // ── Payments ──────────────────────────────────────────────────────────────
 
-    public async Task<PaymentReceiptPageItem> GetPaymentsByStudentAsync(Guid studentId, int page, int pageSize, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<PaymentReceiptPageItem> GetPaymentsByStudentAsync(Guid studentId, int page, int pageSize, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
-        var raw = await GetAsync<PaymentPageApiDto>($"api/v1/payments/student/{studentId}?page={page}&pageSize={pageSize}{BuildPaymentScopeAmpQuery(tenantId, campusId)}", ct);
+        var raw = await GetAsync<PaymentPageApiDto>($"api/v1/payments/student/{studentId}?page={page}&pageSize={pageSize}{BuildPaymentScopeAmpQuery(tenantId, campusId, institutionType)}", ct);
         return raw is null ? new PaymentReceiptPageItem() : MapPaymentPage(raw);
     }
 
@@ -4333,6 +4334,7 @@ public class EduApiClient : IEduApiClient
         StudentName        = p.StudentName ?? "",
         RegistrationNumber = p.RegistrationNumber ?? "",
         Amount             = p.Amount,
+        ReceiptNo          = p.ReceiptNo ?? "",
         FeeType            = p.Description ?? p.FeeType ?? "",
         Status             = p.Status ?? "",
         DueDate            = p.DueDate,
@@ -4343,9 +4345,9 @@ public class EduApiClient : IEduApiClient
     };
 
     // Final-Touches Phase 7 — admin and student payment actions
-    public async Task<PaymentReceiptPageItem> GetAllPaymentsAsync(int page, int pageSize, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<PaymentReceiptPageItem> GetAllPaymentsAsync(int page, int pageSize, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
-        var raw = await GetAsync<PaymentPageApiDto>($"api/v1/payments?page={page}&pageSize={pageSize}{BuildPaymentScopeAmpQuery(tenantId, campusId)}", ct);
+        var raw = await GetAsync<PaymentPageApiDto>($"api/v1/payments?page={page}&pageSize={pageSize}{BuildPaymentScopeAmpQuery(tenantId, campusId, institutionType)}", ct);
         return raw is null ? new PaymentReceiptPageItem() : MapPaymentPage(raw);
     }
 
@@ -4363,11 +4365,25 @@ public class EduApiClient : IEduApiClient
         TotalCount = raw.TotalCount
     };
 
-    public Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string description, DateTime dueDate, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/payments{BuildPaymentScopeQuery(tenantId, campusId)}", new { studentProfileId, amount, description, dueDate }, ct);
+    public Task CreatePaymentAsync(Guid studentProfileId, decimal amount, string receiptNo, string description, DateTime dueDate, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/payments{BuildPaymentScopeQuery(tenantId, campusId)}", new { studentProfileId, amount, receiptNo, description, dueDate }, ct);
 
-    public Task UpdatePaymentAsync(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => PutAsync<object, object>($"api/v1/payments/{receiptId}{BuildPaymentScopeQuery(tenantId, campusId)}", new { amount, description, dueDate, notes }, ct);
+    public async Task CreatePaymentsBatchAsync(List<PaymentImportCsvRow> rows, Dictionary<string, Guid> registrationToStudentProfileMap, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var commands = rows.Select(r => new
+        {
+            studentProfileId = registrationToStudentProfileMap[r.RegistrationNumber],
+            amount = r.Amount,
+            receiptNo = r.ReceiptNo,
+            description = r.Description,
+            dueDate = r.DueDate
+        }).ToList();
+
+        await PostAsync<object, object>($"api/v1/payments/bulk{BuildPaymentScopeQuery(tenantId, campusId)}", commands, ct);
+    }
+
+    public Task UpdatePaymentAsync(Guid receiptId, decimal amount, string receiptNo, string description, DateTime dueDate, string? notes, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/payments/{receiptId}{BuildPaymentScopeQuery(tenantId, campusId)}", new { amount, receiptNo, description, dueDate, notes }, ct);
 
     public Task ConfirmPaymentAsync(Guid receiptId, Guid? tenantId, Guid? campusId, CancellationToken ct)
         => PostAsync<string, object>($"api/v1/payments/{receiptId}/confirm{BuildPaymentScopeQuery(tenantId, campusId)}", string.Empty, ct);
@@ -4389,13 +4405,15 @@ public class EduApiClient : IEduApiClient
         return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
     }
 
-    private static string BuildPaymentScopeAmpQuery(Guid? tenantId, Guid? campusId)
+    private static string BuildPaymentScopeAmpQuery(Guid? tenantId, Guid? campusId, int? institutionType)
     {
         var parts = new List<string>();
         if (tenantId.HasValue)
             parts.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue)
             parts.Add($"campusId={campusId.Value}");
+        if (institutionType.HasValue)
+            parts.Add($"institutionType={institutionType.Value}");
 
         return parts.Count == 0 ? string.Empty : "&" + string.Join("&", parts);
     }
@@ -4407,6 +4425,7 @@ public class EduApiClient : IEduApiClient
         public string?  StudentName        { get; set; }
         public string?  RegistrationNumber { get; set; }
         public decimal  Amount             { get; set; }
+        public string?  ReceiptNo          { get; set; }
         public string?  FeeType            { get; set; }
         public string?  Description        { get; set; }
         public string?  Status             { get; set; }

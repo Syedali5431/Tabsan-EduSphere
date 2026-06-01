@@ -102,12 +102,14 @@ public record RejectModificationRequestCommand(
 public record CreatePaymentReceiptCommand(
     Guid StudentProfileId,
     decimal Amount,
+    string ReceiptNo,
     string Description,
     DateTime DueDate
 );
 
 public record UpdatePaymentReceiptCommand(
     decimal Amount,
+    string ReceiptNo,
     string Description,
     DateTime DueDate,
     string? Notes = null
@@ -118,6 +120,7 @@ public record PaymentReceiptDto(
     Guid StudentProfileId,
     string StudentName,
     decimal Amount,
+    string ReceiptNo,
     string Description,
     DateTime DueDate,
     string Status,

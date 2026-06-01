@@ -32,6 +32,9 @@ public class PaymentReceipt : AuditableEntity
     /// <summary>Amount due in the receipt.</summary>
     public decimal Amount { get; private set; }
 
+    /// <summary>Institution or bank receipt number, unique across payment receipts.</summary>
+    public string ReceiptNo { get; private set; } = default!;
+
     /// <summary>Description of the fees (e.g., "Semester 1 Tuition", "Exam Fee").</summary>
     public string Description { get; private set; } = default!;
 
@@ -63,12 +66,14 @@ public class PaymentReceipt : AuditableEntity
         Guid studentProfileId,
         Guid createdByUserId,
         decimal amount,
+        string receiptNo,
         string description,
         DateTime dueDate)
     {
         StudentProfileId = studentProfileId;
         CreatedByUserId = createdByUserId;
         Amount = amount;
+        ReceiptNo = receiptNo;
         Description = description;
         DueDate = dueDate;
         Status = PaymentReceiptStatus.Pending;
@@ -87,12 +92,13 @@ public class PaymentReceipt : AuditableEntity
     }
 
     /// <summary>Finance edits receipt details while it is still actionable.</summary>
-    public void UpdateDetails(decimal amount, string description, DateTime dueDate, string? notes = null)
+    public void UpdateDetails(decimal amount, string receiptNo, string description, DateTime dueDate, string? notes = null)
     {
         if (Status is PaymentReceiptStatus.Paid or PaymentReceiptStatus.Cancelled)
             throw new InvalidOperationException("Paid or Cancelled receipts cannot be edited.");
 
         Amount = amount;
+        ReceiptNo = receiptNo;
         Description = description;
         DueDate = dueDate;
         Notes = notes;

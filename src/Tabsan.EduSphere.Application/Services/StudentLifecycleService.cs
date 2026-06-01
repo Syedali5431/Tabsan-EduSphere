@@ -462,6 +462,13 @@ public class StudentLifecycleService : IStudentLifecycleService
         CreatePaymentReceiptCommand cmd,
         CancellationToken ct = default)
     {
+        var receiptNo = cmd.ReceiptNo?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(receiptNo))
+            throw new InvalidOperationException("Receipt number is required.");
+
+        if (await _repository.ReceiptNoExistsAsync(receiptNo, null, ct))
+            throw new InvalidOperationException($"Receipt number '{receiptNo}' already exists.");
+
         var student = await _repository.GetByIdAsync(cmd.StudentProfileId, ct);
         if (student is null)
             throw new KeyNotFoundException($"Student profile {cmd.StudentProfileId} not found.");
@@ -470,6 +477,7 @@ public class StudentLifecycleService : IStudentLifecycleService
             cmd.StudentProfileId,
             financeUserId,
             cmd.Amount,
+            receiptNo,
             cmd.Description,
             cmd.DueDate
         );
@@ -495,11 +503,18 @@ public class StudentLifecycleService : IStudentLifecycleService
         UpdatePaymentReceiptCommand cmd,
         CancellationToken ct = default)
     {
+        var receiptNo = cmd.ReceiptNo?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(receiptNo))
+            throw new InvalidOperationException("Receipt number is required.");
+
+        if (await _repository.ReceiptNoExistsAsync(receiptNo, receiptId, ct))
+            throw new InvalidOperationException($"Receipt number '{receiptNo}' already exists.");
+
         var receipt = await _repository.GetReceiptByIdAsync(receiptId, ct);
         if (receipt == null)
             throw new KeyNotFoundException($"Receipt {receiptId} not found.");
 
-        receipt.UpdateDetails(cmd.Amount, cmd.Description, cmd.DueDate, cmd.Notes);
+        receipt.UpdateDetails(cmd.Amount, receiptNo, cmd.Description, cmd.DueDate, cmd.Notes);
         await _repository.UpdateReceiptAsync(receipt, ct);
 
         var student = await _repository.GetByIdAsync(receipt.StudentProfileId, ct);
@@ -677,6 +692,7 @@ public class StudentLifecycleService : IStudentLifecycleService
             receipt.StudentProfileId,
             studentName,
             receipt.Amount,
+            receipt.ReceiptNo,
             receipt.Description,
             receipt.DueDate,
             status,

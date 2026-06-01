@@ -22,6 +22,7 @@ public class PaymentReceiptConfiguration : IEntityTypeConfiguration<PaymentRecei
         builder.Property(x => x.ConfirmedByUserId).IsRequired(false);
         builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.Amount).IsRequired().HasPrecision(10, 2);
+        builder.Property(x => x.ReceiptNo).IsRequired().HasMaxLength(64);
         builder.Property(x => x.Description).IsRequired().HasMaxLength(500);
         builder.Property(x => x.DueDate).IsRequired();
         builder.Property(x => x.ProofOfPaymentPath).IsRequired(false).HasMaxLength(500);
@@ -58,6 +59,7 @@ public class PaymentReceiptConfiguration : IEntityTypeConfiguration<PaymentRecei
         builder.HasIndex(x => new { x.StudentProfileId, x.CreatedAt }).HasDatabaseName("ix_pr_student_created_at");
         builder.HasIndex(x => new { x.Status, x.DueDate }).HasDatabaseName("ix_pr_status_due_date");
         builder.HasIndex(x => x.DueDate).HasDatabaseName("ix_pr_due_date");
+        builder.HasIndex(x => x.ReceiptNo).IsUnique().HasDatabaseName("ix_pr_receipt_no");
 
         // Match principal StudentProfile soft-delete filter to avoid required-relationship filter warnings.
         builder.HasQueryFilter(x => !x.StudentProfile.IsDeleted);

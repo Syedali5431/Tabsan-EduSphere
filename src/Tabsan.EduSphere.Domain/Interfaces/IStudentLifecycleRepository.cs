@@ -97,6 +97,9 @@ public interface IStudentLifecycleRepository
     /// <summary>Gets a specific payment receipt by ID with related data loaded.</summary>
     Task<PaymentReceipt?> GetReceiptByIdAsync(Guid receiptId, CancellationToken ct = default);
 
+    /// <summary>Checks whether a receipt number already exists, excluding an optional receipt id.</summary>
+    Task<bool> ReceiptNoExistsAsync(string receiptNo, Guid? excludeReceiptId = null, CancellationToken ct = default);
+
     /// <summary>Gets unpaid receipts (Pending or Submitted status) for a student.</summary>
     Task<IList<PaymentReceipt>> GetUnpaidReceiptsByStudentAsync(Guid studentProfileId, CancellationToken ct = default);
 

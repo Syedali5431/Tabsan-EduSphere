@@ -253,6 +253,66 @@
 			"label": "Push portal guard fix",
 			"type": "shell",
 			"command": "git push origin main"
+		},
+		{
+			"label": "Study Plan runtime target query",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SET NOCOUNT ON; SELECT TOP 5 sp.Id AS StudentProfileId, u.Username, d.Name AS DepartmentName, COUNT(p.Id) AS PlanCount FROM student_profiles sp INNER JOIN users u ON u.Id = sp.UserId INNER JOIN departments d ON d.Id = sp.DepartmentId LEFT JOIN study_plans p ON p.StudentProfileId = sp.Id AND p.IsDeleted = 0 GROUP BY sp.Id, u.Username, d.Name ORDER BY PlanCount DESC, u.Username; SELECT COUNT(1) AS StudyPlanCount FROM study_plans WHERE IsDeleted = 0;'"
+		},
+		{
+			"label": "Compare StudyPlan counts A0384 vs LocalDB",
+			"type": "shell",
+			"command": "Write-Host 'A0384'; sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SELECT COUNT(1) AS StudyPlanCount FROM study_plans WHERE IsDeleted = 0; SELECT COUNT(1) AS StudentPlans FROM study_plans WHERE StudentProfileId = ''515FCD71-8576-42B8-BE17-46E6470092B1'' AND IsDeleted = 0;'; Write-Host 'LOCALDB'; sqlcmd -S \"(localdb)\\MSSQLLocalDB\" -d \"Tabsan-EduSphere\" -E -Q 'SELECT COUNT(1) AS StudyPlanCount FROM study_plans WHERE IsDeleted = 0; SELECT COUNT(1) AS StudentPlans FROM study_plans WHERE StudentProfileId = ''515FCD71-8576-42B8-BE17-46E6470092B1'' AND IsDeleted = 0;'"
+		},
+		{
+			"label": "Verify Study Plan filter demo seed rows",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SET NOCOUNT ON; SELECT ''StudyPlanFilterDemo_Count'' AS CheckName, COUNT(1) AS [Value] FROM study_plans WHERE Id IN (''81818181-8181-8181-8181-818181818101'',''81818181-8181-8181-8181-818181818102'',''81818181-8181-8181-8181-818181818103''); SELECT ''StudyPlanFilterDemo_CourseCount'' AS CheckName, COUNT(1) AS [Value] FROM study_plan_courses WHERE StudyPlanId IN (''81818181-8181-8181-8181-818181818101'',''81818181-8181-8181-8181-818181818102'',''81818181-8181-8181-8181-818181818103''); SELECT ''StudyPlanFilterDemo_ByStudent'' AS CheckName, sp.StudentProfileId, sp.PlannedSemesterName, COUNT(spc.Id) AS CourseCount FROM study_plans sp LEFT JOIN study_plan_courses spc ON spc.StudyPlanId = sp.Id WHERE sp.Id IN (''81818181-8181-8181-8181-818181818101'',''81818181-8181-8181-8181-818181818102'',''81818181-8181-8181-8181-818181818103'') GROUP BY sp.StudentProfileId, sp.PlannedSemesterName ORDER BY sp.PlannedSemesterName;'"
+		},
+		{
+			"label": "Verify Study Plan filter demo seed rows v2",
+			"type": "shell",
+			"command": "sqlcmd -S A0384 -d \"Tabsan-EduSphere\" -E -Q 'SET NOCOUNT ON; SELECT ''StudyPlanFilterDemo_Count'' AS CheckName, COUNT(1) AS [Value] FROM study_plans WHERE Id IN (''9A111111-1111-1111-1111-111111111101'',''9A111111-1111-1111-1111-111111111102'',''9A111111-1111-1111-1111-111111111103''); SELECT ''StudyPlanFilterDemo_CourseCount'' AS CheckName, COUNT(1) AS [Value] FROM study_plan_courses WHERE StudyPlanId IN (''9A111111-1111-1111-1111-111111111101'',''9A111111-1111-1111-1111-111111111102'',''9A111111-1111-1111-1111-111111111103''); SELECT ''StudyPlanFilterDemo_ByStudent'' AS CheckName, sp.StudentProfileId, sp.PlannedSemesterName, COUNT(spc.Id) AS CourseCount FROM study_plans sp LEFT JOIN study_plan_courses spc ON spc.StudyPlanId = sp.Id WHERE sp.Id IN (''9A111111-1111-1111-1111-111111111101'',''9A111111-1111-1111-1111-111111111102'',''9A111111-1111-1111-1111-111111111103'') GROUP BY sp.StudentProfileId, sp.PlannedSemesterName ORDER BY sp.PlannedSemesterName;'"
+		},
+		{
+			"label": "Stage requested StudyPlan+docs updates",
+			"type": "shell",
+			"command": "git add \"Scripts/03-FullDummyData.sql\" \"Scripts/05-PostDeployment-Checks.sql\" \"Docs/Function-List.md\" \"Docs/Functionality.md\" \"Project startup Docs/PRD.md\" \"Project startup Docs/Modules.md\" \"Project startup Docs/Development Plan - ASP.NET.md\" \"Project startup Docs/Database Schema.md\" \"src/Tabsan.EduSphere.Web/Controllers/PortalController.cs\" \"src/Tabsan.EduSphere.Web/Services/EduApiClient.cs\" ; git status --short"
+		},
+		{
+			"label": "Stage all then unstage vscode tasks",
+			"type": "shell",
+			"command": "git add -A ; git restore --staged .vscode/tasks.json ; git status --short"
+		},
+		{
+			"label": "Commit StudyPlan seed docs sync",
+			"type": "shell",
+			"command": "git commit -m \"Add deterministic Study Plan demo seed, checks, and documentation sync\""
+		},
+		{
+			"label": "Commit StudyPlan seed docs sync fixed quoting",
+			"type": "shell",
+			"command": "git commit -m 'Add deterministic Study Plan demo seed checks and documentation sync'"
+		},
+		{
+			"label": "Run payments focused dotnet tests",
+			"type": "shell",
+			"command": "dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --filter 'FullyQualifiedName~PaymentReceiptTests' --nologo ; dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --filter 'FullyQualifiedName~Payments_GetAll_WithMatchingTenantCampusScope_ReturnsScopedReceipt|FullyQualifiedName~Payments_GetAll_WithMismatchedCampusScope_HidesOutOfScopeReceipt|FullyQualifiedName~SidebarMenuIntegrationTests' --nologo"
+		},
+		{
+			"label": "Run payments focused tests no-build",
+			"type": "shell",
+			"command": "dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj --no-build --filter 'FullyQualifiedName~PaymentReceiptTests' --nologo ; dotnet test tests/Tabsan.EduSphere.IntegrationTests/Tabsan.EduSphere.IntegrationTests.csproj --no-build --filter 'FullyQualifiedName~Payments_GetAll_WithMatchingTenantCampusScope_ReturnsScopedReceipt|FullyQualifiedName~Payments_GetAll_WithMismatchedCampusScope_HidesOutOfScopeReceipt|FullyQualifiedName~SidebarMenuIntegrationTests' --nologo"
+		},
+		{
+			"label": "Stage payments view fix only",
+			"type": "shell",
+			"command": "git add src/Tabsan.EduSphere.Web/Views/Portal/Payments.cshtml ; git restore --staged .vscode/tasks.json ; git status --short"
+		},
+		{
+			"label": "Commit payments admin-role rendering fix",
+			"type": "shell",
+			"command": "git commit -m 'Fix Payments admin view rendering when student list is empty'"
 		}
 	],
 	"inputs": [

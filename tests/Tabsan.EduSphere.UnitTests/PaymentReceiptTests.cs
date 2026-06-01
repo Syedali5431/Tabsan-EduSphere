@@ -12,11 +12,13 @@ public class PaymentReceiptTests
             studentProfileId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             amount: 100m,
+            receiptNo: "UT-001",
             description: "Semester Tuition",
             dueDate: new DateTime(2026, 6, 1));
 
         receipt.UpdateDetails(
             amount: 125m,
+            receiptNo: "UT-002",
             description: "Semester Tuition - Revised",
             dueDate: new DateTime(2026, 6, 15),
             notes: "Updated after finance review");
@@ -35,12 +37,13 @@ public class PaymentReceiptTests
             studentProfileId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             amount: 100m,
+            receiptNo: "UT-101",
             description: "Semester Tuition",
             dueDate: new DateTime(2026, 6, 1));
 
         receipt.ConfirmPayment(Guid.NewGuid(), "paid");
 
-        var act = () => receipt.UpdateDetails(110m, "Revised", new DateTime(2026, 6, 10), "should fail");
+        var act = () => receipt.UpdateDetails(110m, "UT-102", "Revised", new DateTime(2026, 6, 10), "should fail");
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*cannot be edited*");

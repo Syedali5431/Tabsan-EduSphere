@@ -341,7 +341,7 @@ public class PortalController : Controller
         return options;
     }
 
-    private static int ResolveLicensedInstitutionSelection(
+    private static int? ResolveLicensedInstitutionSelection(
         int? requestedInstitutionType,
         SessionIdentity? identity,
         IReadOnlyCollection<CertificateInstitutionOption> licensedOptions)
@@ -352,11 +352,14 @@ public class PortalController : Controller
         if (requestedInstitutionType.HasValue && licensedOptions.Any(x => x.Value == requestedInstitutionType.Value))
             return requestedInstitutionType.Value;
 
+        if (identity?.IsSuperAdmin == true)
+            return null;
+
         if (identity?.InstitutionType is int identityInstitutionType
             && licensedOptions.Any(x => x.Value == identityInstitutionType))
             return identityInstitutionType;
 
-        return licensedOptions.First().Value;
+        return null;
     }
 
     private static int? ResolveCertificateInstitutionType(SessionIdentity? identity, List<DepartmentItem> departments, Guid? selectedDepartmentId)
@@ -6559,7 +6562,7 @@ public class PortalController : Controller
     // Final-Touches Phase 7 — admin all-receipts view + student own receipts
 
     [HttpGet]
-    public async Task<IActionResult> Payments(Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> Payments(Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         ViewData["Title"] = "Payments";
         var identity = _api.GetSessionIdentity();
@@ -6572,6 +6575,7 @@ public class PortalController : Controller
             SelectedStudentId = studentId,
             SelectedTenantId  = effectiveTenantId,
             SelectedCampusId  = effectiveCampusId,
+            SelectedInstitutionType = institutionType,
             Page = page < 1 ? 1 : page,
             Message           = TempData["PortalMessage"]?.ToString()
         };
@@ -6589,6 +6593,15 @@ public class PortalController : Controller
             }
             else
             {
+                var canManagePayments = identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true;
+
+                if (canManagePayments)
+                {
+                    var capabilityMatrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+                    model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(capabilityMatrix);
+                    model.SelectedInstitutionType = ResolveLicensedInstitutionSelection(model.SelectedInstitutionType, identity, model.AvailableInstitutionTypes);
+                }
+
                 if (identity?.IsSuperAdmin == true)
                 {
                     model.Tenants = await _api.GetTenantsAsync(ct);
@@ -6596,13 +6609,13 @@ public class PortalController : Controller
                         model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
                 }
 
-                model.Students = await _api.GetStudentsAsync(null, ct);
+                model.Students = await LoadPaymentStudentsForScopeAsync(model.SelectedTenantId, model.SelectedCampusId, model.SelectedInstitutionType, ct);
                 // Admin / Finance: load paged receipts and optionally filter by student
                 PaymentReceiptPageItem pageResult;
                 if (studentId.HasValue)
-                    pageResult = await _api.GetPaymentsByStudentAsync(studentId.Value, model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, ct);
+                    pageResult = await _api.GetPaymentsByStudentAsync(studentId.Value, model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, model.SelectedInstitutionType, ct);
                 else
-                    pageResult = await _api.GetAllPaymentsAsync(model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, ct);
+                    pageResult = await _api.GetAllPaymentsAsync(model.Page, model.PageSize, model.SelectedTenantId, model.SelectedCampusId, model.SelectedInstitutionType, ct);
 
                 model.Payments = pageResult.Items;
                 model.TotalCount = pageResult.TotalCount;
@@ -6617,86 +6630,286 @@ public class PortalController : Controller
     // Final-Touches Phase 7 Stage 7.2 — create receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreatePayment(CreatePaymentForm form, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> CreatePayment(CreatePaymentForm form, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         try
         {
             var identity = _api.GetSessionIdentity();
+            if (!(identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true))
+            {
+                TempData["PortalMessage"] = "Only Admin/Finance users can create payment receipts.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
             var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
-            await _api.CreatePaymentAsync(form.StudentProfileId, form.Amount, form.Description, form.DueDate, effectiveTenantId, effectiveCampusId, ct);
+            await _api.CreatePaymentAsync(form.StudentProfileId, form.Amount, form.ReceiptNo, form.Description, form.DueDate, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt created successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+    }
+
+    [HttpGet]
+    public IActionResult ExportPaymentsCsvTemplate()
+    {
+        var lines = new[]
+        {
+            "ReceiptNo,RegistrationNumber,Amount,Description,DueDate",
+            "RCPT-2026-0001,2026-CS-0001,5000.00,Semester 1 Tuition,2026-08-15",
+            "RCPT-2026-0002,2026-COMM-0001,1200.00,Exam Fee,2026-08-20"
+        };
+
+        return File(Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, lines)), "text/csv", "payments-import-template.csv");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportPaymentsCsv(IFormFile csvFile, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
+    {
+        try
+        {
+            var identity = _api.GetSessionIdentity();
+            if (!(identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true))
+            {
+                TempData["PortalMessage"] = "Only Admin/Finance users can import payments.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
+            if (csvFile is null || csvFile.Length == 0)
+            {
+                TempData["PortalMessage"] = "Please select a CSV file.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
+            var rows = await ParsePaymentImportCsvAsync(csvFile, ct);
+            if (rows.Count == 0)
+            {
+                TempData["PortalMessage"] = "CSV has no payment rows.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+            var students = await LoadPaymentStudentsForScopeAsync(effectiveTenantId, effectiveCampusId, institutionType, ct);
+            var map = students
+                .GroupBy(s => s.RegistrationNumber, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var registration in rows.Select(r => r.RegistrationNumber).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!map.ContainsKey(registration))
+                    throw new InvalidOperationException($"Student with registration '{registration}' was not found in current scope.");
+            }
+
+            await _api.CreatePaymentsBatchAsync(rows, map, effectiveTenantId, effectiveCampusId, ct);
+            TempData["PortalMessage"] = $"Imported {rows.Count} payment receipts successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — edit receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string description, DateTime dueDate, string? notes, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string receiptNo, string description, DateTime dueDate, string? notes, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         try
         {
             var identity = _api.GetSessionIdentity();
+            if (!(identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true))
+            {
+                TempData["PortalMessage"] = "Only Admin/Finance users can update payment receipts.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
             var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
-            await _api.UpdatePaymentAsync(receiptId, amount, description, dueDate, notes, effectiveTenantId, effectiveCampusId, ct);
+            await _api.UpdatePaymentAsync(receiptId, amount, receiptNo, description, dueDate, notes, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt updated successfully.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — confirm payment (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConfirmPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> ConfirmPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         try
         {
             var identity = _api.GetSessionIdentity();
+            if (!(identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true))
+            {
+                TempData["PortalMessage"] = "Only Admin/Finance users can confirm payments.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
             var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
             await _api.ConfirmPaymentAsync(receiptId, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Payment confirmed.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
     // Final-Touches Phase 7 Stage 7.2 — cancel receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CancelPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> CancelPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         try
         {
             var identity = _api.GetSessionIdentity();
+            if (!(identity?.IsSuperAdmin == true || identity?.IsAdmin == true || identity?.IsFinance == true))
+            {
+                TempData["PortalMessage"] = "Only Admin/Finance users can cancel receipts.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
             var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
             await _api.CancelPaymentAsync(receiptId, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Receipt cancelled.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
     // Final-Touches Phase 7 Stage 7.3 — student marks receipt as submitted
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, Guid? studentId, Guid? tenantId, Guid? campusId, int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
     {
         try
         {
             var identity = _api.GetSessionIdentity();
+            if (identity?.IsStudent != true)
+            {
+                TempData["PortalMessage"] = "Only students can submit payment proof.";
+                return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+            }
+
             var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
             var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
             await _api.SubmitProofAsync(receiptId, proofNote, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = "Proof of payment submitted.";
         }
         catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
-        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, page });
+        return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
+    }
+
+    private async Task<List<StudentItem>> LoadPaymentStudentsForScopeAsync(Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
+    {
+        if (!tenantId.HasValue && !campusId.HasValue)
+        {
+            var students = await _api.GetStudentsAsync(null, ct);
+            return students
+                .Where(s => !institutionType.HasValue || s.InstitutionType == institutionType.Value)
+                .OrderBy(s => s.RegistrationNumber)
+                .ThenBy(s => s.FullName)
+                .ToList();
+        }
+
+        var departmentDetails = await _api.GetDepartmentDetailsAsync(tenantId, campusId, ct);
+        var filteredDepartments = departmentDetails
+            .Where(d => !institutionType.HasValue || d.InstitutionType == institutionType.Value)
+            .Select(d => d.Id)
+            .Distinct()
+            .ToList();
+
+        if (filteredDepartments.Count == 0)
+            return new List<StudentItem>();
+
+        var studentsById = new Dictionary<Guid, StudentItem>();
+
+        foreach (var departmentId in filteredDepartments)
+        {
+            var students = await _api.GetStudentsAsync(departmentId, ct);
+            foreach (var student in students)
+            {
+                studentsById[student.Id] = student;
+            }
+        }
+
+        return studentsById.Values
+            .OrderBy(s => s.RegistrationNumber)
+            .ThenBy(s => s.FullName)
+            .ToList();
+    }
+
+    private async Task<List<PaymentImportCsvRow>> ParsePaymentImportCsvAsync(IFormFile csvFile, CancellationToken ct)
+    {
+        await using var stream = csvFile.OpenReadStream();
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+
+        var headerLine = await reader.ReadLineAsync(ct);
+        if (string.IsNullOrWhiteSpace(headerLine))
+            throw new InvalidOperationException("CSV header is missing.");
+
+        var headers = ParseCsvLine(headerLine)
+            .Select(h => h.Trim())
+            .ToArray();
+
+        var required = new[] { "ReceiptNo", "RegistrationNumber", "Amount", "Description", "DueDate" };
+        if (required.Any(x => !headers.Contains(x, StringComparer.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("CSV must contain headers: ReceiptNo, RegistrationNumber, Amount, Description, DueDate.");
+
+        var indexMap = headers
+            .Select((name, idx) => new { name, idx })
+            .ToDictionary(x => x.name, x => x.idx, StringComparer.OrdinalIgnoreCase);
+
+        var rows = new List<PaymentImportCsvRow>();
+        string? line;
+        var lineNo = 1;
+
+        while ((line = await reader.ReadLineAsync(ct)) is not null)
+        {
+            lineNo++;
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var cols = ParseCsvLine(line);
+
+            string Read(string col)
+            {
+                var idx = indexMap[col];
+                return idx < cols.Length ? cols[idx].Trim() : string.Empty;
+            }
+
+            var receiptNo = Read("ReceiptNo");
+            var registrationNumber = Read("RegistrationNumber");
+            var amountRaw = Read("Amount");
+            var description = Read("Description");
+            var dueDateRaw = Read("DueDate");
+
+            if (string.IsNullOrWhiteSpace(receiptNo) || string.IsNullOrWhiteSpace(registrationNumber) || string.IsNullOrWhiteSpace(amountRaw) || string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(dueDateRaw))
+                throw new InvalidOperationException($"CSV row {lineNo} is missing one or more required values.");
+
+            if (!decimal.TryParse(amountRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
+                throw new InvalidOperationException($"CSV row {lineNo} has invalid Amount '{amountRaw}'.");
+
+            if (!DateTime.TryParse(dueDateRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dueDate))
+                throw new InvalidOperationException($"CSV row {lineNo} has invalid DueDate '{dueDateRaw}'.");
+
+            rows.Add(new PaymentImportCsvRow
+            {
+                ReceiptNo = receiptNo,
+                RegistrationNumber = registrationNumber,
+                Amount = amount,
+                Description = description,
+                DueDate = dueDate.Date
+            });
+        }
+
+        return rows;
     }
 
     // ── Enrollments ────────────────────────────────────────────────────────
