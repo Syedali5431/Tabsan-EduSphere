@@ -632,7 +632,8 @@ public class PortalController : Controller
 
     private Guid? GetCurrentUserId()
     {
-        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var callerIdStr = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
         return Guid.TryParse(callerIdStr, out var parsedUserId) ? parsedUserId : null;
     }
 
