@@ -280,3 +280,98 @@ Use high-contrast or readable themes when reviewing long grading sessions.
 - Faculty should treat `FinalReview` rows as draft correction-stage records; students see only published states.
 - Demo dataset now includes expanded attendance timeline and mixed result types (`Midterm`, `Final`, `FinalReview`) for realistic faculty testing.
 
+## 14. Detailed Faculty Teaching Cycle
+
+This section gives a practical weekly teaching cycle with expected outputs.
+
+### 14.1 Pre-Class Preparation
+
+1. Validate timetable slots and room/modality details.
+2. Open upcoming offering page and verify enrollment roster.
+3. Confirm assignment/quiz visibility windows align with session plan.
+4. Prepare attendance-ready session metadata (topic, date, remarks).
+
+### 14.2 In-Class Actions
+
+1. Share agenda and expected outcomes.
+2. Mark attendance after identity confirmation process.
+3. Record in-session notes for exceptional student cases.
+4. If quiz is live, verify timer and attempt controls are correct.
+
+### 14.3 Post-Class Closure
+
+1. Publish attendance if not auto-published by policy.
+2. Upload or update lesson resources.
+3. Send summary notification for follow-up tasks.
+4. Log students requiring intervention.
+
+## 15. Grading and Publication Governance
+
+Use this sequence to avoid publication mistakes.
+
+1. Enter Marks
+- Ensure selected offering is correct.
+- Confirm result type and maximum marks.
+- Save draft entries first.
+
+2. Validate Before Publish
+- Spot-check at least 10 percent of entries or minimum 10 records.
+- Confirm no out-of-range marks.
+- Confirm absent/incomplete coding is consistent with policy.
+
+3. Publish
+- Publish only if your role has publish authority.
+- Confirm expected student visibility after publish.
+- Record publish timestamp in course log.
+
+4. Corrections
+- Apply corrections only through reasoned workflow.
+- Include clear correction reason and source evidence.
+- Verify corrected rows are republished where policy requires.
+
+## 16. Faculty Communication Playbook
+
+Use concise, action-driven communication templates.
+
+1. Assignment Reminder
+- Include title, due date/time, allowed format, and submission policy.
+
+2. Quiz Notice
+- Include start/end window, attempts allowed, and technical requirements.
+
+3. Result Notice
+- Include published components and official recheck/correction request window.
+
+4. Attendance Warning
+- Include current percentage, threshold, and required corrective action.
+
+## 17. Faculty Troubleshooting Deep-Dive
+
+1. Roster mismatch
+- Check offering ID and period filter.
+- Confirm student enrollment status.
+- Ask admin to verify department/program mapping.
+
+2. Quiz submission anomalies
+- Confirm quiz was in active window.
+- Confirm attempt quota not exceeded.
+- Capture timestamps and student identifiers for audit.
+
+3. Result publication not visible to students
+- Confirm status is published, not draft.
+- Confirm students belong to the published offering.
+- Confirm no scope mismatch in institution context.
+
+4. Missing analytics data
+- Check selected date range and offering filter.
+- Check whether module/report permissions are active.
+- Escalate with role/scope/filter details.
+
+## 18. Faculty Weekly Quality Checklist
+
+- All planned sessions delivered and attendance recorded.
+- All assignments/quizzes carry clear instructions and deadlines.
+- Pending grading backlog below institutional SLA.
+- Published results verified for correctness and visibility.
+- Student intervention list updated for low performance/attendance.
+

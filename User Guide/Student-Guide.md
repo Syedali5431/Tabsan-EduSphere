@@ -238,3 +238,73 @@ Use this weekly:
 - Attendance data quality is improved through expanded multi-day records in the training/demo baseline.
 - If a result is delayed, it may be under controlled `FinalReview` workflow pending authorized publication.
 
+## 16. Detailed Student Semester Playbook
+
+Follow this practical sequence each semester.
+
+### 16.1 Week 1-2: Setup and Orientation
+
+1. Confirm all enrolled courses are visible in dashboard and enrollments.
+2. Verify timetable and class modality.
+3. Review assignment and quiz policy for each course.
+4. Enable notification monitoring habit (daily check).
+
+### 16.2 Mid-Semester: Continuous Performance Control
+
+1. Track assignment status twice weekly.
+2. Review attendance per course at least once a week.
+3. Check quiz attempts remaining before each assessment window.
+4. Monitor performance trend and seek faculty guidance early.
+
+### 16.3 End-Semester: Closure and Records
+
+1. Verify all required submissions are complete.
+2. Confirm published results by course.
+3. Download transcript/report exports where needed.
+4. Resolve discrepancies through official correction channels.
+
+## 17. Student Data and Privacy Notes
+
+Your access is intentionally restricted for security.
+
+- You can see only your own academic and activity records.
+- You cannot access department-level or admin-level reports.
+- Some features are hidden by role, module, or institution policy.
+- Sensitive operations are audited for compliance.
+
+## 18. Student Self-Service Recovery Guide
+
+1. Login trouble
+- Recheck username/registration number format.
+- Reset password through approved workflow.
+- Contact admin if account is locked.
+
+2. Missing assignment or quiz
+- Confirm you are in correct course/period context.
+- Confirm publication state and availability window.
+- Raise issue with faculty including course and timestamp.
+
+3. Attendance mismatch
+- Capture date, class, and evidence.
+- Request correction through faculty/admin process.
+
+4. Result discrepancy
+- Check if result is published or still under review.
+- Submit correction/recheck request with evidence.
+
+## 19. Student Productivity Tips
+
+- Keep a weekly planner aligned with assignment due dates.
+- Submit assignments at least 24 hours before deadline when possible.
+- Avoid last-minute quiz attempts to reduce technical risk.
+- Track low-attendance courses first and prioritize correction.
+
+## 20. Student Weekly Checklist (Expanded)
+
+- Dashboard reviewed daily.
+- Assignments reviewed and pending items prioritized.
+- Quiz windows checked before expiry.
+- Attendance reviewed for all active courses.
+- New notifications processed and archived.
+- Performance concerns communicated to faculty early.
+

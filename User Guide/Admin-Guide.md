@@ -313,3 +313,106 @@ For change requests:
 - Post-deployment checks now include published/draft result counts and attendance status distribution checks.
 - Full demo validation marker is now `DemoDatasetVersion = FullDummyData-v9`.
 
+## 13. Detailed Admin SOP (End-to-End)
+
+This section provides a practical day-cycle flow for Admin operations.
+
+### 13.1 Start-of-Day Checks (10-20 minutes)
+
+1. Open dashboard and review alerts by severity.
+2. Validate active academic period status.
+3. Check pending requests queue for enrollment, attendance correction, and result-related tasks.
+4. Confirm no critical menu visibility regressions were reported after last deployment.
+5. Review notifications requiring department-wide communication.
+
+### 13.2 Midday Operations
+
+1. Verify timetables for collision and unpublished changes.
+2. Review enrollment exceptions and unresolved drops.
+3. Confirm faculty assignment coverage for active offerings.
+4. Run report spot-checks for attendance and result publication status.
+
+### 13.3 End-of-Day Closure
+
+1. Resolve or triage all high-priority pending requests.
+2. Publish required notices for next-day operations.
+3. Capture unresolved items in a handover note.
+4. Escalate platform-level issues to SuperAdmin with full context.
+
+## 14. Admin Decision Matrix
+
+Use the matrix below to reduce incorrect escalations.
+
+1. Missing Menu Item
+- Check role assignment.
+- Check module activation status.
+- Check sidebar role access entry.
+- Check tenant/campus scope assignment.
+- Escalate only if all checks pass and issue persists.
+
+2. Empty Report Data
+- Confirm selected filters (department, period, course, date range).
+- Confirm user scope is valid for requested data.
+- Confirm source data exists in operations modules.
+- Escalate only after reproducing with known-valid filters.
+
+3. Faculty Cannot Publish Results
+- Confirm publish permission is assigned to role.
+- Confirm workflow state allows publication.
+- Confirm write scope and institute compatibility.
+- Deny or escalate according to governance policy.
+
+## 15. Data Quality Controls
+
+Apply these controls weekly.
+
+1. Enrollment Integrity
+- Every active offering should have at least one faculty assignment or a documented reason.
+- Dropped enrollments should match request and approval records.
+
+2. Attendance Integrity
+- Validate outlier detection (all present, all absent, or repeated identical marks).
+- Confirm correction requests include clear reason and traceability.
+
+3. Results Integrity
+- Verify no unauthorized draft-to-published transitions.
+- Ensure correction entries include reason fields.
+
+4. Notification Integrity
+- Confirm critical notices are published once and not duplicated.
+- Validate audience targeting for department vs institute-wide messaging.
+
+## 16. Incident Handling Template
+
+When opening a support incident, include all fields below:
+
+- Role of reporter
+- Institution mode (School/College/University)
+- Tenant and campus (if applicable)
+- Department and offering (if academic issue)
+- Module and menu key involved
+- Exact route or endpoint
+- Time of incident with timezone
+- Expected behavior vs actual behavior
+- Screenshot and request ID/correlation ID if available
+
+## 17. Admin Handover Template
+
+Use this at shift handover or weekly closure.
+
+1. Pending approvals:
+- Enrollment: <count>
+- Attendance corrections: <count>
+- Result corrections/publication requests: <count>
+
+2. Operational risks:
+- Timetable conflicts: <count>
+- Unassigned offerings: <count>
+- Data quality anomalies: <count>
+
+3. Escalations sent to SuperAdmin:
+- <ticket IDs>
+
+4. Notices published:
+- <notice titles and audience>
+

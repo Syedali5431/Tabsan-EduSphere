@@ -189,3 +189,102 @@ After issuing a license:
 - Operational smoke tests should verify attendance and result workflows in at least one scoped department per institution mode.
 - Demo-path verification now references full dummy marker `DemoDatasetVersion = FullDummyData-v9`.
 
+## 13. Advanced Secure License Operations
+
+This section extends the baseline workflow with enterprise-grade controls.
+
+### 13.1 Key Custody Model
+
+Use a minimum two-person control model for private-key access:
+
+1. Key Custodian A: vault access owner.
+2. Key Custodian B: issuance approver.
+3. License Operator: prepares payload and executes signing.
+
+No single operator should own all three responsibilities.
+
+### 13.2 License Issuance Workflow (Detailed)
+
+1. Intake request
+- Capture customer/institution identity, requested modules, institution mode, tenant/campus constraints, and validity period.
+
+2. Payload preparation
+- Build deterministic payload fields in canonical order.
+- Verify issue date, expiry date, and timezone normalization.
+
+3. Approval
+- Obtain approval for scope and duration.
+- Log approver identity and timestamp.
+
+4. Signing
+- Sign payload with private key from controlled workstation.
+- Verify signature locally using corresponding public key.
+
+5. Packaging and transfer
+- If policy requires, encrypt package with AES key.
+- Transfer through approved secure channel only.
+
+6. Activation verification
+- Upload in environment.
+- Validate module visibility and policy behavior.
+
+7. Audit closure
+- Record issuance ID, hash/fingerprint, approver, and activation result.
+
+## 14. Validation Checklist by Environment
+
+Run these checks in test and production.
+
+1. License state
+- Status is active.
+- Scope fields match contract.
+
+2. Module behavior
+- Enabled modules visible and accessible.
+- Disabled modules hidden and blocked by API.
+
+3. Institution policy behavior
+- School/College/University labels and features align with issued scope.
+
+4. Governance behavior
+- Sidebar/report settings remain consistent with active license and role policies.
+
+## 15. Rotation and Revocation Procedure
+
+### 15.1 Planned Rotation
+
+1. Generate new key pair.
+2. Distribute new public key to verifiers.
+3. Issue new licenses signed with rotated private key.
+4. Maintain grace period for old key where policy allows.
+5. Disable old key after cutover window.
+
+### 15.2 Emergency Revocation
+
+1. Declare incident and freeze new issuance on affected key.
+2. Generate emergency replacement key pair.
+3. Reissue active licenses on priority order.
+4. Publish revocation bulletin to operations owners.
+5. Confirm all environments reject old-key signatures.
+
+## 16. Security Baseline Controls
+
+- Keep private keys only in HSM or managed vault where available.
+- Enforce MFA for all key-access accounts.
+- Log every private-key retrieval operation.
+- Rotate AES keys separately from RSA keys.
+- Never attach private keys in tickets, email, or chat.
+
+## 17. License Audit Record Template
+
+Minimum audit fields:
+
+- License issuance ID
+- Institution/customer identifier
+- Scope (modules, institution mode, tenant/campus)
+- Issue and expiry dates
+- Signing key fingerprint
+- Approver and operator identities
+- Activation result and verification timestamp
+- Incident reference if reissued/revoked
+

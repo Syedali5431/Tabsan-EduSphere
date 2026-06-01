@@ -246,3 +246,100 @@ Common parity-scope signals to record:
 - Import report access is hardened through one-time token validation and expiry controls.
 - Full dummy validation now expects `DemoDatasetVersion = FullDummyData-v9` with mixed results lifecycle and attendance timeline seed data.
 
+## 15. SuperAdmin Governance Runbook
+
+This runbook helps execute predictable and auditable governance changes.
+
+### 15.1 Change Categories
+
+1. License changes
+- Activation, renewal, replacement, emergency rollback.
+
+2. Module composition changes
+- Enable/disable optional modules with approval and communication.
+
+3. Access governance changes
+- Sidebar and report role mapping updates.
+
+4. Scope governance changes
+- Tenant/campus-specific activation, deactivation, and access boundaries.
+
+### 15.2 Required Approval Pattern
+
+1. Raise change request with objective and impact scope.
+2. Capture affected roles, modules, and tenant/campus targets.
+3. Approve through designated authority.
+4. Execute during defined maintenance window where applicable.
+5. Validate using role-based smoke checklist.
+
+### 15.3 Post-Change Validation
+
+1. Validate menus per role.
+2. Validate API and UI behavior parity.
+3. Validate no unauthorized privilege expansion.
+4. Confirm audit logs captured change events.
+
+## 16. Audit and Compliance Rhythm
+
+### 16.1 Daily
+
+- High-risk action audit checks.
+- Failed login and lockout review.
+- Critical incident queue review.
+
+### 16.2 Weekly
+
+- Role-to-menu and role-to-report spot validation.
+- Module activation consistency review.
+- Random access-denial sample review to detect misconfiguration.
+
+### 16.3 Monthly
+
+- Full role entitlement audit.
+- License and module alignment review.
+- Tenant/campus scope conformance review.
+- Security control effectiveness check.
+
+## 17. Emergency Operations
+
+### 17.1 License Incident
+
+1. Confirm active license state and expiry.
+2. Validate signature/public-key consistency.
+3. Roll back to previous valid license only if approved.
+4. Record incident timeline and preventive actions.
+
+### 17.2 Unauthorized Access Suspicion
+
+1. Contain affected account/session.
+2. Capture audit logs and scope impact.
+3. Review recent role/module/scope changes.
+4. Apply corrective governance updates.
+5. Notify stakeholders per policy.
+
+### 17.3 Governance Drift
+
+1. Reconcile module registry and sidebar/report settings.
+2. Reapply intended role mappings.
+3. Validate with role test accounts.
+4. Document root cause and preventive control.
+
+## 18. Release Governance Checklist
+
+Before production release:
+
+- License validity confirmed for deployment window.
+- Required modules activated and optional modules intentionally configured.
+- Sidebar settings validated for all privileged roles.
+- Report settings validated for role-based least privilege.
+- Institution policy and terminology mode confirmed.
+- Tenant/campus scope behavior spot-tested.
+- Training and user guides updated for release changes.
+
+After production release:
+
+- Role smoke tests passed.
+- Critical workflows validated (auth, attendance, results, reports, notifications).
+- No high-severity governance incidents in first 24h.
+- Hypercare monitoring enabled with ownership assignment.
+

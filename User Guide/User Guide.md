@@ -290,3 +290,119 @@ Finance users cannot:
 - Result correction now requires an explicit reason and applies to published records only.
 - Attendance and result training data now includes expanded multi-day attendance plus mixed result lifecycle states (published and draft).
 - Demo database validation references `DemoDatasetVersion = FullDummyData-v9` after full dummy seed execution.
+
+---
+
+## 9. Role Capability Matrix (Detailed)
+
+Use this matrix to understand common access expectations.
+
+1. Student
+- Access: Assignments, Quizzes, Attendance, Results, Transcript, Notifications, FYP (if enabled)
+- No Access: Admin governance settings, department/global reports, licensing
+
+2. Faculty
+- Access: Offering-linked assignments/quizzes/attendance/results, FYP supervision, class analytics
+- Limited: Publication rights based on configured governance
+
+3. Admin
+- Access: Department users, enrollments, offerings, timetable, departmental reports and notifications
+- No Access: Global license and system-wide module policy unless delegated
+
+4. SuperAdmin
+- Access: License, module composition, sidebar/report governance, tenant/campus governance
+- Responsibility: platform-wide policy, audit, and change control
+
+5. Finance
+- Access: Payments, payment reports, payment analytics
+- No Access: Academic modules and student result operations
+
+## 10. Password and Account Security Standards
+
+Users should follow these security requirements at all times.
+
+- Use strong passwords and avoid reusing old passwords.
+- Do not share credentials across users.
+- Change password immediately if compromise is suspected.
+- Log out from shared/public devices.
+- Report suspicious login attempts to Admin/SuperAdmin.
+
+### Force-Change Password Expectations
+
+When prompted for forced change:
+
+1. Enter current password.
+2. Enter new password meeting policy constraints.
+3. Confirm new password exactly.
+4. Re-login and verify account access.
+
+## 11. Cross-Role Escalation Path
+
+Use this route for fast and correct issue handling.
+
+1. Student -> Faculty
+- Learning content, assignment, quiz, attendance mismatch, result clarification.
+
+2. Faculty -> Admin
+- Offering assignment, enrollment mismatch, timetable conflicts, departmental access.
+
+3. Admin -> SuperAdmin
+- License/module issues, cross-scope governance, privileged setting anomalies.
+
+4. SuperAdmin -> IT/Platform Team
+- Infrastructure failures, deployment regressions, security incidents.
+
+## 12. Reporting and Export Standards
+
+- Use institution-appropriate filters before export.
+- Validate report scope (department/tenant/campus/time window).
+- Archive critical exports per institutional retention policy.
+- For queued exports, track job completion before sharing output.
+
+## 13. Common Operational Scenarios
+
+1. Menu visible but route denied
+- Cause: role has sidebar visibility but lacks effective route entitlement.
+- Action: Admin/SuperAdmin validates role access and module policy.
+
+2. Report empty for one campus only
+- Cause: scope filter mismatch or campus assignment gap.
+- Action: verify tenant/campus scope claims and report activation.
+
+3. Student sees delayed final result
+- Cause: result may be in governed review state before publication.
+- Action: faculty/admin confirms workflow stage and expected publish window.
+
+4. Finance data inconsistent across charts/reports
+- Cause: filter mismatch between analytics and report view.
+- Action: rerun both with identical scope filters and compare totals.
+
+## 14. Support Ticket Template
+
+Include these fields in every support request:
+
+- Reporter role
+- Institution mode
+- Tenant and campus
+- Department and offering (if academic)
+- Module/menu key
+- Timestamp and timezone
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshot and correlation/request ID
+
+## 15. Release Readiness for End Users
+
+Before a major academic cycle starts:
+
+- All role guides reviewed and distributed.
+- Login and password reset workflow validated.
+- Core module visibility spot-tested by role.
+- Attendance and result pipelines validated with sample data.
+- Notification channels tested.
+
+After release:
+
+- Confirm no major access anomalies in first 24 hours.
+- Run role-based smoke scenarios.
+- Publish known-issues bulletin if needed.

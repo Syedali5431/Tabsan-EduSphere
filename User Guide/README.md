@@ -79,3 +79,81 @@ Repository Sync Note (15 May 2026):
 - User guides now align with stricter Enter Results governance (write scope checks, publish role controls, correction reason requirement).
 - Demo validation baseline for training/UAT now includes mixed result states (`Midterm`, published `Final`, draft `FinalReview`) and expanded attendance timeline rows.
 - Script marker for full dataset path is now `DemoDatasetVersion = FullDummyData-v9`.
+
+## Comprehensive Guide Index (Detailed)
+
+Use this section to quickly identify the right guide for each operational need.
+
+### Student Journey Docs
+
+- Student onboarding, course participation, assignments, quizzes, attendance, and result tracking:
+  - Student-Guide.md
+- End-user consolidated guidance and quick troubleshooting:
+  - User Guide.md
+
+### Teaching and Academic Delivery Docs
+
+- Day-to-day teaching operations, grading, publication readiness, and class analytics:
+  - Faculty-Guide.md
+- Instructor classroom readiness and escalation patterns:
+  - Training Manual.md (Faculty sessions)
+
+### Department and Governance Docs
+
+- Department administration operations, user and semester controls, and compliance checks:
+  - Admin-Guide.md
+- Platform governance, licensing, module composition, sidebar/report governance, and audit handling:
+  - SuperAdmin-Guide.md
+
+### License and Crypto Operations Docs
+
+- Key generation and secure license lifecycle operations:
+  - License-KeyGen-Guide.md
+
+### Training Delivery Docs
+
+- Instructor-led enablement programs, exercises, acceptance criteria, and completion scoring:
+  - Training Manual.md
+
+## Recommended Reading Paths
+
+Use these paths for faster onboarding by responsibility.
+
+1. Student Support Team
+- Start: User Guide.md
+- Then: Student-Guide.md
+- Then: Training Manual.md (Student sessions)
+
+2. Faculty Support Coordinator
+- Start: Faculty-Guide.md
+- Then: Admin-Guide.md
+- Then: Training Manual.md (Faculty and Admin sessions)
+
+3. Department Administrator
+- Start: Admin-Guide.md
+- Then: SuperAdmin-Guide.md (governance dependencies)
+- Then: User Guide.md (cross-role impact)
+
+4. Platform Owner / IT Lead
+- Start: SuperAdmin-Guide.md
+- Then: License-KeyGen-Guide.md
+- Then: Training Manual.md (IT and SuperAdmin sessions)
+
+## Operational Quality Bar
+
+The following outcomes should be achievable after reading the role-specific guide:
+
+- User can complete core tasks without escalation.
+- User understands permission boundaries and when access denial is expected.
+- User can identify whether an issue is data, scope, module, or license related.
+- User can provide support-ready incident details (role, institution mode, tenant/campus, module, route, timestamp).
+
+## Documentation Maintenance Protocol
+
+When the product is updated, refresh these documents in this order:
+
+1. Update User Guide.md for consolidated behavior changes.
+2. Update role guides impacted by the release.
+3. Update Training Manual.md with new session drills.
+4. Verify all internal references and script/version markers.
+5. Include a dated release-note block in each modified guide.

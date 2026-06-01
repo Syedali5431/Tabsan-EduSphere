@@ -248,3 +248,145 @@ Each participant should:
 - Add results lifecycle training check: validate `Midterm` (published), `Final` (published), and `FinalReview` (draft) behavior in the same offering.
 - Add import-report token handling drill: verify one-time report-download token expiry/reuse behavior in results import workflow.
 
+---
+
+## 8. Session 4 – Faculty: Assignments, Quizzes, Attendance, Grading
+
+### Learning Objectives
+- Create and publish assignments and quizzes correctly.
+- Record attendance accurately with policy alignment.
+- Enter and publish results using governed workflow.
+
+### Agenda
+1. Offering and roster readiness (10 min)
+2. Assignment and quiz lifecycle (20 min)
+3. Attendance workflow and correction requests (10 min)
+4. Results entry and publication controls (20 min)
+
+### Exercise 4A – Assignment and Quiz Setup
+1. Create one assignment with due date and grading rubric.
+2. Create one quiz with timer and attempt limits.
+3. Publish both and verify student visibility.
+
+### Exercise 4B – Attendance and Results
+1. Record attendance for one class session.
+2. Enter marks for one assessment.
+3. Publish only after validation checks.
+4. Trigger one controlled correction with reason.
+
+---
+
+## 9. Session 5 – Faculty: FYP, Notifications, Performance Review
+
+### Learning Objectives
+- Manage FYP supervision workflow.
+- Send targeted notifications to student groups.
+- Use class performance analytics for intervention.
+
+### Exercise 5A – FYP Supervision Drill
+1. Open assigned FYP projects.
+2. Schedule one meeting.
+3. Add meeting notes and action items.
+
+### Exercise 5B – Student Intervention Drill
+1. Identify low-attendance student.
+2. Send warning notice.
+3. Document intervention outcome.
+
+---
+
+## 10. Session 6 – Admin: Department Operations
+
+### Learning Objectives
+- Operate enrollment and timetable workflows.
+- Manage departmental users and exceptions.
+- Generate operational reports.
+
+### Exercise 6A – Enrollment and Timetable
+1. Validate one offering roster.
+2. Process one enrollment add and one drop.
+3. Run timetable conflict check and resolve one issue.
+
+### Exercise 6B – Report and Notice
+1. Generate attendance summary report.
+2. Export to PDF and Excel.
+3. Publish one department notice with action deadline.
+
+---
+
+## 11. Session 7 – SuperAdmin: Governance and License
+
+### Learning Objectives
+- Perform safe license update and verification.
+- Govern module composition and role visibility.
+- Validate report/sidebar settings parity.
+
+### Exercise 7A – License Drill
+1. Upload test license in non-production environment.
+2. Verify activation details and module availability.
+3. Validate institution mode behavior.
+
+### Exercise 7B – Governance Drill
+1. Toggle one optional module.
+2. Validate menu visibility changes by role.
+3. Reconcile report settings access for two roles.
+
+---
+
+## 12. Session 9-11 – Advanced Analytics, Report Sections, Export Pipeline
+
+### Objectives
+- Use advanced analytics in role-safe manner.
+- Understand institution-specific report partitions.
+- Operate queued export pipeline and job tracking.
+
+### Practical Checks
+1. Run top performers report for one department.
+2. Run performance trend report for one period.
+3. Trigger one large export and monitor queued job status.
+4. Validate output filename convention and download integrity.
+
+---
+
+## 13. Trainer Enablement and Delivery Standards
+
+### Pre-Session Standards
+- Validate all demo accounts 24 hours before training.
+- Validate seeded data and expected records.
+- Prepare fallback screenshots for network disruption.
+
+### In-Session Standards
+- Demonstrate first, then allow participant hands-on.
+- Enforce role-boundary awareness in every exercise.
+- Capture participant blockers in real time.
+
+### Post-Session Standards
+- Run quick competency assessment.
+- Collect unresolved issues and assign owner.
+- Share recap document and next-action timeline.
+
+---
+
+## 14. Training Assessment Rubric
+
+Score each participant area from 1 to 5.
+
+1. Navigation confidence
+2. Task completion accuracy
+3. Governance and role-boundary awareness
+4. Troubleshooting readiness
+5. Reporting/export accuracy
+
+Pass recommendation:
+- Average >= 4.0 with no score below 3 in governance awareness.
+
+---
+
+## 15. Post-Training Certification Checklist
+
+- Participant completed all mandatory role exercises.
+- Participant passed scenario-based validation.
+- Participant can explain escalation path for scope/access issues.
+- Participant can produce one export/report relevant to their role.
+- Participant signed acknowledgment of security and privacy practices.
+
