@@ -727,43 +727,47 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV39' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV40' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v39';
+	AND DemoValue = N'FullDummyData-v40';
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_StudentCountV39' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_StudentCountV40' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
 	N'DEMO-CERT-COL-901',
 	N'DEMO-CERT-COL-902',
 	N'DEMO-CERT-SCH-911',
-	N'DEMO-CERT-SCH-912'
+	N'DEMO-CERT-SCH-912',
+	N'DEMO-CERT-COL-SEARCH-941',
+	N'DEMO-CERT-SCH-SEARCH-942'
 )
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_CollegeCountV39' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_CollegeCountV40' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
 	N'DEMO-CERT-COL-901',
-	N'DEMO-CERT-COL-902'
+	N'DEMO-CERT-COL-902',
+	N'DEMO-CERT-COL-SEARCH-941'
 )
 	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER)
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_SchoolCountV39' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_SchoolCountV40' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
 	N'DEMO-CERT-SCH-911',
-	N'DEMO-CERT-SCH-912'
+	N'DEMO-CERT-SCH-912',
+	N'DEMO-CERT-SCH-SEARCH-942'
 )
 	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222216' AS UNIQUEIDENTIFIER)
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_EnrollmentCountV39' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_EnrollmentCountV40' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
 WHERE [StudentProfileId] IN
 (
@@ -774,9 +778,20 @@ WHERE [StudentProfileId] IN
 		N'DEMO-CERT-COL-901',
 		N'DEMO-CERT-COL-902',
 		N'DEMO-CERT-SCH-911',
-		N'DEMO-CERT-SCH-912'
+		N'DEMO-CERT-SCH-912',
+		N'DEMO-CERT-COL-SEARCH-941',
+		N'DEMO-CERT-SCH-SEARCH-942'
 	)
 );
+
+SELECT 'DummySeed_GenerateCertificatesSearchDemo_UsernamesV40' AS [CheckName], COUNT(1) AS [Value]
+FROM [users]
+WHERE [Username] IN
+(
+	N'demo.cert.search.col.941',
+	N'demo.cert.search.sch.942'
+)
+	AND [IsDeleted] = 0;
 
 SELECT 'DummySeed_DegreeAuditEligibilityDemo_StudentCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]

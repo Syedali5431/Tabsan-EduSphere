@@ -1,3 +1,17 @@
+## Execution Update - 2026-06-01 (Generate Certificates License-Driven Institute Filter + Search Demo Seed v40)
+
+### Module impact summary
+- No new module introduced; change remains inside existing Generate Certificates runtime and supporting seed/check scripts.
+- UI behavior now prioritizes search-first admin operation:
+  - institution-only filter,
+  - non-university certificate title/type-aware row search.
+- License integration now controls institution selection options at runtime for this page.
+- Full dummy seed/check marker advanced to v40 with deterministic search-demo rows.
+
+### Validation summary
+- Runtime checks confirmed institution-only filter and search narrowing.
+- SQL checks confirmed v40 marker and expanded Generate Certificates demo coverage.
+
 ## Execution Update - 2026-06-01 (Generate Certificates Additional Certificate Demo Seed v39)
 
 ### Module impact summary

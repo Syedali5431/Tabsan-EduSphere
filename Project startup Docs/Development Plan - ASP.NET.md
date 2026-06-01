@@ -1,3 +1,14 @@
+## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
+
+### Plan sync
+- Shifted Generate Certificates page UX to a search-first flow with institution-only filtering.
+- Added license-driven institution option resolution so single-license installs auto-select and lock, while multi-license installs expose dropdown selection.
+- Expanded FullDummyData and post-deployment checks to v40 with deterministic search-demo rows for repeated QA/UAT verification.
+
+### Validation sync
+- Runtime checks confirm filter simplification and institution-option behavior across license combinations.
+- Table search checks confirm non-university certificate title/type text is included in match behavior.
+
 ## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Runtime Validation
 
 ### Plan sync

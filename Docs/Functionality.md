@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
+
+### Implementation sync
+- Generate Certificates filter surface now retains a single institution filter and removes tenant/campus/department/course/semester selectors from the page.
+- Institution selection is now license-driven:
+	- if license enables only one institute type, it auto-selects and locks that option,
+	- if license enables multiple institute types, user selects from the dropdown.
+- Table search now indexes student/program/department plus non-university generated certificate title/type values.
+- Scripts/03-FullDummyData.sql advanced to FullDummyData-v40 with deterministic search-demo rows for this flow.
+- Scripts/05-PostDeployment-Checks.sql synchronized with v40 marker and expanded Generate Certificates checks.
+
+### Validation sync
+- Runtime verification confirmed the page shows only Institution filter and Search Students controls for this section.
+- Search verification confirmed non-university certificate title/type keywords now narrow row results.
+
 ## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Runtime Validation
 
 ### Implementation sync

@@ -2296,6 +2296,12 @@ public class CertificateDocumentTypeOption
     public string Label { get; set; } = string.Empty;
 }
 
+public class CertificateInstitutionOption
+{
+    public int Value { get; set; }
+    public string Label { get; set; } = string.Empty;
+}
+
 public class GenerateCertificatesPageModel
 {
     public bool IsConnected { get; set; }
@@ -2308,10 +2314,12 @@ public class GenerateCertificatesPageModel
     public Guid? SelectedCourseId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
     public int? SelectedInstitutionType { get; set; }
+    public bool CanSelectInstitution { get; set; }
     public bool ShowUniversityCertificates { get; set; }
     public bool CanUploadAdditionalCertificates { get; set; }
     public string PeriodFilterLabel { get; set; } = "Semester";
     public List<CertificateDocumentTypeOption> AvailableDocumentTypes { get; set; } = new();
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
     public List<LookupItem> Departments { get; set; } = new();

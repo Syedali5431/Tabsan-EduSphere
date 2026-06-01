@@ -323,6 +323,44 @@ public class PortalController : Controller
     private static string ResolvePeriodFilterLabel(int? institutionType)
         => IsUniversityInstitutionType(institutionType) ? "Class" : "Semester";
 
+    private static List<CertificateInstitutionOption> BuildLicensedInstitutionOptions(PortalCapabilityMatrixApiModel? matrix)
+    {
+        var options = new List<CertificateInstitutionOption>();
+        var includeUniversity = matrix?.IncludeUniversity ?? true;
+        var includeSchool = matrix?.IncludeSchool ?? true;
+        var includeCollege = matrix?.IncludeCollege ?? true;
+
+        if (includeUniversity)
+            options.Add(new CertificateInstitutionOption { Value = 0, Label = "University" });
+        if (includeSchool)
+            options.Add(new CertificateInstitutionOption { Value = 1, Label = "School" });
+        if (includeCollege)
+            options.Add(new CertificateInstitutionOption { Value = 2, Label = "College" });
+
+        if (options.Count == 0)
+            options.Add(new CertificateInstitutionOption { Value = 0, Label = "University" });
+
+        return options;
+    }
+
+    private static int ResolveLicensedInstitutionSelection(
+        int? requestedInstitutionType,
+        SessionIdentity? identity,
+        IReadOnlyCollection<CertificateInstitutionOption> licensedOptions)
+    {
+        if (licensedOptions.Count == 1)
+            return licensedOptions.First().Value;
+
+        if (requestedInstitutionType.HasValue && licensedOptions.Any(x => x.Value == requestedInstitutionType.Value))
+            return requestedInstitutionType.Value;
+
+        if (identity?.InstitutionType is int identityInstitutionType
+            && licensedOptions.Any(x => x.Value == identityInstitutionType))
+            return identityInstitutionType;
+
+        return licensedOptions.First().Value;
+    }
+
     private static int? ResolveCertificateInstitutionType(SessionIdentity? identity, List<DepartmentItem> departments, Guid? selectedDepartmentId)
     {
         if (selectedDepartmentId.HasValue)
@@ -8296,6 +8334,14 @@ public class PortalController : Controller
 
         try
         {
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(matrix);
+            model.CanSelectInstitution = model.AvailableInstitutionTypes.Count > 1;
+            model.SelectedInstitutionType = ResolveLicensedInstitutionSelection(
+                model.SelectedInstitutionType,
+                identity,
+                model.AvailableInstitutionTypes);
+
             if (identity?.IsSuperAdmin == true)
             {
                 model.Tenants = await _api.GetTenantsAsync(ct);
@@ -8316,14 +8362,12 @@ public class PortalController : Controller
                 .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
                 .ToList();
 
-            model.SelectedInstitutionType ??= ResolveCertificateInstitutionType(identity, departmentDetails, model.SelectedDepartmentId);
             model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.SelectedInstitutionType);
             model.Semesters = await _api.GetSemestersAsync(ct);
             model.AvailableDocumentTypes = BuildCertificateDocumentTypes(model.SelectedInstitutionType);
 
             model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, ct);
 
-            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
             model.ShowUniversityCertificates = IsUniversityInstitutionType(model.SelectedInstitutionType) && (matrix?.IncludeUniversity ?? true);
 
             if (IsUniversityInstitutionType(model.SelectedInstitutionType) && !model.ShowUniversityCertificates)

@@ -1,5 +1,35 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
+
+### Function inventory delta
+- Newly created functions in this slice:
+	- PortalController.BuildLicensedInstitutionOptions
+	- PortalController.ResolveLicensedInstitutionSelection
+	- CertificateInstitutionOption (view model)
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.GenerateCertificates
+		- institution filter options are now derived from license capability matrix and auto-select a single licensed institute.
+	- GenerateCertificates.cshtml table search index
+		- now includes non-university generated certificate title/document type text in row search keys.
+	- EduApiClient.DownloadCertificateTemplateAsync
+		- now surfaces non-404 API errors while preserving null return for true not-found template responses.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v40 and adds deterministic Generate Certificates search-demo rows:
+	- DEMO-CERT-COL-SEARCH-941
+	- DEMO-CERT-SCH-SEARCH-942
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v40 checks for:
+	- dataset marker,
+	- expanded additional-certificate demo student counts,
+	- deterministic search-demo usernames.
+
+### Validation summary
+- Runtime checks confirm Institution filter now follows license options:
+	- single licensed institute => auto-selected and locked,
+	- multiple licensed institutes => selectable dropdown.
+- Search checks confirm typing student/program/department plus non-university certificate title/type narrows table rows as expected.
+
 ## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Function Inventory Sync
 
 ### Function inventory delta

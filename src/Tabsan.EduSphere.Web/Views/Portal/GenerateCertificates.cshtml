@@ -31,84 +31,25 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <form method="get" class="row g-2 align-items-end">
-                    @if (Model.Identity?.IsSuperAdmin == true)
-                    {
-                        <div class="col-md-3">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
-                                @foreach (var tenant in Model.Tenants)
-                                {
-                                    <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                                <option value="">All Campuses</option>
-                                @foreach (var campus in Model.Campuses)
-                                {
-                                    <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
-                                }
-                            </select>
-                        </div>
-                    }
-
-                    <div class="col-md-3">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Departments</option>
-                            @foreach (var d in Model.Departments)
-                            {
-                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id)">@d.Name</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Course</label>
-                        <select name="courseId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Courses</option>
-                            @foreach (var c in Model.Courses)
-                            {
-                                <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id)">@c.Name</option>
-                            }
-                        </select>
-                    </div>
-
-                    @if (Model.Identity?.IsSuperAdmin == true)
-                    {
-                        <div class="col-md-3">
-                            <label class="form-label">Institution</label>
+                    <div class="col-md-4">
+                        <label class="form-label">Institution</label>
+                        @if (Model.CanSelectInstitution)
+                        {
                             <select name="institutionType" class="form-select" onchange="this.form.submit()">
-                                <option value="">Auto</option>
-                                <option value="0" selected="@(Model.SelectedInstitutionType == 0)">University</option>
-                                <option value="1" selected="@(Model.SelectedInstitutionType == 1)">School</option>
-                                <option value="2" selected="@(Model.SelectedInstitutionType == 2)">College</option>
-                            </select>
-                        </div>
-                    }
-
-                    @if (Model.ShowUniversityCertificates)
-                    {
-                        <div class="col-md-3">
-                            <label class="form-label">@Model.PeriodFilterLabel</label>
-                            <select name="semesterId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All @(Model.PeriodFilterLabel.ToLowerInvariant() + "s")</option>
-                                @foreach (var semester in Model.Semesters)
+                                @foreach (var institution in Model.AvailableInstitutionTypes)
                                 {
-                                    <option value="@semester.Id" selected="@(Model.SelectedSemesterId == semester.Id)">@semester.Name</option>
+                                    <option value="@institution.Value" selected="@(Model.SelectedInstitutionType == institution.Value)">@institution.Label</option>
                                 }
                             </select>
-                        </div>
-                    }
-
-                    @if (Model.Identity?.IsSuperAdmin != true)
-                    {
-                        <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                    }
+                        }
+                        else
+                        {
+                            <select class="form-select" disabled>
+                                <option selected>@(Model.AvailableInstitutionTypes.FirstOrDefault()?.Label ?? "University")</option>
+                            </select>
+                            <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                        }
+                    </div>
 
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>Apply</button>
@@ -232,8 +173,19 @@
         else
         {
             <div class="card shadow-sm">
+                <div class="card-body border-bottom">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6 col-lg-4">
+                            <label for="certificateStudentSearch" class="form-label mb-1">Search Students</label>
+                            <input id="certificateStudentSearch"
+                                   type="search"
+                                   class="form-control"
+                                   placeholder="Type name, registration, department, or program" />
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
+                    <table id="certificateStudentsTable" class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>Student</th>
@@ -252,10 +204,15 @@
                                 }
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="certificateStudentsTableBody">
                             @foreach (var student in Model.Students)
                             {
-                                <tr>
+                                var additionalCertificateSearch = string.Join(" ", student.AdditionalCertificates.Select(cert =>
+                                    string.IsNullOrWhiteSpace(cert.DocumentType)
+                                        ? cert.Title
+                                        : $"{cert.Title} {cert.DocumentType}"));
+                                var rowSearch = ($"{student.StudentName} {student.RegistrationNumber} {student.DepartmentName} {student.ProgramName} {additionalCertificateSearch}").ToLowerInvariant();
+                                <tr data-search="@rowSearch">
                                     <td>@student.StudentName</td>
                                     <td>@student.RegistrationNumber</td>
                                     <td>@student.DepartmentName</td>
@@ -368,3 +325,22 @@
         }
     }
 </div>
+
+<script>
+    (function () {
+        const searchInput = document.getElementById('certificateStudentSearch');
+        const tableBody = document.getElementById('certificateStudentsTableBody');
+        if (!searchInput || !tableBody) {
+            return;
+        }
+
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        searchInput.addEventListener('input', function () {
+            const term = (searchInput.value || '').trim().toLowerCase();
+            rows.forEach(function (row) {
+                const haystack = (row.getAttribute('data-search') || '').toLowerCase();
+                row.style.display = term.length === 0 || haystack.includes(term) ? '' : 'none';
+            });
+        });
+    })();
+</script>

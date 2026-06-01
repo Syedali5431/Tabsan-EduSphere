@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Generate Certificates License-Driven Institute Filter + Search Demo Seed v40)
+- Runtime delivery in this slice:
+  - simplified Generate Certificates filter UI to institution-only,
+  - enforced license-driven institution selection behavior (single-option auto-select/lock, multi-option user selection),
+  - expanded table search behavior to include non-university certificate title/type text,
+  - advanced Scripts/03-FullDummyData.sql to FullDummyData-v40 with deterministic search-demo rows,
+  - synchronized Scripts/05-PostDeployment-Checks.sql with v40 marker and expanded checks.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive seed/check update only for existing Generate Certificates workflows.
+- Validation Summary:
+  - page runtime confirms institution-only filter and search-first admin workflow,
+  - search runtime confirms non-university certificate title/type matching,
+  - SQL checks confirm v40 marker and deterministic demo rows.
+
 ### 2026-06-01 - Product Requirements Synchronization (Generate Certificates Additional Certificate Demo Seed v39)
 - Runtime delivery in this slice:
   - advanced Scripts/03-FullDummyData.sql to FullDummyData-v39,

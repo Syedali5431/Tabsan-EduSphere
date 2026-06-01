@@ -1,3 +1,17 @@
+## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40 (Schema Posture)
+
+- Implementation Summary:
+	- advanced Scripts/03-FullDummyData.sql dataset marker to FullDummyData-v40,
+	- added additive deterministic Generate Certificates search-demo rows in existing tables only:
+		- users (+2 rows),
+		- student_profiles (+2 rows),
+		- enrollments (+2 rows),
+	- updated Scripts/05-PostDeployment-Checks.sql to v40 marker and expanded deterministic checks.
+- Validation Summary:
+	- SQL updates remain additive and idempotent on deterministic IDs,
+	- schema impact: no schema mutation,
+	- EF migration impact: none.
+
 ## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 (Schema Posture)
 
 - Implementation Summary:

@@ -1351,10 +1351,20 @@ public class EduApiClient : IEduApiClient
             _ => $"api/v1/certificate-generation/templates/{normalized}/default"
         };
 
-        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
-        using var response = await CreateClient().SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode)
+        using var response = await SendWithAutoRefreshAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Get, path);
+            return request;
+        }, ct);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null;
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            throw BuildException(response.StatusCode, body);
+        }
 
         return await response.Content.ReadAsByteArrayAsync(ct);
     }
