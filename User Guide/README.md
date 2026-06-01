@@ -26,6 +26,7 @@ Repository Sync Note (15 May 2026):
 - [Student-Guide.md](Student-Guide.md)
 - [Faculty-Guide.md](Faculty-Guide.md)
 - [Admin-Guide.md](Admin-Guide.md)
+- [Finance-Guide.md](Finance-Guide.md)
 - [SuperAdmin-Guide.md](SuperAdmin-Guide.md)
 - [License-KeyGen-Guide.md](License-KeyGen-Guide.md)
 - [Training Manual.md](Training Manual.md)
@@ -36,6 +37,7 @@ Repository Sync Note (15 May 2026):
 - Students: start with Student Guide
 - Faculty members: start with Faculty Guide
 - Department admins: start with Admin Guide
+- Finance officers: start with Finance Guide
 - Platform owners / IT administrators: start with SuperAdmin Guide
 - Teams responsible for issuing licenses: use License KeyGen Guide
 
@@ -102,6 +104,8 @@ Use this section to quickly identify the right guide for each operational need.
 
 - Department administration operations, user and semester controls, and compliance checks:
   - Admin-Guide.md
+- Finance operations for payments, reports, analytics, and scope controls:
+  - Finance-Guide.md
 - Platform governance, licensing, module composition, sidebar/report governance, and audit handling:
   - SuperAdmin-Guide.md
 
@@ -138,6 +142,11 @@ Use these paths for faster onboarding by responsibility.
 - Start: SuperAdmin-Guide.md
 - Then: License-KeyGen-Guide.md
 - Then: Training Manual.md (IT and SuperAdmin sessions)
+
+5. Finance Team
+- Start: Finance-Guide.md
+- Then: User Guide.md
+- Then: Training Manual.md (Finance session)
 
 ## Operational Quality Bar
 

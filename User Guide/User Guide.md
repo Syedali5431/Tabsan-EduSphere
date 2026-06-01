@@ -224,6 +224,9 @@ Upon login you see a personalised dashboard showing:
 
 Finance users can work with payments, payment reports, and payment analytics without accessing academic modules.
 
+For full role-specific details, use the dedicated guide:
+- Finance-Guide.md
+
 ### 7.1 Finance Access
 
 Finance users can access:
