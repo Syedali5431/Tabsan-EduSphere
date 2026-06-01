@@ -1,5 +1,21 @@
 # Student Lifecycle Output
 
+## Output Synchronization Update (2026-06-02)
+
+- Domain script-pack execution outputs are now aligned by institution mode:
+	- Scripts/School Scripts,
+	- Scripts/College Scripts,
+	- Scripts/University Scripts.
+- Expected deterministic coverage in lifecycle output evidence:
+	- School: Class 1-10 rows for all scoped school students,
+	- College: Class 11-12 rows for all scoped college students,
+	- University: Semester 1-8 rows for all scoped university students.
+- University lifecycle output now explicitly includes seeded and verifiable:
+	- enrollment records,
+	- attendance records,
+	- FYP project records.
+- University post-deployment output validation now includes strict attendance/FYP coverage assertions.
+
 ## Reference Scenario
 This document captures the expected lifecycle of a single student across the supported institution modes.
 

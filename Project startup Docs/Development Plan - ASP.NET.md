@@ -1,3 +1,24 @@
+## 2026-06-02 Update - Development Plan Synchronization (Domain Script Packs and Full Dummy Coverage)
+
+### Plan sync
+- Added domain-specific database execution packs under Scripts:
+  - School Scripts,
+  - College Scripts,
+  - University Scripts.
+- Aligned dummy-data strategy by institution mode:
+  - School mode: Class 1 to Class 10 for all scoped students.
+  - College mode: Class 11 and Class 12 for all scoped students.
+  - University mode: Semester 1 to Semester 8 for all scoped students.
+- Extended University demo plan with deterministic lifecycle artifacts beyond results:
+  - enrollments,
+  - attendance records,
+  - FYP projects.
+- Added strict University post-deployment assertions for attendance and FYP coverage.
+
+### Validation sync
+- Build/runtime checks remain stable for documentation/scripting changes.
+- Full integration test baseline still includes known unrelated failures tracked separately (sidebar expectation + payment `ReceiptNo` test-db mismatch).
+
 ## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import Date Parsing Compatibility
 
 ## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43

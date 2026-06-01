@@ -1,6 +1,17 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (02 June 2026):
+- Added domain script-pack execution references for environment walkthroughs:
+   - Scripts/School Scripts,
+   - Scripts/College Scripts,
+   - Scripts/University Scripts.
+- Clarified deterministic full dummy-data coverage by institution mode:
+   - School => Class 1-10,
+   - College => Class 11-12,
+   - University => Semester 1-8.
+- Clarified University lifecycle demo now includes enrollment, attendance, and FYP seeded data and strict post-deployment validation expectations.
+
 User guide synchronization update (28 May 2026):
 - Enter Results governance now documents stricter write-scope checks, controlled publish actions, and mandatory correction reason capture.
 - Training/demo baseline now includes expanded attendance timeline rows and mixed result lifecycle states (`Midterm`, published `Final`, draft `FinalReview`).

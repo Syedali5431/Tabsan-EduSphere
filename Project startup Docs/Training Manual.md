@@ -1,6 +1,17 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (02 June 2026):
+- Add trainer coverage for domain-specific script-pack execution paths:
+	- Scripts/School Scripts,
+	- Scripts/College Scripts,
+	- Scripts/University Scripts.
+- Add trainer verification for deterministic all-student lifecycle demo rows:
+	- School Class 1-10,
+	- College Class 11-12,
+	- University Semester 1-8.
+- Add trainer workflow to verify University demo now includes enrollment, attendance, and FYP seeded artifacts and strict post-deployment attendance/FYP checks.
+
 Training synchronization update (28 May 2026):
 - Add trainer coverage for Enter Results governance: write-scope checks, controlled publish rights, and mandatory correction reason.
 - Add seeded-data walkthrough for expanded attendance timeline and mixed result lifecycle states (`Midterm`, published `Final`, draft `FinalReview`).

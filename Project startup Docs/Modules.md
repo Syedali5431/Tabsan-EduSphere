@@ -1,3 +1,22 @@
+## Execution Update - 2026-06-02 (Domain Script Packs + Full Lifecycle Demo Coverage)
+
+### Module impact summary
+- No new module introduced; this slice aligns existing academic modules and demo-seed execution flows.
+- Added domain-specific script packs under Scripts for environment-specific demo execution:
+  - School Scripts,
+  - College Scripts,
+  - University Scripts.
+- Full dummy coverage expectations are now explicitly represented in domain scripts:
+  - School: Class 1-10 rows for all scoped students.
+  - College: Class 11-12 rows for all scoped students.
+  - University: Semester 1-8 rows for all scoped students.
+- University module-surface demo realism now includes deterministic enrollment, attendance, and FYP rows in addition to semester results/report cards.
+- University post-deployment checks now enforce strict attendance/FYP coverage alongside semester result/report-card coverage.
+
+### Validation summary
+- Changes are additive/idempotent and remain within existing module boundaries.
+- Execution and documentation alignment now supports repeatable SAT/UAT institution-mode walkthroughs.
+
 ## Execution Update - 2026-06-01 (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
 
 ## Execution Update - 2026-06-01 (Payments Student Scope Filter Stabilization + Demo Seed v43)

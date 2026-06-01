@@ -1,5 +1,17 @@
 # Phase 36 Stage 36.5 UAT/SAT Approval Pack
 
+## Synchronization Addendum (2026-06-02)
+
+- Approval-pack references now include domain script-pack execution alignment:
+	- Scripts/School Scripts,
+	- Scripts/College Scripts,
+	- Scripts/University Scripts.
+- Institutional lifecycle demo coverage alignment:
+	- School: Class 1-10,
+	- College: Class 11-12,
+	- University: Semester 1-8 plus enrollment, attendance, and FYP seed artifacts.
+- University SAT/UAT sign-off guidance now expects strict attendance/FYP post-deployment checks alongside semester result/report-card checks.
+
 ## Objective
 Capture final UAT/SAT pass outcomes and operational sign-off before Stage 36.6 go-live execution.
 

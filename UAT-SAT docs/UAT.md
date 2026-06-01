@@ -1,5 +1,21 @@
 # User Acceptance Testing (UAT)
 
+## UAT Synchronization Update (2026-06-02)
+
+- Validate domain-specific script-pack path readiness for demo/UAT runs:
+	- Scripts/School Scripts,
+	- Scripts/College Scripts,
+	- Scripts/University Scripts.
+- Validate deterministic all-student data coverage in UAT evidence:
+	- School: Class 1-10,
+	- College: Class 11-12,
+	- University: Semester 1-8.
+- Add explicit UAT verification that University seeded lifecycle data includes:
+	- enrollments,
+	- attendance,
+	- FYP projects.
+- Include check that University strict post-deployment checks pass for attendance/FYP coverage.
+
 ## Purpose
 User acceptance testing confirms the product behaves correctly from an operator perspective before deployment handoff.
 

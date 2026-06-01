@@ -1,5 +1,27 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-02 - Product Requirements Synchronization (Domain Script Packs + Full Lifecycle Seed Coverage)
+- Runtime/ops delivery in this slice:
+  - added domain-specific script packs for controlled demo execution:
+    - `Scripts/School Scripts`,
+    - `Scripts/College Scripts`,
+    - `Scripts/University Scripts`,
+  - aligned deterministic all-student dummy data coverage by institution context:
+    - School => Class 1 to Class 10,
+    - College => Class 11 and Class 12,
+    - University => Semester 1 to Semester 8,
+  - extended University demo scope with deterministic lifecycle rows for:
+    - enrollments,
+    - attendance,
+    - FYP,
+  - strengthened University post-deployment checks to validate attendance/FYP coverage in addition to semester cards/results.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive/idempotent seed and check behavior only.
+- Validation summary:
+  - documentation, seed strategy, and operational SAT/UAT walkthroughs are now aligned for School/College/University execution paths.
+
 ### 2026-06-01 - Product Requirements Synchronization (Payments Student Scope Filter Stabilization + Demo Seed v43)
 - Runtime delivery in this slice:
   - corrected Payments student option loading so selected `institutionType` is enforced even in superadmin all-scope sessions (no tenant/campus selected),

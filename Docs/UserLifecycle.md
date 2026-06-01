@@ -1,5 +1,16 @@
 # Tabsan EduSphere User Lifecycle
 
+## 2026-06-02 Lifecycle Synchronization Summary (Domain Script Packs and Full Dummy Coverage)
+
+- Lifecycle demo/validation data is now organized in domain-specific script packs:
+  - Scripts/School Scripts,
+  - Scripts/College Scripts,
+  - Scripts/University Scripts.
+- School lifecycle demo data now covers Class 1 to Class 10 for all scoped school students with deterministic report-card and result rows.
+- College lifecycle demo data now covers Class 11 and Class 12 for all scoped college students with deterministic report-card and result rows.
+- University lifecycle demo data now covers Semester 1 to Semester 8 for all scoped university students and includes deterministic enrollment, attendance, and FYP lifecycle rows.
+- University post-deployment lifecycle checks now include strict attendance and FYP coverage assertions in addition to semester report-card/result checks.
+
 ## 2026-05-26 Lifecycle Synchronization Summary
 
 - Governance lifecycle includes institution-aware result-calculation control (GPA/component rules) under privileged settings access.

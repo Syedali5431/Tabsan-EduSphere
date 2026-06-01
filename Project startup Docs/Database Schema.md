@@ -1,3 +1,24 @@
+## 2026-06-02 Update - Domain Script Packs and Deterministic Lifecycle Seed Coverage (Schema Posture)
+
+- Implementation Summary:
+	- added domain-specific script-pack folders under Scripts:
+		- `School Scripts`,
+		- `College Scripts`,
+		- `University Scripts`,
+	- added domain-scoped `03-FullDummyData.sql` scripts with deterministic all-student coverage:
+		- School: Class 1 to Class 10,
+		- College: Class 11 and Class 12,
+		- University: Semester 1 to Semester 8,
+	- expanded University script with additive deterministic rows in existing tables only:
+		- `enrollments`,
+		- `attendance_records`,
+		- `fyp_projects`,
+	- expanded University `05-PostDeployment-Checks.sql` with strict all-student attendance and FYP coverage assertions.
+- Validation Summary:
+	- schema impact: no table/column/index/constraint mutation,
+	- EF migration impact: none,
+	- changes remain additive and idempotent.
+
 ## 2026-06-01 Update - Payments Filter Demo Seed v42 (Schema Posture)
 
 ## 2026-06-01 Update - Payments Student Scope Demo Seed v43 (Schema Posture)

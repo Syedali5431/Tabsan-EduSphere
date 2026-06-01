@@ -1,5 +1,18 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-06-02 Synchronization Note (Domain Script Packs and Full Dummy Coverage)
+
+- Menu topology and keys remain unchanged in this documentation sync.
+- Documentation now aligns with domain-specific script packs under Scripts:
+	- School Scripts,
+	- College Scripts,
+	- University Scripts.
+- Data-seed coverage reflected for menu-driven demos:
+	- School: Class 1 to Class 10 coverage for all scoped students.
+	- College: Class 11 and Class 12 coverage for all scoped students.
+	- University: Semester 1 to Semester 8 coverage for all scoped students with additional enrollment, attendance, and FYP demo rows.
+- University validation posture now includes stricter attendance and FYP post-deployment assertions.
+
 ## 2026-05-28 Synchronization Note (Enter Results Acceptance Criteria Closure)
 
 - No new menu key introduced in this closure slice.

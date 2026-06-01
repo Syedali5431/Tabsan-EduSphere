@@ -1,5 +1,20 @@
 # UAT Test Plan
 
+## UAT Test Plan Synchronization Update (2026-06-02)
+
+- Add deterministic domain script-pack checks:
+	- run and verify School Scripts pack coverage (Class 1-10 for all scoped school students),
+	- run and verify College Scripts pack coverage (Class 11-12 for all scoped college students),
+	- run and verify University Scripts pack coverage (Semester 1-8 for all scoped university students).
+- Add University lifecycle demo-data checks:
+	- enrollment row presence for all scoped university students,
+	- attendance row presence across semester coverage,
+	- FYP row presence per scoped university student.
+- Add University strict post-deployment verification:
+	- semester report-card/results thresholds,
+	- attendance threshold,
+	- FYP per-student threshold.
+
 ## Scope
 This checklist covers the user-acceptance flow for the main EduSphere app and the standalone Tabsan.Lic tool before deployment.
 

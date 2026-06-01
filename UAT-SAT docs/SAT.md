@@ -1,5 +1,21 @@
 # Site Acceptance Testing (SAT)
 
+## SAT Synchronization Update (2026-06-02)
+
+- Include domain script-pack verification as part of SAT execution evidence:
+	- Scripts/School Scripts,
+	- Scripts/College Scripts,
+	- Scripts/University Scripts.
+- Confirm deterministic all-student demo coverage by institution mode:
+	- School: Class 1-10,
+	- College: Class 11-12,
+	- University: Semester 1-8.
+- For University SAT, additionally confirm seeded lifecycle rows exist for:
+	- enrollments,
+	- attendance_records,
+	- fyp_projects.
+- Confirm University post-deployment strict checks include attendance and FYP coverage assertions.
+
 ## Purpose
 Site acceptance testing verifies the deployed application behaves correctly in its target environment after deployment.
 
