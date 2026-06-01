@@ -184,11 +184,9 @@ public class PortalController : Controller
             catch (Exception ex) when (IsApiConnectivityException(ex))
             {
                 _logger.LogWarning(ex, "Unable to load visible menu keys for action {ActionName} due to API connectivity issue.", action);
-                TempData["PortalMessage"] = "API service is temporarily unavailable. Some menu checks were skipped for this request.";
-                visibleMenuKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    requiredMenuKey
-                };
+                TempData["PortalMessage"] = "API service is temporarily unavailable. Access checks could not be completed.";
+                context.Result = RedirectToAction(nameof(Dashboard));
+                return;
             }
 
             if (!visibleMenuKeys.Contains(requiredMenuKey))
