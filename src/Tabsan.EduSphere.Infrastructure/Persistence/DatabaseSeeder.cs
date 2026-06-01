@@ -369,6 +369,17 @@ public static class DatabaseSeeder
         var programs         = await Upsert("programs",          "Programs",           "Manage degree programs",                         11);
         var courses          = await Upsert("courses",           "Courses",            "Manage courses and offerings",                   12);
         var prerequisites    = await Upsert("prerequisites",     "Prerequisites",      "Configure course prerequisite rules",            13);
+        var degreeAudit      = await Upsert("degree_audit",      "Degree Audit",       "Evaluate progress against degree requirements and deficits", 30);
+        var graduationEligibility = await Upsert("graduation_eligibility", "Graduation Eligibility", "Assess graduation readiness using configured rules", 31);
+        var degreeRules      = await Upsert("degree_rules",      "Degree Rules",       "Configure mandatory credit and rule constraints for programs", 32);
+        var graduationApply  = await Upsert("graduation_apply",  "Graduation Apply",   "Student-facing graduation application workflow", 33);
+        var graduationApplications = await Upsert("graduation_applications", "Graduation Applications", "Review and process graduation requests", 34);
+        var gradingConfig    = await Upsert("grading_config",    "Grading Config",     "Maintain grading profiles pass thresholds and ranges", 35);
+        var lmsManage        = await Upsert("lms_manage",        "LMS Manage",         "Manage LMS integration and governance settings", 36);
+        var courseMaterial   = await Upsert("course_material",   "Course Material",    "Upload organize and access course resources", 37);
+        var discussion       = await Upsert("discussion",        "Discussion",         "Threaded discussions for course collaboration and Q&A", 38);
+        var announcements    = await Upsert("announcements",     "Announcements",      "Scoped institutional and course announcements", 39);
+        var studyPlan        = await Upsert("study_plan",        "Study Plan",         "Plan student course pathways with advisor review", 40);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
         var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
@@ -406,6 +417,7 @@ public static class DatabaseSeeder
         var campusManagement    = await Upsert("campus_management",    "Campus Management",    "Manage campuses and activation status", 9, parentId: systemSettings.Id, isSystemMenu: true);
         var libraryConfig       = await Upsert("library_config",       "Library Config",       "Configure external library integration", 10, parentId: systemSettings.Id, isSystemMenu: true);
         var accreditation       = await Upsert("accreditation",        "Accreditation",        "Manage accreditation templates and exports", 11, parentId: systemSettings.Id, isSystemMenu: true);
+        var advancedAudit       = await Upsert("advanced_audit",       "Advanced Audit",       "System audit logs and compliance tracking", 12, parentId: systemSettings.Id, isSystemMenu: true);
 
         // Remove legacy Module Settings menu if present from older seeds.
         var legacyModuleSettings = await db.SidebarMenuItems
@@ -470,7 +482,8 @@ public static class DatabaseSeeder
             tenantManagement.Id,
             campusManagement.Id,
             libraryConfig.Id,
-            accreditation.Id
+            accreditation.Id,
+            advancedAudit.Id
         })
         {
             EnsureRoleAccess(id, "Admin",   isAllowed: false);
@@ -515,6 +528,51 @@ public static class DatabaseSeeder
         EnsureRoleAccess(prerequisites.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(prerequisites.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(prerequisites.Id, "Student", isAllowed: false);
+
+        // University and extended academic feature menus.
+        EnsureRoleAccess(degreeAudit.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(degreeAudit.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(degreeAudit.Id, "Student", isAllowed: true);
+
+        EnsureRoleAccess(graduationEligibility.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(graduationEligibility.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(graduationEligibility.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(degreeRules.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(degreeRules.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(degreeRules.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(graduationApply.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(graduationApply.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(graduationApply.Id, "Student", isAllowed: true);
+
+        EnsureRoleAccess(graduationApplications.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(graduationApplications.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(graduationApplications.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(gradingConfig.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(gradingConfig.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(gradingConfig.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(lmsManage.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(lmsManage.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(lmsManage.Id, "Student", isAllowed: false);
+
+        EnsureRoleAccess(courseMaterial.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(courseMaterial.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(courseMaterial.Id, "Student", isAllowed: true);
+
+        EnsureRoleAccess(discussion.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(discussion.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(discussion.Id, "Student", isAllowed: true);
+
+        EnsureRoleAccess(announcements.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(announcements.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(announcements.Id, "Student", isAllowed: true);
+
+        EnsureRoleAccess(studyPlan.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(studyPlan.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(studyPlan.Id, "Student", isAllowed: true);
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
@@ -632,6 +690,17 @@ public static class DatabaseSeeder
 
         EnsureRoleAccess(userImport.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(programs.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(degreeAudit.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(graduationEligibility.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(degreeRules.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(graduationApply.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(graduationApplications.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(gradingConfig.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(lmsManage.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(courseMaterial.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(discussion.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(announcements.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(studyPlan.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(prerequisites.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(gradebook.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(rubricManage.Id, "Finance", isAllowed: false);

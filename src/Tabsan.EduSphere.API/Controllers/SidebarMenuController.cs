@@ -61,6 +61,9 @@ public class SidebarMenuController : ControllerBase
             ["assignments"] = "assignments",
             ["rubric_manage"] = "assignments",
             ["attendance"] = "attendance",
+            ["timetable_admin"] = "attendance",
+            ["timetable_teacher"] = "attendance",
+            ["timetable_student"] = "attendance",
             ["results"] = "results",
             ["enter_results"] = "results",
             ["gradebook"] = "results",
@@ -73,7 +76,8 @@ public class SidebarMenuController : ControllerBase
             ["report_center"] = "reports",
             ["report_settings"] = "reports",
             ["ai_chat"] = "ai_chat",
-            ["theme_settings"] = "themes"
+            ["theme_settings"] = "themes",
+            ["advanced_audit"] = "advanced_audit"
         };
 
     public SidebarMenuController(
