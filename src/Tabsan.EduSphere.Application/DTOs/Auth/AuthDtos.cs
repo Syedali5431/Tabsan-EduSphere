@@ -49,13 +49,17 @@ public sealed record ChangePasswordRequest(
     string CurrentPassword,
 
     [property: Required]
-    [property: StringLength(256, MinimumLength = 8)]
+    [property: StringLength(16, MinimumLength = 12)]
     string NewPassword);
 
 /// <summary>Request body for POST /api/v1/auth/force-change-password (P4-S2-02).</summary>
 public sealed record ForceChangePasswordRequest(
     [property: Required]
-    [property: StringLength(256, MinimumLength = 8)]
+    [property: StringLength(256, MinimumLength = 1)]
+    string CurrentPassword,
+
+    [property: Required]
+    [property: StringLength(16, MinimumLength = 12)]
     string NewPassword);
 
 /// <summary>Request body for completing MFA enrollment by proving current authenticator ownership.</summary>

@@ -104,6 +104,7 @@ public class UserImportAndForceChangeIntegrationTests
 
             var forceChangeResponse = await importedUserClient.PostAsJsonAsync("api/v1/auth/force-change-password", new
             {
+                currentPassword = importedUsername,
                 newPassword = "TempPass@12345"
             });
 

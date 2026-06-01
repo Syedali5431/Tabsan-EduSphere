@@ -47,7 +47,7 @@ public interface IAuthService
     /// Clears the MustChangePassword flag on success.
     /// Returns false when the user is not found or the new password is invalid.
     /// </summary>
-    Task<bool> ForceChangePasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
+    Task<bool> ForceChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken ct = default);
 
     /// <summary>
     /// Starts or rotates MFA enrollment for the user and returns bootstrap secret and one-time recovery codes.

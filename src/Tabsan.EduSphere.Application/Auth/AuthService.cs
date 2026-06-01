@@ -431,17 +431,25 @@ public class AuthService : IAuthService
 
     /// <summary>
     /// Sets a new password for a user who is flagged with MustChangePassword = true.
-    /// Does NOT require the current password (because the imported password is just a placeholder).
+    /// Requires the old/current password for verification before changing.
     /// Clears MustChangePassword on success.
-    /// Returns false when the user is not found or the new password is empty.
+    /// Returns false when the user is not found, old password is wrong, or the new password is invalid.
     /// </summary>
-    public async Task<bool> ForceChangePasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
+    public async Task<bool> ForceChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(newPassword))
+        if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
             return false;
 
         var user = await _userRepo.GetByIdAsync(userId, ct);
         if (user is null) return false;
+        if (!user.MustChangePassword) return false;
+
+        if (!_passwordHasher.Verify(user.PasswordHash, currentPassword))
+            return false;
+
+        var recentHashes = await _passwordHistory.GetRecentAsync(userId, 5, ct);
+        if (recentHashes.Any(h => _passwordHasher.Verify(h.PasswordHash, newPassword)))
+            return false;
 
         var newHash = _passwordHasher.Hash(newPassword);
         user.UpdatePasswordHash(newHash);

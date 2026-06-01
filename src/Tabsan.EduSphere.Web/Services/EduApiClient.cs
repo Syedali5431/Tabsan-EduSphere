@@ -17,7 +17,7 @@ public interface IEduApiClient
     ApiConnectionModel GetConnection();
     void SaveConnection(ApiConnectionModel model);
     SessionIdentity? GetSessionIdentity();
-    Task ForceChangePasswordAsync(string newPassword, CancellationToken ct);
+    Task ForceChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct);
     Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> DisableTwoFactorAsync(string code, CancellationToken ct);
@@ -706,8 +706,8 @@ public class EduApiClient : IEduApiClient
         };
     }
 
-    public Task ForceChangePasswordAsync(string newPassword, CancellationToken ct)
-        => PostAsync<object, object>("api/v1/auth/force-change-password", new { newPassword }, ct);
+    public Task ForceChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct)
+        => PostAsync<object, object>("api/v1/auth/force-change-password", new { currentPassword, newPassword }, ct);
 
     public async Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
     {

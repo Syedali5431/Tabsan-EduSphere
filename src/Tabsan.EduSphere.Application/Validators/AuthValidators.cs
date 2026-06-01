@@ -37,14 +37,40 @@ public sealed class ChangePasswordRequestValidator : AbstractValidator<ChangePas
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("New password is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
-            .MaximumLength(128).WithMessage("Password must not exceed 128 characters.")
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches("[0-9]").WithMessage("Password must contain at least one digit.")
-            .Matches(@"[!@#$%^&*()_\-+=\[\]{}|;:',.<>?/\\]")
-            .WithMessage("Password must contain at least one special character.");
+            .Must(BeSafePassword)
+            .WithMessage(PasswordRulesMessage);
+
+        RuleFor(x => x)
+            .Must(x => !string.Equals(x.CurrentPassword, x.NewPassword, StringComparison.Ordinal))
+            .WithMessage("New password must be different from old password.");
     }
+
+    private static bool BeSafePassword(string password) => PasswordPolicyRules.BeSafePassword(password);
+
+    private const string PasswordRulesMessage = PasswordPolicyRules.PasswordRulesMessage;
+}
+
+/// <summary>Validates <see cref="ForceChangePasswordRequest"/>.</summary>
+public sealed class ForceChangePasswordRequestValidator : AbstractValidator<ForceChangePasswordRequest>
+{
+    public ForceChangePasswordRequestValidator()
+    {
+        RuleFor(x => x.CurrentPassword)
+            .NotEmpty().WithMessage("Old password is required.");
+
+        RuleFor(x => x.NewPassword)
+            .NotEmpty().WithMessage("New password is required.")
+            .Must(BeSafePassword)
+            .WithMessage(PasswordRulesMessage);
+
+        RuleFor(x => x)
+            .Must(x => !string.Equals(x.CurrentPassword, x.NewPassword, StringComparison.Ordinal))
+            .WithMessage("New password must be different from old password.");
+    }
+
+    private static bool BeSafePassword(string password) => PasswordPolicyRules.BeSafePassword(password);
+
+    private const string PasswordRulesMessage = PasswordPolicyRules.PasswordRulesMessage;
 }
 
 /// <summary>Validates <see cref="AdminResetPasswordRequest"/>.</summary>
@@ -57,12 +83,41 @@ public sealed class AdminResetPasswordRequestValidator : AbstractValidator<Admin
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("New password is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
-            .MaximumLength(128).WithMessage("Password must not exceed 128 characters.")
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches("[0-9]").WithMessage("Password must contain at least one digit.")
-            .Matches(@"[!@#$%^&*()_\-+=\[\]{}|;:',.<>?/\\]")
-            .WithMessage("Password must contain at least one special character.");
+            .Must(BeSafePassword)
+            .WithMessage(PasswordRulesMessage);
+    }
+
+    private static bool BeSafePassword(string password) => PasswordPolicyRules.BeSafePassword(password);
+
+    private const string PasswordRulesMessage = PasswordPolicyRules.PasswordRulesMessage;
+}
+
+internal static class PasswordPolicyRules
+{
+    public const string PasswordRulesMessage = "Password policy: 12-16 characters, include uppercase, lowercase, number, and symbol (! @ # $ % ^ & *), and avoid simple patterns like 123456, password, qwerty.";
+
+    private static readonly string[] DisallowedPatterns =
+    [
+        "123456",
+        "password",
+        "qwerty",
+        "abc123",
+        "111111",
+        "000000",
+        "letmein",
+        "welcome"
+    ];
+
+    public static bool BeSafePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password)) return false;
+        if (password.Length < 12 || password.Length > 16) return false;
+        if (!password.Any(char.IsUpper)) return false;
+        if (!password.Any(char.IsLower)) return false;
+        if (!password.Any(char.IsDigit)) return false;
+        if (!password.Any(c => "!@#$%^&*".Contains(c))) return false;
+
+        var normalized = password.ToLowerInvariant();
+        return !DisallowedPatterns.Any(normalized.Contains);
     }
 }

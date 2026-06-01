@@ -42,7 +42,7 @@ public class SecurityValidationTests
     [Fact]
     public void ForceChangePasswordRequest_EmptyPassword_FailsValidation()
     {
-        var request = new ForceChangePasswordRequest(string.Empty);
+        var request = new ForceChangePasswordRequest("old-pass", string.Empty);
 
         var results = Validate(request);
 

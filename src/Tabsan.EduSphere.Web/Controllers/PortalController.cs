@@ -446,7 +446,7 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForceChangePassword(string newPassword, string confirmPassword, CancellationToken ct)
+    public async Task<IActionResult> ForceChangePassword(string currentPassword, string newPassword, string confirmPassword, CancellationToken ct)
     {
         ViewData["Title"] = "Force Change Password";
         var model = new ForceChangePasswordPageModel { IsConnected = _api.IsConnected() };
@@ -454,9 +454,21 @@ public class PortalController : Controller
         if (!model.IsConnected)
             return RedirectToAction("Index", "Login");
 
+        if (string.IsNullOrWhiteSpace(currentPassword))
+        {
+            model.Message = "Old password is required.";
+            return View(model);
+        }
+
         if (string.IsNullOrWhiteSpace(newPassword))
         {
             model.Message = "New password is required.";
+            return View(model);
+        }
+
+        if (!TryValidateSafePassword(newPassword, out var passwordPolicyMessage))
+        {
+            model.Message = passwordPolicyMessage;
             return View(model);
         }
 
@@ -468,7 +480,7 @@ public class PortalController : Controller
 
         try
         {
-            await _api.ForceChangePasswordAsync(newPassword, ct);
+            await _api.ForceChangePasswordAsync(currentPassword, newPassword, ct);
             _api.SetForcePasswordChangeRequired(false);
             TempData["PortalMessage"] = "Password changed successfully.";
             return RedirectToAction(nameof(Dashboard));
@@ -478,6 +490,40 @@ public class PortalController : Controller
             model.Message = ex.Message;
             return View(model);
         }
+    }
+
+    private static bool TryValidateSafePassword(string password, out string message)
+    {
+        var issues = new List<string>();
+
+        if (password.Length < 12 || password.Length > 16)
+            issues.Add("Use 12-16 characters.");
+
+        if (!password.Any(char.IsUpper))
+            issues.Add("Include at least one uppercase letter (A-Z).");
+
+        if (!password.Any(char.IsLower))
+            issues.Add("Include at least one lowercase letter (a-z).");
+
+        if (!password.Any(char.IsDigit))
+            issues.Add("Include at least one number (0-9).");
+
+        if (!password.Any(c => "!@#$%^&*".Contains(c)))
+            issues.Add("Include at least one symbol (! @ # $ % ^ & *).");
+
+        var normalized = password.ToLowerInvariant();
+        var simplePatterns = new[] { "123456", "password", "qwerty", "abc123", "111111", "000000", "letmein", "welcome" };
+        if (simplePatterns.Any(normalized.Contains))
+            issues.Add("Do not use simple patterns like 123456, password, or qwerty.");
+
+        if (issues.Count == 0)
+        {
+            message = string.Empty;
+            return true;
+        }
+
+        message = "Password rules not met: " + string.Join(" ", issues);
+        return false;
     }
 
     [HttpGet]

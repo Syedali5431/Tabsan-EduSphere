@@ -131,7 +131,7 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// Allows a user flagged with MustChangePassword (imported via CSV) to set a new password (P4-S2-02).
-    /// Does NOT require the old password. Returns 204 on success, 400 on failure.
+    /// Requires old password verification. Returns 204 on success, 400 on failure.
     /// </summary>
     [HttpPost("force-change-password")]
     [Authorize]
@@ -145,10 +145,10 @@ public class AuthController : ControllerBase
         if (!Guid.TryParse(userIdStr, out var userId))
             return Forbid();
 
-        var success = await _auth.ForceChangePasswordAsync(userId, request.NewPassword, ct);
+        var success = await _auth.ForceChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword, ct);
 
         if (!success)
-            return BadRequest(new { message = "Failed to change password. Ensure the new password is not empty." });
+            return BadRequest(new { message = "Failed to change password. Verify old password and ensure the new password follows policy: 12-16 characters with uppercase, lowercase, number, symbol (! @ # $ % ^ & *), and no simple patterns." });
 
         return NoContent();
     }
