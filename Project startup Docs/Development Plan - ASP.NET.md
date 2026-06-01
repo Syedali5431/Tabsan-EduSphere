@@ -1,3 +1,18 @@
+## 2026-06-02 Update - Development Plan Synchronization (Password Hardening and Module-Sidebar Parity)
+
+### Plan sync
+- Hardened password workflow plan is now implemented and documented for all protected password-change paths:
+  - old-password verification required for force-change,
+  - safe-password policy enforcement at validation and service layers,
+  - policy guidance surfaced in portal-facing flows.
+- Settings-governance plan now includes explicit module/sidebar parity synchronization across newly expanded menu keys.
+- Runtime startup/seed plan now ensures missing sidebar keys and role-access defaults are created for deterministic settings behavior.
+
+### Validation sync
+- Password policy verification checks confirm weak-pattern rejection and old-password requirement.
+- Sidebar/module settings checks confirm menu-key parity and role visibility stability after synchronization.
+- Integration smoke baseline remains stable for touched settings/menu flows.
+
 ## 2026-06-02 Update - Development Plan Synchronization (Domain Script Packs and Full Dummy Coverage)
 
 ### Plan sync

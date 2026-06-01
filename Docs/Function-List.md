@@ -1,5 +1,44 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Password Policy Hardening and Module-Sidebar Parity Synchronization
+
+### Function inventory delta
+- Newly created functions tracked in this slice (added once, no duplicate rows):
+	- AuthController.ForceChangePassword
+	- IAuthService.ForceChangePasswordAsync
+	- AuthService.ForceChangePasswordAsync
+	- IEduApiClient.ForceChangePasswordAsync
+	- EduApiClient.ForceChangePasswordAsync
+	- PasswordPolicyRules.BeSafePassword
+- Existing function behavior updates (no duplicate inventory rows added):
+	- AuthService.ChangePasswordAsync
+		- now enforces current-password verification and safe-password constraints before update.
+	- AuthController.ChangePassword
+		- now aligns request validation and response handling with the hardened password-policy flow.
+	- PortalController.ForceChangePassword
+		- now submits old-password plus new-password path and surfaces policy feedback correctly.
+	- SidebarMenuController.MenuModuleKeyMap
+		- synchronized timetable keys (`timetable_admin`, `timetable_teacher`, `timetable_student`) and `advanced_audit` mapping for module-sidebar parity.
+
+### Seed/runtime synchronization
+- DatabaseSeeder sidebar-key and role-access synchronization now includes missing module-parity keys:
+	- `degree_audit`,
+	- `graduation_eligibility`,
+	- `degree_rules`,
+	- `graduation_apply`,
+	- `graduation_applications`,
+	- `grading_config`,
+	- `lms_manage`,
+	- `course_material`,
+	- `discussion`,
+	- `announcements`,
+	- `study_plan`,
+	- `advanced_audit`.
+
+### Validation summary
+- Password-force-change flow now requires old password and applies strict safe-password policy before acceptance.
+- Sidebar/module settings now remain aligned for timetable and advanced audit paths, with deterministic role/menu visibility behavior.
+
 ## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
 
 ### Function inventory delta

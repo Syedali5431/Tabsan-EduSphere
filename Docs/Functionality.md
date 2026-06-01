@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Password Hardening and Module-Sidebar Settings Parity
+
+### Implementation sync
+- Force-change-password workflow is now hardened end-to-end:
+	- current (old) password is mandatory,
+	- new password must satisfy strict safe-password policy rules,
+	- validation messaging is aligned across API and portal.
+- Password policy baseline now enforces stronger composition and pattern safety checks for user-initiated password changes.
+- Sidebar settings parity is synchronized with module composition for recently expanded keys:
+	- timetable admin/teacher/student,
+	- advanced audit,
+	- degree audit companion keys,
+	- course-material/discussion/announcements/study-plan governance keys.
+- Database seeding path now includes missing sidebar/menu upserts and role-access defaults so settings screens consistently expose configured features.
+
+### Validation sync
+- Force-change-password runtime checks confirm old-password validation and policy-rule enforcement before update.
+- Sidebar settings and module composition checks confirm expected key availability and role visibility alignment.
+- Settings and sidebar integration smoke tests remain green after parity synchronization.
+
 ## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
 
 ### Implementation sync

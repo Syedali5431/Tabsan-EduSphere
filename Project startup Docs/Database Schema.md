@@ -1,3 +1,14 @@
+## 2026-06-02 Update - Password Hardening and Sidebar/Module Parity (Schema Posture)
+
+- Implementation Summary:
+	- password-policy hardening and old-password verification updates were applied at API/application/web layers,
+	- sidebar/module parity synchronization was applied through runtime menu mapping and startup seed alignment,
+	- no table, column, index, constraint, trigger, view, or procedure changes were introduced in this slice.
+- Validation Summary:
+	- schema impact: no schema mutation,
+	- EF migration impact: none,
+	- changes remain additive in runtime behavior and seed/menu-governance alignment only.
+
 ## 2026-06-02 Update - Domain Script Packs and Deterministic Lifecycle Seed Coverage (Schema Posture)
 
 - Implementation Summary:

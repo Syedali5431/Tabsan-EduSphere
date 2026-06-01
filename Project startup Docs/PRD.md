@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-02 - Product Requirements Synchronization (Password Security Hardening + Module/Sidebar Governance Parity)
+- Runtime delivery in this slice:
+  - force-change-password now requires user old-password verification,
+  - safe-password policy rules are enforced for password-update paths,
+  - UI validation guidance is aligned with API policy decisions,
+  - sidebar governance now includes synchronized module-to-menu coverage for timetable and advanced-audit keys,
+  - degree-audit companion and learning-workflow sidebar keys are seeded consistently in runtime startup path.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive runtime validation hardening and menu-governance synchronization only.
+- Validation summary:
+  - password change and force-change flows now reject weak or policy-violating credentials,
+  - settings/module/sidebar parity checks confirm required keys are present and role visibility is consistent.
+
 ### 2026-06-02 - Product Requirements Synchronization (Domain Script Packs + Full Lifecycle Seed Coverage)
 - Runtime/ops delivery in this slice:
   - added domain-specific script packs for controlled demo execution:

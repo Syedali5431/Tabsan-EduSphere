@@ -1,3 +1,21 @@
+## Execution Update - 2026-06-02 (Password Security Hardening + Sidebar/Module Governance Parity)
+
+### Module impact summary
+- No new module introduced; update strengthens existing Authentication, Settings Governance, and Sidebar Composition behavior.
+- Authentication/password flow now enforces old-password verification for forced change and stricter safe-password rule compliance.
+- Sidebar settings now remain synchronized with module composition for missing parity keys, including:
+  - timetable_admin,
+  - timetable_teacher,
+  - timetable_student,
+  - advanced_audit,
+  - degree_audit and graduation companion keys,
+  - lms_manage/course_material/discussion/announcements/study_plan governance keys.
+- Runtime seeding path now ensures these keys and role-access rows are available in settings-driven environments.
+
+### Validation summary
+- Password workflow checks confirm policy enforcement and old-password verification in force-change scenarios.
+- Sidebar/module parity checks confirm expected key visibility and settings-level governance consistency.
+
 ## Execution Update - 2026-06-02 (Domain Script Packs + Full Lifecycle Demo Coverage)
 
 ### Module impact summary
