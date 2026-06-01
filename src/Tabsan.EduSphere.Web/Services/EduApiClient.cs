@@ -6225,7 +6225,7 @@ public sealed class StudyPlanCourseApiModel
     public string CourseCode  { get; set; } = string.Empty;
     public string CourseTitle { get; set; } = string.Empty;
     public int    CreditHours { get; set; }
-    public string CourseType  { get; set; } = string.Empty;
+    public JsonElement CourseType  { get; set; }
 }
 
 public sealed class StudyPlanApiModel
@@ -6234,7 +6234,7 @@ public sealed class StudyPlanApiModel
     public Guid                          StudentProfileId    { get; set; }
     public string                        PlannedSemesterName { get; set; } = string.Empty;
     public string?                       Notes               { get; set; }
-    public string                        AdvisorStatus       { get; set; } = string.Empty;
+    public JsonElement                   AdvisorStatus       { get; set; }
     public string?                       AdvisorNotes        { get; set; }
     public Guid?                         ReviewedByUserId    { get; set; }
     public int                           TotalCreditHours    { get; set; }
@@ -6249,7 +6249,7 @@ public sealed class RecommendedCourseApiModel
     public string CourseCode  { get; set; } = string.Empty;
     public string CourseTitle { get; set; } = string.Empty;
     public int    CreditHours { get; set; }
-    public string CourseType  { get; set; } = string.Empty;
+    public JsonElement CourseType  { get; set; }
     public string Reason      { get; set; } = string.Empty;
 }
 

@@ -1,3 +1,16 @@
+## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Compatibility (Schema Posture)
+
+- Implementation Summary:
+	- added additive deterministic Study Plan demo rows in existing tables only:
+		- study_plans (3 deterministic rows for school/college/university filter walkthroughs),
+		- study_plan_courses (deterministic course-link rows for the new plans),
+	- added deterministic insert/update guards in Scripts/03-FullDummyData.sql for idempotent reruns,
+	- added synchronized deterministic Study Plan validation queries in Scripts/05-PostDeployment-Checks.sql.
+- Validation Summary:
+	- SQL updates remain additive and idempotent on deterministic IDs,
+	- schema impact: no schema mutation,
+	- EF migration impact: none.
+
 ## 2026-06-01 Update - Generate Certificates School/College Filter Demo Seed v41 (Schema Posture)
 
 - Implementation Summary:

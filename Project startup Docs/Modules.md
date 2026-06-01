@@ -1,3 +1,16 @@
+## Execution Update - 2026-06-01 (Study Plan Filter Demo Seed + Runtime Scope/Serialization Hardening)
+
+### Module impact summary
+- No new module introduced; update remains within existing Study Plan module surface.
+- Study Plan runtime flow now preserves selected tenant/campus/department/student context across list/detail/create/add/remove/delete/advise actions.
+- Study Plan payload rendering now normalizes advisor-status and course-type values when API sends numeric enums.
+- Full dummy seed now includes deterministic Study Plan filter-demo rows across university/college/school slices for repeatable demo/testing.
+- Post-deployment checks now include deterministic Study Plan row/count assertions.
+
+### Validation summary
+- Runtime checks confirm no unexpected error/not found/json conversion failures on Study Plan page load and navigation.
+- Filter checks confirm expected department->student option narrowing and seeded plan visibility.
+
 ## Execution Update - 2026-06-01 (Generate Certificates School/College Filter Demo Seed v41 + Grading Scope Load Stabilization)
 
 ### Module impact summary

@@ -9689,17 +9689,65 @@ public class PortalController : Controller
     // ── Phase 21 Stage 21.1/21.2 — Study Planner ─────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> StudyPlan(Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> StudyPlan(Guid? studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         ViewData["Title"] = "Study Plans";
-        var model = new StudyPlanPageModel { StudentProfileId = studentProfileId, IsConnected = _api.IsConnected() };
+        var identity = _api.GetSessionIdentity();
+        var model = new StudyPlanPageModel
+        {
+            StudentProfileId = studentProfileId ?? Guid.Empty,
+            SelectedStudentProfileId = studentProfileId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            IsConnected = _api.IsConnected()
+        };
         if (TempData["SuccessMessage"] is string s) model.SuccessMessage = s;
         if (TempData["ErrorMessage"]   is string e) model.ErrorMessage   = e;
         if (_api.IsConnected())
         {
             try
             {
-                var plans = await _api.GetStudyPlansAsync(studentProfileId, ct);
+                if (identity?.IsSuperAdmin != true)
+                {
+                    model.SelectedTenantId ??= identity?.TenantId;
+                    model.SelectedCampusId ??= identity?.CampusId;
+                }
+
+                if (identity?.IsSuperAdmin == true)
+                {
+                    model.Tenants = (await _api.GetTenantsAsync(ct))
+                        .Select(t => new LookupItem { Id = t.Id, Name = t.Name })
+                        .ToList();
+                    if (model.SelectedTenantId.HasValue)
+                        model.Campuses = (await _api.GetCampusesAsync(model.SelectedTenantId, ct))
+                            .Select(c => new LookupItem { Id = c.Id, Name = c.Name })
+                            .ToList();
+                }
+
+                model.Departments = await _api.GetDepartmentsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+                model.Students = await _api.GetStudentsAsync(model.SelectedDepartmentId, ct);
+
+                if (!model.SelectedStudentProfileId.HasValue && model.StudentProfileId != Guid.Empty)
+                    model.SelectedStudentProfileId = model.StudentProfileId;
+
+                if (model.SelectedStudentProfileId.HasValue)
+                    model.StudentProfileId = model.SelectedStudentProfileId.Value;
+
+                List<StudyPlanApiModel> plans;
+                if (model.StudentProfileId != Guid.Empty)
+                {
+                    plans = await _api.GetStudyPlansAsync(model.StudentProfileId, ct);
+                }
+                else if (model.SelectedDepartmentId.HasValue)
+                {
+                    plans = await _api.GetStudyPlansByDepartmentAsync(model.SelectedDepartmentId.Value, ct);
+                }
+                else
+                {
+                    plans = new List<StudyPlanApiModel>();
+                }
+
                 model.Plans = plans.Select(p => MapStudyPlanItem(p)).ToList();
             }
             catch (Exception ex) { model.ErrorMessage = ex.Message; }
@@ -9708,10 +9756,17 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> StudyPlanDetail(Guid planId, CancellationToken ct)
+    public async Task<IActionResult> StudyPlanDetail(Guid planId, Guid? studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         ViewData["Title"] = "Study Plan Detail";
-        var model = new StudyPlanDetailPageModel { IsConnected = _api.IsConnected() };
+        var model = new StudyPlanDetailPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            SelectedStudentProfileId = studentProfileId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId
+        };
         if (TempData["SuccessMessage"] is string s) model.SuccessMessage = s;
         if (TempData["ErrorMessage"]   is string e) model.ErrorMessage   = e;
         if (_api.IsConnected())
@@ -9728,7 +9783,7 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateStudyPlan(Guid studentProfileId, string plannedSemesterName, string? notes, CancellationToken ct)
+    public async Task<IActionResult> CreateStudyPlan(Guid studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, string plannedSemesterName, string? notes, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -9739,11 +9794,11 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(StudyPlan), new { studentProfileId });
+        return RedirectToAction(nameof(StudyPlan), new { studentProfileId, departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddStudyPlanCourse(Guid planId, Guid courseId, Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> AddStudyPlanCourse(Guid planId, Guid courseId, Guid studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -9754,11 +9809,11 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(StudyPlanDetail), new { planId });
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> RemoveStudyPlanCourse(Guid planId, Guid courseId, CancellationToken ct)
+    public async Task<IActionResult> RemoveStudyPlanCourse(Guid planId, Guid courseId, Guid studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -9769,11 +9824,11 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(StudyPlanDetail), new { planId });
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteStudyPlan(Guid planId, Guid studentProfileId, CancellationToken ct)
+    public async Task<IActionResult> DeleteStudyPlan(Guid planId, Guid studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -9784,11 +9839,11 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(StudyPlan), new { studentProfileId });
+        return RedirectToAction(nameof(StudyPlan), new { studentProfileId, departmentId, tenantId, campusId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AdvisePlan(Guid planId, bool isEndorsed, string? advisorNotes, CancellationToken ct)
+    public async Task<IActionResult> AdvisePlan(Guid planId, Guid studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, bool isEndorsed, string? advisorNotes, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -9799,7 +9854,7 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(StudyPlanDetail), new { planId });
+        return RedirectToAction(nameof(StudyPlanDetail), new { planId, studentProfileId, departmentId, tenantId, campusId });
     }
 
     [HttpGet]
@@ -9827,7 +9882,7 @@ public class PortalController : Controller
                         CourseCode  = r.CourseCode,
                         CourseTitle = r.CourseTitle,
                         CreditHours = r.CreditHours,
-                        CourseType  = r.CourseType,
+                        CourseType  = NormalizeCourseTypeValue(r.CourseType),
                         Reason      = r.Reason
                     }).ToList();
                 }
@@ -9845,7 +9900,7 @@ public class PortalController : Controller
         StudentProfileId    = p.StudentProfileId,
         PlannedSemesterName = p.PlannedSemesterName,
         Notes               = p.Notes,
-        AdvisorStatus       = p.AdvisorStatus,
+        AdvisorStatus       = NormalizeAdvisorStatusValue(p.AdvisorStatus),
         AdvisorNotes        = p.AdvisorNotes,
         ReviewedByUserId    = p.ReviewedByUserId,
         TotalCreditHours    = p.TotalCreditHours,
@@ -9855,10 +9910,46 @@ public class PortalController : Controller
             CourseCode  = c.CourseCode,
             CourseTitle = c.CourseTitle,
             CreditHours = c.CreditHours,
-            CourseType  = c.CourseType
+            CourseType  = NormalizeCourseTypeValue(c.CourseType)
         }).ToList(),
         CreatedAt = p.CreatedAt
     };
+
+    private static string NormalizeAdvisorStatusValue(System.Text.Json.JsonElement value)
+    {
+        if (value.ValueKind == System.Text.Json.JsonValueKind.String)
+            return value.GetString() ?? "Pending";
+
+        if (value.ValueKind == System.Text.Json.JsonValueKind.Number && value.TryGetInt32(out var status))
+        {
+            return status switch
+            {
+                1 => "Endorsed",
+                2 => "Rejected",
+                _ => "Pending"
+            };
+        }
+
+        return "Pending";
+    }
+
+    private static string NormalizeCourseTypeValue(System.Text.Json.JsonElement value)
+    {
+        if (value.ValueKind == System.Text.Json.JsonValueKind.String)
+            return value.GetString() ?? string.Empty;
+
+        if (value.ValueKind == System.Text.Json.JsonValueKind.Number && value.TryGetInt32(out var courseType))
+        {
+            return courseType switch
+            {
+                1 => "Elective",
+                2 => "Lab",
+                _ => "Core"
+            };
+        }
+
+        return "Core";
+    }
 
     // ── Phase 22: External Integrations ─────────────────────────────────────────────
 

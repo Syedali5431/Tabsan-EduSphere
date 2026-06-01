@@ -1,3 +1,15 @@
+## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Stabilization
+
+### Plan sync
+- Extended Study Plan web flow with scope-context-preserving redirects for list/detail/create/add/remove/delete/advise operations.
+- Added Study Plan enum-value normalization in portal layer for API payload compatibility when enum values are serialized numerically.
+- Added deterministic Study Plan demo dataset rows in Scripts/03-FullDummyData.sql for school/college/university filter verification.
+- Added synchronized deterministic Study Plan checks in Scripts/05-PostDeployment-Checks.sql.
+
+### Validation sync
+- Study Plan page loads and actions verified without json conversion/runtime load errors.
+- SQL checks verify deterministic Study Plan demo cohort totals and per-student course coverage.
+
 ## 2026-06-01 Update - Generate Certificates School/College Filter Demo Seed v41 and Scope-Load Hardening
 
 ### Plan sync

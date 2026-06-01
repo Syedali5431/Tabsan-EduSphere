@@ -3757,6 +3757,47 @@ BEGIN
         NULL
     FROM StudentBase sb
     WHERE NOT EXISTS (SELECT 1 FROM [study_plans] x WHERE x.[StudentProfileId] = sb.[Id]);
+
+    /* Study Plan deterministic filter demo cohort */
+    DECLARE @StudyPlanFilterDemo TABLE
+    (
+        [Id] UNIQUEIDENTIFIER,
+        [StudentProfileId] UNIQUEIDENTIFIER,
+        [PlannedSemesterName] NVARCHAR(100),
+        [Notes] NVARCHAR(2000),
+        [AdvisorStatus] INT,
+        [AdvisorNotes] NVARCHAR(2000)
+    );
+
+    INSERT INTO @StudyPlanFilterDemo ([Id], [StudentProfileId], [PlannedSemesterName], [Notes], [AdvisorStatus], [AdvisorNotes])
+    VALUES
+        (CAST('9A111111-1111-1111-1111-111111111101' AS UNIQUEIDENTIFIER), CAST('99999999-9999-9999-9999-999999999911' AS UNIQUEIDENTIFIER), N'Filter Demo - University CS', N'Deterministic filter demo plan for University/CS student.', 1, N'Endorsed for filter verification.'),
+        (CAST('9A111111-1111-1111-1111-111111111102' AS UNIQUEIDENTIFIER), CAST('99999999-9999-9999-9999-999999999933' AS UNIQUEIDENTIFIER), N'Filter Demo - College Commerce', N'Deterministic filter demo plan for College/Commerce student.', 1, N'Endorsed for filter verification.'),
+        (CAST('9A111111-1111-1111-1111-111111111103' AS UNIQUEIDENTIFIER), CAST('99999999-9999-9999-9999-999999999941' AS UNIQUEIDENTIFIER), N'Filter Demo - School Math', N'Deterministic filter demo plan for School/Math student.', 2, N'Rejected in demo to verify status badge filter behavior.');
+
+    INSERT INTO [study_plans] ([Id], [StudentProfileId], [PlannedSemesterName], [Notes], [AdvisorStatus], [AdvisorNotes], [ReviewedByUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT d.[Id], d.[StudentProfileId], d.[PlannedSemesterName], d.[Notes], d.[AdvisorStatus], d.[AdvisorNotes], @SuperAdminUserId, @Now, NULL, 0, NULL
+    FROM @StudyPlanFilterDemo d
+    WHERE EXISTS (SELECT 1 FROM [student_profiles] sp WHERE sp.[Id] = d.[StudentProfileId])
+      AND NOT EXISTS (SELECT 1 FROM [study_plans] x WHERE x.[Id] = d.[Id]);
+
+    UPDATE sp
+    SET sp.[PlannedSemesterName] = d.[PlannedSemesterName],
+        sp.[Notes] = d.[Notes],
+        sp.[AdvisorStatus] = d.[AdvisorStatus],
+        sp.[AdvisorNotes] = d.[AdvisorNotes],
+        sp.[ReviewedByUserId] = @SuperAdminUserId,
+        sp.[UpdatedAt] = @Now,
+        sp.[IsDeleted] = 0,
+        sp.[DeletedAt] = NULL
+    FROM [study_plans] sp
+    INNER JOIN @StudyPlanFilterDemo d ON d.[Id] = sp.[Id]
+    WHERE sp.[PlannedSemesterName] <> d.[PlannedSemesterName]
+       OR ISNULL(sp.[Notes], N'') <> d.[Notes]
+       OR sp.[AdvisorStatus] <> d.[AdvisorStatus]
+       OR ISNULL(sp.[AdvisorNotes], N'') <> d.[AdvisorNotes]
+       OR sp.[IsDeleted] = 1
+       OR sp.[DeletedAt] IS NOT NULL;
 END
 
 IF OBJECT_ID(N'[study_plan_courses]') IS NOT NULL
@@ -3776,6 +3817,31 @@ BEGIN
           SELECT 1 FROM [study_plan_courses] x
           WHERE x.[StudyPlanId] = pc.[StudyPlanId] AND x.[CourseId] = pc.[CourseId]
       );
+
+    /* Deterministic study plan courses for filter demo cohort */
+    DECLARE @StudyPlanFilterDemoCourses TABLE
+    (
+        [Id] UNIQUEIDENTIFIER,
+        [StudyPlanId] UNIQUEIDENTIFIER,
+        [CourseId] UNIQUEIDENTIFIER
+    );
+
+    INSERT INTO @StudyPlanFilterDemoCourses ([Id], [StudyPlanId], [CourseId])
+    VALUES
+        (CAST('9B222222-2222-2222-2222-222222222111' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111101' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER)),
+        (CAST('9B222222-2222-2222-2222-222222222112' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111101' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444402' AS UNIQUEIDENTIFIER)),
+        (CAST('9B222222-2222-2222-2222-222222222121' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111102' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444422' AS UNIQUEIDENTIFIER)),
+        (CAST('9B222222-2222-2222-2222-222222222122' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111102' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444423' AS UNIQUEIDENTIFIER)),
+        (CAST('9B222222-2222-2222-2222-222222222131' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111103' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444428' AS UNIQUEIDENTIFIER)),
+        (CAST('9B222222-2222-2222-2222-222222222132' AS UNIQUEIDENTIFIER), CAST('9A111111-1111-1111-1111-111111111103' AS UNIQUEIDENTIFIER), CAST('44444444-4444-4444-4444-444444444429' AS UNIQUEIDENTIFIER));
+
+    INSERT INTO [study_plan_courses] ([Id], [StudyPlanId], [CourseId], [CreatedAt], [UpdatedAt])
+    SELECT src.[Id], src.[StudyPlanId], src.[CourseId], @Now, NULL
+    FROM @StudyPlanFilterDemoCourses src
+    WHERE EXISTS (SELECT 1 FROM [study_plans] sp WHERE sp.[Id] = src.[StudyPlanId])
+      AND EXISTS (SELECT 1 FROM [courses] c WHERE c.[Id] = src.[CourseId])
+      AND NOT EXISTS (SELECT 1 FROM [study_plan_courses] x WHERE x.[Id] = src.[Id])
+      AND NOT EXISTS (SELECT 1 FROM [study_plan_courses] x WHERE x.[StudyPlanId] = src.[StudyPlanId] AND x.[CourseId] = src.[CourseId]);
 END
 
 IF OBJECT_ID(N'[course_announcements]') IS NOT NULL

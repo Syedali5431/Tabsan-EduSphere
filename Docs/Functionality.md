@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Scope/Serialization Stabilization
+
+### Implementation sync
+- Study Plan page flow now preserves selected scope context (tenant, campus, department, student) across list/detail/create/add/remove/delete/advise actions.
+- Study Plan filter loading now supports selected-student and department fallback behavior for stable page-load rendering in scoped demo sessions.
+- Study Plan payload normalization now handles numeric enum serialization from API responses:
+	- advisor status,
+	- course type,
+	so web rendering is resilient when API sends enum numbers instead of strings.
+- Scripts/03-FullDummyData.sql now adds deterministic Study Plan demo rows for three institution slices (University CS, College Commerce, School Math) with idempotent insert/update behavior.
+- Scripts/05-PostDeployment-Checks.sql now includes deterministic Study Plan demo validation checks.
+
+### Validation sync
+- Runtime checks confirm Study Plan page loads without unexpected error/not found/json conversion failures.
+- Filter checks confirm department->student narrowing and seeded plan visibility for target demo profiles.
+- SQL checks confirm deterministic Study Plan demo row and course coverage.
+
 ## 2026-06-01 Update - Generate Certificates School/College Filter Demo Stabilization and Seed Sync v41
 
 ### Implementation sync

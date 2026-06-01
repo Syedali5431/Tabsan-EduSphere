@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Study Plan Filter Demo Seed + Runtime Resilience)
+- Runtime delivery in this slice:
+  - preserved Study Plan filter context across list/detail/create/edit/advise/delete interactions,
+  - hardened Study Plan rendering against API enum numeric serialization for advisor status and course type,
+  - added deterministic Study Plan demo cohort in Scripts/03-FullDummyData.sql for school/college/university filter walkthroughs,
+  - added synchronized Study Plan assertions in Scripts/05-PostDeployment-Checks.sql.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive seed/check updates and non-breaking runtime behavior hardening only.
+- Validation Summary:
+  - deterministic seed/check run remains repeatable,
+  - Study Plan menu/filter flow renders scoped options and seeded data without page-load conversion errors.
+
 ### 2026-06-01 - Product Requirements Synchronization (Generate Certificates School/College Filter Demo Seed v41)
 - Runtime delivery in this slice:
   - improved school/college demo-data reliability for Generate Certificates by resolving department/program targets dynamically during FullDummyData seeding,

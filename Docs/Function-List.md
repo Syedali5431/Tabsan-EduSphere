@@ -1,5 +1,45 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Study Plan Filter Demo Seed Sync and Runtime Serialization Hardening
+
+### Function inventory delta
+- Newly created functions in this slice:
+	- PortalController.NormalizeAdvisorStatusValue
+	- PortalController.NormalizeCourseTypeValue
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.StudyPlan
+		- now accepts optional tenant/campus/department/student filters and keeps selected scope context.
+	- PortalController.StudyPlanDetail
+		- now preserves selected filter context on navigation.
+	- PortalController.CreateStudyPlan
+	- PortalController.AddStudyPlanCourse
+	- PortalController.RemoveStudyPlanCourse
+	- PortalController.DeleteStudyPlan
+	- PortalController.AdvisePlan
+		- all now preserve selected filter context in redirects.
+	- EduApiClient.StudyPlanApiModel.AdvisorStatus
+	- EduApiClient.StudyPlanCourseApiModel.CourseType
+	- EduApiClient.RecommendedCourseApiModel.CourseType
+		- switched to JsonElement-backed payload handling so numeric enum serialization from API no longer causes runtime string conversion failures.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql now includes deterministic Study Plan filter-demo rows for stable menu/filter testing:
+	- student profiles:
+		- 99999999-9999-9999-9999-999999999911 (University CS)
+		- 99999999-9999-9999-9999-999999999933 (College Commerce)
+		- 99999999-9999-9999-9999-999999999941 (School Math)
+	- study plans:
+		- 9A111111-1111-1111-1111-111111111101
+		- 9A111111-1111-1111-1111-111111111102
+		- 9A111111-1111-1111-1111-111111111103
+	- study plan courses:
+		- 9B222222-2222-2222-2222-222222222111 .. 9B222222-2222-2222-2222-222222222132
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized Study Plan deterministic checks for row totals and per-student plan/course coverage.
+
+### Validation summary
+- Deterministic seed remains additive and idempotent across reruns.
+- Runtime Study Plan filter checks confirm department->student narrowing works and data renders without not-found/unexpected-error/json-conversion failures.
+
 ## 2026-06-01 Update - Generate Certificates School/College Filter Demo Stabilization and Seed Sync v41
 
 ### Function inventory delta
