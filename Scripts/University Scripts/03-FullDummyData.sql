@@ -162,8 +162,77 @@ WHERE NOT EXISTS
       AND r.[ResultType] = CONCAT(N'Semester ', CAST(sc.[SemesterNo] AS NVARCHAR(10)))
 );
 
+    IF OBJECT_ID(N'[enrollments]') IS NOT NULL
+    BEGIN
+      INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [DroppedAt], [Status], [CreatedAt], [UpdatedAt])
+      SELECT NEWID(),
+           ts.[StudentProfileId],
+           ts.[CourseOfferingId],
+           DATEADD(day, -(10 + ts.[StudentRn]), @Now),
+           NULL,
+           N'Enrolled',
+           @Now,
+           NULL
+      FROM @TargetStudents ts
+      WHERE NOT EXISTS
+      (
+        SELECT 1
+        FROM [enrollments] e
+        WHERE e.[StudentProfileId] = ts.[StudentProfileId]
+          AND e.[CourseOfferingId] = ts.[CourseOfferingId]
+          AND e.[Status] = N'Enrolled'
+      );
+    END;
+
+    IF OBJECT_ID(N'[attendance_records]') IS NOT NULL
+    BEGIN
+      INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [Remarks], [CreatedAt], [UpdatedAt])
+      SELECT NEWID(),
+           ts.[StudentProfileId],
+           ts.[CourseOfferingId],
+           DATEADD(day, -(30 + (sc.[SemesterNo] * 7) + ts.[StudentRn]), CAST(@Now AS date)),
+           CASE WHEN ((ts.[StudentRn] + sc.[SemesterNo]) % 4) = 0 THEN N'Absent' ELSE N'Present' END,
+           ts.[FacultyUserId],
+           CONCAT(N'University semester ', CAST(sc.[SemesterNo] AS NVARCHAR(10)), N' attendance seed'),
+           @Now,
+           NULL
+      FROM @SemesterCoverage sc
+      CROSS JOIN @TargetStudents ts
+      WHERE NOT EXISTS
+      (
+        SELECT 1
+        FROM [attendance_records] ar
+        WHERE ar.[StudentProfileId] = ts.[StudentProfileId]
+          AND ar.[CourseOfferingId] = ts.[CourseOfferingId]
+          AND ar.[Date] = DATEADD(day, -(30 + (sc.[SemesterNo] * 7) + ts.[StudentRn]), CAST(@Now AS date))
+      );
+    END;
+
+    IF OBJECT_ID(N'[fyp_projects]') IS NOT NULL
+    BEGIN
+      INSERT INTO [fyp_projects] ([Id], [StudentProfileId], [DepartmentId], [Title], [Description], [Status], [SupervisorUserId], [CoordinatorRemarks], [CreatedAt], [UpdatedAt])
+      SELECT NEWID(),
+           ts.[StudentProfileId],
+           sp.[DepartmentId],
+           CONCAT(N'Capstone Project - Student ', CAST(ts.[StudentRn] AS NVARCHAR(20))),
+           N'University semester 8 capstone and FYP coverage seeded for deterministic demo and validation.',
+           N'InProgress',
+           ts.[FacultyUserId],
+           N'Seeded by University Scripts/03-FullDummyData.sql',
+           @Now,
+           NULL
+      FROM @TargetStudents ts
+      INNER JOIN [student_profiles] sp ON sp.[Id] = ts.[StudentProfileId]
+      WHERE NOT EXISTS
+      (
+        SELECT 1
+        FROM [fyp_projects] fp
+        WHERE fp.[StudentProfileId] = ts.[StudentProfileId]
+      );
+    END;
+
 COMMIT TRANSACTION;
-PRINT N'University dummy data seeded successfully (all university students, Semester 1 to Semester 8 with marks/results).';
+    PRINT N'University dummy data seeded successfully (all university students, Semester 1 to Semester 8 with results, attendance, enrollment, and FYP data).';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
