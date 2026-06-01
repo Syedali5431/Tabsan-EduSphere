@@ -1,5 +1,21 @@
 ## Execution Update - 2026-06-01 (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
 
+## Execution Update - 2026-06-01 (Payments Student Scope Filter Stabilization + Demo Seed v43)
+
+### Module impact summary
+- No new module introduced; update remains in the existing Payments module surface.
+- Payments student source loading now honors selected institution scope even when tenant/campus filters are empty in superadmin sessions.
+- Full dummy seed advanced to `FullDummyData-v43` with deterministic scope-demo receipts:
+  - `RCPT-DEMO-PAY-SCP-U-043`
+  - `RCPT-DEMO-PAY-SCP-C-043`
+  - `RCPT-DEMO-PAY-SCP-S-043`
+- Post-deployment checks now include synchronized v43 marker and scope-demo institution-alignment assertions.
+
+### Validation summary
+- Payments menu filter validation confirms institution/student filter paths now render scope-correct rows for demo/testing.
+
+## Execution Update - 2026-06-01 (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
+
 ### Module impact summary
 - No new module introduced; update remains in the existing Payments module surface.
 - Payments institution filter mapping is now aligned for this deployment so user-visible labels correspond to the scoped payment dataset values.

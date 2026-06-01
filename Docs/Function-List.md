@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
+
+### Function inventory delta
+- Newly created functions in this slice:
+	- No new function signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.LoadPaymentStudentsForScopeAsync
+		- now applies institution-type constrained loading even when tenant/campus are not selected (superadmin all-scope path), preventing cross-institution student leakage in Payments create/filter dropdowns.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v43` and adds deterministic Payments student-scope demo receipts:
+	- `RCPT-DEMO-PAY-SCP-U-043` (University)
+	- `RCPT-DEMO-PAY-SCP-C-043` (College)
+	- `RCPT-DEMO-PAY-SCP-S-043` (School)
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v43 checks for the new scope-demo receipts plus dataset marker update.
+
+### Validation summary
+- Payments institution filter now returns scope-correct student lists in create/filter flows.
+- Deterministic v43 scope-demo receipts render only in their matching institution filters and under matching student filter selection.
+
 ## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import/Scope Reliability
 
 ### Function inventory delta

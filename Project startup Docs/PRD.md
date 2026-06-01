@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Payments Student Scope Filter Stabilization + Demo Seed v43)
+- Runtime delivery in this slice:
+  - corrected Payments student option loading so selected `institutionType` is enforced even in superadmin all-scope sessions (no tenant/campus selected),
+  - advanced Scripts/03-FullDummyData.sql to `FullDummyData-v43` with deterministic student-scope payment demo rows:
+    - `RCPT-DEMO-PAY-SCP-U-043`,
+    - `RCPT-DEMO-PAY-SCP-C-043`,
+    - `RCPT-DEMO-PAY-SCP-S-043`,
+  - synchronized Scripts/05-PostDeployment-Checks.sql with v43 marker and scope-demo receipt alignment assertions.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive seed/check updates and non-breaking runtime filtering correction only.
+- Validation Summary:
+  - Payments institution and student filters now resolve scope-correct datasets for demo/testing workflows.
+
 ### 2026-06-01 - Product Requirements Synchronization (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
 - Runtime delivery in this slice:
   - aligned Payments institution-filter option mapping with scoped payment dataset values so user-facing labels match expected result sets,

@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v42', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v43', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v42',
+    SET [DemoValue] = N'FullDummyData-v43',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2629,6 +2629,83 @@ BEGIN
             COALESCE(@FinanceSchUserId, @SuperAdminUserId),
             DATEADD(day, -2, @Now),
             N'Deterministic School filter-demo payment row.'
+    ) v
+    WHERE v.[StudentProfileId] IS NOT NULL
+      AND NOT EXISTS
+      (
+          SELECT 1
+          FROM [payment_receipts] pr
+          WHERE pr.[ReceiptNo] = v.[ReceiptNo]
+      );
+
+    /* 12.1.3) Deterministic payment student-scope demo rows (v43) */
+    DECLARE @PayScopeDemoUniversityStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-BAENG-0001');
+    DECLARE @PayScopeDemoCollegeStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-ACC-0001');
+    DECLARE @PayScopeDemoSchoolStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-MAT-M-001');
+
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        v.[Id],
+        v.[StudentProfileId],
+        v.[CreatedByUserId],
+        v.[ReceiptNo],
+        v.[Status],
+        v.[Amount],
+        v.[Description],
+        v.[DueDate],
+        NULL,
+        NULL,
+        v.[ConfirmedByUserId],
+        v.[ConfirmedAt],
+        v.[Notes],
+        @Now,
+        @Now,
+        0,
+        NULL
+    FROM
+    (
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272714' AS UNIQUEIDENTIFIER) AS [Id],
+            @PayScopeDemoUniversityStudentId AS [StudentProfileId],
+            COALESCE(@FinanceUniUserId, @SuperAdminUserId) AS [CreatedByUserId],
+            N'RCPT-DEMO-PAY-SCP-U-043' AS [ReceiptNo],
+            1 AS [Status],
+            CAST(5300.00 AS DECIMAL(10,2)) AS [Amount],
+            N'Demo Payment Scope - University v43' AS [Description],
+            DATEADD(day, 23, @Now) AS [DueDate],
+            COALESCE(@FinanceUniUserId, @SuperAdminUserId) AS [ConfirmedByUserId],
+            DATEADD(day, -2, @Now) AS [ConfirmedAt],
+            N'Deterministic university student-scope demo payment row.' AS [Notes]
+
+        UNION ALL
+
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272715' AS UNIQUEIDENTIFIER),
+            @PayScopeDemoCollegeStudentId,
+            COALESCE(@FinanceColUserId, @SuperAdminUserId),
+            N'RCPT-DEMO-PAY-SCP-C-043',
+            1,
+            CAST(4300.00 AS DECIMAL(10,2)),
+            N'Demo Payment Scope - College v43',
+            DATEADD(day, 24, @Now),
+            COALESCE(@FinanceColUserId, @SuperAdminUserId),
+            DATEADD(day, -2, @Now),
+            N'Deterministic college student-scope demo payment row.'
+
+        UNION ALL
+
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272716' AS UNIQUEIDENTIFIER),
+            @PayScopeDemoSchoolStudentId,
+            COALESCE(@FinanceSchUserId, @SuperAdminUserId),
+            N'RCPT-DEMO-PAY-SCP-S-043',
+            1,
+            CAST(3300.00 AS DECIMAL(10,2)),
+            N'Demo Payment Scope - School v43',
+            DATEADD(day, 25, @Now),
+            COALESCE(@FinanceSchUserId, @SuperAdminUserId),
+            DATEADD(day, -2, @Now),
+            N'Deterministic school student-scope demo payment row.'
     ) v
     WHERE v.[StudentProfileId] IS NOT NULL
       AND NOT EXISTS

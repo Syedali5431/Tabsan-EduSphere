@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
+
+### Implementation sync
+- Payments student option loading now respects selected institution type even when tenant/campus are not selected (superadmin all-scope path).
+- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v43` and now adds deterministic student-scope payment demo receipts:
+	- `RCPT-DEMO-PAY-SCP-U-043`
+	- `RCPT-DEMO-PAY-SCP-C-043`
+	- `RCPT-DEMO-PAY-SCP-S-043`
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v43 marker and scope-demo receipt institution-alignment checks.
+
+### Validation sync
+- Payments menu runtime checks confirm institution/student filter narrowing shows only scope-correct rows.
+- Deterministic v43 scope-demo receipts appear in the correct institution and student slices only.
+
 ## 2026-06-01 Update - Payments Filter Demo Seed v42 and CSV Import Reliability
 
 ### Implementation sync

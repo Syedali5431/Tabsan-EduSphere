@@ -1,5 +1,20 @@
 ## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import Date Parsing Compatibility
 
+## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
+
+### Plan sync
+- Corrected Payments student source loading so institution selection is enforced even without tenant/campus scope (superadmin all-scope branch).
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v43` and added deterministic payment scope-demo sample rows:
+  - `RCPT-DEMO-PAY-SCP-U-043`
+  - `RCPT-DEMO-PAY-SCP-C-043`
+  - `RCPT-DEMO-PAY-SCP-S-043`
+- Updated Scripts/05-PostDeployment-Checks.sql to v43 and added deterministic checks for the new scope-demo receipts.
+
+### Validation sync
+- Runtime menu verification confirms institution and student filters now show scope-correct payment rows.
+
+## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import Date Parsing Compatibility
+
 ### Plan sync
 - Corrected Payments institution-filter option mapping in PortalController so filter labels map to the current deployment's payment dataset values.
 - Expanded `ParsePaymentImportCsvAsync` date parsing to accept spreadsheet-friendly due-date formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, and dash variants).

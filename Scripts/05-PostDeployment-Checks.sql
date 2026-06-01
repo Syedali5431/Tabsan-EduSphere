@@ -551,34 +551,58 @@ INNER JOIN student_profiles sp ON sp.Id = pr.StudentProfileId
 INNER JOIN departments d ON d.Id = sp.DepartmentId
 WHERE d.InstitutionType = 2;
 
-SELECT 'DummySeed_PaymentFilterDemo_ReceiptRowsV42' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_PaymentFilterDemo_ReceiptRowsV43' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts]
 WHERE [ReceiptNo] IN
 (
 		N'RCPT-DEMO-PAY-FLT-U-001',
 		N'RCPT-DEMO-PAY-FLT-C-001',
-		N'RCPT-DEMO-PAY-FLT-S-001'
+		N'RCPT-DEMO-PAY-FLT-S-001',
+		N'RCPT-DEMO-PAY-SCP-U-043',
+		N'RCPT-DEMO-PAY-SCP-C-043',
+		N'RCPT-DEMO-PAY-SCP-S-043'
 );
 
-SELECT 'DummySeed_PaymentFilterDemo_UniversityCountV42' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_PaymentFilterDemo_UniversityCountV43' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts] pr
 INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
 INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
 WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-FLT-U-001'
 	AND d.[InstitutionType] = 2;
 
-SELECT 'DummySeed_PaymentFilterDemo_CollegeCountV42' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_PaymentFilterDemo_CollegeCountV43' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts] pr
 INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
 INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
 WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-FLT-C-001'
 	AND d.[InstitutionType] = 1;
 
-SELECT 'DummySeed_PaymentFilterDemo_SchoolCountV42' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_PaymentFilterDemo_SchoolCountV43' AS [CheckName], COUNT(1) AS [Value]
 FROM [payment_receipts] pr
 INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
 INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
 WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-FLT-S-001'
+	AND d.[InstitutionType] = 0;
+
+SELECT 'DummySeed_PaymentScopeDemo_UniversityCountV43' AS [CheckName], COUNT(1) AS [Value]
+FROM [payment_receipts] pr
+INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-SCP-U-043'
+	AND d.[InstitutionType] = 2;
+
+SELECT 'DummySeed_PaymentScopeDemo_CollegeCountV43' AS [CheckName], COUNT(1) AS [Value]
+FROM [payment_receipts] pr
+INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-SCP-C-043'
+	AND d.[InstitutionType] = 1;
+
+SELECT 'DummySeed_PaymentScopeDemo_SchoolCountV43' AS [CheckName], COUNT(1) AS [Value]
+FROM [payment_receipts] pr
+INNER JOIN [student_profiles] sp ON sp.[Id] = pr.[StudentProfileId]
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE pr.[ReceiptNo] = N'RCPT-DEMO-PAY-SCP-S-043'
 	AND d.[InstitutionType] = 0;
 
 SELECT 'DummySeed_CriticalEntityCount_AdminAssignments' AS [CheckName], COUNT(1) AS [Value]
@@ -790,10 +814,10 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV42' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV43' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v42';
+	AND DemoValue = N'FullDummyData-v43';
 
 SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_StudentCountV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
