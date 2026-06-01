@@ -2664,7 +2664,11 @@ public class PortalController : Controller
                 {
                     model.Tenants = await _api.GetTenantsAsync(ct);
                     if (model.SelectedTenantId.HasValue)
+                    {
                         model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+                        if (!model.SelectedCampusId.HasValue && model.Campuses.Count == 1)
+                            model.SelectedCampusId = model.Campuses[0].Id;
+                    }
                 }
                 else
                 {

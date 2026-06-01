@@ -2420,6 +2420,14 @@ public class EduApiClient : IEduApiClient
             : "api/v1/campus";
 
         var raw = await GetAsync<List<CampusApiDto>>(path, ct) ?? new();
+
+        // Fallback: if tenant-filtered fetch returns empty, re-check unfiltered list and filter locally.
+        if (tenantId.HasValue && raw.Count == 0)
+        {
+            var allCampuses = await TryGetAsync<List<CampusApiDto>>("api/v1/campus", ct) ?? new();
+            raw = allCampuses.Where(c => c.TenantId == tenantId.Value).ToList();
+        }
+
         return raw.Select(c => new CampusItem
         {
             Id = c.Id,
