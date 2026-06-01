@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Generate Certificates School/College Filter Demo Seed v41)
+- Runtime delivery in this slice:
+  - improved school/college demo-data reliability for Generate Certificates by resolving department/program targets dynamically during FullDummyData seeding,
+  - expanded deterministic filter-demo cohort for non-university scope with two additional rows,
+  - aligned post-deployment checks with v41 marker and explicit school/college split assertions,
+  - improved Grading Config scope usability with single-campus auto-selection and resilient campus loading fallback.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - additive seed/check updates and non-breaking runtime behavior updates only.
+- Validation Summary:
+  - deterministic seed/check run remains repeatable,
+  - menu/filter workflows render expected scoped options and deterministic demo rows for QA/UAT walkthroughs.
+
 ### 2026-06-01 - Product Requirements Synchronization (Generate Certificates License-Driven Institute Filter + Search Demo Seed v40)
 - Runtime delivery in this slice:
   - simplified Generate Certificates filter UI to institution-only,

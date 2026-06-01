@@ -1,3 +1,20 @@
+## Execution Update - 2026-06-01 (Generate Certificates School/College Filter Demo Seed v41 + Grading Scope Load Stabilization)
+
+### Module impact summary
+- No new module introduced; update remains within existing Generate Certificates and Grading Config module surfaces.
+- Full dummy seed now includes expanded deterministic school/college filter-demo cohort for Generate Certificates:
+  - DEMO-CERT-COL-FILTER-943
+  - DEMO-CERT-SCH-FILTER-944
+  - DEMO-CERT-COL-FILTER-945
+  - DEMO-CERT-SCH-FILTER-946
+- Full dummy seed now resolves school/college department/program targets dynamically to avoid environment-specific hardcoded-ID mismatch.
+- Post-deployment checks now validate v41 marker plus school/college split integrity for the expanded filter-demo cohort.
+- Grading Config filter-chain stability improved with single-campus auto-select and resilient campus list fallback.
+
+### Validation summary
+- Deterministic demo seed and checks remain additive/idempotent for repeatable testing cycles.
+- Runtime checks confirm scoped menu filters populate and render expected data for demo/testing flows.
+
 ## Execution Update - 2026-06-01 (Generate Certificates License-Driven Institute Filter + Search Demo Seed v40)
 
 ### Module impact summary

@@ -727,12 +727,12 @@ SELECT 'DummySeed_DemoDatasetVersionRowCount' AS [CheckName], COUNT(1) AS [Value
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion';
 
-SELECT 'DummySeed_DemoDatasetVersionIsV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_DemoDatasetVersionIsV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [Tabsan-EduSphere]
 WHERE DemoKey = N'DemoDatasetVersion'
-	AND DemoValue = N'FullDummyData-v40';
+	AND DemoValue = N'FullDummyData-v41';
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_StudentCountV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_StudentCountV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
@@ -745,29 +745,33 @@ WHERE [RegistrationNumber] IN
 )
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_CollegeCountV40' AS [CheckName], COUNT(1) AS [Value]
-FROM [student_profiles]
-WHERE [RegistrationNumber] IN
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_CollegeCountV41' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE sp.[RegistrationNumber] IN
 (
 	N'DEMO-CERT-COL-901',
 	N'DEMO-CERT-COL-902',
 	N'DEMO-CERT-COL-SEARCH-941'
 )
-	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER)
-	AND [IsDeleted] = 0;
+	AND sp.[IsDeleted] = 0
+	AND d.[IsDeleted] = 0
+	AND d.[InstitutionType] = 1;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_SchoolCountV40' AS [CheckName], COUNT(1) AS [Value]
-FROM [student_profiles]
-WHERE [RegistrationNumber] IN
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_SchoolCountV41' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE sp.[RegistrationNumber] IN
 (
 	N'DEMO-CERT-SCH-911',
 	N'DEMO-CERT-SCH-912',
 	N'DEMO-CERT-SCH-SEARCH-942'
 )
-	AND [ProgramId] = CAST('22222222-2222-2222-2222-222222222216' AS UNIQUEIDENTIFIER)
-	AND [IsDeleted] = 0;
+	AND sp.[IsDeleted] = 0
+	AND d.[IsDeleted] = 0
+	AND d.[InstitutionType] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_EnrollmentCountV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesAdditionalDemo_EnrollmentCountV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [enrollments]
 WHERE [StudentProfileId] IN
 (
@@ -784,7 +788,7 @@ WHERE [StudentProfileId] IN
 	)
 );
 
-SELECT 'DummySeed_GenerateCertificatesSearchDemo_UsernamesV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesSearchDemo_UsernamesV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [users]
 WHERE [Username] IN
 (
@@ -793,23 +797,43 @@ WHERE [Username] IN
 )
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesFilterDemo_StudentCountV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_StudentCountV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]
 WHERE [RegistrationNumber] IN
 (
 	N'DEMO-CERT-COL-FILTER-943',
-	N'DEMO-CERT-SCH-FILTER-944'
+	N'DEMO-CERT-SCH-FILTER-944',
+	N'DEMO-CERT-COL-FILTER-945',
+	N'DEMO-CERT-SCH-FILTER-946'
 )
 	AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_GenerateCertificatesFilterDemo_UsernamesV40' AS [CheckName], COUNT(1) AS [Value]
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_UsernamesV41' AS [CheckName], COUNT(1) AS [Value]
 FROM [users]
 WHERE [Username] IN
 (
 	N'demo.cert.filter.col.943',
-	N'demo.cert.filter.sch.944'
+	N'demo.cert.filter.sch.944',
+	N'demo.cert.filter.col.945',
+	N'demo.cert.filter.sch.946'
 )
 	AND [IsDeleted] = 0;
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_CollegeCountV41' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE sp.[RegistrationNumber] IN (N'DEMO-CERT-COL-FILTER-943', N'DEMO-CERT-COL-FILTER-945')
+	AND sp.[IsDeleted] = 0
+	AND d.[IsDeleted] = 0
+	AND d.[InstitutionType] = 1;
+
+SELECT 'DummySeed_GenerateCertificatesFilterDemo_SchoolCountV41' AS [CheckName], COUNT(1) AS [Value]
+FROM [student_profiles] sp
+INNER JOIN [departments] d ON d.[Id] = sp.[DepartmentId]
+WHERE sp.[RegistrationNumber] IN (N'DEMO-CERT-SCH-FILTER-944', N'DEMO-CERT-SCH-FILTER-946')
+	AND sp.[IsDeleted] = 0
+	AND d.[IsDeleted] = 0
+	AND d.[InstitutionType] = 0;
 
 SELECT 'DummySeed_DegreeAuditEligibilityDemo_StudentCountV37' AS [CheckName], COUNT(1) AS [Value]
 FROM [student_profiles]

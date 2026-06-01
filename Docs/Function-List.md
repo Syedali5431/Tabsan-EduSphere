@@ -1,5 +1,34 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates School/College Filter Demo Stabilization and Seed Sync v41
+
+### Function inventory delta
+- Newly created functions in this slice:
+	- No new public controller/service/API function signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.GradingConfig
+		- auto-selects the campus when only one campus exists for the selected tenant.
+	- EduApiClient.GetCampusesAsync
+		- adds resilient fallback: if tenant-filtered campus API response is empty, retries with all campuses and filters locally by tenant.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v41 and strengthens Generate Certificates school/college demo seeding:
+	- resolves school/college department/program IDs dynamically from current data,
+	- retains deterministic filter-demo rows 943/944,
+	- adds deterministic filter-demo rows:
+		- DEMO-CERT-COL-FILTER-945
+		- DEMO-CERT-SCH-FILTER-946
+	- adds matching deterministic users/enrollments for 945/946.
+- Scripts/05-PostDeployment-Checks.sql now includes v41-synchronized checks for:
+	- dataset marker,
+	- additional-certificate cohort counts,
+	- expanded filter-demo row and username counts,
+	- institution-type split checks for college vs school filter-demo rows.
+
+### Validation summary
+- Dummy seed remains additive and idempotent for deterministic IDs.
+- Runtime menu/filter checks confirm Grading Config cascading scope loads correctly and Generate Certificates demo datasets are now seeded for school/college filter testing.
+
 ## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
 
 ### Function inventory delta

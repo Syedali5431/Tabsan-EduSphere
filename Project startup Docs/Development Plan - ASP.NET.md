@@ -1,3 +1,17 @@
+## 2026-06-01 Update - Generate Certificates School/College Filter Demo Seed v41 and Scope-Load Hardening
+
+### Plan sync
+- Upgraded demo dataset marker to FullDummyData-v41 and expanded deterministic school/college Generate Certificates filter-demo coverage with two additional sample rows.
+- Reworked FullDummyData school/college certificate demo target selection to resolve department/program IDs dynamically from current environment data.
+- Updated post-deployment checks to v41 and added expanded filter-demo assertions (profile/username totals plus institution-type split).
+- Hardened Grading Config scope-loading behavior for demo/testing stability:
+  - auto-select single campus for selected tenant,
+  - fallback to all-campus API query with local tenant filter when tenant-scoped campus query returns empty.
+
+### Validation sync
+- Seed/check cycle remains additive and idempotent.
+- Runtime menu/filter tests confirm deterministic rows and stable filter option loading for scoped demos.
+
 ## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
 
 ### Plan sync

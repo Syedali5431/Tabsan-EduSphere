@@ -1,3 +1,18 @@
+## 2026-06-01 Update - Generate Certificates School/College Filter Demo Seed v41 (Schema Posture)
+
+- Implementation Summary:
+	- advanced Scripts/03-FullDummyData.sql marker to FullDummyData-v41,
+	- expanded additive deterministic Generate Certificates school/college filter-demo rows in existing tables only:
+		- users (+2 rows for 945/946),
+		- student_profiles (+2 rows for 945/946),
+		- enrollments (+2 rows for 945/946),
+	- replaced brittle hardcoded school/college program targeting in this slice with dynamic department/program resolution queries against existing departments and academic_programs data,
+	- updated Scripts/05-PostDeployment-Checks.sql with v41-aligned deterministic assertions for expanded filter-demo coverage.
+- Validation Summary:
+	- SQL updates remain additive and idempotent on deterministic IDs,
+	- schema impact: no schema mutation,
+	- EF migration impact: none.
+
 ## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40 (Schema Posture)
 
 - Implementation Summary:

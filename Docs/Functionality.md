@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Generate Certificates School/College Filter Demo Stabilization and Seed Sync v41
+
+### Implementation sync
+- Scripts/03-FullDummyData.sql advanced to FullDummyData-v41 and now seeds additional deterministic school/college Generate Certificates filter-demo records for demo/testing:
+	- DEMO-CERT-COL-FILTER-945
+	- DEMO-CERT-SCH-FILTER-946
+- The seed now resolves school/college department/program IDs dynamically from current data, reducing environment-specific ID mismatch issues.
+- Scripts/05-PostDeployment-Checks.sql synchronized to v41 and expanded with school/college split checks plus expanded filter-demo username/profile assertions.
+- Grading Config scope behavior updated to improve filter usability:
+	- auto-selects single campus for selected tenant,
+	- uses resilient campus loading fallback in web API client when tenant-filtered campus list is unexpectedly empty.
+
+### Validation sync
+- Deterministic seed/check flow remains additive and idempotent for repeated demo resets.
+- Runtime checks confirm tenant-campus-department-course/class filter chains render with expected options and data visibility.
+
 ## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
 
 ### Implementation sync
