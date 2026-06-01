@@ -7,6 +7,8 @@ using Tabsan.EduSphere.Web.Services;
 namespace Tabsan.EduSphere.Web.Controllers;
 
 [Route("Portal/Login")]
+[Route("Login")]
+[Route("Home/Login")]
 public class LoginController : Controller
 {
     private readonly IEduApiClient _api;

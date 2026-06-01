@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
@@ -403,6 +404,7 @@ public class AnalyticsInstituteParityIntegrationTests
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await EnsurePaymentReceiptSchemaCompatibilityAsync(db);
 
         var studentRole = db.Roles.First(r => r.Name == "Student");
         var financeRole = db.Roles.First(r => r.Name == "Finance");
@@ -456,6 +458,7 @@ public class AnalyticsInstituteParityIntegrationTests
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await EnsurePaymentReceiptSchemaCompatibilityAsync(db);
 
         var studentRole = db.Roles.First(r => r.Name == "Student");
         var financeRole = db.Roles.First(r => r.Name == "Finance");
@@ -506,5 +509,23 @@ public class AnalyticsInstituteParityIntegrationTests
         await db.SaveChangesAsync();
 
         return (tenant.Id, campus.Id, courseFilter.Id, semesterFilter.Id);
+    }
+
+    private static async Task EnsurePaymentReceiptSchemaCompatibilityAsync(ApplicationDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+               AND COL_LENGTH(N'payment_receipts', N'ReceiptNo') IS NULL
+            BEGIN
+                ALTER TABLE [payment_receipts] ADD [ReceiptNo] nvarchar(64) NULL;
+
+                UPDATE [payment_receipts]
+                SET [ReceiptNo] = CONCAT(N'RCPT-', REPLACE(CONVERT(nvarchar(36), [Id]), N'-', N''))
+                WHERE [ReceiptNo] IS NULL;
+
+                ALTER TABLE [payment_receipts] ALTER COLUMN [ReceiptNo] nvarchar(64) NOT NULL;
+            END
+            """);
     }
 }
