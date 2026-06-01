@@ -291,3 +291,78 @@ Summary: Advanced is ideal for institutions that need stronger visibility, gover
 - Best suited for organizations running cross-role operations with measurable performance targets
 - Enables deeper monitoring and policy-backed execution confidence
 - Bridges operational maturity toward enterprise-grade reliability and governance
+
+## App Architecture Snapshot
+Summary: Advanced-tier delivery is powered by a modular architecture that blends governance discipline with high-visibility analytics.
+- Policy-enforced API execution for sensitive operations
+- Role-aware portal surfaces with module-governed visibility
+- Export-ready reporting pipeline for operational and strategic analysis
+- Reliability-oriented workflow design for recurring academic cycles
+
+## Advanced Plan Capability Emphasis
+Summary: Advanced focuses on insight-driven execution, stronger controls, and parent-facing transparency.
+- Advanced analytics for trend, comparison, and performance insight
+- Export job workflows for high-volume report handling
+- Parent portal read visibility and communication fan-out options
+- Governance reinforcement across sidebar, report, and module settings
+
+## Governance and Analytics Operating Model
+Summary: Institutions can combine analytics depth with controlled policy execution.
+
+1. Role and scope governance
+- Validate access by institution, campus, department, and role assignment
+
+2. Reporting discipline
+- Define report ownership, access boundaries, and recurring review cadence
+
+3. Analytics-led intervention
+- Use trend indicators to prioritize academic and operational actions
+
+4. Audit readiness
+- Maintain evidence for publication/correction and report distribution events
+
+## Reliability and Performance Considerations
+Summary: Advanced deployments should emphasize predictable execution at medium-to-high operational volume.
+- Support for bulk import and validation-heavy workflows
+- Stable export patterns for recurring reporting cycles
+- Improved operational resilience through staged rollout and post-deployment checks
+- Structured handling for concurrent updates and large dataset navigation
+
+## Adoption Roadmap (Advanced)
+Summary: A focused rollout helps institutions realize analytics ROI quickly.
+
+Phase 1: Core stability
+- Confirm core academic workflows and governance baselines
+
+Phase 2: Analytics expansion
+- Activate advanced report and trend usage by governance-defined roles
+
+Phase 3: Parent and communication pathways
+- Enable parent read workflows and aligned communication patterns
+
+Phase 4: Continuous optimization
+- Tune KPI targets and governance controls based on measured outcomes
+
+## KPI Targets for Advanced Institutions
+Summary: Recommended performance indicators for Advanced rollout success.
+- Reporting adoption by leadership and operations teams
+- Export completion reliability and turnaround time
+- Result publication governance compliance rate
+- Attendance-risk intervention response time
+- Parent communication reach and acknowledgement rate
+
+## FAQ (Advanced Plan)
+
+1. Is Advanced only for large institutions?
+- No, it suits any institution needing richer analytics and tighter governance.
+
+2. Can Advanced reduce manual decision cycles?
+- Yes, analytics and standardized exports improve decision speed and consistency.
+
+3. Does Advanced support phased rollout?
+- Yes, institutions can activate capabilities by governance priority.
+
+## Pricing Integrity Note
+Summary: This revision expands app and execution details only.
+- Advanced pricing remains unchanged at AUD 4 per user yearly.
+

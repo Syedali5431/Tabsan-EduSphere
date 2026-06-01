@@ -291,3 +291,77 @@ Summary: Enterprise is optimized for multi-campus scale, strict governance, and 
 - Best suited for organizations needing deep control, broad capability coverage, and operational resilience
 - Supports complex rollout governance with sustained performance under high demand
 - Enables strategic transformation programs backed by structured reporting and reliability controls
+
+## App Architecture Snapshot
+Summary: Enterprise delivery combines complete platform coverage with governance-first architecture and operational resilience.
+- End-to-end module stack across academics, governance, analytics, communication, and parent engagement
+- Strong policy controls enforced across visibility and backend execution layers
+- High-readiness model for multi-campus and multi-scope operational complexity
+- Structured deployment and validation path for stability at scale
+
+## Enterprise Capability Depth
+Summary: Enterprise provides full-spectrum functionality for institutions with strategic transformation goals.
+- Full module coverage with institution-aware behavior and role controls
+- Advanced analytics, export orchestration, and governance-aware reporting
+- Parent communication and engagement pathways for transparency
+- Reliability-focused operational tooling for high-volume scenarios
+
+## Enterprise Operating Framework
+Summary: A framework approach helps leadership maintain scale without losing control.
+
+1. Governance layer
+- Central policy with scoped execution (tenant/campus/department)
+
+2. Academic execution layer
+- Standardized delivery for attendance, assessments, and result lifecycle
+
+3. Insight layer
+- Decision support through trend analytics and KPI dashboards
+
+4. Assurance layer
+- Auditability, access control checks, and post-change validation discipline
+
+## Scale and Reliability Considerations
+Summary: Enterprise institutions typically require predictable behavior across many users and workflows.
+- High-volume import and processing support for operational continuity
+- Scope-aware query and reporting patterns for multi-campus visibility
+- Controlled handling of concurrent actions and governance transitions
+- Maintenance and validation routines for sustained performance baselines
+
+## Executive Adoption Roadmap
+Summary: Enterprise rollout should be governed as a transformation program.
+
+Stage 1: Governance foundation
+- Confirm licensing, module entitlement, role boundaries, and scope model
+
+Stage 2: Operational rollout
+- Enable full academic and reporting workflows with department-level accountability
+
+Stage 3: Analytics and executive reporting
+- Establish KPI cadence and evidence-based intervention process
+
+Stage 4: Continuous improvement
+- Apply optimization cycles for policy, adoption, and performance tuning
+
+## Enterprise KPI Portfolio
+Summary: Suggested strategic KPIs for institutional leadership.
+- Institution-wide publication cycle time and governance compliance
+- Cross-campus attendance and performance trend variance
+- Reporting utilization by decision-making tier
+- Policy exception frequency and remediation turnaround
+- Platform adoption depth across role groups and campuses
+
+## FAQ (Enterprise Plan)
+
+1. Is Enterprise only a feature bundle?
+- No, it is also an operating model for governance, reliability, and strategic execution.
+
+2. Can Enterprise support multi-campus governance complexity?
+- Yes, it is designed for scoped control and broad operational visibility.
+
+3. Does Enterprise include growth headroom for future enhancements?
+- Yes, roadmap-ready architecture supports continuous capability expansion.
+
+## Pricing Integrity Note
+Summary: This update adds deeper app and transformation detail only.
+- Enterprise pricing remains unchanged at AUD 5 per user yearly.

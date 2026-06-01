@@ -291,3 +291,91 @@ Summary: Foundation Lite delivers a robust academic core with practical controls
 - Best suited for foundational rollout where core academics are primary priority
 - Strong governance baseline with essential role and scope enforcement
 - Clear upgrade path to richer analytics, integrations, and advanced automation when readiness grows
+
+## App Architecture Snapshot
+Summary: Tabsan EduSphere is engineered as a modular education platform with clear separation between governance, academic workflows, and analytics.
+- API-first backend with role and scope checks for all sensitive operations
+- Web portal optimized for day-to-day institutional execution
+- License-aware module activation to keep deployments policy aligned
+- Structured data and script path for clean rollout and post-deployment verification
+
+## Module Catalog (Current Coverage)
+Summary: Institutions can enable capabilities progressively according to operational maturity.
+- Core academics: courses, enrollments, assignments, quizzes, attendance, results
+- Governance: module settings, sidebar settings, report settings, institution policy
+- Administration: user management, semester/class operations, notifications
+- Reporting and analytics: institution-aware reports, trend dashboards, scoped exports
+- Extended capabilities: parent-facing surfaces, AI chat, communication enhancements
+
+## End-to-End User Journey
+Summary: The platform supports a complete institutional workflow from onboarding to audited academic outcomes.
+
+1. Setup
+- Institution scope selected through license policy
+- Roles and baseline settings configured
+
+2. Academic Execution
+- Faculty delivers classes, attendance, assignments, quizzes, and marks
+- Admin monitors operations and approvals
+
+3. Outcome Publication
+- Controlled publication process for results
+- Student-facing visibility only after governed transitions
+
+4. Improvement Loop
+- Reports and analytics guide interventions
+- Policy and configuration refined per KPI performance
+
+## Security and Governance Details
+Summary: Access control is enforced at both visibility and backend authorization layers.
+- Role-based authorization for all protected workflows
+- Scope-aware checks by institution, tenant/campus, and department contexts
+- Controlled draft-to-publish and correction lifecycle with audit traceability
+- Hardening for sensitive download and reporting flows
+
+## Implementation Timeline (Suggested)
+Summary: A practical deployment path reduces risk and accelerates adoption.
+
+Week 1: Foundation
+- Configure license scope, roles, and baseline module settings
+
+Week 2: Academic Enablement
+- Activate attendance and results workflows with guided UAT scenarios
+
+Week 3: Reporting and Governance
+- Enable report governance, sidebar mapping, and scoped operational controls
+
+Week 4: Adoption and Stabilization
+- Run training, KPI baseline measurement, and optimization adjustments
+
+## Onboarding and Training Model
+Summary: Structured training by role improves speed-to-value.
+- Student orientation: assignments, quizzes, attendance, results
+- Faculty operations: content delivery, assessment workflows, controlled publication
+- Admin operations: user lifecycle, timetable, departmental governance
+- SuperAdmin governance: licensing, modules, role/menu/report policy
+
+## KPI and ROI Indicators
+Summary: Institutions can measure tangible transformation outcomes within one term.
+- Reduced manual processing time for attendance and results publication
+- Improved first-pass data quality during imports
+- Faster issue resolution through role/scope-aware troubleshooting
+- Higher reporting usage by leadership for data-driven decisions
+
+## FAQ (Executive and Operations)
+
+1. Can the platform support different institution types in one product?
+- Yes, School/College/University modes are license and policy aware.
+
+2. Is phased rollout possible?
+- Yes, institutions can start with core workflows and progressively enable advanced capabilities.
+
+3. Can features be added later without re-platforming?
+- Yes, module-driven expansion supports incremental adoption.
+
+4. Does this plan allow growth path to advanced analytics and integrations?
+- Yes, Foundation Lite is intentionally designed as a low-risk entry with upgrade continuity.
+
+## Pricing Integrity Note
+Summary: This document revision adds functional and implementation details only.
+- Foundation Lite pricing remains unchanged at AUD 1.5 per user yearly.

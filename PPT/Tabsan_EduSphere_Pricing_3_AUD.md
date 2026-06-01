@@ -291,3 +291,82 @@ Summary: Growth extends foundational operations with collaboration and learning 
 - Best suited for institutions transitioning from basic administration to active digital teaching operations
 - Adds stronger day-to-day workflow capacity for faculty and mixed-role execution
 - Maintains cost predictability while preparing teams for advanced analytics and governance depth
+
+## App Architecture Snapshot
+Summary: Tabsan EduSphere uses modular architecture to combine academic operations, governance controls, and actionable analytics.
+- API-first service model with policy-driven authorization
+- License-aware module surfaces for controlled feature activation
+- Web-first operational workflows designed for role-specific execution
+- Structured script and validation path for safe rollout and maintenance
+
+## Capability Depth in Growth Plan Context
+Summary: Growth is positioned for institutions running active teaching operations across multiple role groups.
+- Full academic workflow continuity from offering setup to result publication
+- Collaboration features including LMS, discussion, and study planner support
+- Stronger faculty-admin coordination through governed settings and report surfaces
+- Extendable integration path without platform migration
+
+## Operational Workflow Blueprint
+Summary: A consistent operating model helps institutions reduce friction and improve delivery quality.
+
+1. Academic Setup
+- Program, offering, and enrollment alignment
+
+2. Continuous Delivery
+- Assignments, quizzes, attendance, and in-term result capture
+
+3. Governance Checkpoints
+- Role/menu/report scope validations and publication control
+
+4. Analytics Review
+- Trend and outcome monitoring for timely intervention
+
+## Security and Compliance Details
+Summary: Security posture combines strict authorization with auditable workflow transitions.
+- Role and scope validation on protected endpoints
+- Controlled publication and correction lifecycle
+- Audit trail retention for high-impact actions
+- Boundary enforcement across institution and scope contexts
+
+## Adoption Roadmap (Recommended)
+Summary: Growth plan adoption works best with phased enablement and measurable checkpoints.
+
+Phase A: Operational Core
+- Stabilize attendance, assessments, and results lifecycle
+
+Phase B: Collaboration Layer
+- Expand LMS/discussion/helpdesk usage for faculty and student engagement
+
+Phase C: Governance and Insights
+- Enable analytics and stronger report discipline for decision support
+
+## Role Enablement Outcomes
+Summary: Each role gains clear operational value under Growth.
+- Students: better engagement and visibility through structured workflows
+- Faculty: efficient delivery and controlled assessment operations
+- Admins: stronger operational oversight and communication coverage
+- SuperAdmins: policy-level governance and rollout control
+
+## KPI Focus for Growth Institutions
+Summary: Suggested metrics to track plan success.
+- Assignment and quiz completion consistency
+- Attendance capture timeliness
+- Result publication cycle duration
+- Collaboration feature adoption rates (LMS/discussion/helpdesk)
+- Escalation reduction due to clearer governance paths
+
+## FAQ (Growth Plan)
+
+1. Is Growth suitable for mixed digital maturity institutions?
+- Yes, it balances practical operational depth with manageable complexity.
+
+2. Can we move to Advanced/Enterprise later?
+- Yes, Growth is designed with upgrade continuity and minimal disruption.
+
+3. Does Growth improve cross-role collaboration?
+- Yes, it includes workflow features that reduce coordination delays.
+
+## Pricing Integrity Note
+Summary: This revision expands app detail content only.
+- Growth pricing remains unchanged at AUD 3 per user yearly.
+
