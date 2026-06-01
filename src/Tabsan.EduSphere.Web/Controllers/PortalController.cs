@@ -6830,7 +6830,7 @@ public class PortalController : Controller
 
     private async Task<List<StudentItem>> LoadPaymentStudentsForScopeAsync(Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
-        if (!tenantId.HasValue && !campusId.HasValue)
+        if (!tenantId.HasValue && !campusId.HasValue && !institutionType.HasValue)
         {
             var students = await _api.GetStudentsAsync(null, ct);
             return students
