@@ -1781,6 +1781,13 @@ public class EduApiClient : IEduApiClient
             if (root.ValueKind != JsonValueKind.Object)
                 return null;
 
+            if (root.TryGetProperty("detail", out var detailElement))
+            {
+                var detail = detailElement.GetString();
+                if (!string.IsNullOrWhiteSpace(detail))
+                    return detail;
+            }
+
             if (root.TryGetProperty("message", out var messageElement))
             {
                 var message = messageElement.GetString();

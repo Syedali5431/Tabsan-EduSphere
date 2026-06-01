@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Payments Filter Demo Seed v42 and CSV Import Reliability
+
+### Implementation sync
+- Payments menu institution filter now uses payment-specific licensed option mapping so labels align with the underlying scoped payment dataset.
+- Payments CSV import now accepts common spreadsheet due-date formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, and dash variants).
+- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v42` and adds deterministic payment filter-demo receipts:
+	- `RCPT-DEMO-PAY-FLT-U-001` (University)
+	- `RCPT-DEMO-PAY-FLT-C-001` (College)
+	- `RCPT-DEMO-PAY-FLT-S-001` (School)
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v42 checks for payment demo marker and per-institution filter-demo receipt integrity.
+
+### Validation sync
+- Payments menu runtime checks confirmed institution-filter and student-filter narrowing now show the expected deterministic rows.
+- Payments CSV import checks confirmed spreadsheet-style due-date values no longer fail date validation.
+- SQL checks confirmed deterministic payment filter-demo receipt presence and institution alignment.
+
 ## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Scope/Serialization Stabilization
 
 ### Implementation sync

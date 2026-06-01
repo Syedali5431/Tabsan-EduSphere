@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-01 - Product Requirements Synchronization (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
+- Runtime delivery in this slice:
+  - aligned Payments institution-filter option mapping with scoped payment dataset values so user-facing labels match expected result sets,
+  - expanded Payments CSV import due-date parsing to accept common spreadsheet formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, plus dash variants),
+  - advanced Scripts/03-FullDummyData.sql to `FullDummyData-v42` with deterministic Payments filter-demo receipts for university/college/school paths,
+  - synchronized Scripts/05-PostDeployment-Checks.sql with v42 marker and deterministic payment filter-demo assertions.
+- Compatibility boundary:
+  - no route removals,
+  - no table/column schema mutation,
+  - additive seed/check updates and non-breaking runtime behavior correction only.
+- Validation Summary:
+  - Payments menu/filter flow renders deterministic scoped rows for institution and student filter paths,
+  - CSV import now accepts spreadsheet-style due-date values used in demo templates,
+  - SQL checks confirm deterministic payment demo rows and institution alignment.
+
 ### 2026-06-01 - Product Requirements Synchronization (Study Plan Filter Demo Seed + Runtime Resilience)
 - Runtime delivery in this slice:
   - preserved Study Plan filter context across list/detail/create/edit/advise/delete interactions,

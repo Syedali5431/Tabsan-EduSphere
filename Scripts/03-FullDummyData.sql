@@ -129,14 +129,14 @@ END;
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
-    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v41', @Now, NULL
+    SELECT '10101010-1010-1010-1010-101010101010', N'DemoDatasetVersion', N'FullDummyData-v42', @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoDatasetVersion');
 
     INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt], [UpdatedAt])
     SELECT '10101010-1010-1010-1010-101010101011', N'DemoSeededAtUtc', CONVERT(NVARCHAR(40), @Now, 127), @Now, NULL
     WHERE NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] x WHERE x.[DemoKey] = N'DemoSeededAtUtc');
     UPDATE [Tabsan-EduSphere]
-    SET [DemoValue] = N'FullDummyData-v41',
+    SET [DemoValue] = N'FullDummyData-v42',
         [UpdatedAt] = @Now
     WHERE [DemoKey] = N'DemoDatasetVersion';
 END
@@ -2559,6 +2559,83 @@ BEGIN
           FROM [payment_receipts] pr
           WHERE pr.[StudentProfileId] = sp.[Id]
             AND pr.[Description] = N'Bulk Tuition Auto Seed - Spring Cycle'
+      );
+
+    /* 12.1.2) Deterministic payment filter-demo rows for menu validation */
+    DECLARE @PayDemoUniversityStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-CS-0001');
+    DECLARE @PayDemoCollegeStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'DEMO-CERT-COL-FILTER-943');
+    DECLARE @PayDemoSchoolStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'DEMO-CERT-SCH-FILTER-944');
+
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT
+        v.[Id],
+        v.[StudentProfileId],
+        v.[CreatedByUserId],
+        v.[ReceiptNo],
+        v.[Status],
+        v.[Amount],
+        v.[Description],
+        v.[DueDate],
+        NULL,
+        NULL,
+        v.[ConfirmedByUserId],
+        v.[ConfirmedAt],
+        v.[Notes],
+        @Now,
+        @Now,
+        0,
+        NULL
+    FROM
+    (
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272711' AS UNIQUEIDENTIFIER) AS [Id],
+            @PayDemoUniversityStudentId AS [StudentProfileId],
+            COALESCE(@FinanceUniUserId, @SuperAdminUserId) AS [CreatedByUserId],
+            N'RCPT-DEMO-PAY-FLT-U-001' AS [ReceiptNo],
+            1 AS [Status],
+            CAST(4100.00 AS DECIMAL(10,2)) AS [Amount],
+            N'Demo Payment Filter - University' AS [Description],
+            DATEADD(day, 20, @Now) AS [DueDate],
+            COALESCE(@FinanceUniUserId, @SuperAdminUserId) AS [ConfirmedByUserId],
+            DATEADD(day, -2, @Now) AS [ConfirmedAt],
+            N'Deterministic University filter-demo payment row.' AS [Notes]
+
+        UNION ALL
+
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272712' AS UNIQUEIDENTIFIER),
+            @PayDemoCollegeStudentId,
+            COALESCE(@FinanceColUserId, @SuperAdminUserId),
+            N'RCPT-DEMO-PAY-FLT-C-001',
+            1,
+            CAST(2750.00 AS DECIMAL(10,2)),
+            N'Demo Payment Filter - College',
+            DATEADD(day, 21, @Now),
+            COALESCE(@FinanceColUserId, @SuperAdminUserId),
+            DATEADD(day, -2, @Now),
+            N'Deterministic College filter-demo payment row.'
+
+        UNION ALL
+
+        SELECT
+            CAST('27272727-2727-2727-2727-272727272713' AS UNIQUEIDENTIFIER),
+            @PayDemoSchoolStudentId,
+            COALESCE(@FinanceSchUserId, @SuperAdminUserId),
+            N'RCPT-DEMO-PAY-FLT-S-001',
+            1,
+            CAST(1900.00 AS DECIMAL(10,2)),
+            N'Demo Payment Filter - School',
+            DATEADD(day, 22, @Now),
+            COALESCE(@FinanceSchUserId, @SuperAdminUserId),
+            DATEADD(day, -2, @Now),
+            N'Deterministic School filter-demo payment row.'
+    ) v
+    WHERE v.[StudentProfileId] IS NOT NULL
+      AND NOT EXISTS
+      (
+          SELECT 1
+          FROM [payment_receipts] pr
+          WHERE pr.[ReceiptNo] = v.[ReceiptNo]
       );
 END
 

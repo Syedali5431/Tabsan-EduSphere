@@ -1,3 +1,17 @@
+## 2026-06-01 Update - Payments Filter Demo Seed v42 (Schema Posture)
+
+- Implementation Summary:
+	- advanced Scripts/03-FullDummyData.sql marker to `FullDummyData-v42`,
+	- added additive deterministic payment filter-demo rows in existing `payment_receipts` table only:
+		- `RCPT-DEMO-PAY-FLT-U-001` (University scope),
+		- `RCPT-DEMO-PAY-FLT-C-001` (College scope),
+		- `RCPT-DEMO-PAY-FLT-S-001` (School scope),
+	- synchronized Scripts/05-PostDeployment-Checks.sql with v42 marker and deterministic payment filter-demo validation queries.
+- Validation Summary:
+	- SQL seed/check updates remain additive and idempotent,
+	- schema impact: no table/column/index mutation in this slice,
+	- EF migration impact: none.
+
 ## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Compatibility (Schema Posture)
 
 - Implementation Summary:

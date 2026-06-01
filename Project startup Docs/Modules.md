@@ -1,3 +1,19 @@
+## Execution Update - 2026-06-01 (Payments Filter Demo Seed v42 + CSV Import Date Compatibility)
+
+### Module impact summary
+- No new module introduced; update remains in the existing Payments module surface.
+- Payments institution filter mapping is now aligned for this deployment so user-visible labels correspond to the scoped payment dataset values.
+- Payments CSV import date parsing now accepts common spreadsheet date formats used during demo/testing uploads.
+- Full dummy seed advanced to `FullDummyData-v42` with deterministic payment filter-demo receipts:
+  - `RCPT-DEMO-PAY-FLT-U-001`
+  - `RCPT-DEMO-PAY-FLT-C-001`
+  - `RCPT-DEMO-PAY-FLT-S-001`
+- Post-deployment checks now include v42 marker and deterministic payment filter-demo assertions.
+
+### Validation summary
+- Payments menu/filter runtime checks confirm expected institution and student narrowing behavior.
+- CSV import runtime checks confirm spreadsheet-format due dates load successfully.
+
 ## Execution Update - 2026-06-01 (Study Plan Filter Demo Seed + Runtime Scope/Serialization Hardening)
 
 ### Module impact summary

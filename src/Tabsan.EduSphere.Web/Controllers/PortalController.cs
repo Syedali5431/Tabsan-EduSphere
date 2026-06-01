@@ -341,6 +341,27 @@ public class PortalController : Controller
         return options;
     }
 
+    private static List<CertificateInstitutionOption> BuildLicensedPaymentsInstitutionOptions(PortalCapabilityMatrixApiModel? matrix)
+    {
+        // Payments data in this deployment uses legacy values: 0=School, 1=College, 2=University.
+        var options = new List<CertificateInstitutionOption>();
+        var includeUniversity = matrix?.IncludeUniversity ?? true;
+        var includeSchool = matrix?.IncludeSchool ?? true;
+        var includeCollege = matrix?.IncludeCollege ?? true;
+
+        if (includeUniversity)
+            options.Add(new CertificateInstitutionOption { Value = 2, Label = "University" });
+        if (includeSchool)
+            options.Add(new CertificateInstitutionOption { Value = 0, Label = "School" });
+        if (includeCollege)
+            options.Add(new CertificateInstitutionOption { Value = 1, Label = "College" });
+
+        if (options.Count == 0)
+            options.Add(new CertificateInstitutionOption { Value = 2, Label = "University" });
+
+        return options;
+    }
+
     private static int? ResolveLicensedInstitutionSelection(
         int? requestedInstitutionType,
         SessionIdentity? identity,
@@ -6598,7 +6619,7 @@ public class PortalController : Controller
                 if (canManagePayments)
                 {
                     var capabilityMatrix = await _api.GetPortalCapabilityMatrixAsync(ct);
-                    model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(capabilityMatrix);
+                    model.AvailableInstitutionTypes = BuildLicensedPaymentsInstitutionOptions(capabilityMatrix);
                     model.SelectedInstitutionType = ResolveLicensedInstitutionSelection(model.SelectedInstitutionType, identity, model.AvailableInstitutionTypes);
                 }
 
@@ -6895,8 +6916,23 @@ public class PortalController : Controller
             if (!decimal.TryParse(amountRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
                 throw new InvalidOperationException($"CSV row {lineNo} has invalid Amount '{amountRaw}'.");
 
-            if (!DateTime.TryParse(dueDateRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dueDate))
-                throw new InvalidOperationException($"CSV row {lineNo} has invalid DueDate '{dueDateRaw}'.");
+            var acceptedDateFormats = new[]
+            {
+                "yyyy-MM-dd",
+                "dd/MM/yyyy",
+                "d/M/yyyy",
+                "MM/dd/yyyy",
+                "M/d/yyyy",
+                "dd-MM-yyyy",
+                "d-M-yyyy"
+            };
+
+            if (!DateTime.TryParseExact(dueDateRaw, acceptedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dueDate)
+                && !DateTime.TryParse(dueDateRaw, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out dueDate)
+                && !DateTime.TryParse(dueDateRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out dueDate))
+            {
+                throw new InvalidOperationException($"CSV row {lineNo} has invalid DueDate '{dueDateRaw}'. Accepted formats include yyyy-MM-dd or dd/MM/yyyy.");
+            }
 
             rows.Add(new PaymentImportCsvRow
             {

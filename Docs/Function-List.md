@@ -1,5 +1,35 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import/Scope Reliability
+
+### Function inventory delta
+- Newly created functions in this slice:
+	- PortalController.BuildLicensedPaymentsInstitutionOptions
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.Payments
+		- now uses payment-specific institution option mapping so dropdown labels align with scoped payment data values.
+	- PortalController.ImportPaymentsCsv
+		- preserves scoped filter context and continues role-guarded batch import behavior.
+	- PortalController.ParsePaymentImportCsvAsync
+		- now accepts common spreadsheet date formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, and dash variants) and emits explicit invalid-date guidance.
+	- EduApiClient.TryExtractApiErrorMessage
+		- now extracts `detail` in addition to `message`/`title` from ProblemDetails payloads so portal alerts surface the real backend error in development runs.
+
+### Seed/check synchronization
+- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v42` and now adds deterministic Payments filter-demo receipts:
+	- `RCPT-DEMO-PAY-FLT-U-001` (University)
+	- `RCPT-DEMO-PAY-FLT-C-001` (College)
+	- `RCPT-DEMO-PAY-FLT-S-001` (School)
+- Scripts/05-PostDeployment-Checks.sql now includes synchronized v42 checks for:
+	- demo dataset marker,
+	- deterministic payment filter-demo receipt presence,
+	- per-institution alignment of the three demo receipts.
+
+### Validation summary
+- Deterministic payment demo seed/check remains additive and idempotent.
+- Payments menu filter validation confirms institution and student filters return the expected seeded receipts.
+- CSV import with spreadsheet-style due-date formats now succeeds for demo/testing templates.
+
 ## 2026-06-01 Update - Study Plan Filter Demo Seed Sync and Runtime Serialization Hardening
 
 ### Function inventory delta
@@ -681,7 +711,7 @@
 
 ### Runtime additions
 - Added one new internal helper in existing API client flow (no endpoint contract change):
-	- `EduApiClient.TryExtractApiErrorMessage` (extracts `message`/`title` from JSON API error payloads so portal alerts show readable text).
+	- `EduApiClient.TryExtractApiErrorMessage` (extracts `detail`/`message`/`title` from JSON API error payloads so portal alerts show readable text).
 - Existing runtime surface retained for Student Timetable filter behavior:
 	- `PortalController.TimetableStudent`
 	- `EduApiClient.GetTimetablesByDepartmentAsync`

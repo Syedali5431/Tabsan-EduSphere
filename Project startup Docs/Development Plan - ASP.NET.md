@@ -1,3 +1,15 @@
+## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import Date Parsing Compatibility
+
+### Plan sync
+- Corrected Payments institution-filter option mapping in PortalController so filter labels map to the current deployment's payment dataset values.
+- Expanded `ParsePaymentImportCsvAsync` date parsing to accept spreadsheet-friendly due-date formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, and dash variants).
+- Updated Scripts/03-FullDummyData.sql to `FullDummyData-v42` and added deterministic payment filter-demo receipts for university/college/school validation.
+- Updated Scripts/05-PostDeployment-Checks.sql with v42 marker and deterministic payment filter-demo integrity checks.
+
+### Validation sync
+- Payments menu runtime checks confirmed institution and student filters render deterministic expected rows.
+- Payments CSV import checks confirmed spreadsheet-style due-date values now import successfully.
+
 ## 2026-06-01 Update - Study Plan Filter Demo Seed and Runtime Stabilization
 
 ### Plan sync
