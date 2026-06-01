@@ -15,6 +15,14 @@ This folder is intentionally kept DB-focused and now contains only database setu
 | 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path, including attendance/results lifecycle and institution-coverage checks. |
 | 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path, including no-dummy assertions for attendance and results. |
 
+## Domain Script Packs
+
+- School pack: `Scripts/School Scripts/` (Class 1 to Class 10 dummy data with school results/marks)
+- College pack: `Scripts/College Scripts/` (Class 11 to Class 12 dummy data with college results/marks)
+- University pack: `Scripts/University Scripts/` (Semester 1 to Semester 8 dummy data with university results/marks)
+
+Each pack keeps the same 01-05 sequence pattern as the root scripts.
+
 ## Default Seeded Credentials
 
 For scripts that seed users (`02-Seed-Core.sql`, `Seed-Core-Clean.sql`, `03-FullDummyData.sql`):
