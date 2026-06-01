@@ -6812,7 +6812,6 @@ public class PortalController : Controller
         {
             var students = await _api.GetStudentsAsync(null, ct);
             return students
-                .Where(s => !institutionType.HasValue || s.InstitutionType == institutionType.Value)
                 .OrderBy(s => s.RegistrationNumber)
                 .ThenBy(s => s.FullName)
                 .ToList();

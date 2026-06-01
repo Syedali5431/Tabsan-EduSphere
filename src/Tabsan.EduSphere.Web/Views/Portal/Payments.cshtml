@@ -108,6 +108,7 @@ else
                         <div class="col-md-3">
                             <label class="form-label mb-1">Institution</label>
                             <select name="institutionType" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Institutions</option>
                                 @foreach (var institutionOption in Model.AvailableInstitutionTypes)
                                 {
                                     <option value="@institutionOption.Value" selected="@(Model.SelectedInstitutionType == institutionOption.Value)">@institutionOption.Label</option>
