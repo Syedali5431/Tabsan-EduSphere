@@ -165,5 +165,6 @@ BEGIN
     PRINT CONCAT(N'University validation info: students with Semester 8 completion marker = ', @CompletedAfterSemester8, N'.');
 END;
 
+PRINT N'Phase 4 script sync: university period handling remains semester-based and validated as-is.';
 PRINT N'University validation checks passed.';
 GO

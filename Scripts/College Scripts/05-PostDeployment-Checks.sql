@@ -114,5 +114,6 @@ BEGIN
     END;
 END;
 
+PRINT N'Phase 4 script sync: college period handling uses class labels and does not require semester-only validation gates.';
 PRINT N'College validation checks passed.';
 GO

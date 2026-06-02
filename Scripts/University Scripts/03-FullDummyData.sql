@@ -282,6 +282,7 @@ PRINT N'University lifecycle completion applied for students with Semester 8 cov
     END;
 
 COMMIT TRANSACTION;
+  PRINT N'Phase 4 script sync: university semester-period write scope remains unchanged and backward compatible.';
   PRINT N'University dummy data seeded successfully (all university students, Semester 1 to Semester 8 with completion, results, attendance, enrollment, and FYP data).';
 END TRY
 BEGIN CATCH

@@ -105,5 +105,6 @@ BEGIN
     PRINT CONCAT(N'School validation info: students with Class 10 completion marker = ', @CompletedAfterClass10, N'.');
 END;
 
+PRINT N'Phase 4 script sync: school period handling uses class labels and does not require semester-only validation gates.';
 PRINT N'School validation checks passed.';
 GO

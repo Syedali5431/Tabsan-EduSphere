@@ -227,6 +227,7 @@ BEGIN
 END;
 
 COMMIT TRANSACTION;
+PRINT N'Phase 4 script sync: college class-period write scope is web-driven; SQL seed remains class coverage aligned.';
 PRINT N'College dummy data seeded successfully (all college students, Class 11 and Class 12 with completion after Class 12).';
 END TRY
 BEGIN CATCH

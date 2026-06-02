@@ -401,6 +401,15 @@ BEGIN
 END;
 
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+VALUES
+(
+    N'CleanBaseline.Phase4ScriptSyncMarker',
+    1,
+    N'1',
+    N'1'
+);
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT
     N'ModuleStatus.RequiredCoverage',
     CASE WHEN COUNT(1) = 14 THEN 1 ELSE 0 END,

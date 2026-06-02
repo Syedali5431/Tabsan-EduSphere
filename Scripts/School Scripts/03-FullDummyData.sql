@@ -215,6 +215,7 @@ END;
 PRINT N'School lifecycle completion applied for students with Class 10 coverage (where supported by schema).';
 
 COMMIT TRANSACTION;
+PRINT N'Phase 4 script sync: school class-period write scope is web-driven; SQL seed remains class coverage aligned.';
 PRINT N'School dummy data seeded successfully (all school students, Class 1 to Class 10 with completion after Class 10).';
 END TRY
 BEGIN CATCH
