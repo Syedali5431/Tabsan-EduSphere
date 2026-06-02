@@ -16,38 +16,37 @@
 	- FYP per-student threshold.
 
 ## Scope
-This checklist covers the user-acceptance flow for the main EduSphere app and the standalone Tabsan.Lic tool before deployment.
+This checklist covers user-acceptance flow for the main EduSphere app before deployment.
+
+- Included roles: Admin, Faculty, Student, Finance.
+- Excluded: SuperAdmin role tests and standalone Tabsan.Lic tests.
 
 ## Pre-Deployment Checks
 
 | Area | Step | Expected Result |
 |---|---|---|
 | EduSphere app | Start the solution and open the login page | App starts without startup errors |
-| EduSphere app | Verify institution policy endpoints are reachable | School, College, and University flags can be read and saved by SuperAdmin |
-| EduSphere app | Upload a valid `.tablic` file | License activates successfully |
-| EduSphere app | Upload a tampered `.tablic` file | Activation is rejected |
-| EduSphere app | Test a license locked to a different domain | Activation is rejected on the wrong host |
-| EduSphere app | Log in with a license that has `MaxUsers = 0` | Unlimited concurrent usage is allowed |
+| EduSphere app | Sign in as Admin and verify navigation/permissions | Admin modules are available and restricted correctly |
+| EduSphere app | Execute core Admin flows | User/timetable/report workflows complete successfully |
+| EduSphere app | Sign in as Faculty and verify navigation/permissions | Faculty modules are available and restricted correctly |
+| EduSphere app | Execute core Faculty flows | Attendance/course/assignment-result workflows complete successfully |
+| EduSphere app | Sign in as Student and verify navigation/permissions | Student modules are available and restricted correctly |
+| EduSphere app | Execute core Student flows | Dashboard/attendance/course/report-card flows complete successfully |
+| EduSphere app | Sign in as Finance and verify navigation/permissions | Finance-only modules are visible and academic modules are blocked |
+| EduSphere app | Execute core Finance flows | Payments/reports/analytics workflows complete successfully |
 | EduSphere app | Validate `User Import Sheets/faculty-admin-import-template.csv` | File is accepted and fields map correctly for Admin/Faculty onboarding |
 | EduSphere app | Validate `User Import Sheets/students-import-template.csv` | File is accepted and student onboarding fields are validated as expected |
 | EduSphere app | Execute Scripts/01 through Scripts/05 in order | Schema, seed, dummy data, maintenance, and post-deployment checks complete successfully |
-| Tabsan.Lic | Generate a single verification key | A raw key is shown once and the hash is stored |
-| Tabsan.Lic | Generate a bulk batch of keys | Multiple keys are created with unique IDs |
-| Tabsan.Lic | Build a `.tablic` file with School/College/University scope | Selected institution flags are embedded in the payload |
-| Tabsan.Lic | Use 1 month / 1 year / 2 years / 3 years / Permanent expiry | The generated record reflects the selected expiry |
-| Tabsan.Lic | Set max users and allowed domain | Values are persisted and written into the payload |
 
 ## Validation Results
 
-- `dotnet build tools/Tabsan.Lic/Tabsan.Lic.sln` succeeded.
 - `dotnet test tests/Tabsan.EduSphere.UnitTests/Tabsan.EduSphere.UnitTests.csproj -v minimal` succeeded with 130/130 tests passing.
 
 ## Exit Criteria
 
-- License generation works end-to-end.
-- License activation updates the app policy and enforces the selected domain and user constraints.
 - Role-specific CSV import templates validate successfully.
-- The app and the license tool both run without build or test failures.
+- Admin, Faculty, Student, and Finance role workflows pass without blocking defects.
+- The app runs without build or test failures.
 
 ## Phase 40.2 Unified Update (2026-05-21)
 
