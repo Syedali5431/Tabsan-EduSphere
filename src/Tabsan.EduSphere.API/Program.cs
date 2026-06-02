@@ -39,6 +39,7 @@ using Tabsan.EduSphere.Infrastructure.Exporters;
 using Tabsan.EduSphere.Infrastructure.Integrations;
 using Tabsan.EduSphere.API.Services;
 using Tabsan.EduSphere.API.Services.TwoFactor;
+using Tabsan.EduSphere.API.Services.Setup;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -120,6 +121,9 @@ var networkOutboundConnectTimeoutSeconds = Math.Max(2, builder.Configuration.Get
 
 var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
 var configuredConnectionString = databaseConnection.ConnectionString;
+var runtimeSetup = DatabaseSetupBootstrapper.Resolve(builder.Environment.ContentRootPath, configuredConnectionString);
+var activeDatabaseProvider = runtimeSetup.Provider;
+configuredConnectionString = runtimeSetup.ConnectionString;
 StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
     builder.Configuration,
     env,
@@ -140,8 +144,14 @@ var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:Know
 Console.WriteLine($"[Startup] Database type: {databaseType}");
 Console.WriteLine($"[Startup] Configuration source summary: {configurationSourceSummary}");
 Console.WriteLine($"[Startup] Database connection source: {databaseConnection.Source}");
+Console.WriteLine($"[Startup] Runtime database setup source: {runtimeSetup.Source}");
 Console.WriteLine($"[Startup] Deployment profile: Mode={deploymentTopology.Mode}, Customer={deploymentTopology.CustomerCode}, Domain={deploymentTopology.CustomerDomain}, Database={deploymentTopology.CustomerDatabaseName}, Scaling={deploymentTopology.ScalingEnabled} ({deploymentTopology.MinReplicas}-{deploymentTopology.MaxReplicas})");
 Console.WriteLine($"[Startup] Tenant isolation: Enabled={tenantIsolation.Enabled}, Mode={tenantIsolation.Mode}, Tenant={tenantIsolation.TenantCode}, Domain={tenantIsolation.TenantDomain}, Database={tenantIsolation.TenantDatabaseName}, Strategy={tenantIsolation.IsolationStrategy}");
+
+var databaseSetupState = new DatabaseSetupRuntimeState();
+databaseSetupState.Set(activeDatabaseProvider, configuredConnectionString, requiresSetup: false, lastError: null);
+builder.Services.AddSingleton(databaseSetupState);
+builder.Services.AddSingleton<IDatabaseSetupService, DatabaseSetupService>();
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -227,13 +237,24 @@ builder.Host.UseSerilog((ctx, services, config) =>
 
 // ── Database ────────────────────────────────────────────────────────────────────
 // Reads the connection string from appsettings.json → ConnectionStrings:DefaultConnection.
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseSqlServer(configuredConnectionString,
-        sql =>
-        {
-            sql.MigrationsAssembly("Tabsan.EduSphere.Infrastructure");
-            sql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
-        }));
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, opts) =>
+{
+    var setupState = serviceProvider.GetRequiredService<DatabaseSetupRuntimeState>().Snapshot();
+    if (setupState.Provider == RuntimeDatabaseProvider.Sqlite)
+    {
+        opts.UseSqlite(setupState.ConnectionString,
+            sql => sql.MigrationsAssembly("Tabsan.EduSphere.Infrastructure"));
+    }
+    else
+    {
+        opts.UseSqlServer(setupState.ConnectionString,
+            sql =>
+            {
+                sql.MigrationsAssembly("Tabsan.EduSphere.Infrastructure");
+                sql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
+            });
+    }
+});
 
 // ── JWT Authentication ──────────────────────────────────────────────────────────
 // Binds JwtSettings section from appsettings.json so options are strongly-typed.
@@ -645,7 +666,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Tabsan.EduSphere.Applicatio
 builder.Services.AddFluentValidationAutoValidation();
 
 // ── API infrastructure ──────────────────────────────────────────────────────────
-builder.Services.AddControllers()
+builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
@@ -680,7 +701,16 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // ── Seed database on startup ─────────────────────────────────────────────────────
-await DatabaseSeeder.SeedAsync(app.Services);
+var setupService = app.Services.GetRequiredService<IDatabaseSetupService>();
+var startupDatabaseValidation = await setupService.ValidateCurrentConnectionAsync(force: true, CancellationToken.None);
+if (startupDatabaseValidation.Success)
+{
+    await DatabaseSeeder.SeedAsync(app.Services);
+}
+else
+{
+    app.Logger.LogWarning("Database setup required before normal startup path: {Message}", startupDatabaseValidation.Message);
+}
 
 // ── HTTP pipeline ────────────────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -743,6 +773,7 @@ if (corsOrigins.Length > 0)
 {
     app.UseCors("AllowConfiguredOrigins");
 }
+app.UseMiddleware<DatabaseSetupGateMiddleware>();
 // P2-S3-02: Reject requests from domains that do not match the activated license domain.
 app.UseMiddleware<LicenseDomainMiddleware>();
 app.UseAuthentication();

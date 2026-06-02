@@ -1,0 +1,133 @@
+body {
+    margin: 0;
+    font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    color: #1f2937;
+}
+
+.container {
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    padding: 1.5rem;
+}
+
+h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.muted {
+    color: #4b5563;
+    margin-bottom: 1.25rem;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.col-12 { grid-column: span 12; }
+.col-8 { grid-column: span 8; }
+.col-6 { grid-column: span 6; }
+.col-4 { grid-column: span 4; }
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+input,
+select,
+button {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.95rem;
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.55rem;
+}
+
+.check input {
+    width: auto;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.actions button,
+.actions a {
+    width: auto;
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #94a3b8;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.primary {
+    background: #0f766e;
+    color: #fff;
+    border-color: #0f766e;
+}
+
+.secondary {
+    background: #fff;
+    color: #111827;
+}
+
+.alert {
+    margin-top: 1rem;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    border-color: #34d399;
+}
+
+.alert-warning,
+.alert-danger {
+    background: #fef2f2;
+    border-color: #f87171;
+}
+
+.small {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+    .col-8,
+    .col-6,
+    .col-4 {
+        grid-column: span 12;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+}

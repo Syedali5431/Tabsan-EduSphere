@@ -1,0 +1,116 @@
+@model Tabsan.EduSphere.API.Models.Setup.DatabaseSetupViewModel
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EduSphere Database Setup</title>
+    <link href="/setup/setup.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div>
+                    <h1 class="h4 mb-1">Database Setup</h1>
+                    <p class="muted">Configure your deployment database once, then run normally. You can revisit this page any time at /setup.</p>
+
+                    @if (TempData["SetupMessage"] is string setupMessage && !string.IsNullOrWhiteSpace(setupMessage))
+                    {
+                        <div class="alert alert-success">@setupMessage</div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+                    {
+                        <div class="alert alert-warning">@Model.StatusMessage</div>
+                    }
+
+                    <form method="post" action="/setup/save" id="dbSetupForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Database Type</label>
+                                <select class="form-select" name="DatabaseType" id="dbType">
+                                    <option value="Local">Local</option>
+                                    <option value="Cloud">Cloud</option>
+                                    <option value="Custom">Custom / Other</option>
+                                </select>
+                            </div>
+                            <div class="col-6" id="localProviderGroup">
+                                <label class="form-label">Local Provider</label>
+                                <select class="form-select" name="LocalProvider" id="localProvider">
+                                    <option value="SqlServerExpress">SQL Server Express</option>
+                                    <option value="LocalDb">LocalDB</option>
+                                    <option value="Sqlite">SQLite</option>
+                                </select>
+                            </div>
+
+                            <div class="col-8" id="serverGroup">
+                                <label class="form-label">Server / Host</label>
+                                <input class="form-control" name="ServerHost" id="serverHost" placeholder="localhost or db.example.com" />
+                            </div>
+                            <div class="col-4" id="portGroup">
+                                <label class="form-label">Port (optional)</label>
+                                <input type="number" class="form-control" name="Port" id="port" min="1" max="65535" />
+                            </div>
+
+                            <div class="col-8" id="databaseGroup">
+                                <label class="form-label">Database Name</label>
+                                <input class="form-control" name="DatabaseName" id="databaseName" placeholder="Tabsan-EduSphere" />
+                            </div>
+                            <div class="col-4" id="sqlitePathGroup" style="display:none;">
+                                <label class="form-label">SQLite File Path</label>
+                                <input class="form-control" name="SqliteFilePath" id="sqliteFilePath" placeholder="/data/edusphere.db" />
+                            </div>
+
+                            <div class="col-6 auth-group">
+                                <label class="form-label">Username</label>
+                                <input class="form-control" name="Username" id="username" autocomplete="username" />
+                            </div>
+                            <div class="col-6 auth-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="Password" id="password" autocomplete="new-password" />
+                            </div>
+
+                            <div class="col-4 auth-group">
+                                <div class="check">
+                                    <input type="checkbox" class="form-check-input" id="trustedConnection" name="TrustedConnection" value="true" />
+                                    <label for="trustedConnection">Trusted Connection</label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="check">
+                                    <input type="checkbox" class="form-check-input" id="useSsl" name="UseSsl" value="true" checked />
+                                    <label for="useSsl">Use SSL / Encrypt</label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="check">
+                                    <input type="checkbox" class="form-check-input" id="trustCert" name="TrustServerCertificate" value="true" checked />
+                                    <label for="trustCert">Trust Server Certificate</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="secondary" type="button" id="testConnectionButton">Test Connection</button>
+                            <button class="primary" type="submit">Save & Continue</button>
+                        </div>
+                        <p class="small">Passwords are never written in plain text source config. Setup values are stored in encrypted runtime configuration.</p>
+                    </form>
+
+                    <div id="testResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/setup/setup.js"></script>
+</body>
+</html>
