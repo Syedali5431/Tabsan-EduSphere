@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Schema Posture)
+
+- Implementation Summary:
+	- completed web-layer Phase 4 continuation updates for Attendance period handling and write-gating behavior,
+	- no persistence contract or database object changes introduced.
+- Validation Summary:
+	- schema impact: no table/column/index/constraint mutation,
+	- EF migration impact: none,
+	- diagnostics checks for touched attendance runtime files are clean.
+
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Progress (Schema Posture)
 
 - Implementation Summary:

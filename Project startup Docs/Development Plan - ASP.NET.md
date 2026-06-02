@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Development Plan Synchronization (Institute Dynamic Model Phase 4 Continuation)
+
+### Plan sync
+- Relaxed attendance-write semester dependency in web scope-validation logic for School/College paths.
+- Updated Attendance UI save gating and period labeling to class/year-aware behavior.
+
+### Validation sync
+- Diagnostics checks for touched attendance controller/model/view files are clean.
+
 ## 2026-06-03 Update - Development Plan Synchronization (Institute Dynamic Model Phase 4 Progress)
 
 ### Plan sync

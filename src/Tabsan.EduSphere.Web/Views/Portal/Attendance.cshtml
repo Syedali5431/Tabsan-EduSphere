@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = "Attendance"; }
 @{
     var attendanceAction = ViewData["AttendanceAction"]?.ToString() ?? "Attendance";
+    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel;
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
@@ -75,9 +76,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Class/Semester</label>
+                        <label class="form-label">@periodLabel</label>
                         <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Classes/Semesters</option>
+                            <option value="">All @periodLabel</option>
                             @foreach (var s in Model.SemesterOptions)
                             {
                                 <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>

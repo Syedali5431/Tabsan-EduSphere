@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Attendance)
+
+### Implementation sync
+- Attendance write operations now support School/College flows without mandatory semester/class filter input.
+- Attendance UI readiness logic and period labeling now align with dynamic class/year/semester behavior.
+
+### Validation sync
+- Diagnostics checks report no errors in touched attendance controller/model/view files.
+
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Progress (Results and Course Material)
 
 ### Implementation sync

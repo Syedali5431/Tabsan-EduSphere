@@ -3277,6 +3277,7 @@ public class PortalController : Controller
             SelectedCourseId = courseId,
             SelectedStudentId = studentId,
             SelectedSemesterName = semesterName,
+            PeriodLabel = "Semester",
             ImportReportToken = reportToken,
             Message          = TempData["PortalMessage"]?.ToString()
         };
@@ -3358,6 +3359,7 @@ public class PortalController : Controller
                     .OrderBy(s => s)
                     .Select(s => new LookupItem { Id = Guid.Empty, Name = s! })
                     .ToList();
+                model.PeriodLabel = ResolveResultsPeriodLabel(model.SemesterOptions);
 
                 if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName)
                     && !model.SemesterOptions.Any(s => string.Equals(s.Name, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
@@ -4699,8 +4701,8 @@ public class PortalController : Controller
         if (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue)
             return (false, "Tenant and campus scope is required for attendance write operations.");
 
-        if (!departmentId.HasValue || !courseId.HasValue || string.IsNullOrWhiteSpace(semesterName))
-            return (false, "Select department, course, and semester/class before performing attendance write operations.");
+        if (!departmentId.HasValue || !courseId.HasValue)
+            return (false, "Select department and course before performing attendance write operations.");
 
         var offerings = await _api.GetCourseOfferingsAsync(departmentId, effectiveTenantId, effectiveCampusId, null, ct);
         var selectedOffering = offerings.FirstOrDefault(o => o.Id == offeringId);
@@ -4710,7 +4712,8 @@ public class PortalController : Controller
         if (selectedOffering.CourseId != courseId.Value)
             return (false, "Selected offering does not match the selected course.");
 
-        if (!string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(semesterName)
+            && !string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
             return (false, "Selected offering does not match the selected semester/class.");
 
         return (true, string.Empty);

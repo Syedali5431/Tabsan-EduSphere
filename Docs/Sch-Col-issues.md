@@ -167,6 +167,7 @@ Completed:
 - [x] Results write-scope validation no longer hard-blocks School/College actions when semester/class filter is empty.
 - [x] Results page write readiness no longer requires semester/class selection; period label now resolves dynamically from available period options.
 - [x] Course Material create flow now supports optional class/year/semester selector with safe fallback resolution.
+- [x] Attendance write-scope validation no longer hard-blocks School/College actions when semester/class filter is empty.
 
 Remaining:
 
@@ -268,14 +269,17 @@ Implementation Summary:
 - Added `ResultsPageModel.PeriodLabel` and dynamic period-label resolution in `PortalController.RenderResultsAsync` so `Results.cshtml` renders Class/Year/Semester wording from available options.
 - Updated `PortalController.CreateCourseMaterial` to accept optional `semesterId` and resolve fallback period safely from selected filter/default list.
 - Updated `CourseMaterial.cshtml` create modal period selector to optional for School/College class/year flows.
+- Updated `PortalController.ValidateAttendanceWriteScopeAsync` and `AttendancePageModel.CanSaveAttendance` to remove mandatory semester/class dependency and keep period match conditional when a filter value is provided.
+- Updated `Attendance.cshtml` period filter label to dynamic Class/Year/Semester wording.
 
 Validation Summary:
 
 - Diagnostics checks are clean for touched files:
-	- `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs`
-	- `src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs`
-	- `src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml`
-	- `src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml`
+  - `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs`
+  - `src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs`
+  - `src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml`
+  - `src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml`
+  - `src/Tabsan.EduSphere.Web/Views/Portal/Attendance.cshtml`
 - University result publishing and GPA/CGPA data paths remain untouched in this increment.
 
 Regression:

@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Phase 4 Continuation (Attendance Scope Alignment)
+
+### Attendance delta
+- Existing function behavior updates (no duplicate inventory rows added):
+  - PortalController.ValidateAttendanceWriteScopeAsync: removed mandatory semester/class requirement for write scope; period match now applies only when a period value is supplied.
+  - AttendancePageModel.CanSaveAttendance: no longer requires `SelectedSemesterName` for write enablement.
+
+### Validation summary
+- Diagnostics checks report no errors in touched attendance controller/model/view files.
+
 ## 2026-06-03 Update - Phase 4 Progress (Results and Course Material Scope Relaxation)
 
 ### Function inventory delta

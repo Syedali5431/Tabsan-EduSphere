@@ -847,15 +847,15 @@ public class AttendancePageModel
     public Guid?  SelectedCourseId     { get; set; }
     public Guid?  SelectedStudentId    { get; set; }
     public string? SelectedSemesterName { get; set; }
+    public string PeriodLabel { get; set; } = "Semester";
     public string? ImportReportToken { get; set; }
     public bool CanSaveAttendance =>
         SelectedOfferingId.HasValue
         && SelectedDepartmentId.HasValue
-        && SelectedCourseId.HasValue
-        && !string.IsNullOrWhiteSpace(SelectedSemesterName);
+        && SelectedCourseId.HasValue;
 
     public string SaveAttendanceDisabledReason =>
-        "Select department, course, subject offering, and semester/class before saving attendance.";
+        "Select department, course, and subject offering before saving attendance.";
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
