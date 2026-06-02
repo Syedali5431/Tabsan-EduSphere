@@ -17,6 +17,7 @@
 else
 {
     var canManageScope = Model.Identity?.IsSuperAdmin == true || Model.Identity?.IsAdmin == true;
+    var periodLabel = string.IsNullOrWhiteSpace(Model.OfferingPeriodLabel) ? "Semester" : Model.OfferingPeriodLabel;
 
     if (canManageScope)
     {
@@ -95,7 +96,7 @@ else
                 <div>
                     <span class="section-kicker">Course operations</span>
                     <h2 class="h5 mb-1">Courses and active offerings</h2>
-                    <p class="text-muted mb-0">Manage curriculum inventory and semester offerings with institution-aware scoping.</p>
+                    <p class="text-muted mb-0">Manage curriculum inventory and @periodLabel.ToLowerInvariant() offerings with institution-aware scoping.</p>
                 </div>
             </div>
             <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
@@ -209,7 +210,7 @@ else
                     {
                         <div class="empty-state-card">
                             <h3>No offerings found</h3>
-                            <p class="text-muted mb-0">Offerings appear here once a course is assigned to faculty and semester.</p>
+                            <p class="text-muted mb-0">Offerings appear here once a course is assigned to faculty and @periodLabel.ToLowerInvariant().</p>
                         </div>
                     }
                     else
@@ -218,7 +219,7 @@ else
                             <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Course</th><th>Faculty</th><th>Semester</th><th>Active</th>
+                                        <th>Course</th><th>Faculty</th><th>@periodLabel</th><th>Active</th>
                                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) { <th></th> }
                                     </tr>
                                 </thead>
@@ -303,10 +304,6 @@ else
                         <input type="text" name="title" class="form-control" required maxlength="200">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Credit Hours <span class="text-danger">*</span></label>
-                        <input type="number" name="creditHours" class="form-control" min="1" max="6" required value="3">
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
                         <select name="departmentId" class="form-select js-course-department" required>
                             <option value="">Select department…</option>
@@ -314,17 +311,21 @@ else
                             {
                                 if (Model.SelectedDepartmentId == d.Id)
                                 {
-                                    <option value="@d.Id" selected>@d.Name</option>
+                                    <option value="@d.Id" data-institution-type="@d.InstitutionType" selected>@d.Name</option>
                                 }
                                 else
                                 {
-                                    <option value="@d.Id">@d.Name</option>
+                                    <option value="@d.Id" data-institution-type="@d.InstitutionType">@d.Name</option>
                                 }
                             }
                         </select>
                     </div>
+                    <div id="courseCreditHoursGroup" class="mb-3">
+                        <label class="form-label">Credit Hours <span class="text-danger">*</span></label>
+                        <input type="number" name="creditHours" class="form-control" min="1" max="6" required value="3">
+                    </div>
                     @* Final-Touches Phase 19 Stage 19.1/19.2 — semester vs duration and grading type *@
-                    <div class="mb-3">
+                    <div id="courseSemesterTypeGroup" class="mb-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="hasSemesters" id="hasSemesters" value="true" checked onchange="toggleCourseType()">
                             <label class="form-check-label" for="hasSemesters">This course is semester-based</label>
@@ -376,15 +377,44 @@ function toggleCourseType() {
     document.getElementById('durationFields').style.display = cb.checked ? 'none' : '';
 }
 
+function applyInstitutionModeToCourseForm() {
+    var departmentSelect = document.querySelector('#createCourseModal .js-course-department');
+    var creditHoursGroup = document.getElementById('courseCreditHoursGroup');
+    var semesterTypeGroup = document.getElementById('courseSemesterTypeGroup');
+    var semesterFields = document.getElementById('semesterFields');
+    var durationFields = document.getElementById('durationFields');
+    var hasSemesters = document.getElementById('hasSemesters');
+
+    if (!departmentSelect || !creditHoursGroup || !semesterTypeGroup || !semesterFields || !durationFields || !hasSemesters)
+        return;
+
+    var selectedOption = departmentSelect.options[departmentSelect.selectedIndex];
+    var institutionType = selectedOption ? selectedOption.getAttribute('data-institution-type') : null;
+    var isSchoolOrCollege = institutionType === '0' || institutionType === '1';
+
+    creditHoursGroup.style.display = isSchoolOrCollege ? 'none' : '';
+    semesterTypeGroup.style.display = isSchoolOrCollege ? 'none' : '';
+
+    if (isSchoolOrCollege) {
+        hasSemesters.checked = false;
+        semesterFields.style.display = 'none';
+        durationFields.style.display = '';
+    } else {
+        toggleCourseType();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var filterDepartment = document.querySelector('#createCourseModal input[name="filterDepartmentId"]');
     var courseDepartment = document.querySelector('#createCourseModal .js-course-department');
     if (filterDepartment && courseDepartment) {
         courseDepartment.addEventListener('change', function () {
             filterDepartment.value = this.value || '';
+            applyInstitutionModeToCourseForm();
         });
     }
     toggleCourseType();
+    applyInstitutionModeToCourseForm();
 });
 </script>
 
@@ -442,9 +472,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Semester <span class="text-danger">*</span></label>
+                        <label class="form-label">@periodLabel <span class="text-danger">*</span></label>
                         <select name="semesterId" class="form-select" required>
-                            <option value="">Select a semesterâ€¦</option>
+                            <option value="">Select a @periodLabel.ToLowerInvariant()â€¦</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id">@s.Name</option>

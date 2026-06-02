@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 3 Completion)
+- Runtime delivery in this slice:
+  - completed user-facing period-label adaptation for institute-aware behavior,
+  - University pages now render `Semester` or `Year` labels based on configured period naming,
+  - School/College pages continue rendering `Class` labels,
+  - School/College course creation UI now hides semester-first controls (`Credit Hours`, `hasSemesters`) and server side normalizes payloads to non-semester course metadata.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - tenant/campus scoping preserved,
+  - university dual-mode behavior remains non-breaking.
+- Validation Summary:
+  - diagnostics checks for touched runtime controller/model/view paths are clean,
+  - dynamic label behavior now aligns across lifecycle, courses, course-material, and results surfaces.
+
 ### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 2 Completion)
 - Runtime delivery in this slice:
   - completed lifecycle academic-level structure update for institute-based behavior,

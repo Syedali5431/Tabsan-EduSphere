@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Phase 3 Completion (UI/UX Adaptation)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- No new public controller/service/API signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.Courses
+		- now computes selected institution metadata and dynamic offering period label (`Class`/`Semester`/`Year`).
+	- PortalController.CreateCourse
+		- now normalizes School/College course creation payloads to non-semester metadata and hides semester-first assumptions.
+	- PortalController.CourseMaterial
+		- now emits dynamic period filter label/placeholder for School/College/University UI rendering.
+	- PortalController.CourseMaterialStudent
+		- now emits dynamic period filter label/placeholder for student-facing filters.
+	- PortalController.StudentLifecycle
+		- university period label now resolves `Semester` vs `Year` from configured level names.
+
+### Validation summary
+- Diagnostics checks report no errors in touched controller/model/view files.
+- Dynamic period semantics now render consistently in lifecycle, courses, course-material, and results surfaces.
+
 ## 2026-06-02 Update - Phase 2 Completion (Institute-Based Academic Structure)
 
 ### Function inventory delta

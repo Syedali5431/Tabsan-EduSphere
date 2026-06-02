@@ -5,7 +5,7 @@
 Enhance the system to support dynamic academic structure by Institute Type while preserving University flexibility and backward compatibility:
 
 - University: semester-based OR year-based via existing IsSemesterBased flag.
-- College: class-based (Class 1-2).
+- College: class-based (Class 11-12).
 - School: class-based (Class 1-10).
 
 Additionally:
@@ -113,19 +113,20 @@ Validation Summary:
 
 ## Phase 3 - UI / UX Adaptation
 
-Status: In Progress
+Status: Completed
 
 Completed:
 
 - [x] Removed fixed 1-8 range from Student Lifecycle selector.
 - [x] Applied Class label for non-university lifecycle flow.
+- [x] Made University label dynamic (Semester vs Year) in user-facing lifecycle/results/course pages based on configured period naming.
+- [x] Hid semester fields in School/College course-create form where not applicable.
+- [x] Hid/disabled credit-hour and hasSemesters controls for School/College course-create flow.
+- [x] Applied dynamic period label replacement across key list/filter pages (Courses, Course Material, Results).
 
 Remaining:
 
-- [ ] Make University label dynamic (Semester vs Year) based on IsSemesterBased where user-facing.
-- [ ] Hide semester fields in School/College forms where not applicable.
-- [ ] Hide/disable credit-hour and hasSemesters fields for School/College forms.
-- [ ] Apply consistent dynamic label replacement across dashboard/widgets/list pages.
+- [x] Phase 3 scope completed for runtime UX adaptation; wider dashboard readability tuning remains tracked under Phase 4.
 
 Candidate files:
 
@@ -134,6 +135,25 @@ Candidate files:
 - src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml
 - src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml
 - src/Tabsan.EduSphere.Web/Views/Portal/Dashboard*.cshtml
+
+Implementation Summary:
+
+- Enhanced period-label behavior in runtime UI:
+	- University now infers `Semester` vs `Year` label from configured period names.
+	- School/College continue using `Class` label.
+- Updated `Courses` page:
+	- dynamic offering label (`Semester`/`Year`/`Class`) in list and create-offering modal.
+	- `CreateCourse` form now hides `Credit Hours` and `hasSemesters` controls for School/College department selections.
+	- server-side normalization enforces non-semester metadata for School/College course creation.
+- Updated `CourseMaterial` and `CourseMaterialStudent` filters/modals to use dynamic period labels and placeholders.
+- Updated `Results` page to use dynamic University `Year` label when configured period names are year-based.
+
+Validation Summary:
+
+- Diagnostics checks are clean for all Phase 3 touched files (controller, models, and views).
+- UI behavior now reflects:
+	- School/College class-based labels and simplified create-course controls,
+	- University semester/year label adaptation without restricting existing flows.
 
 ## Phase 4 - LMS and Functional Fixes
 
@@ -230,7 +250,7 @@ Functional:
 
 - [ ] Student Lifecycle accuracy:
 - [ ] School -> Class 1-10
-- [ ] College -> Class 1-2
+- [ ] College -> Class 11-12
 - [ ] University -> Semester/Year based on IsSemesterBased
 - [ ] LMS Discussion and Announcements behavior validated under school/college scopes.
 - [ ] Result approval validated for legacy and new payloads.
@@ -247,7 +267,7 @@ Regression:
 Single stable system supporting:
 
 - University (semester OR year via IsSemesterBased)
-- College (class-based 1-2)
+- College (class-based 11-12)
 - School (class-based 1-10)
 
 Outcome targets:

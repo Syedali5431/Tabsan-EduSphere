@@ -1,3 +1,17 @@
+<!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
+
+## Execution Update - 2026-06-02 (Institute Dynamic Model - Phase 3 Completion)
+
+### Module impact summary
+- No new module introduced; this slice adapts UX behavior in existing Student Lifecycle, Courses, Course Material, and Results modules.
+- University period labels now adapt between `Semester` and `Year` using configured period-name metadata.
+- School/College period labels remain `Class` for user-facing filters and selectors.
+- School/College course creation flow now suppresses semester-first controls and uses normalized non-semester payload behavior.
+
+### Validation summary
+- Diagnostics checks report no errors in touched module controller/model/view files.
+- Dynamic period-label rendering now behaves consistently in key list/filter and lifecycle screens.
+
 ## Execution Update - 2026-06-02 (Institute Dynamic Model - Phase 2 Completion)
 
 ### Module impact summary

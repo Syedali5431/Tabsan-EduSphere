@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### School/College Institute Dynamic Model - Phase 3 Completion Sync (2026-06-02)
+- Implementation Summary:
+  - Completed UI/UX adaptation for institute-aware period semantics across lifecycle and key list/filter pages.
+  - Added dynamic University label handling (`Semester` vs `Year`) inferred from configured period names.
+  - Updated Courses create form to hide School/College semester-first fields (`Credit Hours`, `hasSemesters`) and normalized server-side payload behavior.
+  - Updated Course Material and Results views for dynamic period-label rendering.
+- Commands Executed:
+  - diagnostics checks across touched web controller/model/view files (VS Code Problems/get_errors)
+  - `git add src/Tabsan.EduSphere.Web/Controllers/PortalController.cs src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs src/Tabsan.EduSphere.Web/Views/Portal/Courses.cshtml src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterialStudent.cshtml src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml Docs/Sch-Col-issues.md Docs/Function-List.md Docs/Command.md Docs/Functionality.md "Project startup Docs/PRD.md" "Project startup Docs/Modules.md" "Project startup Docs/Development Plan - ASP.NET.md" "Project startup Docs/Database Schema.md"`
+  - `git commit -m "Complete Phase 3 UI adaptation (dynamic year/semester labels + school/college form controls)"`
+  - `git push origin main`
+  - `git pull --rebase origin main`
+- Validation Summary:
+  - Diagnostics checks report no errors for touched runtime files.
+  - UI period labels now align with institute mode in lifecycle, courses, course-material, and results pages.
+
 ### School/College Institute Dynamic Model - Phase 2 Completion Sync (2026-06-02)
 - Implementation Summary:
   - Updated lifecycle institute academic-level policy for class-based school/college and dynamic university mode.

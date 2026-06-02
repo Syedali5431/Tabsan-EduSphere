@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Institute Dynamic Model Phase 3 Completion (UI and UX Adaptation)
+
+### Implementation sync
+- Completed Phase 3 UI/UX adaptation for institute-aware period semantics.
+- University user-facing period labels now adapt between `Semester` and `Year` by configured period naming metadata.
+- School/College user-facing period labels remain `Class` in lifecycle and key filter pages.
+- Course creation UX now suppresses semester-first controls for School/College department selections.
+- Course Material and Results pages now render dynamic period labels/placeholders in filters/tables/prompts.
+
+### Validation sync
+- Diagnostics checks report no errors in touched lifecycle/course/course-material/result files.
+- Tenant/campus scoped behavior remains unchanged while period semantics now reflect institute context.
+
 ## 2026-06-02 Update - Institute Dynamic Model Phase 2 Completion (Academic-Level Structure)
 
 ### Implementation sync

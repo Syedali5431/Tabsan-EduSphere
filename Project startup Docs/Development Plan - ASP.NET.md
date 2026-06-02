@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Development Plan Synchronization (Institute Dynamic Model Phase 3 Completion)
+
+### Plan sync
+- Completed Phase 3 UX adaptation scope for dynamic period semantics.
+- Implemented dynamic University `Semester`/`Year` label rendering by configured period naming.
+- Implemented School/College `Class` label alignment on lifecycle and key filter/list pages.
+- Updated Course creation flow to suppress School/College semester-first controls and normalize create payload behavior server side.
+
+### Validation sync
+- Diagnostics checks for touched lifecycle/course/course-material/result files are clean.
+- Runtime UI now reflects institute-aware period semantics without breaking tenant/campus scope.
+
 ## 2026-06-02 Update - Development Plan Synchronization (Institute Dynamic Model Phase 2 Completion)
 
 ### Plan sync

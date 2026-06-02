@@ -345,6 +345,7 @@ public class PortalController : Controller
         => periodFilterLabel switch
         {
             "Class" => "All Classes",
+            "Year" => "All Years",
             "Semester/Class" => "All Semesters/Classes",
             _ => "All Semesters"
         };
@@ -2703,6 +2704,14 @@ public class PortalController : Controller
             var selectedInstitutionType = model.Departments
                 .FirstOrDefault(d => d.Id == model.SelectedDepartmentId)?.InstitutionType;
 
+            model.SelectedInstitutionType = selectedInstitutionType;
+            model.OfferingPeriodLabel = selectedInstitutionType switch
+            {
+                0 or 1 => "Class",
+                2 => InferUniversityPeriodLabel(model.Semesters),
+                _ => "Semester"
+            };
+
             model.Courses = await _api.GetCourseDetailsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
             model.Offerings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, selectedInstitutionType, ct);
         }
@@ -2721,9 +2730,28 @@ public class PortalController : Controller
         {
             try
             {
+                var departmentInstitutionType = (await _api.GetDepartmentsAsync(tenantId, campusId, ct))
+                    .FirstOrDefault(d => d.Id == departmentId)
+                    ?.InstitutionType;
+
+                if (departmentInstitutionType is 0 or 1)
+                {
+                    // School/College forms are class-based and should not carry semester-first course metadata.
+                    hasSemesters = false;
+                    totalSemesters = null;
+                    durationValue ??= departmentInstitutionType == 1 ? 2 : 10;
+                    durationUnit ??= "Years";
+                    gradingType = string.IsNullOrWhiteSpace(gradingType) ? "Percentage" : gradingType;
+                    creditHours = 3;
+                }
+                else
+                {
+                    creditHours = Math.Max(1, creditHours);
+                }
+
                 await _api.CreateCourseAsync(code, title, creditHours, departmentId,
                     hasSemesters, totalSemesters, durationValue, durationUnit, gradingType,
-                    tenantId, campusId, null, ct);
+                    tenantId, campusId, departmentInstitutionType, ct);
                 TempData["PortalMessage"] = $"Course '{code}' created.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
@@ -6675,6 +6703,7 @@ public class PortalController : Controller
             {
                 // University remains flexible (semester/year) and uses configured level metadata.
                 var configuredLevels = await _api.GetSemestersAsync(ct);
+                model.PeriodLabel = InferUniversityPeriodLabel(configuredLevels);
                 var numericLevels = configuredLevels
                     .Select(s => ExtractFirstInteger(s.Name))
                     .Where(v => v.HasValue)
@@ -6731,6 +6760,23 @@ public class PortalController : Controller
             return null;
 
         return int.TryParse(digits, out var parsed) ? parsed : null;
+    }
+
+    private static string InferUniversityPeriodLabel(IEnumerable<LookupItem> configuredLevels)
+    {
+        var names = configuredLevels
+            .Select(s => s.Name)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n!)
+            .ToList();
+
+        var hasYear = names.Any(n => n.Contains("year", StringComparison.OrdinalIgnoreCase));
+        var hasSemester = names.Any(n => n.Contains("semester", StringComparison.OrdinalIgnoreCase));
+
+        if (hasYear && !hasSemester)
+            return "Year";
+
+        return "Semester";
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -9605,6 +9651,17 @@ public class PortalController : Controller
             model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
 
+            var selectedInstitutionType = model.Departments
+                .FirstOrDefault(d => d.Id == departmentId)
+                ?.InstitutionType;
+            model.PeriodFilterLabel = selectedInstitutionType switch
+            {
+                0 or 1 => "Class",
+                2 => InferUniversityPeriodLabel(model.Semesters),
+                _ => "Semester"
+            };
+            model.PeriodFilterPlaceholder = ResolvePeriodFilterPlaceholder(model.PeriodFilterLabel);
+
             model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
             model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
 
@@ -9683,6 +9740,17 @@ public class PortalController : Controller
 
             model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
             model.Semesters = await _api.GetSemestersAsync(ct);
+
+            var selectedInstitutionType = model.Departments
+                .FirstOrDefault(d => d.Id == departmentId)
+                ?.InstitutionType;
+            model.PeriodFilterLabel = selectedInstitutionType switch
+            {
+                0 or 1 => "Class",
+                2 => InferUniversityPeriodLabel(model.Semesters),
+                _ => "Semester"
+            };
+            model.PeriodFilterPlaceholder = ResolvePeriodFilterPlaceholder(model.PeriodFilterLabel);
 
             model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
             model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);

@@ -1,3 +1,14 @@
+## 2026-06-02 Update - Institute Dynamic Model Phase 3 Completion (Schema Posture)
+
+- Implementation Summary:
+	- completed UX adaptation for institute-aware period labels and School/College course-form control behavior,
+	- updated runtime period semantics across lifecycle/course/course-material/results surfaces,
+	- no data-shape or persistence contract changes introduced.
+- Validation Summary:
+	- schema impact: no table/column/index/constraint mutation,
+	- EF migration impact: none,
+	- diagnostics checks for touched runtime files are clean.
+
 ## 2026-06-02 Update - Institute Dynamic Model Phase 2 Completion (Schema Posture)
 
 - Implementation Summary:

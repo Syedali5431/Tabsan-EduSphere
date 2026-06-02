@@ -3,6 +3,8 @@
     ViewData["Title"] = "Course Materials";
     ViewData["PageTitle"] = "Course Materials";
     ViewData["ActivePage"] = "course_material";
+    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodFilterLabel) ? "Semester" : Model.PeriodFilterLabel;
+    var periodPlaceholder = string.IsNullOrWhiteSpace(Model.PeriodFilterPlaceholder) ? "All Semesters" : Model.PeriodFilterPlaceholder;
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
@@ -81,9 +83,9 @@ else
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Semester</label>
+                    <label class="form-label">@periodLabel</label>
                     <select name="semesterId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Semesters</option>
+                        <option value="">@periodPlaceholder</option>
                         @foreach (var s in Model.Semesters)
                         {
                             <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
@@ -306,9 +308,9 @@ else
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Semester</label>
+                        <label class="form-label">@periodLabel</label>
                         <select name="semesterId" class="form-select" required>
-                            <option value="">Select semester...</option>
+                            <option value="">Select @periodLabel.ToLowerInvariant()...</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>

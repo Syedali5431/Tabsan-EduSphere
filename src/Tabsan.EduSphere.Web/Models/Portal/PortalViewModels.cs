@@ -732,6 +732,8 @@ public class CoursesPageModel
     public List<LookupItem>         Departments { get; set; } = new();
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<FacultyLookupItem>  Faculty     { get; set; } = new();
+    public int? SelectedInstitutionType { get; set; }
+    public string OfferingPeriodLabel { get; set; } = "Semester";
     public Guid?  SelectedTenantId { get; set; }
     public Guid?  SelectedCampusId { get; set; }
     public Guid?  SelectedDepartmentId { get; set; }
@@ -2576,6 +2578,8 @@ public class CourseMaterialManagePageModel
     public Guid? SelectedAcademicProgramId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
     public Guid? SelectedCourseId { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
     public bool ActiveOnly { get; set; } = true;
     public bool CanManage { get; set; }
 }
@@ -2597,6 +2601,8 @@ public class CourseMaterialStudentPageModel
     public Guid? SelectedAcademicProgramId { get; set; }
     public Guid? SelectedSemesterId { get; set; }
     public Guid? SelectedCourseId { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
 }
 
 // ── Phase 21: Study Planner ─────────────────────────────────────────────────
