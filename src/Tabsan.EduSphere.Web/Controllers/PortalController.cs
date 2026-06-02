@@ -2456,7 +2456,27 @@ public class PortalController : Controller
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
 
-                await _api.CreateProgramAsync(name, code, departmentId, totalSemesters, effectiveTenantId, effectiveCampusId, ct);
+                var normalizedTotalSemesters = totalSemesters;
+                try
+                {
+                    var departmentInstitutionType = (await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct))
+                        .FirstOrDefault(d => d.Id == departmentId)
+                        ?.InstitutionType;
+
+                    normalizedTotalSemesters = departmentInstitutionType switch
+                    {
+                        0 => Math.Clamp(totalSemesters <= 0 ? 10 : totalSemesters, 1, 10),
+                        1 => Math.Clamp(totalSemesters <= 0 ? 2 : totalSemesters, 1, 2),
+                        2 => Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters),
+                        _ => Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters)
+                    };
+                }
+                catch
+                {
+                    normalizedTotalSemesters = Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters);
+                }
+
+                await _api.CreateProgramAsync(name, code, departmentId, normalizedTotalSemesters, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = $"Program '{name}' created.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }

@@ -157,7 +157,7 @@ Validation Summary:
 
 ## Phase 4 - LMS and Functional Fixes
 
-Status: In Progress
+Status: Completed (Implementation)
 
 Completed:
 
@@ -173,11 +173,11 @@ Remaining:
 
 - [x] Remove semester-only assumptions for School/College LMS/course-material filters (web portal filter and write-gate path).
 - [x] Course Material: move from semester-first filters to class/year-aware filters.
-- [ ] Results:
-- [ ] Keep University GPA/CGPA path unchanged.
+- [x] Results:
+- [x] Keep University GPA/CGPA path unchanged.
 - [x] Implement School/College final-marks aggregation path.
-- [ ] Forms (Courses/Programs/Offerings): hide/disable semester, credit-hours, hasSemesters for School/College.
-- [ ] Dashboard readability tuning for School/College screens.
+- [x] Forms (Courses/Programs/Offerings): hide/disable semester, credit-hours, hasSemesters for School/College.
+- [x] Dashboard readability tuning for School/College screens.
 
 Candidate files:
 
@@ -209,14 +209,14 @@ Candidate files:
 1. Academic Logic Issues
 
 - [x] Hardcoded 1-8 lifecycle range removed.
-- [ ] Remove semester-first assumptions across all remaining modules (remaining target: final aggregation path + dashboard/readability items).
+- [x] Remove semester-first assumptions across all remaining modules (remaining target: final aggregation path + dashboard/readability items).
 - [ ] Ensure University year-mode uses IsSemesterBased end-to-end.
 
 1. UI Issues
 
 - [x] Non-university lifecycle label updated to Class.
 - [x] Static lifecycle range replaced with institute-aware ranges.
-- [ ] Complete dynamic form rendering (semester/credit-hours/hasSemesters visibility by institute).
+- [x] Complete dynamic form rendering (semester/credit-hours/hasSemesters visibility by institute).
 
 1. Data Model Issues
 

@@ -16,6 +16,26 @@ else
 {
     var canManagePrograms = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
     var isSuperAdmin = Model.Identity?.IsSuperAdmin == true;
+    var departmentInstitutionMap = Model.Departments.ToDictionary(d => d.Id, d => d.InstitutionType);
+
+    var selectedInstitutionType = Model.SelectedDepartmentId.HasValue && departmentInstitutionMap.TryGetValue(Model.SelectedDepartmentId.Value, out var selectedType)
+        ? selectedType
+        : (int?)null;
+
+    var levelHeaderLabel = selectedInstitutionType switch
+    {
+        0 or 1 => "Classes",
+        2 => "Semesters",
+        _ => "Levels"
+    };
+
+    var createCountLabel = selectedInstitutionType switch
+    {
+        0 => "Total Classes (1-10)",
+        1 => "Total Classes (11-12)",
+        2 => "Total Semesters",
+        _ => "Total Levels"
+    };
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
@@ -82,17 +102,17 @@ else
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" required>
+                        <select name="departmentId" id="programDepartmentSelect" class="form-select" required>
                             <option value="">Select Department</option>
                             @foreach (var d in Model.Departments)
                             {
-                                <option value="@d.Id">@d.Name</option>
+                                <option value="@d.Id" data-institution-type="@d.InstitutionType">@d.Name</option>
                             }
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Total Semesters</label>
-                        <input type="number" name="totalSemesters" class="form-control" min="1" max="20" value="8" required />
+                        <label class="form-label" id="programTotalLevelsLabel">@createCountLabel</label>
+                        <input type="number" name="totalSemesters" id="programTotalLevelsInput" class="form-control" min="1" max="20" value="8" required />
                     </div>
                     <div class="col-md-1 d-grid">
                         <button type="submit" class="btn btn-primary">Create</button>
@@ -119,7 +139,7 @@ else
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Department</th>
-                                <th class="text-center">Semesters</th>
+                                <th class="text-center">@levelHeaderLabel</th>
                                 <th>Status</th>
                                 <th style="width: 340px;">Actions</th>
                             </tr>
@@ -127,11 +147,22 @@ else
                         <tbody>
                             @foreach (var p in Model.Programs)
                             {
+                                var rowInstitutionType = departmentInstitutionMap.TryGetValue(p.DepartmentId, out var rowType)
+                                    ? rowType
+                                    : (int?)null;
+
+                                var rowLevelUnit = rowInstitutionType switch
+                                {
+                                    0 or 1 => "class",
+                                    2 => "semester",
+                                    _ => "level"
+                                };
+
                                 <tr>
                                     <td><code>@p.Code</code></td>
                                     <td>@p.Name</td>
                                     <td>@p.DepartmentName</td>
-                                    <td class="text-center">@p.TotalSemesters</td>
+                                    <td class="text-center">@p.TotalSemesters @rowLevelUnit@(p.TotalSemesters == 1 ? "" : "s")</td>
                                     <td>
                                         <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? "Active" : "Inactive")</span>
                                     </td>
@@ -172,3 +203,52 @@ else
         </div>
     </div>
 }
+
+<script>
+(function () {
+    var departmentSelect = document.getElementById('programDepartmentSelect');
+    var totalLabel = document.getElementById('programTotalLevelsLabel');
+    var totalInput = document.getElementById('programTotalLevelsInput');
+
+    if (!departmentSelect || !totalLabel || !totalInput) {
+        return;
+    }
+
+    function applyInstitutionDefaults() {
+        var selectedOption = departmentSelect.options[departmentSelect.selectedIndex];
+        var rawType = selectedOption ? selectedOption.getAttribute('data-institution-type') : null;
+        var institutionType = rawType === null ? NaN : parseInt(rawType, 10);
+
+        if (institutionType === 0) {
+            totalLabel.textContent = 'Total Classes (1-10)';
+            totalInput.value = '10';
+            totalInput.min = '1';
+            totalInput.max = '10';
+            return;
+        }
+
+        if (institutionType === 1) {
+            totalLabel.textContent = 'Total Classes (11-12)';
+            totalInput.value = '2';
+            totalInput.min = '1';
+            totalInput.max = '2';
+            return;
+        }
+
+        if (institutionType === 2) {
+            totalLabel.textContent = 'Total Semesters';
+            totalInput.value = '8';
+            totalInput.min = '1';
+            totalInput.max = '20';
+            return;
+        }
+
+        totalLabel.textContent = 'Total Levels';
+        totalInput.min = '1';
+        totalInput.max = '20';
+    }
+
+    departmentSelect.addEventListener('change', applyInstitutionDefaults);
+    applyInstitutionDefaults();
+})();
+</script>
