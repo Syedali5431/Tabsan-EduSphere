@@ -89,6 +89,34 @@ BEGIN
     PRINT N'College validation note: no course offerings found, so result coverage check was skipped.';
 END;
 
+SELECT N'CoursesTenantIdColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('courses', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT N'CoursesCampusIdColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('courses', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT N'CoursesInstitutionTypeColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('courses', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT N'CourseOfferingsTenantIdColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('course_offerings', 'TenantId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT N'CourseOfferingsCampusIdColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('course_offerings', 'CampusId') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT N'CourseOfferingsInstitutionTypeColumnExists' AS [CheckName],
+       CASE WHEN COL_LENGTH('course_offerings', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+IF COL_LENGTH('courses', 'TenantId') IS NULL
+OR COL_LENGTH('courses', 'CampusId') IS NULL
+OR COL_LENGTH('courses', 'InstitutionType') IS NULL
+OR COL_LENGTH('course_offerings', 'TenantId') IS NULL
+OR COL_LENGTH('course_offerings', 'CampusId') IS NULL
+OR COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
+BEGIN
+    PRINT N'College validation warning: missing course scope columns detected. Run College Scripts/07-Fix-Course-Institution-Scope.sql.';
+END;
+
 IF COL_LENGTH('student_profiles', 'CurrentSemesterNumber') IS NOT NULL
 BEGIN
     IF EXISTS

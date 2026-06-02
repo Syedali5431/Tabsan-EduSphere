@@ -51,5 +51,41 @@ BEGIN
     END;
 END;
 
+IF OBJECT_ID(N'[courses]') IS NOT NULL
+AND COL_LENGTH('courses', 'TenantId') IS NOT NULL
+AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+BEGIN
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes
+        WHERE [name] = N'IX_courses_scope_active'
+          AND [object_id] = OBJECT_ID(N'[courses]')
+    )
+    BEGIN
+        CREATE INDEX [IX_courses_scope_active]
+            ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
+    END;
+END;
+
+IF OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+BEGIN
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes
+        WHERE [name] = N'IX_course_offerings_scope_open'
+          AND [object_id] = OBJECT_ID(N'[course_offerings]')
+    )
+    BEGIN
+        CREATE INDEX [IX_course_offerings_scope_open]
+            ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
+    END;
+END;
+
 PRINT N'College maintenance wrapper completed.';
 GO

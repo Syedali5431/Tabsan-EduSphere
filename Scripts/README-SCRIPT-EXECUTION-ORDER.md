@@ -34,6 +34,9 @@ Run scripts in this exact order.
   - `Scripts/College Scripts/` (Class 11-12 focused dummy path)
   - `Scripts/University Scripts/` (Semester 1-8 focused dummy path)
 - If legacy objects were accidentally created in `master`, run `00-Cleanup-Master-Mistake.sql` once before step 1.
+- Utility scripts available after baseline setup:
+  - `06-Create-SuperAdmin-User.sql` to create/update an additional SuperAdmin account.
+  - `07-Fix-Course-Institution-Scope.sql` to self-heal missing `courses`/`course_offerings` scope columns for compatibility with current API mappings.
 
 ## Example Commands
 
@@ -45,6 +48,15 @@ sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/02-Seed-Core.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/03-FullDummyData.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/04-Maintenance-Indexes-And-Views.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/05-PostDeployment-Checks.sql
+```
+
+## Utility / Recovery Commands
+
+Run only when needed (after schema + seed):
+
+```powershell
+sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/06-Create-SuperAdmin-User.sql
+sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/07-Fix-Course-Institution-Scope.sql
 ```
 
 ## Phase 40.2 Unified Update (2026-05-21)

@@ -239,6 +239,16 @@ SELECT 'CourseOfferingsCampusIdColumnExists' AS [CheckName],
 SELECT 'CourseOfferingsInstitutionTypeColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('course_offerings', 'InstitutionType') IS NULL THEN 0 ELSE 1 END AS [Value];
 
+IF COL_LENGTH('courses', 'TenantId') IS NULL
+OR COL_LENGTH('courses', 'CampusId') IS NULL
+OR COL_LENGTH('courses', 'InstitutionType') IS NULL
+OR COL_LENGTH('course_offerings', 'TenantId') IS NULL
+OR COL_LENGTH('course_offerings', 'CampusId') IS NULL
+OR COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
+BEGIN
+	PRINT 'Post-deployment warning: missing course scope columns detected. Run Scripts/07-Fix-Course-Institution-Scope.sql.';
+END;
+
 SELECT 'CourseMaterialsTableExists' AS [CheckName],
 	CASE WHEN OBJECT_ID('course_materials') IS NULL THEN 0 ELSE 1 END AS [Value];
 

@@ -14,6 +14,8 @@ This folder is intentionally kept DB-focused and now contains only database setu
 | 04 | 04-Maintenance-Indexes-And-Views.sql | Adds maintenance indexes and reporting views, including results lifecycle indexes used by publish/draft workflows. |
 | 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path, including attendance/results lifecycle and institution-coverage checks. |
 | 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path, including no-dummy assertions for attendance and results. |
+| 06 | 06-Create-SuperAdmin-User.sql | Utility script to create/update a SuperAdmin account with configurable username/email/hash. |
+| 07 | 07-Fix-Course-Institution-Scope.sql | Recovery/compatibility patch for missing courses and course_offerings scope columns (TenantId/CampusId/InstitutionType). |
 
 ## Domain Script Packs
 
@@ -21,7 +23,7 @@ This folder is intentionally kept DB-focused and now contains only database setu
 - College pack: `Scripts/College Scripts/` (Class 11 to Class 12 dummy data with college results/marks)
 - University pack: `Scripts/University Scripts/` (Semester 1 to Semester 8 dummy data with university results/marks)
 
-Each pack keeps the same 01-05 sequence pattern as the root scripts.
+Each pack keeps the same 01-05 base sequence pattern and now also includes utility scripts 06 and 07.
 
 ## Default Seeded Credentials
 
@@ -51,6 +53,13 @@ sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Che
 ```
 
 The maintenance step is optional for strict clean-seed validation, but recommended to keep index/view state aligned with production deployments.
+
+Utility and recovery scripts (run when needed):
+
+```powershell
+sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\06-Create-SuperAdmin-User.sql"
+sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\07-Fix-Course-Institution-Scope.sql"
+```
 
 ## Phase 40.2 Unified Update (2026-05-21)
 

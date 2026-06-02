@@ -220,41 +220,45 @@ BEGIN
       AND [CampusId] IS NOT NULL;
 END;
 
-IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
-   AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
-   AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
-BEGIN
-    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
-    SELECT
-        N'Courses.ScopeColumnsPresent',
-        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
-        CAST(COUNT(1) AS NVARCHAR(20)),
-        N'3'
-    FROM (VALUES
-        (COL_LENGTH('courses', 'TenantId')),
-        (COL_LENGTH('courses', 'CampusId')),
-        (COL_LENGTH('courses', 'InstitutionType'))
-    ) v([len])
-    WHERE v.[len] IS NOT NULL;
-END;
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'Courses.ScopeColumnsPresent',
+    CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+    CAST(COUNT(1) AS NVARCHAR(20)),
+    N'3'
+FROM (VALUES
+    (COL_LENGTH('courses', 'TenantId')),
+    (COL_LENGTH('courses', 'CampusId')),
+    (COL_LENGTH('courses', 'InstitutionType'))
+) v([len])
+WHERE v.[len] IS NOT NULL;
 
-IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
-   AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
-   AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
-BEGIN
-    INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
-    SELECT
-        N'CourseOfferings.ScopeColumnsPresent',
-        CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
-        CAST(COUNT(1) AS NVARCHAR(20)),
-        N'3'
-    FROM (VALUES
-        (COL_LENGTH('course_offerings', 'TenantId')),
-        (COL_LENGTH('course_offerings', 'CampusId')),
-        (COL_LENGTH('course_offerings', 'InstitutionType'))
-    ) v([len])
-    WHERE v.[len] IS NOT NULL;
-END;
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'CourseOfferings.ScopeColumnsPresent',
+    CASE WHEN COUNT(1) = 3 THEN 1 ELSE 0 END,
+    CAST(COUNT(1) AS NVARCHAR(20)),
+    N'3'
+FROM (VALUES
+    (COL_LENGTH('course_offerings', 'TenantId')),
+    (COL_LENGTH('course_offerings', 'CampusId')),
+    (COL_LENGTH('course_offerings', 'InstitutionType'))
+) v([len])
+WHERE v.[len] IS NOT NULL;
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_courses_scope_active',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_scope_active' AND [object_id] = OBJECT_ID(N'courses')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_scope_active' AND [object_id] = OBJECT_ID(N'courses')) THEN N'1' ELSE N'0' END,
+    N'1';
+
+INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+SELECT
+    N'IndexExists.IX_course_offerings_scope_open',
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_scope_open' AND [object_id] = OBJECT_ID(N'course_offerings')) THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_scope_open' AND [object_id] = OBJECT_ID(N'course_offerings')) THEN N'1' ELSE N'0' END,
+    N'1';
 
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT

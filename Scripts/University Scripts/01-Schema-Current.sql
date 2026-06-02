@@ -29,6 +29,60 @@ BEGIN
   RETURN;
 END;
 
+/*
+  University compatibility self-heal:
+  Ensure current API-required scope columns exist on courses and course_offerings.
+*/
+IF OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
+BEGIN
+  IF COL_LENGTH('courses', 'CampusId') IS NULL
+    ALTER TABLE [courses] ADD [CampusId] UNIQUEIDENTIFIER NULL;
+
+  IF COL_LENGTH('courses', 'InstitutionType') IS NULL
+    ALTER TABLE [courses] ADD [InstitutionType] INT NOT NULL CONSTRAINT [DF_university_courses_InstitutionType] DEFAULT ((3));
+
+  IF COL_LENGTH('courses', 'TenantId') IS NULL
+    ALTER TABLE [courses] ADD [TenantId] UNIQUEIDENTIFIER NULL;
+
+  IF COL_LENGTH('course_offerings', 'CampusId') IS NULL
+    ALTER TABLE [course_offerings] ADD [CampusId] UNIQUEIDENTIFIER NULL;
+
+  IF COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
+    ALTER TABLE [course_offerings] ADD [InstitutionType] INT NOT NULL CONSTRAINT [DF_university_course_offerings_InstitutionType] DEFAULT ((3));
+
+  IF COL_LENGTH('course_offerings', 'TenantId') IS NULL
+    ALTER TABLE [course_offerings] ADD [TenantId] UNIQUEIDENTIFIER NULL;
+
+  IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
+  AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+  AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+  BEGIN
+    EXEC(N'
+      UPDATE c
+      SET
+        c.[TenantId] = d.[TenantId],
+        c.[CampusId] = d.[CampusId],
+        c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
+      FROM [courses] c
+      INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+      WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
+    ');
+  END;
+
+  EXEC(N'
+    UPDATE o
+    SET
+      o.[TenantId] = c.[TenantId],
+      o.[CampusId] = c.[CampusId],
+      o.[InstitutionType] = c.[InstitutionType]
+    FROM [course_offerings] o
+    INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
+    WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
+  ');
+END;
+
 IF OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
   IF COL_LENGTH('discussion_threads', 'IsSolved') IS NULL

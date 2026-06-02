@@ -9,6 +9,8 @@ This folder contains school-focused wrappers and seed scripts that follow the sa
 3. 03-FullDummyData.sql
 4. 04-Maintenance-Indexes-And-Views.sql
 5. 05-PostDeployment-Checks.sql
+6. 06-Create-SuperAdmin-User.sql (optional utility)
+7. 07-Fix-Course-Institution-Scope.sql (optional recovery/compatibility)
 
 ## Notes
 
@@ -18,3 +20,5 @@ This folder contains school-focused wrappers and seed scripts that follow the sa
 - Script 03 seeds school class coverage (Class 1 to Class 10) with report cards/results and applies completion markers after Class 10 where schema supports it.
 - Script 04 adds school-focused lookup indexes for Class 1-10 report-card and result access.
 - Script 05 performs post-deployment coverage checks and prints warnings/info for any missing coverage.
+- Script 06 creates/updates a SuperAdmin account when an additional privileged login is needed.
+- Script 07 patches missing `courses` / `course_offerings` scope columns (`TenantId`, `CampusId`, `InstitutionType`) for API compatibility.

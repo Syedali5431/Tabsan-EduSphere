@@ -1636,11 +1636,25 @@ public class EduApiClient : IEduApiClient
         if (!await TryRefreshAccessTokenAsync(ct))
         {
             using var retryWithoutRefresh = requestFactory();
-            return await client.SendAsync(retryWithoutRefresh, ct);
+            var responseWithoutRefresh = await client.SendAsync(retryWithoutRefresh, ct);
+            if (responseWithoutRefresh.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                SaveConnection(new ApiConnectionModel());
+                SetForcePasswordChangeRequired(false);
+            }
+
+            return responseWithoutRefresh;
         }
 
         using var retryRequest = requestFactory();
-        return await client.SendAsync(retryRequest, ct);
+        var retryResponse = await client.SendAsync(retryRequest, ct);
+        if (retryResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            SaveConnection(new ApiConnectionModel());
+            SetForcePasswordChangeRequired(false);
+        }
+
+        return retryResponse;
     }
 
     private async Task<bool> TryRefreshAccessTokenAsync(CancellationToken ct)
@@ -1765,6 +1779,9 @@ public class EduApiClient : IEduApiClient
 
     private static Exception BuildException(System.Net.HttpStatusCode statusCode, string body)
     {
+        if (statusCode == System.Net.HttpStatusCode.Unauthorized)
+            return new InvalidOperationException("Your session has expired or is invalid. Please sign in again.");
+
         var message = string.IsNullOrWhiteSpace(body)
             ? $"API request failed with status {(int)statusCode}."
             : TryExtractApiErrorMessage(body) ?? body;

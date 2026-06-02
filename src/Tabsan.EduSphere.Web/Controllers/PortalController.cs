@@ -244,7 +244,9 @@ public class PortalController : Controller
 
     private static bool IsUnauthorizedApiException(InvalidOperationException ex)
         => ex.Message.Contains("status 401", StringComparison.OrdinalIgnoreCase)
-           || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase);
+           || ex.Message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase)
+           || ex.Message.Contains("session has expired", StringComparison.OrdinalIgnoreCase)
+           || ex.Message.Contains("sign in again", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsApiConnectivityException(Exception ex)
     {
