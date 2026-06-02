@@ -175,7 +175,7 @@ Remaining:
 - [x] Course Material: move from semester-first filters to class/year-aware filters.
 - [ ] Results:
 - [ ] Keep University GPA/CGPA path unchanged.
-- [ ] Implement School/College final-marks aggregation path.
+- [x] Implement School/College final-marks aggregation path.
 - [ ] Forms (Courses/Programs/Offerings): hide/disable semester, credit-hours, hasSemesters for School/College.
 - [ ] Dashboard readability tuning for School/College screens.
 
@@ -204,7 +204,7 @@ Candidate files:
 
 - [x] JSON parsing hardened for legacy/new payloads.
 - [x] Missing-key runtime failures prevented in approval path.
-- [ ] Complete School/College simplified final aggregation rollout.
+- [x] Complete School/College simplified final aggregation rollout.
 
 1. Academic Logic Issues
 

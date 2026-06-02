@@ -66,6 +66,9 @@ public interface IResultRepository
     /// <summary>Returns active enrollments for the student across all semesters.</summary>
     Task<IReadOnlyList<Enrollment>> GetActiveEnrollmentsForStudentAsync(Guid studentProfileId, CancellationToken ct = default);
 
+    /// <summary>Returns the institution type configured for a course offering.</summary>
+    Task<InstitutionType> GetInstitutionTypeForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
+
     /// <summary>Returns the semester ID for a course offering.</summary>
     Task<Guid?> GetSemesterIdForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default);
 

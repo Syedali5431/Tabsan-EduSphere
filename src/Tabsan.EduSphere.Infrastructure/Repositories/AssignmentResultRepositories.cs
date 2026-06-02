@@ -245,6 +245,12 @@ public class ResultRepository : IResultRepository
                              && e.Status == EnrollmentStatus.Active)
                     .ToListAsync(ct);
 
+    public Task<InstitutionType> GetInstitutionTypeForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+        => _db.CourseOfferings
+              .Where(o => o.Id == courseOfferingId)
+              .Select(o => o.InstitutionType)
+              .FirstOrDefaultAsync(ct);
+
     public Task<Guid?> GetSemesterIdForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
         => _db.CourseOfferings
               .Where(o => o.Id == courseOfferingId)
