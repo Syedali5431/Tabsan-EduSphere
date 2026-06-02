@@ -12,6 +12,8 @@ This folder contains college-focused wrappers and seed scripts that follow the s
 
 ## Notes
 
-- Scripts 01, 02, and 04 delegate to the shared root scripts to avoid duplication.
-- Script 03 adds college class coverage (Class 11 and Class 12) with results and marks.
-- Script 05 validates college class/result coverage.
+- Script 01 delegates to the shared schema script and then validates required college schema tables.
+- Script 02 delegates to the shared core seed script and then bootstraps deterministic college baseline entities.
+- Script 03 seeds Class 11 and Class 12 report cards/results and applies completion behavior after Class 12.
+- Script 04 delegates to shared maintenance and adds college-focused indexes for Class 11-12 report/result lookups.
+- Script 05 validates Class 11/12 coverage and verifies completion-level progression after Class 12.

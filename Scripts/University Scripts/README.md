@@ -12,6 +12,9 @@ This folder contains university-focused wrappers and seed scripts that follow th
 
 ## Notes
 
-- Scripts 01, 02, and 04 delegate to the shared root scripts to avoid duplication.
-- Script 03 adds university semester coverage (Semester 1 to Semester 8) with results and marks.
-- Script 05 validates university semester/result coverage.
+- Scripts are pure T-SQL (no SQLCMD `:r` dependency) and can run in standard SSMS/Azure Data Studio query mode.
+- Script 01 validates university prerequisites and self-heals missing LMS discussion columns used by the current app model.
+- Script 02 ensures deterministic university baseline entities (department/program/faculty/student profile) for Semester 1-8 flows.
+- Script 03 seeds university semester coverage (Semester 1 to Semester 8) with report cards/results and applies completion markers after Semester 8 where schema supports it; also seeds attendance/enrollment/FYP support data.
+- Script 04 adds university-focused lookup indexes for semester report-card/result, attendance, and FYP access patterns.
+- Script 05 performs post-deployment coverage checks and prints warnings/info for any missing coverage.

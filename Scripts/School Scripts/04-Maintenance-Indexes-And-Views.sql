@@ -1,6 +1,55 @@
+SET ANSI_NULLS ON;
+GO
+
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /*
-  School domain wrapper for maintenance/index/view setup.
-  Delegates to the shared maintenance script.
+  School maintenance/index script.
+  Adds school-focused query indexes for Class 1-10 coverage access patterns.
 */
 
-:r "..\04-Maintenance-Indexes-And-Views.sql"
+IF DB_ID(N'Tabsan-EduSphere') IS NULL
+BEGIN
+    PRINT N'School maintenance note: database [Tabsan-EduSphere] does not exist. Run School Scripts/01-Schema-Current.sql first.';
+    RETURN;
+END;
+GO
+
+USE [Tabsan-EduSphere];
+GO
+
+SET NOCOUNT ON;
+
+IF OBJECT_ID(N'[student_report_cards]') IS NOT NULL
+BEGIN
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes
+        WHERE [name] = N'IX_SRC_School_Class1_10'
+          AND [object_id] = OBJECT_ID(N'[student_report_cards]')
+    )
+    BEGIN
+        CREATE INDEX [IX_SRC_School_Class1_10]
+            ON [student_report_cards] ([InstitutionType], [PeriodLabel], [StudentProfileId]);
+    END;
+END;
+
+IF OBJECT_ID(N'[results]') IS NOT NULL
+BEGIN
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes
+        WHERE [name] = N'IX_Results_School_Class1_10'
+          AND [object_id] = OBJECT_ID(N'[results]')
+    )
+    BEGIN
+        CREATE INDEX [IX_Results_School_Class1_10]
+            ON [results] ([ResultType], [StudentProfileId], [CourseOfferingId]);
+    END;
+END;
+
+PRINT N'School maintenance script completed.';
+GO

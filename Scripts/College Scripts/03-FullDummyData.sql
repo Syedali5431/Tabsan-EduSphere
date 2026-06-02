@@ -6,7 +6,7 @@ GO
 
 IF DB_ID(N'Tabsan-EduSphere') IS NULL
 BEGIN
-    RAISERROR('Database [Tabsan-EduSphere] does not exist. Run 01-Schema-Current.sql first.', 16, 1);
+  PRINT N'College dummy data note: database [Tabsan-EduSphere] does not exist. Run College Scripts/01-Schema-Current.sql first.';
     RETURN;
 END;
 GO
@@ -16,7 +16,7 @@ GO
 
 IF DB_NAME() <> N'Tabsan-EduSphere'
 BEGIN
-    RAISERROR('Failed to switch context to [Tabsan-EduSphere]. Aborting college dummy data script.', 16, 1);
+  PRINT N'College dummy data note: failed to switch context to [Tabsan-EduSphere].';
     RETURN;
 END;
 GO
@@ -39,10 +39,18 @@ SET XACT_ABORT ON;
 BEGIN TRY
 BEGIN TRANSACTION;
 
-IF OBJECT_ID(N'[student_report_cards]') IS NULL OR OBJECT_ID(N'[results]') IS NULL
+IF OBJECT_ID(N'[users]') IS NULL
+OR OBJECT_ID(N'[roles]') IS NULL
+OR OBJECT_ID(N'[student_profiles]') IS NULL
+OR OBJECT_ID(N'[student_report_cards]') IS NULL
+OR OBJECT_ID(N'[results]') IS NULL
+OR OBJECT_ID(N'[course_offerings]') IS NULL
+OR OBJECT_ID(N'[courses]') IS NULL
+OR OBJECT_ID(N'[departments]') IS NULL
 BEGIN
-    RAISERROR('Required tables [student_report_cards] and/or [results] were not found. Run 01-Schema-Current.sql first.', 16, 1);
-    RETURN;
+  PRINT N'College dummy data note: required tables are missing. Run schema/core seed scripts first.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
@@ -58,10 +66,18 @@ DECLARE @FallbackFacultyUserId UNIQUEIDENTIFIER = (
     ORDER BY u.[CreatedAt], u.[Id]
 );
 
+  IF @FallbackFacultyUserId IS NULL
+  BEGIN
+    SELECT TOP (1) @FallbackFacultyUserId = u.[Id]
+    FROM [users] u
+    WHERE ISNULL(u.[IsDeleted], 0) = 0
+    ORDER BY u.[CreatedAt], u.[Id];
+  END;
+
 DECLARE @TargetStudents TABLE
 (
     [StudentProfileId] UNIQUEIDENTIFIER NOT NULL,
-    [CourseOfferingId] UNIQUEIDENTIFIER NOT NULL,
+    [CourseOfferingId] UNIQUEIDENTIFIER NULL,
     [FacultyUserId] UNIQUEIDENTIFIER NOT NULL,
     [StudentRn] INT NOT NULL
 );
@@ -98,13 +114,13 @@ OUTER APPLY
 ) instOffering
 WHERE ISNULL(su.[InstitutionType], @CollegeInstitutionType) = @CollegeInstitutionType
   AND ISNULL(su.[IsDeleted], 0) = 0
-  AND COALESCE(depOffering.[CourseOfferingId], instOffering.[CourseOfferingId]) IS NOT NULL
   AND COALESCE(depOffering.[FacultyUserId], instOffering.[FacultyUserId], @FallbackFacultyUserId) IS NOT NULL;
 
 IF NOT EXISTS (SELECT 1 FROM @TargetStudents)
 BEGIN
-    RAISERROR('College seed prerequisites not satisfied (students, faculty, or course offerings missing). Run 02-Seed-Core.sql and base dummy seeds first.', 16, 1);
-    RETURN;
+  PRINT N'College dummy data note: no eligible college students/faculty were found. Nothing to seed.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @ClassCoverage TABLE ([ClassNo] INT, [Marks] DECIMAL(8,2));
@@ -147,7 +163,8 @@ SELECT NEWID(),
        NULL
 FROM @ClassCoverage cc
 CROSS JOIN @TargetStudents ts
-WHERE NOT EXISTS
+WHERE ts.[CourseOfferingId] IS NOT NULL
+  AND NOT EXISTS
 (
     SELECT 1
     FROM [results] r
@@ -156,17 +173,65 @@ WHERE NOT EXISTS
       AND r.[ResultType] = CONCAT(N'Class ', CAST(cc.[ClassNo] AS NVARCHAR(10)))
 );
 
+/*
+  Mark college completion after Class 12 where schema supports lifecycle columns.
+*/
+IF COL_LENGTH('student_profiles', 'CurrentSemesterNumber') IS NOT NULL
+BEGIN
+    UPDATE sp
+    SET sp.[CurrentSemesterNumber] = CASE WHEN ISNULL(sp.[CurrentSemesterNumber], 0) < 12 THEN 12 ELSE sp.[CurrentSemesterNumber] END,
+        sp.[UpdatedAt] = @Now
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], @CollegeInstitutionType) = @CollegeInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+      AND EXISTS
+      (
+          SELECT 1
+          FROM [student_report_cards] src
+          WHERE src.[StudentProfileId] = sp.[Id]
+            AND src.[InstitutionType] = @CollegeInstitutionType
+            AND src.[PeriodLabel] = N'Class 12'
+      );
+END;
+
+IF COL_LENGTH('student_profiles', 'Status') IS NOT NULL AND COL_LENGTH('student_profiles', 'GraduatedDate') IS NOT NULL
+BEGIN
+    EXEC sys.sp_executesql
+        N'UPDATE sp
+          SET sp.[Status] = N''Graduated'',
+              sp.[GraduatedDate] = COALESCE(sp.[GraduatedDate], @Now),
+              sp.[UpdatedAt] = @Now
+          FROM [student_profiles] sp
+          INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+          WHERE ISNULL(u.[InstitutionType], @CollegeInstitutionType) = @CollegeInstitutionType
+            AND ISNULL(u.[IsDeleted], 0) = 0
+            AND EXISTS
+            (
+                SELECT 1
+                FROM [student_report_cards] src
+                WHERE src.[StudentProfileId] = sp.[Id]
+                  AND src.[InstitutionType] = @CollegeInstitutionType
+                  AND src.[PeriodLabel] = N''Class 12''
+            );',
+        N'@Now DATETIME2, @CollegeInstitutionType INT',
+        @Now = @Now,
+        @CollegeInstitutionType = @CollegeInstitutionType;
+END;
+
+PRINT N'College lifecycle completion applied for students with Class 12 coverage (where supported by schema).';
+
+IF NOT EXISTS (SELECT 1 FROM @TargetStudents WHERE [CourseOfferingId] IS NOT NULL)
+BEGIN
+    PRINT N'College note: no course offerings resolved for college students, so Class 11/12 results were skipped; report cards were still seeded.';
+END;
+
 COMMIT TRANSACTION;
-PRINT N'College dummy data seeded successfully (all college students, Class 11 and Class 12 with marks/results).';
+PRINT N'College dummy data seeded successfully (all college students, Class 11 and Class 12 with completion after Class 12).';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
-
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
-
-    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+  PRINT CONCAT(N'College dummy data warning: ', ERROR_MESSAGE());
 END CATCH;
 GO

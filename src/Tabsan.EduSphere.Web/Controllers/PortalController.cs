@@ -5824,11 +5824,58 @@ public class PortalController : Controller
                 using var doc = System.Text.Json.JsonDocument.Parse(req.ProposedData);
                 var root = doc.RootElement;
 
-                var studentProfileId = root.GetProperty("studentProfileId").GetGuid();
-                var courseOfferingId = root.GetProperty("courseOfferingId").GetGuid();
-                var resultType = root.GetProperty("resultType").GetString() ?? "Final";
-                var newMarksObtained = root.GetProperty("newMarksObtained").GetDecimal();
-                var newMaxMarks = root.GetProperty("newMaxMarks").GetDecimal();
+                static Guid ReadGuid(System.Text.Json.JsonElement source, params string[] keys)
+                {
+                    foreach (var key in keys)
+                    {
+                        if (source.TryGetProperty(key, out var node))
+                        {
+                            if (node.ValueKind == System.Text.Json.JsonValueKind.String
+                                && Guid.TryParse(node.GetString(), out var parsed))
+                            {
+                                return parsed;
+                            }
+
+                            if (node.ValueKind == System.Text.Json.JsonValueKind.Object
+                                && node.TryGetProperty("value", out var nested)
+                                && nested.ValueKind == System.Text.Json.JsonValueKind.String
+                                && Guid.TryParse(nested.GetString(), out parsed))
+                            {
+                                return parsed;
+                            }
+                        }
+                    }
+
+                    throw new InvalidOperationException("Proposed result change data is missing required identifier fields.");
+                }
+
+                static decimal ReadDecimal(System.Text.Json.JsonElement source, params string[] keys)
+                {
+                    foreach (var key in keys)
+                    {
+                        if (source.TryGetProperty(key, out var node))
+                        {
+                            if (node.ValueKind == System.Text.Json.JsonValueKind.Number && node.TryGetDecimal(out var numeric))
+                                return numeric;
+
+                            if (node.ValueKind == System.Text.Json.JsonValueKind.String
+                                && decimal.TryParse(node.GetString(), out numeric))
+                            {
+                                return numeric;
+                            }
+                        }
+                    }
+
+                    throw new InvalidOperationException("Proposed result change data is missing marks fields.");
+                }
+
+                var studentProfileId = ReadGuid(root, "studentProfileId", "studentId");
+                var courseOfferingId = ReadGuid(root, "courseOfferingId", "offeringId", "subjectOfferingId");
+                var resultType = root.TryGetProperty("resultType", out var resultTypeNode) && resultTypeNode.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? (resultTypeNode.GetString() ?? "Final")
+                    : "Final";
+                var newMarksObtained = ReadDecimal(root, "newMarksObtained", "marksObtained");
+                var newMaxMarks = ReadDecimal(root, "newMaxMarks", "maxMarks");
 
                 Guid? requestedTenantId = null;
                 Guid? requestedCampusId = null;
@@ -6605,6 +6652,27 @@ public class PortalController : Controller
             }
 
             model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+
+            var selectedDepartmentInstitutionType = model.Departments
+                .FirstOrDefault(d => d.Id == departmentId)?.InstitutionType;
+            var effectiveInstitutionType = selectedDepartmentInstitutionType
+                ?? (identity?.InstitutionType.HasValue == true ? identity.InstitutionType.Value : 2);
+
+            if (effectiveInstitutionType is 0 or 1)
+                model.PeriodLabel = "Class";
+
+            model.MaxAcademicLevel = effectiveInstitutionType switch
+            {
+                0 => 10,
+                1 => 2,
+                _ => 8
+            };
+
+            if (semester < model.MinAcademicLevel || semester > model.MaxAcademicLevel)
+            {
+                semester = model.MinAcademicLevel;
+                model.SelectedSemester = semester;
+            }
 
             if (identity is { IsSuperAdmin: false, InstitutionType: not null })
             {
@@ -9831,7 +9899,7 @@ public class PortalController : Controller
 
     // Final-Touches Phase 20 Stage 20.3 — discussion forum
     [HttpGet]
-    public async Task<IActionResult> Discussion(Guid offeringId, CancellationToken ct)
+    public async Task<IActionResult> Discussion(Guid? offeringId, CancellationToken ct)
     {
         ViewData["Title"] = "Discussion";
         var session = _api.GetSessionIdentity();
@@ -9841,7 +9909,7 @@ public class PortalController : Controller
 
         var model = new DiscussionPageModel
         {
-            OfferingId     = offeringId,
+            OfferingId     = offeringId ?? Guid.Empty,
             CurrentUserId  = currentUserId,
             CanModerate    = canModerate,
             IsConnected    = _api.IsConnected(),
@@ -9851,7 +9919,21 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var threads = await _api.GetDiscussionThreadsAsync(offeringId, ct);
+            if (model.OfferingId == Guid.Empty)
+            {
+                var offerings = await _api.GetOfferingsAsync(session?.TenantId, session?.CampusId, ct);
+                var first = offerings.FirstOrDefault();
+                if (first is not null)
+                    model.OfferingId = first.Id;
+            }
+
+            if (model.OfferingId == Guid.Empty)
+            {
+                model.ErrorMessage ??= "No course offerings are available for your school/college scope.";
+                return View(model);
+            }
+
+            var threads = await _api.GetDiscussionThreadsAsync(model.OfferingId, ct);
             model.Threads = threads.Select(t => new DiscussionThreadItem
             {
                 Id = t.Id, OfferingId = t.OfferingId, AuthorId = t.AuthorId, Title = t.Title,
@@ -10016,7 +10098,7 @@ public class PortalController : Controller
 
     // Final-Touches Phase 20 Stage 20.4 — announcements
     [HttpGet]
-    public async Task<IActionResult> Announcements(Guid offeringId, bool includeInactive = false, CancellationToken ct = default)
+    public async Task<IActionResult> Announcements(Guid? offeringId, bool includeInactive = false, CancellationToken ct = default)
     {
         ViewData["Title"] = "Announcements";
         var session = _api.GetSessionIdentity();
@@ -10026,7 +10108,7 @@ public class PortalController : Controller
 
         var model = new AnnouncementsPageModel
         {
-            OfferingId     = offeringId,
+            OfferingId     = offeringId ?? Guid.Empty,
             IncludeInactive = includeInactive,
             CanManage      = canManage,
             IsConnected    = _api.IsConnected(),
@@ -10036,7 +10118,22 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            var items = await _api.GetAnnouncementsAsync(offeringId, includeInactive, tenantId, campusId, ct);
+            model.Offerings = await _api.GetOfferingsAsync(tenantId, campusId, ct);
+
+            if (model.OfferingId == Guid.Empty)
+            {
+                var first = model.Offerings.FirstOrDefault();
+                if (first is not null)
+                    model.OfferingId = first.Id;
+            }
+
+            if (model.OfferingId == Guid.Empty)
+            {
+                model.ErrorMessage ??= "No course offerings are available for your school/college scope.";
+                return View(model);
+            }
+
+            var items = await _api.GetAnnouncementsAsync(model.OfferingId, includeInactive, tenantId, campusId, ct);
             model.Announcements = items.Select(a => new AnnouncementItem
             {
                 Id = a.Id, OfferingId = a.OfferingId, Title = a.Title,

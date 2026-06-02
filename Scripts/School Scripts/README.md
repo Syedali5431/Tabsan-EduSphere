@@ -12,6 +12,9 @@ This folder contains school-focused wrappers and seed scripts that follow the sa
 
 ## Notes
 
-- Scripts 01, 02, and 04 delegate to the shared root scripts to avoid duplication.
-- Script 03 adds school class coverage (Class 1 to Class 10) with results and marks.
-- Script 05 validates school class/result coverage.
+- Scripts are pure T-SQL (no SQLCMD `:r` dependency) and can run in standard SSMS/Azure Data Studio query mode.
+- Script 01 validates school prerequisites and self-heals missing LMS discussion columns used by the current app model.
+- Script 02 ensures deterministic school baseline entities (department/program/faculty/student profile) for Class 1-10 flows.
+- Script 03 seeds school class coverage (Class 1 to Class 10) with report cards/results and applies completion markers after Class 10 where schema supports it.
+- Script 04 adds school-focused lookup indexes for Class 1-10 report-card and result access.
+- Script 05 performs post-deployment coverage checks and prints warnings/info for any missing coverage.

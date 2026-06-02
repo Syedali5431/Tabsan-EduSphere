@@ -50,7 +50,6 @@ BEGIN TRANSACTION;
 IF OBJECT_ID(N'[academic_programs]') IS NULL
 BEGIN
     RAISERROR('ERROR: Table [academic_programs] does not exist. You MUST run scripts in this order: 01-Schema, 02-Seed, 03-DummyData', 16, 1);
-    RETURN;
 END;
 
 -- Only check row count if table exists
@@ -58,7 +57,6 @@ DECLARE @DepartmentCount INT = (SELECT COUNT(1) FROM [departments]);
 IF @DepartmentCount = 0
 BEGIN
     RAISERROR('ERROR: Table [departments] is empty. You MUST run 02-Seed-Core.sql BEFORE running this script.', 16, 1);
-    RETURN;
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
@@ -122,7 +120,6 @@ DECLARE @RoleCount INT = (SELECT COUNT(1) FROM [roles] WHERE [Id] IN (@RoleSuper
 IF @RoleCount < 5
 BEGIN
     RAISERROR('ERROR: Not all required roles found (including Finance). You MUST run 02-Seed-Core.sql BEFORE running this script.', 16, 1);
-    RETURN;
 END;
 
 /* 0) Demo metadata table (custom object requested for demos) */
@@ -946,27 +943,33 @@ BEGIN
     IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
     AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
     AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+    AND COL_LENGTH('departments', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
     BEGIN
-        UPDATE c
-        SET c.[TenantId] = d.[TenantId],
-            c.[CampusId] = d.[CampusId],
-            c.[InstitutionType] = d.[InstitutionType],
-            c.[UpdatedAt] = @Now
-        FROM [courses] c
-        INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-        WHERE c.[Id] IN
-        (
-            CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
-            CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER),
-            CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
-        )
-            AND (
-                c.[TenantId] IS NULL
-                OR c.[CampusId] IS NULL
-                OR c.[InstitutionType] <> d.[InstitutionType]
-                OR c.[TenantId] <> d.[TenantId]
-                OR c.[CampusId] <> d.[CampusId]
-            );
+        EXEC sys.sp_executesql
+            N'UPDATE c
+              SET c.[TenantId] = d.[TenantId],
+                  c.[CampusId] = d.[CampusId],
+                  c.[InstitutionType] = d.[InstitutionType],
+                  c.[UpdatedAt] = @Now
+              FROM [courses] c
+              INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+              WHERE c.[Id] IN
+              (
+                  CAST(''47474747-4747-4747-4747-474747474901'' AS UNIQUEIDENTIFIER),
+                  CAST(''47474747-4747-4747-4747-474747474902'' AS UNIQUEIDENTIFIER),
+                  CAST(''47474747-4747-4747-4747-474747474903'' AS UNIQUEIDENTIFIER)
+              )
+                  AND (
+                      c.[TenantId] IS NULL
+                      OR c.[CampusId] IS NULL
+                      OR c.[InstitutionType] <> d.[InstitutionType]
+                      OR c.[TenantId] <> d.[TenantId]
+                      OR c.[CampusId] <> d.[CampusId]
+                  );',
+            N'@Now DATETIME2',
+            @Now = @Now;
     END;
 
     IF COL_LENGTH('courses', 'HasSemesters') IS NOT NULL
@@ -1380,7 +1383,7 @@ END
 /* 6.5) Course Materials demo pack for portal testing */
 IF OBJECT_ID(N'[course_materials]') IS NOT NULL
 BEGIN
-    DECLARE @CourseMaterialsDemo TABLE
+    CREATE TABLE #CourseMaterialsDemo
     (
         Id UNIQUEIDENTIFIER,
         TenantId UNIQUEIDENTIFIER,
@@ -1398,7 +1401,7 @@ BEGIN
         IsActive BIT
     );
 
-    INSERT INTO @CourseMaterialsDemo VALUES
+    INSERT INTO #CourseMaterialsDemo VALUES
     ('27272727-2727-2727-2727-272727272701', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444401', N'Programming Fundamentals - Demo Outline', N'Demo handout for Course Material page tests.', N'https://demo.tabsan.local/materials/pf-outline', N'dev/course-materials/demo/pf-outline.pdf', 3, '66666666-6666-6666-6666-666666666611', 1),
     ('27272727-2727-2727-2727-272727272702', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444402', N'Data Structures - Demo Slides', N'Slides file for demo download checks.', NULL, N'dev/course-materials/demo/data-structures-slides.pptx', 1, '66666666-6666-6666-6666-666666666611', 1),
     ('27272727-2727-2727-2727-272727272703', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222211', '33333333-3333-3333-3333-333333333335', '44444444-4444-4444-4444-444444444403', N'Algorithms - External Reference', N'Link-only material used to validate Link mode rendering.', N'https://demo.tabsan.local/materials/algorithms-reference', NULL, 2, '66666666-6666-6666-6666-666666666611', 1),
@@ -1407,28 +1410,41 @@ BEGIN
     ('27272727-2727-2727-2727-272727272706', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111112', '22222222-2222-2222-2222-222222222214', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444408', N'Business Analytics - Demo Brief', N'Business demo row to verify department and program filters.', N'https://demo.tabsan.local/materials/business-analytics-brief', N'dev/course-materials/demo/business-analytics-brief.pdf', 3, '66666666-6666-6666-6666-666666666612', 1),
     ('27272727-2727-2727-2727-272727272707', @UniTenantId, @UniCampusId, '11111111-1111-1111-1111-111111111113', '22222222-2222-2222-2222-222222222216', '33333333-3333-3333-3333-333333333334', '44444444-4444-4444-4444-444444444413', N'Engineering Mechanics - Demo Notes', N'Engineering demo row to verify cross-department filter combinations.', NULL, N'dev/course-materials/demo/engineering-mechanics-notes.docx', 1, '66666666-6666-6666-6666-666666666613', 1);
 
-    INSERT INTO [course_materials] ([Id], [TenantId], [CampusId], [DepartmentId], [AcademicProgramId], [SemesterId], [CourseId], [Name], [Description], [LinkUrl], [FilePath], [MaterialType], [CreatedByUserId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT
-        cm.[Id],
-        cm.[TenantId],
-        cm.[CampusId],
-        cm.[DepartmentId],
-        cm.[AcademicProgramId],
-        cm.[SemesterId],
-        cm.[CourseId],
-        cm.[Name],
-        cm.[Description],
-        NULLIF(cm.[LinkUrl], N''),
-        NULLIF(cm.[FilePath], N''),
-        cm.[MaterialType],
-        cm.[CreatedByUserId],
-        cm.[IsActive],
-        @Now,
-        NULL,
-        0,
-        NULL
-    FROM @CourseMaterialsDemo cm
-    WHERE NOT EXISTS (SELECT 1 FROM [course_materials] x WHERE x.[Id] = cm.[Id]);
+    IF COL_LENGTH('course_materials', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('course_materials', 'CampusId') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [course_materials] ([Id], [TenantId], [CampusId], [DepartmentId], [AcademicProgramId], [SemesterId], [CourseId], [Name], [Description], [LinkUrl], [FilePath], [MaterialType], [CreatedByUserId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+              SELECT
+                  cm.[Id],
+                  cm.[TenantId],
+                  cm.[CampusId],
+                  cm.[DepartmentId],
+                  cm.[AcademicProgramId],
+                  cm.[SemesterId],
+                  cm.[CourseId],
+                  cm.[Name],
+                  cm.[Description],
+                  NULLIF(cm.[LinkUrl], N''''),
+                  NULLIF(cm.[FilePath], N''''),
+                  cm.[MaterialType],
+                  cm.[CreatedByUserId],
+                  cm.[IsActive],
+                  @Now,
+                  NULL,
+                  0,
+                  NULL
+              FROM #CourseMaterialsDemo cm
+              WHERE NOT EXISTS (SELECT 1 FROM [course_materials] x WHERE x.[Id] = cm.[Id]);',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        RAISERROR('Table [course_materials] is missing required columns [TenantId] and/or [CampusId]. Run 01-Schema-Current.sql first.', 16, 1);
+    END;
+
+    DROP TABLE #CourseMaterialsDemo;
 END
 
 /* 7) Course offerings (Spring 2026 and beyond) - Massively expanded */
@@ -1526,27 +1542,33 @@ BEGIN
     IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
     AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
     AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+    AND COL_LENGTH('courses', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
     BEGIN
-        UPDATE co
-        SET co.[TenantId] = c.[TenantId],
-            co.[CampusId] = c.[CampusId],
-            co.[InstitutionType] = c.[InstitutionType],
-            co.[UpdatedAt] = @Now
-        FROM [course_offerings] co
-        INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
-        WHERE co.[Id] IN
-        (
-            CAST('57575757-5757-5757-5757-575757575901' AS UNIQUEIDENTIFIER),
-            CAST('57575757-5757-5757-5757-575757575902' AS UNIQUEIDENTIFIER),
-            CAST('57575757-5757-5757-5757-575757575903' AS UNIQUEIDENTIFIER)
-        )
-            AND (
-                co.[TenantId] IS NULL
-                OR co.[CampusId] IS NULL
-                OR co.[InstitutionType] <> c.[InstitutionType]
-                OR co.[TenantId] <> c.[TenantId]
-                OR co.[CampusId] <> c.[CampusId]
-            );
+        EXEC sys.sp_executesql
+            N'UPDATE co
+              SET co.[TenantId] = c.[TenantId],
+                  co.[CampusId] = c.[CampusId],
+                  co.[InstitutionType] = c.[InstitutionType],
+                  co.[UpdatedAt] = @Now
+              FROM [course_offerings] co
+              INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+              WHERE co.[Id] IN
+              (
+                  CAST(''57575757-5757-5757-5757-575757575901'' AS UNIQUEIDENTIFIER),
+                  CAST(''57575757-5757-5757-5757-575757575902'' AS UNIQUEIDENTIFIER),
+                  CAST(''57575757-5757-5757-5757-575757575903'' AS UNIQUEIDENTIFIER)
+              )
+                  AND (
+                      co.[TenantId] IS NULL
+                      OR co.[CampusId] IS NULL
+                      OR co.[InstitutionType] <> c.[InstitutionType]
+                      OR co.[TenantId] <> c.[TenantId]
+                      OR co.[CampusId] <> c.[CampusId]
+                  );',
+            N'@Now DATETIME2',
+            @Now = @Now;
     END;
 END;
 
@@ -2128,18 +2150,28 @@ BEGIN
 END;
 
 /* 11.4) Results demo offering scope alignment (tenant/campus/institution) */
-UPDATE co
-SET co.[TenantId] = @UniTenantId,
-        co.[CampusId] = @UniCampusId,
-        co.[InstitutionType] = 2,
-        co.[UpdatedAt] = @Now
-FROM [course_offerings] co
-WHERE co.[Id] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
-    AND (
-                co.[TenantId] IS NULL
-                OR co.[CampusId] IS NULL
-                OR co.[InstitutionType] IS NULL
-            );
+IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+BEGIN
+    EXEC sys.sp_executesql
+        N'UPDATE co
+          SET co.[TenantId] = @UniTenantId,
+              co.[CampusId] = @UniCampusId,
+              co.[InstitutionType] = 2,
+              co.[UpdatedAt] = @Now
+          FROM [course_offerings] co
+          WHERE co.[Id] = CAST(''55555555-5555-5555-5555-555555555501'' AS UNIQUEIDENTIFIER)
+              AND (
+                  co.[TenantId] IS NULL
+                  OR co.[CampusId] IS NULL
+                  OR co.[InstitutionType] IS NULL
+              );',
+        N'@UniTenantId UNIQUEIDENTIFIER, @UniCampusId UNIQUEIDENTIFIER, @Now DATETIME2',
+        @UniTenantId = @UniTenantId,
+        @UniCampusId = @UniCampusId,
+        @Now = @Now;
+END;
 
 /* 12) Results - Massively Expanded */
 IF OBJECT_ID(N'[results]') IS NOT NULL
@@ -2482,7 +2514,7 @@ END
 /* 12.1) Payments - Expanded */
 IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
 BEGIN
-    DECLARE @PaymentReceipts TABLE (
+    CREATE TABLE #PaymentReceipts (
         Id UNIQUEIDENTIFIER,
         StudentProfileId UNIQUEIDENTIFIER,
         CreatedByUserId UNIQUEIDENTIFIER,
@@ -2496,7 +2528,7 @@ BEGIN
         Notes NVARCHAR(2000) NULL
     );
 
-    INSERT INTO @PaymentReceipts VALUES
+    INSERT INTO #PaymentReceipts VALUES
     ('27272727-2727-2727-2727-272727272701', '99999999-9999-9999-9999-999999999911', '77777777-7777-7777-7777-777777777711', N'RCPT-SEED-0001', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
     ('27272727-2727-2727-2727-272727272702', '99999999-9999-9999-9999-999999999912', '77777777-7777-7777-7777-777777777711', N'RCPT-SEED-0002', 1, 15000.00, N'Spring 2026 semester tuition installment 1', DATEADD(day, 14, @Now), '77777777-7777-7777-7777-777777777711', DATEADD(day, -2, @Now), N'Paid at campus counter.'),
     ('27272727-2727-2727-2727-272727272703', '99999999-9999-9999-9999-999999999913', '77777777-7777-7777-7777-777777777712', N'RCPT-SEED-0003', 0, 15000.00, N'Spring 2026 semester tuition', DATEADD(day, 21, @Now), NULL, NULL, N'Awaiting proof of payment.'),
@@ -2508,17 +2540,44 @@ BEGIN
     ('27272727-2727-2727-2727-272727272709', '99999999-9999-9999-9999-999999999942', '77777777-7777-7777-7777-777777777732', N'RCPT-SEED-0009', 1, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), '77777777-7777-7777-7777-777777777732', DATEADD(day, -2, @Now), N'Confirmed by school admin.'),
     ('27272727-2727-2727-2727-272727272710', '99999999-9999-9999-9999-999999999943', '77777777-7777-7777-7777-777777777732', N'RCPT-SEED-0010', 0, 9500.00, N'School Spring 2026 term fee', DATEADD(day, 10, @Now), NULL, NULL, N'Awaiting payment.');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[ReceiptNo], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
-    FROM @PaymentReceipts p
-    WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] x WHERE x.[Id] = p.[Id]);
+    IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+              SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[ReceiptNo], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
+              FROM #PaymentReceipts p
+              WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] x WHERE x.[Id] = p.[Id]);',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT p.[Id], p.[StudentProfileId], p.[CreatedByUserId], p.[Status], p.[Amount], p.[Description], p.[DueDate], NULL, NULL, p.[ConfirmedByUserId], p.[ConfirmedAt], p.[Notes], @Now, @Now, 0, NULL
+        FROM #PaymentReceipts p
+        WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] x WHERE x.[Id] = p.[Id]);
+    END;
 
     /* 12.1.1) High-volume payment receipts for bulk students by institution type */
     DECLARE @FinanceUniUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.uni.1');
     DECLARE @FinanceColUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.col.1');
     DECLARE @FinanceSchUserId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.sch.1');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    CREATE TABLE #BulkPaymentReceipts (
+        Id UNIQUEIDENTIFIER,
+        StudentProfileId UNIQUEIDENTIFIER,
+        CreatedByUserId UNIQUEIDENTIFIER,
+        ReceiptNo NVARCHAR(64),
+        [Status] INT,
+        Amount DECIMAL(10,2),
+        [Description] NVARCHAR(500),
+        DueDate DATETIME2,
+        ConfirmedByUserId UNIQUEIDENTIFIER NULL,
+        ConfirmedAt DATETIME2 NULL,
+        Notes NVARCHAR(2000) NULL
+    );
+
+    INSERT INTO #BulkPaymentReceipts
     SELECT
         NEWID(),
         sp.[Id],
@@ -2536,8 +2595,6 @@ BEGIN
         END,
         N'Bulk Tuition Auto Seed - Spring Cycle',
         DATEADD(day, 10 + (ABS(CHECKSUM(sp.[Id])) % 21), @Now),
-        NULL,
-        NULL,
         CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN NULL ELSE
             CASE u.[InstitutionType]
                 WHEN 2 THEN COALESCE(@FinanceUniUserId, @SuperAdminUserId)
@@ -2546,11 +2603,7 @@ BEGIN
             END
         END,
         CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN NULL ELSE DATEADD(day, -1, @Now) END,
-        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN N'Pending student payment proof.' ELSE N'Auto-confirmed bulk finance seed receipt.' END,
-        @Now,
-        @Now,
-        0,
-        NULL
+        CASE WHEN ABS(CHECKSUM(sp.[Id])) % 4 = 0 THEN N'Pending student payment proof.' ELSE N'Auto-confirmed bulk finance seed receipt.' END
     FROM [student_profiles] sp
     INNER JOIN [users] u ON u.[Id] = sp.[UserId]
     WHERE u.[Username] LIKE N'bulk.%.student.%'
@@ -2561,31 +2614,43 @@ BEGIN
             AND pr.[Description] = N'Bulk Tuition Auto Seed - Spring Cycle'
       );
 
+    IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+              SELECT b.[Id], b.[StudentProfileId], b.[CreatedByUserId], b.[ReceiptNo], b.[Status], b.[Amount], b.[Description], b.[DueDate], NULL, NULL, b.[ConfirmedByUserId], b.[ConfirmedAt], b.[Notes], @Now, @Now, 0, NULL
+              FROM #BulkPaymentReceipts b;',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT b.[Id], b.[StudentProfileId], b.[CreatedByUserId], b.[Status], b.[Amount], b.[Description], b.[DueDate], NULL, NULL, b.[ConfirmedByUserId], b.[ConfirmedAt], b.[Notes], @Now, @Now, 0, NULL
+        FROM #BulkPaymentReceipts b;
+    END;
+
     /* 12.1.2) Deterministic payment filter-demo rows for menu validation */
     DECLARE @PayDemoUniversityStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-CS-0001');
     DECLARE @PayDemoCollegeStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'DEMO-CERT-COL-FILTER-943');
     DECLARE @PayDemoSchoolStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'DEMO-CERT-SCH-FILTER-944');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT
-        v.[Id],
-        v.[StudentProfileId],
-        v.[CreatedByUserId],
-        v.[ReceiptNo],
-        v.[Status],
-        v.[Amount],
-        v.[Description],
-        v.[DueDate],
-        NULL,
-        NULL,
-        v.[ConfirmedByUserId],
-        v.[ConfirmedAt],
-        v.[Notes],
-        @Now,
-        @Now,
-        0,
-        NULL
-    FROM
+    CREATE TABLE #PayDemoReceipts (
+        Id UNIQUEIDENTIFIER,
+        StudentProfileId UNIQUEIDENTIFIER,
+        CreatedByUserId UNIQUEIDENTIFIER,
+        ReceiptNo NVARCHAR(64),
+        [Status] INT,
+        Amount DECIMAL(10,2),
+        [Description] NVARCHAR(500),
+        DueDate DATETIME2,
+        ConfirmedByUserId UNIQUEIDENTIFIER NULL,
+        ConfirmedAt DATETIME2 NULL,
+        Notes NVARCHAR(2000) NULL
+    );
+
+    INSERT INTO #PayDemoReceipts
+    SELECT * FROM
     (
         SELECT
             CAST('27272727-2727-2727-2727-272727272711' AS UNIQUEIDENTIFIER) AS [Id],
@@ -2630,39 +2695,52 @@ BEGIN
             DATEADD(day, -2, @Now),
             N'Deterministic School filter-demo payment row.'
     ) v
-    WHERE v.[StudentProfileId] IS NOT NULL
-      AND NOT EXISTS
-      (
-          SELECT 1
-          FROM [payment_receipts] pr
-          WHERE pr.[ReceiptNo] = v.[ReceiptNo]
-      );
+    WHERE v.[StudentProfileId] IS NOT NULL;
+
+    IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+              SELECT v.[Id], v.[StudentProfileId], v.[CreatedByUserId], v.[ReceiptNo], v.[Status], v.[Amount], v.[Description], v.[DueDate], NULL, NULL, v.[ConfirmedByUserId], v.[ConfirmedAt], v.[Notes], @Now, @Now, 0, NULL
+              FROM #PayDemoReceipts v
+              WHERE NOT EXISTS
+              (
+                  SELECT 1
+                  FROM [payment_receipts] pr
+                  WHERE pr.[ReceiptNo] = v.[ReceiptNo]
+              );',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT v.[Id], v.[StudentProfileId], v.[CreatedByUserId], v.[Status], v.[Amount], v.[Description], v.[DueDate], NULL, NULL, v.[ConfirmedByUserId], v.[ConfirmedAt], v.[Notes], @Now, @Now, 0, NULL
+        FROM #PayDemoReceipts v
+        WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] pr WHERE pr.[Id] = v.[Id]);
+    END;
 
     /* 12.1.3) Deterministic payment student-scope demo rows (v43) */
     DECLARE @PayScopeDemoUniversityStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-BAENG-0001');
     DECLARE @PayScopeDemoCollegeStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-ACC-0001');
     DECLARE @PayScopeDemoSchoolStudentId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [student_profiles] WHERE [RegistrationNumber] = N'2026-MAT-M-001');
 
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT
-        v.[Id],
-        v.[StudentProfileId],
-        v.[CreatedByUserId],
-        v.[ReceiptNo],
-        v.[Status],
-        v.[Amount],
-        v.[Description],
-        v.[DueDate],
-        NULL,
-        NULL,
-        v.[ConfirmedByUserId],
-        v.[ConfirmedAt],
-        v.[Notes],
-        @Now,
-        @Now,
-        0,
-        NULL
-    FROM
+    CREATE TABLE #PayScopeReceipts (
+        Id UNIQUEIDENTIFIER,
+        StudentProfileId UNIQUEIDENTIFIER,
+        CreatedByUserId UNIQUEIDENTIFIER,
+        ReceiptNo NVARCHAR(64),
+        [Status] INT,
+        Amount DECIMAL(10,2),
+        [Description] NVARCHAR(500),
+        DueDate DATETIME2,
+        ConfirmedByUserId UNIQUEIDENTIFIER NULL,
+        ConfirmedAt DATETIME2 NULL,
+        Notes NVARCHAR(2000) NULL
+    );
+
+    INSERT INTO #PayScopeReceipts
+    SELECT * FROM
     (
         SELECT
             CAST('27272727-2727-2727-2727-272727272714' AS UNIQUEIDENTIFIER) AS [Id],
@@ -2707,13 +2785,30 @@ BEGIN
             DATEADD(day, -2, @Now),
             N'Deterministic school student-scope demo payment row.'
     ) v
-    WHERE v.[StudentProfileId] IS NOT NULL
-      AND NOT EXISTS
-      (
-          SELECT 1
-          FROM [payment_receipts] pr
-          WHERE pr.[ReceiptNo] = v.[ReceiptNo]
-      );
+    WHERE v.[StudentProfileId] IS NOT NULL;
+
+    IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+              SELECT v.[Id], v.[StudentProfileId], v.[CreatedByUserId], v.[ReceiptNo], v.[Status], v.[Amount], v.[Description], v.[DueDate], NULL, NULL, v.[ConfirmedByUserId], v.[ConfirmedAt], v.[Notes], @Now, @Now, 0, NULL
+              FROM #PayScopeReceipts v
+              WHERE NOT EXISTS
+              (
+                  SELECT 1
+                  FROM [payment_receipts] pr
+                  WHERE pr.[ReceiptNo] = v.[ReceiptNo]
+              );',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT v.[Id], v.[StudentProfileId], v.[CreatedByUserId], v.[Status], v.[Amount], v.[Description], v.[DueDate], NULL, NULL, v.[ConfirmedByUserId], v.[ConfirmedAt], v.[Notes], @Now, @Now, 0, NULL
+        FROM #PayScopeReceipts v
+        WHERE NOT EXISTS (SELECT 1 FROM [payment_receipts] pr WHERE pr.[Id] = v.[Id]);
+    END;
 END
 
 /* 12.2) Report export artifacts - Expanded */
@@ -3489,7 +3584,7 @@ END
 /* 15) LMS discussions */
 IF OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
-    DECLARE @DiscussionThreads TABLE (
+    CREATE TABLE #DiscussionThreads (
         Id UNIQUEIDENTIFIER,
         OfferingId UNIQUEIDENTIFIER,
         Title NVARCHAR(500),
@@ -3504,22 +3599,41 @@ BEGIN
         TicketNumber NVARCHAR(100),
         IsVisibleToAll BIT
     );
-    INSERT INTO @DiscussionThreads VALUES
+    INSERT INTO #DiscussionThreads VALUES
     ('20202020-2020-2020-2020-202020202001', '55555555-5555-5555-5555-555555555501', N'Week 2 Lab Preparation', '66666666-6666-6666-6666-666666666621', 1, 0, N'Issue', N'Assignment', 0, NULL, NULL, N'DISC-2026-0001', 1),
     ('20202020-2020-2020-2020-202020202002', '55555555-5555-5555-5555-555555555504', N'Case Study References', '66666666-6666-6666-6666-666666666623', 0, 0, N'FAQ', N'Academic', 0, NULL, NULL, N'DISC-2026-0002', 0),
     ('20202020-2020-2020-2020-202020202003', '55555555-5555-5555-5555-555555555501', N'Upload issue resolved for week 2 report', '66666666-6666-6666-6666-666666666621', 0, 1, N'Issue', N'Technical', 1, '66666666-6666-6666-6666-666666666621', DATEADD(MINUTE, -20, @Now), N'DISC-2026-0003', 1),
     ('20202020-2020-2020-2020-202020202004', '55555555-5555-5555-5555-555555555504', N'Database lab VPN not reachable', '66666666-6666-6666-6666-666666666623', 1, 0, N'Issue', N'Access', 0, NULL, NULL, N'DISC-2026-0004', 1),
     ('20202020-2020-2020-2020-202020202005', '55555555-5555-5555-5555-555555555504', N'Assessment rubric clarification', '66666666-6666-6666-6666-666666666623', 0, 1, N'FAQ', N'Assessment', 1, '66666666-6666-6666-6666-666666666623', DATEADD(HOUR, -2, @Now), N'DISC-2026-0005', 0);
 
-    INSERT INTO [discussion_threads] (
-        [Id], [OfferingId], [Title], [AuthorId], [IsPinned], [IsClosed], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt],
-        [ThreadType], [IssueSubType], [IsSolved], [ResolvedBy], [ResolvedAt], [TicketNumber], [IsVisibleToAll]
-    )
-    SELECT
-        t.Id, t.OfferingId, t.Title, t.AuthorId, t.IsPinned, t.IsClosed, @Now, NULL, 0, NULL,
-        t.ThreadType, t.IssueSubType, t.IsSolved, t.ResolvedBy, t.ResolvedAt, t.TicketNumber, t.IsVisibleToAll
-    FROM @DiscussionThreads t
-    WHERE NOT EXISTS (SELECT 1 FROM [discussion_threads] x WHERE x.[Id] = t.Id);
+    IF COL_LENGTH('discussion_threads', 'ThreadType') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'IssueSubType') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'IsSolved') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'ResolvedBy') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'ResolvedAt') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'TicketNumber') IS NOT NULL
+    AND COL_LENGTH('discussion_threads', 'IsVisibleToAll') IS NOT NULL
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO [discussion_threads] (
+                  [Id], [OfferingId], [Title], [AuthorId], [IsPinned], [IsClosed], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt],
+                  [ThreadType], [IssueSubType], [IsSolved], [ResolvedBy], [ResolvedAt], [TicketNumber], [IsVisibleToAll]
+              )
+              SELECT
+                  t.Id, t.OfferingId, t.Title, t.AuthorId, t.IsPinned, t.IsClosed, @Now, NULL, 0, NULL,
+                  t.ThreadType, t.IssueSubType, t.IsSolved, t.ResolvedBy, t.ResolvedAt, t.TicketNumber, t.IsVisibleToAll
+              FROM #DiscussionThreads t
+              WHERE NOT EXISTS (SELECT 1 FROM [discussion_threads] x WHERE x.[Id] = t.Id);',
+            N'@Now DATETIME2',
+            @Now = @Now;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO [discussion_threads] ([Id], [OfferingId], [Title], [AuthorId], [IsPinned], [IsClosed], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT t.Id, t.OfferingId, t.Title, t.AuthorId, t.IsPinned, t.IsClosed, @Now, NULL, 0, NULL
+        FROM #DiscussionThreads t
+        WHERE NOT EXISTS (SELECT 1 FROM [discussion_threads] x WHERE x.[Id] = t.Id);
+    END;
 
     IF OBJECT_ID(N'[discussion_replies]') IS NOT NULL
     BEGIN
@@ -3772,26 +3886,32 @@ BEGIN
     IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
     AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
     AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+    AND COL_LENGTH('departments', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
     BEGIN
-        UPDATE c
-        SET c.[TenantId] = d.[TenantId],
-            c.[CampusId] = d.[CampusId],
-            c.[InstitutionType] = d.[InstitutionType],
-            c.[UpdatedAt] = @Now
-        FROM [courses] c
-        INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-        WHERE c.[Id] IN
-        (
-            CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
-            CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
-        )
-        AND (
-            c.[TenantId] IS NULL
-            OR c.[CampusId] IS NULL
-            OR c.[InstitutionType] <> d.[InstitutionType]
-            OR c.[TenantId] <> d.[TenantId]
-            OR c.[CampusId] <> d.[CampusId]
-        );
+        EXEC sys.sp_executesql
+            N'UPDATE c
+              SET c.[TenantId] = d.[TenantId],
+                  c.[CampusId] = d.[CampusId],
+                  c.[InstitutionType] = d.[InstitutionType],
+                  c.[UpdatedAt] = @Now
+              FROM [courses] c
+              INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+              WHERE c.[Id] IN
+              (
+                  CAST(''58585858-5858-5858-5858-585858585801'' AS UNIQUEIDENTIFIER),
+                  CAST(''59595959-5959-5959-5959-595959595901'' AS UNIQUEIDENTIFIER)
+              )
+              AND (
+                  c.[TenantId] IS NULL
+                  OR c.[CampusId] IS NULL
+                  OR c.[InstitutionType] <> d.[InstitutionType]
+                  OR c.[TenantId] <> d.[TenantId]
+                  OR c.[CampusId] <> d.[CampusId]
+              );',
+            N'@Now DATETIME2',
+            @Now = @Now;
     END;
 END;
 
@@ -5074,6 +5194,20 @@ BEGIN
     DECLARE @FinanceColUserId2 UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.col.1');
     DECLARE @FinanceSchUserId2 UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [users] WHERE [Username] = N'finance.sch.1');
 
+    CREATE TABLE #SemesterPaymentReceipts (
+        Id UNIQUEIDENTIFIER,
+        StudentProfileId UNIQUEIDENTIFIER,
+        CreatedByUserId UNIQUEIDENTIFIER,
+        ReceiptNo NVARCHAR(64),
+        [Status] INT,
+        Amount DECIMAL(10,2),
+        [Description] NVARCHAR(500),
+        DueDate DATETIME2,
+        ConfirmedByUserId UNIQUEIDENTIFIER NULL,
+        ConfirmedAt DATETIME2 NULL,
+        Notes NVARCHAR(2000) NULL
+    );
+
     ;WITH StudentScope AS (
         SELECT sp.[Id] AS StudentProfileId,
                u.[InstitutionType],
@@ -5086,7 +5220,20 @@ BEGIN
         SELECT s.[Id], s.[Name], s.[StartDate], ROW_NUMBER() OVER (ORDER BY s.[StartDate], s.[Id]) AS SemesterRn
         FROM [semesters] s
     )
-    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    INSERT INTO #SemesterPaymentReceipts
+    (
+        [Id],
+        [StudentProfileId],
+        [CreatedByUserId],
+        [ReceiptNo],
+        [Status],
+        [Amount],
+        [Description],
+        [DueDate],
+        [ConfirmedByUserId],
+        [ConfirmedAt],
+        [Notes]
+    )
     SELECT
         NEWID(),
         st.[StudentProfileId],
@@ -5107,8 +5254,6 @@ BEGIN
             ELSE CONCAT(N'Semester Fee - ', sm.[Name])
         END,
         DATEADD(day, 18, sm.[StartDate]),
-        NULL,
-        NULL,
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN NULL ELSE
             CASE st.[InstitutionType]
                 WHEN 2 THEN COALESCE(@FinanceUniUserId2, @SuperAdminUserId)
@@ -5117,11 +5262,7 @@ BEGIN
             END
         END,
         CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN NULL ELSE DATEADD(day, 2, sm.[StartDate]) END,
-        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN N'Pending semester payment proof.' ELSE N'Confirmed semester-cycle seed payment.' END,
-        @Now,
-        @Now,
-        0,
-        NULL
+        CASE WHEN ((st.[StudentRn] + sm.[SemesterRn]) % 5) = 0 THEN N'Pending semester payment proof.' ELSE N'Confirmed semester-cycle seed payment.' END
     FROM StudentScope st
     CROSS JOIN SemesterScope sm
         WHERE st.[StudentRn] <= 220
@@ -5134,7 +5275,23 @@ BEGIN
                                 WHEN 0 THEN CONCAT(N'Class Fee - Class ', CAST(8 + ((sm.[SemesterRn] - 1) % 2) AS NVARCHAR(10)), N' - ', sm.[Name])
                                 ELSE CONCAT(N'Semester Fee - ', sm.[Name])
                         END
-      );
+            );
+
+        IF COL_LENGTH('payment_receipts', 'ReceiptNo') IS NOT NULL
+        BEGIN
+                EXEC sys.sp_executesql
+                        N'INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+                            SELECT s.[Id], s.[StudentProfileId], s.[CreatedByUserId], s.[ReceiptNo], s.[Status], s.[Amount], s.[Description], s.[DueDate], NULL, NULL, s.[ConfirmedByUserId], s.[ConfirmedAt], s.[Notes], @Now, @Now, 0, NULL
+                            FROM #SemesterPaymentReceipts s;',
+                        N'@Now DATETIME2',
+                        @Now = @Now;
+        END
+        ELSE
+        BEGIN
+                INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [Status], [Amount], [Description], [DueDate], [ProofOfPaymentPath], [ProofUploadedAt], [ConfirmedByUserId], [ConfirmedAt], [Notes], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+                SELECT s.[Id], s.[StudentProfileId], s.[CreatedByUserId], s.[Status], s.[Amount], s.[Description], s.[DueDate], NULL, NULL, s.[ConfirmedByUserId], s.[ConfirmedAt], s.[Notes], @Now, @Now, 0, NULL
+                FROM #SemesterPaymentReceipts s;
+        END;
 END
 
 /* 18.1) Deterministic minimum lifecycle matrix coverage

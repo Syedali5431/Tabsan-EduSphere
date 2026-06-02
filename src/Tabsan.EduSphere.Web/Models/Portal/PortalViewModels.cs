@@ -1153,6 +1153,8 @@ public class StudentLifecyclePageModel
     public Guid?  SelectedCampusId      { get; set; }
     public Guid?  SelectedDepartmentId  { get; set; }
     public int    SelectedSemester      { get; set; } = 1;
+    public int    MinAcademicLevel      { get; set; } = 1;
+    public int    MaxAcademicLevel      { get; set; } = 8;
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────

@@ -388,6 +388,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [ThreadType] nvarchar(50) NOT NULL DEFAULT N'Issue';
 END;
@@ -397,6 +398,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [IssueSubType] nvarchar(100) NULL;
 END;
@@ -406,6 +408,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [IsSolved] bit NOT NULL DEFAULT CAST(0 AS bit);
 END;
@@ -415,6 +418,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [ResolvedBy] uniqueidentifier NULL;
 END;
@@ -424,6 +428,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [ResolvedAt] datetime2 NULL;
 END;
@@ -433,6 +438,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [TicketNumber] nvarchar(100) NOT NULL DEFAULT N'';
 END;
@@ -442,6 +448,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     ALTER TABLE [discussion_threads] ADD [IsVisibleToAll] bit NOT NULL DEFAULT CAST(0 AS bit);
 END;
@@ -451,6 +458,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_TicketNumber' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
     BEGIN
@@ -463,6 +471,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_IsSolved' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
     BEGIN
@@ -475,6 +484,7 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_discussion_threads_IsVisibleToAll' AND [object_id] = OBJECT_ID(N'[discussion_threads]'))
     BEGIN
@@ -487,13 +497,14 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260518_Phase31_Stage31_3_DiscussionEnhancements'
 )
+AND OBJECT_ID(N'[discussion_threads]') IS NOT NULL
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260518_Phase31_Stage31_3_DiscussionEnhancements', N'8.0.8');
 END;
 GO
 
-COMMIT;
+IF @@TRANCOUNT > 0 COMMIT;
 GO
 
 BEGIN TRANSACTION;
@@ -990,6 +1001,9 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
 )
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
 BEGIN
     IF COL_LENGTH('courses', 'CampusId') IS NULL
         ALTER TABLE [courses] ADD [CampusId] uniqueidentifier NULL;
@@ -1009,29 +1023,42 @@ BEGIN
     IF COL_LENGTH('course_offerings', 'TenantId') IS NULL
         ALTER TABLE [course_offerings] ADD [TenantId] uniqueidentifier NULL;
 
-    UPDATE c
-    SET
-        c.[TenantId] = d.[TenantId],
-        c.[CampusId] = d.[CampusId],
-        c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
-    FROM [courses] c
-    INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-    WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
+    IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+    BEGIN
+        EXEC(N'
+            UPDATE c
+            SET
+                c.[TenantId] = d.[TenantId],
+                c.[CampusId] = d.[CampusId],
+                c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
+            FROM [courses] c
+            INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+            WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
+        ');
+    END;
 
-    UPDATE o
-    SET
-        o.[TenantId] = c.[TenantId],
-        o.[CampusId] = c.[CampusId],
-        o.[InstitutionType] = c.[InstitutionType]
-    FROM [course_offerings] o
-    INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
-    WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
+    EXEC(N'
+        UPDATE o
+        SET
+            o.[TenantId] = c.[TenantId],
+            o.[CampusId] = c.[CampusId],
+            o.[InstitutionType] = c.[InstitutionType]
+        FROM [course_offerings] o
+        INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
+        WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
+    ');
 
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_courses_scope_active' AND [object_id] = OBJECT_ID(N'[courses]'))
-        CREATE INDEX [IX_courses_scope_active] ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
+    EXEC(N'
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_courses_scope_active'' AND [object_id] = OBJECT_ID(N''[courses]''))
+            CREATE INDEX [IX_courses_scope_active] ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
+    ');
 
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_course_offerings_scope_open' AND [object_id] = OBJECT_ID(N'[course_offerings]'))
-        CREATE INDEX [IX_course_offerings_scope_open] ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
+    EXEC(N'
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_course_offerings_scope_open'' AND [object_id] = OBJECT_ID(N''[course_offerings]''))
+            CREATE INDEX [IX_course_offerings_scope_open] ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
+    ');
 END;
 GO
 
@@ -1039,6 +1066,9 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
 )
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260523021000_Phase47_CourseInstitutionScope', N'8.0.4');
@@ -2269,6 +2299,7 @@ END;
 GO
 
 IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+    AND COL_LENGTH(N'payment_receipts', N'ReceiptNo') IS NOT NULL
    AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_receipt_no' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
 BEGIN
     CREATE UNIQUE INDEX [ix_pr_receipt_no] ON [payment_receipts] ([ReceiptNo]);
@@ -2360,6 +2391,7 @@ BEGIN
         [Id] uniqueidentifier NOT NULL,
         [StudentProfileId] uniqueidentifier NOT NULL,
         [CreatedByUserId] uniqueidentifier NOT NULL,
+        [ReceiptNo] nvarchar(64) NOT NULL,
         [Status] int NOT NULL,
         [Amount] decimal(10,2) NOT NULL,
         [Description] nvarchar(500) NOT NULL,
@@ -2379,6 +2411,14 @@ BEGIN
         CONSTRAINT [fk_pr_created_by_user] FOREIGN KEY ([CreatedByUserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION,
         CONSTRAINT [fk_pr_student_profile] FOREIGN KEY ([StudentProfileId]) REFERENCES [student_profiles] ([Id]) ON DELETE NO ACTION
     );
+END;
+GO
+
+IF OBJECT_ID(N'[payment_receipts]') IS NOT NULL
+   AND COL_LENGTH(N'payment_receipts', N'ReceiptNo') IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'ix_pr_receipt_no' AND [object_id] = OBJECT_ID(N'[payment_receipts]'))
+BEGIN
+    CREATE UNIQUE INDEX [ix_pr_receipt_no] ON [payment_receipts] ([ReceiptNo]);
 END;
 GO
 
@@ -2612,7 +2652,7 @@ BEGIN
 END;
 GO
 
-COMMIT;
+IF @@TRANCOUNT > 0 COMMIT;
 GO
 
 BEGIN TRANSACTION;

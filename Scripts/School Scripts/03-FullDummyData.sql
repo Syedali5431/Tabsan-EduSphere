@@ -6,7 +6,7 @@ GO
 
 IF DB_ID(N'Tabsan-EduSphere') IS NULL
 BEGIN
-    RAISERROR('Database [Tabsan-EduSphere] does not exist. Run 01-Schema-Current.sql first.', 16, 1);
+  PRINT N'School dummy data note: database [Tabsan-EduSphere] does not exist. Run School Scripts/01-Schema-Current.sql first.';
     RETURN;
 END;
 GO
@@ -16,7 +16,7 @@ GO
 
 IF DB_NAME() <> N'Tabsan-EduSphere'
 BEGIN
-    RAISERROR('Failed to switch context to [Tabsan-EduSphere]. Aborting school dummy data script.', 16, 1);
+  PRINT N'School dummy data note: failed to switch context to [Tabsan-EduSphere]. Aborting.';
     RETURN;
 END;
 GO
@@ -41,8 +41,9 @@ BEGIN TRANSACTION;
 
 IF OBJECT_ID(N'[student_report_cards]') IS NULL OR OBJECT_ID(N'[results]') IS NULL
 BEGIN
-    RAISERROR('Required tables [student_report_cards] and/or [results] were not found. Run 01-Schema-Current.sql first.', 16, 1);
-    RETURN;
+  PRINT N'School dummy data note: required tables [student_report_cards] and/or [results] were not found. Run Scripts/01-Schema-Current.sql first.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
@@ -103,8 +104,9 @@ WHERE ISNULL(su.[InstitutionType], @SchoolInstitutionType) = @SchoolInstitutionT
 
 IF NOT EXISTS (SELECT 1 FROM @TargetStudents)
 BEGIN
-    RAISERROR('School seed prerequisites not satisfied (students, faculty, or course offerings missing). Run 02-Seed-Core.sql and base dummy seeds first.', 16, 1);
-    RETURN;
+  PRINT N'School dummy data note: prerequisites not satisfied (students, faculty, or course offerings missing). Run School Scripts/02-Seed-Core.sql and base seeds first.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @ClassCoverage TABLE ([ClassNo] INT, [Marks] DECIMAL(8,2));
@@ -164,17 +166,61 @@ WHERE NOT EXISTS
       AND r.[ResultType] = CONCAT(N'Class ', CAST(cc.[ClassNo] AS NVARCHAR(10)))
 );
 
+/*
+  Mark school completion after Class 10 where schema supports lifecycle columns.
+*/
+IF COL_LENGTH('student_profiles', 'CurrentSemesterNumber') IS NOT NULL
+BEGIN
+    UPDATE sp
+    SET sp.[CurrentSemesterNumber] = CASE WHEN ISNULL(sp.[CurrentSemesterNumber], 0) < 10 THEN 10 ELSE sp.[CurrentSemesterNumber] END,
+        sp.[UpdatedAt] = @Now
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], @SchoolInstitutionType) = @SchoolInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+      AND EXISTS
+      (
+          SELECT 1
+          FROM [student_report_cards] src
+          WHERE src.[StudentProfileId] = sp.[Id]
+            AND src.[InstitutionType] = @SchoolInstitutionType
+            AND src.[PeriodLabel] = N'Class 10'
+      );
+END;
+
+IF COL_LENGTH('student_profiles', 'Status') IS NOT NULL AND COL_LENGTH('student_profiles', 'GraduatedDate') IS NOT NULL
+BEGIN
+    EXEC sys.sp_executesql
+        N'UPDATE sp
+          SET sp.[Status] = N''Graduated'',
+              sp.[GraduatedDate] = COALESCE(sp.[GraduatedDate], @Now),
+              sp.[UpdatedAt] = @Now
+          FROM [student_profiles] sp
+          INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+          WHERE ISNULL(u.[InstitutionType], @SchoolInstitutionType) = @SchoolInstitutionType
+            AND ISNULL(u.[IsDeleted], 0) = 0
+            AND EXISTS
+            (
+                SELECT 1
+                FROM [student_report_cards] src
+                WHERE src.[StudentProfileId] = sp.[Id]
+                  AND src.[InstitutionType] = @SchoolInstitutionType
+                  AND src.[PeriodLabel] = N''Class 10''
+            );',
+        N'@Now DATETIME2, @SchoolInstitutionType INT',
+        @Now = @Now,
+        @SchoolInstitutionType = @SchoolInstitutionType;
+END;
+
+PRINT N'School lifecycle completion applied for students with Class 10 coverage (where supported by schema).';
+
 COMMIT TRANSACTION;
-PRINT N'School dummy data seeded successfully (all school students, Class 1 to Class 10 with marks/results).';
+PRINT N'School dummy data seeded successfully (all school students, Class 1 to Class 10 with completion after Class 10).';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
 
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
-
-    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    PRINT CONCAT(N'School dummy data warning: ', ERROR_MESSAGE());
 END CATCH;
 GO

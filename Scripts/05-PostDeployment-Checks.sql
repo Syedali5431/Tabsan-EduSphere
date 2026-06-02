@@ -1128,59 +1128,70 @@ WHERE d.[InstitutionType] = 2
 	AND d.[Id] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
 	AND sp.[Id] = CAST('8B8B8B8B-8B8B-8B8B-8B8B-8B8B8B8B8911' AS UNIQUEIDENTIFIER);
 
-SELECT 'DummySeed_CourseMaterialsDemo_CountV38' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_materials]
-WHERE [Id] IN
-(
-	CAST('27272727-2727-2727-2727-272727272701' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272702' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272703' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272704' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
-)
-	AND [IsDeleted] = 0;
-
-SELECT 'DummySeed_CourseMaterialsDemo_ActiveCountV38' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_materials]
-WHERE [Id] IN
-(
-	CAST('27272727-2727-2727-2727-272727272701' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272702' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272703' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272704' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER),
-	CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
-)
-	AND [IsDeleted] = 0
-	AND [IsActive] = 1;
-
-SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_CS_V38' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_materials]
-WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
-	AND [Id] IN
+IF OBJECT_ID(N'[course_materials]') IS NOT NULL
+BEGIN
+	SELECT 'DummySeed_CourseMaterialsDemo_CountV38' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_materials]
+	WHERE [Id] IN
 	(
 		CAST('27272727-2727-2727-2727-272727272701' AS UNIQUEIDENTIFIER),
 		CAST('27272727-2727-2727-2727-272727272702' AS UNIQUEIDENTIFIER),
 		CAST('27272727-2727-2727-2727-272727272703' AS UNIQUEIDENTIFIER),
 		CAST('27272727-2727-2727-2727-272727272704' AS UNIQUEIDENTIFIER),
-		CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER)
+		CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
 	)
-	AND [IsDeleted] = 0;
+		AND [IsDeleted] = 0;
 
-SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_BUS_V38' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_materials]
-WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
-	AND [Id] = CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER)
-	AND [IsDeleted] = 0;
+	SELECT 'DummySeed_CourseMaterialsDemo_ActiveCountV38' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_materials]
+	WHERE [Id] IN
+	(
+		CAST('27272727-2727-2727-2727-272727272701' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272702' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272703' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272704' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER),
+		CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
+	)
+		AND [IsDeleted] = 0
+		AND [IsActive] = 1;
 
-SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_ENG_V38' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_materials]
-WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER)
-	AND [Id] = CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
-	AND [IsDeleted] = 0;
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_CS_V38' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_materials]
+	WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+		AND [Id] IN
+		(
+			CAST('27272727-2727-2727-2727-272727272701' AS UNIQUEIDENTIFIER),
+			CAST('27272727-2727-2727-2727-272727272702' AS UNIQUEIDENTIFIER),
+			CAST('27272727-2727-2727-2727-272727272703' AS UNIQUEIDENTIFIER),
+			CAST('27272727-2727-2727-2727-272727272704' AS UNIQUEIDENTIFIER),
+			CAST('27272727-2727-2727-2727-272727272705' AS UNIQUEIDENTIFIER)
+		)
+		AND [IsDeleted] = 0;
+
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_BUS_V38' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_materials]
+	WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+		AND [Id] = CAST('27272727-2727-2727-2727-272727272706' AS UNIQUEIDENTIFIER)
+		AND [IsDeleted] = 0;
+
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_ENG_V38' AS [CheckName], COUNT(1) AS [Value]
+	FROM [course_materials]
+	WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER)
+		AND [Id] = CAST('27272727-2727-2727-2727-272727272707' AS UNIQUEIDENTIFIER)
+		AND [IsDeleted] = 0;
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_CourseMaterialsDemo_CountV38' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_CourseMaterialsDemo_ActiveCountV38' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_CS_V38' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_BUS_V38' AS [CheckName], CAST(-1 AS INT) AS [Value];
+	SELECT 'DummySeed_CourseMaterialsDemo_DepartmentCount_ENG_V38' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_CoursesFilterDemo_CourseRowsByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [courses]
@@ -1253,19 +1264,23 @@ END;
 IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
 AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
 AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+AND COL_LENGTH('departments', 'TenantId') IS NOT NULL
+AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
 BEGIN
-	SELECT 'DummySeed_CoursesFilterDemo_CourseScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
-	FROM [courses] c
-	INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-	WHERE c.[Id] IN
-	(
-		CAST('47474747-4747-4747-4747-474747474901' AS UNIQUEIDENTIFIER),
-		CAST('47474747-4747-4747-4747-474747474902' AS UNIQUEIDENTIFIER),
-		CAST('47474747-4747-4747-4747-474747474903' AS UNIQUEIDENTIFIER)
-	)
-		AND c.[TenantId] = d.[TenantId]
-		AND c.[CampusId] = d.[CampusId]
-		AND c.[InstitutionType] = d.[InstitutionType];
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_CoursesFilterDemo_CourseScopeAlignedCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [courses] c
+		INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+		WHERE c.[Id] IN
+		(
+			CAST(''47474747-4747-4747-4747-474747474901'' AS UNIQUEIDENTIFIER),
+			CAST(''47474747-4747-4747-4747-474747474902'' AS UNIQUEIDENTIFIER),
+			CAST(''47474747-4747-4747-4747-474747474903'' AS UNIQUEIDENTIFIER)
+		)
+			AND c.[TenantId] = d.[TenantId]
+			AND c.[CampusId] = d.[CampusId]
+			AND c.[InstitutionType] = d.[InstitutionType];';
 END
 ELSE
 BEGIN
@@ -1275,19 +1290,23 @@ END;
 IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
 AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
 AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+AND COL_LENGTH('courses', 'TenantId') IS NOT NULL
+AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
+AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
 BEGIN
-	SELECT 'DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
-	FROM [course_offerings] co
-	INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
-	WHERE co.[Id] IN
-	(
-		CAST('57575757-5757-5757-5757-575757575901' AS UNIQUEIDENTIFIER),
-		CAST('57575757-5757-5757-5757-575757575902' AS UNIQUEIDENTIFIER),
-		CAST('57575757-5757-5757-5757-575757575903' AS UNIQUEIDENTIFIER)
-	)
-		AND co.[TenantId] = c.[TenantId]
-		AND co.[CampusId] = c.[CampusId]
-		AND co.[InstitutionType] = c.[InstitutionType];
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [course_offerings] co
+		INNER JOIN [courses] c ON c.[Id] = co.[CourseId]
+		WHERE co.[Id] IN
+		(
+			CAST(''57575757-5757-5757-5757-575757575901'' AS UNIQUEIDENTIFIER),
+			CAST(''57575757-5757-5757-5757-575757575902'' AS UNIQUEIDENTIFIER),
+			CAST(''57575757-5757-5757-5757-575757575903'' AS UNIQUEIDENTIFIER)
+		)
+			AND co.[TenantId] = c.[TenantId]
+			AND co.[CampusId] = c.[CampusId]
+			AND co.[InstitutionType] = c.[InstitutionType];';
 END
 ELSE
 BEGIN
@@ -1322,18 +1341,22 @@ WHERE [DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDEN
 IF COL_LENGTH('courses', 'TenantId') IS NOT NULL
 AND COL_LENGTH('courses', 'CampusId') IS NOT NULL
 AND COL_LENGTH('courses', 'InstitutionType') IS NOT NULL
+AND COL_LENGTH('departments', 'TenantId') IS NOT NULL
+AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
 BEGIN
-	SELECT 'DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount' AS [CheckName], COUNT(1) AS [Value]
-	FROM [courses] c
-	INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-	WHERE c.[Id] IN
-	(
-		CAST('58585858-5858-5858-5858-585858585801' AS UNIQUEIDENTIFIER),
-		CAST('59595959-5959-5959-5959-595959595901' AS UNIQUEIDENTIFIER)
-	)
-		AND c.[TenantId] = d.[TenantId]
-		AND c.[CampusId] = d.[CampusId]
-		AND c.[InstitutionType] = d.[InstitutionType];
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [courses] c
+		INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+		WHERE c.[Id] IN
+		(
+			CAST(''58585858-5858-5858-5858-585858585801'' AS UNIQUEIDENTIFIER),
+			CAST(''59595959-5959-5959-5959-595959595901'' AS UNIQUEIDENTIFIER)
+		)
+			AND c.[TenantId] = d.[TenantId]
+			AND c.[CampusId] = d.[CampusId]
+			AND c.[InstitutionType] = d.[InstitutionType];';
 END
 ELSE
 BEGIN
@@ -1378,22 +1401,46 @@ FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = N'discussion_threads'
 	AND COLUMN_NAME IN (N'ThreadType', N'IssueSubType', N'IsSolved', N'ResolvedBy', N'ResolvedAt', N'TicketNumber', N'IsVisibleToAll');
 
-SELECT 'DummySeed_Discussion_ThreadTypePopulatedCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [discussion_threads]
-WHERE [IsDeleted] = 0
-	AND [ThreadType] IS NOT NULL
-	AND [ThreadType] <> N'';
+IF COL_LENGTH('discussion_threads', 'ThreadType') IS NOT NULL
+BEGIN
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_Discussion_ThreadTypePopulatedCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [discussion_threads]
+		WHERE [IsDeleted] = 0
+			AND [ThreadType] IS NOT NULL
+			AND [ThreadType] <> N'''';';
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_Discussion_ThreadTypePopulatedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
-SELECT 'DummySeed_Discussion_TicketNumberPopulatedCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [discussion_threads]
-WHERE [IsDeleted] = 0
-	AND [TicketNumber] IS NOT NULL
-	AND [TicketNumber] <> N'';
+IF COL_LENGTH('discussion_threads', 'TicketNumber') IS NOT NULL
+BEGIN
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_Discussion_TicketNumberPopulatedCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [discussion_threads]
+		WHERE [IsDeleted] = 0
+			AND [TicketNumber] IS NOT NULL
+			AND [TicketNumber] <> N'''';';
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_Discussion_TicketNumberPopulatedCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
-SELECT 'DummySeed_Discussion_ResolvedThreadCount' AS [CheckName], COUNT(1) AS [Value]
-FROM [discussion_threads]
-WHERE [IsDeleted] = 0
-	AND [IsSolved] = 1;
+IF COL_LENGTH('discussion_threads', 'IsSolved') IS NOT NULL
+BEGIN
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_Discussion_ResolvedThreadCount'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [discussion_threads]
+		WHERE [IsDeleted] = 0
+			AND [IsSolved] = 1;';
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_Discussion_ResolvedThreadCount' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_Discussion_Offering501_ThreadCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [discussion_threads]
@@ -1786,12 +1833,22 @@ FROM [results]
 WHERE [CourseOfferingId] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
 	AND [ResultType] = N'Internal';
 
-SELECT 'DummySeed_ResultOffering501_ScopeAligned' AS [CheckName], COUNT(1) AS [Value]
-FROM [course_offerings]
-WHERE [Id] = CAST('55555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER)
-	AND [TenantId] = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
-	AND [CampusId] = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER)
-	AND [InstitutionType] = 2;
+IF COL_LENGTH('course_offerings', 'TenantId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'CampusId') IS NOT NULL
+AND COL_LENGTH('course_offerings', 'InstitutionType') IS NOT NULL
+BEGIN
+	EXEC sys.sp_executesql N'
+		SELECT ''DummySeed_ResultOffering501_ScopeAligned'' AS [CheckName], COUNT(1) AS [Value]
+		FROM [course_offerings]
+		WHERE [Id] = CAST(''55555555-5555-5555-5555-555555555501'' AS UNIQUEIDENTIFIER)
+			AND [TenantId] = CAST(''f1000000-0000-0000-0000-000000000001'' AS UNIQUEIDENTIFIER)
+			AND [CampusId] = CAST(''f2000000-0000-0000-0000-000000000001'' AS UNIQUEIDENTIFIER)
+			AND [InstitutionType] = 2;';
+END
+ELSE
+BEGIN
+	SELECT 'DummySeed_ResultOffering501_ScopeAligned' AS [CheckName], CAST(-1 AS INT) AS [Value];
+END;
 
 SELECT 'DummySeed_QuizRows_FilterDemoByIdCount' AS [CheckName], COUNT(1) AS [Value]
 FROM [quizzes]
@@ -2290,10 +2347,10 @@ ORDER BY [MigrationId] DESC;
 
 IF OBJECT_ID(N'[Tabsan-EduSphere]') IS NOT NULL
 BEGIN
-		SELECT 'DummySeed_DemoDatasetVersion_v30' AS [CheckName], COUNT(1) AS [Value]
+		SELECT 'DummySeed_DemoDatasetVersion_v43' AS [CheckName], COUNT(1) AS [Value]
 		FROM [Tabsan-EduSphere]
 		WHERE [DemoKey] = N'DemoDatasetVersion'
-			AND [DemoValue] = N'FullDummyData-v30';
+			AND [DemoValue] = N'FullDummyData-v43';
 END;
 
 PRINT 'Post-deployment checks completed.';

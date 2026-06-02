@@ -6,7 +6,7 @@ GO
 
 IF DB_ID(N'Tabsan-EduSphere') IS NULL
 BEGIN
-    RAISERROR('Database [Tabsan-EduSphere] does not exist. Run 01-Schema-Current.sql first.', 16, 1);
+  PRINT N'University dummy data note: database [Tabsan-EduSphere] does not exist. Run University Scripts/01-Schema-Current.sql first.';
     RETURN;
 END;
 GO
@@ -16,7 +16,7 @@ GO
 
 IF DB_NAME() <> N'Tabsan-EduSphere'
 BEGIN
-    RAISERROR('Failed to switch context to [Tabsan-EduSphere]. Aborting university dummy data script.', 16, 1);
+  PRINT N'University dummy data note: failed to switch context to [Tabsan-EduSphere]. Aborting.';
     RETURN;
 END;
 GO
@@ -41,8 +41,9 @@ BEGIN TRANSACTION;
 
 IF OBJECT_ID(N'[student_report_cards]') IS NULL OR OBJECT_ID(N'[results]') IS NULL
 BEGIN
-    RAISERROR('Required tables [student_report_cards] and/or [results] were not found. Run 01-Schema-Current.sql first.', 16, 1);
-    RETURN;
+  PRINT N'University dummy data note: required tables [student_report_cards] and/or [results] were not found. Run Scripts/01-Schema-Current.sql first.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
@@ -103,8 +104,9 @@ WHERE ISNULL(su.[InstitutionType], @UniversityInstitutionType) = @UniversityInst
 
 IF NOT EXISTS (SELECT 1 FROM @TargetStudents)
 BEGIN
-    RAISERROR('University seed prerequisites not satisfied (students, faculty, or course offerings missing). Run 02-Seed-Core.sql and base dummy seeds first.', 16, 1);
-    RETURN;
+  PRINT N'University dummy data note: prerequisites not satisfied (students, faculty, or course offerings missing). Run University Scripts/02-Seed-Core.sql and base seeds first.';
+  ROLLBACK TRANSACTION;
+  RETURN;
 END;
 
 DECLARE @SemesterCoverage TABLE ([SemesterNo] INT, [Marks] DECIMAL(8,2));
@@ -161,6 +163,54 @@ WHERE NOT EXISTS
       AND r.[CourseOfferingId] = ts.[CourseOfferingId]
       AND r.[ResultType] = CONCAT(N'Semester ', CAST(sc.[SemesterNo] AS NVARCHAR(10)))
 );
+
+/*
+  Mark university completion after Semester 8 where schema supports lifecycle columns.
+*/
+IF COL_LENGTH('student_profiles', 'CurrentSemesterNumber') IS NOT NULL
+BEGIN
+    UPDATE sp
+    SET sp.[CurrentSemesterNumber] = CASE WHEN ISNULL(sp.[CurrentSemesterNumber], 0) < 8 THEN 8 ELSE sp.[CurrentSemesterNumber] END,
+        sp.[UpdatedAt] = @Now
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], @UniversityInstitutionType) = @UniversityInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+      AND EXISTS
+      (
+          SELECT 1
+          FROM [student_report_cards] src
+          WHERE src.[StudentProfileId] = sp.[Id]
+            AND src.[InstitutionType] = @UniversityInstitutionType
+            AND src.[PeriodLabel] = N'Semester 8'
+      );
+END;
+
+IF COL_LENGTH('student_profiles', 'Status') IS NOT NULL AND COL_LENGTH('student_profiles', 'GraduatedDate') IS NOT NULL
+BEGIN
+    EXEC sys.sp_executesql
+        N'UPDATE sp
+          SET sp.[Status] = N''Graduated'',
+              sp.[GraduatedDate] = COALESCE(sp.[GraduatedDate], @Now),
+              sp.[UpdatedAt] = @Now
+          FROM [student_profiles] sp
+          INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+          WHERE ISNULL(u.[InstitutionType], @UniversityInstitutionType) = @UniversityInstitutionType
+            AND ISNULL(u.[IsDeleted], 0) = 0
+            AND EXISTS
+            (
+                SELECT 1
+                FROM [student_report_cards] src
+                WHERE src.[StudentProfileId] = sp.[Id]
+                  AND src.[InstitutionType] = @UniversityInstitutionType
+                  AND src.[PeriodLabel] = N''Semester 8''
+            );',
+        N'@Now DATETIME2, @UniversityInstitutionType INT',
+        @Now = @Now,
+        @UniversityInstitutionType = @UniversityInstitutionType;
+END;
+
+PRINT N'University lifecycle completion applied for students with Semester 8 coverage (where supported by schema).';
 
     IF OBJECT_ID(N'[enrollments]') IS NOT NULL
     BEGIN
@@ -232,16 +282,12 @@ WHERE NOT EXISTS
     END;
 
 COMMIT TRANSACTION;
-    PRINT N'University dummy data seeded successfully (all university students, Semester 1 to Semester 8 with results, attendance, enrollment, and FYP data).';
+  PRINT N'University dummy data seeded successfully (all university students, Semester 1 to Semester 8 with completion, results, attendance, enrollment, and FYP data).';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
 
-    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
-
-    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+  PRINT CONCAT(N'University dummy data warning: ', ERROR_MESSAGE());
 END CATCH;
 GO
