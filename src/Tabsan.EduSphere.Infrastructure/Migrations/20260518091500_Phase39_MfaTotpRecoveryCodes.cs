@@ -12,40 +12,43 @@ public partial class Phase39_MfaTotpRecoveryCodes : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.AddColumn<bool>(
-            name: "MfaIsEnabled",
-            table: "users",
-            type: "bit",
-            nullable: false,
-            defaultValue: false);
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaIsEnabled') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaIsEnabled] bit NOT NULL DEFAULT CAST(0 AS bit);
+END");
 
-        migrationBuilder.AddColumn<string>(
-            name: "MfaRecoveryCodesHashJson",
-            table: "users",
-            type: "nvarchar(4000)",
-            maxLength: 4000,
-            nullable: true);
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaRecoveryCodesHashJson] nvarchar(4000) NULL;
+END");
 
-        migrationBuilder.AddColumn<string>(
-            name: "MfaTotpSecret",
-            table: "users",
-            type: "nvarchar(128)",
-            maxLength: 128,
-            nullable: true);
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaTotpSecret') IS NULL
+BEGIN
+    ALTER TABLE [users] ADD [MfaTotpSecret] nvarchar(128) NULL;
+END");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "MfaIsEnabled",
-            table: "users");
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaIsEnabled') IS NOT NULL
+BEGIN
+    ALTER TABLE [users] DROP COLUMN [MfaIsEnabled];
+END");
 
-        migrationBuilder.DropColumn(
-            name: "MfaRecoveryCodesHashJson",
-            table: "users");
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaRecoveryCodesHashJson') IS NOT NULL
+BEGIN
+    ALTER TABLE [users] DROP COLUMN [MfaRecoveryCodesHashJson];
+END");
 
-        migrationBuilder.DropColumn(
-            name: "MfaTotpSecret",
-            table: "users");
+        migrationBuilder.Sql(
+            @"IF COL_LENGTH('users', 'MfaTotpSecret') IS NOT NULL
+BEGIN
+    ALTER TABLE [users] DROP COLUMN [MfaTotpSecret];
+END");
     }
 }
