@@ -10099,7 +10099,7 @@ public class PortalController : Controller
         {
             if (model.OfferingId == Guid.Empty)
             {
-                var offerings = await _api.GetOfferingsAsync(session?.TenantId, session?.CampusId, ct);
+                var offerings = await _api.GetMyOfferingsAsync(ct);
                 var first = offerings.FirstOrDefault();
                 if (first is not null)
                     model.OfferingId = first.Id;
@@ -10296,7 +10296,7 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            model.Offerings = await _api.GetOfferingsAsync(tenantId, campusId, ct);
+            model.Offerings = await _api.GetMyOfferingsAsync(ct);
 
             if (model.OfferingId == Guid.Empty)
             {
