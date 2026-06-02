@@ -105,6 +105,21 @@
                         <p class="small">Passwords are never written in plain text source config. Setup values are stored in encrypted runtime configuration.</p>
                     </form>
 
+                    <hr class="separator" />
+                    <h2 class="section-title">Advanced Setup Utilities</h2>
+                    <div class="actions wrap">
+                        <a class="secondary" href="/setup/export">Export Profile JSON</a>
+                        <a class="secondary" href="/setup/docker-env">Download Docker .env Template</a>
+                    </div>
+
+                    <form method="post" action="/setup/import" enctype="multipart/form-data" class="import-form">
+                        @Html.AntiForgeryToken()
+                        <label for="profileFile">Import Profile JSON</label>
+                        <input id="profileFile" type="file" name="profileFile" accept="application/json,.json" required />
+                        <button class="secondary" type="submit">Import & Apply Profile</button>
+                        <p class="small">Imported profiles can omit password when Trusted Connection is enabled. For SQL auth, include Password in JSON before import.</p>
+                    </form>
+
                     <div id="testResult" class="mt-3"></div>
                 </div>
             </div>

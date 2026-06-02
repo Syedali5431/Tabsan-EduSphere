@@ -76,6 +76,10 @@ button {
     margin-top: 1rem;
 }
 
+.actions.wrap {
+    flex-wrap: wrap;
+}
+
 .actions button,
 .actions a {
     width: auto;
@@ -118,6 +122,24 @@ button {
 .small {
     color: #6b7280;
     font-size: 0.8rem;
+}
+
+.separator {
+    margin: 1.2rem 0;
+    border: 0;
+    border-top: 1px solid #e2e8f0;
+}
+
+.section-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+}
+
+.import-form {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
 }
 
 @media (max-width: 900px) {

@@ -53,6 +53,9 @@ public interface IDatabaseSetupService
     Task<SetupConnectionTestResult> TestConnectionAsync(DatabaseSetupViewModel input, CancellationToken ct);
     Task<SetupConnectionTestResult> SaveAsync(DatabaseSetupViewModel input, CancellationToken ct);
     Task<SetupConnectionTestResult> ValidateCurrentConnectionAsync(bool force, CancellationToken ct);
+    string ExportProfileJson();
+    Task<SetupConnectionTestResult> ImportProfileAsync(DatabaseSetupProfileModel profile, CancellationToken ct);
+    string BuildDockerEnvTemplate();
 }
 
 public sealed class DatabaseSetupService : IDatabaseSetupService
@@ -80,8 +83,20 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
     public DatabaseSetupViewModel BuildViewModel(string? returnUrl = null)
     {
         var snapshot = _state.Snapshot();
+        var stored = TryReadStoredConfiguration();
+
         return new DatabaseSetupViewModel
         {
+            DatabaseType = stored?.DatabaseType ?? "Local",
+            LocalProvider = stored?.LocalProvider ?? (snapshot.Provider == RuntimeDatabaseProvider.Sqlite ? "Sqlite" : "SqlServerExpress"),
+            ServerHost = stored?.ServerHost,
+            DatabaseName = stored?.DatabaseName,
+            Username = stored?.Username,
+            Port = stored?.Port,
+            UseSsl = stored?.UseSsl ?? true,
+            TrustServerCertificate = stored?.TrustServerCertificate ?? true,
+            TrustedConnection = stored?.TrustedConnection ?? false,
+            SqliteFilePath = stored?.SqliteFilePath,
             ReturnUrl = returnUrl,
             RequiresSetup = snapshot.RequiresSetup,
             CurrentProvider = snapshot.Provider.ToString(),
@@ -149,6 +164,80 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
         var probe = await ProbeConnectionAsync(snapshot.ConnectionString, snapshot.Provider, ct);
         _state.Set(snapshot.Provider, snapshot.ConnectionString, requiresSetup: !probe.Success, lastError: probe.Success ? null : probe.Message);
         return probe;
+    }
+
+    public string ExportProfileJson()
+    {
+        var stored = TryReadStoredConfiguration();
+        if (stored is null)
+        {
+            var empty = new DatabaseSetupProfileModel();
+            return JsonSerializer.Serialize(empty, new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        var profile = new DatabaseSetupProfileModel
+        {
+            Version = stored.Version,
+            DatabaseType = stored.DatabaseType ?? "Local",
+            LocalProvider = stored.LocalProvider ?? "SqlServerExpress",
+            ServerHost = stored.ServerHost,
+            DatabaseName = stored.DatabaseName,
+            Username = stored.Username,
+            Port = stored.Port,
+            UseSsl = stored.UseSsl,
+            TrustServerCertificate = stored.TrustServerCertificate,
+            TrustedConnection = stored.TrustedConnection,
+            SqliteFilePath = stored.SqliteFilePath,
+            ExportedUtc = DateTimeOffset.UtcNow
+        };
+
+        return JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    public Task<SetupConnectionTestResult> ImportProfileAsync(DatabaseSetupProfileModel profile, CancellationToken ct)
+    {
+        var input = new DatabaseSetupViewModel
+        {
+            DatabaseType = profile.DatabaseType,
+            LocalProvider = profile.LocalProvider,
+            ServerHost = profile.ServerHost,
+            DatabaseName = profile.DatabaseName,
+            Username = profile.Username,
+            Password = profile.Password,
+            Port = profile.Port,
+            UseSsl = profile.UseSsl,
+            TrustServerCertificate = profile.TrustServerCertificate,
+            TrustedConnection = profile.TrustedConnection,
+            SqliteFilePath = profile.SqliteFilePath
+        };
+
+        return SaveAsync(input, ct);
+    }
+
+    public string BuildDockerEnvTemplate()
+    {
+        var snapshot = _state.Snapshot();
+        var lines = new List<string>
+        {
+            "# EduSphere runtime database setup",
+            "ASPNETCORE_ENVIRONMENT=Production"
+        };
+
+        if (!string.IsNullOrWhiteSpace(snapshot.ConnectionString))
+        {
+            var escaped = snapshot.ConnectionString.Replace("\"", "\\\"");
+            lines.Add($"ConnectionStrings__DefaultConnection=\"{escaped}\"");
+        }
+        else
+        {
+            lines.Add("ConnectionStrings__DefaultConnection=\"<set-your-connection-string>\"");
+        }
+
+        lines.Add($"EDUSPHERE_RUNTIME_DB_PROVIDER={snapshot.Provider}");
+        lines.Add("# Optional: mount persistent setup store");
+        lines.Add("# -v /host/path/edusphere-app-data:/app/App_Data");
+
+        return string.Join(Environment.NewLine, lines);
     }
 
     private BuildConnectionResult BuildConnection(DatabaseSetupViewModel input)
@@ -261,6 +350,24 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
         var filePath = Path.Combine(appDataPath, SetupFileName);
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(filePath, json);
+    }
+
+    private StoredDatabaseSetup? TryReadStoredConfiguration()
+    {
+        var appDataPath = Path.Combine(_environment.ContentRootPath, "App_Data");
+        var filePath = Path.Combine(appDataPath, SetupFileName);
+        if (!File.Exists(filePath))
+            return null;
+
+        try
+        {
+            var json = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<StoredDatabaseSetup>(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private sealed class StoredDatabaseSetup
