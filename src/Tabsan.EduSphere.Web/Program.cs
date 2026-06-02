@@ -10,6 +10,15 @@ using Tabsan.EduSphere.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render and similar hosts inject PORT; bind Kestrel to 0.0.0.0:<PORT> when present.
+var renderPortValue = Environment.GetEnvironmentVariable("PORT");
+var useRenderPortBinding = int.TryParse(renderPortValue, out var renderPort) && renderPort > 0;
+if (useRenderPortBinding)
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{renderPort}");
+    Console.WriteLine($"[Web] Using host-provided PORT binding: http://0.0.0.0:{renderPort}");
+}
+
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var environmentProfile = EnvironmentConfigurationResolver.Resolve(builder.Configuration, env);
@@ -208,7 +217,10 @@ if (useForwardedHeaders)
     app.UseForwardedHeaders();
 }
 
-app.UseHttpsRedirection();
+if (!useRenderPortBinding)
+{
+    app.UseHttpsRedirection();
+}
 app.UseResponseCompression();
 // Final-Touches Phase 34 Stage 4.2 — apply cache headers only to static files, not authenticated/dynamic MVC responses.
 app.UseStaticFiles(new StaticFileOptions
@@ -224,7 +236,7 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-if (!app.Environment.IsEnvironment("Testing"))
+if (!app.Environment.IsEnvironment("Testing") && !useRenderPortBinding)
 {
     app.UseHttpsRedirection();
 }
