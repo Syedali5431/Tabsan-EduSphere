@@ -1,5 +1,32 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Phase 1 Completion (Institute-Scoped Runtime Stabilization)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- No new public controller/service/API signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.ApproveResultModificationRequest
+		- now parses legacy/new result-modification payload shapes via safe key fallbacks and guarded decimal/guid extraction.
+	- PortalController.Discussion
+		- now resolves first available offering when caller does not provide an offering id, avoiding empty-state runtime failures.
+	- PortalController.Announcements
+		- now resolves first available offering and populates scoped offering options when offering id is missing.
+	- PortalController.StudentLifecycle
+		- now applies institute-aware period labels/ranges for school and college paths (class-based ranges), while keeping university behavior intact.
+
+### Script/runtime synchronization
+- Domain script packs now run as pure T-SQL without SQLCMD wrapper dependency:
+	- Scripts/School Scripts/01..05
+	- Scripts/College Scripts/01..05
+	- Scripts/University Scripts/01..05
+- LMS schema self-heal guards for discussion-thread runtime columns were added in domain schema wrappers.
+
+### Validation summary
+- No SQLCMD `:r` usage remains in School/College/University script packs.
+- Diagnostics report clean for all touched scripts and portal controller updates.
+- Legacy/new result-modification payload shapes now pass guarded parsing path without key lookup exceptions.
+
 ## 2026-06-02 Update - Password Policy Hardening and Module-Sidebar Parity Synchronization
 
 ### Function inventory delta

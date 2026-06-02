@@ -1,5 +1,19 @@
 ## 2026-06-02 Update - Development Plan Synchronization (Password Hardening and Module-Sidebar Parity)
 
+## 2026-06-02 Update - Development Plan Synchronization (Institute Dynamic Model - Phase 1 Completion)
+
+### Plan sync
+- Completed Phase 1 critical runtime scope for institute-dynamic rollout.
+- Converted School/College/University domain script packs to pure T-SQL execution paths to remove SQLCMD wrapper dependency.
+- Added LMS discussion schema self-heal guards in domain schema scripts to prevent runtime mismatch failures.
+- Hardened result-modification approval parsing with legacy/new key fallback handling.
+- Updated phase tracker and core docs with Phase 1 completion plus implementation/validation summaries.
+
+### Validation sync
+- SQLCMD dependency scan confirms no remaining `:r` wrappers in domain script packs.
+- Diagnostics checks for touched scripts/controllers are clean.
+- Payload parsing checks confirm safe fallback handling for old/new result-modification payload structures.
+
 ### Plan sync
 - Hardened password workflow plan is now implemented and documented for all protected password-change paths:
   - old-password verification required for force-change,

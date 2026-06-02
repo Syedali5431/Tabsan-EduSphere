@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 1 Completion)
+- Runtime delivery in this slice:
+  - completed Phase 1 critical runtime fixes for institute-dynamic rollout,
+  - converted School/College/University domain script packs to pure T-SQL execution (no SQLCMD wrapper requirement),
+  - added LMS discussion schema self-heal guards to prevent runtime crashes caused by older schema shapes,
+  - hardened result-modification approval parsing for legacy and current payload formats to prevent missing-key runtime exceptions.
+- Compatibility boundary:
+  - no route removals,
+  - no breaking behavior change for University paths,
+  - tenant/campus scoping preserved.
+- Validation summary:
+  - SQLCMD dependency scan confirms no remaining `:r` directives in domain script packs,
+  - diagnostics checks for touched scripts/controllers are clean,
+  - runtime payload parsing path now handles legacy/new key shapes safely.
+
 ### 2026-06-02 - Product Requirements Synchronization (Password Security Hardening + Module/Sidebar Governance Parity)
 - Runtime delivery in this slice:
   - force-change-password now requires user old-password verification,

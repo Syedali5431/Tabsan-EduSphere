@@ -1,5 +1,18 @@
 ## 2026-06-02 Update - Password Hardening and Sidebar/Module Parity (Schema Posture)
 
+## 2026-06-02 Update - Institute Dynamic Model Phase 1 Completion (Schema Posture)
+
+- Implementation Summary:
+	- completed Phase 1 runtime-stability scope for institute-dynamic model,
+	- converted School/College/University script packs to pure T-SQL execution style,
+	- added additive schema self-heal guards for LMS `discussion_threads` runtime compatibility in domain schema scripts,
+	- hardened result approval parsing in application layer (no schema contract break).
+- Validation Summary:
+	- SQLCMD dependency scan confirms no wrapper directives remain in domain packs,
+	- diagnostics checks for touched scripts/controllers are clean,
+	- schema impact: no breaking table/column/index removal.
+- EF migration impact: none.
+
 - Implementation Summary:
 	- password-policy hardening and old-password verification updates were applied at API/application/web layers,
 	- sidebar/module parity synchronization was applied through runtime menu mapping and startup seed alignment,

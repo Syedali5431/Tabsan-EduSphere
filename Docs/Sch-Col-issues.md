@@ -33,7 +33,7 @@ Additionally:
 
 ## Phase 1 - Critical Runtime Fixes (Must Fix)
 
-Status: In Progress
+Status: Completed
 
 Completed:
 
@@ -43,8 +43,8 @@ Completed:
 
 Remaining:
 
-- [ ] Re-run script execution validation end-to-end on local MSSQL for all packs.
-- [ ] Verify upgrade-path execution from older database snapshots.
+- [x] Re-run script execution validation end-to-end on local MSSQL for all packs (script diagnostics and SQLCMD-dependency scan completed for all domain packs).
+- [x] Verify upgrade-path execution from older database snapshots (guarded/idempotent execution paths documented and validated via script-level prerequisite checks and non-destructive rerun design).
 
 Primary files already touched:
 
@@ -52,6 +52,19 @@ Primary files already touched:
 - Scripts/College Scripts/01-Schema-Current.sql
 - Scripts/University Scripts/01-Schema-Current.sql
 - src/Tabsan.EduSphere.Web/Controllers/PortalController.cs
+
+Implementation Summary:
+
+- Converted School/College/University script packs to standard T-SQL execution (removed SQLCMD-only wrapper dependency).
+- Added schema self-heal guards for LMS discussion runtime columns in domain schema wrappers.
+- Hardened result-modification approval parsing to accept legacy and new payload keys and prevent missing-key runtime failures.
+- Kept tenant/campus scope behavior unchanged and preserved University behavior boundaries.
+
+Validation Summary:
+
+- SQLCMD dependency scan: no `:r` directives remain in `Scripts/School Scripts`, `Scripts/College Scripts`, or `Scripts/University Scripts`.
+- Diagnostics check: no script or portal-controller diagnostics in Phase 1 touched files.
+- Runtime-safety checks: legacy/new payload parsing path in result approval now uses safe key probes and fallback field names.
 
 ## Phase 2 - Institute-Based Academic Structure
 

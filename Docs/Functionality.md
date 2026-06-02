@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Institute Dynamic Model Phase 1 Completion (Runtime Stability and Compatibility)
+
+### Implementation sync
+- Completed Phase 1 critical runtime fixes for institute-dynamic rollout.
+- Domain script packs are now executable as pure T-SQL without SQLCMD dependency for:
+	- School Scripts,
+	- College Scripts,
+	- University Scripts.
+- LMS crash path from discussion-thread schema mismatch is mitigated with self-healing column guards in domain schema scripts.
+- Result modification approval flow now supports legacy/new payload key shapes and avoids key-lookup runtime exceptions.
+- Student Lifecycle and LMS entry paths now include safer institute-aware/default offering behavior while preserving existing university flow.
+
+### Validation sync
+- SQLCMD dependency scan confirms no `:r` directives remain in domain script packs.
+- Diagnostics checks report no errors in touched scripts and portal-controller updates.
+- Runtime parsing path in result approval now uses guarded extraction and fallback keys.
+
 ## 2026-06-02 Update - Password Hardening and Module-Sidebar Settings Parity
 
 ### Implementation sync

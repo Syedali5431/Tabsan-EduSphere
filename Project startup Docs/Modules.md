@@ -1,5 +1,19 @@
 ## Execution Update - 2026-06-02 (Password Security Hardening + Sidebar/Module Governance Parity)
 
+## Execution Update - 2026-06-02 (Institute Dynamic Model - Phase 1 Completion)
+
+### Module impact summary
+- No new module introduced; this slice stabilizes existing Script Execution, LMS, Results, and Student Lifecycle module behavior.
+- Domain script packs are now standard T-SQL executable for School, College, and University contexts without SQLCMD wrapper dependency.
+- LMS discussion runtime crash risk from schema drift is mitigated by domain schema self-heal guards.
+- Result modification approval now supports legacy/new payload key shapes without key lookup failures.
+- University behavior remains non-restricted; tenant/campus scope remains enforced.
+
+### Validation summary
+- SQLCMD dependency scan: no `:r` directives remain in domain script packs.
+- Diagnostics checks: clean for touched scripts and portal-controller changes.
+- Runtime checks: result approval payload parsing path now resolves legacy and current key names safely.
+
 ### Module impact summary
 - No new module introduced; update strengthens existing Authentication, Settings Governance, and Sidebar Composition behavior.
 - Authentication/password flow now enforces old-password verification for forced change and stricter safe-password rule compliance.
