@@ -5879,76 +5879,160 @@ public class PortalController : Controller
                     throw new InvalidOperationException("Modification request not found.");
 
                 using var doc = System.Text.Json.JsonDocument.Parse(req.ProposedData);
-                var root = doc.RootElement;
+                var root = doc.RootElement.Clone();
 
-                static Guid ReadGuid(System.Text.Json.JsonElement source, params string[] keys)
+                // Backward compatibility: some records persisted proposedData as JSON string or nested payload.
+                if (root.ValueKind == System.Text.Json.JsonValueKind.String)
                 {
-                    foreach (var key in keys)
+                    var nestedJson = root.GetString();
+                    if (!string.IsNullOrWhiteSpace(nestedJson))
                     {
-                        if (source.TryGetProperty(key, out var node))
-                        {
-                            if (node.ValueKind == System.Text.Json.JsonValueKind.String
-                                && Guid.TryParse(node.GetString(), out var parsed))
-                            {
-                                return parsed;
-                            }
+                        using var nestedDoc = System.Text.Json.JsonDocument.Parse(nestedJson);
+                        root = nestedDoc.RootElement.Clone();
+                    }
+                }
 
-                            if (node.ValueKind == System.Text.Json.JsonValueKind.Object
-                                && node.TryGetProperty("value", out var nested)
-                                && nested.ValueKind == System.Text.Json.JsonValueKind.String
-                                && Guid.TryParse(nested.GetString(), out parsed))
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Object
+                    && TryGetPropertyIgnoreCase(root, out var proposedNode, "proposedData"))
+                {
+                    if (proposedNode.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        root = proposedNode.Clone();
+                    }
+                    else if (proposedNode.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        var nestedJson = proposedNode.GetString();
+                        if (!string.IsNullOrWhiteSpace(nestedJson))
+                        {
+                            using var nestedDoc = System.Text.Json.JsonDocument.Parse(nestedJson);
+                            root = nestedDoc.RootElement.Clone();
+                        }
+                    }
+                }
+
+                static bool TryGetPropertyIgnoreCase(System.Text.Json.JsonElement source, out System.Text.Json.JsonElement value, params string[] keys)
+                {
+                    value = default;
+                    if (source.ValueKind != System.Text.Json.JsonValueKind.Object)
+                        return false;
+
+                    foreach (var property in source.EnumerateObject())
+                    {
+                        foreach (var key in keys)
+                        {
+                            if (string.Equals(property.Name, key, StringComparison.OrdinalIgnoreCase))
                             {
-                                return parsed;
+                                value = property.Value;
+                                return true;
                             }
                         }
                     }
 
-                    throw new InvalidOperationException("Proposed result change data is missing required identifier fields.");
+                    return false;
                 }
 
-                static decimal ReadDecimal(System.Text.Json.JsonElement source, params string[] keys)
+                static bool TryReadGuid(System.Text.Json.JsonElement source, out Guid value, params string[] keys)
                 {
-                    foreach (var key in keys)
-                    {
-                        if (source.TryGetProperty(key, out var node))
-                        {
-                            if (node.ValueKind == System.Text.Json.JsonValueKind.Number && node.TryGetDecimal(out var numeric))
-                                return numeric;
+                    value = Guid.Empty;
+                    if (!TryGetPropertyIgnoreCase(source, out var node, keys))
+                        return false;
 
-                            if (node.ValueKind == System.Text.Json.JsonValueKind.String
-                                && decimal.TryParse(node.GetString(), out numeric))
-                            {
-                                return numeric;
-                            }
-                        }
+                    if (node.ValueKind == System.Text.Json.JsonValueKind.String
+                        && Guid.TryParse(node.GetString(), out var parsed))
+                    {
+                        value = parsed;
+                        return true;
                     }
 
-                    throw new InvalidOperationException("Proposed result change data is missing marks fields.");
+                    if (node.ValueKind == System.Text.Json.JsonValueKind.Object
+                        && TryGetPropertyIgnoreCase(node, out var nested, "value")
+                        && nested.ValueKind == System.Text.Json.JsonValueKind.String
+                        && Guid.TryParse(nested.GetString(), out parsed))
+                    {
+                        value = parsed;
+                        return true;
+                    }
+
+                    return false;
                 }
 
-                var studentProfileId = ReadGuid(root, "studentProfileId", "studentId");
-                var courseOfferingId = ReadGuid(root, "courseOfferingId", "offeringId", "subjectOfferingId");
-                var resultType = root.TryGetProperty("resultType", out var resultTypeNode) && resultTypeNode.ValueKind == System.Text.Json.JsonValueKind.String
+                static bool TryReadDecimal(System.Text.Json.JsonElement source, out decimal value, params string[] keys)
+                {
+                    value = 0m;
+                    if (!TryGetPropertyIgnoreCase(source, out var node, keys))
+                        return false;
+
+                    if (node.ValueKind == System.Text.Json.JsonValueKind.Number && node.TryGetDecimal(out var numeric))
+                    {
+                        value = numeric;
+                        return true;
+                    }
+
+                    if (node.ValueKind == System.Text.Json.JsonValueKind.String
+                        && decimal.TryParse(node.GetString(), out numeric))
+                    {
+                        value = numeric;
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                ResultItem? matchedResult = null;
+                if (offeringId.HasValue)
+                {
+                    var resultsForOffering = await _api.GetResultsByOfferingAsync(offeringId.Value, tenantId, campusId, ct);
+                    matchedResult = resultsForOffering.FirstOrDefault(r => r.Id == req.RecordId);
+                }
+
+                var hasStudentProfileId = TryReadGuid(root, out var studentProfileId, "studentProfileId", "studentId");
+                if (!hasStudentProfileId && matchedResult is not null)
+                    studentProfileId = matchedResult.StudentProfileId;
+
+                var hasCourseOfferingId = TryReadGuid(root, out var courseOfferingId, "courseOfferingId", "offeringId", "subjectOfferingId");
+                if (!hasCourseOfferingId && matchedResult is not null)
+                    courseOfferingId = matchedResult.CourseOfferingId;
+                if (courseOfferingId == Guid.Empty && offeringId.HasValue)
+                    courseOfferingId = offeringId.Value;
+
+                var resultType = TryGetPropertyIgnoreCase(root, out var resultTypeNode, "resultType")
+                                 && resultTypeNode.ValueKind == System.Text.Json.JsonValueKind.String
                     ? (resultTypeNode.GetString() ?? "Final")
-                    : "Final";
-                var newMarksObtained = ReadDecimal(root, "newMarksObtained", "marksObtained");
-                var newMaxMarks = ReadDecimal(root, "newMaxMarks", "maxMarks");
+                    : (matchedResult?.ResultType ?? "Final");
+
+                var hasNewMarksObtained = TryReadDecimal(root, out var newMarksObtained, "newMarksObtained", "marksObtained");
+                if (!hasNewMarksObtained && matchedResult?.MarksObtained is not null)
+                    newMarksObtained = matchedResult.MarksObtained.Value;
+
+                var hasNewMaxMarks = TryReadDecimal(root, out var newMaxMarks, "newMaxMarks", "maxMarks", "totalMarks");
+                if (!hasNewMaxMarks && matchedResult is not null && matchedResult.TotalMarks > 0)
+                    newMaxMarks = matchedResult.TotalMarks;
+
+                var canResolveIdentifiers = studentProfileId != Guid.Empty && courseOfferingId != Guid.Empty;
+                var canResolveMarks = (hasNewMarksObtained || matchedResult?.MarksObtained is not null)
+                                   && (hasNewMaxMarks || (matchedResult is not null && matchedResult.TotalMarks > 0));
 
                 Guid? requestedTenantId = null;
                 Guid? requestedCampusId = null;
 
-                if (root.TryGetProperty("tenantId", out var tenantNode) && tenantNode.ValueKind == System.Text.Json.JsonValueKind.String)
-                    requestedTenantId = Guid.TryParse(tenantNode.GetString(), out var parsedTenant) ? parsedTenant : null;
-                if (root.TryGetProperty("campusId", out var campusNode) && campusNode.ValueKind == System.Text.Json.JsonValueKind.String)
-                    requestedCampusId = Guid.TryParse(campusNode.GetString(), out var parsedCampus) ? parsedCampus : null;
+                if (TryReadGuid(root, out var parsedTenantId, "tenantId"))
+                    requestedTenantId = parsedTenantId;
+                if (TryReadGuid(root, out var parsedCampusId, "campusId"))
+                    requestedCampusId = parsedCampusId;
 
                 var correctionReason = string.IsNullOrWhiteSpace(req.Reason)
                     ? "Approved modification request correction."
                     : req.Reason;
 
-                await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, correctionReason, requestedTenantId, requestedCampusId, ct);
+                if (canResolveIdentifiers && canResolveMarks)
+                {
+                    await _api.CorrectResultAsync(studentProfileId, courseOfferingId, resultType, newMarksObtained, newMaxMarks, correctionReason, requestedTenantId, requestedCampusId, ct);
+                }
+
                 await _api.ApproveResultModificationRequestAsync(requestId, notes, ct);
-                TempData["PortalMessage"] = "Result modification request approved and applied.";
+                TempData["PortalMessage"] = (canResolveIdentifiers && canResolveMarks)
+                    ? "Result modification request approved and applied."
+                    : "Result modification request approved. Auto-correction was skipped because legacy proposed data was incomplete.";
             }
             catch (Exception ex)
             {
