@@ -56,9 +56,10 @@ When the wizard starts, provide the following:
    - `0` means unlimited
    - Any positive integer enforces a user limit
 
-4. **Allowed domain (optional)**
-   - Leave blank for unrestricted activation
-   - Example domain lock: `portal.example.edu`
+4. **Host target mode**
+   - `1` = Local (auto-binds to `tabsan.local`)
+   - `2` = Live (requires entering live host, for example `portal.example.edu`)
+   - Enter host only (no `http://`, `https://`, or path)
 
 5. **Institution scope flags (required)**
    - Include School? `(y/n)`
@@ -121,12 +122,12 @@ Check the following:
 ### Generate unrestricted license
 
 - MaxUsers: `0`
-- AllowedDomain: blank
+- Host target: choose Local for local deployments
 - Scope: choose any required institution flags
 
 ### Generate domain-locked license
 
-- AllowedDomain: set target host (for example `portal.example.edu`)
+- Host target: choose Live and set target host (for example `portal.example.edu`)
 - Ensure activation occurs from same host/domain
 
 ### Generate school-only package
@@ -152,8 +153,8 @@ Check the following:
 
 ### Error: domain mismatch
 
-- Verify uploaded domain equals generation `AllowedDomain`.
-- If unsure, regenerate with blank `AllowedDomain`.
+- Verify uploaded domain equals the generated host target value.
+- Local mode binds to `tabsan.local`; Live mode binds to the host you entered.
 
 ### Error: license reuse rejected
 

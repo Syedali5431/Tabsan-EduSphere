@@ -117,9 +117,9 @@ static async Task HandleGenerateLicenseFile(KeyService keySvc, LicenseBuilder bu
         return;
     }
 
-    Console.Write("  Allowed domain (optional, blank = unrestricted): ");
-    var domainInput = Console.ReadLine()?.Trim();
-    var allowedDomain = string.IsNullOrWhiteSpace(domainInput) ? null : domainInput.ToLowerInvariant();
+    var hostTarget = PromptHostTarget();
+    if (hostTarget is null)
+        return;
 
     var scope = PromptInstitutionScope();
     if (scope is null)
@@ -127,7 +127,7 @@ static async Task HandleGenerateLicenseFile(KeyService keySvc, LicenseBuilder bu
 
     var (record, _) = await keySvc.GenerateAsync(expiry.Value, label);
     record.MaxUsers = maxUsers;
-    record.AllowedDomain = allowedDomain;
+    record.AllowedDomain = hostTarget.Value.Domain;
     record.IncludeSchool = scope.Value.IncludeSchool;
     record.IncludeCollege = scope.Value.IncludeCollege;
     record.IncludeUniversity = scope.Value.IncludeUniversity;
@@ -154,6 +154,7 @@ static async Task HandleGenerateLicenseFile(KeyService keySvc, LicenseBuilder bu
         Console.WriteLine($"  Expires    : {FormatExpiry(record.ExpiryType, record.ExpiresAt)}");
         Console.WriteLine($"  Scope      : {FormatInstitutionScope(record.IncludeSchool, record.IncludeCollege, record.IncludeUniversity)}");
         Console.WriteLine($"  MaxUsers   : {(record.MaxUsers == 0 ? "Unlimited" : record.MaxUsers.ToString())}");
+        Console.WriteLine($"  Host Mode  : {hostTarget.Value.Mode}");
         Console.WriteLine($"  Domain     : {record.AllowedDomain ?? "Any"}");
         Console.WriteLine();
         Console.WriteLine("Import this .tablic file in EduSphere: Portal -> Settings -> License Update.");
@@ -200,6 +201,52 @@ static ExpiryType? PromptExpiry()
         "5" => ExpiryType.Permanent,
         _   => null
     };
+}
+
+static (LicenseHostMode Mode, string Domain)? PromptHostTarget()
+{
+    Console.WriteLine("  Host target:");
+    Console.WriteLine("    [1] Local (tabsan.local)");
+    Console.WriteLine("    [2] Live  (enter domain)");
+    Console.Write("  Choice: ");
+    var choice = Console.ReadLine()?.Trim();
+
+    if (choice == "1")
+        return (LicenseHostMode.Local, "tabsan.local");
+
+    if (choice == "2")
+    {
+        Console.Write("  Live host/domain (example: tabsan-edusphere.onrender.com): ");
+        var liveHostRaw = Console.ReadLine()?.Trim();
+        var normalizedHost = NormalizeHost(liveHostRaw);
+
+        if (normalizedHost is null)
+        {
+            WriteError("Invalid live host. Enter only a domain/host without protocol or path.");
+            return null;
+        }
+
+        return (LicenseHostMode.Live, normalizedHost);
+    }
+
+    WriteError("Invalid host target selection. Choose 1 or 2.");
+    return null;
+}
+
+static string? NormalizeHost(string? raw)
+{
+    if (string.IsNullOrWhiteSpace(raw))
+        return null;
+
+    var value = raw.Trim().ToLowerInvariant();
+    value = value.Replace("http://", string.Empty, StringComparison.OrdinalIgnoreCase);
+    value = value.Replace("https://", string.Empty, StringComparison.OrdinalIgnoreCase);
+    value = value.Trim('/');
+
+    if (value.Contains('/') || value.Contains(' ') || value.Contains('?') || value.Contains('#'))
+        return null;
+
+    return value.Length <= 253 ? value : null;
 }
 
 static (bool IncludeSchool, bool IncludeCollege, bool IncludeUniversity)? PromptInstitutionScope()
@@ -255,5 +302,11 @@ static void WriteError(string msg)
     Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine($"  ✗ {msg}");
     Console.ResetColor();
+}
+
+enum LicenseHostMode
+{
+    Local,
+    Live
 }
 

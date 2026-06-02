@@ -63,7 +63,9 @@ Wizard prompts include:
 1. Expiry type (1 month, 1/2/3 years, permanent)
 2. Customer/tenant label (optional)
 3. Max users (0 = unlimited)
-4. Allowed domain (optional)
+4. Host target mode:
+   - Local -> binds license domain to `tabsan.local`
+   - Live -> prompts for live host/domain and binds to that value
 5. Institution scope flags:
 	- Include School? (y/n)
 	- Include College? (y/n)
@@ -146,8 +148,10 @@ Possible causes:
 	- These key pairs must match.
 
 3. **Domain restriction mismatch**
-	- If `AllowedDomain` was set during generation, upload/activation must occur on that same domain.
-	- Leave domain blank for unrestricted licenses.
+   - Generated licenses are now host-bound by mode:
+     - Local mode -> `tabsan.local`
+     - Live mode -> chosen live host/domain
+   - Upload/activation must occur on the same host/domain.
 
 4. **Verification key fingerprint mismatch**
 	- Payload now includes a verification fingerprint bound to the signing key.

@@ -313,6 +313,11 @@
 			"label": "Commit payments admin-role rendering fix",
 			"type": "shell",
 			"command": "git commit -m 'Fix Payments admin view rendering when student list is empty'"
+		},
+		{
+			"label": "Apply Render Live License (interactive)",
+			"type": "shell",
+			"command": "powershell -ExecutionPolicy Bypass -File \"tools/Tabsan.Lic/apply-render-license.ps1\""
 		}
 	],
 	"inputs": [
