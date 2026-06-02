@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 COPY . .
-RUN dotnet restore Tabsan.EduSphere.sln
+RUN dotnet restore src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj
 RUN dotnet publish src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj -c Release -o /app/out /p:UseAppHost=false --no-restore
 
 # Runtime stage
