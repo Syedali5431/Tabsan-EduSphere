@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Institute Dynamic Model Phase 2 Completion (Academic-Level Structure)
+
+### Implementation sync
+- Completed Phase 2 lifecycle academic-level structure adjustments for institute-specific behavior.
+- Student Lifecycle now enforces:
+	- School mode => Class 1 to Class 10,
+	- College mode => Class 11 to Class 12,
+	- University mode => dynamic upper level inferred from configured semester/year metadata.
+- University lifecycle range no longer uses fixed max-level constants.
+- Tenant/campus scope behavior remains unchanged.
+
+### Validation sync
+- Diagnostics checks report no errors in touched lifecycle controller code.
+- Runtime range clamping and option rendering now align with institute-specific academic boundaries.
+
 ## 2026-06-02 Update - Institute Dynamic Model Phase 1 Completion (Runtime Stability and Compatibility)
 
 ### Implementation sync

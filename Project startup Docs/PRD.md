@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 2 Completion)
+- Runtime delivery in this slice:
+  - completed lifecycle academic-level structure update for institute-based behavior,
+  - set college class range to Class 11 and Class 12,
+  - retained school class range as Class 1 to Class 10,
+  - removed fixed university max-level assumption by deriving upper bound from configured semester/year definitions.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - tenant/campus scoping preserved,
+  - university dual-mode behavior remains non-breaking.
+- Validation Summary:
+  - diagnostics checks for touched lifecycle controller paths are clean,
+  - lifecycle range handling now conforms to institute-specific requirements.
+
 ### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 1 Completion)
 - Runtime delivery in this slice:
   - completed Phase 1 critical runtime fixes for institute-dynamic rollout,

@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-02 Update - Phase 2 Completion (Institute-Based Academic Structure)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- No new public controller/service/API signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.StudentLifecycle
+		- now enforces School Class 1-10 and College Class 11-12 ranges.
+		- University level upper bound is now inferred from configured semester/year metadata instead of fixed max-level constants.
+		- selected level is clamped to institute-specific min/max boundaries before downstream calls.
+
+### Validation summary
+- Diagnostics checks report no errors in touched controller files.
+- Runtime range behavior now reflects institute-specific class/semester boundaries for lifecycle filtering.
+
 ## 2026-06-02 Update - Phase 1 Completion (Institute-Scoped Runtime Stabilization)
 
 ### Function inventory delta

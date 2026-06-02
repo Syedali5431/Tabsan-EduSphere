@@ -6661,12 +6661,33 @@ public class PortalController : Controller
             if (effectiveInstitutionType is 0 or 1)
                 model.PeriodLabel = "Class";
 
-            model.MaxAcademicLevel = effectiveInstitutionType switch
+            if (effectiveInstitutionType == 1)
             {
-                0 => 10,
-                1 => 2,
-                _ => 8
-            };
+                model.MinAcademicLevel = 11;
+                model.MaxAcademicLevel = 12;
+            }
+            else if (effectiveInstitutionType == 0)
+            {
+                model.MinAcademicLevel = 1;
+                model.MaxAcademicLevel = 10;
+            }
+            else
+            {
+                // University remains flexible (semester/year) and uses configured level metadata.
+                var configuredLevels = await _api.GetSemestersAsync(ct);
+                var numericLevels = configuredLevels
+                    .Select(s => ExtractFirstInteger(s.Name))
+                    .Where(v => v.HasValue)
+                    .Select(v => v!.Value)
+                    .ToList();
+
+                var inferredMax = numericLevels.Count > 0
+                    ? numericLevels.Max()
+                    : configuredLevels.Count;
+
+                model.MinAcademicLevel = 1;
+                model.MaxAcademicLevel = Math.Max(1, inferredMax);
+            }
 
             if (semester < model.MinAcademicLevel || semester > model.MaxAcademicLevel)
             {
@@ -6698,6 +6719,18 @@ public class PortalController : Controller
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
+    }
+
+    private static int? ExtractFirstInteger(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return null;
+
+        var digits = new string(input.Where(char.IsDigit).ToArray());
+        if (string.IsNullOrWhiteSpace(digits))
+            return null;
+
+        return int.TryParse(digits, out var parsed) ? parsed : null;
     }
 
     [HttpPost, ValidateAntiForgeryToken]

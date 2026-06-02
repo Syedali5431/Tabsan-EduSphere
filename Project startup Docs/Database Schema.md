@@ -1,3 +1,14 @@
+## 2026-06-02 Update - Institute Dynamic Model Phase 2 Completion (Schema Posture)
+
+- Implementation Summary:
+	- completed lifecycle academic-level structure runtime update for institute-specific behavior,
+	- changed college lifecycle range policy to Class 11-12,
+	- changed university lifecycle upper-bound resolution to configured semester/year inference (removed fixed max-level assumption).
+- Validation Summary:
+	- schema impact: no table/column/index/constraint mutation,
+	- EF migration impact: none,
+	- diagnostics checks for touched controller paths are clean.
+
 ## 2026-06-02 Update - Password Hardening and Sidebar/Module Parity (Schema Posture)
 
 ## 2026-06-02 Update - Institute Dynamic Model Phase 1 Completion (Schema Posture)

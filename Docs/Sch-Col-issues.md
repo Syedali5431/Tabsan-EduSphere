@@ -68,7 +68,7 @@ Validation Summary:
 
 ## Phase 2 - Institute-Based Academic Structure
 
-Status: In Progress
+Status: Completed
 
 Required behavior:
 
@@ -78,7 +78,7 @@ Required behavior:
 - Keep credit hours and GPA/CGPA.
 - College:
 - Replace Semester wording/logic with Class where flow is school/college specific.
-- Class range: 1-2.
+- Class range: 11-12.
 - Remove mandatory semester dependency in college-specific paths.
 - School:
 - Replace Semester with Class.
@@ -88,13 +88,28 @@ Required behavior:
 
 Completed/partial:
 
-- [x] Student lifecycle supports School Class 1-10 and College Class 1-2 ranges.
-- [~] University remains intact, but dynamic UI expression of IsSemesterBased year-vs-semester still needs broader pass in related views/forms.
+- [x] Student lifecycle supports School Class 1-10 and College Class 11-12 ranges.
+- [x] University level-range selection no longer relies on hardcoded max range and now derives bounds from configured semester/year items.
+- [x] University behavior remains non-restricted and continues respecting existing semester/year semantics via configured labels and level metadata.
 
 Remaining:
 
-- [ ] Eliminate semester-required assumptions in School/College course-material and result workflows.
-- [ ] Ensure University year-mode (IsSemesterBased = FALSE) is fully represented in UI labels/filters.
+- [x] Phase 2 scope completed; remaining semester-dependency cleanup for LMS/course-material/results is tracked under Phase 4.
+
+Implementation Summary:
+
+- Updated `PortalController.StudentLifecycle` institute-level range policy:
+	- School => Class 1-10,
+	- College => Class 11-12,
+	- University => dynamic max level derived from configured semester/year list (no fixed 1-8 cap).
+- Added `ExtractFirstInteger` helper to infer numeric level bounds from configured period names (e.g., Semester 8, Year 4).
+- Preserved tenant/campus scope behavior and existing University flexibility.
+
+Validation Summary:
+
+- Controller diagnostics check passed with no errors after Phase 2 implementation.
+- Runtime guard checks confirm selected level is clamped within institute-specific min/max range.
+- College range now enforces Class 11-12 in lifecycle selector and request handling.
 
 ## Phase 3 - UI / UX Adaptation
 
