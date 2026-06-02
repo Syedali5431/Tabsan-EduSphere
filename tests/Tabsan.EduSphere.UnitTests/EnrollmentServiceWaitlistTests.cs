@@ -214,6 +214,7 @@ file sealed class StubResultRepository : IResultRepository
     public Task<IReadOnlyList<Enrollment>> GetActiveEnrollmentsForStudentAsync(Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Enrollment>>([]);
     public Task<Guid?> GetSemesterIdForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default) => Task.FromResult<Guid?>(null);
     public Task<int?> GetCreditHoursForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default) => Task.FromResult<int?>(null);
+    public Task<InstitutionType> GetInstitutionTypeForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default) => Task.FromResult(InstitutionType.University);
     public void UpdateStudentProfile(StudentProfile studentProfile) { }
     public Task<IReadOnlyList<TranscriptExportLog>> GetExportLogsAsync(Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<TranscriptExportLog>>([]);
     public Task AddExportLogAsync(TranscriptExportLog log, CancellationToken ct = default) => Task.CompletedTask;

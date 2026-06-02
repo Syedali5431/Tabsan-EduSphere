@@ -24,16 +24,16 @@ else
 
     var levelHeaderLabel = selectedInstitutionType switch
     {
-        0 or 1 => "Classes",
-        2 => "Semesters",
+        1 or 2 => "Classes",
+        0 => "Semesters",
         _ => "Levels"
     };
 
     var createCountLabel = selectedInstitutionType switch
     {
-        0 => "Total Classes (1-10)",
+        2 => "Total Classes (1-10)",
         1 => "Total Classes (11-12)",
-        2 => "Total Semesters",
+        0 => "Total Semesters",
         _ => "Total Levels"
     };
 
@@ -153,8 +153,8 @@ else
 
                                 var rowLevelUnit = rowInstitutionType switch
                                 {
-                                    0 or 1 => "class",
-                                    2 => "semester",
+                                    1 or 2 => "class",
+                                    0 => "semester",
                                     _ => "level"
                                 };
 
@@ -219,7 +219,7 @@ else
         var rawType = selectedOption ? selectedOption.getAttribute('data-institution-type') : null;
         var institutionType = rawType === null ? NaN : parseInt(rawType, 10);
 
-        if (institutionType === 0) {
+        if (institutionType === 2) {
             totalLabel.textContent = 'Total Classes (1-10)';
             totalInput.value = '10';
             totalInput.min = '1';
@@ -235,7 +235,7 @@ else
             return;
         }
 
-        if (institutionType === 2) {
+        if (institutionType === 0) {
             totalLabel.textContent = 'Total Semesters';
             totalInput.value = '8';
             totalInput.min = '1';

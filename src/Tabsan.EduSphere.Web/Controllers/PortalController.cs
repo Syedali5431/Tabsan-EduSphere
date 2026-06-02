@@ -2465,9 +2465,9 @@ public class PortalController : Controller
 
                     normalizedTotalSemesters = departmentInstitutionType switch
                     {
-                        0 => Math.Clamp(totalSemesters <= 0 ? 10 : totalSemesters, 1, 10),
+                        2 => Math.Clamp(totalSemesters <= 0 ? 10 : totalSemesters, 1, 10),
                         1 => Math.Clamp(totalSemesters <= 0 ? 2 : totalSemesters, 1, 2),
-                        2 => Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters),
+                        0 => Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters),
                         _ => Math.Max(1, totalSemesters <= 0 ? 8 : totalSemesters)
                     };
                 }

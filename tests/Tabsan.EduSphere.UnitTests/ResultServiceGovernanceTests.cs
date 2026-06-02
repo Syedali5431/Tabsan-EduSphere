@@ -181,6 +181,9 @@ public class ResultServiceGovernanceTests
         public Task<int?> GetCreditHoursForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
             => Task.FromResult<int?>(null);
 
+        public Task<InstitutionType> GetInstitutionTypeForOfferingAsync(Guid courseOfferingId, CancellationToken ct = default)
+            => Task.FromResult(InstitutionType.University);
+
         public void UpdateStudentProfile(StudentProfile studentProfile)
         {
         }
