@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD022 MD032 MD041 -->
 
+### School/College Institute Dynamic Model - Phase 4 Progress Sync (2026-06-03)
+- Implementation Summary:
+  - Results write-scope validation relaxed to allow School/College write actions without forced semester/class filter selection.
+  - Results page write gating and period labels updated for class/year-aware behavior.
+  - Course Material create path now supports optional period input with safe fallback resolution.
+- Commands Executed:
+  - diagnostics checks via VS Code Problems/get_errors on touched files.
+  - `git status --short ; git branch --show-current ; git remote -v`
+  - `git add src/Tabsan.EduSphere.Web/Controllers/PortalController.cs src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml Docs/Sch-Col-issues.md Docs/Function-List.md Docs/Command.md Docs/Functionality.md "Project startup Docs/PRD.md" "Project startup Docs/Modules.md" "Project startup Docs/Development Plan - ASP.NET.md" "Project startup Docs/Database Schema.md"`
+  - `git commit -m "Advance Phase 4 results and course-material class/year handling"`
+  - `git push origin main`
+  - `git pull --rebase origin main`
+- Validation Summary:
+  - Diagnostics checks report no errors for touched runtime files.
+
 ### School/College Institute Dynamic Model - Phase 3 Completion Sync (2026-06-02)
 - Implementation Summary:
   - Completed UI/UX adaptation for institute-aware period semantics across lifecycle and key list/filter pages.

@@ -164,11 +164,14 @@ Completed:
 - [x] Discussion crash mitigation via schema self-heal columns.
 - [x] Discussion page now auto-loads first available offering when none selected.
 - [x] Announcements auto-resolves offering and populates offering selector.
+- [x] Results write-scope validation no longer hard-blocks School/College actions when semester/class filter is empty.
+- [x] Results page write readiness no longer requires semester/class selection; period label now resolves dynamically from available period options.
+- [x] Course Material create flow now supports optional class/year/semester selector with safe fallback resolution.
 
 Remaining:
 
-- [ ] Remove semester-only assumptions for School/College LMS/course-material filters.
-- [ ] Course Material: move from semester-first filters to class/year-aware filters.
+- [x] Remove semester-only assumptions for School/College LMS/course-material filters (web portal filter and write-gate path).
+- [x] Course Material: move from semester-first filters to class/year-aware filters.
 - [ ] Results:
 - [ ] Keep University GPA/CGPA path unchanged.
 - [ ] Implement School/College final-marks aggregation path.
@@ -194,7 +197,7 @@ Candidate files:
 
 - [x] discussion_threads mismatch mitigated by schema self-heal.
 - [x] Empty offering states now auto-resolve in Discussion/Announcements.
-- [ ] Validate no remaining semester-only LMS filter path for School/College.
+- [x] Validate no remaining semester-only LMS filter path for School/College (web portal course-material/results path).
 
 1. Result System Issues
 
@@ -205,7 +208,7 @@ Candidate files:
 1. Academic Logic Issues
 
 - [x] Hardcoded 1-8 lifecycle range removed.
-- [ ] Remove semester-first assumptions across all remaining modules.
+- [ ] Remove semester-first assumptions across all remaining modules (remaining target: final aggregation path + dashboard/readability items).
 - [ ] Ensure University year-mode uses IsSemesterBased end-to-end.
 
 1. UI Issues
@@ -217,7 +220,7 @@ Candidate files:
 1. Data Model Issues
 
 - [ ] Validate Class structure support coverage for School/College across app layers.
-- [ ] Remove mandatory Semester dependency in School/College app logic and script checks.
+- [x] Remove mandatory Semester dependency in School/College app logic and script checks (web portal result writes + course-material create flow).
 - [ ] Preserve full backward compatibility for University data.
 
 ## Database Schema Updates (MSSQL)
@@ -254,7 +257,26 @@ Functional:
 - [ ] University -> Semester/Year based on IsSemesterBased
 - [ ] LMS Discussion and Announcements behavior validated under school/college scopes.
 - [ ] Result approval validated for legacy and new payloads.
-- [ ] Course Material and Results filters validated for class/year-aware behavior.
+- [x] Course Material and Results filters validated for class/year-aware behavior in web portal flow.
+
+## 2026-06-03 Increment - Phase 4 Web Path Progress
+
+Implementation Summary:
+
+- Updated `PortalController.ValidateResultWriteScopeAsync` to make semester/class matching conditional (only enforced when a period value is supplied), removing hard-blocks for School/College writes.
+- Updated `ResultsPageModel.CanWriteResults` and disabled-reason messaging to stop requiring `SelectedSemesterName` for write actions.
+- Added `ResultsPageModel.PeriodLabel` and dynamic period-label resolution in `PortalController.RenderResultsAsync` so `Results.cshtml` renders Class/Year/Semester wording from available options.
+- Updated `PortalController.CreateCourseMaterial` to accept optional `semesterId` and resolve fallback period safely from selected filter/default list.
+- Updated `CourseMaterial.cshtml` create modal period selector to optional for School/College class/year flows.
+
+Validation Summary:
+
+- Diagnostics checks are clean for touched files:
+	- `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs`
+	- `src/Tabsan.EduSphere.Web/Models/Portal/PortalViewModels.cs`
+	- `src/Tabsan.EduSphere.Web/Views/Portal/Results.cshtml`
+	- `src/Tabsan.EduSphere.Web/Views/Portal/CourseMaterial.cshtml`
+- University result publishing and GPA/CGPA data paths remain untouched in this increment.
 
 Regression:
 

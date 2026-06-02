@@ -3,12 +3,7 @@
 @{
     var currentAction = (ViewData["ResultsAction"] as string) ?? (ViewContext.RouteData.Values["action"]?.ToString() ?? "Results");
     var canDownloadTemplate = Model.SelectedOfferingId.HasValue;
-    var isUniversityScope = (Model.Identity?.InstitutionType ?? 2) == 2;
-    var hasYearLabel = Model.SemesterOptions.Any(s => !string.IsNullOrWhiteSpace(s.Name) && s.Name.Contains("year", StringComparison.OrdinalIgnoreCase));
-    var hasSemesterLabel = Model.SemesterOptions.Any(s => !string.IsNullOrWhiteSpace(s.Name) && s.Name.Contains("semester", StringComparison.OrdinalIgnoreCase));
-    var classSemesterLabel = !isUniversityScope
-        ? "Class"
-        : (hasYearLabel && !hasSemesterLabel ? "Year" : "Semester");
+    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel;
     var semesterLabels = Model.SemesterOptions
         .Select((s, index) => new { s.Name, Label = (index + 1).ToString() })
         .ToDictionary(x => x.Name, x => x.Label, StringComparer.OrdinalIgnoreCase);
@@ -217,9 +212,9 @@ else
                     }
 
                     <div class="col-md-3">
-                        <label class="form-label">@classSemesterLabel @if (!User.IsInRole("Student")) { <span class="text-danger">*</span> }</label>
+                        <label class="form-label">@periodLabel</label>
                         <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                            <option value="">All @classSemesterLabel</option>
+                            <option value="">All @periodLabel</option>
                             @foreach (var s in Model.SemesterOptions)
                             {
                                 <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@GetSemesterLabel(s.Name)</option>
@@ -503,7 +498,7 @@ else
                             <tr>
                                 <th>Course</th>
                                 <th>Student</th>
-                                <th>@classSemesterLabel</th>
+                                <th>@periodLabel</th>
                                 <th>Marks</th>
                                 <th>Grade</th>
                                 <th>Published</th>
@@ -562,7 +557,7 @@ else
                                             @if (r.StudentProfileId != Guid.Empty)
                                             {
                                                 <form asp-action="PromoteStudentFromResult" method="post" class="d-inline"
-                                                      onsubmit="return confirm('Promote @r.StudentName to next @classSemesterLabel.ToLowerInvariant()?')">
+                                                      onsubmit="return confirm('Promote @r.StudentName to next @periodLabel.ToLowerInvariant()?')">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="entryPoint" value="@currentAction" />
                                                     <input type="hidden" name="studentProfileId" value="@r.StudentProfileId" />
@@ -667,7 +662,7 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="promote" value="true" id="promoteCheck" />
                                 <label class="form-check-label" for="promoteCheck">
-                                    Promote student to next @classSemesterLabel.ToLowerInvariant() after saving
+                                    Promote student to next @periodLabel.ToLowerInvariant() after saving
                                 </label>
                             </div>
                         </div>

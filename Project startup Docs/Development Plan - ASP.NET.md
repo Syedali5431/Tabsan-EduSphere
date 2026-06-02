@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Development Plan Synchronization (Institute Dynamic Model Phase 4 Progress)
+
+### Plan sync
+- Relaxed result-write semester dependency in web scope-validation logic for School/College paths.
+- Updated Results UI write gating and period labeling to class/year-aware behavior.
+- Updated Course Material create path to accept optional class/year/semester selection and resolve fallback period safely.
+
+### Validation sync
+- Diagnostics checks for touched controller/model/view files are clean.
+
 ## 2026-06-02 Update - Development Plan Synchronization (Institute Dynamic Model Phase 3 Completion)
 
 ### Plan sync

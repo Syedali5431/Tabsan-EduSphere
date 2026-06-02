@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Phase 4 Progress (Results and Course Material Scope Relaxation)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- No new public controller/service/API signature introduced.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- PortalController.ValidateResultWriteScopeAsync
+		- removed mandatory semester/class requirement for write scope; period matching now applies only when a period filter is provided.
+	- PortalController.RenderResultsAsync
+		- now resolves and emits dynamic `PeriodLabel` for Results UI rendering.
+	- PortalController.CreateCourseMaterial
+		- now accepts optional period selection and resolves fallback period before create submission.
+	- ResultsPageModel.CanWriteResults
+		- no longer requires `SelectedSemesterName` for write enablement.
+
+### Validation summary
+- Diagnostics checks report no errors in touched controller/model/view files.
+
 ## 2026-06-02 Update - Phase 3 Completion (UI/UX Adaptation)
 
 ### Function inventory delta

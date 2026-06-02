@@ -911,13 +911,13 @@ public class ResultsPageModel
     public string? SelectedSection { get; set; }
     public string? SelectedBatch { get; set; }
     public string? SelectedSemesterName { get; set; }
+    public string PeriodLabel { get; set; } = "Semester";
     public string? ImportReportToken { get; set; }
     public bool CanWriteResults =>
         SelectedOfferingId.HasValue
         && SelectedDepartmentId.HasValue
         && SelectedCourseId.HasValue
         && SelectedSubjectOfferingId.HasValue
-        && !string.IsNullOrWhiteSpace(SelectedSemesterName)
         && !string.IsNullOrWhiteSpace(SelectedExamType)
         && !string.IsNullOrWhiteSpace(SelectedAssessmentComponent);
 
@@ -926,7 +926,7 @@ public class ResultsPageModel
         && (Identity?.IsAdmin == true || Identity?.IsSuperAdmin == true);
 
     public string SaveResultDisabledReason =>
-        "Select department, course, subject, semester/class, exam type, and assessment component before result write actions.";
+        "Select department, course, subject, exam type, and assessment component before result write actions.";
 
     public string PublishResultDisabledReason =>
         CanWriteResults

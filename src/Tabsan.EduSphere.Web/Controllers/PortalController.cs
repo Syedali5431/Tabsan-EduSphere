@@ -3568,6 +3568,7 @@ public class PortalController : Controller
             SelectedStudentId = studentId,
             SelectedSection = section,
             SelectedBatch = batch,
+            PeriodLabel = "Semester",
             Message = TempData["PortalMessage"]?.ToString()
         };
 
@@ -3611,6 +3612,7 @@ public class PortalController : Controller
             {
                 var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
                 model.SemesterOptions = BuildSemesterOptions(allOfferings);
+                model.PeriodLabel = ResolveResultsPeriodLabel(model.SemesterOptions);
                 model.Offerings = FilterOfferingsBySemester(allOfferings, semesterName);
 
                 model.Results = await _api.GetMyResultsAsync(effectiveTenantId, effectiveCampusId, ct);
@@ -3678,7 +3680,7 @@ public class PortalController : Controller
             {
                 model.Departments = (await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct))
                     .OrderBy(d => d.Name)
-                    .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                    .Select(d => new LookupItem { Id = d.Id, Name = d.Name, InstitutionType = d.InstitutionType })
                     .ToList();
 
                 if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
@@ -3712,6 +3714,7 @@ public class PortalController : Controller
                     .OrderBy(s => s)
                     .Select(s => new LookupItem { Id = Guid.Empty, Name = s! })
                     .ToList();
+                model.PeriodLabel = ResolveResultsPeriodLabel(model.SemesterOptions);
 
                 if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName)
                     && !model.SemesterOptions.Any(s => string.Equals(s.Name, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
@@ -4860,10 +4863,10 @@ public class PortalController : Controller
         if (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue)
             return (false, "Tenant and campus scope is required for result write operations.");
 
-        if (!departmentId.HasValue || !courseId.HasValue || !subjectOfferingId.HasValue || string.IsNullOrWhiteSpace(semesterName)
+        if (!departmentId.HasValue || !courseId.HasValue || !subjectOfferingId.HasValue
             || string.IsNullOrWhiteSpace(examType) || string.IsNullOrWhiteSpace(assessmentComponent))
         {
-            return (false, "Select department, course, subject, semester/class, exam type, and assessment component before performing result write operations.");
+            return (false, "Select department, course, subject, exam type, and assessment component before performing result write operations.");
         }
 
         if (subjectOfferingId.Value != offeringId)
@@ -4877,7 +4880,8 @@ public class PortalController : Controller
         if (selectedOffering.CourseId != courseId.Value)
             return (false, "Selected offering does not match the selected course.");
 
-        if (!string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(semesterName)
+            && !string.Equals(selectedOffering.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase))
             return (false, "Selected offering does not match the selected semester/class.");
 
         return (true, string.Empty);
@@ -6775,6 +6779,32 @@ public class PortalController : Controller
 
         if (hasYear && !hasSemester)
             return "Year";
+
+        return "Semester";
+    }
+
+    private static string ResolveResultsPeriodLabel(IEnumerable<LookupItem> options)
+    {
+        var names = options
+            .Select(s => s.Name)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n!.Trim())
+            .ToList();
+
+        if (names.Count == 0)
+            return "Semester";
+
+        if (names.Any(n => n.Contains("class", StringComparison.OrdinalIgnoreCase)))
+            return "Class";
+
+        var hasYear = names.Any(n => n.Contains("year", StringComparison.OrdinalIgnoreCase));
+        var hasSemester = names.Any(n => n.Contains("semester", StringComparison.OrdinalIgnoreCase));
+        if (hasYear && !hasSemester)
+            return "Year";
+
+        var allNumeric = names.All(n => int.TryParse(new string(n.Where(char.IsDigit).ToArray()), out _));
+        if (allNumeric)
+            return "Class";
 
         return "Semester";
     }
@@ -9806,7 +9836,7 @@ public class PortalController : Controller
     public async Task<IActionResult> CreateCourseMaterial(
         Guid departmentId,
         Guid academicProgramId,
-        Guid semesterId,
+        Guid? semesterId,
         Guid courseId,
         string materialType,
         string title,
@@ -9828,6 +9858,30 @@ public class PortalController : Controller
         {
             try
             {
+                if (!semesterId.HasValue)
+                {
+                    semesterId = selectedSemesterId;
+                }
+
+                if (!semesterId.HasValue)
+                {
+                    var semesters = await _api.GetSemestersAsync(ct);
+                    semesterId = semesters.FirstOrDefault()?.Id;
+                }
+
+                if (!semesterId.HasValue || semesterId.Value == Guid.Empty)
+                {
+                    TempData["PortalMessage"] = "Select a valid class/year/semester before creating course material.";
+                    return RedirectToAction(nameof(CourseMaterial), new
+                    {
+                        departmentId = selectedDepartmentId,
+                        academicProgramId = selectedAcademicProgramId,
+                        semesterId = selectedSemesterId,
+                        courseId = selectedCourseId,
+                        activeOnly
+                    });
+                }
+
                 if (materialFile is { Length: > 0 })
                 {
                     await using var uploadStream = materialFile.OpenReadStream();
@@ -9843,7 +9897,7 @@ public class PortalController : Controller
                 await _api.CreateCourseMaterialAsync(
                     departmentId,
                     academicProgramId,
-                    semesterId,
+                    semesterId.Value,
                     courseId,
                     materialType,
                     title,

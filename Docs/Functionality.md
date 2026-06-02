@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Institute Dynamic Model Phase 4 Progress (Results and Course Material)
+
+### Implementation sync
+- Result write operations now support School/College flows without mandatory semester/class filter input.
+- Results UI readiness logic no longer blocks writes solely due to empty semester/class filter.
+- Results UI now uses runtime period labels (`Class`/`Year`/`Semester`) inferred from available period options.
+- Course Material create flow now supports optional period selection with safe fallback period resolution.
+
+### Validation sync
+- Diagnostics checks report no errors in touched Portal controller/model/view files.
+
 ## 2026-06-02 Update - Institute Dynamic Model Phase 3 Completion (UI and UX Adaptation)
 
 ### Implementation sync

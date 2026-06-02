@@ -1,5 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-03 - Product Requirements Synchronization (Institute Dynamic Model Phase 4 Progress)
+- Runtime delivery in this slice:
+  - removed mandatory semester/class prerequisite from web result write scope validation for School/College paths,
+  - updated results write readiness and period labeling to class/year-aware behavior,
+  - updated course-material create flow to allow optional period selection with safe fallback behavior.
+- Compatibility boundary:
+  - no route removals,
+  - no schema mutation,
+  - tenant/campus scoping preserved,
+  - university GPA/CGPA behavior unchanged in this increment.
+- Validation Summary:
+  - diagnostics checks for touched runtime files are clean.
+
 ### 2026-06-02 - Product Requirements Synchronization (Institute Dynamic Model Phase 3 Completion)
 - Runtime delivery in this slice:
   - completed user-facing period-label adaptation for institute-aware behavior,
