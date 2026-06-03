@@ -12,19 +12,18 @@ public partial class Phase40_AddUserPhoneNumber : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.Sql(
-            @"IF COL_LENGTH('users', 'PhoneNumber') IS NULL
-BEGIN
-    ALTER TABLE [users] ADD [PhoneNumber] nvarchar(32) NULL;
-END");
+        migrationBuilder.AddColumn<string>(
+            name: "PhoneNumber",
+            table: "users",
+            type: "nvarchar(32)",
+            maxLength: 32,
+            nullable: true);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.Sql(
-            @"IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] DROP COLUMN [PhoneNumber];
-END");
+        migrationBuilder.DropColumn(
+            name: "PhoneNumber",
+            table: "users");
     }
 }
