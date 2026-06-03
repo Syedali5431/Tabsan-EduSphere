@@ -9011,6 +9011,8 @@ public class PortalController : Controller
             if (model.SelectedUser is not null)
             {
                 model.Form.Email = model.SelectedUser.Email;
+                model.Form.FullName = model.SelectedUser.FullName;
+                model.Form.FatherName = model.SelectedUser.FatherName;
                 model.Form.PhoneNumber = model.SelectedUser.PhoneNumber;
                 model.Form.Address = model.SelectedUser.Address;
             }
@@ -9035,12 +9037,12 @@ public class PortalController : Controller
             var identity = _api.GetSessionIdentity();
             if (selectedUserId.HasValue && (identity?.IsAdmin == true || identity?.IsSuperAdmin == true))
             {
-                await _api.UpdateUserSettingsAsync(selectedUserId!.Value, new UpdateUserSettingsRequest(form.Email, form.PhoneNumber, form.Address), ct);
+                await _api.UpdateUserSettingsAsync(selectedUserId!.Value, new UpdateUserSettingsRequest(form.Email, form.FullName, form.FatherName, form.PhoneNumber, form.Address), ct);
                 TempData["PortalMessage"] = "User details updated.";
             }
             else
             {
-                await _api.UpdateMyUserSettingsAsync(new UpdateUserSettingsRequest(form.Email, form.PhoneNumber, form.Address), ct);
+                await _api.UpdateMyUserSettingsAsync(new UpdateUserSettingsRequest(form.Email, null, null, form.PhoneNumber, form.Address), ct);
                 TempData["PortalMessage"] = "Your details were updated.";
             }
         }

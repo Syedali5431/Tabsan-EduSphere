@@ -24,6 +24,12 @@ public class User : AuditableEntity
     /// <summary>Optional email address. Unique when provided (filtered index).</summary>
     public string? Email { get; private set; }
 
+    /// <summary>Optional full legal name for profile display and documentation.</summary>
+    public string? FullName { get; private set; }
+
+    /// <summary>Optional father name for certificate and identity workflows.</summary>
+    public string? FatherName { get; private set; }
+
     /// <summary>Optional recipient phone number used for SMS notification delivery.</summary>
     public string? PhoneNumber { get; private set; }
 
@@ -91,8 +97,9 @@ public class User : AuditableEntity
 
     /// <summary>Creates a new user. Password must already be hashed by the caller.</summary>
     public User(string username, string passwordHash, int roleId, string? email = null, Guid? departmentId = null,
-                bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null,
-                Guid? tenantId = null, Guid? campusId = null, string? address = null)
+                bool mustChangePassword = false, InstitutionType? institutionType = null, string? fullName = null,
+                string? fatherName = null, string? phoneNumber = null, Guid? tenantId = null, Guid? campusId = null,
+                string? address = null)
     {
         ValidateTenantCampusPair(tenantId, campusId);
 
@@ -100,6 +107,8 @@ public class User : AuditableEntity
         PasswordHash = passwordHash;
         RoleId = roleId;
         Email = email;
+        FullName = string.IsNullOrWhiteSpace(fullName) ? null : fullName.Trim();
+        FatherName = string.IsNullOrWhiteSpace(fatherName) ? null : fatherName.Trim();
         PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
         Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
         TenantId = tenantId;
@@ -185,6 +194,20 @@ public class User : AuditableEntity
     public void UpdateEmail(string? email)
     {
         Email = email;
+        Touch();
+    }
+
+    /// <summary>Updates the user's full name. Pass null to clear it.</summary>
+    public void UpdateFullName(string? fullName)
+    {
+        FullName = string.IsNullOrWhiteSpace(fullName) ? null : fullName.Trim();
+        Touch();
+    }
+
+    /// <summary>Updates the user's father name. Pass null to clear it.</summary>
+    public void UpdateFatherName(string? fatherName)
+    {
+        FatherName = string.IsNullOrWhiteSpace(fatherName) ? null : fatherName.Trim();
         Touch();
     }
 

@@ -29,6 +29,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Email)
                .HasMaxLength(256);
 
+        builder.Property(u => u.FullName)
+               .HasMaxLength(200)
+               .IsRequired(false);
+
+        builder.Property(u => u.FatherName)
+               .HasMaxLength(200)
+               .IsRequired(false);
+
         builder.Property(u => u.PhoneNumber)
                .HasMaxLength(32)
                .IsRequired(false);

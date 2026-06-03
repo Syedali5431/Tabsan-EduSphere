@@ -20,6 +20,12 @@ public sealed record CreateAdminUserRequest(
 
 	InstitutionType? InstitutionType,
 
+	[property: StringLength(200)]
+	string? FullName = null,
+
+	[property: StringLength(200)]
+	string? FatherName = null,
+
 	[property: Phone]
 	[property: StringLength(32)]
 	string? PhoneNumber = null,

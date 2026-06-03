@@ -131,6 +131,34 @@ END;
             AND LTRIM(RTRIM([Address])) <> N'';
     END;
 
+    IF COL_LENGTH('users', 'FullName') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'Users.SuperAdminFullNamePresent',
+            CASE WHEN COUNT(1) = 1 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'1'
+        FROM [users]
+        WHERE [Id] = '66666666-6666-6666-6666-666666666601'
+            AND [FullName] IS NOT NULL
+            AND LTRIM(RTRIM([FullName])) <> N'';
+    END;
+
+    IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+    BEGIN
+        INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
+        SELECT
+            N'Users.SuperAdminFatherNamePresent',
+            CASE WHEN COUNT(1) = 1 THEN 1 ELSE 0 END,
+            CAST(COUNT(1) AS NVARCHAR(20)),
+            N'1'
+        FROM [users]
+        WHERE [Id] = '66666666-6666-6666-6666-666666666601'
+            AND [FatherName] IS NOT NULL
+            AND LTRIM(RTRIM([FatherName])) <> N'';
+    END;
+
 /* 3) Department institution-type baseline */
 INSERT INTO @Results ([CheckName], [Passed], [Actual], [Expected])
 SELECT

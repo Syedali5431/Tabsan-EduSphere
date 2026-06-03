@@ -198,6 +198,8 @@ BEGIN
         [Id] uniqueidentifier NOT NULL,
         [Username] nvarchar(100) NOT NULL,
         [Email] nvarchar(256) NULL,
+        [FullName] nvarchar(200) NULL,
+        [FatherName] nvarchar(200) NULL,
         [Address] nvarchar(500) NULL,
         [PasswordHash] nvarchar(512) NOT NULL,
         [RoleId] int NOT NULL,

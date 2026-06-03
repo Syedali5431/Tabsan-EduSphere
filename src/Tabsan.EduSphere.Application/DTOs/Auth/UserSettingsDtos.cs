@@ -7,6 +7,8 @@ public sealed record UserSettingsUserDto(
     string Username,
     string Role,
     string? Email,
+    string? FullName,
+    string? FatherName,
     string? PhoneNumber,
     string? Address,
     bool IsActive,
@@ -21,6 +23,12 @@ public sealed record UpdateUserSettingsRequest(
     [property: EmailAddress]
     [property: StringLength(256)]
     string? Email,
+
+    [property: StringLength(200)]
+    string? FullName,
+
+    [property: StringLength(200)]
+    string? FatherName,
 
     [property: Phone]
     [property: StringLength(32)]

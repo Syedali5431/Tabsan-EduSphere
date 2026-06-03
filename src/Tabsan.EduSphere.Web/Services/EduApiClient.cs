@@ -2542,6 +2542,8 @@ public class EduApiClient : IEduApiClient
         public string Username { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public string? Email { get; set; }
+        public string? FullName { get; set; }
+        public string? FatherName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Address { get; set; }
         public bool IsActive { get; set; }
@@ -2574,6 +2576,8 @@ public class EduApiClient : IEduApiClient
         Username = item.Username,
         Role = item.Role,
         Email = item.Email,
+        FullName = item.FullName,
+        FatherName = item.FatherName,
         PhoneNumber = item.PhoneNumber,
         Address = item.Address,
         IsActive = item.IsActive,

@@ -37,6 +37,8 @@ DECLARE @UserId UNIQUEIDENTIFIER = NEWID();
 DECLARE @Username NVARCHAR(100) = N'superadmin2';
 DECLARE @Email NVARCHAR(256) = N'superadmin2@tabsan.local';
 DECLARE @Address NVARCHAR(500) = N'Head Office';
+DECLARE @FullName NVARCHAR(200) = N'Super Admin';
+DECLARE @FatherName NVARCHAR(200) = N'Founding Father';
 DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 DECLARE @PhoneNumber NVARCHAR(32) = N'+61490000999';
 /* --------------------------------------------------------- */
@@ -77,6 +79,8 @@ BEGIN
         [Id],
         [Username],
         [Email],
+        [FullName],
+        [FatherName],
         [Address],
         [PasswordHash],
         [RoleId],
@@ -94,6 +98,8 @@ BEGIN
         @UserId,
         @Username,
         @Email,
+        @FullName,
+        @FatherName,
         @Address,
         @PasswordHash,
         @RoleSuperAdminId,
@@ -114,6 +120,8 @@ BEGIN
     UPDATE [users]
     SET [Username] = @Username,
         [Email] = @Email,
+        [FullName] = @FullName,
+        [FatherName] = @FatherName,
         [Address] = @Address,
         [PasswordHash] = @PasswordHash,
         [RoleId] = @RoleSuperAdminId,
@@ -130,6 +138,22 @@ IF COL_LENGTH('users', 'TenantId') IS NOT NULL
 BEGIN
     UPDATE [users]
     SET [TenantId] = NULL,
+        [UpdatedAt] = @Now
+    WHERE [Id] = @ExistingId;
+END;
+
+IF COL_LENGTH('users', 'FullName') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [FullName] = @FullName,
+        [UpdatedAt] = @Now
+    WHERE [Id] = @ExistingId;
+END;
+
+IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [FatherName] = @FatherName,
         [UpdatedAt] = @Now
     WHERE [Id] = @ExistingId;
 END;

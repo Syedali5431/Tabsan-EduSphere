@@ -114,7 +114,7 @@ public class UserSettingsController : ControllerBase
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim();
-                if (!Contains(dto.Username, term) && !Contains(dto.Email, term) && !Contains(dto.PhoneNumber, term) && !Contains(dto.Address, term))
+                if (!Contains(dto.Username, term) && !Contains(dto.FullName, term) && !Contains(dto.FatherName, term) && !Contains(dto.Email, term) && !Contains(dto.PhoneNumber, term) && !Contains(dto.Address, term))
                     continue;
             }
 
@@ -205,6 +205,8 @@ public class UserSettingsController : ControllerBase
     private async Task<IActionResult> UpdateUserAsync(User user, UpdateUserSettingsRequest request, CancellationToken ct)
     {
         var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        var fullName = string.IsNullOrWhiteSpace(request.FullName) ? null : request.FullName.Trim();
+        var fatherName = string.IsNullOrWhiteSpace(request.FatherName) ? null : request.FatherName.Trim();
         var phone = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
         var address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim();
 
@@ -214,6 +216,12 @@ public class UserSettingsController : ControllerBase
             if (existing is not null && existing.Id != user.Id)
                 return Conflict(new { message = "Email already exists." });
         }
+
+        if (request.FullName is not null)
+            user.UpdateFullName(fullName);
+
+        if (request.FatherName is not null)
+            user.UpdateFatherName(fatherName);
 
         user.UpdateEmail(email);
         user.UpdatePhoneNumber(phone);
@@ -282,6 +290,8 @@ public class UserSettingsController : ControllerBase
             user.Username,
             user.Role.Name,
             user.Email,
+            user.FullName,
+            user.FatherName,
             user.PhoneNumber,
             user.Address,
             user.IsActive,

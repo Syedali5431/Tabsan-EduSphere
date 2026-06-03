@@ -317,6 +317,8 @@
                             <div class="detail-grid mb-4">
                                 <div class="detail-item"><div class="detail-label">Username</div><div class="detail-value">@selectedUser.Username</div></div>
                                 <div class="detail-item"><div class="detail-label">Role</div><div class="detail-value">@selectedUser.Role</div></div>
+                                <div class="detail-item"><div class="detail-label">Full Name</div><div class="detail-value">@(selectedUser.FullName ?? "Not assigned")</div></div>
+                                <div class="detail-item"><div class="detail-label">Father Name</div><div class="detail-value">@(selectedUser.FatherName ?? "Not assigned")</div></div>
                                 <div class="detail-item"><div class="detail-label">Department</div><div class="detail-value">@(selectedUser.DepartmentName ?? "Not assigned")</div></div>
                                 <div class="detail-item"><div class="detail-label">Course</div><div class="detail-value">@(selectedUser.CourseName ?? "Not assigned")</div></div>
                                 <div class="detail-item"><div class="detail-label">Tenant</div><div class="detail-value">@(selectedUser.TenantId?.ToString() ?? "Not assigned")</div></div>
@@ -333,6 +335,17 @@
                                 <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
 
                                 <div class="row g-3">
+                                    @if (Model.CanManageUsers)
+                                    {
+                                        <div class="col-md-6">
+                                            <label class="form-label">Full Name</label>
+                                            <input name="FullName" type="text" class="form-control" value="@Model.Form.FullName" maxlength="200" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Father Name</label>
+                                            <input name="FatherName" type="text" class="form-control" value="@Model.Form.FatherName" maxlength="200" />
+                                        </div>
+                                    }
                                     <div class="col-md-4">
                                         <label class="form-label">Email</label>
                                         <input name="Email" type="email" class="form-control" value="@Model.Form.Email" maxlength="256" />

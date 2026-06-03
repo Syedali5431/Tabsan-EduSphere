@@ -200,6 +200,8 @@ DECLARE @CoreUsers TABLE
     [Id] UNIQUEIDENTIFIER,
     [Username] NVARCHAR(100),
     [Email] NVARCHAR(256),
+    [FullName] NVARCHAR(200) NULL,
+    [FatherName] NVARCHAR(200) NULL,
     [RoleId] INT,
     [DepartmentId] UNIQUEIDENTIFIER NULL,
     [InstitutionType] INT NULL
@@ -230,6 +232,36 @@ SET u.[Username] = src.[Username],
     u.[UpdatedAt] = @Now
 FROM [users] u
 INNER JOIN @CoreUsers src ON src.[Id] = u.[Id];
+
+IF COL_LENGTH('users', 'FullName') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[FullName] = CASE u.[Username]
+        WHEN N'superadmin' THEN N'Tabsan Super Admin'
+        WHEN N'admin' THEN N'Core Admin'
+        WHEN N'faculty' THEN N'Core Faculty'
+        WHEN N'student' THEN N'Core Student'
+        ELSE u.[FullName]
+    END,
+    u.[UpdatedAt] = @Now
+    FROM [users] u
+    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
+END;
+
+IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[FatherName] = CASE u.[Username]
+        WHEN N'superadmin' THEN N'Founding Father'
+        WHEN N'admin' THEN N'Admin Father'
+        WHEN N'faculty' THEN N'Faculty Father'
+        WHEN N'student' THEN N'Student Father'
+        ELSE u.[FatherName]
+    END,
+    u.[UpdatedAt] = @Now
+    FROM [users] u
+    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
+END;
 
 IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
 BEGIN

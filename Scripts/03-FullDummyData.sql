@@ -4830,16 +4830,16 @@ END
 
 IF OBJECT_ID(N'[users]') IS NOT NULL
 BEGIN
-        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-        SELECT @LifecycleSchoolUserId, N'lifecycle.school.c1to10', N'lifecycle.school.c1to10@demo.local', @PwdHash, @RoleStudent, @LifecycleSchoolDepartmentId, 0, 1, @Now, NULL, 0, NULL
+        INSERT INTO [users] ([Id], [Username], [Email], [FullName], [FatherName], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleSchoolUserId, N'lifecycle.school.c1to10', N'lifecycle.school.c1to10@demo.local', N'Lifecycle School Student', N'School Father', @PwdHash, @RoleStudent, @LifecycleSchoolDepartmentId, 0, 1, @Now, NULL, 0, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleSchoolUserId OR u.[Username] = N'lifecycle.school.c1to10');
 
-        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-        SELECT @LifecycleCollegeUserId, N'lifecycle.college.c11to12', N'lifecycle.college.c11to12@demo.local', @PwdHash, @RoleStudent, @LifecycleCollegeDepartmentId, 1, 1, @Now, NULL, 0, NULL
+        INSERT INTO [users] ([Id], [Username], [Email], [FullName], [FatherName], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleCollegeUserId, N'lifecycle.college.c11to12', N'lifecycle.college.c11to12@demo.local', N'Lifecycle College Student', N'College Father', @PwdHash, @RoleStudent, @LifecycleCollegeDepartmentId, 1, 1, @Now, NULL, 0, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleCollegeUserId OR u.[Username] = N'lifecycle.college.c11to12');
 
-        INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-        SELECT @LifecycleUniversityUserId, N'lifecycle.university.s1to8', N'lifecycle.university.s1to8@demo.local', @PwdHash, @RoleStudent, @LifecycleUniversityDepartmentId, 2, 1, @Now, NULL, 0, NULL
+        INSERT INTO [users] ([Id], [Username], [Email], [FullName], [FatherName], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        SELECT @LifecycleUniversityUserId, N'lifecycle.university.s1to8', N'lifecycle.university.s1to8@demo.local', N'Lifecycle University Student', N'University Father', @PwdHash, @RoleStudent, @LifecycleUniversityDepartmentId, 2, 1, @Now, NULL, 0, NULL
         WHERE NOT EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = @LifecycleUniversityUserId OR u.[Username] = N'lifecycle.university.s1to8');
 END
 
@@ -5477,21 +5477,23 @@ DECLARE @InstituteDemoUsers TABLE
     [Id] UNIQUEIDENTIFIER,
     [Username] NVARCHAR(100),
     [Email] NVARCHAR(256),
+    [FullName] NVARCHAR(200),
+    [FatherName] NVARCHAR(200),
     [RoleId] INT,
     [DepartmentId] UNIQUEIDENTIFIER,
     [InstitutionType] INT
 );
 
-INSERT INTO @InstituteDemoUsers ([Id], [Username], [Email], [RoleId], [DepartmentId], [InstitutionType]) VALUES
-(CAST('6a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.admin', N'demo.uni.admin@demo.local', @RoleAdmin, '11111111-1111-1111-1111-111111111111', 2),
-(CAST('7a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.faculty', N'demo.uni.faculty@demo.local', @RoleFaculty, '11111111-1111-1111-1111-111111111111', 2),
-(CAST('8a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.student', N'demo.uni.student@demo.local', @RoleStudent, '11111111-1111-1111-1111-111111111111', 2),
-(CAST('6a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.admin', N'demo.col.admin@demo.local', @RoleAdmin, '12222222-2222-2222-2222-222222222221', 1),
-(CAST('7a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.faculty', N'demo.col.faculty@demo.local', @RoleFaculty, '12222222-2222-2222-2222-222222222221', 1),
-(CAST('8a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.student', N'demo.col.student@demo.local', @RoleStudent, '12222222-2222-2222-2222-222222222221', 1),
-(CAST('6a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.admin', N'demo.sch.admin@demo.local', @RoleAdmin, '13333333-3333-3333-3333-333333333331', 0),
-(CAST('7a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.faculty', N'demo.sch.faculty@demo.local', @RoleFaculty, '13333333-3333-3333-3333-333333333331', 0),
-(CAST('8a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.student', N'demo.sch.student@demo.local', @RoleStudent, '13333333-3333-3333-3333-333333333331', 0);
+INSERT INTO @InstituteDemoUsers ([Id], [Username], [Email], [FullName], [FatherName], [RoleId], [DepartmentId], [InstitutionType]) VALUES
+(CAST('6a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.admin', N'demo.uni.admin@demo.local', N'Demo University Admin', N'University Father', @RoleAdmin, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('7a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.faculty', N'demo.uni.faculty@demo.local', N'Demo University Faculty', N'University Father', @RoleFaculty, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('8a100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'demo.uni.student', N'demo.uni.student@demo.local', N'Demo University Student', N'University Father', @RoleStudent, '11111111-1111-1111-1111-111111111111', 2),
+(CAST('6a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.admin', N'demo.col.admin@demo.local', N'Demo College Admin', N'College Father', @RoleAdmin, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('7a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.faculty', N'demo.col.faculty@demo.local', N'Demo College Faculty', N'College Father', @RoleFaculty, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('8a100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'demo.col.student', N'demo.col.student@demo.local', N'Demo College Student', N'College Father', @RoleStudent, '12222222-2222-2222-2222-222222222221', 1),
+(CAST('6a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.admin', N'demo.sch.admin@demo.local', N'Demo School Admin', N'School Father', @RoleAdmin, '13333333-3333-3333-3333-333333333331', 0),
+(CAST('7a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.faculty', N'demo.sch.faculty@demo.local', N'Demo School Faculty', N'School Father', @RoleFaculty, '13333333-3333-3333-3333-333333333331', 0),
+(CAST('8a100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'demo.sch.student', N'demo.sch.student@demo.local', N'Demo School Student', N'School Father', @RoleStudent, '13333333-3333-3333-3333-333333333331', 0);
 
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT src.[Id], src.[Username], src.[Email], @PwdHash, src.[RoleId], src.[DepartmentId], src.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
@@ -5518,6 +5520,24 @@ SET u.[Username] = src.[Username],
     u.[UpdatedAt] = @Now
 FROM [users] u
 INNER JOIN @InstituteDemoUsers src ON src.[Id] = u.[Id];
+
+IF COL_LENGTH('users', 'FullName') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[FullName] = src.[FullName],
+        u.[UpdatedAt] = @Now
+    FROM [users] u
+    INNER JOIN @InstituteDemoUsers src ON src.[Id] = u.[Id];
+END;
+
+IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+BEGIN
+    UPDATE u
+    SET u.[FatherName] = src.[FatherName],
+        u.[UpdatedAt] = @Now
+    FROM [users] u
+    INNER JOIN @InstituteDemoUsers src ON src.[Id] = u.[Id];
+END;
 
 IF OBJECT_ID(N'[student_profiles]') IS NOT NULL
 BEGIN

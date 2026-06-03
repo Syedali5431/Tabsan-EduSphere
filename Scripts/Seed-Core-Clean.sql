@@ -136,6 +136,22 @@ SET [Username] = N'superadmin',
     [UpdatedAt] = @Now
 WHERE [Id] = @SuperAdminUserId;
 
+IF COL_LENGTH('users', 'FullName') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [FullName] = N'Tabsan Super Admin',
+        [UpdatedAt] = @Now
+    WHERE [Id] = @SuperAdminUserId;
+END;
+
+IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [FatherName] = N'Founding Father',
+        [UpdatedAt] = @Now
+    WHERE [Id] = @SuperAdminUserId;
+END;
+
 IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
 BEGIN
     UPDATE [users]

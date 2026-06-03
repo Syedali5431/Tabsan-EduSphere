@@ -170,6 +170,30 @@ BEGIN
 	SELECT 'UsersWithAddressCount' AS [CheckName], CAST(0 AS int) AS [Value];
 END;
 
+IF COL_LENGTH('users', 'FullName') IS NOT NULL
+BEGIN
+	SELECT 'UsersWithFullNameCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM users
+	WHERE [FullName] IS NOT NULL
+	  AND LTRIM(RTRIM([FullName])) <> N'';
+END
+ELSE
+BEGIN
+	SELECT 'UsersWithFullNameCount' AS [CheckName], CAST(0 AS int) AS [Value];
+END;
+
+IF COL_LENGTH('users', 'FatherName') IS NOT NULL
+BEGIN
+	SELECT 'UsersWithFatherNameCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM users
+	WHERE [FatherName] IS NOT NULL
+	  AND LTRIM(RTRIM([FatherName])) <> N'';
+END
+ELSE
+BEGIN
+	SELECT 'UsersWithFatherNameCount' AS [CheckName], CAST(0 AS int) AS [Value];
+END;
+
 SELECT 'PaymentSummaryReportCount' AS [CheckName], COUNT(1) AS [Value]
 FROM report_definitions
 WHERE [Key] = N'payment_summary';
