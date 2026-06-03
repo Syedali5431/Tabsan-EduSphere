@@ -621,6 +621,9 @@
                         {
                             <a class="menu-link @(IsActiveLink("Portal", "Students") ? "is-active" : "")" asp-controller="Portal" asp-action="Students" aria-current="@(IsActiveLink("Portal", "Students") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Students"))</span><span class="menu-link-text">Students</span></a>
                             <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">User Import</span></a>
+                        }
+                        @if (showAdminLinks || showFacultyLinks)
+                        {
                             <a class="menu-link @(IsActiveLink("Portal", "Departments") ? "is-active" : "")" asp-controller="Portal" asp-action="Departments" aria-current="@(IsActiveLink("Portal", "Departments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Departments"))</span><span class="menu-link-text">Departments</span></a>
                             <a class="menu-link @(IsActiveLink("Portal", "Programs") ? "is-active" : "")" asp-controller="Portal" asp-action="Programs" aria-current="@(IsActiveLink("Portal", "Programs") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Programs"))</span><span class="menu-link-text">Programs</span></a>
                         }
@@ -646,7 +649,7 @@
                     }
                     <a class="menu-link @(IsActiveLink("Portal", "Helpdesk") ? "is-active" : "")" asp-controller="Portal" asp-action="Helpdesk" aria-current="@(IsActiveLink("Portal", "Helpdesk") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Helpdesk"))</span><span class="menu-link-text">Helpdesk</span></a>
 
-                    @if (showAdminLinks)
+                    @if (showAdminLinks || showFacultyLinks)
                     {
                         <a class="menu-link @(IsActiveLink("Portal", "Prerequisites") ? "is-active" : "")" asp-controller="Portal" asp-action="Prerequisites" aria-current="@(IsActiveLink("Portal", "Prerequisites") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Prerequisites"))</span><span class="menu-link-text">Prerequisites</span></a>
                     }

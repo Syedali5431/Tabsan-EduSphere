@@ -115,6 +115,37 @@ public class PortalController : Controller
         "study_plan"
     };
 
+    private static readonly HashSet<string> FacultyAdminAcademicOnlyActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(Departments),
+        nameof(CreateDepartment),
+        nameof(UpdateDepartment),
+        nameof(SetDepartmentActive),
+        nameof(Programs),
+        nameof(CreateProgram),
+        nameof(UpdateProgram),
+        nameof(SetProgramActive),
+        nameof(Courses),
+        nameof(CreateCourse),
+        nameof(CreateOffering),
+        nameof(DeactivateCourse),
+        nameof(DeleteOffering),
+        nameof(Enrollments),
+        nameof(SetEnrollmentActive),
+        nameof(EnrollStudent),
+        nameof(AdminDropEnrollment),
+        nameof(StudentEnroll),
+        nameof(StudentDropEnrollment),
+        nameof(ResultCalculation),
+        nameof(SaveResultCalculation),
+        nameof(Prerequisites),
+        nameof(PrerequisiteAdd),
+        nameof(PrerequisiteRemove),
+        nameof(GradingConfig),
+        nameof(SaveGradingConfig),
+        nameof(SaveInstitutionGradingProfile)
+    };
+
     private sealed record AttendanceImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
 
     private sealed record ResultImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
@@ -167,6 +198,13 @@ public class PortalController : Controller
             return;
         }
 
+        if (ShouldRestrictToFacultyAdminAcademicRoles(action) && !HasFacultyAdminAcademicAccess())
+        {
+            TempData["PortalMessage"] = "This section is available only for Faculty, Admin, or SuperAdmin.";
+            context.Result = RedirectToAction(nameof(Dashboard));
+            return;
+        }
+
         if (ShouldEnforceSidebarGuard(action) && !CanBypassSidebarGuard())
         {
             var requiredMenuKey = ActionMenuKeyMap[action!];
@@ -214,6 +252,16 @@ public class PortalController : Controller
             return false;
 
         return FinanceBlockedAcademicMenuKeys.Contains(menuKey);
+    }
+
+    private static bool ShouldRestrictToFacultyAdminAcademicRoles(string? action)
+        => !string.IsNullOrWhiteSpace(action)
+           && FacultyAdminAcademicOnlyActions.Contains(action);
+
+    private bool HasFacultyAdminAcademicAccess()
+    {
+        var identity = _api.GetSessionIdentity();
+        return identity is not null && (identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin);
     }
 
     private bool ShouldEnforceSidebarGuard(string? actionName)
@@ -2395,9 +2443,9 @@ public class PortalController : Controller
         };
         if (!model.IsConnected) return View(model);
 
-        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        if (identity is null || (!identity.IsFaculty && !identity.IsAdmin && !identity.IsSuperAdmin))
         {
-            TempData["PortalMessage"] = "Only Admin or SuperAdmin can manage programs.";
+            TempData["PortalMessage"] = "Only Faculty/Admin/SuperAdmin can manage programs.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -2446,9 +2494,9 @@ public class PortalController : Controller
         CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
-        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        if (identity is null || (!identity.IsFaculty && !identity.IsAdmin && !identity.IsSuperAdmin))
         {
-            TempData["PortalMessage"] = "Only Admin or SuperAdmin can create programs.";
+            TempData["PortalMessage"] = "Only Faculty/Admin/SuperAdmin can create programs.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -2491,9 +2539,9 @@ public class PortalController : Controller
     public async Task<IActionResult> UpdateProgram(Guid id, string newName, Guid? tenantId, Guid? campusId, Guid? filterDepartmentId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
-        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+        if (identity is null || (!identity.IsFaculty && !identity.IsAdmin && !identity.IsSuperAdmin))
         {
-            TempData["PortalMessage"] = "Only Admin or SuperAdmin can update programs.";
+            TempData["PortalMessage"] = "Only Faculty/Admin/SuperAdmin can update programs.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -2516,9 +2564,9 @@ public class PortalController : Controller
     public async Task<IActionResult> SetProgramActive(Guid id, bool activate, Guid? tenantId, Guid? campusId, Guid? filterDepartmentId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
-        if (identity?.IsSuperAdmin != true)
+        if (identity is null || (!identity.IsFaculty && !identity.IsAdmin && !identity.IsSuperAdmin))
         {
-            TempData["PortalMessage"] = "Only SuperAdmin can change program status.";
+            TempData["PortalMessage"] = "Only Faculty/Admin/SuperAdmin can change program status.";
             return RedirectToAction(nameof(Dashboard));
         }
 
