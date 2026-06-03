@@ -52,15 +52,6 @@ static string RequireSecureStartupValue(IConfiguration configuration, IHostEnvir
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Render and similar hosts inject PORT; bind Kestrel to 0.0.0.0:<PORT> when present.
-var renderPortValue = Environment.GetEnvironmentVariable("PORT");
-var useRenderPortBinding = int.TryParse(renderPortValue, out var renderPort) && renderPort > 0;
-if (useRenderPortBinding)
-{
-    builder.WebHost.UseUrls($"http://0.0.0.0:{renderPort}");
-    Console.WriteLine($"[Startup] Using host-provided PORT binding: http://0.0.0.0:{renderPort}");
-}
-
 var env = builder.Environment;
 builder.Configuration.AddEduSphereConfigurationHierarchy(env);
 var environmentProfile = EnvironmentConfigurationResolver.Resolve(builder.Configuration, env);
@@ -755,7 +746,7 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("AppSett
     app.UseSwaggerUI();
 }
 
-if (!app.Environment.IsEnvironment("Testing") && !useRenderPortBinding)
+if (!app.Environment.IsEnvironment("Testing"))
 {
     app.UseHttpsRedirection();
 }
