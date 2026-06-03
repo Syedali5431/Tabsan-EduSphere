@@ -278,16 +278,27 @@ else
                     }
                     else
                     {
-                        <div class="col-md-5">
-                            <label class="form-label">Select Course Offering</label>
-                            <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                                <option value="">My Results (all)</option>
-                                @foreach (var o in Model.Offerings)
+                        <div class="col-md-3">
+                            <label class="form-label">Course</label>
+                            <select name="courseId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Courses</option>
+                                @foreach (var c in Model.Courses)
                                 {
-                                    <option value="@o.Id" selected="@(Model.SelectedOfferingId == o.Id ? "selected" : null)">@o.Name</option>
+                                    <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
                                 }
                             </select>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Subject</label>
+                            <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Subjects</option>
+                                @foreach (var s in Model.Subjects)
+                                {
+                                    <option value="@s.Id" selected="@(Model.SelectedSubjectOfferingId == s.Id ? "selected" : null)">@s.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <input type="hidden" name="offeringId" value="@Model.SelectedSubjectOfferingId" />
                     }
 
                     @if (!User.IsInRole("Student"))

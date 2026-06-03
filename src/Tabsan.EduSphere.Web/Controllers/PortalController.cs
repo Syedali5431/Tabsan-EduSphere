@@ -3661,25 +3661,146 @@ public class PortalController : Controller
 
             if (identity?.IsStudent == true)
             {
-                var allOfferings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
-                model.SemesterOptions = BuildSemesterOptions(allOfferings);
+                var myOfferingLookups = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
+                var myOfferingIds = myOfferingLookups.Select(o => o.Id).ToHashSet();
+
+                // Build student filters from offerings actually assigned to the signed-in student.
+                var scopedOfferings = await _api.GetCourseOfferingsAsync(null, effectiveTenantId, effectiveCampusId, null, ct);
+                var studentOfferings = scopedOfferings
+                    .Where(o => myOfferingIds.Contains(o.Id))
+                    .ToList();
+
+                var departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+                var departmentNameById = departments.ToDictionary(d => d.Id, d => d.Name);
+
+                model.Departments = studentOfferings
+                    .GroupBy(o => o.DepartmentId)
+                    .Select(g => new LookupItem
+                    {
+                        Id = g.Key,
+                        Name = departmentNameById.TryGetValue(g.Key, out var name) ? name : "Department"
+                    })
+                    .OrderBy(d => d.Name)
+                    .ToList();
+
+                if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId.Value))
+                    model.SelectedDepartmentId = null;
+
+                var departmentFilteredOfferings = model.SelectedDepartmentId.HasValue
+                    ? studentOfferings.Where(o => o.DepartmentId == model.SelectedDepartmentId.Value).ToList()
+                    : studentOfferings;
+
+                model.Courses = departmentFilteredOfferings
+                    .GroupBy(o => o.CourseId)
+                    .Select(g => g.First())
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.CourseId,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? o.CourseTitle
+                            : $"{o.CourseCode} - {o.CourseTitle}"
+                    })
+                    .ToList();
+
+                if (model.SelectedCourseId.HasValue && model.Courses.All(c => c.Id != model.SelectedCourseId.Value))
+                    model.SelectedCourseId = null;
+
+                var courseFilteredOfferings = model.SelectedCourseId.HasValue
+                    ? departmentFilteredOfferings.Where(o => o.CourseId == model.SelectedCourseId.Value).ToList()
+                    : departmentFilteredOfferings;
+
+                model.SemesterOptions = courseFilteredOfferings
+                    .Select(o => o.SemesterName)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(s => s)
+                    .Select(s => new LookupItem { Id = Guid.Empty, Name = s! })
+                    .ToList();
                 model.PeriodLabel = ResolveResultsPeriodLabel(model.SemesterOptions);
-                model.Offerings = FilterOfferingsBySemester(allOfferings, semesterName);
+
+                if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    && !model.SemesterOptions.Any(s => string.Equals(s.Name, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    model.SelectedSemesterName = null;
+                }
+
+                var semesterFilteredOfferings = !string.IsNullOrWhiteSpace(model.SelectedSemesterName)
+                    ? courseFilteredOfferings.Where(o => string.Equals(o.SemesterName, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)).ToList()
+                    : courseFilteredOfferings;
+
+                model.Subjects = semesterFilteredOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? o.CourseTitle
+                            : $"{o.CourseCode} - {o.CourseTitle}"
+                    })
+                    .ToList();
+
+                if (model.SelectedSubjectOfferingId.HasValue && model.Subjects.All(s => s.Id != model.SelectedSubjectOfferingId.Value))
+                    model.SelectedSubjectOfferingId = null;
+
+                if (!model.SelectedOfferingId.HasValue && model.SelectedSubjectOfferingId.HasValue)
+                    model.SelectedOfferingId = model.SelectedSubjectOfferingId;
+
+                if (!model.SelectedSubjectOfferingId.HasValue && model.SelectedOfferingId.HasValue)
+                    model.SelectedSubjectOfferingId = model.SelectedOfferingId;
+
+                model.Offerings = semesterFilteredOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .ThenBy(o => o.SemesterName)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? $"{o.CourseTitle} ({o.SemesterName})"
+                            : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                    })
+                    .ToList();
+
+                if (model.SelectedOfferingId.HasValue && model.Offerings.All(o => o.Id != model.SelectedOfferingId.Value))
+                    model.SelectedOfferingId = null;
 
                 model.Results = await _api.GetMyResultsAsync(effectiveTenantId, effectiveCampusId, ct);
 
-                if (offeringId.HasValue)
+                var allowedOfferingIds = studentOfferings.Select(o => o.Id).ToHashSet();
+                model.Results = model.Results
+                    .Where(r => allowedOfferingIds.Contains(r.CourseOfferingId))
+                    .ToList();
+
+                var selectedOfferingId = model.SelectedSubjectOfferingId ?? model.SelectedOfferingId;
+                if (selectedOfferingId.HasValue)
                 {
                     model.Results = model.Results
-                        .Where(r => r.CourseOfferingId == offeringId.Value)
+                        .Where(r => r.CourseOfferingId == selectedOfferingId.Value)
                         .ToList();
                 }
 
-                if (!string.IsNullOrWhiteSpace(semesterName))
+                if (model.SelectedCourseId.HasValue)
                 {
                     model.Results = model.Results
-                        .Where(r => string.Equals(r.SemesterName, semesterName, StringComparison.OrdinalIgnoreCase)
-                                    || string.IsNullOrWhiteSpace(r.SemesterName))
+                        .Where(r => studentOfferings.Any(o => o.Id == r.CourseOfferingId && o.CourseId == model.SelectedCourseId.Value))
+                        .ToList();
+                }
+
+                if (model.SelectedDepartmentId.HasValue)
+                {
+                    model.Results = model.Results
+                        .Where(r => studentOfferings.Any(o => o.Id == r.CourseOfferingId && o.DepartmentId == model.SelectedDepartmentId.Value))
+                        .ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(model.SelectedSemesterName))
+                {
+                    model.Results = model.Results
+                        .Where(r => studentOfferings.Any(o => o.Id == r.CourseOfferingId
+                            && string.Equals(o.SemesterName, model.SelectedSemesterName, StringComparison.OrdinalIgnoreCase)))
                         .ToList();
                 }
 
@@ -5098,6 +5219,13 @@ public class PortalController : Controller
         if (!_api.IsConnected())
             return RedirectToAction(nameof(Dashboard));
 
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsStudent == true)
+        {
+            TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+            return RedirectWithContext();
+        }
+
         if (!offeringId.HasValue)
         {
             TempData["PortalMessage"] = "Select an offering before downloading the result CSV template.";
@@ -5278,6 +5406,14 @@ public class PortalController : Controller
             return RedirectToAction(nameof(Dashboard));
         }
 
+        var sessionId = _api.GetSessionIdentity();
+        if (sessionId?.IsStudent == true)
+        {
+            TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+            WriteResultImportAudit("blocked-student-role", sessionId, new List<string> { "Student role is read-only for Results." });
+            return RedirectWithContext();
+        }
+
         if (!offeringId.HasValue)
         {
             TempData["PortalMessage"] = "Select an offering before importing result CSV.";
@@ -5292,7 +5428,6 @@ public class PortalController : Controller
             return RedirectWithContext();
         }
 
-        var sessionId = _api.GetSessionIdentity();
         var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
         var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
         var scopeValidation = await ValidateResultWriteScopeAsync(
@@ -5581,6 +5716,26 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (sessionId?.IsStudent == true)
+                {
+                    TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
@@ -5694,6 +5849,26 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (sessionId?.IsStudent == true)
+                {
+                    TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.PromoteStudentAsync(studentProfileId, effectiveTenantId, effectiveCampusId, ct);
@@ -5732,6 +5907,26 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (sessionId?.IsStudent == true)
+                {
+                    TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
 
@@ -5855,6 +6050,26 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (sessionId?.IsStudent == true)
+                {
+                    TempData["PortalMessage"] = "Students can only view their own results. Result write actions are not allowed.";
+                    return RedirectToAction(ResolveResultsEntryAction(entryPoint), new
+                    {
+                        offeringId,
+                        semesterName,
+                        tenantId,
+                        campusId,
+                        departmentId,
+                        courseId,
+                        subjectOfferingId,
+                        examType,
+                        assessmentComponent,
+                        studentId,
+                        section,
+                        batch
+                    });
+                }
+
                 if (sessionId?.IsAdmin != true && sessionId?.IsSuperAdmin != true)
                 {
                     _logger.LogWarning(
