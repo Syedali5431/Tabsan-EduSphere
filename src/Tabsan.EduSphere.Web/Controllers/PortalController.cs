@@ -154,6 +154,18 @@ public class PortalController : Controller
         nameof(StudyPlanRecommendations)
     };
 
+    private static readonly HashSet<string> FinanceAdminPaymentsOnlyActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(Payments),
+        nameof(CreatePayment),
+        nameof(ExportPaymentsCsvTemplate),
+        nameof(ImportPaymentsCsv),
+        nameof(UpdatePayment),
+        nameof(ConfirmPayment),
+        nameof(CancelPayment),
+        nameof(SubmitProof)
+    };
+
     private sealed record AttendanceImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
 
     private sealed record ResultImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
@@ -209,6 +221,13 @@ public class PortalController : Controller
         if (ShouldRestrictToFacultyAdminAcademicRoles(action) && !HasFacultyAdminAcademicAccess())
         {
             TempData["PortalMessage"] = "This section is available only for Faculty, Admin, or SuperAdmin.";
+            context.Result = RedirectToAction(nameof(Dashboard));
+            return;
+        }
+
+        if (ShouldRestrictToFinanceAdminPaymentsRoles(action) && !HasFinanceAdminPaymentsAccess())
+        {
+            TempData["PortalMessage"] = "Payments is available only for Admin, SuperAdmin, or Finance users.";
             context.Result = RedirectToAction(nameof(Dashboard));
             return;
         }
@@ -270,6 +289,16 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         return identity is not null && (identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin);
+    }
+
+    private static bool ShouldRestrictToFinanceAdminPaymentsRoles(string? action)
+        => !string.IsNullOrWhiteSpace(action)
+           && FinanceAdminPaymentsOnlyActions.Contains(action);
+
+    private bool HasFinanceAdminPaymentsAccess()
+    {
+        var identity = _api.GetSessionIdentity();
+        return identity is not null && (identity.IsAdmin || identity.IsSuperAdmin || identity.IsFinance);
     }
 
     private bool ShouldEnforceSidebarGuard(string? actionName)
