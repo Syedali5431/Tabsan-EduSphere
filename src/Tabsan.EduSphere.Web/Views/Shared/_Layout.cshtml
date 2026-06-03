@@ -295,67 +295,82 @@
     {
         "dashboard" => ("Overview", 1),
 
-        "timetable_admin" => ("Faculty Related", 2),
-        "timetable_teacher" => ("Faculty Related", 2),
-        "assignments" => ("Faculty Related", 2),
-        "enter_attendance" => ("Faculty Related", 2),
-        "enter_results" => ("Faculty Related", 2),
-        "gradebook"     => ("Faculty Related", 2),
-        "rubric_manage" => ("Faculty Related", 2),
-        "lms_manage"    => ("Faculty Related", 2),
-        "course_material" => ("Faculty Related", 2),
-        "discussion"    => ("Faculty Related", 2),
-        "announcements" => ("Faculty Related", 2),
+        // Setup flow should guide users through required prerequisites.
+        "tenant_management" => ("Setup Flow", 2),
+        "campus_management" => ("Setup Flow", 2),
+        "departments" => ("Setup Flow", 2),
+        "program" => ("Setup Flow", 2),
+        "programs" => ("Setup Flow", 2),
+        "courses" => ("Setup Flow", 2),
+        "enrollments" => ("Setup Flow", 2),
+        "students" => ("Setup Flow", 2),
 
-        "timetable_student" => ("Student Related", 3),
-        "students" => ("Faculty Related", 2),
-        "attendance" => ("Student Related", 3),
-        "results" => ("Student Related", 3),
-        "view_quizzes" => ("Student Related", 3),
-        "quizzes" => ("Faculty Related", 2),
-        "fyp" => ("Student Related", 3),
-        "student_lifecycle" => ("Student Related", 3),
-        "enrollments" => ("Student Related", 3),
+        "timetable_admin" => ("Faculty Related", 3),
+        "timetable_teacher" => ("Faculty Related", 3),
+        "assignments" => ("Faculty Related", 3),
+        "enter_attendance" => ("Faculty Related", 3),
+        "enter_results" => ("Faculty Related", 3),
+        "gradebook"     => ("Faculty Related", 3),
+        "rubric_manage" => ("Faculty Related", 3),
+        "lms_manage"    => ("Faculty Related", 3),
+        "course_material" => ("Faculty Related", 3),
+        "discussion"    => ("Faculty Related", 3),
+        "announcements" => ("Faculty Related", 3),
 
-        "program" => ("Academic Related", 4),
-        "programs" => ("Academic Related", 4),
-        "departments" => ("Academic Related", 4),
-        "courses" => ("Academic Related", 4),
-        "prerequisites" => ("Academic Related", 4),
-        "degree_audit" => ("Academic Related", 4),
-        "graduation_eligibility" => ("Academic Related", 4),
-        "degree_rules" => ("Academic Related", 4),
-        "graduation_apply" => ("Academic Related", 4),
-        "graduation_applications" => ("Academic Related", 4),
-        "generate_certificates" => ("Academic Related", 4),
-        "grading_config" => ("Academic Related", 4),
-        "study_plan" => ("Academic Related", 4),
-        "result_calculation" => ("Academic Related", 4),
+        "timetable_student" => ("Student Related", 4),
+        "attendance" => ("Student Related", 4),
+        "results" => ("Student Related", 4),
+        "view_quizzes" => ("Student Related", 4),
+        "quizzes" => ("Faculty Related", 3),
+        "fyp" => ("Student Related", 4),
+        "student_lifecycle" => ("Student Related", 4),
 
-        "payments" => ("Financial Related", 5),
+        "prerequisites" => ("Academic Related", 5),
+        "degree_audit" => ("Academic Related", 5),
+        "graduation_eligibility" => ("Academic Related", 5),
+        "degree_rules" => ("Academic Related", 5),
+        "graduation_apply" => ("Academic Related", 5),
+        "graduation_applications" => ("Academic Related", 5),
+        "generate_certificates" => ("Academic Related", 5),
+        "grading_config" => ("Academic Related", 5),
+        "study_plan" => ("Academic Related", 5),
+        "result_calculation" => ("Academic Related", 5),
 
-        "admin_users" => ("Settings Related", 6),
-        "user_import" => ("Settings Related", 6),
-        "buildings" => ("Settings Related", 6),
-        "rooms" => ("Settings Related", 6),
-        "analytics" => ("Settings Related", 6),
-        "report_center" => ("Settings Related", 6),
-        "user_settings" => ("Settings Related", 6),
-        "report_settings" => ("Settings Related", 6),
-        "sidebar_settings" => ("Settings Related", 6),
-        "theme_settings" => ("Settings Related", 6),
-        "license_update" => ("Settings Related", 6),
-        "dashboard_settings" => ("Settings Related", 6),
-        "institution_policy" => ("Settings Related", 6),
-        "module_composition" => ("Settings Related", 6),
-        "library_config" => ("Settings Related", 6),
-        "accreditation" => ("Settings Related", 6),
-        "tenant_management" => ("Settings Related", 6),
-        "campus_management" => ("Settings Related", 6),
-        "notifications" => ("Settings Related", 6),
-        "helpdesk" => ("Settings Related", 6),
+        "payments" => ("Financial Related", 6),
+
+        "admin_users" => ("Settings Related", 7),
+        "user_import" => ("Settings Related", 7),
+        "buildings" => ("Settings Related", 7),
+        "rooms" => ("Settings Related", 7),
+        "analytics" => ("Settings Related", 7),
+        "report_center" => ("Settings Related", 7),
+        "user_settings" => ("Settings Related", 7),
+        "report_settings" => ("Settings Related", 7),
+        "sidebar_settings" => ("Settings Related", 7),
+        "theme_settings" => ("Settings Related", 7),
+        "license_update" => ("Settings Related", 7),
+        "dashboard_settings" => ("Settings Related", 7),
+        "institution_policy" => ("Settings Related", 7),
+        "module_composition" => ("Settings Related", 7),
+        "library_config" => ("Settings Related", 7),
+        "accreditation" => ("Settings Related", 7),
+        "notifications" => ("Settings Related", 7),
+        "helpdesk" => ("Settings Related", 7),
 
         _ => ("General", 9)
+    };
+
+    static int ResolveDependencyOrder(string key) => key.ToLowerInvariant() switch
+    {
+        "tenant_management" => 10,
+        "campus_management" => 20,
+        "departments" => 30,
+        "program" => 40,
+        "programs" => 40,
+        "courses" => 50,
+        "enrollments" => 60,
+        "students" => 70,
+        _ => 900
     };
 
     static bool IsUniversityOnlyAction(string action) => action.ToLowerInvariant() switch
@@ -494,14 +509,15 @@
 
                                 if (isStudent && sub.Key.Equals("quizzes", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    groupedLinks.Add(("Student Related", 3, (top.DisplayOrder * 100) + sub.DisplayOrder, "View Quizzes", "Portal", "ViewQuizzes"));
+                                    groupedLinks.Add(("Student Related", 4, (top.DisplayOrder * 100) + sub.DisplayOrder, "View Quizzes", "Portal", "ViewQuizzes"));
                                     continue;
                                 }
 
                                 var subRoute = ResolveRoute(sub.Key);
                                 if (subRoute is null) { continue; }
                                 var subGroup = ResolveGroup(sub.Key);
-                                groupedLinks.Add((subGroup.Group, subGroup.SortOrder, (top.DisplayOrder * 100) + sub.DisplayOrder, sub.Name, subRoute.Value.Controller, subRoute.Value.Action));
+                                var subDependencySort = ResolveDependencyOrder(sub.Key);
+                                groupedLinks.Add((subGroup.Group, subGroup.SortOrder, (subDependencySort * 10000) + (top.DisplayOrder * 100) + sub.DisplayOrder, sub.Name, subRoute.Value.Controller, subRoute.Value.Action));
                             }
                         }
                         else
@@ -526,14 +542,15 @@
 
                             if (isStudent && top.Key.Equals("quizzes", StringComparison.OrdinalIgnoreCase))
                             {
-                                groupedLinks.Add(("Student Related", 3, top.DisplayOrder * 100, "View Quizzes", "Portal", "ViewQuizzes"));
+                                groupedLinks.Add(("Student Related", 4, top.DisplayOrder * 100, "View Quizzes", "Portal", "ViewQuizzes"));
                                 continue;
                             }
 
                             var topRoute = ResolveRoute(top.Key);
                             if (topRoute is null) { continue; }
                             var topGroup = ResolveGroup(top.Key);
-                            groupedLinks.Add((topGroup.Group, topGroup.SortOrder, top.DisplayOrder * 100, top.Name, topRoute.Value.Controller, topRoute.Value.Action));
+                            var topDependencySort = ResolveDependencyOrder(top.Key);
+                            groupedLinks.Add((topGroup.Group, topGroup.SortOrder, (topDependencySort * 10000) + (top.DisplayOrder * 100), top.Name, topRoute.Value.Controller, topRoute.Value.Action));
                         }
                     }
 
