@@ -51,101 +51,12 @@ public static class StartupConfigurationFailSafeValidator
     private static void ValidateDatabaseConnection(IHostEnvironment environment, string applicationName, DatabaseConnectionResolution databaseConnection)
     {
         var connectionString = databaseConnection.ConnectionString?.Trim() ?? string.Empty;
-        var isNonDevelopmentEnvironment = !environment.IsDevelopment() && !environment.IsEnvironment("Testing");
         if (string.IsNullOrWhiteSpace(connectionString)
             || connectionString.Contains("NOT_SET", StringComparison.OrdinalIgnoreCase)
-            || (isNonDevelopmentEnvironment && SecureConfigurationValidator.IsUnsafePlaceholderValue(connectionString)))
+            || (!environment.IsDevelopment() && !environment.IsEnvironment("Testing") && SecureConfigurationValidator.IsUnsafePlaceholderValue(connectionString)))
         {
             throw new InvalidOperationException($"{applicationName} startup requires a valid database connection string. Resolved source: {databaseConnection.Source}. Configure EDUSPHERE_DB_CONNECTION, Deployment:Database:ConnectionString, or ConnectionStrings:DefaultConnection.");
         }
-
-        if (isNonDevelopmentEnvironment && IsLoopbackSqlServerConnection(connectionString))
-        {
-            throw new InvalidOperationException($"{applicationName} startup blocked a localhost/localdb SQL connection string in non-development mode. Resolved source: {databaseConnection.Source}. Configure EDUSPHERE_DB_CONNECTION (or Deployment:Database:ConnectionString) to a reachable external database endpoint.");
-        }
-    }
-
-    private static bool IsLoopbackSqlServerConnection(string connectionString)
-    {
-        var normalized = connectionString.Trim();
-        if (normalized.Length == 0)
-        {
-            return false;
-        }
-
-        var lowered = normalized.ToLowerInvariant();
-        if (lowered.Contains("(localdb)"))
-        {
-            return true;
-        }
-
-        var parts = normalized.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        foreach (var part in parts)
-        {
-            var separatorIndex = part.IndexOf('=');
-            if (separatorIndex <= 0)
-            {
-                continue;
-            }
-
-            var key = part[..separatorIndex].Trim();
-            var value = part[(separatorIndex + 1)..].Trim();
-            if (value.Length == 0)
-            {
-                continue;
-            }
-
-            if (!key.Equals("Server", StringComparison.OrdinalIgnoreCase)
-                && !key.Equals("Data Source", StringComparison.OrdinalIgnoreCase)
-                && !key.Equals("Addr", StringComparison.OrdinalIgnoreCase)
-                && !key.Equals("Address", StringComparison.OrdinalIgnoreCase)
-                && !key.Equals("Network Address", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var hostToken = value;
-            var tcpPrefix = "tcp:";
-            if (hostToken.StartsWith(tcpPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                hostToken = hostToken[tcpPrefix.Length..];
-            }
-
-            var commaIndex = hostToken.IndexOf(',');
-            if (commaIndex >= 0)
-            {
-                hostToken = hostToken[..commaIndex];
-            }
-
-            var slashIndex = hostToken.IndexOf('/');
-            if (slashIndex >= 0)
-            {
-                hostToken = hostToken[..slashIndex];
-            }
-
-            var backslashIndex = hostToken.IndexOf('\\');
-            if (backslashIndex >= 0)
-            {
-                hostToken = hostToken[..backslashIndex];
-            }
-
-            var colonIndex = hostToken.IndexOf(':');
-            if (colonIndex >= 0)
-            {
-                hostToken = hostToken[..colonIndex];
-            }
-
-            hostToken = hostToken.Trim();
-            if (hostToken.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-                || hostToken.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)
-                || hostToken.Equals("::1", StringComparison.OrdinalIgnoreCase)
-                || hostToken.Equals(".", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static void ValidateDeploymentScaling(string applicationName, DeploymentTopologyResolution deploymentTopology)
