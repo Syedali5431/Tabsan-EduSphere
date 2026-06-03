@@ -883,6 +883,13 @@ public class PortalController : Controller
     [HttpGet]
     public IActionResult Dashboard()
     {
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsSuperAdmin != true)
+        {
+            TempData["PortalMessage"] = "Dashboard is available only for SuperAdmin users.";
+            return RedirectToAction(nameof(Helpdesk));
+        }
+
         ViewData["Title"] = "Dashboard";
         var vm = _api.GetConnection();
         return View(vm);

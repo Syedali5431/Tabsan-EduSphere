@@ -43,6 +43,55 @@
     }
     var canStudentSeeFyp = !isStudent || studentSemesterNumber >= 8;
 
+    var restrictedSettingsActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Buildings",
+        "Rooms",
+        "ThemeSettings",
+        "DashboardSettings",
+        "UserImport",
+        "Analytics",
+        "Helpdesk",
+        "ReportCenter",
+        "TwoFactorSettings"
+    };
+
+    var adminVisibleSettingsActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Buildings",
+        "Rooms",
+        "ThemeSettings",
+        "DashboardSettings",
+        "UserImport",
+        "Analytics",
+        "Helpdesk",
+        "ReportCenter",
+        "TwoFactorSettings"
+    };
+
+    var nonAdminVisibleSettingsActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "ThemeSettings",
+        "Analytics",
+        "Helpdesk",
+        "ReportCenter",
+        "TwoFactorSettings"
+    };
+
+    bool IsSettingsActionVisibleForRole(string action)
+    {
+        if (!restrictedSettingsActions.Contains(action))
+            return true;
+
+        if (showSuperAdminLinks)
+            return true;
+
+        if (showAdminLinks)
+            return adminVisibleSettingsActions.Contains(action);
+
+        return nonAdminVisibleSettingsActions.Contains(action);
+    }
+
     // Display name for header
     var displayName = sessionId?.UserName ?? (aspNetAuth ? principal!.Identity!.Name : null) ?? "Guest";
     var displayInitial = string.IsNullOrWhiteSpace(displayName) ? "G" : displayName[..1].ToUpperInvariant();
@@ -507,6 +556,14 @@
                         groupedLinks.Add(("Settings Related", 6, 2510, "User Import", "Portal", "UserImport"));
                     }
 
+                    var hasTwoFactorLink = groupedLinks.Any(l =>
+                        l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase)
+                        && l.Action.Equals("TwoFactorSettings", StringComparison.OrdinalIgnoreCase));
+                    if (!hasTwoFactorLink)
+                    {
+                        groupedLinks.Add(("Settings Related", 6, 2745, "Two-Factor Authentication", "Portal", "TwoFactorSettings"));
+                    }
+
                     if (isSuperAdmin)
                     {
                         var superAdminFallbackLinks = new[]
@@ -577,6 +634,11 @@
                                 continue;
                             }
 
+                            if (!IsSettingsActionVisibleForRole(link.Action))
+                            {
+                                continue;
+                            }
+
                             var isActive = IsActiveLink(link.Controller, link.Action);
                             <a class="menu-link @(isActive ? "is-active" : "")" asp-controller="@link.Controller" asp-action="@link.Action" aria-current="@(isActive ? "page" : null)">
                                 <span class="menu-link-icon">@Html.Raw(ResolveMenuIcon(link.Action))</span>
@@ -588,7 +650,10 @@
                 else
                 {
                     <div class="menu-label">Overview</div>
-                    <a class="menu-link @(IsActiveLink("Portal", "Dashboard") ? "is-active" : "")" asp-controller="Portal" asp-action="Dashboard" aria-current="@(IsActiveLink("Portal", "Dashboard") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">Dashboard</span></a>
+                    @if (showSuperAdminLinks)
+                    {
+                        <a class="menu-link @(IsActiveLink("Portal", "Dashboard") ? "is-active" : "")" asp-controller="Portal" asp-action="Dashboard" aria-current="@(IsActiveLink("Portal", "Dashboard") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">Dashboard</span></a>
+                    }
 
                     <div class="menu-label">Timetable</div>
                     @if (showAdminLinks)
@@ -663,7 +728,7 @@
                         <a class="menu-link @(IsActiveLink("Portal", "RubricManage") ? "is-active" : "")" asp-controller="Portal" asp-action="RubricManage" aria-current="@(IsActiveLink("Portal", "RubricManage") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("RubricManage"))</span><span class="menu-link-text">Rubric Management</span></a>
                     }
 
-                    @if (showAdminLinks || showFacultyLinks)
+                    @if (isConnected)
                     {
                         <div class="menu-label">Admin Tools</div>
                         <a class="menu-link @(IsActiveLink("Portal", "Analytics") ? "is-active" : "")" asp-controller="Portal" asp-action="Analytics" aria-current="@(IsActiveLink("Portal", "Analytics") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Analytics"))</span><span class="menu-link-text">Analytics</span></a>
@@ -679,6 +744,18 @@
                         }
                     }
 
+                    @if (!showSuperAdminLinks && isConnected)
+                    {
+                        <div class="menu-label">Settings</div>
+                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">Two-Factor Authentication</span></a>
+                        @if (showAdminLinks)
+                        {
+                            <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">Dashboard Settings</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">User Import</span></a>
+                        }
+                    }
+
                     @if (showSuperAdminLinks)
                     {
                         <div class="menu-label">System Settings</div>
@@ -686,6 +763,8 @@
                         <a class="menu-link @(IsActiveLink("Portal", "SidebarSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SidebarSettings" aria-current="@(IsActiveLink("Portal", "SidebarSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SidebarSettings"))</span><span class="menu-link-text">Sidebar Settings</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "LicenseUpdate") ? "is-active" : "")" asp-controller="Portal" asp-action="LicenseUpdate" aria-current="@(IsActiveLink("Portal", "LicenseUpdate") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LicenseUpdate"))</span><span class="menu-link-text">License Update</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">Two-Factor Authentication</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">Dashboard Settings</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "TenantManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="TenantManagement" aria-current="@(IsActiveLink("Portal", "TenantManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TenantManagement"))</span><span class="menu-link-text">Tenant Management</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "CampusManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="CampusManagement" aria-current="@(IsActiveLink("Portal", "CampusManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("CampusManagement"))</span><span class="menu-link-text">Campus Management</span></a>
                     }
@@ -767,7 +846,10 @@
                             </summary>
                             <div class="profile-menu-panel">
                                 <div class="profile-menu-role">@((sessionId?.Roles.Count > 0) ? string.Join(" / ", sessionId.Roles) : "Connected user")</div>
-                                <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">Open Dashboard</a>
+                                @if (isSuperAdmin)
+                                {
+                                    <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">Open Dashboard</a>
+                                }
                                 <a asp-controller="Portal" asp-action="Notifications" class="profile-menu-link">View Notifications</a>
                                 <a asp-controller="Portal" asp-action="TwoFactorSettings" class="profile-menu-link">Two-Factor Authentication</a>
                                 @if (isSuperAdmin)
