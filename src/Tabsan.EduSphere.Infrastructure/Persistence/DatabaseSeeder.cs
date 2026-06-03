@@ -1,6 +1,8 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Application.Interfaces;
@@ -39,6 +41,8 @@ public static class DatabaseSeeder
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        var hostEnvironment = scope.ServiceProvider.GetService<IHostEnvironment>();
+        var logger = scope.ServiceProvider.GetService<ILoggerFactory>()?.CreateLogger("DatabaseSeeder");
 
         // Retry once on "Database already exists" (SQL error 1801), which can happen
         // when two processes race to create the same LocalDB database in test scenarios.
@@ -54,6 +58,17 @@ public static class DatabaseSeeder
             await Task.Delay(2000);
             await db.Database.MigrateAsync();
         }
+        catch (SqlException ex) when (hostEnvironment?.IsProduction() == true && IsKnownProductionSchemaConflict(ex))
+        {
+            // In production environments with pre-existing schema objects, historical EF migrations can
+            // fail on duplicate-object DDL (column/index/constraint already exists). Continue startup
+            // so the app can run against the already-materialized schema.
+            logger?.LogWarning(
+                ex,
+                "Skipping blocking migration conflict in production because schema objects already exist. " +
+                "ErrorNumbers={ErrorNumbers}",
+                string.Join(",", ex.Errors.Cast<SqlError>().Select(e => e.Number).Distinct()));
+        }
 
         await SeedRolesAsync(db);
         await SeedModulesAsync(db);
@@ -65,6 +80,27 @@ public static class DatabaseSeeder
         await EnsureTenantCampusBackfillAsync(db, defaultTenantId, defaultCampusId);
 
         await db.SaveChangesAsync();
+    }
+
+    private static bool IsKnownProductionSchemaConflict(SqlException ex)
+    {
+        // SQL Server duplicate/exists errors commonly raised when EF migration DDL collides
+        // with schema that was already created out-of-band.
+        var knownConflictNumbers = new HashSet<int>
+        {
+            2601, // Cannot insert duplicate key row
+            2627, // Violation of PRIMARY KEY/UNIQUE constraint
+            2705, // Column names in each table must be unique
+            2714  // There is already an object named ... in the database
+        };
+
+        foreach (SqlError error in ex.Errors)
+        {
+            if (knownConflictNumbers.Contains(error.Number))
+                return true;
+        }
+
+        return false;
     }
 
     // ── Tenant and Campus Defaults (Phase 2) ─────────────────────────────────
