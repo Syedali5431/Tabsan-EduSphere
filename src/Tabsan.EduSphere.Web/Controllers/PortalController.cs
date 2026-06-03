@@ -143,7 +143,15 @@ public class PortalController : Controller
         nameof(PrerequisiteRemove),
         nameof(GradingConfig),
         nameof(SaveGradingConfig),
-        nameof(SaveInstitutionGradingProfile)
+        nameof(SaveInstitutionGradingProfile),
+        nameof(StudyPlan),
+        nameof(StudyPlanDetail),
+        nameof(CreateStudyPlan),
+        nameof(AddStudyPlanCourse),
+        nameof(RemoveStudyPlanCourse),
+        nameof(DeleteStudyPlan),
+        nameof(AdvisePlan),
+        nameof(StudyPlanRecommendations)
     };
 
     private sealed record AttendanceImportReportPayload(string FileName, string CsvContent, DateTime CreatedAtUtc);
