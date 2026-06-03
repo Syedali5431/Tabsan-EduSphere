@@ -55,36 +55,39 @@ else
                             </select>
                         </div>
                     }
-                    <div class="col-md-3">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Departments</option>
-                            @foreach (var d in Model.Departments)
-                            {
-                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Course/Subject</label>
-                        <select name="courseId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Courses</option>
-                            @foreach (var c in Model.Courses)
-                            {
-                                <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">@periodLabel</label>
-                        <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                            <option value="">All @periodLabel</option>
-                            @foreach (var s in Model.SemesterOptions)
-                            {
-                                <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>
-                            }
-                        </select>
-                    </div>
+                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Department</label>
+                            <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Departments</option>
+                                @foreach (var d in Model.Departments)
+                                {
+                                    <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Course/Subject</label>
+                            <select name="courseId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Courses</option>
+                                @foreach (var c in Model.Courses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">@periodLabel</label>
+                            <select name="semesterName" class="form-select" onchange="this.form.submit()">
+                                <option value="">All @periodLabel</option>
+                                @foreach (var s in Model.SemesterOptions)
+                                {
+                                    <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     <div class="col-md-5">
                         <label class="form-label">Select Course Offering</label>
                         <select name="offeringId" class="form-select" onchange="this.form.submit()">
@@ -95,7 +98,7 @@ else
                             }
                         </select>
                     </div>
-                    @if (Model.SelectedOfferingId.HasValue)
+                    @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                     {
                         <div class="col-md-4">
                             <label class="form-label">Student (Optional)</label>

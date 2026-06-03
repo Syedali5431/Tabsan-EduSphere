@@ -3316,6 +3316,13 @@ public class PortalController : Controller
             var sessionId = _api.GetSessionIdentity();
             var effectiveTenantId = sessionId?.IsSuperAdmin == true ? model.SelectedTenantId : sessionId?.TenantId;
             var effectiveCampusId = sessionId?.IsSuperAdmin == true ? model.SelectedCampusId : sessionId?.CampusId;
+            var isStudent = sessionId?.IsStudent == true;
+            var isFaculty = sessionId?.IsFaculty == true;
+
+            var myOfferingLookup = (isStudent || isFaculty)
+                ? await _api.GetMyOfferingsAsync(ct)
+                : new List<LookupItem>();
+            var myOfferingIds = myOfferingLookup.Select(o => o.Id).ToHashSet();
 
             if (sessionId?.IsSuperAdmin == true
                 && (effectiveTenantId.HasValue ^ effectiveCampusId.HasValue))
@@ -3334,8 +3341,20 @@ public class PortalController : Controller
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
             }
 
-            if (sessionId?.IsStudent == true)
+            if (isStudent)
             {
+                model.CourseOfferings = myOfferingLookup
+                    .OrderBy(o => o.Name)
+                    .ToList();
+
+                if (model.SelectedOfferingId.HasValue && !myOfferingIds.Contains(model.SelectedOfferingId.Value))
+                {
+                    model.SelectedOfferingId = null;
+                    model.Message = string.IsNullOrWhiteSpace(model.Message)
+                        ? "Selected offering is not valid for your enrollment scope."
+                        : model.Message;
+                }
+
                 model.Summary = await _api.GetMyAttendanceSummaryAsync(ct);
                 model.LowAttendance = model.Summary
                     .Where(s => s.AttendancePercentage < 75)
@@ -3354,6 +3373,13 @@ public class PortalController : Controller
                     model.SelectedDepartmentId = null;
 
                 var allOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, effectiveTenantId, effectiveCampusId, null, ct);
+
+                if (isFaculty)
+                {
+                    allOfferings = allOfferings
+                        .Where(o => myOfferingIds.Contains(o.Id))
+                        .ToList();
+                }
 
                 model.Courses = allOfferings
                     .GroupBy(o => o.CourseId)
@@ -4748,11 +4774,22 @@ public class PortalController : Controller
         SessionIdentity? identity,
         CancellationToken ct)
     {
-        if (identity?.IsSuperAdmin == true && (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue))
+        var actor = identity;
+        if (actor is null || !(actor.IsFaculty || actor.IsAdmin || actor.IsSuperAdmin))
+            return (false, "Only Faculty/Admin/SuperAdmin can mark or edit attendance.");
+
+        if (actor.IsSuperAdmin && (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue))
             return (false, "Select tenant and campus before performing attendance write operations.");
 
         if (!effectiveTenantId.HasValue || !effectiveCampusId.HasValue)
             return (false, "Tenant and campus scope is required for attendance write operations.");
+
+        if (actor.IsFaculty)
+        {
+            var myOfferingIds = (await _api.GetMyOfferingsAsync(ct)).Select(o => o.Id).ToHashSet();
+            if (!myOfferingIds.Contains(offeringId))
+                return (false, "Faculty can only mark or edit attendance for assigned class/subject offerings.");
+        }
 
         if (!departmentId.HasValue || !courseId.HasValue)
             return (false, "Select department and course before performing attendance write operations.");
