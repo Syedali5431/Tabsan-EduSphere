@@ -3,6 +3,57 @@
     ViewData["Title"] = "Sidebar Settings";
     var roles = new[] { "Admin", "Faculty", "Student" };
     var message = TempData["Message"] as string;
+
+    static (string Section, int SectionSort) ResolveSidebarSection(string key)
+    {
+        var normalized = key?.Trim().ToLowerInvariant() ?? string.Empty;
+        return normalized switch
+        {
+            "dashboard" => ("Overview", 1),
+
+            "tenant_management" or "campus_management" or "departments" or "program" or "programs" or "courses" or "enrollments" or "students"
+                => ("Setup Flow", 2),
+
+            "timetable_admin" or "timetable_teacher" or "assignments" or "enter_attendance" or "enter_results" or "gradebook" or "rubric_manage" or "lms_manage" or "course_material" or "discussion" or "announcements" or "quizzes"
+                => ("Faculty Related", 3),
+
+            "timetable_student" or "attendance" or "results" or "view_quizzes" or "fyp" or "student_lifecycle"
+                => ("Student Related", 4),
+
+            "prerequisites" or "degree_audit" or "graduation_eligibility" or "degree_rules" or "graduation_apply" or "graduation_applications" or "generate_certificates" or "grading_config" or "study_plan" or "result_calculation"
+                => ("Academic Related", 5),
+
+            "payments" => ("Financial Related", 6),
+
+            "admin_users" or "user_import" or "buildings" or "rooms" or "analytics" or "report_center" or "user_settings" or "report_settings" or "sidebar_settings" or "theme_settings" or "license_update" or "dashboard_settings" or "institution_policy" or "module_composition" or "library_config" or "accreditation" or "notifications" or "helpdesk"
+                => ("Settings Related", 7),
+
+            _ => ("General", 9)
+        };
+    }
+
+    static int ResolveDependencyOrder(string key)
+    {
+        var normalized = key?.Trim().ToLowerInvariant() ?? string.Empty;
+        return normalized switch
+        {
+            "tenant_management" => 10,
+            "campus_management" => 20,
+            "departments" => 30,
+            "program" or "programs" => 40,
+            "courses" => 50,
+            "enrollments" => 60,
+            "students" => 70,
+            _ => 900
+        };
+    }
+
+    var orderedTopLevelMenus = Model.TopLevelMenus
+        .OrderBy(x => ResolveSidebarSection(x.Key).SectionSort)
+        .ThenBy(x => ResolveDependencyOrder(x.Key))
+        .ThenBy(x => x.DisplayOrder)
+        .ThenBy(x => x.Name)
+        .ToList();
 }
 
 <div class="d-flex align-items-center mb-3 gap-2">
@@ -59,8 +110,18 @@ else
                 </thead>
                 <tbody>
                     @{ int topIndex = 1; }
-                    @foreach (var item in Model.TopLevelMenus.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name))
+                    @{ string? currentSection = null; }
+                    @foreach (var item in orderedTopLevelMenus)
                     {
+                        var section = ResolveSidebarSection(item.Key);
+                        if (!string.Equals(currentSection, section.Section, StringComparison.Ordinal))
+                        {
+                            currentSection = section.Section;
+                            <tr class="table-secondary">
+                                <td colspan="8" class="fw-semibold text-uppercase small">@currentSection</td>
+                            </tr>
+                        }
+
                         <tr class="table-primary fw-semibold @(item.SubMenus.Any() ? "has-submenus" : "")"
                             data-id="@item.Id"
                             style="cursor:@(item.SubMenus.Any() ? "pointer" : "default")"
@@ -120,7 +181,10 @@ else
                         @if (item.SubMenus.Any())
                         {
                             var subIndex = 1;
-                            foreach (var sub in item.SubMenus.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
+                            foreach (var sub in item.SubMenus
+                                .OrderBy(s => ResolveDependencyOrder(s.Key))
+                                .ThenBy(s => s.DisplayOrder)
+                                .ThenBy(s => s.Name))
                             {
                                 <tr class="submenu-row d-none table-light" data-parent="@item.Id">
                                     <td class="ps-4 text-muted small">@($"{topIndex}.{subIndex}")</td>
