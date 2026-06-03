@@ -55,6 +55,64 @@ END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 DECLARE @CollegeInstitutionType INT = 1;
+DECLARE @CollegeCanonicalCourseCode NVARCHAR(50) = N'COL-CORE-11TO12';
+
+IF OBJECT_ID(N'[departments]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[semesters]') IS NOT NULL
+BEGIN
+  DECLARE @CollegeCanonicalDepartmentId UNIQUEIDENTIFIER = CAST('12222222-2222-2222-2222-222222222223' AS UNIQUEIDENTIFIER);
+  DECLARE @CollegeCanonicalProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222324' AS UNIQUEIDENTIFIER);
+  DECLARE @CollegeCanonicalCourseId UNIQUEIDENTIFIER = CAST('44444444-4444-4444-4444-444444444434' AS UNIQUEIDENTIFIER);
+  DECLARE @CollegeCanonicalOfferingId UNIQUEIDENTIFIER = CAST('75555555-5555-5555-5555-555555555601' AS UNIQUEIDENTIFIER);
+  DECLARE @CollegeSeedFacultyUserId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) u.[Id]
+    FROM [users] u
+    INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
+    WHERE r.[Name] = N'Faculty'
+      AND ISNULL(u.[InstitutionType], @CollegeInstitutionType) = @CollegeInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+    ORDER BY u.[CreatedAt], u.[Id]
+  );
+  DECLARE @CollegeSemesterId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) [Id]
+    FROM [semesters]
+    WHERE ISNULL([IsDeleted], 0) = 0
+    ORDER BY [CreatedAt], [Id]
+  );
+
+  INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @CollegeCanonicalDepartmentId, N'College Core Department', N'COLCORE', @CollegeInstitutionType, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @CollegeCanonicalDepartmentId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @CollegeCanonicalProgramId, N'Intermediate Core (Class 11-12)', N'CLS11_12', @CollegeCanonicalDepartmentId, 2, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @CollegeCanonicalProgramId);
+
+  INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @CollegeCanonicalCourseId, N'College Core Studies (Class 11-12)', @CollegeCanonicalCourseCode, 3, @CollegeCanonicalDepartmentId, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Id] = @CollegeCanonicalCourseId);
+
+  UPDATE [courses]
+  SET [Title] = N'College Core Studies (Class 11-12)',
+    [Code] = @CollegeCanonicalCourseCode,
+    [DepartmentId] = @CollegeCanonicalDepartmentId,
+    [CreditHours] = 3,
+    [IsActive] = 1,
+    [IsDeleted] = 0,
+    [DeletedAt] = NULL,
+    [UpdatedAt] = @Now
+  WHERE [Id] = @CollegeCanonicalCourseId;
+
+  IF @CollegeSemesterId IS NOT NULL
+  BEGIN
+    INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @CollegeCanonicalOfferingId, @CollegeCanonicalCourseId, @CollegeSemesterId, @CollegeSeedFacultyUserId, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = @CollegeCanonicalOfferingId);
+  END;
+END;
 
 DECLARE @FallbackFacultyUserId UNIQUEIDENTIFIER = (
     SELECT TOP (1) u.[Id]
@@ -98,7 +156,8 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE WHEN c.[Code] = @CollegeCanonicalCourseCode THEN 0 ELSE 1 END,
+             co.[CreatedAt], co.[Id]
 ) depOffering
 OUTER APPLY
 (
@@ -110,7 +169,8 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE WHEN c.[Code] = @CollegeCanonicalCourseCode THEN 0 ELSE 1 END,
+             co.[CreatedAt], co.[Id]
 ) instOffering
 WHERE ISNULL(su.[InstitutionType], @CollegeInstitutionType) = @CollegeInstitutionType
   AND ISNULL(su.[IsDeleted], 0) = 0

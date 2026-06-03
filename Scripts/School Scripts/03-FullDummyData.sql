@@ -48,6 +48,64 @@ END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 DECLARE @SchoolInstitutionType INT = 0;
+DECLARE @SchoolCanonicalCourseCode NVARCHAR(50) = N'SCH-CORE-1TO10';
+
+IF OBJECT_ID(N'[departments]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[semesters]') IS NOT NULL
+BEGIN
+  DECLARE @SchoolCanonicalDepartmentId UNIQUEIDENTIFIER = CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER);
+  DECLARE @SchoolCanonicalProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER);
+  DECLARE @SchoolCanonicalCourseId UNIQUEIDENTIFIER = CAST('44444444-4444-4444-4444-444444444428' AS UNIQUEIDENTIFIER);
+  DECLARE @SchoolCanonicalOfferingId UNIQUEIDENTIFIER = CAST('75555555-5555-5555-5555-555555555501' AS UNIQUEIDENTIFIER);
+  DECLARE @SchoolSeedFacultyUserId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) u.[Id]
+    FROM [users] u
+    INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
+    WHERE r.[Name] = N'Faculty'
+      AND ISNULL(u.[InstitutionType], @SchoolInstitutionType) = @SchoolInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+    ORDER BY u.[CreatedAt], u.[Id]
+  );
+  DECLARE @SchoolSemesterId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) [Id]
+    FROM [semesters]
+    WHERE ISNULL([IsDeleted], 0) = 0
+    ORDER BY [CreatedAt], [Id]
+  );
+
+  INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @SchoolCanonicalDepartmentId, N'School Core Department', N'SCHCORE', @SchoolInstitutionType, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @SchoolCanonicalDepartmentId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @SchoolCanonicalProgramId, N'School Core (Class 1-10)', N'CLS1_10', @SchoolCanonicalDepartmentId, 10, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @SchoolCanonicalProgramId);
+
+  INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @SchoolCanonicalCourseId, N'School Core Studies (Class 1-10)', @SchoolCanonicalCourseCode, 3, @SchoolCanonicalDepartmentId, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Id] = @SchoolCanonicalCourseId);
+
+  UPDATE [courses]
+  SET [Title] = N'School Core Studies (Class 1-10)',
+    [Code] = @SchoolCanonicalCourseCode,
+    [DepartmentId] = @SchoolCanonicalDepartmentId,
+    [CreditHours] = 3,
+    [IsActive] = 1,
+    [IsDeleted] = 0,
+    [DeletedAt] = NULL,
+    [UpdatedAt] = @Now
+  WHERE [Id] = @SchoolCanonicalCourseId;
+
+  IF @SchoolSemesterId IS NOT NULL
+  BEGIN
+    INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @SchoolCanonicalOfferingId, @SchoolCanonicalCourseId, @SchoolSemesterId, @SchoolSeedFacultyUserId, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = @SchoolCanonicalOfferingId);
+  END;
+END;
 
 DECLARE @FallbackFacultyUserId UNIQUEIDENTIFIER = (
     SELECT TOP (1) u.[Id]
@@ -83,7 +141,8 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE WHEN c.[Code] = @SchoolCanonicalCourseCode THEN 0 ELSE 1 END,
+             co.[CreatedAt], co.[Id]
 ) depOffering
 OUTER APPLY
 (
@@ -95,7 +154,8 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE WHEN c.[Code] = @SchoolCanonicalCourseCode THEN 0 ELSE 1 END,
+             co.[CreatedAt], co.[Id]
 ) instOffering
 WHERE ISNULL(su.[InstitutionType], @SchoolInstitutionType) = @SchoolInstitutionType
   AND ISNULL(su.[IsDeleted], 0) = 0

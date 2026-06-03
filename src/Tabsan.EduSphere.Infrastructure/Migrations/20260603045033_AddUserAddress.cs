@@ -11,13 +11,11 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_result_component_rules_name",
-                table: "result_component_rules");
+            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[result_component_rules]') AND name = N'IX_result_component_rules_name')
+                                  DROP INDEX [IX_result_component_rules_name] ON [dbo].[result_component_rules];");
 
-            migrationBuilder.DropIndex(
-                name: "IX_gpa_scale_rules_minimum_score",
-                table: "gpa_scale_rules");
+            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[gpa_scale_rules]') AND name = N'IX_gpa_scale_rules_minimum_score')
+                                  DROP INDEX [IX_gpa_scale_rules_minimum_score] ON [dbo].[gpa_scale_rules];");
 
             migrationBuilder.AlterColumn<string>(
                 name: "MfaTotpSecret",
@@ -30,34 +28,23 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                 oldMaxLength: 128,
                 oldNullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "Address",
-                table: "users",
-                type: "nvarchar(500)",
-                maxLength: 500,
-                nullable: true);
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[users]', N'Address') IS NULL
+                                  ALTER TABLE [dbo].[users] ADD [Address] nvarchar(500) NULL;");
 
-            migrationBuilder.AddColumn<int>(
-                name: "InstitutionType",
-                table: "result_component_rules",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[users]', N'FullName') IS NULL
+                                  ALTER TABLE [dbo].[users] ADD [FullName] nvarchar(200) NULL;");
 
-            migrationBuilder.AddColumn<string>(
-                name: "ReceiptNo",
-                table: "payment_receipts",
-                type: "nvarchar(64)",
-                maxLength: 64,
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[users]', N'FatherName') IS NULL
+                                  ALTER TABLE [dbo].[users] ADD [FatherName] nvarchar(200) NULL;");
 
-            migrationBuilder.AddColumn<int>(
-                name: "InstitutionType",
-                table: "gpa_scale_rules",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[result_component_rules]', N'InstitutionType') IS NULL
+                                  ALTER TABLE [dbo].[result_component_rules] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_result_component_rules_InstitutionType] DEFAULT (0);");
+
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[payment_receipts]', N'ReceiptNo') IS NULL
+                                  ALTER TABLE [dbo].[payment_receipts] ADD [ReceiptNo] nvarchar(64) NOT NULL CONSTRAINT [DF_payment_receipts_ReceiptNo] DEFAULT (N'');");
+
+            migrationBuilder.Sql(@"IF COL_LENGTH(N'[dbo].[gpa_scale_rules]', N'InstitutionType') IS NULL
+                                  ALTER TABLE [dbo].[gpa_scale_rules] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_gpa_scale_rules_InstitutionType] DEFAULT (0);");
 
             migrationBuilder.CreateTable(
                 name: "academic_document_templates",
@@ -155,23 +142,14 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_result_component_rules_institution_name",
-                table: "result_component_rules",
-                columns: new[] { "InstitutionType", "Name" },
-                unique: true);
+            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[result_component_rules]') AND name = N'IX_result_component_rules_institution_name')
+                                  CREATE UNIQUE INDEX [IX_result_component_rules_institution_name] ON [dbo].[result_component_rules] ([InstitutionType], [Name]);");
 
-            migrationBuilder.CreateIndex(
-                name: "ix_pr_receipt_no",
-                table: "payment_receipts",
-                column: "ReceiptNo",
-                unique: true);
+            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[payment_receipts]') AND name = N'ix_pr_receipt_no')
+                                  CREATE UNIQUE INDEX [ix_pr_receipt_no] ON [dbo].[payment_receipts] ([ReceiptNo]);");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_gpa_scale_rules_institution_minimum_score",
-                table: "gpa_scale_rules",
-                columns: new[] { "InstitutionType", "MinimumScore" },
-                unique: true);
+            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[gpa_scale_rules]') AND name = N'IX_gpa_scale_rules_institution_minimum_score')
+                                  CREATE UNIQUE INDEX [IX_gpa_scale_rules_institution_minimum_score] ON [dbo].[gpa_scale_rules] ([InstitutionType], [MinimumScore]);");
 
             migrationBuilder.CreateIndex(
                 name: "IX_academic_document_templates_type_active",

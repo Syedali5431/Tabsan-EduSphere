@@ -48,6 +48,156 @@ END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 DECLARE @UniversityInstitutionType INT = 2;
+DECLARE @UniversityItCourseCode NVARCHAR(50) = N'UNI-IT-CORE';
+DECLARE @UniversityBusinessCourseCode NVARCHAR(50) = N'UNI-BUS-CORE';
+DECLARE @UniversityLanguageCourseCode NVARCHAR(50) = N'UNI-LANG-CORE';
+
+IF OBJECT_ID(N'[departments]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[semesters]') IS NOT NULL
+BEGIN
+  DECLARE @UniversityItDepartmentId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityBusinessDepartmentId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityLanguageDepartmentId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111114' AS UNIQUEIDENTIFIER);
+
+  DECLARE @UniversityBscsProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityBsseProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222212' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityBbaProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityLanguageProgramId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222218' AS UNIQUEIDENTIFIER);
+
+  DECLARE @UniversityItCourseId UNIQUEIDENTIFIER = CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityBusinessCourseId UNIQUEIDENTIFIER = CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityLanguageCourseId UNIQUEIDENTIFIER = CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER);
+
+  DECLARE @UniversityItOfferingId UNIQUEIDENTIFIER = CAST('75555555-5555-5555-5555-555555555701' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityBusinessOfferingId UNIQUEIDENTIFIER = CAST('75555555-5555-5555-5555-555555555702' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityLanguageOfferingId UNIQUEIDENTIFIER = CAST('75555555-5555-5555-5555-555555555703' AS UNIQUEIDENTIFIER);
+
+  DECLARE @UniversitySeedFacultyUserId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) u.[Id]
+    FROM [users] u
+    INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
+    WHERE r.[Name] = N'Faculty'
+      AND ISNULL(u.[InstitutionType], @UniversityInstitutionType) = @UniversityInstitutionType
+      AND ISNULL(u.[IsDeleted], 0) = 0
+    ORDER BY u.[CreatedAt], u.[Id]
+  );
+  DECLARE @UniversitySemesterId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) [Id]
+    FROM [semesters]
+    WHERE ISNULL([IsDeleted], 0) = 0
+    ORDER BY [CreatedAt], [Id]
+  );
+
+  INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityItDepartmentId, N'IT Department', N'IT', @UniversityInstitutionType, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @UniversityItDepartmentId);
+
+  INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityBusinessDepartmentId, N'Business Department', N'BUS', @UniversityInstitutionType, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @UniversityBusinessDepartmentId);
+
+  INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityLanguageDepartmentId, N'Language Department', N'LANG', @UniversityInstitutionType, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @UniversityLanguageDepartmentId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityBscsProgramId, N'BS Computer Science', N'BSCS', @UniversityItDepartmentId, 8, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @UniversityBscsProgramId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityBsseProgramId, N'BS Software Engineering', N'BSSE', @UniversityItDepartmentId, 8, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @UniversityBsseProgramId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityBbaProgramId, N'BBA', N'BBA', @UniversityBusinessDepartmentId, 8, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @UniversityBbaProgramId);
+
+  INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityLanguageProgramId, N'Language Studies (1 Year)', N'LANG-1Y', @UniversityLanguageDepartmentId, 2, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @UniversityLanguageProgramId);
+
+  UPDATE [academic_programs]
+  SET [Name] = CASE [Id]
+           WHEN @UniversityBscsProgramId THEN N'BS Computer Science'
+           WHEN @UniversityBsseProgramId THEN N'BS Software Engineering'
+           WHEN @UniversityBbaProgramId THEN N'BBA'
+           WHEN @UniversityLanguageProgramId THEN N'Language Studies (1 Year)'
+         END,
+    [Code] = CASE [Id]
+           WHEN @UniversityBscsProgramId THEN N'BSCS'
+           WHEN @UniversityBsseProgramId THEN N'BSSE'
+           WHEN @UniversityBbaProgramId THEN N'BBA'
+           WHEN @UniversityLanguageProgramId THEN N'LANG-1Y'
+         END,
+    [DepartmentId] = CASE [Id]
+               WHEN @UniversityBscsProgramId THEN @UniversityItDepartmentId
+               WHEN @UniversityBsseProgramId THEN @UniversityItDepartmentId
+               WHEN @UniversityBbaProgramId THEN @UniversityBusinessDepartmentId
+               WHEN @UniversityLanguageProgramId THEN @UniversityLanguageDepartmentId
+             END,
+    [TotalSemesters] = CASE [Id]
+                 WHEN @UniversityLanguageProgramId THEN 2
+                 ELSE 8
+               END,
+    [IsActive] = 1,
+    [IsDeleted] = 0,
+    [DeletedAt] = NULL,
+    [UpdatedAt] = @Now
+  WHERE [Id] IN (@UniversityBscsProgramId, @UniversityBsseProgramId, @UniversityBbaProgramId, @UniversityLanguageProgramId);
+
+  INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityItCourseId, N'IT Core Computing', @UniversityItCourseCode, 3, @UniversityItDepartmentId, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Id] = @UniversityItCourseId);
+
+  INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityBusinessCourseId, N'Business Core Management', @UniversityBusinessCourseCode, 3, @UniversityBusinessDepartmentId, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Id] = @UniversityBusinessCourseId);
+
+  INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+  SELECT @UniversityLanguageCourseId, N'Language Core Studies', @UniversityLanguageCourseCode, 3, @UniversityLanguageDepartmentId, 1, @Now, NULL, 0, NULL
+  WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Id] = @UniversityLanguageCourseId);
+
+  UPDATE [courses]
+  SET [Title] = CASE [Id]
+            WHEN @UniversityItCourseId THEN N'IT Core Computing'
+            WHEN @UniversityBusinessCourseId THEN N'Business Core Management'
+            WHEN @UniversityLanguageCourseId THEN N'Language Core Studies'
+          END,
+    [Code] = CASE [Id]
+           WHEN @UniversityItCourseId THEN @UniversityItCourseCode
+           WHEN @UniversityBusinessCourseId THEN @UniversityBusinessCourseCode
+           WHEN @UniversityLanguageCourseId THEN @UniversityLanguageCourseCode
+         END,
+    [DepartmentId] = CASE [Id]
+               WHEN @UniversityItCourseId THEN @UniversityItDepartmentId
+               WHEN @UniversityBusinessCourseId THEN @UniversityBusinessDepartmentId
+               WHEN @UniversityLanguageCourseId THEN @UniversityLanguageDepartmentId
+             END,
+    [CreditHours] = 3,
+    [IsActive] = 1,
+    [IsDeleted] = 0,
+    [DeletedAt] = NULL,
+    [UpdatedAt] = @Now
+  WHERE [Id] IN (@UniversityItCourseId, @UniversityBusinessCourseId, @UniversityLanguageCourseId);
+
+  IF @UniversitySemesterId IS NOT NULL
+  BEGIN
+    INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @UniversityItOfferingId, @UniversityItCourseId, @UniversitySemesterId, @UniversitySeedFacultyUserId, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = @UniversityItOfferingId);
+
+    INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @UniversityBusinessOfferingId, @UniversityBusinessCourseId, @UniversitySemesterId, @UniversitySeedFacultyUserId, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = @UniversityBusinessOfferingId);
+
+    INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    SELECT @UniversityLanguageOfferingId, @UniversityLanguageCourseId, @UniversitySemesterId, @UniversitySeedFacultyUserId, @Now, NULL, 0, NULL
+    WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = @UniversityLanguageOfferingId);
+  END;
+END;
 
 DECLARE @FallbackFacultyUserId UNIQUEIDENTIFIER = (
     SELECT TOP (1) u.[Id]
@@ -83,7 +233,11 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE
+                 WHEN c.[Code] IN (@UniversityItCourseCode, @UniversityBusinessCourseCode, @UniversityLanguageCourseCode) THEN 0
+                 ELSE 1
+             END,
+             co.[CreatedAt], co.[Id]
 ) depOffering
 OUTER APPLY
 (
@@ -95,7 +249,11 @@ OUTER APPLY
       AND ISNULL(c.[IsDeleted], 0) = 0
       AND ISNULL(co.[IsDeleted], 0) = 0
       AND co.[FacultyUserId] IS NOT NULL
-    ORDER BY co.[CreatedAt], co.[Id]
+    ORDER BY CASE
+                 WHEN c.[Code] IN (@UniversityItCourseCode, @UniversityBusinessCourseCode, @UniversityLanguageCourseCode) THEN 0
+                 ELSE 1
+             END,
+             co.[CreatedAt], co.[Id]
 ) instOffering
 WHERE ISNULL(su.[InstitutionType], @UniversityInstitutionType) = @UniversityInstitutionType
   AND ISNULL(su.[IsDeleted], 0) = 0

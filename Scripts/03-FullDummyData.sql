@@ -619,6 +619,87 @@ SELECT sp.Id, sp.UserId, sp.RegistrationNumber, sp.ProgramId, sp.DepartmentId, '
 FROM @StudentProfiles sp
 WHERE NOT EXISTS (SELECT 1 FROM [student_profiles] x WHERE x.[Id] = sp.Id);
 
+/* 5.0) Canonical dummy mapping per requested class/course topology */
+UPDATE ap
+SET ap.[Name] = src.[Name],
+    ap.[Code] = src.[Code],
+    ap.[TotalSemesters] = src.[TotalSemesters],
+    ap.[IsActive] = 1,
+    ap.[IsDeleted] = 0,
+    ap.[DeletedAt] = NULL,
+    ap.[UpdatedAt] = @Now
+FROM [academic_programs] ap
+INNER JOIN
+(
+    VALUES
+    (CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER), N'School Core (Class 1-10)', N'CLS1_10', 10),
+    (CAST('22222222-2222-2222-2222-222222222324' AS UNIQUEIDENTIFIER), N'Intermediate Core (Class 11-12)', N'CLS11_12', 2),
+    (CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER), N'BS Computer Science', N'BSCS', 8),
+    (CAST('22222222-2222-2222-2222-222222222212' AS UNIQUEIDENTIFIER), N'BS Software Engineering', N'BSSE', 8),
+    (CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER), N'BBA', N'BBA', 8),
+    (CAST('22222222-2222-2222-2222-222222222218' AS UNIQUEIDENTIFIER), N'Language Studies (1 Year)', N'LANG-1Y', 2)
+) src([Id], [Name], [Code], [TotalSemesters])
+    ON src.[Id] = ap.[Id];
+
+;WITH SchoolProfiles AS
+(
+    SELECT sp.[Id],
+           ROW_NUMBER() OVER (ORDER BY sp.[CreatedAt], sp.[Id]) AS rn
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], 0) = 0
+      AND ISNULL(u.[IsDeleted], 0) = 0
+)
+UPDATE sp
+SET sp.[ProgramId] = CAST('22222222-2222-2222-2222-222222222431' AS UNIQUEIDENTIFIER),
+    sp.[CurrentSemesterNumber] = ((s.rn - 1) % 10) + 1,
+    sp.[UpdatedAt] = @Now
+FROM [student_profiles] sp
+INNER JOIN SchoolProfiles s ON s.[Id] = sp.[Id];
+
+;WITH CollegeProfiles AS
+(
+    SELECT sp.[Id],
+           ROW_NUMBER() OVER (ORDER BY sp.[CreatedAt], sp.[Id]) AS rn
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], 1) = 1
+      AND ISNULL(u.[IsDeleted], 0) = 0
+)
+UPDATE sp
+SET sp.[ProgramId] = CAST('22222222-2222-2222-2222-222222222324' AS UNIQUEIDENTIFIER),
+    sp.[CurrentSemesterNumber] = ((c.rn - 1) % 2) + 11,
+    sp.[UpdatedAt] = @Now
+FROM [student_profiles] sp
+INNER JOIN CollegeProfiles c ON c.[Id] = sp.[Id];
+
+;WITH UniversityProfiles AS
+(
+    SELECT sp.[Id],
+           sp.[DepartmentId],
+           ROW_NUMBER() OVER (PARTITION BY sp.[DepartmentId] ORDER BY sp.[CreatedAt], sp.[Id]) AS rn
+    FROM [student_profiles] sp
+    INNER JOIN [users] u ON u.[Id] = sp.[UserId]
+    WHERE ISNULL(u.[InstitutionType], 2) = 2
+      AND ISNULL(u.[IsDeleted], 0) = 0
+)
+UPDATE sp
+SET sp.[ProgramId] = CASE
+                         WHEN up.[DepartmentId] = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER)
+                             THEN CASE WHEN (up.rn % 2) = 1
+                                       THEN CAST('22222222-2222-2222-2222-222222222211' AS UNIQUEIDENTIFIER)
+                                       ELSE CAST('22222222-2222-2222-2222-222222222212' AS UNIQUEIDENTIFIER)
+                                  END
+                         WHEN up.[DepartmentId] = CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER)
+                             THEN CAST('22222222-2222-2222-2222-222222222214' AS UNIQUEIDENTIFIER)
+                         WHEN up.[DepartmentId] = CAST('11111111-1111-1111-1111-111111111114' AS UNIQUEIDENTIFIER)
+                             THEN CAST('22222222-2222-2222-2222-222222222218' AS UNIQUEIDENTIFIER)
+                         ELSE sp.[ProgramId]
+                     END,
+    sp.[UpdatedAt] = @Now
+FROM [student_profiles] sp
+INNER JOIN UniversityProfiles up ON up.[Id] = sp.[Id];
+
 /* 5.1) High-volume multi-institute dummy expansion */
 DECLARE @BulkTarget TABLE
 (
@@ -896,7 +977,51 @@ FROM @Courses c
 WHERE EXISTS (SELECT 1 FROM [departments] d WHERE d.[Id] = c.[DepartmentId])
     AND NOT EXISTS (SELECT 1 FROM [courses] x WHERE x.[Id] = c.Id);
 
-/* 6.0) Courses menu/filter deterministic demo cohort */
+/* 6.0) Canonical course set requested for school/college/university */
+UPDATE c
+SET c.[Title] = src.[Title],
+    c.[Code] = src.[Code],
+    c.[CreditHours] = src.[CreditHours],
+    c.[DepartmentId] = src.[DepartmentId],
+    c.[IsActive] = 1,
+    c.[IsDeleted] = 0,
+    c.[DeletedAt] = NULL,
+    c.[UpdatedAt] = @Now
+FROM [courses] c
+INNER JOIN
+(
+    VALUES
+    (CAST('44444444-4444-4444-4444-444444444428' AS UNIQUEIDENTIFIER), CAST('13333333-3333-3333-3333-333333333331' AS UNIQUEIDENTIFIER), N'School Core Studies (Class 1-10)', N'SCH-CORE-1TO10', 3),
+    (CAST('44444444-4444-4444-4444-444444444434' AS UNIQUEIDENTIFIER), CAST('12222222-2222-2222-2222-222222222223' AS UNIQUEIDENTIFIER), N'College Core Studies (Class 11-12)', N'COL-CORE-11TO12', 3),
+    (CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), N'IT Core Computing', N'UNI-IT-CORE', 3),
+    (CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111112' AS UNIQUEIDENTIFIER), N'Business Core Management', N'UNI-BUS-CORE', 3),
+    (CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER), CAST('11111111-1111-1111-1111-111111111114' AS UNIQUEIDENTIFIER), N'Language Core Studies', N'UNI-LANG-CORE', 3)
+) src([Id], [DepartmentId], [Title], [Code], [CreditHours])
+    ON src.[Id] = c.[Id];
+
+IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+BEGIN
+    UPDATE c
+    SET c.[IsActive] = CASE
+                           WHEN c.[Id] IN (
+                               CAST('44444444-4444-4444-4444-444444444428' AS UNIQUEIDENTIFIER),
+                               CAST('44444444-4444-4444-4444-444444444434' AS UNIQUEIDENTIFIER),
+                               CAST('44444444-4444-4444-4444-444444444401' AS UNIQUEIDENTIFIER),
+                               CAST('44444444-4444-4444-4444-444444444408' AS UNIQUEIDENTIFIER),
+                               CAST('44444444-4444-4444-4444-444444444437' AS UNIQUEIDENTIFIER)
+                           ) THEN 1
+                           ELSE 0
+                       END,
+        c.[UpdatedAt] = @Now
+    FROM [courses] c
+    INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+    WHERE d.[InstitutionType] IN (0, 1, 2)
+      AND c.[Id] IN (
+          SELECT x.[Id] FROM @Courses x
+      );
+END;
+
+/* 6.1) Courses menu/filter deterministic demo cohort */
 IF OBJECT_ID(N'[courses]') IS NOT NULL
 BEGIN
     INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
