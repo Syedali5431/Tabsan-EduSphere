@@ -363,7 +363,6 @@
         "degreeaudit" => true,
         "graduationeligibility" => true,
         "degreerules" => true,
-        "generatecertificates" => true,
         "graduationapply" => true,
         "graduationapplications" => true,
         "fyp" => true,
@@ -601,10 +600,7 @@
                             groupedLinks.Add(("Academic Related", 4, 2640, "Degree Rules", "Portal", "DegreeRules"));
                         }
 
-                        if (showDegreeAuditSidebar)
-                        {
-                            groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
-                        }
+                        groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
 
                         foreach (var link in superAdminFallbackLinks)
                         {

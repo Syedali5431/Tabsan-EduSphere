@@ -27,7 +27,6 @@ public class SidebarMenuController : ControllerBase
             "degree_audit",
             "graduation_eligibility",
             "degree_rules",
-            "generate_certificates",
             "graduation_apply",
             "graduation_applications",
             "fyp"
