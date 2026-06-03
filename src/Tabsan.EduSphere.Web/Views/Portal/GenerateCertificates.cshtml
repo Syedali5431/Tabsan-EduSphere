@@ -51,6 +51,64 @@
                         }
                     </div>
 
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-4">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var tenant in Model.Tenants)
+                                {
+                                    <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select">
+                                <option value="">All Campuses</option>
+                                @foreach (var campus in Model.Campuses)
+                                {
+                                    <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    <div class="col-md-4">
+                        <label class="form-label">Department</label>
+                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Departments</option>
+                            @foreach (var department in Model.Departments)
+                            {
+                                <option value="@department.Id" selected="@(Model.SelectedDepartmentId == department.Id)">@department.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Course</label>
+                        <select name="courseId" class="form-select">
+                            <option value="">All Courses</option>
+                            @foreach (var course in Model.Courses)
+                            {
+                                <option value="@course.Id" selected="@(Model.SelectedCourseId == course.Id)">@course.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">@Model.PeriodFilterLabel</label>
+                        <select name="semesterId" class="form-select">
+                            <option value="">All @Model.PeriodFilterLabel</option>
+                            @foreach (var period in Model.Semesters)
+                            {
+                                <option value="@period.Id" selected="@(Model.SelectedSemesterId == period.Id)">@period.Name</option>
+                            }
+                        </select>
+                    </div>
+
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>Apply</button>
                         <a href="@Url.Action("GenerateCertificates", "Portal")" class="btn btn-outline-secondary ms-2">Clear</a>

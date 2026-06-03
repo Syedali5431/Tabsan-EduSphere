@@ -499,7 +499,7 @@ public interface IEduApiClient
     Task UploadCertificateTemplateAsync(string templateType, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
     Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct);
     Task<List<StudentAdditionalCertificateItem>> GetStudentAdditionalCertificatesAsync(Guid studentProfileId, CancellationToken ct);
-    Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, CancellationToken ct);
+    Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, Guid? semesterId, CancellationToken ct);
     Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct);
     Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct);
 
@@ -1430,8 +1430,13 @@ public class EduApiClient : IEduApiClient
         => await GetAsync<List<StudentAdditionalCertificateItem>>($"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates", ct)
            ?? new List<StudentAdditionalCertificateItem>();
 
-    public Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates/generate?documentType={Uri.EscapeDataString(NormalizeCertificateTemplateType(documentType))}", new { }, ct);
+    public Task GenerateAdditionalCertificateAsync(Guid studentProfileId, string documentType, Guid? semesterId, CancellationToken ct)
+    {
+        var path = $"api/v1/certificate-generation/students/{studentProfileId}/additional-certificates/generate?documentType={Uri.EscapeDataString(NormalizeCertificateTemplateType(documentType))}";
+        if (semesterId.HasValue)
+            path += $"&semesterId={semesterId.Value:D}";
+        return PostAsync<object, object>(path, new { }, ct);
+    }
 
     public async Task UploadStudentAdditionalCertificateAsync(Guid studentProfileId, string title, Stream fileStream, string fileName, string? contentType, CancellationToken ct)
     {

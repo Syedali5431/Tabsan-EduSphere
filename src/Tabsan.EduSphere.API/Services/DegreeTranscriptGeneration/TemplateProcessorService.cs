@@ -26,8 +26,15 @@ public sealed class TemplateProcessorService
             {
                 ["{{StudentName}}"] = payload.StudentName,
                 ["{{FatherName}}"] = payload.FatherName,
+                ["{{RegistrationNumber}}"] = payload.RegistrationNumber,
+                ["{{DepartmentName}}"] = payload.DepartmentName,
+                ["{{ProgramName}}"] = payload.ProgramName,
+                ["{{ClassName}}"] = payload.ClassName,
                 ["{{DegreeTitle}}"] = payload.DegreeTitle,
                 ["{{CGPA}}"] = payload.Cgpa,
+                ["{{FinalPercentage}}"] = payload.FinalPercentage,
+                ["{{FinalGPA}}"] = payload.FinalGpa,
+                ["{{SemesterGpaSummary}}"] = payload.SemesterGpaSummary,
                 ["{{IssueDate}}"] = payload.IssueDate,
                 ["{{SerialNumber}}"] = payload.SerialNumber,
                 ["{{QR_CODE}}"] = payload.VerificationUrl
@@ -132,22 +139,30 @@ public sealed class TemplateProcessorService
                     new InsideHorizontalBorder { Val = BorderValues.Single, Size = 6 },
                     new InsideVerticalBorder { Val = BorderValues.Single, Size = 6 })));
 
-        table.Append(BuildRow("Course Name", "Credit Hours", "Grade", "SGPA/Marks", isHeader: true));
+        table.Append(BuildRow("Sr No", "Subject Name", "Credit Hours", "Obtained Marks", "Total Marks", "GPA/Percent", isHeader: true));
         foreach (var row in rows)
         {
-            table.Append(BuildRow(row.CourseName, row.CreditHours.ToString("0.##"), row.Grade, row.SgpaOrMarks));
+            table.Append(BuildRow(
+                row.SerialNumber,
+                row.CourseName,
+                row.CreditHours <= 0 ? "-" : row.CreditHours.ToString("0.##"),
+                row.ObtainedMarks,
+                row.TotalMarks,
+                row.SgpaOrMarks));
         }
 
         return table;
     }
 
-    private static TableRow BuildRow(string c1, string c2, string c3, string c4, bool isHeader = false)
+    private static TableRow BuildRow(string c1, string c2, string c3, string c4, string c5, string c6, bool isHeader = false)
     {
         return new TableRow(
             BuildCell(c1, isHeader),
             BuildCell(c2, isHeader),
             BuildCell(c3, isHeader),
-            BuildCell(c4, isHeader));
+            BuildCell(c4, isHeader),
+            BuildCell(c5, isHeader),
+            BuildCell(c6, isHeader));
     }
 
     private static TableCell BuildCell(string value, bool isHeader)
@@ -166,14 +181,23 @@ public sealed class TemplateProcessorService
 public sealed record DocumentTemplatePayload(
     string StudentName,
     string FatherName,
+    string RegistrationNumber,
+    string DepartmentName,
+    string ProgramName,
+    string ClassName,
     string DegreeTitle,
     string Cgpa,
+    string FinalPercentage,
+    string FinalGpa,
+    string SemesterGpaSummary,
     string IssueDate,
     string SerialNumber,
     string VerificationUrl);
 
 public sealed record TranscriptCourseRow(
+    string SerialNumber,
     string CourseName,
     decimal CreditHours,
-    string Grade,
+    string ObtainedMarks,
+    string TotalMarks,
     string SgpaOrMarks);

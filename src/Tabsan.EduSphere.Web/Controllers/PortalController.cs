@@ -10351,7 +10351,7 @@ public class PortalController : Controller
 
         try
         {
-            await _api.GenerateAdditionalCertificateAsync(studentProfileId, normalizedType, ct);
+            await _api.GenerateAdditionalCertificateAsync(studentProfileId, normalizedType, semesterId, ct);
             TempData["PortalMessage"] = normalizedType == "completion"
                 ? "Completion certificate generated successfully."
                 : "Report card generated successfully.";

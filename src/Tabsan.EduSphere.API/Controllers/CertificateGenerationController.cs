@@ -32,6 +32,7 @@ public class CertificateGenerationController : ControllerBase
     private readonly IStudentProfileRepository _studentProfiles;
     private readonly IInstitutionPolicyService _institutionPolicy;
     private readonly DocumentGenerationService _documents;
+    private readonly TemplateProcessorService _templateProcessor;
 
     public CertificateGenerationController(
         ApplicationDbContext db,
@@ -40,7 +41,8 @@ public class CertificateGenerationController : ControllerBase
         IFacultyAssignmentRepository facultyAssignments,
         IStudentProfileRepository studentProfiles,
         IInstitutionPolicyService institutionPolicy,
-        DocumentGenerationService documents)
+        DocumentGenerationService documents,
+        TemplateProcessorService templateProcessor)
     {
         _db = db;
         _accessScope = accessScope;
@@ -49,6 +51,7 @@ public class CertificateGenerationController : ControllerBase
         _studentProfiles = studentProfiles;
         _institutionPolicy = institutionPolicy;
         _documents = documents;
+        _templateProcessor = templateProcessor;
     }
 
     [HttpGet("graduated-students")]
@@ -272,9 +275,13 @@ public class CertificateGenerationController : ControllerBase
         var request = new DegreeGenerationRequest(
             StudentId: student.Id,
             StudentName: await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct),
-            FatherName: "-",
+            FatherName: await ResolveFatherNameAsync(student.UserId, ct),
             DegreeTitle: $"{student.Program?.Name ?? "Degree"}",
-            Cgpa: student.Cgpa.ToString("0.00"));
+            Cgpa: student.Cgpa.ToString("0.00"),
+            RegistrationNumber: student.RegistrationNumber,
+            DepartmentName: student.Department.Name,
+            ProgramName: student.Program?.Name,
+            FinalGpa: student.Cgpa.ToString("0.00"));
 
         var doc = await _documents.GenerateDegreeAsync(request, ct);
         return Ok(doc);
@@ -288,14 +295,24 @@ public class CertificateGenerationController : ControllerBase
         if (student is null)
             return Forbid();
 
-        var transcriptRows = await BuildTranscriptRowsAsync(student.Id, semesterId, ct);
+        var transcriptContext = await BuildTranscriptContextAsync(student, semesterId, ct);
+        if (transcriptContext.Rows.Count == 0)
+            return BadRequest(new { message = "No published results found for the selected student/semester." });
+
+        var studentName = await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct);
         var request = new TranscriptGenerationRequest(
             StudentId: student.Id,
-            StudentName: await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct),
-            FatherName: "-",
+            StudentName: studentName,
+            FatherName: await ResolveFatherNameAsync(student.UserId, ct),
             DegreeTitle: $"{student.Program?.Name ?? "Transcript"}",
-            Cgpa: student.Cgpa.ToString("0.00"),
-            Courses: transcriptRows);
+            Cgpa: transcriptContext.FinalCgpa,
+            Courses: transcriptContext.Rows,
+            RegistrationNumber: student.RegistrationNumber,
+            DepartmentName: student.Department.Name,
+            ProgramName: student.Program?.Name,
+            ClassName: semesterId.HasValue ? await ResolveClassNameAsync(Array.Empty<string>(), semesterId, ct) : "All",
+            FinalGpa: transcriptContext.FinalCgpa,
+            SemesterGpaSummary: transcriptContext.SemesterGpaSummary);
 
         var doc = await _documents.GenerateTranscriptAsync(request, ct);
         return Ok(doc);
@@ -465,7 +482,11 @@ public class CertificateGenerationController : ControllerBase
 
     [HttpPost("students/{studentProfileId:guid}/additional-certificates/generate")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> GenerateAdditionalCertificate(Guid studentProfileId, [FromQuery] string? documentType, CancellationToken ct)
+    public async Task<IActionResult> GenerateAdditionalCertificate(
+        Guid studentProfileId,
+        [FromQuery] string? documentType,
+        [FromQuery] Guid? semesterId,
+        CancellationToken ct)
     {
         var normalizedType = NormalizeAdditionalDocumentType(documentType);
         if (normalizedType is null)
@@ -475,7 +496,49 @@ public class CertificateGenerationController : ControllerBase
         if (student is null)
             return Forbid();
 
+        if (normalizedType == CompletionDocumentType && !IsCompletionEligible(student))
+            return BadRequest(new { message = "Completion certificate can be generated only after class 10 (School) or class 12 (College)." });
+
+        var reportRows = await BuildNonUniversityReportRowsAsync(student.Id, semesterId, ct);
+        if (reportRows.Count == 0)
+            return BadRequest(new { message = "No published result rows found for the selected student/class." });
+
+        var studentName = await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct);
+        var fatherName = await ResolveFatherNameAsync(student.UserId, ct);
+        var resultSummary = BuildResultSummary(reportRows);
+        var className = await ResolveClassNameAsync(reportRows.Select(r => r.SemesterName).Distinct().ToList(), semesterId, ct);
+
         var templateBytes = await GetAdditionalTemplateBytesAsync(normalizedType, ct);
+        var payload = new DocumentTemplatePayload(
+            StudentName: studentName,
+            FatherName: fatherName,
+            RegistrationNumber: student.RegistrationNumber,
+            DepartmentName: student.Department.Name,
+            ProgramName: student.Program?.Name ?? "",
+            ClassName: className,
+            DegreeTitle: student.Program?.Name ?? "",
+            Cgpa: student.Cgpa.ToString("0.00"),
+            FinalPercentage: resultSummary.FinalPercentage,
+            FinalGpa: student.Cgpa.ToString("0.00"),
+            SemesterGpaSummary: resultSummary.SemesterSummary,
+            IssueDate: DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            SerialNumber: $"{(normalizedType == CompletionDocumentType ? "CMP" : "RPT")}-{DateTime.UtcNow:yyyyMMddHHmmss}",
+            VerificationUrl: "N/A");
+
+        var reportTableRows = reportRows
+            .OrderBy(r => r.SemesterName)
+            .ThenBy(r => r.CourseCode)
+            .Select((r, index) => new TranscriptCourseRow(
+                SerialNumber: (index + 1).ToString(),
+                CourseName: string.IsNullOrWhiteSpace(r.CourseCode) ? r.CourseTitle : $"{r.CourseCode} - {r.CourseTitle}",
+                CreditHours: 0,
+                ObtainedMarks: r.MarksObtained.ToString("0.##"),
+                TotalMarks: r.MaxMarks.ToString("0.##"),
+                SgpaOrMarks: $"{r.Percentage:0.##}%"))
+            .ToList();
+
+        var generatedBytes = _templateProcessor.PopulateTemplate(templateBytes, payload, reportTableRows);
+
         var root = GetAdditionalCertificateStorageRoot();
         var studentFolder = Path.Combine(root, studentProfileId.ToString("N"));
         Directory.CreateDirectory(studentFolder);
@@ -485,7 +548,7 @@ public class CertificateGenerationController : ControllerBase
             : $"report-card-{DateTime.UtcNow:yyyyMMddHHmmss}.docx";
         var fullPath = Path.Combine(studentFolder, fileName);
 
-        await System.IO.File.WriteAllBytesAsync(fullPath, templateBytes, ct);
+        await System.IO.File.WriteAllBytesAsync(fullPath, generatedBytes, ct);
 
         var index = await ListAdditionalCertificatesAsync(ct);
         var currentUser = GetCurrentUserId();
@@ -641,52 +704,186 @@ public class CertificateGenerationController : ControllerBase
         return string.IsNullOrWhiteSpace(userName) ? fallback : userName;
     }
 
-    private async Task<IReadOnlyList<TranscriptCourseRow>> BuildTranscriptRowsAsync(Guid studentProfileId, CancellationToken ct)
+    private async Task<string> ResolveFatherNameAsync(Guid userId, CancellationToken ct)
     {
-        var courseRows = await (
-            from enrollment in _db.Enrollments.AsNoTracking()
-            where enrollment.StudentProfileId == studentProfileId
-            join offering in _db.CourseOfferings.AsNoTracking() on enrollment.CourseOfferingId equals offering.Id
-            join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
-            orderby course.Code
-            select new TranscriptCourseRow(
-                string.IsNullOrWhiteSpace(course.Code) ? course.Title : $"{course.Code} - {course.Title}",
-                course.CreditHours,
-                "N/A",
-                "N/A"))
-            .ToListAsync(ct);
+        var fatherName = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.FatherName)
+            .FirstOrDefaultAsync(ct);
 
-        return courseRows;
+        return string.IsNullOrWhiteSpace(fatherName) ? "-" : fatherName;
     }
 
-    private async Task<IReadOnlyList<TranscriptCourseRow>> BuildTranscriptRowsAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
+    private async Task<TranscriptBuildContext> BuildTranscriptContextAsync(StudentProfile student, Guid? semesterId, CancellationToken ct)
     {
-        var query =
-            from enrollment in _db.Enrollments.AsNoTracking()
-            where enrollment.StudentProfileId == studentProfileId
-            join offering in _db.CourseOfferings.AsNoTracking() on enrollment.CourseOfferingId equals offering.Id
+        var publishedRows = await (
+            from result in _db.Results.AsNoTracking()
+            where result.StudentProfileId == student.Id && result.IsPublished
+            join offering in _db.CourseOfferings.AsNoTracking() on result.CourseOfferingId equals offering.Id
             join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
-            select new { offering.SemesterId, course.Code, course.Title, course.CreditHours };
-
-        if (semesterId.HasValue)
-            query = query.Where(x => x.SemesterId == semesterId.Value);
-
-        var rows = await query
-            .OrderBy(x => x.Code)
-            .Select(x => new TranscriptCourseRow(
-                string.IsNullOrWhiteSpace(x.Code) ? x.Title : $"{x.Code} - {x.Title}",
-                x.CreditHours,
-                "N/A",
-                "N/A"))
+            join semester in _db.Semesters.AsNoTracking() on offering.SemesterId equals semester.Id
+            where !semesterId.HasValue || offering.SemesterId == semesterId.Value
+            select new TranscriptResultProjection(
+                offering.Id,
+                offering.SemesterId,
+                semester.Name,
+                course.Code,
+                course.Title,
+                course.CreditHours,
+                result.ResultType,
+                result.MarksObtained,
+                result.MaxMarks,
+                result.GradePoint))
             .ToListAsync(ct);
 
-        return rows;
+        if (publishedRows.Count == 0)
+            return new TranscriptBuildContext(new List<TranscriptCourseRow>(), student.Cgpa.ToString("0.00"), "");
+
+        var byCourse = publishedRows
+            .GroupBy(x => new { x.CourseOfferingId, x.SemesterId, x.SemesterName, x.CourseCode, x.CourseTitle, x.CreditHours })
+            .OrderBy(g => g.Key.SemesterName)
+            .ThenBy(g => g.Key.CourseCode)
+            .ToList();
+
+        var tableRows = new List<TranscriptCourseRow>(byCourse.Count);
+        var semesterBuckets = new Dictionary<Guid, List<decimal>>();
+
+        for (var index = 0; index < byCourse.Count; index++)
+        {
+            var g = byCourse[index];
+            var totalRow = g.FirstOrDefault(r => string.Equals(r.ResultType, "Total", StringComparison.OrdinalIgnoreCase));
+
+            var obtained = totalRow is null ? g.Sum(x => x.MarksObtained) : totalRow.MarksObtained;
+            var max = totalRow is null ? g.Sum(x => x.MaxMarks) : totalRow.MaxMarks;
+            var gradePoint = totalRow?.GradePoint
+                ?? g.Select(x => x.GradePoint).Where(x => x.HasValue).Select(x => x!.Value).DefaultIfEmpty(max > 0 ? (obtained / max) * 4m : 0m).Max();
+
+            if (!semesterBuckets.TryGetValue(g.Key.SemesterId, out var semesterValues))
+            {
+                semesterValues = new List<decimal>();
+                semesterBuckets[g.Key.SemesterId] = semesterValues;
+            }
+            semesterValues.Add(gradePoint);
+
+            tableRows.Add(new TranscriptCourseRow(
+                SerialNumber: (index + 1).ToString(),
+                CourseName: string.IsNullOrWhiteSpace(g.Key.CourseCode)
+                    ? g.Key.CourseTitle
+                    : $"{g.Key.CourseCode} - {g.Key.CourseTitle}",
+                CreditHours: g.Key.CreditHours,
+                ObtainedMarks: obtained.ToString("0.##"),
+                TotalMarks: max.ToString("0.##"),
+                SgpaOrMarks: gradePoint.ToString("0.00")));
+        }
+
+        var semesterLabels = publishedRows
+            .GroupBy(x => x.SemesterId)
+            .ToDictionary(g => g.Key, g => g.First().SemesterName);
+
+        var cumulative = new List<decimal>();
+        var summaryLines = new List<string>();
+        foreach (var semester in semesterBuckets.Keys.OrderBy(k => semesterLabels.GetValueOrDefault(k, string.Empty)))
+        {
+            var sgpa = semesterBuckets[semester].Count == 0 ? 0m : semesterBuckets[semester].Average();
+            cumulative.Add(sgpa);
+            var cgpa = cumulative.Average();
+            summaryLines.Add($"{semesterLabels.GetValueOrDefault(semester, "Semester")}: GPA {sgpa:0.00}, CGPA {cgpa:0.00}");
+        }
+
+        var finalCgpa = cumulative.Count == 0 ? student.Cgpa : cumulative.Average();
+        summaryLines.Add($"Final GPA: {(cumulative.Count == 0 ? student.CurrentSemesterGpa : cumulative.Last()):0.00}");
+
+        return new TranscriptBuildContext(
+            tableRows,
+            finalCgpa.ToString("0.00"),
+            string.Join(" | ", summaryLines));
+    }
+
+    private async Task<List<TranscriptResultProjection>> BuildNonUniversityReportRowsAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
+    {
+        return await (
+            from result in _db.Results.AsNoTracking()
+            where result.StudentProfileId == studentProfileId && result.IsPublished
+            join offering in _db.CourseOfferings.AsNoTracking() on result.CourseOfferingId equals offering.Id
+            join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
+            join semester in _db.Semesters.AsNoTracking() on offering.SemesterId equals semester.Id
+            where !semesterId.HasValue || offering.SemesterId == semesterId.Value
+            select new TranscriptResultProjection(
+                offering.Id,
+                offering.SemesterId,
+                semester.Name,
+                course.Code,
+                course.Title,
+                course.CreditHours,
+                result.ResultType,
+                result.MarksObtained,
+                result.MaxMarks,
+                result.GradePoint))
+            .ToListAsync(ct);
+    }
+
+    private static bool IsCompletionEligible(StudentProfile student)
+    {
+        if (student.Status == StudentStatus.Graduated)
+            return true;
+
+        return student.Department.InstitutionType switch
+        {
+            InstitutionType.School => student.CurrentSemesterNumber >= 10,
+            InstitutionType.College => student.CurrentSemesterNumber >= 12,
+            _ => false
+        };
+    }
+
+    private static ResultSummary BuildResultSummary(IReadOnlyCollection<TranscriptResultProjection> rows)
+    {
+        if (rows.Count == 0)
+            return new ResultSummary("0.00", "");
+
+        var grouped = rows
+            .GroupBy(r => r.SemesterName)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        var summaryLines = new List<string>(grouped.Count);
+        decimal totalObtained = 0;
+        decimal totalMax = 0;
+
+        foreach (var group in grouped)
+        {
+            var obtained = group.Sum(x => x.MarksObtained);
+            var max = group.Sum(x => x.MaxMarks);
+            totalObtained += obtained;
+            totalMax += max;
+            var pct = max <= 0 ? 0m : (obtained / max) * 100m;
+            summaryLines.Add($"{group.Key}: {pct:0.##}%");
+        }
+
+        var finalPct = totalMax <= 0 ? 0m : (totalObtained / totalMax) * 100m;
+        return new ResultSummary(finalPct.ToString("0.##"), string.Join(" | ", summaryLines));
+    }
+
+    private async Task<string> ResolveClassNameAsync(IReadOnlyCollection<string> semesterNames, Guid? semesterId, CancellationToken ct)
+    {
+        if (semesterId.HasValue)
+        {
+            var selected = await _db.Semesters.AsNoTracking().Where(s => s.Id == semesterId.Value).Select(s => s.Name).FirstOrDefaultAsync(ct);
+            if (!string.IsNullOrWhiteSpace(selected))
+                return selected;
+        }
+
+        if (semesterNames.Count == 0)
+            return "N/A";
+
+        return semesterNames.Count == 1 ? semesterNames.First() : "Multiple Classes";
     }
 
     private async Task<StudentProfile?> GetNonUniversityStudentForAdminManagementAsync(Guid studentProfileId, CancellationToken ct)
     {
         var student = await _db.StudentProfiles
             .Include(s => s.Department)
+            .Include(s => s.Program)
             .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
 
         if (student is null || student.Department.InstitutionType == InstitutionType.University)
@@ -840,20 +1037,41 @@ public class CertificateGenerationController : ControllerBase
             {
                 "Completion Certificate",
                 string.Empty,
-                "This certifies that {{StudentName}} ({{RegistrationNumber}})",
-                "has successfully completed {{ProgramName}}.",
-                "Department: {{DepartmentName}}",
-                "Issued On: {{IssueDate}}"
+                "Institution: {{DepartmentName}}",
+                "Class/Year: {{ClassName}}",
+                "Registration #: {{RegistrationNumber}}",
+                "Student: {{StudentName}}",
+                "Father Name: {{FatherName}}",
+                "Program: {{ProgramName}}",
+                "Final Percentage: {{FinalPercentage}}%",
+                "Issued On: {{IssueDate}}",
+                "Certificate No: {{SerialNumber}}",
+                string.Empty,
+                "{{COURSE_TABLE}}",
+                string.Empty,
+                "Authorized Signatory: ______________________",
+                "Seal/Logo Area"
             }
             : new[]
             {
                 "Report Card",
                 string.Empty,
-                "Student: {{StudentName}}",
+                "Institution: {{DepartmentName}}",
+                "Class/Year: {{ClassName}}",
                 "Registration #: {{RegistrationNumber}}",
+                "Student: {{StudentName}}",
+                "Father Name: {{FatherName}}",
                 "Program/Class: {{ProgramName}}",
-                "Department: {{DepartmentName}}",
-                "Issued On: {{IssueDate}}"
+                "Issued On: {{IssueDate}}",
+                "Certificate No: {{SerialNumber}}",
+                string.Empty,
+                "{{COURSE_TABLE}}",
+                string.Empty,
+                "Per Class Percentage: {{SemesterGpaSummary}}",
+                "Final Percentage: {{FinalPercentage}}%",
+                string.Empty,
+                "Authorized Signatory: ______________________",
+                "Seal/Logo Area"
             };
 
         using var stream = new MemoryStream();
@@ -923,4 +1141,28 @@ public class CertificateGenerationController : ControllerBase
         public DateTime UploadedAtUtc { get; set; }
         public Guid? UploadedByUserId { get; set; }
     }
+
+    private sealed record TranscriptResultProjection(
+        Guid CourseOfferingId,
+        Guid SemesterId,
+        string SemesterName,
+        string CourseCode,
+        string CourseTitle,
+        int CreditHours,
+        string ResultType,
+        decimal MarksObtained,
+        decimal MaxMarks,
+        decimal? GradePoint)
+    {
+        public decimal Percentage => MaxMarks <= 0 ? 0m : (MarksObtained / MaxMarks) * 100m;
+    }
+
+    private sealed record TranscriptBuildContext(
+        IReadOnlyList<TranscriptCourseRow> Rows,
+        string FinalCgpa,
+        string SemesterGpaSummary);
+
+    private sealed record ResultSummary(
+        string FinalPercentage,
+        string SemesterSummary);
 }

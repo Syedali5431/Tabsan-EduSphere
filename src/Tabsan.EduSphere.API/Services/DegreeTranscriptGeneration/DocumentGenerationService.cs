@@ -169,9 +169,11 @@ public sealed class DocumentGenerationService
                 ? null
                 : JsonSerializer.Serialize(courses.Select(c => new
                 {
+                    c.SerialNumber,
                     c.CourseName,
                     c.CreditHours,
-                    c.Grade,
+                    c.ObtainedMarks,
+                    c.TotalMarks,
                     c.SgpaOrMarks
                 }));
 
@@ -297,17 +299,31 @@ public sealed record DegreeGenerationRequest(
     string FatherName,
     string DegreeTitle,
     string Cgpa,
+    string? RegistrationNumber = null,
+    string? DepartmentName = null,
+    string? ProgramName = null,
+    string? ClassName = null,
+    string? FinalPercentage = null,
+    string? FinalGpa = null,
+    string? SemesterGpaSummary = null,
     string? IssueDate = null,
     string? SerialNumber = null)
 {
     public DocumentTemplatePayload ToPayload() => new(
-        StudentName,
-        FatherName,
-        DegreeTitle,
-        Cgpa,
-        IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
-        SerialNumber ?? $"DEG-{DateTime.UtcNow:yyyyMMddHHmmss}",
-        VerificationUrl: "{{QR_CODE}}");
+    StudentName: StudentName,
+    FatherName: FatherName,
+    RegistrationNumber: RegistrationNumber ?? "",
+    DepartmentName: DepartmentName ?? "",
+    ProgramName: ProgramName ?? DegreeTitle,
+    ClassName: ClassName ?? "",
+    DegreeTitle: DegreeTitle,
+    Cgpa: Cgpa,
+    FinalPercentage: FinalPercentage ?? "",
+    FinalGpa: FinalGpa ?? Cgpa,
+    SemesterGpaSummary: SemesterGpaSummary ?? "",
+    IssueDate: IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+    SerialNumber: SerialNumber ?? $"DEG-{DateTime.UtcNow:yyyyMMddHHmmss}",
+    VerificationUrl: "{{QR_CODE}}");
 }
 
 public sealed record TranscriptGenerationRequest(
@@ -317,15 +333,29 @@ public sealed record TranscriptGenerationRequest(
     string DegreeTitle,
     string Cgpa,
     IReadOnlyList<TranscriptCourseRow> Courses,
+    string? RegistrationNumber = null,
+    string? DepartmentName = null,
+    string? ProgramName = null,
+    string? ClassName = null,
+    string? FinalPercentage = null,
+    string? FinalGpa = null,
+    string? SemesterGpaSummary = null,
     string? IssueDate = null,
     string? SerialNumber = null)
 {
     public DocumentTemplatePayload ToPayload() => new(
-        StudentName,
-        FatherName,
-        DegreeTitle,
-        Cgpa,
-        IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
-        SerialNumber ?? $"TRN-{DateTime.UtcNow:yyyyMMddHHmmss}",
-        VerificationUrl: "{{QR_CODE}}");
+    StudentName: StudentName,
+    FatherName: FatherName,
+    RegistrationNumber: RegistrationNumber ?? "",
+    DepartmentName: DepartmentName ?? "",
+    ProgramName: ProgramName ?? DegreeTitle,
+    ClassName: ClassName ?? "",
+    DegreeTitle: DegreeTitle,
+    Cgpa: Cgpa,
+    FinalPercentage: FinalPercentage ?? "",
+    FinalGpa: FinalGpa ?? Cgpa,
+    SemesterGpaSummary: SemesterGpaSummary ?? "",
+    IssueDate: IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+    SerialNumber: SerialNumber ?? $"TRN-{DateTime.UtcNow:yyyyMMddHHmmss}",
+    VerificationUrl: "{{QR_CODE}}");
 }
