@@ -11,203 +11,201 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"IF COL_LENGTH('users', 'CampusId') IS NULL
-BEGIN
-    ALTER TABLE [users] ADD [CampusId] uniqueidentifier NULL;
-END");
+            migrationBuilder.AddColumn<Guid>(
+                name: "CampusId",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true);
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('users', 'TenantId') IS NULL
-BEGIN
-    ALTER TABLE [users] ADD [TenantId] uniqueidentifier NULL;
-END");
+            migrationBuilder.AddColumn<Guid>(
+                name: "TenantId",
+                table: "users",
+                type: "uniqueidentifier",
+                nullable: true);
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('departments', 'CampusId') IS NULL
-BEGIN
-    ALTER TABLE [departments] ADD [CampusId] uniqueidentifier NULL;
-END");
+            migrationBuilder.AddColumn<Guid>(
+                name: "CampusId",
+                table: "departments",
+                type: "uniqueidentifier",
+                nullable: true);
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('departments', 'TenantId') IS NULL
-BEGIN
-    ALTER TABLE [departments] ADD [TenantId] uniqueidentifier NULL;
-END");
+            migrationBuilder.AddColumn<Guid>(
+                name: "TenantId",
+                table: "departments",
+                type: "uniqueidentifier",
+                nullable: true);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('tenants', 'U') IS NULL
-BEGIN
-    CREATE TABLE [tenants] (
-        [Id] uniqueidentifier NOT NULL,
-        [Code] nvarchar(64) NOT NULL,
-        [Name] nvarchar(200) NOT NULL,
-        [IsActive] bit NOT NULL CONSTRAINT [DF_tenants_IsActive] DEFAULT CAST(1 AS bit),
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NULL,
-        [RowVersion] rowversion NULL,
-        [IsDeleted] bit NOT NULL,
-        [DeletedAt] datetime2 NULL,
-        CONSTRAINT [PK_tenants] PRIMARY KEY ([Id])
-    );
-END");
+            migrationBuilder.CreateTable(
+                name: "tenants",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tenants", x => x.Id);
+                });
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('campuses', 'U') IS NULL
-BEGIN
-    CREATE TABLE [campuses] (
-        [Id] uniqueidentifier NOT NULL,
-        [TenantId] uniqueidentifier NOT NULL,
-        [Code] nvarchar(64) NOT NULL,
-        [Name] nvarchar(200) NOT NULL,
-        [IsActive] bit NOT NULL CONSTRAINT [DF_campuses_IsActive] DEFAULT CAST(1 AS bit),
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NULL,
-        [RowVersion] rowversion NULL,
-        [IsDeleted] bit NOT NULL,
-        [DeletedAt] datetime2 NULL,
-        CONSTRAINT [PK_campuses] PRIMARY KEY ([Id])
-    );
-END");
+            migrationBuilder.CreateTable(
+                name: "campuses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_campuses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_campuses_tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_campuses_tenants_TenantId', 'F') IS NULL
-AND OBJECT_ID('campuses', 'U') IS NOT NULL
-AND OBJECT_ID('tenants', 'U') IS NOT NULL
-BEGIN
-    ALTER TABLE [campuses] ADD CONSTRAINT [FK_campuses_tenants_TenantId]
-    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_users_campus_id",
+                table: "users",
+                column: "CampusId");
 
-            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_campus_id' AND object_id = OBJECT_ID('users'))
-BEGIN
-    CREATE INDEX [IX_users_campus_id] ON [users]([CampusId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_users_tenant_id",
+                table: "users",
+                column: "TenantId");
 
-            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_tenant_id' AND object_id = OBJECT_ID('users'))
-BEGIN
-    CREATE INDEX [IX_users_tenant_id] ON [users]([TenantId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_departments_campus_id",
+                table: "departments",
+                column: "CampusId");
 
-            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_campus_id' AND object_id = OBJECT_ID('departments'))
-BEGIN
-    CREATE INDEX [IX_departments_campus_id] ON [departments]([CampusId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_departments_tenant_id",
+                table: "departments",
+                column: "TenantId");
 
-            migrationBuilder.Sql(@"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_tenant_id' AND object_id = OBJECT_ID('departments'))
-BEGIN
-    CREATE INDEX [IX_departments_tenant_id] ON [departments]([TenantId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_campuses_tenant_code",
+                table: "campuses",
+                columns: new[] { "TenantId", "Code" },
+                unique: true);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('campuses', 'U') IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_campuses_tenant_code' AND object_id = OBJECT_ID('campuses'))
-BEGIN
-    CREATE UNIQUE INDEX [IX_campuses_tenant_code] ON [campuses]([TenantId], [Code]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_campuses_tenant_id",
+                table: "campuses",
+                column: "TenantId");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('campuses', 'U') IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_campuses_tenant_id' AND object_id = OBJECT_ID('campuses'))
-BEGIN
-    CREATE INDEX [IX_campuses_tenant_id] ON [campuses]([TenantId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_tenants_code",
+                table: "tenants",
+                column: "Code",
+                unique: true);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('tenants', 'U') IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_tenants_code' AND object_id = OBJECT_ID('tenants'))
-BEGIN
-    CREATE UNIQUE INDEX [IX_tenants_code] ON [tenants]([Code]);
-END");
+            migrationBuilder.AddForeignKey(
+                name: "FK_departments_campuses_CampusId",
+                table: "departments",
+                column: "CampusId",
+                principalTable: "campuses",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_departments_campuses_CampusId', 'F') IS NULL
-AND OBJECT_ID('departments', 'U') IS NOT NULL
-AND OBJECT_ID('campuses', 'U') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] ADD CONSTRAINT [FK_departments_campuses_CampusId]
-    FOREIGN KEY ([CampusId]) REFERENCES [campuses] ([Id]) ON DELETE NO ACTION;
-END");
+            migrationBuilder.AddForeignKey(
+                name: "FK_departments_tenants_TenantId",
+                table: "departments",
+                column: "TenantId",
+                principalTable: "tenants",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_departments_tenants_TenantId', 'F') IS NULL
-AND OBJECT_ID('departments', 'U') IS NOT NULL
-AND OBJECT_ID('tenants', 'U') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] ADD CONSTRAINT [FK_departments_tenants_TenantId]
-    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
-END");
+            migrationBuilder.AddForeignKey(
+                name: "FK_users_campuses_CampusId",
+                table: "users",
+                column: "CampusId",
+                principalTable: "campuses",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_users_campuses_CampusId', 'F') IS NULL
-AND OBJECT_ID('users', 'U') IS NOT NULL
-AND OBJECT_ID('campuses', 'U') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] ADD CONSTRAINT [FK_users_campuses_CampusId]
-    FOREIGN KEY ([CampusId]) REFERENCES [campuses] ([Id]) ON DELETE NO ACTION;
-END");
-
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_users_tenants_TenantId', 'F') IS NULL
-AND OBJECT_ID('users', 'U') IS NOT NULL
-AND OBJECT_ID('tenants', 'U') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] ADD CONSTRAINT [FK_users_tenants_TenantId]
-    FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION;
-END");
+            migrationBuilder.AddForeignKey(
+                name: "FK_users_tenants_TenantId",
+                table: "users",
+                column: "TenantId",
+                principalTable: "tenants",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_departments_campuses_CampusId', 'F') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] DROP CONSTRAINT [FK_departments_campuses_CampusId];
-END");
+            migrationBuilder.DropForeignKey(
+                name: "FK_departments_campuses_CampusId",
+                table: "departments");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_departments_tenants_TenantId', 'F') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] DROP CONSTRAINT [FK_departments_tenants_TenantId];
-END");
+            migrationBuilder.DropForeignKey(
+                name: "FK_departments_tenants_TenantId",
+                table: "departments");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_users_campuses_CampusId', 'F') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] DROP CONSTRAINT [FK_users_campuses_CampusId];
-END");
+            migrationBuilder.DropForeignKey(
+                name: "FK_users_campuses_CampusId",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('FK_users_tenants_TenantId', 'F') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] DROP CONSTRAINT [FK_users_tenants_TenantId];
-END");
+            migrationBuilder.DropForeignKey(
+                name: "FK_users_tenants_TenantId",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('campuses', 'U') IS NOT NULL DROP TABLE [campuses];");
-            migrationBuilder.Sql(@"IF OBJECT_ID('tenants', 'U') IS NOT NULL DROP TABLE [tenants];");
+            migrationBuilder.DropTable(
+                name: "campuses");
 
-            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_campus_id' AND object_id = OBJECT_ID('users'))
-BEGIN
-    DROP INDEX [IX_users_campus_id] ON [users];
-END");
+            migrationBuilder.DropTable(
+                name: "tenants");
 
-            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_tenant_id' AND object_id = OBJECT_ID('users'))
-BEGIN
-    DROP INDEX [IX_users_tenant_id] ON [users];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_users_campus_id",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_campus_id' AND object_id = OBJECT_ID('departments'))
-BEGIN
-    DROP INDEX [IX_departments_campus_id] ON [departments];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_users_tenant_id",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_departments_tenant_id' AND object_id = OBJECT_ID('departments'))
-BEGIN
-    DROP INDEX [IX_departments_tenant_id] ON [departments];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_departments_campus_id",
+                table: "departments");
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('users', 'CampusId') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] DROP COLUMN [CampusId];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_departments_tenant_id",
+                table: "departments");
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('users', 'TenantId') IS NOT NULL
-BEGIN
-    ALTER TABLE [users] DROP COLUMN [TenantId];
-END");
+            migrationBuilder.DropColumn(
+                name: "CampusId",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('departments', 'CampusId') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] DROP COLUMN [CampusId];
-END");
+            migrationBuilder.DropColumn(
+                name: "TenantId",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
-BEGIN
-    ALTER TABLE [departments] DROP COLUMN [TenantId];
-END");
+            migrationBuilder.DropColumn(
+                name: "CampusId",
+                table: "departments");
+
+            migrationBuilder.DropColumn(
+                name: "TenantId",
+                table: "departments");
         }
     }
 }
