@@ -21,13 +21,16 @@ public class ProgressionService : IProgressionService
 {
     private readonly IStudentProfileRepository _studentRepo;
     private readonly IInstitutionGradingProfileRepository _gradingRepo;
+    private readonly IResultRepository? _resultRepo;
 
     public ProgressionService(
         IStudentProfileRepository studentRepo,
-        IInstitutionGradingProfileRepository gradingRepo)
+        IInstitutionGradingProfileRepository gradingRepo,
+        IResultRepository? resultRepo = null)
     {
         _studentRepo = studentRepo;
-        _gradingRepo  = gradingRepo;
+        _gradingRepo = gradingRepo;
+        _resultRepo = resultRepo;
     }
 
     public async Task<ProgressionDecision> EvaluateAsync(
@@ -43,8 +46,8 @@ public class ProgressionService : IProgressionService
         return request.InstitutionType switch
         {
             InstitutionType.University => BuildUniversityDecision(student, passThreshold),
-            InstitutionType.School     => BuildSchoolDecision(student, passThreshold),
-            InstitutionType.College    => BuildCollegeDecision(student, passThreshold),
+            InstitutionType.School     => BuildSchoolDecision(student, passThreshold, await ResolveProgressionPercentageAsync(student, ct)),
+            InstitutionType.College    => BuildCollegeDecision(student, passThreshold, await ResolveProgressionPercentageAsync(student, ct)),
             _                          => BuildUniversityDecision(student, passThreshold)
         };
     }
@@ -71,8 +74,8 @@ public class ProgressionService : IProgressionService
         return request.InstitutionType switch
         {
             InstitutionType.University => BuildUniversityDecision(student, passThreshold),
-            InstitutionType.School     => BuildSchoolDecision(student, passThreshold),
-            InstitutionType.College    => BuildCollegeDecision(student, passThreshold),
+            InstitutionType.School     => BuildSchoolDecision(student, passThreshold, await ResolveProgressionPercentageAsync(student, ct)),
+            InstitutionType.College    => BuildCollegeDecision(student, passThreshold, await ResolveProgressionPercentageAsync(student, ct)),
             _                          => BuildUniversityDecision(student, passThreshold)
         };
     }
@@ -95,9 +98,8 @@ public class ProgressionService : IProgressionService
     }
 
     private static ProgressionDecision BuildSchoolDecision(
-        Domain.Academic.StudentProfile student, decimal passThreshold)
+        Domain.Academic.StudentProfile student, decimal passThreshold, decimal percentage)
     {
-        var percentage = NormalizeToPercentage(student.CurrentSemesterGpa);
         var canProgress = percentage >= passThreshold;
         var currentLabel = $"Grade {student.CurrentSemesterNumber}";
         var nextLabel    = $"Grade {student.CurrentSemesterNumber + 1}";
@@ -110,9 +112,8 @@ public class ProgressionService : IProgressionService
     }
 
     private static ProgressionDecision BuildCollegeDecision(
-        Domain.Academic.StudentProfile student, decimal passThreshold)
+        Domain.Academic.StudentProfile student, decimal passThreshold, decimal percentage)
     {
-        var percentage = NormalizeToPercentage(student.CurrentSemesterGpa);
         var year = (student.CurrentSemesterNumber + 1) / 2; // semesters → years
         var canProgress = percentage >= passThreshold;
         var currentLabel = $"Year {year}";
@@ -124,6 +125,54 @@ public class ProgressionService : IProgressionService
         return new ProgressionDecision(student.Id, InstitutionType.College,
             canProgress, currentLabel, nextLabel, percentage, passThreshold, remarks);
     }
+
+    private async Task<decimal> ResolveProgressionPercentageAsync(
+        Domain.Academic.StudentProfile student,
+        CancellationToken ct)
+    {
+        var storedPercentage = NormalizeToPercentage(student.CurrentSemesterGpa);
+        if (storedPercentage > 0m || _resultRepo is null)
+            return storedPercentage;
+
+        var allResults = await _resultRepo.GetByStudentAsync(student.Id, ct);
+        if (allResults.Count == 0)
+            return storedPercentage;
+
+        var latestTotal = allResults
+            .Where(r => IsAggregateResultType(r.ResultType) && r.MaxMarks > 0)
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefault();
+
+        if (latestTotal is not null)
+            return Math.Round(latestTotal.MarksObtained / latestTotal.MaxMarks * 100m, 2, MidpointRounding.AwayFromZero);
+
+        var latestOfferingId = allResults
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => r.CourseOfferingId)
+            .FirstOrDefault();
+
+        if (latestOfferingId == Guid.Empty)
+            return storedPercentage;
+
+        var latestOfferingComponents = allResults
+            .Where(r => r.CourseOfferingId == latestOfferingId
+                        && !IsAggregateResultType(r.ResultType)
+                        && r.MaxMarks > 0)
+            .ToList();
+
+        if (latestOfferingComponents.Count == 0)
+            return storedPercentage;
+
+        var totalMarks = latestOfferingComponents.Sum(r => r.MarksObtained);
+        var totalMax = latestOfferingComponents.Sum(r => r.MaxMarks);
+        if (totalMax <= 0)
+            return storedPercentage;
+
+        return Math.Round(totalMarks / totalMax * 100m, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static bool IsAggregateResultType(string? resultType)
+        => string.Equals(resultType, "Total", StringComparison.OrdinalIgnoreCase);
 
     // Legacy academic standing stores GPA-scale values (0-4); School/College progression
     // needs percentage semantics, so normalize when values are in GPA range.

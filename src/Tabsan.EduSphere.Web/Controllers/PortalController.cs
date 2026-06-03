@@ -3807,8 +3807,39 @@ public class PortalController : Controller
 
                 if (model.SelectedOfferingId.HasValue)
                 {
+                    var selectedOffering = semesterFilteredOfferings
+                        .FirstOrDefault(o => o.Id == model.SelectedOfferingId.Value);
+
                     model.Results = await _api.GetResultsByOfferingAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
                     model.Roster = await _api.GetEnrollmentRosterAsync(model.SelectedOfferingId.Value, effectiveTenantId, effectiveCampusId, ct);
+
+                    // Some API result rows can omit display-only labels; backfill from
+                    // the selected offering and roster so the Enter Results table remains usable.
+                    var rosterByStudentId = model.Roster
+                        .GroupBy(r => r.StudentProfileId)
+                        .ToDictionary(g => g.Key, g => g.First());
+
+                    foreach (var result in model.Results)
+                    {
+                        if (string.IsNullOrWhiteSpace(result.CourseCode))
+                            result.CourseCode = selectedOffering?.CourseCode ?? string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(result.CourseName))
+                            result.CourseName = selectedOffering?.CourseTitle ?? string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(result.SemesterName))
+                            result.SemesterName = selectedOffering?.SemesterName ?? string.Empty;
+
+                        if (result.StudentProfileId != Guid.Empty
+                            && rosterByStudentId.TryGetValue(result.StudentProfileId, out var rosterRow))
+                        {
+                            if (string.IsNullOrWhiteSpace(result.StudentName))
+                                result.StudentName = rosterRow.StudentName;
+
+                            if (string.IsNullOrWhiteSpace(result.RegistrationNumber))
+                                result.RegistrationNumber = rosterRow.RegistrationNumber;
+                        }
+                    }
 
                     if (model.SelectedStudentId.HasValue)
                     {
