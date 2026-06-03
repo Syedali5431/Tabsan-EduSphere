@@ -7262,6 +7262,9 @@ public class PortalController : Controller
     {
         ViewData["Title"] = "Student Lifecycle";
         var identity = _api.GetSessionIdentity();
+        if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+            return Forbid();
+
         var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
         var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
         var model = new StudentLifecyclePageModel
@@ -7327,6 +7330,8 @@ public class PortalController : Controller
                 model.MaxAcademicLevel = Math.Max(1, inferredMax);
             }
 
+            model.ShowGraduationSection = departmentId.HasValue && effectiveInstitutionType is not (0 or 1);
+
             if (semester < model.MinAcademicLevel || semester > model.MaxAcademicLevel)
             {
                 semester = model.MinAcademicLevel;
@@ -7350,7 +7355,9 @@ public class PortalController : Controller
             {
                 if (model.Departments.Any(d => d.Id == departmentId.Value))
                 {
-                    model.GraduationCandidates = await _api.GetGraduationCandidatesAsync(departmentId.Value, effectiveTenantId, effectiveCampusId, ct);
+                    if (model.ShowGraduationSection)
+                        model.GraduationCandidates = await _api.GetGraduationCandidatesAsync(departmentId.Value, effectiveTenantId, effectiveCampusId, ct);
+
                     model.StudentsBySemester   = await _api.GetStudentsByAcademicLevelAsync(departmentId.Value, semester, effectiveTenantId, effectiveCampusId, ct);
                 }
             }
@@ -7484,8 +7491,24 @@ public class PortalController : Controller
             try
             {
                 var identity = _api.GetSessionIdentity();
+                if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+                    return Forbid();
+
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+                var departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+                var selectedDepartmentInstitutionType = departments
+                    .FirstOrDefault(d => d.Id == departmentId)?.InstitutionType;
+                var effectiveInstitutionType = selectedDepartmentInstitutionType
+                    ?? (identity?.InstitutionType.HasValue == true ? identity.InstitutionType.Value : 2);
+
+                if (effectiveInstitutionType is 0 or 1)
+                {
+                    TempData["PortalMessage"] = "Graduation section is available only for university. Use Promote for school/college students.";
+                    return RedirectToAction(nameof(StudentLifecycle), new { departmentId, tenantId, campusId });
+                }
+
                 await _api.GraduateStudentAsync(studentId, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "Student graduated.";
             }
@@ -7502,10 +7525,24 @@ public class PortalController : Controller
             try
             {
                 var identity = _api.GetSessionIdentity();
+                if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
+                    return Forbid();
+
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
                 await _api.PromoteStudentAsync(studentId, effectiveTenantId, effectiveCampusId, ct);
-                TempData["PortalMessage"] = "Student promoted to the next academic level.";
+
+                var departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
+                var selectedDepartmentInstitutionType = departments
+                    .FirstOrDefault(d => d.Id == departmentId)?.InstitutionType;
+                if (selectedDepartmentInstitutionType == 0 && semester >= 10)
+                {
+                    TempData["PortalMessage"] = "Student cleared the school. Create certificate for him.";
+                }
+                else
+                {
+                    TempData["PortalMessage"] = "Student promoted to the next academic level.";
+                }
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }

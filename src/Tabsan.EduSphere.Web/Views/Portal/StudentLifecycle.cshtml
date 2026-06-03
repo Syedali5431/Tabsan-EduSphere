@@ -62,14 +62,17 @@ else
     </div>
 
     <ul class="nav nav-tabs mb-3" id="lifecycleTabs">
+        @if (Model.ShowGraduationSection)
+        {
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabGrad">
+                    Graduation Candidates
+                    <span class="badge bg-danger ms-1">@Model.GraduationCandidates.Count</span>
+                </button>
+            </li>
+        }
         <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabGrad">
-                Graduation Candidates
-                <span class="badge bg-danger ms-1">@Model.GraduationCandidates.Count</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabSem">
+            <button class="nav-link @(Model.ShowGraduationSection ? null : "active")" data-bs-toggle="tab" data-bs-target="#tabSem">
                 @Model.PeriodLabel Students
                 <span class="badge bg-secondary ms-1">@Model.StudentsBySemester.Count</span>
             </button>
@@ -77,53 +80,56 @@ else
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="tabGrad">
-            @if (Model.GraduationCandidates.Count == 0)
-            {
-                <p class="text-muted">No graduation candidates in this department.</p>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Reg. No.</th>
-                                <th>Name</th>
-                                <th>Program</th>
-                                <th>CGPA</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var s in Model.GraduationCandidates)
-                            {
+        @if (Model.ShowGraduationSection)
+        {
+            <div class="tab-pane fade show active" id="tabGrad">
+                @if (Model.GraduationCandidates.Count == 0)
+                {
+                    <p class="text-muted">No graduation candidates in this department.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
-                                    <td><code>@s.RegistrationNumber</code></td>
-                                    <td>@s.FullName</td>
-                                    <td>@s.ProgramName</td>
-                                    <td>@(s.Cgpa.HasValue ? s.Cgpa.Value.ToString("0.00") : "–")</td>
-                                    <td>
-                                        <form asp-action="GraduateStudent" method="post" class="d-inline">
-                                            <input type="hidden" name="studentId" value="@s.Id" />
-                                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
-                                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                            <button type="submit" class="btn btn-success btn-sm"
-                                                    onclick="return confirm('Graduate this student?')">
-                                                Graduate
-                                            </button>
-                                        </form>
-                                    </td>
+                                    <th>Reg. No.</th>
+                                    <th>Name</th>
+                                    <th>Program</th>
+                                    <th>CGPA</th>
+                                    <th>Action</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.GraduationCandidates)
+                                {
+                                    <tr>
+                                        <td><code>@s.RegistrationNumber</code></td>
+                                        <td>@s.FullName</td>
+                                        <td>@s.ProgramName</td>
+                                        <td>@(s.Cgpa.HasValue ? s.Cgpa.Value.ToString("0.00") : "–")</td>
+                                        <td>
+                                            <form asp-action="GraduateStudent" method="post" class="d-inline">
+                                                <input type="hidden" name="studentId" value="@s.Id" />
+                                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                <button type="submit" class="btn btn-success btn-sm"
+                                                        onclick="return confirm('Graduate this student?')">
+                                                    Graduate
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
 
-        <div class="tab-pane fade" id="tabSem">
+        <div class="tab-pane fade @(Model.ShowGraduationSection ? null : "show active")" id="tabSem">
             @if (Model.StudentsBySemester.Count == 0)
             {
                 <p class="text-muted">No students in selected department / @Model.PeriodLabel.ToLowerInvariant().</p>

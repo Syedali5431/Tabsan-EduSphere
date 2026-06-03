@@ -1191,6 +1191,7 @@ public class StudentLifecyclePageModel
     public int    SelectedSemester      { get; set; } = 1;
     public int    MinAcademicLevel      { get; set; } = 1;
     public int    MaxAcademicLevel      { get; set; } = 8;
+    public bool   ShowGraduationSection { get; set; }
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────

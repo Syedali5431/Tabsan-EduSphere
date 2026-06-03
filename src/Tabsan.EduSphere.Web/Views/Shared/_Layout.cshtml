@@ -663,10 +663,13 @@
                         <div class="menu-label">Admin Tools</div>
                         <a class="menu-link @(IsActiveLink("Portal", "Analytics") ? "is-active" : "")" asp-controller="Portal" asp-action="Analytics" aria-current="@(IsActiveLink("Portal", "Analytics") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Analytics"))</span><span class="menu-link-text">Analytics</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "ReportCenter") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportCenter" aria-current="@(IsActiveLink("Portal", "ReportCenter") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportCenter"))</span><span class="menu-link-text">Report Center</span></a>
-                        @if (showAdminLinks)
+                        @if (showAdminLinks || showFacultyLinks)
                         {
                             <a class="menu-link @(IsActiveLink("Portal", "ResultCalculation") ? "is-active" : "")" asp-controller="Portal" asp-action="ResultCalculation" aria-current="@(IsActiveLink("Portal", "ResultCalculation") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ResultCalculation"))</span><span class="menu-link-text">Result Calculation</span></a>
                             <a class="menu-link @(IsActiveLink("Portal", "StudentLifecycle") ? "is-active" : "")" asp-controller="Portal" asp-action="StudentLifecycle" aria-current="@(IsActiveLink("Portal", "StudentLifecycle") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("StudentLifecycle"))</span><span class="menu-link-text">Student Lifecycle</span></a>
+                        }
+                        @if (showAdminLinks)
+                        {
                             <a class="menu-link @(IsActiveLink("Portal", "Payments") ? "is-active" : "")" asp-controller="Portal" asp-action="Payments" aria-current="@(IsActiveLink("Portal", "Payments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Payments"))</span><span class="menu-link-text">Payments</span></a>
                         }
                     }
