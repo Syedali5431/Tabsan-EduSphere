@@ -27,6 +27,9 @@ public class User : AuditableEntity
     /// <summary>Optional recipient phone number used for SMS notification delivery.</summary>
     public string? PhoneNumber { get; private set; }
 
+    /// <summary>Optional postal address for contact and correspondence.</summary>
+    public string? Address { get; private set; }
+
     /// <summary>BCrypt / ASP.NET Identity hashed password. Never stored in plain text.</summary>
     public string PasswordHash { get; private set; } = default!;
 
@@ -89,7 +92,7 @@ public class User : AuditableEntity
     /// <summary>Creates a new user. Password must already be hashed by the caller.</summary>
     public User(string username, string passwordHash, int roleId, string? email = null, Guid? departmentId = null,
                 bool mustChangePassword = false, InstitutionType? institutionType = null, string? phoneNumber = null,
-                Guid? tenantId = null, Guid? campusId = null)
+                Guid? tenantId = null, Guid? campusId = null, string? address = null)
     {
         ValidateTenantCampusPair(tenantId, campusId);
 
@@ -98,6 +101,7 @@ public class User : AuditableEntity
         RoleId = roleId;
         Email = email;
         PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
+        Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
         TenantId = tenantId;
         CampusId = campusId;
         DepartmentId = departmentId;
@@ -191,6 +195,13 @@ public class User : AuditableEntity
         Touch();
     }
 
+    /// <summary>Updates the user's postal address. Pass null to clear it.</summary>
+    public void UpdateAddress(string? address)
+    {
+        Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
+        Touch();
+    }
+
     /// <summary>Assigns or clears an explicit institution type for this user.</summary>
     public void SetInstitutionType(InstitutionType? institutionType)
     {
@@ -228,6 +239,13 @@ public class User : AuditableEntity
     public void ClearMustChangePassword()
     {
         MustChangePassword = false;
+        Touch();
+    }
+
+    /// <summary>Flags the user so they must choose a new password on their next sign-in.</summary>
+    public void RequirePasswordChange()
+    {
+        MustChangePassword = true;
         Touch();
     }
 

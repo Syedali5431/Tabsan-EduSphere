@@ -270,6 +270,57 @@ public class ForceChangePasswordPageModel
     public string? Message { get; set; }
 }
 
+public class UserSettingsUserItem
+{
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Address { get; set; }
+    public bool IsActive { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
+    public Guid? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
+    public Guid? CourseId { get; set; }
+    public string? CourseName { get; set; }
+}
+
+public class UserSettingsFormModel
+{
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Address { get; set; }
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmNewPassword { get; set; } = string.Empty;
+}
+
+public class UserSettingsPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public Guid? CurrentUserId { get; set; }
+    public bool IsSuperAdmin => Identity?.IsSuperAdmin ?? false;
+    public bool IsAdmin => Identity?.IsAdmin ?? false;
+    public bool CanManageUsers => IsAdmin || IsSuperAdmin;
+    public bool CanResetPasswords => IsAdmin || IsSuperAdmin;
+    public Guid? SelectedUserId { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<UserSettingsUserItem> Users { get; set; } = new();
+    public UserSettingsUserItem? SelectedUser { get; set; }
+    public UserSettingsFormModel Form { get; set; } = new();
+}
+
 public class TwoFactorSettingsPageModel
 {
     public bool IsConnected { get; set; }

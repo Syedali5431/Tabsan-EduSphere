@@ -453,6 +453,14 @@ BEGIN
     VALUES (@SettingsMenuId, N'Settings', N'Platform configuration and governance', N'settings', NULL, 3, 1, 0, @Now, NULL, 0, NULL);
 END
 
+DECLARE @UserSettingsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'user_settings');
+IF @UserSettingsMenuId IS NULL
+BEGIN
+    SET @UserSettingsMenuId = NEWID();
+    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+    VALUES (@UserSettingsMenuId, N'User Settings', N'Update personal details and account password', N'user_settings', @SettingsMenuId, 1, 1, 0, @Now, NULL, 0, NULL);
+END
+
 DECLARE @AdminUsersMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'admin_users');
 IF @AdminUsersMenuId IS NULL
 BEGIN

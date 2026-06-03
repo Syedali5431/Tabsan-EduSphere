@@ -36,6 +36,7 @@ BEGIN TRANSACTION;
 DECLARE @UserId UNIQUEIDENTIFIER = NEWID();
 DECLARE @Username NVARCHAR(100) = N'superadmin2';
 DECLARE @Email NVARCHAR(256) = N'superadmin2@tabsan.local';
+DECLARE @Address NVARCHAR(500) = N'Head Office';
 DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 DECLARE @PhoneNumber NVARCHAR(32) = N'+61490000999';
 /* --------------------------------------------------------- */
@@ -76,6 +77,7 @@ BEGIN
         [Id],
         [Username],
         [Email],
+        [Address],
         [PasswordHash],
         [RoleId],
         [DepartmentId],
@@ -92,6 +94,7 @@ BEGIN
         @UserId,
         @Username,
         @Email,
+        @Address,
         @PasswordHash,
         @RoleSuperAdminId,
         NULL,
@@ -111,6 +114,7 @@ BEGIN
     UPDATE [users]
     SET [Username] = @Username,
         [Email] = @Email,
+        [Address] = @Address,
         [PasswordHash] = @PasswordHash,
         [RoleId] = @RoleSuperAdminId,
         [DepartmentId] = NULL,
@@ -142,6 +146,14 @@ IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
 BEGIN
     UPDATE [users]
     SET [PhoneNumber] = @PhoneNumber,
+        [UpdatedAt] = @Now
+    WHERE [Id] = @ExistingId;
+END;
+
+IF COL_LENGTH('users', 'Address') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [Address] = @Address,
         [UpdatedAt] = @Now
     WHERE [Id] = @ExistingId;
 END;

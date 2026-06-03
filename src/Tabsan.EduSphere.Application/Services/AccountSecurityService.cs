@@ -112,32 +112,48 @@ public class AccountSecurityService : IAccountSecurityService
         Guid adminUserId,
         CancellationToken ct = default)
     {
-        var target = await _userRepo.GetByIdAsync(request.TargetUserId, ct);
-        if (target is null)
-            throw new KeyNotFoundException($"User {request.TargetUserId} not found.");
+        await ResetPasswordAsync(request.TargetUserId, request.NewPassword, adminUserId, canResetAdminAccounts: false, requirePasswordChange: false, ct);
+    }
 
-        if (target.Role?.Name is "Admin" or "SuperAdmin")
+    public async Task ResetPasswordAsync(
+        Guid targetUserId,
+        string newPassword,
+        Guid adminUserId,
+        bool canResetAdminAccounts,
+        bool requirePasswordChange,
+        CancellationToken ct = default)
+    {
+        var target = await _userRepo.GetByIdAsync(targetUserId, ct);
+        if (target is null)
+            throw new KeyNotFoundException($"User {targetUserId} not found.");
+
+        if (!canResetAdminAccounts && target.Role?.Name is "Admin" or "SuperAdmin")
             throw new InvalidOperationException("Admin account passwords cannot be reset through this endpoint.");
 
-        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 8)
+        if (!canResetAdminAccounts && string.Equals(target.Role?.Name, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("SuperAdmin accounts cannot be reset through this endpoint.");
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
             throw new ArgumentException("New password must be at least 8 characters.");
 
-        var newHash = _passwordHasher.Hash(request.NewPassword);
+        var newHash = _passwordHasher.Hash(newPassword);
         target.UpdatePasswordHash(newHash);
+        if (requirePasswordChange)
+            target.RequirePasswordChange();
+        else
+            target.ClearMustChangePassword();
 
-        // Also unlock if locked
         if (target.IsLockedOut)
             target.UnlockAccount();
 
         _userRepo.Update(target);
         await _userRepo.SaveChangesAsync(ct);
 
-        // Record in password history for reuse-prevention.
         await _passwordHistory.AddAsync(new PasswordHistoryEntry(target.Id, newHash), ct);
         await _passwordHistory.SaveChangesAsync(ct);
 
         await _audit.LogAsync(new AuditLog(
-            action: "AdminResetPassword",
+            action: canResetAdminAccounts ? "PrivilegedResetPassword" : "AdminResetPassword",
             entityName: "User",
             entityId: target.Id.ToString(),
             actorUserId: adminUserId,
@@ -145,7 +161,6 @@ public class AccountSecurityService : IAccountSecurityService
             newValuesJson: "{\"passwordReset\":true}",
             ipAddress: null), ct);
 
-        // Notify user by email if address is on file.
         if (!string.IsNullOrWhiteSpace(target.Email))
         {
             var body = _templateRenderer.Render("password-reset", new Dictionary<string, string>
@@ -154,7 +169,6 @@ public class AccountSecurityService : IAccountSecurityService
             });
             try
             {
-                // Final-Touches Phase 34 Stage 7.1 — offload transactional email from request path when queue is available.
                 if (_emailQueue is not null)
                 {
                     await _emailQueue.EnqueueAsync(new AccountSecurityEmailWorkItem(

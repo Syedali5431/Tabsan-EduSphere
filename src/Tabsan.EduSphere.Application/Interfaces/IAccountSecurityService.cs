@@ -18,6 +18,9 @@ public interface IAccountSecurityService
     /// <summary>Admin resets the password for a non-admin account (e.g., after lockout).</summary>
     Task ResetPasswordAsync(AdminResetPasswordRequest request, Guid adminUserId, CancellationToken ct = default);
 
+    /// <summary>Admin or super admin resets the password for any allowed account.</summary>
+    Task ResetPasswordAsync(Guid targetUserId, string newPassword, Guid adminUserId, bool canResetAdminAccounts, bool requirePasswordChange, CancellationToken ct = default);
+
     /// <summary>Gets all currently locked-out non-admin accounts. Admin only.</summary>
     Task<IList<AccountLockoutStatusDto>> GetLockedAccountsAsync(CancellationToken ct = default);
 }

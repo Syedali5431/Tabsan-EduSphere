@@ -22,7 +22,10 @@ public sealed record CreateAdminUserRequest(
 
 	[property: Phone]
 	[property: StringLength(32)]
-	string? PhoneNumber = null);
+	string? PhoneNumber = null,
+
+	[property: StringLength(500)]
+	string? Address = null);
 
 /// <summary>Request body for updating an Admin user account.</summary>
 public sealed record UpdateAdminUserRequest(
@@ -37,4 +40,7 @@ public sealed record UpdateAdminUserRequest(
 
 	[property: Phone]
 	[property: StringLength(32)]
-	string? PhoneNumber = null);
+	string? PhoneNumber = null,
+
+	[property: StringLength(500)]
+	string? Address = null);

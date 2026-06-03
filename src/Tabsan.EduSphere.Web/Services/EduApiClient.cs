@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.DataProtection;
 using QRCoder;
+using Tabsan.EduSphere.Application.DTOs.Auth;
 using Tabsan.EduSphere.Application.DTOs.Analytics;
 using Tabsan.EduSphere.Web.Models.Portal;
 
@@ -17,6 +18,7 @@ public interface IEduApiClient
     ApiConnectionModel GetConnection();
     void SaveConnection(ApiConnectionModel model);
     SessionIdentity? GetSessionIdentity();
+    Task ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct);
     Task ForceChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct);
     Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct);
@@ -170,6 +172,12 @@ public interface IEduApiClient
     Task<List<AdminUserLookupItem>> GetAdminUsersAsync(CancellationToken ct);
     Task<Guid> CreateAdminUserAsync(string username, string? email, string password, int? institutionType, CancellationToken ct);
     Task UpdateAdminUserAsync(Guid userId, string? email, bool isActive, string? newPassword, CancellationToken ct);
+    Task<List<UserSettingsUserItem>> GetUserSettingsAsync(Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct);
+    Task<UserSettingsUserItem?> GetMyUserSettingsAsync(CancellationToken ct);
+    Task<UserSettingsUserItem?> GetUserSettingsByIdAsync(Guid userId, CancellationToken ct);
+    Task<UserSettingsUserItem?> UpdateUserSettingsAsync(Guid userId, UpdateUserSettingsRequest request, CancellationToken ct);
+    Task<UserSettingsUserItem?> UpdateMyUserSettingsAsync(UpdateUserSettingsRequest request, CancellationToken ct);
+    Task ResetUserPasswordAsync(Guid userId, CancellationToken ct);
     Task<List<Guid>> GetAdminDepartmentIdsAsync(Guid adminUserId, CancellationToken ct);
     Task AssignAdminToDepartmentAsync(Guid adminUserId, Guid departmentId, CancellationToken ct);
     Task RemoveAdminFromDepartmentAsync(Guid adminUserId, Guid departmentId, CancellationToken ct);
@@ -712,6 +720,9 @@ public class EduApiClient : IEduApiClient
 
     public Task ForceChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct)
         => PostAsync<object, object>("api/v1/auth/force-change-password", new { currentPassword, newPassword }, ct);
+
+    public Task ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct)
+        => PutAsync<object, object>("api/v1/auth/change-password", new { currentPassword, newPassword }, ct);
 
     public async Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct)
     {
@@ -2525,6 +2536,23 @@ public class EduApiClient : IEduApiClient
         public int? InstitutionType { get; set; }
     }
 
+    private sealed class UserSettingsApiDto
+    {
+        public Guid Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Address { get; set; }
+        public bool IsActive { get; set; }
+        public Guid? TenantId { get; set; }
+        public Guid? CampusId { get; set; }
+        public Guid? DepartmentId { get; set; }
+        public string? DepartmentName { get; set; }
+        public Guid? CourseId { get; set; }
+        public string? CourseName { get; set; }
+    }
+
     private sealed class AdminDepartmentAssignmentApiDto
     {
         public Guid AdminUserId { get; set; }
@@ -2539,6 +2567,23 @@ public class EduApiClient : IEduApiClient
         public int Errors { get; set; }
         public List<string>? ErrorDetails { get; set; }
     }
+
+    private static UserSettingsUserItem MapUserSettingsItem(UserSettingsApiDto item) => new()
+    {
+        Id = item.Id,
+        Username = item.Username,
+        Role = item.Role,
+        Email = item.Email,
+        PhoneNumber = item.PhoneNumber,
+        Address = item.Address,
+        IsActive = item.IsActive,
+        TenantId = item.TenantId,
+        CampusId = item.CampusId,
+        DepartmentId = item.DepartmentId,
+        DepartmentName = item.DepartmentName,
+        CourseId = item.CourseId,
+        CourseName = item.CourseName
+    };
 
     public Task CreateDepartmentAsync(string name, string code, int institutionType, CancellationToken ct)
         => CreateDepartmentAsync(name, code, institutionType, null, null, ct);
@@ -2744,6 +2789,47 @@ public class EduApiClient : IEduApiClient
 
     public Task UpdateAdminUserAsync(Guid userId, string? email, bool isActive, string? newPassword, CancellationToken ct)
         => PutAsync<object, object>($"api/v1/admin-user/{userId}", new { email, isActive, newPassword }, ct);
+
+    public async Task<List<UserSettingsUserItem>> GetUserSettingsAsync(Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        var query = new List<string>();
+        if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        if (courseId.HasValue) query.Add($"courseId={courseId.Value}");
+        if (!string.IsNullOrWhiteSpace(search)) query.Add($"search={Uri.EscapeDataString(search)}");
+
+        var path = query.Count == 0 ? "api/v1/user-settings" : $"api/v1/user-settings?{string.Join("&", query)}";
+        var raw = await GetAsync<List<UserSettingsApiDto>>(path, ct) ?? new();
+        return raw.Select(MapUserSettingsItem).ToList();
+    }
+
+    public async Task<UserSettingsUserItem?> GetMyUserSettingsAsync(CancellationToken ct)
+    {
+        var raw = await GetAsync<UserSettingsApiDto>("api/v1/user-settings/me", ct);
+        return raw is null ? null : MapUserSettingsItem(raw);
+    }
+
+    public async Task<UserSettingsUserItem?> GetUserSettingsByIdAsync(Guid userId, CancellationToken ct)
+    {
+        var raw = await GetAsync<UserSettingsApiDto>($"api/v1/user-settings/{userId}", ct);
+        return raw is null ? null : MapUserSettingsItem(raw);
+    }
+
+    public async Task<UserSettingsUserItem?> UpdateUserSettingsAsync(Guid userId, UpdateUserSettingsRequest request, CancellationToken ct)
+    {
+        var raw = await PutAsync<UpdateUserSettingsRequest, UserSettingsApiDto>($"api/v1/user-settings/{userId}", request, ct);
+        return raw is null ? null : MapUserSettingsItem(raw);
+    }
+
+    public async Task<UserSettingsUserItem?> UpdateMyUserSettingsAsync(UpdateUserSettingsRequest request, CancellationToken ct)
+    {
+        var raw = await PutAsync<UpdateUserSettingsRequest, UserSettingsApiDto>("api/v1/user-settings/me", request, ct);
+        return raw is null ? null : MapUserSettingsItem(raw);
+    }
+
+    public Task ResetUserPasswordAsync(Guid userId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/user-settings/{userId}/reset-password", new { }, ct);
 
     public async Task<List<Guid>> GetAdminDepartmentIdsAsync(Guid adminUserId, CancellationToken ct)
     {

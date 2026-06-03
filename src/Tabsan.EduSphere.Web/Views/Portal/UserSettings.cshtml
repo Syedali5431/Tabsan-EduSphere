@@ -1,0 +1,406 @@
+@model Tabsan.EduSphere.Web.Models.Portal.UserSettingsPageModel
+@{
+    ViewData["Title"] = "User Settings";
+    var message = TempData["PortalMessage"] as string ?? Model.Message;
+    var selectedUser = Model.SelectedUser;
+}
+
+<style>
+    .user-settings-shell {
+        --ink: #10243f;
+        --accent: #1d4ed8;
+        --accent-soft: rgba(29, 78, 216, 0.10);
+        --warm: #f59e0b;
+        background:
+            radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+            radial-gradient(circle at top right, rgba(245, 158, 11, 0.10), transparent 24%),
+            linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+        border: 1px solid rgba(29, 78, 216, 0.10);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .hero-card,
+    .panel-card {
+        border: 0;
+        border-radius: 20px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+    }
+
+    .hero-card .card-body {
+        background: linear-gradient(135deg, rgba(29, 78, 216, 0.96), rgba(15, 118, 110, 0.95));
+        color: #fff;
+    }
+
+    .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem .8rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.15);
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+        margin-bottom: 1rem;
+    }
+
+    .soft-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .4rem .7rem;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 700;
+        font-size: .82rem;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .85rem;
+    }
+
+    .detail-item {
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(29, 78, 216, 0.10);
+        border-radius: 16px;
+        padding: .9rem 1rem;
+        min-height: 78px;
+    }
+
+    .detail-label {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #64748b;
+        margin-bottom: .25rem;
+    }
+
+    .detail-value {
+        font-weight: 700;
+        color: var(--ink);
+        word-break: break-word;
+    }
+
+    .user-list {
+        max-height: 420px;
+        overflow: auto;
+    }
+</style>
+
+<div class="user-settings-shell">
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-7">
+            <div class="hero-card card h-100">
+                <div class="card-body">
+                    <div class="hero-kicker"><i class="bi bi-person-badge-fill"></i> Profile and access control</div>
+                    <h2 class="h3 mb-2">User Settings</h2>
+                    <p class="mb-3 opacity-90">
+                        Update email, mobile number, address, or password. Admin and SuperAdmin users can also manage other accounts within scope.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge rounded-pill text-bg-light text-dark">Self-service profile updates</span>
+                        <span class="badge rounded-pill text-bg-light text-dark">Password change with current password</span>
+                        <span class="badge rounded-pill text-bg-light text-dark">Reset password to EduSphere147</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-5">
+            <div class="panel-card card h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="text-uppercase small text-muted fw-semibold mb-2">Current session</div>
+                        <div class="h5 mb-1">@(Model.Identity?.UserName ?? "Guest")</div>
+                        <div class="text-muted small">@(Model.Identity?.Roles.Count > 0 ? string.Join(", ", Model.Identity.Roles) : "No roles resolved")</div>
+                    </div>
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        @if (Model.CanManageUsers)
+                        {
+                            <span class="soft-chip"><i class="bi bi-funnel-fill"></i> Scoped directory access</span>
+                        }
+                        else
+                        {
+                            <span class="soft-chip"><i class="bi bi-person-check-fill"></i> Personal account only</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @(message.StartsWith("Error", StringComparison.OrdinalIgnoreCase) ? "alert-danger" : "alert-success") alert-dismissible fade show shadow-sm border-0" role="alert">
+            @message
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.IsConnected)
+    {
+        <div class="alert alert-warning border-0 shadow-sm">Not connected. Open the Dashboard and configure the API connection first.</div>
+    }
+    else
+    {
+        @if (Model.CanManageUsers)
+        {
+            <div class="panel-card card mb-4">
+                <div class="card-body">
+                    <form asp-action="UserSettings" method="get" class="row g-3 align-items-end">
+                        @if (Model.IsSuperAdmin)
+                        {
+                            <div class="col-md-3">
+                                <label class="form-label">Tenant</label>
+                                <select name="tenantId" class="form-select">
+                                    <option value="">All Tenants</option>
+                                    @foreach (var tenant in Model.Tenants)
+                                    {
+                                        <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Campus</label>
+                                <select name="campusId" class="form-select">
+                                    <option value="">All Campuses</option>
+                                    @foreach (var campus in Model.Campuses)
+                                    {
+                                        <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        <div class="col-md-2">
+                            <label class="form-label">Department</label>
+                            <select name="departmentId" class="form-select">
+                                <option value="">All Departments</option>
+                                @foreach (var department in Model.Departments)
+                                {
+                                    <option value="@department.Id" selected="@(Model.SelectedDepartmentId == department.Id)">@department.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Course</label>
+                            <select name="courseId" class="form-select">
+                                <option value="">All Courses</option>
+                                @foreach (var course in Model.Courses)
+                                {
+                                    <option value="@course.Id" selected="@(Model.SelectedCourseId == course.Id)">@course.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Search</label>
+                            <input name="search" value="@Context.Request.Query["search"]" class="form-control" placeholder="Name or email" />
+                        </div>
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <a asp-action="UserSettings" class="btn btn-outline-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-4">
+                <div class="panel-card card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-uppercase text-muted">Users</div>
+                            <div class="fw-semibold">@(Model.CanManageUsers ? "Scoped directory" : "My account")</div>
+                        </div>
+                        @if (Model.CanManageUsers)
+                        {
+                            <span class="badge bg-secondary">@Model.Users.Count</span>
+                        }
+                    </div>
+                    <div class="card-body p-0 user-list">
+                        @if (Model.CanManageUsers)
+                        {
+                            <form asp-action="UserSettings" method="get" class="p-3 border-bottom">
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                                <label class="form-label">Select user</label>
+                                <select name="selectedUserId" class="form-select" onchange="this.form.submit()">
+                                    @foreach (var user in Model.Users)
+                                    {
+                                        <option value="@user.Id" selected="@(Model.SelectedUserId == user.Id)">
+                                            @user.Username - @user.Role
+                                        </option>
+                                    }
+                                </select>
+                            </form>
+
+                            @if (Model.Users.Count == 0)
+                            {
+                                <div class="p-3 text-muted">No users match the selected filters.</div>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var user in Model.Users)
+                                    {
+                                        var isActive = Model.SelectedUserId == user.Id;
+                                        <a asp-action="UserSettings"
+                                           asp-route-selectedUserId="@user.Id"
+                                           asp-route-tenantId="@Model.SelectedTenantId"
+                                           asp-route-campusId="@Model.SelectedCampusId"
+                                           asp-route-departmentId="@Model.SelectedDepartmentId"
+                                           asp-route-courseId="@Model.SelectedCourseId"
+                                           asp-route-search="@Context.Request.Query["search"]"
+                                           class="list-group-item list-group-item-action @(isActive ? "active" : "")">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="fw-semibold">@user.Username</div>
+                                                    <div class="small opacity-75">@user.Role</div>
+                                                </div>
+                                                <span class="badge @(user.IsActive ? "bg-success" : "bg-secondary")">@(user.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                            <div class="small mt-1 opacity-75">@(string.IsNullOrWhiteSpace(user.Email) ? "No email" : user.Email)</div>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="p-3">
+                                @if (selectedUser is null)
+                                {
+                                    <div class="text-muted">Your profile details are unavailable right now.</div>
+                                }
+                                else
+                                {
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item">
+                                            <div class="fw-semibold">@selectedUser.Username</div>
+                                            <div class="small text-muted">@selectedUser.Role</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-8">
+                <div class="panel-card card mb-4">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-uppercase text-muted">Profile</div>
+                            <div class="fw-semibold">Update details</div>
+                        </div>
+                        @if (selectedUser is not null)
+                        {
+                            <span class="badge bg-light text-dark">@selectedUser.Role</span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        @if (selectedUser is null)
+                        {
+                            <div class="text-muted">Select a user to view and edit their details.</div>
+                        }
+                        else
+                        {
+                            <div class="detail-grid mb-4">
+                                <div class="detail-item"><div class="detail-label">Username</div><div class="detail-value">@selectedUser.Username</div></div>
+                                <div class="detail-item"><div class="detail-label">Role</div><div class="detail-value">@selectedUser.Role</div></div>
+                                <div class="detail-item"><div class="detail-label">Department</div><div class="detail-value">@(selectedUser.DepartmentName ?? "Not assigned")</div></div>
+                                <div class="detail-item"><div class="detail-label">Course</div><div class="detail-value">@(selectedUser.CourseName ?? "Not assigned")</div></div>
+                                <div class="detail-item"><div class="detail-label">Tenant</div><div class="detail-value">@(selectedUser.TenantId?.ToString() ?? "Not assigned")</div></div>
+                                <div class="detail-item"><div class="detail-label">Campus</div><div class="detail-value">@(selectedUser.CampusId?.ToString() ?? "Not assigned")</div></div>
+                            </div>
+
+                            <form asp-action="UpdateUserSettings" method="post" class="mb-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="selectedUserId" value="@selectedUser.Id" />
+                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Email</label>
+                                        <input name="Email" type="email" class="form-control" value="@Model.Form.Email" maxlength="256" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Mobile</label>
+                                        <input name="PhoneNumber" type="text" class="form-control" value="@Model.Form.PhoneNumber" maxlength="32" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Address</label>
+                                        <input name="Address" type="text" class="form-control" value="@Model.Form.Address" maxlength="500" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Details</button>
+                                    @if (Model.CanResetPasswords && (Model.IsSuperAdmin || !string.Equals(selectedUser.Role, "SuperAdmin", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <button type="submit" class="btn btn-outline-warning" formaction="@Url.Action("ResetUserPassword", "Portal")" formmethod="post" name="userId" value="@selectedUser.Id">Reset Password to EduSphere147</button>
+                                    }
+                                </div>
+                            </form>
+
+                            @if (!Model.CanManageUsers || Model.CurrentUserId == selectedUser.Id)
+                            {
+                                <div class="panel-card card mt-4 border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div>
+                                                <div class="small text-uppercase text-muted">Password</div>
+                                                <div class="fw-semibold">Change your password</div>
+                                            </div>
+                                        </div>
+                                        <form asp-action="ChangeUserPassword" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="selectedUserId" value="@selectedUser.Id" />
+                                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                            <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                            <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Current password</label>
+                                                    <input name="CurrentPassword" type="password" class="form-control" autocomplete="current-password" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">New password</label>
+                                                    <input name="NewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Confirm new password</label>
+                                                    <input name="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <button type="submit" class="btn btn-success">Change Password</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

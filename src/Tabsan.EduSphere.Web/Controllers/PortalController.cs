@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using Tabsan.EduSphere.Application.DTOs.Auth;
 using Tabsan.EduSphere.Web.Models.Portal;
 using Tabsan.EduSphere.Web.Services;
 
@@ -62,6 +63,7 @@ public class PortalController : Controller
         [nameof(Enrollments)] = "enrollments",
         [nameof(ReportCenter)] = "report_center",
         [nameof(ReportPayments)] = "report_center",
+        [nameof(UserSettings)] = "user_settings",
         [nameof(DashboardSettings)] = "dashboard_settings",
         [nameof(DegreeAudit)] = "degree_audit",
         [nameof(GraduationEligibility)] = "graduation_eligibility",
@@ -8950,6 +8952,172 @@ public class PortalController : Controller
         return departments
             .Where(d => !d.InstitutionType.HasValue || d.InstitutionType.Value == institutionType.Value)
             .ToList();
+    }
+
+    // ── User Settings ───────────────────────────────────────────────────────
+
+    [HttpGet]
+    public async Task<IActionResult> UserSettings(Guid? selectedUserId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        ViewData["Title"] = "User Settings";
+
+        var identity = _api.GetSessionIdentity();
+        var currentUser = await _api.GetMyUserSettingsAsync(ct);
+        var model = new UserSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            CurrentUserId = currentUser?.Id,
+            SelectedUserId = selectedUserId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedCourseId = courseId
+        };
+
+        if (!model.IsConnected)
+            return View(model);
+
+        try
+        {
+            if (model.CanManageUsers)
+            {
+                if (identity?.IsSuperAdmin == true)
+                {
+                    model.Tenants = await _api.GetTenantsAsync(ct);
+                    model.Campuses = await _api.GetCampusesAsync(null, ct);
+                }
+
+                model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
+                model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
+                model.Users = await _api.GetUserSettingsAsync(tenantId, campusId, departmentId, courseId, search, ct);
+
+                if (!model.SelectedUserId.HasValue && model.Users.Count > 0)
+                    model.SelectedUserId = model.Users[0].Id;
+
+                if (model.SelectedUserId.HasValue)
+                    model.SelectedUser = await _api.GetUserSettingsByIdAsync(model.SelectedUserId.Value, ct);
+
+                if (model.SelectedUser is null && model.Users.Count > 0)
+                    model.SelectedUser = model.Users[0];
+            }
+            else
+            {
+                model.SelectedUser = currentUser;
+                if (model.SelectedUser is not null)
+                    model.SelectedUserId = model.SelectedUser.Id;
+            }
+
+            if (model.SelectedUser is not null)
+            {
+                model.Form.Email = model.SelectedUser.Email;
+                model.Form.PhoneNumber = model.SelectedUser.PhoneNumber;
+                model.Form.Address = model.SelectedUser.Address;
+            }
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateUserSettings(Guid? selectedUserId, UserSettingsFormModel form, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        try
+        {
+            var identity = _api.GetSessionIdentity();
+            if (selectedUserId.HasValue && (identity?.IsAdmin == true || identity?.IsSuperAdmin == true))
+            {
+                await _api.UpdateUserSettingsAsync(selectedUserId!.Value, new UpdateUserSettingsRequest(form.Email, form.PhoneNumber, form.Address), ct);
+                TempData["PortalMessage"] = "User details updated.";
+            }
+            else
+            {
+                await _api.UpdateMyUserSettingsAsync(new UpdateUserSettingsRequest(form.Email, form.PhoneNumber, form.Address), ct);
+                TempData["PortalMessage"] = "Your details were updated.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeUserPassword(UserSettingsFormModel form, Guid? selectedUserId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        if (string.IsNullOrWhiteSpace(form.CurrentPassword))
+        {
+            TempData["PortalMessage"] = "Current password is required.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        if (string.IsNullOrWhiteSpace(form.NewPassword))
+        {
+            TempData["PortalMessage"] = "New password is required.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        if (!string.Equals(form.NewPassword, form.ConfirmNewPassword, StringComparison.Ordinal))
+        {
+            TempData["PortalMessage"] = "Password confirmation does not match.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        if (!TryValidateSafePassword(form.NewPassword, out var passwordMessage))
+        {
+            TempData["PortalMessage"] = passwordMessage;
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        try
+        {
+            await _api.ChangePasswordAsync(form.CurrentPassword, form.NewPassword, ct);
+            TempData["PortalMessage"] = "Password changed successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetUserPassword(Guid userId, Guid? selectedUserId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
+            return Forbid();
+
+        try
+        {
+            await _api.ResetUserPasswordAsync(userId, ct);
+            TempData["PortalMessage"] = "Password reset to EduSphere147.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(UserSettings), new { selectedUserId = selectedUserId ?? userId, tenantId, campusId, departmentId, courseId, search });
     }
 
     // ── Dashboard Settings ────────────────────────────────────────────────────

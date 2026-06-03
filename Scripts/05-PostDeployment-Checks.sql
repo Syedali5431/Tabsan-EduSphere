@@ -123,6 +123,10 @@ SELECT
 	CASE WHEN COL_LENGTH('users', 'PhoneNumber') IS NULL THEN 0 ELSE 1 END AS [Value];
 
 SELECT
+	'UsersAddressColumnExists' AS [CheckName],
+	CASE WHEN COL_LENGTH('users', 'Address') IS NULL THEN 0 ELSE 1 END AS [Value];
+
+SELECT
 	'UsersMfaIsEnabledColumnExists' AS [CheckName],
 	CASE WHEN COL_LENGTH('users', 'MfaIsEnabled') IS NULL THEN 0 ELSE 1 END AS [Value];
 
@@ -138,6 +142,10 @@ SELECT
 	'UsersPhoneNumberMaxLength' AS [CheckName],
 	ISNULL(COL_LENGTH('users', 'PhoneNumber'), 0) AS [Value];
 
+SELECT
+	'UsersAddressMaxLength' AS [CheckName],
+	ISNULL(COL_LENGTH('users', 'Address'), 0) AS [Value];
+
 IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
 BEGIN
 	SELECT 'UsersWithPhoneNumberCount' AS [CheckName], COUNT(1) AS [Value]
@@ -148,6 +156,18 @@ END
 ELSE
 BEGIN
 	SELECT 'UsersWithPhoneNumberCount' AS [CheckName], CAST(0 AS int) AS [Value];
+END;
+
+IF COL_LENGTH('users', 'Address') IS NOT NULL
+BEGIN
+	SELECT 'UsersWithAddressCount' AS [CheckName], COUNT(1) AS [Value]
+	FROM users
+	WHERE [Address] IS NOT NULL
+	  AND LTRIM(RTRIM([Address])) <> N'';
+END
+ELSE
+BEGIN
+	SELECT 'UsersWithAddressCount' AS [CheckName], CAST(0 AS int) AS [Value];
 END;
 
 SELECT 'PaymentSummaryReportCount' AS [CheckName], COUNT(1) AS [Value]

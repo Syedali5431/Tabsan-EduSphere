@@ -33,6 +33,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .HasMaxLength(32)
                .IsRequired(false);
 
+        builder.Property(u => u.Address)
+               .HasMaxLength(500)
+               .IsRequired(false);
+
         builder.Property(u => u.TenantId)
                .IsRequired(false);
 
