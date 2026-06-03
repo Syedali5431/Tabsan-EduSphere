@@ -26,12 +26,6 @@
     </div>
 }
 
-@if (Model.OfferingId == System.Guid.Empty)
-{
-    <div class="alert alert-info">Select a valid course offering to view or post announcements.</div>
-    return;
-}
-
 <form method="get" asp-action="Announcements" class="row g-2 align-items-end mb-4">
     @if (Model.Tenants.Count > 0)
     {
@@ -56,12 +50,23 @@
             </select>
         </div>
     }
+    <div class="col-md-3">
+        <label class="form-label">Department</label>
+        <select name="departmentId" class="form-select" onchange="this.form.submit()">
+            <option value="">All Departments</option>
+            @foreach (var d in Model.Departments)
+            {
+                <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
+            }
+        </select>
+    </div>
     <div class="col-md-4">
         <label class="form-label">Course Offering</label>
         @if (Model.Offerings.Any())
         {
             var hasCurrentOffering = Model.Offerings.Any(o => o.Id == Model.OfferingId);
             <select name="offeringId" class="form-select" onchange="this.form.submit()">
+                <option value="">All Offerings in Selected Department</option>
                 @if (!hasCurrentOffering && Model.OfferingId != System.Guid.Empty)
                 {
                     <option value="@Model.OfferingId" selected="selected">Current offering (@Model.OfferingId)</option>
@@ -74,8 +79,7 @@
         }
         else
         {
-            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-            <input class="form-control" value="Current offering (@Model.OfferingId)" readonly />
+            <input class="form-control" value="No offerings available for the selected scope" readonly />
         }
     </div>
     <div class="col-md-2">
@@ -94,15 +98,28 @@
     <div class="card-body">
         <form asp-action="CreateAnnouncement" method="post">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+            <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
             <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
             <div class="mb-2">
                 <input name="title" class="form-control" placeholder="Announcement title..." required />
             </div>
             <div class="mb-2">
                 <textarea name="body" class="form-control" rows="3" placeholder="Message..." required></textarea>
+            </div>
+            <div class="form-text mb-2">
+                @if (Model.OfferingId != System.Guid.Empty)
+                {
+                    <span>This announcement will be posted to the selected course offering.</span>
+                }
+                else if (Model.SelectedDepartmentId.HasValue)
+                {
+                    <span>This announcement will be posted to all offerings in the selected department.</span>
+                }
+                else
+                {
+                    <span>Select a department or offering above before posting.</span>
+                }
             </div>
             <button type="submit" class="btn btn-primary">Post</button>
         </form>
@@ -111,7 +128,7 @@
 
 @if (!Model.Announcements.Any())
 {
-    <div class="alert alert-info">No announcements for this course.</div>
+    <div class="alert alert-info">No announcements for the selected scope.</div>
 }
 else
 {
@@ -144,9 +161,8 @@ else
                                 <form asp-action="SetAnnouncementActive" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
-                                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                    <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
+                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                     <input type="hidden" name="isActive" value="@(!a.IsActive)" />
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">
@@ -156,9 +172,8 @@ else
                                 <form asp-action="DeleteAnnouncement" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?')">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
-                                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                    <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
+                                    <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

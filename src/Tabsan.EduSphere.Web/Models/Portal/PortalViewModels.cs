@@ -2528,9 +2528,11 @@ public class AnnouncementItem
 public class AnnouncementsPageModel
 {
     public Guid   OfferingId    { get; set; }
+    public Guid?  SelectedDepartmentId { get; set; }
     public string OfferingTitle { get; set; } = string.Empty;
     public List<TenantItem> Tenants { get; set; } = new();
     public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
     public List<LookupItem> Offerings { get; set; } = new();
     public Guid? SelectedTenantId { get; set; }
     public Guid? SelectedCampusId { get; set; }

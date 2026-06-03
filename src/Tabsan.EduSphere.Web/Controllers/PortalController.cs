@@ -10510,7 +10510,7 @@ public class PortalController : Controller
 
     // Final-Touches Phase 20 Stage 20.4 — announcements
     [HttpGet]
-    public async Task<IActionResult> Announcements(Guid? offeringId, bool includeInactive = false, CancellationToken ct = default)
+    public async Task<IActionResult> Announcements(Guid? offeringId, Guid? departmentId, bool includeInactive = false, CancellationToken ct = default)
     {
         ViewData["Title"] = "Announcements";
         var session = _api.GetSessionIdentity();
@@ -10521,6 +10521,9 @@ public class PortalController : Controller
         var model = new AnnouncementsPageModel
         {
             OfferingId     = offeringId ?? Guid.Empty,
+            SelectedDepartmentId = departmentId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
             IncludeInactive = includeInactive,
             CanManage      = canManage,
             IsConnected    = _api.IsConnected(),
@@ -10530,7 +10533,27 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            model.Offerings = await _api.GetMyOfferingsAsync(ct);
+            model.Departments = (await _api.GetDepartmentsAsync(tenantId, campusId, ct))
+                .OrderBy(d => d.Name)
+                .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                .ToList();
+
+            if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
+                model.SelectedDepartmentId = null;
+
+            var scopedOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, tenantId, campusId, null, ct);
+            model.Offerings = scopedOfferings
+                .OrderBy(o => o.CourseCode)
+                .ThenBy(o => o.CourseTitle)
+                .ThenBy(o => o.SemesterName)
+                .Select(o => new LookupItem
+                {
+                    Id = o.Id,
+                    Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                        ? $"{o.CourseTitle} ({o.SemesterName})"
+                        : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                })
+                .ToList();
 
             if (model.OfferingId == Guid.Empty)
             {
@@ -10539,13 +10562,37 @@ public class PortalController : Controller
                     model.OfferingId = first.Id;
             }
 
-            if (model.OfferingId == Guid.Empty)
+            if (model.OfferingId != Guid.Empty && !model.Offerings.Any(o => o.Id == model.OfferingId))
             {
-                model.ErrorMessage ??= "No course offerings are available for your school/college scope.";
+                model.OfferingId = Guid.Empty;
+            }
+
+            if (model.OfferingId == Guid.Empty && !model.SelectedDepartmentId.HasValue)
+            {
+                model.ErrorMessage ??= "Select a department or course offering to view announcements.";
                 return View(model);
             }
 
-            var items = await _api.GetAnnouncementsAsync(model.OfferingId, includeInactive, tenantId, campusId, ct);
+            var targetOfferingIds = model.OfferingId != Guid.Empty
+                ? new List<Guid> { model.OfferingId }
+                : model.Offerings.Select(o => o.Id).ToList();
+
+            if (targetOfferingIds.Count == 0)
+            {
+                model.ErrorMessage ??= "No course offerings are available for the selected department.";
+                return View(model);
+            }
+
+            var announcementBatches = await Task.WhenAll(
+                targetOfferingIds.Select(id => _api.GetAnnouncementsAsync(id, includeInactive, tenantId, campusId, ct)));
+
+            var items = announcementBatches
+                .SelectMany(x => x)
+                .GroupBy(x => x.Id)
+                .Select(g => g.First())
+                .OrderByDescending(x => x.PostedAt)
+                .ToList();
+
             model.Announcements = items.Select(a => new AnnouncementItem
             {
                 Id = a.Id, OfferingId = a.OfferingId, Title = a.Title,
@@ -10557,7 +10604,7 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateAnnouncement(Guid offeringId, string title, string body, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> CreateAnnouncement(Guid? offeringId, Guid? departmentId, string title, string body, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -10567,16 +10614,40 @@ public class PortalController : Controller
                     throw new InvalidOperationException("Title and body are required.");
 
                 var session = _api.GetSessionIdentity();
-                await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, session?.TenantId, session?.CampusId, ct);
-                TempData["SuccessMessage"] = "Announcement posted.";
+                var tenantId = session?.TenantId;
+                var campusId = session?.CampusId;
+
+                if (offeringId.HasValue && offeringId.Value != Guid.Empty)
+                {
+                    await _api.CreateAnnouncementAsync(offeringId, Guid.Empty, title, body, tenantId, campusId, ct);
+                    TempData["SuccessMessage"] = "Announcement posted.";
+                }
+                else if (departmentId.HasValue)
+                {
+                    var departmentOfferings = await _api.GetCourseOfferingsAsync(departmentId, tenantId, campusId, null, ct);
+                    var offeringIds = departmentOfferings.Select(o => o.Id).Distinct().ToList();
+                    if (offeringIds.Count == 0)
+                        throw new InvalidOperationException("No course offerings are available for the selected department.");
+
+                    foreach (var id in offeringIds)
+                    {
+                        await _api.CreateAnnouncementAsync(id, Guid.Empty, title, body, tenantId, campusId, ct);
+                    }
+
+                    TempData["SuccessMessage"] = $"Announcement posted to {offeringIds.Count} offering(s) in the selected department.";
+                }
+                else
+                {
+                    throw new InvalidOperationException("Select a department or course offering before posting an announcement.");
+                }
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, departmentId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid offeringId, bool isActive, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid? offeringId, Guid? departmentId, bool isActive, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -10588,11 +10659,11 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, departmentId, includeInactive });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid offeringId, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid? offeringId, Guid? departmentId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -10604,7 +10675,7 @@ public class PortalController : Controller
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
-        return RedirectToAction(nameof(Announcements), new { offeringId, includeInactive });
+        return RedirectToAction(nameof(Announcements), new { offeringId, departmentId, includeInactive });
     }
 
     // ── Phase 21 Stage 21.1/21.2 — Study Planner ─────────────────────────────
