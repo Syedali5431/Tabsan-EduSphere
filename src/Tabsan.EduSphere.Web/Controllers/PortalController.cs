@@ -9687,6 +9687,45 @@ public class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
+            var session = _api.GetSessionIdentity();
+
+            if (offeringId == Guid.Empty)
+            {
+                var candidateOfferingId = (await _api.GetMyOfferingsAsync(ct))
+                    .Select(o => o.Id)
+                    .FirstOrDefault(id => id != Guid.Empty);
+
+                if (candidateOfferingId == Guid.Empty)
+                {
+                    var scopedOfferings = await _api.GetCourseOfferingsAsync(
+                        departmentId: null,
+                        tenantId: session?.TenantId,
+                        campusId: session?.CampusId,
+                        institutionType: null,
+                        ct);
+
+                    candidateOfferingId = scopedOfferings
+                        .Where(o => o.IsActive)
+                        .Select(o => o.Id)
+                        .FirstOrDefault(id => id != Guid.Empty);
+
+                    if (candidateOfferingId == Guid.Empty)
+                    {
+                        candidateOfferingId = scopedOfferings
+                            .Select(o => o.Id)
+                            .FirstOrDefault(id => id != Guid.Empty);
+                    }
+                }
+
+                if (candidateOfferingId != Guid.Empty)
+                {
+                    return RedirectToAction(nameof(LmsManage), new { offeringId = candidateOfferingId });
+                }
+
+                model.ErrorMessage ??= "No course offerings are available for your current scope.";
+                return View(model);
+            }
+
             var modules = await _api.GetLmsModulesAsync(offeringId, false, ct);
             model.Modules = modules.Select(m => new LmsModuleItem
             {
