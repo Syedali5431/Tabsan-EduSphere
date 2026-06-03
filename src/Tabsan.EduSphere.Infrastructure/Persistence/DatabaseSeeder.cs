@@ -55,6 +55,8 @@ public static class DatabaseSeeder
             await db.Database.MigrateAsync();
         }
 
+        await EnsureDiscussionSchemaCompatibilityAsync(db);
+
         await SeedRolesAsync(db);
         await SeedModulesAsync(db);
         var (defaultTenantId, defaultCampusId) = await EnsureDefaultTenantCampusAsync(db);
@@ -180,6 +182,36 @@ public static class DatabaseSeeder
                 await connection.CloseAsync();
         }
     }
+
+    // Some long-lived environments were created before Phase 31 discussion columns existed.
+    // Keep startup fail-safe by adding only missing columns in-place.
+    private static Task EnsureDiscussionSchemaCompatibilityAsync(ApplicationDbContext db)
+        => db.Database.ExecuteSqlRawAsync(
+            """
+            IF OBJECT_ID(N'[discussion_threads]') IS NOT NULL
+            BEGIN
+                IF COL_LENGTH('discussion_threads', 'ThreadType') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [ThreadType] nvarchar(50) NOT NULL DEFAULT N'Issue';
+
+                IF COL_LENGTH('discussion_threads', 'IssueSubType') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [IssueSubType] nvarchar(100) NULL;
+
+                IF COL_LENGTH('discussion_threads', 'IsSolved') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [IsSolved] bit NOT NULL DEFAULT CAST(0 AS bit);
+
+                IF COL_LENGTH('discussion_threads', 'ResolvedBy') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [ResolvedBy] uniqueidentifier NULL;
+
+                IF COL_LENGTH('discussion_threads', 'ResolvedAt') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [ResolvedAt] datetime2 NULL;
+
+                IF COL_LENGTH('discussion_threads', 'TicketNumber') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [TicketNumber] nvarchar(100) NOT NULL DEFAULT N'';
+
+                IF COL_LENGTH('discussion_threads', 'IsVisibleToAll') IS NULL
+                    ALTER TABLE [discussion_threads] ADD [IsVisibleToAll] bit NOT NULL DEFAULT CAST(0 AS bit);
+            END
+            """);
 
     // ── Roles ─────────────────────────────────────────────────────────────────
 

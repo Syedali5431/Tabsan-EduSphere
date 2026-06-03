@@ -6949,6 +6949,68 @@ public class PortalController : Controller
         return "Semester";
     }
 
+    private static List<LookupItem> BuildCourseMaterialPeriodOptions(
+        IEnumerable<CourseOfferingItem> scopedOfferings,
+        int? institutionType,
+        IEnumerable<LookupItem> fallbackSemesters)
+    {
+        var offeringPeriods = scopedOfferings
+            .Where(o => o.SemesterId != Guid.Empty)
+            .GroupBy(o => o.SemesterId)
+            .Select(g => new LookupItem
+            {
+                Id = g.Key,
+                Name = g.Select(x => x.SemesterName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? string.Empty
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+            .ToList();
+
+        var baseOptions = offeringPeriods.Count > 0
+            ? offeringPeriods
+            : fallbackSemesters
+                .Where(s => s.Id != Guid.Empty)
+                .Select(s => new LookupItem { Id = s.Id, Name = s.Name })
+                .ToList();
+
+        var range = institutionType switch
+        {
+            1 => (Min: 1, Max: 10),
+            2 => (Min: 11, Max: 12),
+            _ => ((int Min, int Max)?)null
+        };
+
+        if (!range.HasValue)
+        {
+            return baseOptions
+                .OrderBy(x => x.Name)
+                .ToList();
+        }
+
+        var classOptions = baseOptions
+            .Select(x => new
+            {
+                Item = x,
+                ClassNumber = ExtractFirstInteger(x.Name)
+            })
+            .Where(x => x.ClassNumber.HasValue
+                        && x.ClassNumber.Value >= range.Value.Min
+                        && x.ClassNumber.Value <= range.Value.Max)
+            .Select(x => new LookupItem
+            {
+                Id = x.Item.Id,
+                Name = x.Item.Name.Contains("Class", StringComparison.OrdinalIgnoreCase)
+                    ? x.Item.Name
+                    : $"Class {x.ClassNumber!.Value}"
+            })
+            .OrderBy(x => ExtractFirstInteger(x.Name) ?? int.MaxValue)
+            .ThenBy(x => x.Name)
+            .ToList();
+
+        return classOptions.Count > 0
+            ? classOptions
+            : baseOptions.OrderBy(x => x.Name).ToList();
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GraduateStudent(Guid studentId, Guid? departmentId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
