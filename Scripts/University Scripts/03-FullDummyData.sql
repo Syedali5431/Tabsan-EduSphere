@@ -120,6 +120,104 @@ INSERT INTO @SemesterCoverage ([SemesterNo], [Marks]) VALUES
 (7, 90.00),
 (8, 92.00);
 
+IF OBJECT_ID(N'[timetables]') IS NOT NULL
+AND OBJECT_ID(N'[timetable_entries]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[academic_programs]') IS NOT NULL
+BEGIN
+  DECLARE @UniversityTimetableId UNIQUEIDENTIFIER = CAST('93000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
+  DECLARE @UniversityDepartmentId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) sp.[DepartmentId]
+    FROM @TargetStudents ts
+    INNER JOIN [student_profiles] sp ON sp.[Id] = ts.[StudentProfileId]
+    ORDER BY ts.[StudentRn]
+  );
+  DECLARE @UniversitySemesterId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) co.[SemesterId]
+    FROM @TargetStudents ts
+    INNER JOIN [course_offerings] co ON co.[Id] = ts.[CourseOfferingId]
+    WHERE co.[SemesterId] IS NOT NULL
+    ORDER BY ts.[StudentRn]
+  );
+  DECLARE @UniversityProgramId UNIQUEIDENTIFIER = (
+    SELECT TOP (1) ap.[Id]
+    FROM [academic_programs] ap
+    WHERE ap.[DepartmentId] = @UniversityDepartmentId
+      AND ISNULL(ap.[IsDeleted], 0) = 0
+    ORDER BY ap.[CreatedAt], ap.[Id]
+  );
+
+  IF @UniversitySemesterId IS NULL
+    SELECT TOP (1) @UniversitySemesterId = s.[Id] FROM [semesters] s WHERE ISNULL(s.[IsDeleted], 0) = 0 ORDER BY s.[CreatedAt], s.[Id];
+
+  IF @UniversityDepartmentId IS NOT NULL AND @UniversitySemesterId IS NOT NULL AND @UniversityProgramId IS NOT NULL
+  BEGIN
+    INSERT INTO [timetables] ([Id], [DepartmentId], [AcademicProgramId], [SemesterId], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt], [EffectiveDate], [SemesterNumber])
+    SELECT @UniversityTimetableId, @UniversityDepartmentId, @UniversityProgramId, @UniversitySemesterId, 1, @Now, @Now, NULL, 0, NULL, CAST(@Now AS date), 1
+    WHERE NOT EXISTS (SELECT 1 FROM [timetables] t WHERE t.[Id] = @UniversityTimetableId);
+
+    DECLARE @UniversityOfferingPool TABLE
+    (
+      [PoolRank] INT NOT NULL,
+      [CourseId] UNIQUEIDENTIFIER NOT NULL,
+      [FacultyUserId] UNIQUEIDENTIFIER NULL
+    );
+
+    INSERT INTO @UniversityOfferingPool ([PoolRank], [CourseId], [FacultyUserId])
+    SELECT
+      ROW_NUMBER() OVER (ORDER BY co.[CreatedAt], co.[Id]),
+      co.[CourseId],
+      co.[FacultyUserId]
+    FROM
+    (
+      SELECT DISTINCT co.[Id], co.[CreatedAt], co.[CourseId], co.[FacultyUserId]
+      FROM @TargetStudents ts
+      INNER JOIN [course_offerings] co ON co.[Id] = ts.[CourseOfferingId]
+      WHERE co.[CourseId] IS NOT NULL
+        AND ISNULL(co.[IsDeleted], 0) = 0
+    ) co;
+
+    DECLARE @UniversityOfferingPoolCount INT = (SELECT COUNT(1) FROM @UniversityOfferingPool);
+
+    IF @UniversityOfferingPoolCount > 0
+    BEGIN
+      ;WITH SemesterEntries AS
+      (
+        SELECT
+          sc.[SemesterNo],
+          ((sc.[SemesterNo] - 1) % @UniversityOfferingPoolCount) + 1 AS [PoolRank]
+        FROM @SemesterCoverage sc
+      )
+      INSERT INTO [timetable_entries] ([Id], [TimetableId], [DayOfWeek], [StartTime], [EndTime], [SubjectName], [RoomNumber], [FacultyName], [RoomId], [CreatedAt], [UpdatedAt], [BuildingId], [CourseId], [FacultyUserId])
+      SELECT
+        NEWID(),
+        @UniversityTimetableId,
+        ((se.[SemesterNo] - 1) % 5) + 1,
+        CAST('09:00:00' AS time),
+        CAST('10:30:00' AS time),
+        CONCAT(N'University Semester ', CAST(se.[SemesterNo] AS NVARCHAR(10)), N' - Core'),
+        N'U-101',
+        COALESCE(fu.[Username], N'university.faculty'),
+        NULL,
+        @Now,
+        NULL,
+        NULL,
+        op.[CourseId],
+        op.[FacultyUserId]
+      FROM SemesterEntries se
+      INNER JOIN @UniversityOfferingPool op ON op.[PoolRank] = se.[PoolRank]
+      LEFT JOIN [users] fu ON fu.[Id] = op.[FacultyUserId]
+      WHERE NOT EXISTS
+      (
+        SELECT 1
+        FROM [timetable_entries] te
+        WHERE te.[TimetableId] = @UniversityTimetableId
+          AND te.[SubjectName] = CONCAT(N'University Semester ', CAST(se.[SemesterNo] AS NVARCHAR(10)), N' - Core')
+      );
+    END;
+  END;
+END;
+
 INSERT INTO [student_report_cards] ([Id], [StudentProfileId], [InstitutionType], [PeriodLabel], [PayloadJson], [GeneratedByUserId], [GeneratedAt], [CreatedAt], [UpdatedAt])
 SELECT NEWID(),
      ts.[StudentProfileId],
@@ -186,7 +284,17 @@ BEGIN
       );
 END;
 
-IF COL_LENGTH('student_profiles', 'Status') IS NOT NULL AND COL_LENGTH('student_profiles', 'GraduatedDate') IS NOT NULL
+IF COL_LENGTH('student_profiles', 'Status') IS NOT NULL
+AND COL_LENGTH('student_profiles', 'GraduatedDate') IS NOT NULL
+AND EXISTS
+(
+  SELECT 1
+  FROM sys.columns c
+  INNER JOIN sys.types t ON t.[user_type_id] = c.[user_type_id]
+  WHERE c.[object_id] = OBJECT_ID(N'student_profiles')
+    AND c.[name] = N'Status'
+    AND t.[name] IN (N'nvarchar', N'varchar', N'nchar', N'char')
+)
 BEGIN
     EXEC sys.sp_executesql
         N'UPDATE sp
@@ -230,7 +338,6 @@ PRINT N'University lifecycle completion applied for students with Semester 8 cov
         FROM [enrollments] e
         WHERE e.[StudentProfileId] = ts.[StudentProfileId]
           AND e.[CourseOfferingId] = ts.[CourseOfferingId]
-          AND e.[Status] = N'Enrolled'
       );
     END;
 
