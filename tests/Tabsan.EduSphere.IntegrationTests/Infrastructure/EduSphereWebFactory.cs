@@ -19,14 +19,17 @@ namespace Tabsan.EduSphere.IntegrationTests.Infrastructure;
 /// </summary>
 public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    private const string ConnectionOverrideEnvVar = "EDUSPHERE_TEST_SQL_CONNECTION";
+
     /// <summary>
     /// Dedicated database name — separate from the development database so tests
     /// never touch real data.
     /// </summary>
     private const string TestDbName = "TabsanEduSphere_IntegrationTests";
 
-    private const string TestConnectionString =
-        $@"Server=(localdb)\mssqllocaldb;Database={TestDbName};Trusted_Connection=True;MultipleActiveResultSets=true";
+    private static readonly string TestConnectionString = ResolveTestConnectionString();
+
+    private static readonly string TestDatabaseName = ResolveTestDatabaseName(TestConnectionString);
 
     public EduSphereWebFactory()
     {
@@ -87,17 +90,16 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
     /// </summary>
     private static async Task ForceDropDatabaseAsync()
     {
-        const string masterConn =
-            @"Server=(localdb)\mssqllocaldb;Database=master;Trusted_Connection=True;";
+        var masterConn = BuildMasterConnectionString(TestConnectionString);
 
         await using var conn = new SqlConnection(masterConn);
         await conn.OpenAsync();
 
         var sql = $"""
-            IF DB_ID('{TestDbName}') IS NOT NULL
+            IF DB_ID('{TestDatabaseName}') IS NOT NULL
             BEGIN
-                ALTER DATABASE [{TestDbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                DROP DATABASE [{TestDbName}];
+                ALTER DATABASE [{TestDatabaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                DROP DATABASE [{TestDatabaseName}];
             END
             """;
 
@@ -107,17 +109,16 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
 
     private static void ForceDropDatabaseSync()
     {
-        const string masterConn =
-            @"Server=(localdb)\mssqllocaldb;Database=master;Trusted_Connection=True;";
+        var masterConn = BuildMasterConnectionString(TestConnectionString);
 
         using var conn = new SqlConnection(masterConn);
         conn.Open();
 
         var sql = $"""
-            IF DB_ID('{TestDbName}') IS NOT NULL
+            IF DB_ID('{TestDatabaseName}') IS NOT NULL
             BEGIN
-                ALTER DATABASE [{TestDbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                DROP DATABASE [{TestDbName}];
+                ALTER DATABASE [{TestDatabaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                DROP DATABASE [{TestDatabaseName}];
             END
             """;
 
@@ -179,5 +180,32 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
         }
 
         return null;
+    }
+
+    private static string ResolveTestConnectionString()
+    {
+        var overrideConnection = Environment.GetEnvironmentVariable(ConnectionOverrideEnvVar);
+        if (!string.IsNullOrWhiteSpace(overrideConnection))
+            return overrideConnection;
+
+        return $@"Server=(localdb)\mssqllocaldb;Database={TestDbName};Trusted_Connection=True;MultipleActiveResultSets=true";
+    }
+
+    private static string ResolveTestDatabaseName(string connectionString)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        return string.IsNullOrWhiteSpace(builder.InitialCatalog)
+            ? TestDbName
+            : builder.InitialCatalog;
+    }
+
+    private static string BuildMasterConnectionString(string connectionString)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = "master"
+        };
+
+        return builder.ConnectionString;
     }
 }
