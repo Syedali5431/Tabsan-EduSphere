@@ -3908,6 +3908,12 @@ public class PortalController : Controller
     {
         ViewData["Title"] = "Quizzes";
         var identity = _api.GetSessionIdentity();
+        if (identity?.IsStudent == true)
+        {
+            TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var model = new QuizzesPageModel
         {
             IsConnected      = _api.IsConnected(),
@@ -6181,6 +6187,12 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (!CanManageQuizzes(sessionId))
+                {
+                    TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.CreateQuizAsync(offeringId, title, instructions, timeLimitMinutes, maxAttempts, effectiveTenantId, effectiveCampusId, ct);
@@ -6200,6 +6212,12 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (!CanManageQuizzes(sessionId))
+                {
+                    TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.UpdateQuizAsync(id, title, instructions, timeLimitMinutes, maxAttempts, effectiveTenantId, effectiveCampusId, ct);
@@ -6218,6 +6236,12 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (!CanManageQuizzes(sessionId))
+                {
+                    TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.PublishQuizAsync(id, effectiveTenantId, effectiveCampusId, ct);
@@ -6241,6 +6265,12 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (!CanManageQuizzes(sessionId))
+                {
+                    TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.SetQuizActiveAsync(id, activate, effectiveTenantId, effectiveCampusId, ct);
@@ -6262,6 +6292,12 @@ public class PortalController : Controller
             try
             {
                 var sessionId = _api.GetSessionIdentity();
+                if (!CanManageQuizzes(sessionId))
+                {
+                    TempData["PortalMessage"] = "Quizzes are available only to Faculty/Admin/SuperAdmin.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 var effectiveTenantId = sessionId?.IsSuperAdmin == true ? tenantId : sessionId?.TenantId;
                 var effectiveCampusId = sessionId?.IsSuperAdmin == true ? campusId : sessionId?.CampusId;
                 await _api.DeleteQuizAsync(id, effectiveTenantId, effectiveCampusId, ct);
@@ -6270,6 +6306,9 @@ public class PortalController : Controller
         }
         return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
+
+    private static bool CanManageQuizzes(SessionIdentity? identity)
+        => identity?.IsFaculty == true || identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
 
     // ── FYP write actions ───────────────────────────────────────────────────
 

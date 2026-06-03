@@ -258,7 +258,7 @@
         "students" => ("Faculty Related", 2),
         "attendance" => ("Student Related", 3),
         "results" => ("Student Related", 3),
-        "quizzes" => ("Student Related", 3),
+        "quizzes" => ("Faculty Related", 2),
         "fyp" => ("Student Related", 3),
         "student_lifecycle" => ("Student Related", 3),
         "enrollments" => ("Student Related", 3),
@@ -438,6 +438,11 @@
                                     continue;
                                 }
 
+                                if (isStudent && sub.Key.Equals("quizzes", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
+
                                 var subRoute = ResolveRoute(sub.Key);
                                 if (subRoute is null) { continue; }
                                 var subGroup = ResolveGroup(sub.Key);
@@ -460,6 +465,11 @@
                             }
 
                             if (isStudent && !canStudentSeeFyp && top.Key.Equals("fyp", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            if (isStudent && top.Key.Equals("quizzes", StringComparison.OrdinalIgnoreCase))
                             {
                                 continue;
                             }
@@ -618,7 +628,10 @@
                     <a class="menu-link @(IsActiveLink("Portal", "Assignments") ? "is-active" : "")" asp-controller="Portal" asp-action="Assignments" aria-current="@(IsActiveLink("Portal", "Assignments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Assignments"))</span><span class="menu-link-text">Assignments</span></a>
                     <a class="menu-link @(IsActiveLink("Portal", "Attendance") ? "is-active" : "")" asp-controller="Portal" asp-action="Attendance" aria-current="@(IsActiveLink("Portal", "Attendance") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Attendance"))</span><span class="menu-link-text">Attendance</span></a>
                     <a class="menu-link @(IsActiveLink("Portal", "Results") ? "is-active" : "")" asp-controller="Portal" asp-action="Results" aria-current="@(IsActiveLink("Portal", "Results") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Results"))</span><span class="menu-link-text">Results</span></a>
-                    <a class="menu-link @(IsActiveLink("Portal", "Quizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="Quizzes" aria-current="@(IsActiveLink("Portal", "Quizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Quizzes"))</span><span class="menu-link-text">Quizzes</span></a>
+                    @if (showFacultyLinks || showAdminLinks)
+                    {
+                        <a class="menu-link @(IsActiveLink("Portal", "Quizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="Quizzes" aria-current="@(IsActiveLink("Portal", "Quizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Quizzes"))</span><span class="menu-link-text">Quizzes</span></a>
+                    }
                     @if (canStudentSeeFyp && showDegreeAuditSidebar)
                     {
                         <a class="menu-link @(IsActiveLink("Portal", "Fyp") ? "is-active" : "")" asp-controller="Portal" asp-action="Fyp" aria-current="@(IsActiveLink("Portal", "Fyp") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Fyp"))</span><span class="menu-link-text">FYP</span></a>
