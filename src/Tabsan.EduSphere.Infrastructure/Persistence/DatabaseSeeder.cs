@@ -88,6 +88,7 @@ public static class DatabaseSeeder
         // with schema that was already created out-of-band.
         var knownConflictNumbers = new HashSet<int>
         {
+            1913, // The operation failed because an index or statistics with name already exists
             2601, // Cannot insert duplicate key row
             2627, // Violation of PRIMARY KEY/UNIQUE constraint
             2705, // Column names in each table must be unique
