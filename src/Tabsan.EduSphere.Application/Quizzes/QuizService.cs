@@ -213,6 +213,7 @@ public sealed class QuizService : IQuizService
         var questionMap = quiz.Questions.ToDictionary(q => q.Id);
         var answers = new List<QuizAnswer>();
         decimal totalScore = 0;
+        var hasManualQuestions = false;
 
         foreach (var entry in request.Answers)
         {
@@ -221,6 +222,7 @@ public sealed class QuizService : IQuizService
             QuizAnswer answer;
             if (question.Type == QuestionType.ShortAnswer)
             {
+                hasManualQuestions = true;
                 answer = new QuizAnswer(attempt.Id, entry.QuizQuestionId, entry.TextResponse ?? string.Empty);
             }
             else
@@ -246,7 +248,8 @@ public sealed class QuizService : IQuizService
 
         await _repo.AddAnswersAsync(answers, ct);
         attempt.Submit();
-        attempt.RecordScore(totalScore);
+        if (!hasManualQuestions)
+            attempt.RecordScore(totalScore);
         _repo.UpdateAttempt(attempt);
         await _repo.SaveChangesAsync(ct);
 
@@ -282,6 +285,21 @@ public sealed class QuizService : IQuizService
 
         answer.AwardMarks(request.MarksAwarded);
         _repo.UpdateAnswer(answer);
+
+        var attempt = await _repo.GetAttemptByIdAsync(answer.QuizAttemptId, ct);
+        if (attempt is not null)
+        {
+            var hasUngradedShortAnswers = attempt.Answers
+                .Any(a => a.Question.Type == QuestionType.ShortAnswer && !a.MarksAwarded.HasValue);
+
+            if (!hasUngradedShortAnswers)
+            {
+                var finalScore = attempt.Answers.Sum(a => a.MarksAwarded ?? 0m);
+                attempt.RecordScore(finalScore);
+                _repo.UpdateAttempt(attempt);
+            }
+        }
+
         await _repo.SaveChangesAsync(ct);
         return true;
     }

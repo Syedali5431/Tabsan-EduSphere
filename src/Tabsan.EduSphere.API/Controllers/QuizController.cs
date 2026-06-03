@@ -239,7 +239,35 @@ public sealed class QuizController : ControllerBase
     {
         var studentProfileId = GetStudentProfileId();
         if (studentProfileId == Guid.Empty) return Forbid();
-        return Ok(await _quizService.GetAllMyAttemptsAsync(studentProfileId, ct));
+
+        var attempts = await _db.QuizAttempts
+            .AsNoTracking()
+            .Where(a => a.StudentProfileId == studentProfileId)
+            .Join(
+                _db.Quizzes.AsNoTracking(),
+                a => a.QuizId,
+                q => q.Id,
+                (a, q) => new
+                {
+                    Attempt = a,
+                    QuizTitle = q.Title,
+                    MaxScore = (int)q.Questions.Sum(qq => qq.Marks)
+                })
+            .OrderByDescending(x => x.Attempt.StartedAt)
+            .Select(x => new
+            {
+                attemptId = x.Attempt.Id,
+                quizId = x.Attempt.QuizId,
+                quizTitle = x.QuizTitle,
+                startedAt = x.Attempt.StartedAt,
+                submittedAt = x.Attempt.FinishedAt,
+                status = x.Attempt.Status.ToString(),
+                totalScore = x.Attempt.TotalScore,
+                maxScore = x.MaxScore
+            })
+            .ToListAsync(ct);
+
+        return Ok(attempts);
     }
 
     /// <summary>
@@ -251,7 +279,35 @@ public sealed class QuizController : ControllerBase
     {
         var studentProfileId = GetStudentProfileId();
         if (studentProfileId == Guid.Empty) return Forbid();
-        return Ok(await _quizService.GetStudentAttemptsAsync(id, studentProfileId, ct));
+
+        var attempts = await _db.QuizAttempts
+            .AsNoTracking()
+            .Where(a => a.QuizId == id && a.StudentProfileId == studentProfileId)
+            .Join(
+                _db.Quizzes.AsNoTracking(),
+                a => a.QuizId,
+                q => q.Id,
+                (a, q) => new
+                {
+                    Attempt = a,
+                    QuizTitle = q.Title,
+                    MaxScore = (int)q.Questions.Sum(qq => qq.Marks)
+                })
+            .OrderByDescending(x => x.Attempt.StartedAt)
+            .Select(x => new
+            {
+                attemptId = x.Attempt.Id,
+                quizId = x.Attempt.QuizId,
+                quizTitle = x.QuizTitle,
+                startedAt = x.Attempt.StartedAt,
+                submittedAt = x.Attempt.FinishedAt,
+                status = x.Attempt.Status.ToString(),
+                totalScore = x.Attempt.TotalScore,
+                maxScore = x.MaxScore
+            })
+            .ToListAsync(ct);
+
+        return Ok(attempts);
     }
 
     /// <summary>

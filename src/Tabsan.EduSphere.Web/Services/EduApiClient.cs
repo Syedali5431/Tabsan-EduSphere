@@ -318,6 +318,10 @@ public interface IEduApiClient
     // Quizzes
     Task<List<QuizItem>> GetQuizzesByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, bool includeInactive, CancellationToken ct);
     Task<List<QuizAttemptItem>> GetMyAttemptsAsync(CancellationToken ct);
+    Task<List<QuizAttemptItem>> GetMyAttemptsByQuizAsync(Guid quizId, CancellationToken ct);
+    Task<QuizDetailItem?> GetQuizDetailAsync(Guid quizId, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task<QuizAttemptItem?> StartQuizAttemptAsync(Guid quizId, CancellationToken ct);
+    Task SubmitQuizAttemptAsync(Guid attemptId, IEnumerable<(Guid QuizQuestionId, Guid? SelectedOptionId, string? TextResponse)> answers, CancellationToken ct);
     Task<Guid> CreateQuizAsync(Guid courseOfferingId, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task UpdateQuizAsync(Guid id, string title, string? instructions, int? timeLimitMinutes, int maxAttempts, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task PublishQuizAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -3870,14 +3874,93 @@ public class EduApiClient : IEduApiClient
         var raw = await GetAsync<List<QuizAttemptApiDto>>("api/v1/quiz/my-attempts", ct) ?? new();
         return raw.Select(a => new QuizAttemptItem
         {
-            Id          = a.Id,
+            Id          = a.AttemptId != Guid.Empty ? a.AttemptId : a.Id,
+            QuizId      = a.QuizId,
             QuizTitle   = a.QuizTitle ?? "",
             StartedAt   = a.StartedAt,
-            SubmittedAt = a.SubmittedAt,
+            SubmittedAt = a.SubmittedAt ?? a.FinishedAt,
             Status      = a.Status ?? "",
             TotalScore  = a.TotalScore,
             MaxScore    = a.MaxScore
         }).ToList();
+    }
+
+    public async Task<List<QuizAttemptItem>> GetMyAttemptsByQuizAsync(Guid quizId, CancellationToken ct)
+    {
+        var raw = await GetAsync<List<QuizAttemptApiDto>>($"api/v1/quiz/{quizId}/my-attempts", ct) ?? new();
+        return raw.Select(a => new QuizAttemptItem
+        {
+            Id          = a.AttemptId != Guid.Empty ? a.AttemptId : a.Id,
+            QuizId      = a.QuizId,
+            QuizTitle   = a.QuizTitle ?? "",
+            StartedAt   = a.StartedAt,
+            SubmittedAt = a.SubmittedAt ?? a.FinishedAt,
+            Status      = a.Status ?? "",
+            TotalScore  = a.TotalScore,
+            MaxScore    = a.MaxScore
+        }).ToList();
+    }
+
+    public async Task<QuizDetailItem?> GetQuizDetailAsync(Guid quizId, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var queryParts = new List<string>();
+        if (tenantId.HasValue)
+            queryParts.Add($"tenantId={tenantId.Value}");
+        if (campusId.HasValue)
+            queryParts.Add($"campusId={campusId.Value}");
+
+        var path = $"api/v1/quiz/{quizId}";
+        if (queryParts.Count > 0)
+            path += "?" + string.Join("&", queryParts);
+
+        var dto = await GetAsync<QuizDetailApiDto>(path, ct);
+        if (dto is null)
+            return null;
+
+        return new QuizDetailItem
+        {
+            QuizId = dto.QuizId,
+            Questions = dto.Questions.Select(q => new QuizQuestionItem
+            {
+                QuestionId = q.QuestionId,
+                Type = q.Type ?? string.Empty
+            }).ToList()
+        };
+    }
+
+    public async Task<QuizAttemptItem?> StartQuizAttemptAsync(Guid quizId, CancellationToken ct)
+    {
+        var dto = await PostAsync<object, QuizAttemptApiDto>($"api/v1/quiz/{quizId}/start", new { }, ct);
+        if (dto is null)
+            return null;
+
+        return new QuizAttemptItem
+        {
+            Id = dto.AttemptId != Guid.Empty ? dto.AttemptId : dto.Id,
+            QuizId = dto.QuizId,
+            QuizTitle = dto.QuizTitle ?? string.Empty,
+            StartedAt = dto.StartedAt,
+            SubmittedAt = dto.SubmittedAt ?? dto.FinishedAt,
+            Status = dto.Status ?? string.Empty,
+            TotalScore = dto.TotalScore,
+            MaxScore = dto.MaxScore
+        };
+    }
+
+    public Task SubmitQuizAttemptAsync(Guid attemptId, IEnumerable<(Guid QuizQuestionId, Guid? SelectedOptionId, string? TextResponse)> answers, CancellationToken ct)
+    {
+        var payload = new
+        {
+            attemptId,
+            answers = answers.Select(a => new
+            {
+                quizQuestionId = a.QuizQuestionId,
+                selectedOptionId = a.SelectedOptionId,
+                textResponse = a.TextResponse
+            }).ToList()
+        };
+
+        return PostAsync<object, object>("api/v1/quiz/attempt/submit", payload, ct);
     }
 
     private sealed class QuizApiDto
@@ -3903,13 +3986,33 @@ public class EduApiClient : IEduApiClient
 
     private sealed class QuizAttemptApiDto
     {
+        [JsonPropertyName("attemptId")]
+        public Guid      AttemptId   { get; set; }
         public Guid      Id          { get; set; }
+        [JsonPropertyName("quizId")]
+        public Guid      QuizId      { get; set; }
         public string?   QuizTitle   { get; set; }
         public DateTime  StartedAt   { get; set; }
+        [JsonPropertyName("finishedAt")]
+        public DateTime? FinishedAt  { get; set; }
         public DateTime? SubmittedAt { get; set; }
         public string?   Status      { get; set; }
         public decimal?  TotalScore  { get; set; }
         public int       MaxScore    { get; set; }
+    }
+
+    private sealed class QuizDetailApiDto
+    {
+        [JsonPropertyName("quizId")]
+        public Guid QuizId { get; set; }
+        public List<QuizQuestionApiDto> Questions { get; set; } = new();
+    }
+
+    private sealed class QuizQuestionApiDto
+    {
+        [JsonPropertyName("questionId")]
+        public Guid QuestionId { get; set; }
+        public string? Type { get; set; }
     }
 
     // ── Quiz write methods ────────────────────────────────────────────────────

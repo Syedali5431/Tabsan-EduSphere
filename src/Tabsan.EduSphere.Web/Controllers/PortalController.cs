@@ -49,6 +49,7 @@ public class PortalController : Controller
         [nameof(Results)] = "results",
         [nameof(EnterResults)] = "enter_results",
         [nameof(Quizzes)] = "quizzes",
+        [nameof(ViewQuizzes)] = "quizzes",
         [nameof(Fyp)] = "fyp",
         [nameof(Helpdesk)] = "helpdesk",
         [nameof(Prerequisites)] = "prerequisites",
@@ -3973,6 +3974,79 @@ public class PortalController : Controller
         return View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ViewQuizzes(string? semesterName, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        ViewData["Title"] = "View Quizzes";
+        var identity = _api.GetSessionIdentity();
+        if (identity?.IsStudent != true)
+        {
+            TempData["PortalMessage"] = "View Quizzes is available only for students.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        var model = new ViewQuizzesPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            Message = TempData["PortalMessage"]?.ToString()
+        };
+        if (!model.IsConnected) return View(model);
+
+        try
+        {
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
+
+            var offerings = await GetOfferingFilterOptionsAsync(identity, ct, effectiveTenantId, effectiveCampusId);
+            offerings = FilterOfferingsBySemester(offerings, semesterName);
+
+            var quizBatches = await Task.WhenAll(
+                offerings.Select(o => _api.GetQuizzesByOfferingAsync(o.Id, effectiveTenantId, effectiveCampusId, false, ct)));
+
+            var quizzes = quizBatches
+                .SelectMany(q => q)
+                .Where(q => q.IsPublished && q.IsActive)
+                .GroupBy(q => q.Id)
+                .Select(g => g.First())
+                .OrderBy(q => q.AvailableTo ?? DateTime.MaxValue)
+                .ThenBy(q => q.Title)
+                .ToList();
+
+            var rows = new List<StudentQuizViewItem>(quizzes.Count);
+            var srNo = 1;
+            foreach (var quiz in quizzes)
+            {
+                var attempts = await _api.GetMyAttemptsByQuizAsync(quiz.Id, ct);
+                var latestAttempt = attempts
+                    .OrderByDescending(a => a.SubmittedAt ?? a.StartedAt)
+                    .FirstOrDefault();
+
+                var status = ResolveStudentQuizStatus(latestAttempt);
+                rows.Add(new StudentQuizViewItem
+                {
+                    SrNo = srNo++,
+                    QuizId = quiz.Id,
+                    QuizName = quiz.Title,
+                    LastDate = quiz.AvailableTo,
+                    SubmitDate = latestAttempt?.SubmittedAt,
+                    Status = status,
+                    Marks = latestAttempt?.TotalScore,
+                    MaxScore = latestAttempt?.MaxScore ?? 0,
+                    CanSubmit = status.Equals("Pending", StringComparison.OrdinalIgnoreCase)
+                });
+            }
+
+            model.Quizzes = rows;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(model);
+    }
+
     // ── FYP ────────────────────────────────────────────────────────────────
 
     [HttpGet]
@@ -6307,8 +6381,108 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Quizzes), new { offeringId, tenantId, campusId, includeInactive });
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitStudentQuiz(Guid quizId, IFormFile? submissionFile, CancellationToken ct)
+    {
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var identity = _api.GetSessionIdentity();
+                if (identity?.IsStudent != true)
+                {
+                    TempData["PortalMessage"] = "Quiz submission is available only for students.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
+                if (submissionFile is { Length: > 0 })
+                {
+                    const long maxSubmissionBytes = 10 * 1024 * 1024;
+                    var allowedSubmissionExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                        { ".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".ppt", ".pptx" };
+
+                    if (submissionFile.Length > maxSubmissionBytes)
+                    {
+                        TempData["PortalMessage"] = "File exceeds the maximum allowed size of 10 MB.";
+                        return RedirectToAction(nameof(ViewQuizzes));
+                    }
+
+                    var submissionExt = Path.GetExtension(submissionFile.FileName);
+                    if (string.IsNullOrEmpty(submissionExt) || !allowedSubmissionExts.Contains(submissionExt))
+                    {
+                        TempData["PortalMessage"] = "Only image/document/ppt files are allowed (.jpg, .jpeg, .png, .pdf, .doc, .docx, .ppt, .pptx).";
+                        return RedirectToAction(nameof(ViewQuizzes));
+                    }
+
+                    var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "quiz-submissions");
+                    Directory.CreateDirectory(uploadsRoot);
+
+                    var fileName = $"{Guid.NewGuid()}{submissionExt}";
+                    var physicalPath = Path.Combine(uploadsRoot, fileName);
+
+                    await using var stream = System.IO.File.Create(physicalPath);
+                    await submissionFile.CopyToAsync(stream, ct);
+                }
+
+                var attempts = await _api.GetMyAttemptsByQuizAsync(quizId, ct);
+                var latestAttempt = attempts
+                    .OrderByDescending(a => a.SubmittedAt ?? a.StartedAt)
+                    .FirstOrDefault();
+
+                var status = ResolveStudentQuizStatus(latestAttempt);
+                if (status.Equals("Submitted", StringComparison.OrdinalIgnoreCase)
+                    || status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["PortalMessage"] = "This quiz is already submitted.";
+                    return RedirectToAction(nameof(ViewQuizzes));
+                }
+
+                var inProgressAttempt = attempts.FirstOrDefault(a => string.Equals(a.Status, "InProgress", StringComparison.OrdinalIgnoreCase));
+                if (inProgressAttempt is null)
+                {
+                    inProgressAttempt = await _api.StartQuizAttemptAsync(quizId, ct);
+                }
+
+                if (inProgressAttempt is null)
+                {
+                    TempData["PortalMessage"] = "Unable to start quiz attempt. The quiz may be unavailable or max attempts reached.";
+                    return RedirectToAction(nameof(ViewQuizzes));
+                }
+
+                await _api.SubmitQuizAttemptAsync(
+                    inProgressAttempt.Id,
+                    Array.Empty<(Guid QuizQuestionId, Guid? SelectedOptionId, string? TextResponse)>(),
+                    ct);
+
+                TempData["PortalMessage"] = "Quiz marked as submitted successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["PortalMessage"] = $"Error: {ex.Message}";
+            }
+        }
+
+        return RedirectToAction(nameof(ViewQuizzes));
+    }
+
     private static bool CanManageQuizzes(SessionIdentity? identity)
         => identity?.IsFaculty == true || identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+
+    private static string ResolveStudentQuizStatus(QuizAttemptItem? attempt)
+    {
+        if (attempt is null)
+            return "Pending";
+
+        if (attempt.TotalScore.HasValue)
+            return "Completed";
+
+        if (attempt.SubmittedAt.HasValue
+            || string.Equals(attempt.Status, "Submitted", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(attempt.Status, "TimedOut", StringComparison.OrdinalIgnoreCase))
+            return "Submitted";
+
+        return "Pending";
+    }
 
     // ── FYP write actions ───────────────────────────────────────────────────
 

@@ -982,12 +982,46 @@ public class QuizItem
 public class QuizAttemptItem
 {
     public Guid      Id           { get; set; }
+    public Guid      QuizId       { get; set; }
     public string    QuizTitle    { get; set; } = "";
     public DateTime  StartedAt    { get; set; }
     public DateTime? SubmittedAt  { get; set; }
     public string    Status       { get; set; } = "";
     public decimal?  TotalScore   { get; set; }
     public int       MaxScore     { get; set; }
+}
+
+public class QuizQuestionItem
+{
+    public Guid   QuestionId { get; set; }
+    public string Type       { get; set; } = "";
+}
+
+public class QuizDetailItem
+{
+    public Guid QuizId { get; set; }
+    public List<QuizQuestionItem> Questions { get; set; } = new();
+}
+
+public class StudentQuizViewItem
+{
+    public int       SrNo         { get; set; }
+    public Guid      QuizId       { get; set; }
+    public string    QuizName     { get; set; } = "";
+    public DateTime? LastDate     { get; set; }
+    public DateTime? SubmitDate   { get; set; }
+    public string    Status       { get; set; } = "Pending";
+    public decimal?  Marks        { get; set; }
+    public int       MaxScore     { get; set; }
+    public bool      CanSubmit    { get; set; }
+}
+
+public class ViewQuizzesPageModel
+{
+    public bool   IsConnected { get; set; }
+    public string? Message    { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public List<StudentQuizViewItem> Quizzes { get; set; } = new();
 }
 
 public class QuizzesPageModel
