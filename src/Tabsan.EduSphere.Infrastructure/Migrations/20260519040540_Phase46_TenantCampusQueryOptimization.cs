@@ -10,69 +10,36 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"IF OBJECT_ID('users', 'U') IS NOT NULL
-AND NOT EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_users_tenant_campus_active_role'
-      AND [object_id] = OBJECT_ID(N'users'))
-BEGIN
-    CREATE INDEX [IX_users_tenant_campus_active_role] ON [users] ([TenantId], [CampusId], [IsActive], [RoleId]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_users_tenant_campus_active_role",
+                table: "users",
+                columns: new[] { "TenantId", "CampusId", "IsActive", "RoleId" });
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('users', 'U') IS NOT NULL
-AND NOT EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_users_tenant_campus_username'
-      AND [object_id] = OBJECT_ID(N'users'))
-BEGIN
-    CREATE INDEX [IX_users_tenant_campus_username] ON [users] ([TenantId], [CampusId], [Username]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_users_tenant_campus_username",
+                table: "users",
+                columns: new[] { "TenantId", "CampusId", "Username" });
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('departments', 'U') IS NOT NULL
-AND NOT EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_departments_tenant_campus_name'
-      AND [object_id] = OBJECT_ID(N'departments'))
-BEGIN
-    CREATE INDEX [IX_departments_tenant_campus_name] ON [departments] ([TenantId], [CampusId], [Name]);
-END");
+            migrationBuilder.CreateIndex(
+                name: "IX_departments_tenant_campus_name",
+                table: "departments",
+                columns: new[] { "TenantId", "CampusId", "Name" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"IF OBJECT_ID('users', 'U') IS NOT NULL
-AND EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_users_tenant_campus_active_role'
-      AND [object_id] = OBJECT_ID(N'users'))
-BEGIN
-    DROP INDEX [IX_users_tenant_campus_active_role] ON [users];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_users_tenant_campus_active_role",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('users', 'U') IS NOT NULL
-AND EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_users_tenant_campus_username'
-      AND [object_id] = OBJECT_ID(N'users'))
-BEGIN
-    DROP INDEX [IX_users_tenant_campus_username] ON [users];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_users_tenant_campus_username",
+                table: "users");
 
-            migrationBuilder.Sql(@"IF OBJECT_ID('departments', 'U') IS NOT NULL
-AND EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE [name] = N'IX_departments_tenant_campus_name'
-      AND [object_id] = OBJECT_ID(N'departments'))
-BEGIN
-    DROP INDEX [IX_departments_tenant_campus_name] ON [departments];
-END");
+            migrationBuilder.DropIndex(
+                name: "IX_departments_tenant_campus_name",
+                table: "departments");
         }
     }
 }
