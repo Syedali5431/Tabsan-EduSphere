@@ -17,9 +17,11 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
                .ValueGeneratedOnAdd();
 
         builder.Property(a => a.Action).IsRequired().HasMaxLength(100);
+       builder.Property(a => a.ActorRole).HasMaxLength(64);
         builder.Property(a => a.EntityName).IsRequired().HasMaxLength(100);
         builder.Property(a => a.EntityId).HasMaxLength(100);
         builder.Property(a => a.IpAddress).HasMaxLength(64);
+       builder.Property(a => a.UserAgent).HasMaxLength(1024);
 
         // Time-range queries on audit logs — clustered by OccurredAt.
         builder.HasIndex(a => a.OccurredAt)
@@ -28,6 +30,10 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         // Filter by actor for per-user audit trail.
         builder.HasIndex(a => a.ActorUserId)
                .HasDatabaseName("IX_audit_logs_actor");
+
+        // Optional role filter for compliance-focused investigations.
+        builder.HasIndex(a => a.ActorRole)
+               .HasDatabaseName("IX_audit_logs_actor_role");
 
         // Composite for entity-type audit trail pages (filter by EntityName, order by OccurredAt).
         builder.HasIndex(a => new { a.EntityName, a.OccurredAt })

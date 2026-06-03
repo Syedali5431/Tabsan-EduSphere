@@ -85,6 +85,12 @@ public interface IEduApiClient
     Task SetSidebarMenuRolesAsync(Guid id, Dictionary<string, bool> roles, CancellationToken ct);
     Task SetSidebarMenuStatusAsync(Guid id, bool isActive, CancellationToken ct);
 
+    // Audit Logs
+    Task<AuditLogSearchResultWebModel?> SearchAuditLogsAsync(string? query, Guid? actorUserId, string? action, string? entityName, DateTime? fromUtc, DateTime? toUtc, int page, int pageSize, CancellationToken ct);
+    Task<byte[]> ExportAuditLogsCsvAsync(string? query, Guid? actorUserId, string? action, string? entityName, DateTime? fromUtc, DateTime? toUtc, int maxRows, CancellationToken ct);
+    Task<byte[]> ExportAuditLogsExcelAsync(string? query, Guid? actorUserId, string? action, string? entityName, DateTime? fromUtc, DateTime? toUtc, int maxRows, CancellationToken ct);
+    Task<byte[]> ExportAuditLogsPdfAsync(string? query, Guid? actorUserId, string? action, string? entityName, DateTime? fromUtc, DateTime? toUtc, int maxRows, CancellationToken ct);
+
     // License
     Task<LicenseUpdatePageModel> GetLicenseDetailsAsync(CancellationToken ct);
     Task<string> UploadLicenseAsync(Stream fileStream, string fileName, CancellationToken ct);
@@ -4953,6 +4959,100 @@ public class EduApiClient : IEduApiClient
         return parts.Any() ? "?" + string.Join("&", parts) : "";
     }
 
+    private static string BuildAuditLogQuery(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int? page = null,
+        int? pageSize = null,
+        int? maxRows = null)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(query)) parts.Add($"query={Uri.EscapeDataString(query.Trim())}");
+        if (actorUserId.HasValue) parts.Add($"actorUserId={actorUserId.Value}");
+        if (!string.IsNullOrWhiteSpace(action)) parts.Add($"action={Uri.EscapeDataString(action.Trim())}");
+        if (!string.IsNullOrWhiteSpace(entityName)) parts.Add($"entityName={Uri.EscapeDataString(entityName.Trim())}");
+        if (fromUtc.HasValue) parts.Add($"fromUtc={Uri.EscapeDataString(fromUtc.Value.ToString("O"))}");
+        if (toUtc.HasValue) parts.Add($"toUtc={Uri.EscapeDataString(toUtc.Value.ToString("O"))}");
+        if (page.HasValue) parts.Add($"page={Math.Max(1, page.Value)}");
+        if (pageSize.HasValue) parts.Add($"pageSize={Math.Clamp(pageSize.Value, 1, 200)}");
+        if (maxRows.HasValue) parts.Add($"maxRows={Math.Clamp(maxRows.Value, 1, 5000)}");
+        return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
+    }
+
+    public async Task<AuditLogSearchResultWebModel?> SearchAuditLogsAsync(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken ct)
+    {
+        var qs = BuildAuditLogQuery(query, actorUserId, action, entityName, fromUtc, toUtc, page, pageSize);
+        var raw = await GetAsync<AuditLogSearchApiDto>($"api/v1/audit/logs{qs}", ct);
+        if (raw is null) return null;
+
+        return new AuditLogSearchResultWebModel
+        {
+            Page = raw.Page,
+            PageSize = raw.PageSize,
+            TotalCount = raw.TotalCount,
+            Items = raw.Items.Select(x => new AuditLogWebItem
+            {
+                Id = x.Id,
+                OccurredAt = x.OccurredAt,
+                Action = x.Action ?? string.Empty,
+                EntityName = x.EntityName ?? string.Empty,
+                EntityId = x.EntityId,
+                ActorUserId = x.ActorUserId,
+                ActorRole = x.ActorRole,
+                IpAddress = x.IpAddress,
+                UserAgent = x.UserAgent,
+                OldValuesJson = x.OldValuesJson,
+                NewValuesJson = x.NewValuesJson
+            }).ToList()
+        };
+    }
+
+    public Task<byte[]> ExportAuditLogsCsvAsync(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/audit/logs/export/csv{BuildAuditLogQuery(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows: maxRows)}", ct);
+
+    public Task<byte[]> ExportAuditLogsExcelAsync(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/audit/logs/export/excel{BuildAuditLogQuery(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows: maxRows)}", ct);
+
+    public Task<byte[]> ExportAuditLogsPdfAsync(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows,
+        CancellationToken ct)
+        => GetBytesAsync($"api/v1/audit/logs/export/pdf{BuildAuditLogQuery(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows: maxRows)}", ct);
+
     // semesterId is required by the API; departmentId is optional and narrows the result set
     // to a single department when provided.
     public async Task<SemesterResultsWebModel?> GetSemesterResultsReportAsync(
@@ -6334,6 +6434,29 @@ public class EduApiClient : IEduApiClient
         public string? Body           { get; set; }
         public bool    IsInternalNote { get; set; }
         public DateTime CreatedAt    { get; set; }
+    }
+
+    private sealed class AuditLogSearchApiDto
+    {
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public List<AuditLogApiDto> Items { get; set; } = new();
+    }
+
+    private sealed class AuditLogApiDto
+    {
+        public long Id { get; set; }
+        public DateTime OccurredAt { get; set; }
+        public string? Action { get; set; }
+        public string? EntityName { get; set; }
+        public string? EntityId { get; set; }
+        public Guid? ActorUserId { get; set; }
+        public string? ActorRole { get; set; }
+        public string? IpAddress { get; set; }
+        public string? UserAgent { get; set; }
+        public string? OldValuesJson { get; set; }
+        public string? NewValuesJson { get; set; }
     }
 }
 

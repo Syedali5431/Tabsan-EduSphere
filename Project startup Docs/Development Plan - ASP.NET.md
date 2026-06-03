@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - Development Plan Synchronization (ISO Phase 1: Audit Logging)
+
+### Plan sync
+- Completed Phase 1 implementation on top of existing audit foundation:
+  - added actor role and user-agent audit fields,
+  - added runtime context enrichment for actor/ip/device metadata,
+  - enforced immutable audit persistence rules,
+  - added API export endpoints for CSV/Excel/PDF,
+  - added portal Audit Logs page with user/module/date filtering and export actions,
+  - integrated advanced_audit sidebar route to portal audit screen.
+
+### Validation sync
+- Full solution build passed.
+- EF migration generated for additive audit schema updates and indexing.
+- No breaking route/API removal introduced.
+
 ## 2026-06-03 Update - Development Plan Synchronization (Institute Dynamic Model Phase 4 Continuation)
 
 ### Plan sync

@@ -19,6 +19,9 @@ public class AuditLog
     /// <summary>Short verb describing what happened (e.g. "Login", "PublishResult", "UploadLicense").</summary>
     public string Action { get; private set; } = default!;
 
+    /// <summary>Role of the actor at the time of action (e.g. SuperAdmin/Admin/Faculty/Student).</summary>
+    public string? ActorRole { get; private set; }
+
     /// <summary>Name of the domain entity affected (e.g. "User", "Assignment", "LicenseState").</summary>
     public string EntityName { get; private set; } = default!;
 
@@ -37,6 +40,9 @@ public class AuditLog
     /// <summary>Client IP address at the time of the action. Captured from HttpContext.</summary>
     public string? IpAddress { get; private set; }
 
+    /// <summary>Client device/user agent string captured from HttpContext headers.</summary>
+    public string? UserAgent { get; private set; }
+
     private AuditLog() { }
 
     /// <summary>
@@ -45,7 +51,8 @@ public class AuditLog
     /// </summary>
     public AuditLog(string action, string entityName, string? entityId = null,
                     Guid? actorUserId = null, string? oldValuesJson = null,
-                    string? newValuesJson = null, string? ipAddress = null)
+                    string? newValuesJson = null, string? ipAddress = null,
+                    string? actorRole = null, string? userAgent = null)
     {
         Action = action;
         EntityName = entityName;
@@ -54,5 +61,7 @@ public class AuditLog
         OldValuesJson = oldValuesJson;
         NewValuesJson = newValuesJson;
         IpAddress = ipAddress;
+        ActorRole = actorRole;
+        UserAgent = userAgent;
     }
 }

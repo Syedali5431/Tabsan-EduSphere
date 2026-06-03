@@ -1,5 +1,25 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-03 - Product Requirements Synchronization (ISO Phase 1: Audit Logging System)
+- Runtime delivery in this slice:
+  - completed filterable audit logging module delivery for Admin/SuperAdmin operations,
+  - added audit log export formats (CSV/Excel/PDF),
+  - added runtime capture enrichment for actor role and device/user-agent,
+  - enforced append-only immutability guard for audit rows at data-write pipeline.
+- Coverage alignment:
+  - captures user/role/action/entity/timestamp/IP/user-agent/before-after payload values,
+  - supports user/module/date filtering,
+  - preserves existing role-based access boundaries.
+- Compatibility boundary:
+  - no route removals,
+  - no GPA/CGPA logic change,
+  - additive schema-only update,
+  - tenant/campus behavior preserved,
+  - backward compatibility maintained for School, College, and University modes.
+- Validation Summary:
+  - full solution build succeeded,
+  - EF migration generated and tracked for audit schema enhancement.
+
 ### 2026-06-03 - Product Requirements Synchronization (Institute Dynamic Model Phase 4 Continuation)
 - Runtime delivery in this slice:
   - removed mandatory semester/class prerequisite from web attendance write scope validation for School/College paths,

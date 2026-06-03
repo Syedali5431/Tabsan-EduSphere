@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Tabsan.EduSphere.Domain.Auditing;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
@@ -14,8 +16,13 @@ namespace Tabsan.EduSphere.Infrastructure.Auditing;
 public class AuditService : IAuditService
 {
     private readonly ApplicationDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuditService(ApplicationDbContext db) => _db = db;
+    public AuditService(ApplicationDbContext db, IHttpContextAccessor httpContextAccessor)
+    {
+        _db = db;
+        _httpContextAccessor = httpContextAccessor;
+    }
 
     /// <summary>
     /// Appends a new audit log entry to the database.
@@ -23,9 +30,64 @@ public class AuditService : IAuditService
     /// </summary>
     public async Task LogAsync(AuditLog entry, CancellationToken ct = default)
     {
-        await _db.AuditLogs.AddAsync(entry, ct);
+        var httpContext = _httpContextAccessor.HttpContext;
+        var actorUserId = entry.ActorUserId ?? TryResolveActorUserId(httpContext?.User);
+        var actorRole = string.IsNullOrWhiteSpace(entry.ActorRole)
+            ? TryResolveActorRole(httpContext?.User)
+            : entry.ActorRole;
+        var ipAddress = string.IsNullOrWhiteSpace(entry.IpAddress)
+            ? TryResolveIpAddress(httpContext)
+            : entry.IpAddress;
+        var userAgent = string.IsNullOrWhiteSpace(entry.UserAgent)
+            ? TryResolveUserAgent(httpContext)
+            : entry.UserAgent;
+
+        var enriched = new AuditLog(
+            action: entry.Action,
+            entityName: entry.EntityName,
+            entityId: entry.EntityId,
+            actorUserId: actorUserId,
+            oldValuesJson: entry.OldValuesJson,
+            newValuesJson: entry.NewValuesJson,
+            ipAddress: ipAddress,
+            actorRole: actorRole,
+            userAgent: userAgent);
+
+        await _db.AuditLogs.AddAsync(enriched, ct);
         await _db.SaveChangesAsync(ct);
     }
+
+    private static Guid? TryResolveActorUserId(ClaimsPrincipal? user)
+    {
+        var raw = user?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? user?.FindFirstValue("sub")
+            ?? user?.FindFirstValue("userId");
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
+
+    private static string? TryResolveActorRole(ClaimsPrincipal? user)
+    {
+        return user?.FindFirst(ClaimTypes.Role)?.Value
+            ?? user?.FindFirst("role")?.Value
+            ?? user?.Claims.FirstOrDefault(c => c.Type.EndsWith("/role", StringComparison.OrdinalIgnoreCase))?.Value;
+    }
+
+    private static string? TryResolveIpAddress(HttpContext? context)
+    {
+        if (context is null)
+            return null;
+
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(forwardedFor))
+        {
+            return forwardedFor.Split(',').FirstOrDefault()?.Trim();
+        }
+
+        return context.Connection.RemoteIpAddress?.ToString();
+    }
+
+    private static string? TryResolveUserAgent(HttpContext? context)
+        => context?.Request.Headers["User-Agent"].ToString();
 
     public async Task<(IReadOnlyList<AuditLog> Items, int TotalCount)> SearchAsync(
         string? query = null,

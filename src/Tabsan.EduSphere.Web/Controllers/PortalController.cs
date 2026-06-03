@@ -78,7 +78,8 @@ public class PortalController : Controller
         [nameof(Announcements)] = "announcements",
         [nameof(StudyPlan)] = "study_plan",
         [nameof(LibraryConfig)] = "library_config",
-        [nameof(InstitutionPolicy)] = "institution_policy"
+        [nameof(InstitutionPolicy)] = "institution_policy",
+        [nameof(AuditLogs)] = "advanced_audit"
     };
 
     private static readonly HashSet<string> FinanceBlockedAcademicMenuKeys = new(StringComparer.OrdinalIgnoreCase)
@@ -2022,6 +2023,138 @@ public class PortalController : Controller
             }
         }
         return RedirectToAction(nameof(SidebarSettings));
+    }
+
+    // ── Audit Logs ──────────────────────────────────────────────────────────
+
+    [HttpGet]
+    public async Task<IActionResult> AuditLogs(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        ViewData["Title"] = "Audit Logs";
+        var model = new AuditLogsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Query = query,
+            ActorUserId = actorUserId,
+            Action = action,
+            EntityName = entityName,
+            FromUtc = fromUtc,
+            ToUtc = toUtc,
+            Page = Math.Max(1, page),
+            PageSize = Math.Clamp(pageSize, 1, 200)
+        };
+
+        if (!model.IsConnected)
+            return View(model);
+
+        try
+        {
+            var result = await _api.SearchAuditLogsAsync(
+                query,
+                actorUserId,
+                action,
+                entityName,
+                fromUtc,
+                toUtc,
+                model.Page,
+                model.PageSize,
+                ct);
+
+            if (result is not null)
+            {
+                model.Page = result.Page;
+                model.PageSize = result.PageSize;
+                model.TotalCount = result.TotalCount;
+                model.Logs = result.Items;
+            }
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportAuditLogsCsv(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows = 5000,
+        CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(AuditLogs));
+        try
+        {
+            var bytes = await _api.ExportAuditLogsCsvAsync(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows, ct);
+            return File(bytes, "text/csv", $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Export CSV failed: {ex.Message}";
+            return RedirectToAction(nameof(AuditLogs), new { query, actorUserId, action, entityName, fromUtc, toUtc });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportAuditLogsExcel(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows = 5000,
+        CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(AuditLogs));
+        try
+        {
+            var bytes = await _api.ExportAuditLogsExcelAsync(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows, ct);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Export Excel failed: {ex.Message}";
+            return RedirectToAction(nameof(AuditLogs), new { query, actorUserId, action, entityName, fromUtc, toUtc });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportAuditLogsPdf(
+        string? query,
+        Guid? actorUserId,
+        string? action,
+        string? entityName,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        int maxRows = 5000,
+        CancellationToken ct = default)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(AuditLogs));
+        try
+        {
+            var bytes = await _api.ExportAuditLogsPdfAsync(query, actorUserId, action, entityName, fromUtc, toUtc, maxRows, ct);
+            return File(bytes, "application/pdf", $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.pdf");
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}";
+            return RedirectToAction(nameof(AuditLogs), new { query, actorUserId, action, entityName, fromUtc, toUtc });
+        }
     }
 
     private IActionResult Section(string title, string description)

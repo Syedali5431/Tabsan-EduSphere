@@ -1,5 +1,34 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-03 Update - ISO Phase 1 Completion (Audit Logging)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- AuditController.ExportLogs
+	- PortalController.AuditLogs
+	- PortalController.ExportAuditLogsCsv
+	- PortalController.ExportAuditLogsExcel
+	- PortalController.ExportAuditLogsPdf
+	- IEduApiClient.SearchAuditLogsAsync
+	- IEduApiClient.ExportAuditLogsCsvAsync
+	- IEduApiClient.ExportAuditLogsExcelAsync
+	- IEduApiClient.ExportAuditLogsPdfAsync
+	- EduApiClient.SearchAuditLogsAsync
+	- EduApiClient.ExportAuditLogsCsvAsync
+	- EduApiClient.ExportAuditLogsExcelAsync
+	- EduApiClient.ExportAuditLogsPdfAsync
+- Existing function behavior updates (no duplicate inventory rows added):
+	- AuditController.SearchLogs
+		- response payload now includes ActorRole and UserAgent.
+	- AuditService.LogAsync
+		- now auto-enriches audit records with ActorUserId, ActorRole, IP, and User-Agent from runtime context when not explicitly supplied.
+	- ApplicationDbContext.SaveChangesAsync
+		- now enforces append-only immutability for audit log rows (update/delete blocked).
+
+### Validation summary
+- EF migration generated for new audit fields/index.
+- Full solution build succeeded after function additions.
+
 ## 2026-06-03 Update - Phase 4 Continuation (Attendance Scope Alignment)
 
 ### Attendance delta

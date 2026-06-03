@@ -1,0 +1,171 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AuditLogsPageModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
+    if (totalPages < 1) totalPages = 1;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Audit Logs</h4>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm"
+           asp-action="ExportAuditLogsCsv"
+           asp-route-query="@Model.Query"
+           asp-route-actorUserId="@Model.ActorUserId"
+           asp-route-action="@Model.Action"
+           asp-route-entityName="@Model.EntityName"
+           asp-route-fromUtc="@Model.FromUtc"
+           asp-route-toUtc="@Model.ToUtc">
+            Export CSV
+        </a>
+        <a class="btn btn-outline-secondary btn-sm"
+           asp-action="ExportAuditLogsExcel"
+           asp-route-query="@Model.Query"
+           asp-route-actorUserId="@Model.ActorUserId"
+           asp-route-action="@Model.Action"
+           asp-route-entityName="@Model.EntityName"
+           asp-route-fromUtc="@Model.FromUtc"
+           asp-route-toUtc="@Model.ToUtc">
+            Export Excel
+        </a>
+        <a class="btn btn-outline-secondary btn-sm"
+           asp-action="ExportAuditLogsPdf"
+           asp-route-query="@Model.Query"
+           asp-route-actorUserId="@Model.ActorUserId"
+           asp-route-action="@Model.Action"
+           asp-route-entityName="@Model.EntityName"
+           asp-route-fromUtc="@Model.FromUtc"
+           asp-route-toUtc="@Model.ToUtc">
+            Export PDF
+        </a>
+    </div>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">Not connected to API. Configure your connection in Dashboard.</div>
+}
+else
+{
+    if (TempData["PortalMessage"] is string portalMessage && !string.IsNullOrWhiteSpace(portalMessage))
+    {
+        <div class="alert alert-info">@portalMessage</div>
+    }
+
+    if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-danger">@Model.Message</div>
+    }
+
+    <form method="get" asp-action="AuditLogs" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input class="form-control" name="query" value="@Model.Query" placeholder="action/entity/ip" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Actor User Id</label>
+            <input class="form-control" name="actorUserId" value="@Model.ActorUserId" placeholder="GUID" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Action</label>
+            <input class="form-control" name="action" value="@Model.Action" placeholder="Login, Update" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Module (Entity)</label>
+            <input class="form-control" name="entityName" value="@Model.EntityName" placeholder="Student, Course" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">From (UTC)</label>
+            <input class="form-control" type="datetime-local" name="fromUtc" value="@(Model.FromUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">To (UTC)</label>
+            <input class="form-control" type="datetime-local" name="toUtc" value="@(Model.ToUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">Rows</label>
+            <input class="form-control" type="number" min="1" max="200" name="pageSize" value="@Model.PageSize" />
+        </div>
+        <div class="col-12 d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+            <a asp-action="AuditLogs" class="btn btn-outline-secondary btn-sm">Reset</a>
+        </div>
+    </form>
+
+    <div class="small text-muted mb-2">Total Records: @Model.TotalCount</div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>At (UTC)</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Entity Id</th>
+                    <th>Actor User</th>
+                    <th>Role</th>
+                    <th>IP</th>
+                    <th>User Agent</th>
+                    <th>Before</th>
+                    <th>After</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Logs.Any())
+            {
+                <tr>
+                    <td colspan="10" class="text-center text-muted">No audit logs found for the selected filters.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var log in Model.Logs)
+                {
+                    <tr>
+                        <td>@log.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@log.Action</td>
+                        <td>@log.EntityName</td>
+                        <td class="text-break">@log.EntityId</td>
+                        <td class="text-break">@log.ActorUserId</td>
+                        <td>@log.ActorRole</td>
+                        <td>@log.IpAddress</td>
+                        <td class="text-break" style="max-width: 260px;">@log.UserAgent</td>
+                        <td class="text-break" style="max-width: 260px;">@log.OldValuesJson</td>
+                        <td class="text-break" style="max-width: 260px;">@log.NewValuesJson</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Audit pagination" class="mt-2">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="AuditLogs"
+                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-query="@Model.Query"
+                   asp-route-actorUserId="@Model.ActorUserId"
+                   asp-route-action="@Model.Action"
+                   asp-route-entityName="@Model.EntityName"
+                   asp-route-fromUtc="@Model.FromUtc"
+                   asp-route-toUtc="@Model.ToUtc">Previous</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">Page @Model.Page of @totalPages</span></li>
+            <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="AuditLogs"
+                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-query="@Model.Query"
+                   asp-route-actorUserId="@Model.ActorUserId"
+                   asp-route-action="@Model.Action"
+                   asp-route-entityName="@Model.EntityName"
+                   asp-route-fromUtc="@Model.FromUtc"
+                   asp-route-toUtc="@Model.ToUtc">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

@@ -428,6 +428,47 @@ public class SidebarSettingsPageModel
     public List<SidebarMenuItemWebModel> TopLevelMenus { get; set; } = new();
 }
 
+public class AuditLogWebItem
+{
+    public long Id { get; set; }
+    public DateTime OccurredAt { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public string EntityName { get; set; } = string.Empty;
+    public string? EntityId { get; set; }
+    public Guid? ActorUserId { get; set; }
+    public string? ActorRole { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? OldValuesJson { get; set; }
+    public string? NewValuesJson { get; set; }
+}
+
+public class AuditLogSearchResultWebModel
+{
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 50;
+    public int TotalCount { get; set; }
+    public List<AuditLogWebItem> Items { get; set; } = new();
+}
+
+public class AuditLogsPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+
+    public string? Query { get; set; }
+    public Guid? ActorUserId { get; set; }
+    public string? Action { get; set; }
+    public string? EntityName { get; set; }
+    public DateTime? FromUtc { get; set; }
+    public DateTime? ToUtc { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 50;
+
+    public int TotalCount { get; set; }
+    public List<AuditLogWebItem> Logs { get; set; } = new();
+}
+
 // ── License Update ────────────────────────────────────────────────────────────
 
 public class LicenseUpdatePageModel

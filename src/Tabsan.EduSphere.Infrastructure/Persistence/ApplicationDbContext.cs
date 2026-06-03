@@ -315,8 +315,20 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        EnforceImmutableAuditLogs();
         SetAuditTimestamps();
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void EnforceImmutableAuditLogs()
+    {
+        foreach (var entry in ChangeTracker.Entries<AuditLog>())
+        {
+            if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+            {
+                throw new InvalidOperationException("Audit logs are immutable and cannot be updated or deleted.");
+            }
+        }
     }
 
     /// <summary>
