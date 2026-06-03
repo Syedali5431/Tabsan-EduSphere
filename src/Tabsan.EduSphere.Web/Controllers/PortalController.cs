@@ -9858,18 +9858,26 @@ public class PortalController : Controller
             var campusId = session?.CampusId;
 
             model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
-            model.Semesters = await _api.GetSemestersAsync(ct);
+            var allSemesters = await _api.GetSemestersAsync(ct);
 
             var selectedInstitutionType = model.Departments
                 .FirstOrDefault(d => d.Id == departmentId)
                 ?.InstitutionType;
             model.PeriodFilterLabel = selectedInstitutionType switch
             {
-                0 or 1 => "Class",
-                2 => InferUniversityPeriodLabel(model.Semesters),
+                1 or 2 => "Class",
+                0 => InferUniversityPeriodLabel(allSemesters),
                 _ => "Semester"
             };
             model.PeriodFilterPlaceholder = ResolvePeriodFilterPlaceholder(model.PeriodFilterLabel);
+
+            var scopedOfferings = await _api.GetCourseOfferingsAsync(departmentId, tenantId, campusId, null, ct);
+            model.Semesters = BuildCourseMaterialPeriodOptions(scopedOfferings, selectedInstitutionType, allSemesters);
+
+            if (semesterId.HasValue && !model.Semesters.Any(s => s.Id == semesterId.Value))
+                semesterId = null;
+
+            model.SelectedSemesterId = semesterId;
 
             model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
             model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
@@ -9948,18 +9956,26 @@ public class PortalController : Controller
             var campusId = session?.CampusId;
 
             model.Departments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
-            model.Semesters = await _api.GetSemestersAsync(ct);
+            var allSemesters = await _api.GetSemestersAsync(ct);
 
             var selectedInstitutionType = model.Departments
                 .FirstOrDefault(d => d.Id == departmentId)
                 ?.InstitutionType;
             model.PeriodFilterLabel = selectedInstitutionType switch
             {
-                0 or 1 => "Class",
-                2 => InferUniversityPeriodLabel(model.Semesters),
+                1 or 2 => "Class",
+                0 => InferUniversityPeriodLabel(allSemesters),
                 _ => "Semester"
             };
             model.PeriodFilterPlaceholder = ResolvePeriodFilterPlaceholder(model.PeriodFilterLabel);
+
+            var scopedOfferings = await _api.GetCourseOfferingsAsync(departmentId, tenantId, campusId, null, ct);
+            model.Semesters = BuildCourseMaterialPeriodOptions(scopedOfferings, selectedInstitutionType, allSemesters);
+
+            if (semesterId.HasValue && !model.Semesters.Any(s => s.Id == semesterId.Value))
+                semesterId = null;
+
+            model.SelectedSemesterId = semesterId;
 
             model.Programs = await _api.GetProgramsAsync(departmentId, tenantId, campusId, ct);
             model.Courses = await _api.GetCoursesAsync(departmentId, tenantId, campusId, ct);
