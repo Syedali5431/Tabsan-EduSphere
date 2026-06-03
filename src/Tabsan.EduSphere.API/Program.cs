@@ -119,30 +119,18 @@ var networkHttp2MaxStreamsPerConnection = Math.Max(100, builder.Configuration.Ge
 var networkOutboundMaxConnectionsPerServer = Math.Max(50, builder.Configuration.GetValue("InfrastructureTuning:NetworkStack:OutboundMaxConnectionsPerServer", 512));
 var networkOutboundConnectTimeoutSeconds = Math.Max(2, builder.Configuration.GetValue("InfrastructureTuning:NetworkStack:OutboundConnectTimeoutSeconds", 10));
 
-var defaultConnectionFromConfiguration = builder.Configuration.GetConnectionString("DefaultConnection")?.Trim();
 var databaseConnection = DatabaseConnectionResolver.ResolveDefaultConnection(builder.Configuration, env);
 var configuredConnectionString = databaseConnection.ConnectionString;
-if (string.IsNullOrWhiteSpace(configuredConnectionString) && !string.IsNullOrWhiteSpace(defaultConnectionFromConfiguration))
-{
-    configuredConnectionString = defaultConnectionFromConfiguration;
-}
 var runtimeSetup = DatabaseSetupBootstrapper.Resolve(builder.Environment.ContentRootPath, configuredConnectionString);
 var activeDatabaseProvider = runtimeSetup.Provider;
 configuredConnectionString = runtimeSetup.ConnectionString;
-try
-{
-    StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
-        builder.Configuration,
-        env,
-        "Tabsan.EduSphere.API",
-        databaseConnection,
-        deploymentTopology,
-        tenantIsolation);
-}
-catch (InvalidOperationException validationEx)
-{
-    Console.WriteLine($"[Startup][Warning] Database/startup validation failed; continuing in degraded mode: {validationEx.Message}");
-}
+StartupConfigurationFailSafeValidator.ValidateCommonStartupConfiguration(
+    builder.Configuration,
+    env,
+    "Tabsan.EduSphere.API",
+    databaseConnection,
+    deploymentTopology,
+    tenantIsolation);
 
 var configurationSourceSummary = StartupVisibilityReporter.DescribeConfigurationSources(
     databaseConnection.Source,
@@ -248,7 +236,7 @@ builder.Host.UseSerilog((ctx, services, config) =>
 });
 
 // ── Database ────────────────────────────────────────────────────────────────────
-// Uses ConnectionStrings:DefaultConnection (including env var ConnectionStrings__DefaultConnection).
+// Reads the connection string from appsettings.json → ConnectionStrings:DefaultConnection.
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, opts) =>
 {
     var setupState = serviceProvider.GetRequiredService<DatabaseSetupRuntimeState>().Snapshot();
@@ -711,14 +699,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
-// Ensure Render-compatible endpoint binding when PORT is injected at runtime.
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-var renderUrl = $"http://0.0.0.0:{port}";
-if (!app.Urls.Any(url => string.Equals(url, renderUrl, StringComparison.OrdinalIgnoreCase)))
-{
-    app.Urls.Add(renderUrl);
-}
 
 // ── Seed database on startup ─────────────────────────────────────────────────────
 var setupService = app.Services.GetRequiredService<IDatabaseSetupService>();
