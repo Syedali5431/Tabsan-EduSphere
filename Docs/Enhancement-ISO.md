@@ -1,198 +1,299 @@
-# Enhancement ISO Roadmap
+You are a senior enterprise .NET + MSSQL architect working on an Educational ERP system that must become ISO 9001 and ISO 27001 compliant.
 
-## Objective
-Enhance the app for School, College and University management system to achieve ISO readiness (particularly ISO 9001 and ISO 27001 alignment) by implementing missing compliance, security, audit, and operational controls.
+You are given:
+1. ISO enhancement roadmap (Enhancement-ISO.md)
+2. Existing full database schema
+3. Existing repository structure with documentation files
 
-The system already supports multi-institute logic (School, College and University, College, School), strong validation, and role-based access. This phase focuses on adding governance, security, and compliance features required for certification.
+Your job:
+- Implement ISO enhancements phase-by-phase
+- Maintain full backward compatibility
+- Apply ONLY additive (non-breaking) changes
+- Keep system stable and production-safe
+- Automatically update documentation and repository after each phase
 
-## Phase 1: Audit Logging System (CRITICAL)
-Implement a complete audit logging module:
-- Capture:
-  - User ID
-  - Role
-  - Action performed (Create, Update, Delete, View, Login, Logout, etc.)
-  - Entity affected (Student, Course, Payment, Result, etc.)
-  - Timestamp
-  - IP Address
-  - Device/User-Agent
-  - Before/After values (for updates)
-- Store logs in MSSQL table:
-  - AuditLogs
-- Features:
-  - Filterable UI (by user, module, date)
-  - Export to CSV/Excel/PDF
-  - Immutable logs (no edit/delete allowed)
+---------------------------------------------------------------------
 
-### Phase 1 Implementation Summary
-- Enhanced existing audit domain model to capture additional ISO-relevant context:
-  - ActorRole
-  - UserAgent
-- Implemented automatic runtime audit-context enrichment in infrastructure:
-  - auto-captures ActorUserId from claims when missing
-  - auto-captures ActorRole from claims when missing
-  - auto-captures IP Address (X-Forwarded-For fallback + remote IP)
-  - auto-captures User-Agent from request headers
-- Enforced immutable audit behavior at persistence layer:
-  - blocked Update/Delete operations for audit log rows in DbContext
-- Extended API audit module:
-  - searchable logs endpoint includes actor role and user-agent data
-  - added export endpoints:
-    - CSV
-    - Excel
-    - PDF
-  - added audit trail entries for view/export operations on audit logs
-- Added web/portal audit monitoring UI:
-  - new Audit Logs page with filter controls:
-    - query
-    - actor user id
-    - action
-    - entity/module
-    - date range (UTC)
-    - pagination/page size
-  - export actions from UI:
-    - CSV
-    - Excel
-    - PDF
-- Integrated sidebar/menu route support for advanced audit screen:
-  - mapped advanced_audit key to portal Audit Logs action
+STRICT RULES:
 
-### Phase 1 Validation Summary
-- Solution build status: PASS
-  - full solution compilation succeeded after Phase 1 changes
-- Database migration status: PASS
-  - generated EF migration: PhaseISO1AuditLoggingEnhancements
-- Regression posture:
-  - additive-only schema update
-  - no route removals
-  - no GPA/CGPA logic changes
-  - tenant/campus isolation behavior preserved
-  - backward compatibility maintained across School, College, and University modes
+1. DO NOT:
+- Break existing APIs or routes
+- Modify GPA/CGPA logic
+- Remove or destructively alter schema
+- Break tenant/campus isolation
 
-## Phase 2: Security and Access Control Enhancements
-- Enforce strong password policy:
-  - Minimum length
-  - Upper/lowercase
-  - Numbers + special characters
-- Implement:
-  - Account lockout after failed attempts
-  - Session timeout
-  - Optional 2FA (already partially supported)
-- Add:
-  - Role-based access review screen
-  - Admin ability to revoke sessions
+2. ONLY:
+- Add new tables
+- Add new columns
+- Add indexes, constraints
+- Extend logic safely
 
-## Phase 3: User Activity Monitoring
-- Track:
-  - Login attempts (success/failure)
-  - Suspicious activity (multiple failed logins)
-  - Concurrent sessions
-- Create:
-  - Security dashboard showing:
-    - Active sessions
-    - Failed login trends
+3. ALWAYS:
+- Use EF Core migration style
+- Add performance indexes
+- Ensure auditability + traceability
+- Follow secure coding practices
+- Keep changes enterprise-grade and scalable
 
-## Phase 4: Backup and Disaster Recovery
-- Implement:
-  - Automatic MSSQL backup scheduler
-  - Backup logs table
-- Provide:
-  - Backup download option
-  - Restore process (admin-only)
-- Add:
-  - Backup status monitoring UI
+---------------------------------------------------------------------
 
-## Phase 5: Data Protection and Privacy
-- Identify sensitive data fields:
-  - Passwords
-  - Personal info (CNIC, phone, email)
-- Implement:
-  - Encryption for sensitive fields (at rest where applicable)
-  - Secure hashing for passwords
-- Mask sensitive data in UI:
-  - Show partial values only where needed
+MANDATORY DOCUMENTATION & REPO RULES (VERY IMPORTANT)
 
-## Phase 6: Incident and Error Management
-- Create incident logging system:
-  - Capture errors/exceptions
-  - Categorize severity (Low / Medium / High / Critical)
-- Add:
-  - Admin incident panel
-  - Status tracking (Open, In Progress, Resolved)
+After COMPLETING EACH PHASE:
 
-## Phase 7: Compliance Documentation Support (SYSTEM LEVEL)
-Add modules or storage for:
-- Security Policy documents
-- SOP (Standard Operating Procedures)
-- Risk Assessment records
-- Data classification definitions
+1. ✅ UPDATE Enhancement-ISO.md:
+   - Add:
+     ✔ Implementation Summary
+     ✔ Validation Summary
+   - Then mark phase as:
+     ✅ COMPLETED
 
-Features:
-- Upload/download documents
+2. ✅ UPDATE Function_list.md:
+   - Add ALL newly created functions/services/APIs
+   - Avoid duplicate functions
+   - Keep it clean (NO summaries here)
+
+3. ✅ REMOVE Implementation & Validation summaries FROM:
+   - Function_list.md
+   - command.md
+   - Functionality.md
+   - PRD.md
+   - Modules.md
+   - Development Plan - ASP.NET.md
+   - Database Schema.md
+
+   (These files must only contain permanent design info, NOT summaries)
+
+4. ✅ KEEP ALL FILES CONSISTENT:
+   - No duplication
+   - No outdated info
+   - Sync naming across files
+
+5. ✅ GIT OPERATIONS (MANDATORY):
+   After each phase:
+   - Commit all changes
+   - Use commit message:
+     "ISO Phase X Completed - [Phase Name]"
+   - Push to repository
+   - Pull latest to sync
+
+   (Simulate these operations logically if execution not possible)
+
+---------------------------------------------------------------------
+
+OUTPUT FORMAT (FOR EVERY PHASE)
+
+Provide:
+
+1. Schema Changes
+   - SQL
+   - EF Core model updates
+   - Indexes and constraints
+
+2. Backend Implementation
+   - C# services / logic (or clear pseudo-code)
+
+3. API Design
+   - Endpoints
+   - Request/response
+
+4. UI Suggestions (if required)
+
+5. Validation Checklist
+
+6. Documentation Updates:
+   - EXACT content to append in Enhancement-ISO.md
+   - EXACT Function_list.md updates
+
+7. Git Step Summary:
+   - Files changed
+   - Commit message
+
+---------------------------------------------------------------------
+
+PHASE 0 — GAP ANALYSIS (START FIRST)
+
+Analyze schema vs ISO roadmap.
+
+Current known:
+- audit_logs exists but missing ActorRole, UserAgent, DeviceInfo
+- users has MFA + lockout features
+- password_history exists
+- user_sessions exists
+
+Identify:
+- Missing ISO features
+- Missing tables
+- Missing audit coverage
+- Security gaps
+
+Output:
+✔ Gap analysis
+✔ Required new tables
+✔ Missing fields
+✔ Risk areas
+
+DO NOT IMPLEMENT YET.
+
+---------------------------------------------------------------------
+
+PHASE 1 — AUDIT LOGGING (CRITICAL)
+
+Enhance audit_logs:
+
+ADD:
+- ActorRole NVARCHAR(50)
+- UserAgent NVARCHAR(512)
+- DeviceInfo NVARCHAR(512)
+
+Ensure:
+- Index on ActorRole
+- Optimized composite indexes
+
+Backend:
+- Auto capture:
+  ✔ UserId
+  ✔ Role
+  ✔ IP address
+  ✔ User-Agent
+
+Enforce:
+- Immutable logs (block UPDATE/DELETE)
+
+APIs:
+- GET /audit-logs (with filters)
+- Export (CSV, Excel, PDF)
+
+UI:
+- Audit dashboard with filters
+
+Validation:
+- Logs auto-recorded
+- No modification allowed
+
+---------------------------------------------------------------------
+
+PHASE 2 — SECURITY
+
+Implement:
+- Strong password policy
+- Prevent password reuse (password_history)
+- Session revocation (using user_sessions)
+- Session timeout
+- Login/logout audit tracking
+
+Admin:
+- Active sessions screen
+
+---------------------------------------------------------------------
+
+PHASE 3 — USER ACTIVITY MONITORING
+
+Create:
+LoginActivityLogs
+
+Track:
+- Failed logins
+- Suspicious activity
+
+Dashboard:
+- Trends
+- Active sessions
+
+---------------------------------------------------------------------
+
+PHASE 4 — BACKUP & DR
+
+Create:
+BackupLogs
+
+Add:
+- Scheduler design
+- Restore API
+- Monitoring UI
+
+---------------------------------------------------------------------
+
+PHASE 5 — DATA PROTECTION
+
+Implement:
+- Encryption service (design)
+- Data masking in UI
+
+DO NOT break schema
+
+---------------------------------------------------------------------
+
+PHASE 6 — INCIDENT MANAGEMENT
+
+Create:
+IncidentLogs
+
+Add:
+- Severity
+- Status flow
+- Admin panel
+
+---------------------------------------------------------------------
+
+PHASE 7 — DOCUMENT MANAGEMENT
+
+Create:
+PolicyDocuments
+
+Add:
 - Version tracking
 - Access control
 
-## Phase 8: Backup Validation and Testing Logs
-- Record:
-  - Backup success/failure logs
-  - Restore test logs
-- Ensure:
-  - Ability to demonstrate recovery process
+---------------------------------------------------------------------
 
-## Phase 9: Data Integrity and Validation Enhancements
-- Ensure:
-  - All critical operations are logged
-  - Transactions are consistent (no partial failure states)
-- Add:
-  - Validation audit trails for financial and academic operations
+PHASE 8 — BACKUP VALIDATION
 
-## Phase 10: Reporting and Compliance Dashboard
-Create ISO Compliance Dashboard:
-- Show:
-  - Audit logs summary
-  - Security events
-  - Backup status
-  - Active users
-  - Policy compliance indicators
+Add:
+- Backup verification logs
+- Restore test logs
 
-## Phase 11: Maintain Existing Constraints
-- DO NOT:
-  - Break School, College and University behavior
-  - Modify GPA/CGPA logic
-  - Remove existing routes or APIs
-- MUST:
-  - Keep tenant/campus isolation
-  - Keep additive-only changes (no breaking schema changes)
-  - Maintain backward compatibility
+---------------------------------------------------------------------
 
-## Phase 12: Database Requirements (MSSQL)
-Add new tables:
-- AuditLogs
-- LoginActivityLogs
-- IncidentLogs
-- BackupLogs
-- PolicyDocuments
+PHASE 9 — DATA INTEGRITY
 
 Ensure:
-- Indexed for performance
-- Scalable for large data (Schools, Colleges and Universities)
+- Transaction safety
+- Audit financial + academic actions
 
-## Validation Requirements
-- All security features must be testable
-- Audit logs must capture all critical actions
-- Backup/restore must be verifiable
-- No regression in existing modules
-- Maintain full compatibility with School / College / School, College and University modes
+---------------------------------------------------------------------
 
-## End Goal
-System becomes ISO-ready by adding:
-- Auditability
-- Security controls
-- Compliance tracking
-- Operational governance
+PHASE 10 — COMPLIANCE DASHBOARD
 
-Ready for:
-- School, College and University audits
-- Enterprise deployment
-- Future ISO 9001 / ISO 27001 certification process
+Create dashboard:
+- Audit summary
+- Security alerts
+- Backup status
+- Active users
 
-Keep the app logic and working same and do not mess up the app.
+---------------------------------------------------------------------
+
+FINAL VALIDATION
+
+Ensure:
+✅ No regression
+✅ Tenant isolation intact
+✅ Audit coverage complete
+✅ Security enforced
+✅ Performance optimized
+✅ EF migrations valid
+
+---------------------------------------------------------------------
+
+EXECUTION INSTRUCTION:
+
+Start from PHASE 0.
+Execute phases sequentially.
+After EACH phase:
+✔ Complete implementation
+✔ Update documentation
+✔ Simulate commit + push + pull
+✔ Then move to next phase
+
+DO NOT SKIP ANY STEP.
+KEEP THE SYSTEM STABLE.
