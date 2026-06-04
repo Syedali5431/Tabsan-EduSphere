@@ -30,6 +30,7 @@ Summary: Purpose-built capabilities help institutions run faster, smarter, and w
 - Dynamic dashboards
 - Advanced reporting system
 - Flexible course and grading system
+- ISO 27001 & ISO 9001 compliant platform with full audit trail, security controls, and compliance dashboard
 
 ---
 
@@ -73,6 +74,7 @@ Summary: Tabsan EduSphere drives measurable efficiency and stronger institutiona
 - Improves accuracy
 - Centralized data management
 - Scalable and future-ready
+- ISO 27001 + ISO 9001 compliance with enterprise-grade security and audit readiness
 
 ---
 
@@ -185,12 +187,20 @@ Summary: Attendance operations support both daily execution and reliable histori
 ---
 
 ## Security and Compliance Posture
-Summary: The platform enforces strict boundaries and operational safeguards for education data.
+Summary: Built on ISO 27001 and ISO 9001 standards with enterprise-grade security controls, full audit traceability, and compliance dashboard.
+- ISO 27001 (Information Security) compliance: immutable audit logging with full context (actor role, IP, user agent, device info, correlation ID, severity, event category)
+- ISO 27001 A.9 Access Control: 90-day password ageing, 5-password history, 30-minute idle session timeout, MFA support, session revocation
+- Login activity monitoring: all authentication attempts logged with success/failure reason, risk level, and IP tracking
+- ISO 27001 A.17 Business Continuity: backup operations logged with checksums and verification records (IntegrityCheck, RestoreTest)
+- Data protection: AES-256 encryption service, PII data masking, data classification scheme (Public/Internal/Confidential/Restricted), GDPR consent tracking
+- ISO 27001 A.16 Incident Management: full incident lifecycle tracking (Open → Investigating → Resolved → Closed) with severity and category classification
+- ISO 9001 7.5 Document Management: version-controlled policy documents with Draft/Published/Archived lifecycle and access control levels
 - Direct URL bypass protection through backend authorization checks
 - Role escalation controls and scoped policy enforcement
 - Tenant/campus boundary isolation and anti-leakage protections
 - Auditable lifecycle for high-impact actions (publish, correction, imports)
 - Controlled tokenized report retrieval patterns for sensitive downloadable artifacts
+- Compliance dashboard with 7-section aggregated posture (Audit, Security, Backup, Incidents, Activity, Data Protection, Documents)
 
 ---
 
@@ -278,13 +288,14 @@ Summary: The Growth plan offers strong capability coverage with clear ROI for mi
 - Current pricing remains unchanged across this document version.
 - New feature additions in this release wave are provided free under existing pricing plans.
 
-## Functionality Synchronization Update (2026-05-28)
+## Functionality Synchronization Update (2026-06-04)
 
 - Results governance strengthened: write-scope controls, controlled publish actions, and correction-reason workflow.
 - Attendance and results data coverage expanded for realistic training/UAT with multi-day attendance and mixed result lifecycle states.
 - Import report access hardening introduced with one-time, short-lived report token behavior.
 - Institution-aware certificate workflows and scoped governance controls remain active across School/College/University modes.
 - Pricing confirmation: Growth remains AUD 3 per user yearly (no price change).
+- ISO 27001 + ISO 9001 compliance instrumentation: 7 new compliance tables, 20+ indexes, compliance dashboard, incident management workflow, backup verification, policy document versioning, and data integrity checks operational across all plans.
 
 ## Detailed Plan Fit: Growth
 Summary: Growth extends foundational operations with collaboration and learning workflows for broader institutional adoption.
@@ -365,6 +376,14 @@ Summary: Suggested metrics to track plan success.
 
 3. Does Growth improve cross-role collaboration?
 - Yes, it includes workflow features that reduce coordination delays.
+
+## ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Platform now instrumented for ISO 27001 (Information Security) and ISO 9001 (Quality Management) compliance across 10 phases.
+- Enhanced audit logging with immutable records, full context capture, severity/category classification, and exportable compliance evidence.
+- Security hardening: password ageing (90-day), password history (5-password), idle session timeout (30 min), MFA, session management.
+- Login activity monitoring, backup/DR logging, backup verification, incident management, policy document versioning, data classification, encryption/masking, data integrity checks, and compliance dashboard — all additive and backward-compatible.
+- All ISO compliance features included in existing plans at no additional cost.
 
 ## Pricing Integrity Note
 Summary: This revision expands app detail content only.
