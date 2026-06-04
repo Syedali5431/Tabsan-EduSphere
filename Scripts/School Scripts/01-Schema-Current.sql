@@ -5578,3 +5578,727 @@ COMMIT;
 GO
 
 
+
+-- ============================================================================
+-- ISO 27001 + ISO 9001 Phase 1-10 Schema Additions
+-- Generated from Enhancement-ISO.md
+-- Adds: new columns to existing tables, new tables, new indexes
+-- All changes are additive and backward-compatible
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+-- ============================================================================
+-- PHASE 1: AUDIT LOGGING ENHANCEMENTS
+-- Migration: PhaseISO1AuditLoggingPart2
+-- ============================================================================
+
+-- Add ActorRole column to audit_logs
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [ActorRole] nvarchar(64) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [UserAgent] nvarchar(1024) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [DeviceInfo] nvarchar(1024) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [CorrelationId] nvarchar(64) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [Severity] nvarchar(20) NOT NULL DEFAULT N'Info';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    ALTER TABLE [audit_logs] ADD [EventCategory] nvarchar(50) NULL;
+END;
+GO
+
+-- Phase 1 Indexes
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_correlation_id' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_correlation_id] ON [audit_logs] ([CorrelationId]) WHERE [CorrelationId] IS NOT NULL;
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_event_category' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_event_category] ON [audit_logs] ([EventCategory]) INCLUDE ([OccurredAt]) WHERE [EventCategory] IS NOT NULL;
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_severity_occurred_at' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_severity_occurred_at] ON [audit_logs] ([Severity], [OccurredAt]) WHERE [Severity] IS NOT NULL;
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_audit_logs_actor_role_occurred_at' AND [object_id] = OBJECT_ID(N'[audit_logs]'))
+    BEGIN
+        CREATE INDEX [IX_audit_logs_actor_role_occurred_at] ON [audit_logs] ([ActorRole], [OccurredAt]) WHERE [ActorRole] IS NOT NULL;
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604043644_PhaseISO1AuditLoggingPart2'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604043644_PhaseISO1AuditLoggingPart2', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 2: SECURITY ENHANCEMENTS
+-- Migration: PhaseISO2Security
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604051851_PhaseISO2Security'
+)
+BEGIN
+    ALTER TABLE [users] ADD [LastPasswordChangedAt] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604051851_PhaseISO2Security'
+)
+BEGIN
+    ALTER TABLE [password_history] ADD [ExpiresAt] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604051851_PhaseISO2Security'
+)
+BEGIN
+    ALTER TABLE [user_sessions] ADD [LastActivityAt] datetime2 NULL;
+END;
+GO
+
+-- Phase 2 Index: Active sessions (filtered)
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604051851_PhaseISO2Security'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_user_sessions_active' AND [object_id] = OBJECT_ID(N'[user_sessions]'))
+    BEGIN
+        CREATE INDEX [IX_user_sessions_active] ON [user_sessions] ([UserId]) INCLUDE ([ExpiresAt], [RevokedAt]) WHERE ([RevokedAt] IS NULL);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604051851_PhaseISO2Security'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604051851_PhaseISO2Security', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 3: USER ACTIVITY MONITORING
+-- Migration: PhaseISO3LoginActivity
+-- New Table: login_activity_logs
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    CREATE TABLE [login_activity_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NULL,
+        [Username] nvarchar(100) NOT NULL,
+        [AttemptedAt] datetime2 NOT NULL,
+        [IpAddress] nvarchar(64) NULL,
+        [UserAgent] nvarchar(1024) NULL,
+        [DeviceInfo] nvarchar(1024) NULL,
+        [IsSuccess] bit NOT NULL,
+        [FailureReason] nvarchar(50) NULL,
+        [RiskLevel] nvarchar(20) NULL,
+        [UserIsLockedOut] bit NOT NULL,
+        CONSTRAINT [PK_login_activity_logs] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_login_activity_logs_users_UserId] FOREIGN KEY ([UserId]) REFERENCES [users] ([Id]) ON DELETE SET NULL
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_login_activity_user_id' AND [object_id] = OBJECT_ID(N'[login_activity_logs]'))
+    BEGIN
+        CREATE INDEX [IX_login_activity_user_id] ON [login_activity_logs] ([UserId]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_login_activity_attempted_at' AND [object_id] = OBJECT_ID(N'[login_activity_logs]'))
+    BEGIN
+        CREATE INDEX [IX_login_activity_attempted_at] ON [login_activity_logs] ([AttemptedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_login_activity_success_attempted' AND [object_id] = OBJECT_ID(N'[login_activity_logs]'))
+    BEGIN
+        CREATE INDEX [IX_login_activity_success_attempted] ON [login_activity_logs] ([IsSuccess], [AttemptedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_login_activity_ip_attempted' AND [object_id] = OBJECT_ID(N'[login_activity_logs]'))
+    BEGIN
+        CREATE INDEX [IX_login_activity_ip_attempted] ON [login_activity_logs] ([IpAddress], [AttemptedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604060000_PhaseISO3LoginActivity'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604060000_PhaseISO3LoginActivity', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 4: BACKUP & DR
+-- Migration: PhaseISO4BackupDR
+-- New Table: backup_logs
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604070000_PhaseISO4BackupDR'
+)
+BEGIN
+    CREATE TABLE [backup_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [BackupType] nvarchar(20) NOT NULL,
+        [FileName] nvarchar(500) NOT NULL,
+        [FilePath] nvarchar(1000) NULL,
+        [FileSizeBytes] bigint NULL,
+        [DurationSeconds] int NULL,
+        [Status] nvarchar(20) NOT NULL,
+        [StartedAt] datetime2 NOT NULL,
+        [CompletedAt] datetime2 NULL,
+        [ErrorMessage] nvarchar(2000) NULL,
+        [Checksum] nvarchar(128) NULL,
+        [InitiatedBy] nvarchar(100) NULL,
+        CONSTRAINT [PK_backup_logs] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604070000_PhaseISO4BackupDR'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_backup_logs_status_started' AND [object_id] = OBJECT_ID(N'[backup_logs]'))
+    BEGIN
+        CREATE INDEX [IX_backup_logs_status_started] ON [backup_logs] ([Status], [StartedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604070000_PhaseISO4BackupDR'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_backup_logs_type_started' AND [object_id] = OBJECT_ID(N'[backup_logs]'))
+    BEGIN
+        CREATE INDEX [IX_backup_logs_type_started] ON [backup_logs] ([BackupType], [StartedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604070000_PhaseISO4BackupDR'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604070000_PhaseISO4BackupDR', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 5: DATA PROTECTION
+-- Migration: PhaseISO5DataProtection
+-- New columns on users + new table data_classification_entries
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    ALTER TABLE [users] ADD [ConsentToMonitoring] bit NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    ALTER TABLE [users] ADD [DataRetentionDate] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    CREATE TABLE [data_classification_entries] (
+        [Id] uniqueidentifier NOT NULL,
+        [EntityName] nvarchar(100) NOT NULL,
+        [EntityId] nvarchar(100) NOT NULL,
+        [ClassificationLevel] nvarchar(20) NOT NULL,
+        [ClassifiedBy] uniqueidentifier NULL,
+        [ClassifiedAt] datetime2 NOT NULL,
+        [Justification] nvarchar(500) NULL,
+        CONSTRAINT [PK_data_classification_entries] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_data_classification_entity' AND [object_id] = OBJECT_ID(N'[data_classification_entries]'))
+    BEGIN
+        CREATE INDEX [IX_data_classification_entity] ON [data_classification_entries] ([EntityName], [EntityId]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_data_classification_level_classified' AND [object_id] = OBJECT_ID(N'[data_classification_entries]'))
+    BEGIN
+        CREATE INDEX [IX_data_classification_level_classified] ON [data_classification_entries] ([ClassificationLevel], [ClassifiedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604080000_PhaseISO5DataProtection'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604080000_PhaseISO5DataProtection', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 6: INCIDENT MANAGEMENT
+-- Migration: PhaseISO6IncidentManagement
+-- New Table: incident_logs
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604090000_PhaseISO6IncidentManagement'
+)
+BEGIN
+    CREATE TABLE [incident_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [Title] nvarchar(300) NOT NULL,
+        [Description] nvarchar(4000) NULL,
+        [Severity] nvarchar(20) NOT NULL,
+        [Category] nvarchar(30) NOT NULL,
+        [Status] nvarchar(20) NOT NULL,
+        [ReportedBy] uniqueidentifier NULL,
+        [ReportedAt] datetime2 NOT NULL,
+        [AssignedTo] uniqueidentifier NULL,
+        [ResolvedAt] datetime2 NULL,
+        [Resolution] nvarchar(2000) NULL,
+        CONSTRAINT [PK_incident_logs] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_incident_logs_users_ReportedBy] FOREIGN KEY ([ReportedBy]) REFERENCES [users] ([Id]) ON DELETE SET NULL,
+        CONSTRAINT [FK_incident_logs_users_AssignedTo] FOREIGN KEY ([AssignedTo]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604090000_PhaseISO6IncidentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_incident_logs_status_reported' AND [object_id] = OBJECT_ID(N'[incident_logs]'))
+    BEGIN
+        CREATE INDEX [IX_incident_logs_status_reported] ON [incident_logs] ([Status], [ReportedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604090000_PhaseISO6IncidentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_incident_logs_severity_status' AND [object_id] = OBJECT_ID(N'[incident_logs]'))
+    BEGIN
+        CREATE INDEX [IX_incident_logs_severity_status] ON [incident_logs] ([Severity], [Status]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604090000_PhaseISO6IncidentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_incident_logs_reported_by' AND [object_id] = OBJECT_ID(N'[incident_logs]'))
+    BEGIN
+        CREATE INDEX [IX_incident_logs_reported_by] ON [incident_logs] ([ReportedBy]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604090000_PhaseISO6IncidentManagement'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604090000_PhaseISO6IncidentManagement', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 7: DOCUMENT MANAGEMENT
+-- Migration: PhaseISO7DocumentManagement
+-- New Tables: policy_documents, policy_document_versions
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    CREATE TABLE [policy_documents] (
+        [Id] uniqueidentifier NOT NULL,
+        [Title] nvarchar(300) NOT NULL,
+        [Description] nvarchar(2000) NULL,
+        [Content] nvarchar(max) NULL,
+        [Version] int NOT NULL,
+        [Status] nvarchar(20) NOT NULL,
+        [Category] nvarchar(50) NULL,
+        [AccessLevel] nvarchar(20) NOT NULL,
+        [PublishedAt] datetime2 NULL,
+        [ArchivedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_policy_documents] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    CREATE TABLE [policy_document_versions] (
+        [Id] uniqueidentifier NOT NULL,
+        [DocumentId] uniqueidentifier NOT NULL,
+        [VersionNumber] int NOT NULL,
+        [Content] nvarchar(max) NULL,
+        [ChangedBy] uniqueidentifier NULL,
+        [ChangedAt] datetime2 NOT NULL,
+        [ChangeNotes] nvarchar(1000) NULL,
+        CONSTRAINT [PK_policy_document_versions] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_policy_document_versions_policy_documents_DocumentId] FOREIGN KEY ([DocumentId]) REFERENCES [policy_documents] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_policy_documents_status' AND [object_id] = OBJECT_ID(N'[policy_documents]'))
+    BEGIN
+        CREATE INDEX [IX_policy_documents_status] ON [policy_documents] ([Status]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_policy_documents_category' AND [object_id] = OBJECT_ID(N'[policy_documents]'))
+    BEGIN
+        CREATE INDEX [IX_policy_documents_category] ON [policy_documents] ([Category]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_policy_document_versions_document_version' AND [object_id] = OBJECT_ID(N'[policy_document_versions]'))
+    BEGIN
+        CREATE UNIQUE INDEX [IX_policy_document_versions_document_version] ON [policy_document_versions] ([DocumentId], [VersionNumber]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604100000_PhaseISO7DocumentManagement'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604100000_PhaseISO7DocumentManagement', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- PHASE 8: BACKUP VALIDATION
+-- Migration: PhaseISO8BackupValidation
+-- New Table: backup_verification_logs
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604110000_PhaseISO8BackupValidation'
+)
+BEGIN
+    CREATE TABLE [backup_verification_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [BackupLogId] uniqueidentifier NOT NULL,
+        [VerificationType] nvarchar(20) NOT NULL,
+        [VerifiedAt] datetime2 NOT NULL,
+        [VerifiedBy] nvarchar(100) NULL,
+        [IsSuccessful] bit NOT NULL,
+        [DurationSeconds] int NULL,
+        [Issues] nvarchar(2000) NULL,
+        [VerifiedChecksum] nvarchar(128) NULL,
+        CONSTRAINT [PK_backup_verification_logs] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_backup_verification_logs_backup_logs_BackupLogId] FOREIGN KEY ([BackupLogId]) REFERENCES [backup_logs] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604110000_PhaseISO8BackupValidation'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_backup_verification_backup_verified' AND [object_id] = OBJECT_ID(N'[backup_verification_logs]'))
+    BEGIN
+        CREATE INDEX [IX_backup_verification_backup_verified] ON [backup_verification_logs] ([BackupLogId], [VerifiedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604110000_PhaseISO8BackupValidation'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_backup_verification_success_verified' AND [object_id] = OBJECT_ID(N'[backup_verification_logs]'))
+    BEGIN
+        CREATE INDEX [IX_backup_verification_success_verified] ON [backup_verification_logs] ([IsSuccessful], [VerifiedAt]);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604110000_PhaseISO8BackupValidation'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604110000_PhaseISO8BackupValidation', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ============================================================================
+-- ISO Compliance: outbound_email_logs already has IX_outbound_email_logs_status_attempted
+-- on (Status, AttemptedAt) which satisfies ISO compliance query requirements.
+-- No additional index needed.
+-- ============================================================================
+
+-- ============================================================================
+-- ISO password_history composite index (Phase 2 supplementary)
+-- ============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604130000_PhaseISOPasswordHistoryIndex'
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_password_history_user_created_desc' AND [object_id] = OBJECT_ID(N'[password_history]'))
+    BEGIN
+        CREATE INDEX [IX_password_history_user_created_desc] ON [password_history] ([UserId], [CreatedAt] DESC);
+    END;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260604130000_PhaseISOPasswordHistoryIndex'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260604130000_PhaseISOPasswordHistoryIndex', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO

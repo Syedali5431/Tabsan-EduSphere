@@ -5789,6 +5789,175 @@ BEGIN
       AND [MustChangePassword] = 1;
 END
 
+-- ============================================================================
+-- ISO 27001 + ISO 9001 Phase 1-10 Dummy Data Additions
+-- Adds sample data for new ISO tables and new columns on existing tables
+-- ============================================================================
+
+PRINT 'ISO Compliance: Seeding dummy data for compliance tables and new columns...';
+
+-- ============================================================================
+-- PHASE 2: Update existing users with new security/data-protection columns
+-- ============================================================================
+
+-- Set LastPasswordChangedAt for all active users who don't have it set
+IF COL_LENGTH('users', 'LastPasswordChangedAt') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [LastPasswordChangedAt] = DATEADD(DAY, -30, @Now),
+        [UpdatedAt] = @Now
+    WHERE [IsDeleted] = 0
+      AND [LastPasswordChangedAt] IS NULL;
+END
+
+-- Set ConsentToMonitoring for GDPR compliance (most users consent)
+IF COL_LENGTH('users', 'ConsentToMonitoring') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [ConsentToMonitoring] = 1,
+        [UpdatedAt] = @Now
+    WHERE [IsDeleted] = 0
+      AND [ConsentToMonitoring] IS NULL;
+END
+
+-- Set DataRetentionDate for data lifecycle (7 years from now)
+IF COL_LENGTH('users', 'DataRetentionDate') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [DataRetentionDate] = DATEADD(YEAR, 7, @Now),
+        [UpdatedAt] = @Now
+    WHERE [IsDeleted] = 0
+      AND [DataRetentionDate] IS NULL;
+END
+
+-- ============================================================================
+-- PHASE 3: login_activity_logs - Sample login attempts
+-- ============================================================================
+
+IF OBJECT_ID(N'[login_activity_logs]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [login_activity_logs])
+BEGIN
+    -- Recent successful logins by core users
+    INSERT INTO [login_activity_logs] ([Id], [UserId], [Username], [AttemptedAt], [IpAddress], [UserAgent], [DeviceInfo], [IsSuccess], [FailureReason], [RiskLevel], [UserIsLockedOut])
+    VALUES
+    (CAST('A1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), N'superadmin', DATEADD(HOUR, -1, @Now),  N'192.168.1.100',  N'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', N'Windows 11 Pro', 1, NULL, N'low', 0),
+    (CAST('A1000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), N'admin',      DATEADD(HOUR, -2, @Now),  N'192.168.1.101',  N'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.5) Safari/17.5', N'macOS 14.5', 1, NULL, N'low', 0),
+    (CAST('A1000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666603' AS UNIQUEIDENTIFIER), N'faculty',    DATEADD(HOUR, -3, @Now),  N'192.168.1.102',  N'Mozilla/5.0 (X11; Linux x86_64) Firefox/127.0', N'Ubuntu 24.04', 1, NULL, N'low', 0),
+    (CAST('A1000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666604' AS UNIQUEIDENTIFIER), N'student',    DATEADD(HOUR, -4, @Now),  N'192.168.1.103',  N'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) Mobile/15E148', N'iPhone 16', 1, NULL, N'low', 0),
+    -- Failed login attempts (suspicious activity)
+    (CAST('A1000000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), NULL,                                         N'hacker',     DATEADD(HOUR, -5, @Now),  N'10.0.0.55',     N'python-requests/2.31.0', N'Unknown', 0, N'InvalidCredentials', N'high', 0),
+    (CAST('A1000000-0000-0000-0000-000000000006' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), N'admin',      DATEADD(HOUR, -6, @Now),  N'185.220.101.34', N'Mozilla/5.0 (Windows NT 10.0; rv:120.0) Gecko', N'Windows 10', 0, N'InvalidCredentials', N'high', 0),
+    (CAST('A1000000-0000-0000-0000-000000000007' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666603' AS UNIQUEIDENTIFIER), N'faculty',    DATEADD(HOUR, -8, @Now),  N'192.168.1.102',  N'Mozilla/5.0 (X11; Linux x86_64) Firefox/127.0', N'Ubuntu 24.04', 0, N'InvalidCredentials', N'medium', 0),
+    (CAST('A1000000-0000-0000-0000-000000000008' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666604' AS UNIQUEIDENTIFIER), N'student',    DATEADD(HOUR, -12, @Now), N'192.168.1.103',  N'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) Mobile/15E148', N'iPhone 16', 0, N'MfaRequired', N'low', 0),
+    (CAST('A1000000-0000-0000-0000-000000000009' AS UNIQUEIDENTIFIER), NULL,                                         N'bruteforce', DATEADD(DAY, -1, @Now),   N'45.33.32.156',  N'curl/8.6.0', N'Unknown', 0, N'ConcurrencyLimitReached', N'high', 0),
+    (CAST('A1000000-0000-0000-0000-000000000010' AS UNIQUEIDENTIFIER), CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), N'admin',      DATEADD(DAY, -2, @Now),   N'192.168.1.101',  N'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.5) Safari/17.5', N'macOS 14.5', 1, NULL, N'low', 0);
+END
+
+-- ============================================================================
+-- PHASE 4: backup_logs - Sample backup operations
+-- ============================================================================
+
+IF OBJECT_ID(N'[backup_logs]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [backup_logs])
+BEGIN
+    INSERT INTO [backup_logs] ([Id], [BackupType], [FileName], [FilePath], [FileSizeBytes], [DurationSeconds], [Status], [StartedAt], [CompletedAt], [ErrorMessage], [Checksum], [InitiatedBy])
+    VALUES
+    (CAST('B2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'Full',         N'TabsanEduSphere_FULL_20260604_010000.bak', N'D:\Backups\Daily\', 524288000, 120, N'Completed', DATEADD(DAY, -3, @Now), DATEADD(DAY, -3, DATEADD(SECOND, 120, @Now)), NULL, N'SHA256:A1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2', N'superadmin'),
+    (CAST('B2000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'Differential', N'TabsanEduSphere_DIFF_20260604_130000.bak', N'D:\Backups\Daily\', 104857600, 45,  N'Completed', DATEADD(DAY, -2, @Now), DATEADD(DAY, -2, DATEADD(SECOND, 45, @Now)), NULL, N'SHA256:B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3', N'admin'),
+    (CAST('B2000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'Log',          N'TabsanEduSphere_LOG_20260604_180000.trn',  N'D:\Backups\Hourly\', 20971520, 15,  N'Completed', DATEADD(DAY, -1, @Now), DATEADD(DAY, -1, DATEADD(SECOND, 15, @Now)), NULL, N'SHA256:C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4', N'SQLAgent'),
+    (CAST('B2000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), N'Full',         N'TabsanEduSphere_FULL_20260603_010000.bak', N'D:\Backups\Daily\', 524288000, 118, N'Completed', DATEADD(DAY, -4, @Now), DATEADD(DAY, -4, DATEADD(SECOND, 118, @Now)), NULL, N'SHA256:D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4E5', N'SQLAgent'),
+    (CAST('B2000000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), N'Full',         N'TabsanEduSphere_FULL_20260528_010000.bak', N'D:\Backups\Daily\', 524288000, NULL, N'Failed',    DATEADD(DAY, -7, @Now), NULL, N'Insufficient disk space on target volume. Required: 512MB, Available: 200MB.', NULL, N'SQLAgent');
+END
+
+-- ============================================================================
+-- PHASE 5: data_classification_entries - Sample data classification
+-- ============================================================================
+
+IF OBJECT_ID(N'[data_classification_entries]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [data_classification_entries])
+BEGIN
+    INSERT INTO [data_classification_entries] ([Id], [EntityName], [EntityId], [ClassificationLevel], [ClassifiedBy], [ClassifiedAt], [Justification])
+    VALUES
+    (CAST('D3000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'StudentProfile', N'*',            N'Confidential', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Contains PII: name, address, parent details per GDPR Article 4(1)'),
+    (CAST('D3000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'Result',         N'*',            N'Confidential', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Academic records with student performance data'),
+    (CAST('D3000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'PaymentReceipt', N'*',            N'Restricted',   CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Financial transaction data with payment details'),
+    (CAST('D3000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), N'Course',         N'*',            N'Internal',     CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Course materials and curriculum — internal use only'),
+    (CAST('D3000000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), N'Department',     N'*',            N'Public',       CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Organizational structure — publicly shareable'),
+    (CAST('D3000000-0000-0000-0000-000000000006' AS UNIQUEIDENTIFIER), N'Assignment',     N'*',            N'Internal',     CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Assignment content — internal to institution');
+END
+
+-- ============================================================================
+-- PHASE 6: incident_logs - Sample security incidents
+-- ============================================================================
+
+IF OBJECT_ID(N'[incident_logs]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [incident_logs])
+BEGIN
+    INSERT INTO [incident_logs] ([Id], [Title], [Description], [Severity], [Category], [Status], [ReportedBy], [ReportedAt], [AssignedTo], [ResolvedAt], [Resolution])
+    VALUES
+    (CAST('E4000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'Multiple failed login attempts from suspicious IP', N'5 failed login attempts detected from IP 185.220.101.34 targeting admin account within 10 minutes.', N'High', N'AccessViolation', N'Resolved', CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), DATEADD(DAY, -5, @Now), CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -4, @Now), N'IP blocked at firewall level. Account was not compromised. Additional rate limiting configured for auth endpoints.'),
+    (CAST('E4000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'Backup failure — insufficient disk space', N'Automated full backup failed due to insufficient disk space on backup volume D:\. Last successful backup was 7 days ago.', N'Medium', N'System', N'Investigating', CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), DATEADD(DAY, -7, @Now), CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), NULL, NULL),
+    (CAST('E4000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'Suspicious data export by faculty user', N'Faculty user exported full student roster with PII data outside business hours. Export contained 500+ student records with addresses and phone numbers.', N'High', N'DataLoss', N'Open', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -1, @Now), NULL, NULL, NULL),
+    (CAST('E4000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), N'SSL certificate expiring in 14 days', N'Production SSL certificate for tabsan-edusphere.com expires in 14 days. Auto-renewal check failed due to DNS validation timeout.', N'Low', N'Security', N'Resolved', CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), DATEADD(DAY, -14, @Now), CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -12, @Now), N'Manual DNS validation completed. SSL certificate renewed for 1 year.'),
+    (CAST('E4000000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), N'Brute force attack detected on student accounts', N'Automated attack attempting common passwords on 50+ student accounts. Attack originated from IP range 45.33.32.0/24.', N'Critical', N'Breach', N'Resolved', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -10, @Now), CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -10, @Now), N'IP range blocked. All targeted accounts locked and forced password reset. No confirmed breaches. Additional monitoring enabled for student auth endpoints.');
+END
+
+-- ============================================================================
+-- PHASE 7: policy_documents + policy_document_versions - ISO 9001 documented information
+-- ============================================================================
+
+IF OBJECT_ID(N'[policy_documents]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [policy_documents])
+BEGIN
+    -- Document 1: Information Security Policy
+    INSERT INTO [policy_documents] ([Id], [Title], [Description], [Content], [Version], [Status], [Category], [AccessLevel], [PublishedAt], [CreatedAt], [UpdatedAt])
+    VALUES (CAST('F5000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'Information Security Policy', N'Comprehensive information security policy aligned with ISO 27001:2022 Annex A controls. Defines roles, responsibilities, and security controls for protecting institutional information assets.', N'# Information Security Policy\n\n## 1. Purpose\nThis policy establishes the framework for protecting the confidentiality, integrity, and availability of Tabsan EduSphere information assets.\n\n## 2. Scope\nApplies to all employees, contractors, students, and third-party users of Tabsan EduSphere systems.\n\n## 3. Policy Statements\n\n### 3.1 Access Control (ISO 27001 A.9)\n- All access must be authorized and authenticated\n- Role-based access control enforced\n- MFA required for administrative accounts\n- Quarterly access reviews mandatory\n\n### 3.2 Password Policy (ISO 27001 A.9.4.3)\n- Minimum 12 characters\n- Must include uppercase, lowercase, digit, special character\n- Password history: last 5 passwords cannot be reused\n- Maximum age: 90 days\n- Account lockout after 5 failed attempts\n\n### 3.3 Data Classification (ISO 27001 A.8.2)\n- Public: unrestricted distribution\n- Internal: institution use only\n- Confidential: limited to authorized personnel\n- Restricted: need-to-know basis only\n\n### 3.4 Incident Response (ISO 27001 A.16)\n- All security incidents must be reported within 1 hour\n- Severity classification: Low, Medium, High, Critical\n- Incident response team on-call 24/7\n\n## 4. Compliance\nNon-compliance may result in disciplinary action.\n\n## 5. Review\nThis policy is reviewed annually or after significant security incidents.', 3, N'Published', N'Security', N'Internal', DATEADD(DAY, -60, @Now), DATEADD(DAY, -90, @Now), DATEADD(DAY, -60, @Now));
+
+    -- Document 2: Data Protection Policy
+    INSERT INTO [policy_documents] ([Id], [Title], [Description], [Content], [Version], [Status], [Category], [AccessLevel], [PublishedAt], [CreatedAt], [UpdatedAt])
+    VALUES (CAST('F5000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'Data Protection & Privacy Policy', N'GDPR-compliant data protection policy covering personal data handling, retention, and data subject rights. Aligned with ISO 27001 A.18 and ISO 9001 clause 7.5.', N'# Data Protection & Privacy Policy\n\n## 1. Purpose\nEnsure lawful, fair, and transparent processing of personal data.\n\n## 2. Data Subject Rights\n- Right to access\n- Right to rectification\n- Right to erasure (right to be forgotten)\n- Right to data portability\n- Right to object to processing\n\n## 3. Data Retention\n- Student records: 7 years after graduation\n- Employee records: 7 years after termination\n- Financial records: 10 years per tax regulations\n- Audit logs: 3 years minimum\n\n## 4. Data Security Measures\n- Encryption at rest (AES-256)\n- Encryption in transit (TLS 1.3)\n- Access logging and monitoring\n- Regular backup and DR testing\n\n## 5. Breach Notification\n- Data breaches must be reported to DPO within 2 hours\n- Regulatory notification within 72 hours per GDPR', 2, N'Published', N'Compliance', N'Internal', DATEADD(DAY, -45, @Now), DATEADD(DAY, -80, @Now), DATEADD(DAY, -45, @Now));
+
+    -- Document 3: Backup & Disaster Recovery Plan (Draft)
+    INSERT INTO [policy_documents] ([Id], [Title], [Description], [Content], [Version], [Status], [Category], [AccessLevel], [PublishedAt], [CreatedAt], [UpdatedAt])
+    VALUES (CAST('F5000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'Backup & Disaster Recovery Plan', N'DR plan defining backup schedules, RPO/RTO targets, restore procedures, and annual DR testing requirements per ISO 27001 A.17.', N'# Backup & Disaster Recovery Plan\n\n## 1. Backup Schedule\n- Full backup: Daily at 01:00 UTC\n- Differential backup: Every 6 hours\n- Transaction log backup: Every 15 minutes\n\n## 2. RPO / RTO\n- RPO (Recovery Point Objective): 15 minutes\n- RTO (Recovery Time Objective): 4 hours\n\n## 3. Offsite Storage\n- Encrypted backups replicated to secondary region\n- Weekly backup shipped to secure offline storage\n\n## 4. Testing\n- Restore test: Monthly\n- Full DR drill: Annually', 1, N'Draft', N'Operations', N'Restricted', NULL, DATEADD(DAY, -30, @Now), DATEADD(DAY, -30, @Now));
+
+    -- Document 4: Academic Integrity Policy
+    INSERT INTO [policy_documents] ([Id], [Title], [Description], [Content], [Version], [Status], [Category], [AccessLevel], [PublishedAt], [CreatedAt], [UpdatedAt])
+    VALUES (CAST('F5000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), N'Academic Integrity Policy', N'Policy governing academic honesty, plagiarism detection, examination conduct, and grade appeals procedure. ISO 9001 clause 8.5 — service provision control.', N'# Academic Integrity Policy\n\n## 1. Scope\nAll students enrolled in any program.\n\n## 2. Prohibited Conduct\n- Plagiarism\n- Cheating on examinations\n- Fabrication of data\n- Unauthorized collaboration\n\n## 3. Penalties\n- First offense: Warning + resubmission\n- Second offense: Course failure\n- Third offense: Suspension/Expulsion\n\n## 4. Grade Appeal Process\n- Submit appeal within 14 days\n- Review committee decision within 30 days', 1, N'Published', N'Academic', N'Public', DATEADD(DAY, -120, @Now), DATEADD(DAY, -150, @Now), DATEADD(DAY, -120, @Now));
+END
+
+-- ============================================================================
+-- PHASE 7: policy_document_versions - Version history for documents
+-- ============================================================================
+
+IF OBJECT_ID(N'[policy_document_versions]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [policy_document_versions])
+BEGIN
+    -- Versions for IS Policy (document F5...001)
+    INSERT INTO [policy_document_versions] ([Id], [DocumentId], [VersionNumber], [Content], [ChangedBy], [ChangedAt], [ChangeNotes])
+    VALUES
+    (CAST('F5100000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), CAST('F5000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 1, N'Initial information security policy draft based on ISO 27001:2013 framework.', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -90, @Now), N'Initial draft created'),
+    (CAST('F5100000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), CAST('F5000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2, N'Updated to ISO 27001:2022 controls. Added MFA requirement and password complexity rules.', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -75, @Now), N'Updated to ISO 27001:2022 standard. Enhanced password policy section.'),
+    (CAST('F5100000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), CAST('F5000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 3, N'Added incident response procedures and data classification framework. Updated compliance section.', CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), DATEADD(DAY, -60, @Now), N'Added incident response section (A.16) and data classification (A.8.2).'),
+    -- Versions for Data Protection Policy (document F5...002)
+    (CAST('F5100000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), CAST('F5000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), 1, N'Initial data protection framework based on GDPR Article 30 requirements.', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -80, @Now), N'Initial draft'),
+    (CAST('F5100000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), CAST('F5000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), 2, N'Added data retention schedules, breach notification procedures, and encryption standards.', CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), DATEADD(DAY, -45, @Now), N'Added retention schedules and breach notification timelines');
+END
+
+-- ============================================================================
+-- PHASE 8: backup_verification_logs - Sample backup verification records
+-- ============================================================================
+
+IF OBJECT_ID(N'[backup_verification_logs]') IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM [backup_verification_logs])
+BEGIN
+    INSERT INTO [backup_verification_logs] ([Id], [BackupLogId], [VerificationType], [VerifiedAt], [VerifiedBy], [IsSuccessful], [DurationSeconds], [Issues], [VerifiedChecksum])
+    VALUES
+    -- Verification for full backup (B2...001 - Completed)
+    (CAST('G6000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), CAST('B2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'IntegrityCheck', DATEADD(DAY, -3, DATEADD(MINUTE, 30, @Now)), N'superadmin', 1, 45, NULL, N'SHA256:A1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2'),
+    (CAST('G6000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), CAST('B2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'RestoreTest',     DATEADD(DAY, -3, DATEADD(HOUR, 2, @Now)), N'superadmin', 1, 300, NULL, N'SHA256:A1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2'),
+    -- Verification for differential backup (B2...002 - Completed)
+    (CAST('G6000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), CAST('B2000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'IntegrityCheck', DATEADD(DAY, -2, DATEADD(MINUTE, 15, @Now)), N'admin', 1, 20, NULL, N'SHA256:B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3'),
+    -- Verification for log backup (B2...003 - Completed)
+    (CAST('G6000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), CAST('B2000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'IntegrityCheck', DATEADD(DAY, -1, DATEADD(MINUTE, 5, @Now)), N'SQLAgent', 1, 8, NULL, N'SHA256:C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4'),
+    -- Failed verification (simulated)
+    (CAST('G6000000-0000-0000-0000-000000000005' AS UNIQUEIDENTIFIER), CAST('B2000000-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), N'IntegrityCheck', DATEADD(DAY, -4, DATEADD(MINUTE, 30, @Now)), N'SQLAgent', 0, 60, N'Checksum mismatch: expected SHA256:D4E5... but computed SHA256:X9Y8Z7... Backup file may be corrupted during storage.', NULL);
+END
+
+PRINT 'ISO Compliance dummy data seeding completed.';
 COMMIT TRANSACTION;
 
 PRINT 'Full dummy demo data seeding completed.';
