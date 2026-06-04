@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 2: Security)
+- Runtime delivery in this slice:
+  - added password ageing enforcement with configurable max age and LoginResponse expiry signal,
+  - added session idle timeout enforcement on token refresh with configurable idle window,
+  - added admin session management API (list/revoke single/revoke all) with audit logging,
+  - added password history archival readiness via ExpiresAt on history entries,
+  - added PasswordAgeingSettings and SessionTimeoutSettings configuration objects.
+- Compatibility boundary:
+  - no route removals,
+  - additive schema-only update (3 nullable columns + 1 filtered index),
+  - tenant/campus behavior preserved,
+  - backward compatibility maintained for legacy sessions and users.
+- Validation Summary:
+  - full solution build succeeded,
+  - EF migration generated and tracked (PhaseISO2Security).
+
 ### 2026-06-03 - Product Requirements Synchronization (Institute Dynamic Model Phase 4 Continuation)
 - Runtime delivery in this slice:
   - removed mandatory semester/class prerequisite from web attendance write scope validation for School/College paths,

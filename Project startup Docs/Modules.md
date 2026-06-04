@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update - 2026-06-04 (ISO Phase 2 - Security)
+
+### Module impact summary
+- No new product module introduced; this slice extends existing Auth, Account Security, and User Session governance surfaces.
+- Auth module now includes:
+  - password ageing enforcement with configurable max age and expiry signaling on login response,
+  - session idle timeout enforcement on token refresh with configurable idle window,
+  - password history archival readiness with ExpiresAt tracking.
+- Account Security module now includes:
+  - admin session management screen — list active sessions, revoke individual sessions, revoke all sessions for a user.
+- Session management now tracks LastActivityAt for idle timeout and admin visibility.
+
+### Validation summary
+- Full solution build succeeded.
+- EF migration generated for additive security schema enhancements (3 columns + 1 filtered index).
+
 ## Execution Update - 2026-06-03 (Institute Dynamic Model - Phase 4 Continuation)
 
 ### Module impact summary

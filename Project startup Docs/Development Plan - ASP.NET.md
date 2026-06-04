@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - Development Plan Synchronization (ISO Phase 2: Security)
+
+### Plan sync
+- Completed Phase 2 security implementation on top of existing auth foundation:
+  - added password ageing enforcement — LastPasswordChangedAt on users, LoginResponse.PasswordExpired flag, configurable max age,
+  - added session idle timeout — LastActivityAt on user_sessions, idle check on token refresh, configurable idle window,
+  - added admin session management — three new API endpoints for listing, revoking, and bulk-revoking sessions,
+  - added password history archival readiness — ExpiresAt on password_history entries set to 2x max age,
+  - added PasswordAgeingSettings and SessionTimeoutSettings to AuthSecurityOptions configuration.
+- All changes are additive: 3 nullable columns, 1 filtered index, 3 new API endpoints, no route removals.
+
+### Validation sync
+- Full solution build passed.
+- EF migration generated (PhaseISO2Security) for additive schema updates.
+- No breaking route/API removal introduced.
+
 ## 2026-06-03 Update - Development Plan Synchronization (Institute Dynamic Model Phase 4 Continuation)
 
 ### Plan sync

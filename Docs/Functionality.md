@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 2 Completion (Security)
+
+### Implementation sync
+- Password ageing policy added — LastPasswordChangedAt tracked on users; login returns PasswordExpired flag when password exceeds max age (90 days default).
+- Password history entries now include ExpiresAt (2x max age) for future archival/pruning.
+- Session idle timeout enforcement — LastActivityAt tracked on user_sessions; refresh rejects idle sessions beyond configured timeout (30 min default).
+- Admin session management screen — list all active sessions, force-revoke individual sessions, revoke all sessions for a user.
+- Password change paths (self-service, forced, admin reset) now record expiry on history entries.
+
+### Validation sync
+- Full solution build succeeded after implementation.
+- EF migration generated (PhaseISO2Security) for 3 new columns + 1 filtered index.
+- No regression in existing auth flows, session management, or password change behavior.
+
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Attendance)
 
 ### Implementation sync

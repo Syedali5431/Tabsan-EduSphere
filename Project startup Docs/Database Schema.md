@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 2 Security (Schema Posture)
+
+- Implementation Summary:
+	- extended existing tables with additive columns:
+		- `LastPasswordChangedAt` (datetime2, nullable) on `users` for password ageing,
+		- `ExpiresAt` (datetime2, nullable) on `password_history` for archival readiness,
+		- `LastActivityAt` (datetime2, nullable) on `user_sessions` for idle timeout tracking,
+	- added additive filtered index:
+		- `IX_user_sessions_active` on `UserId` INCLUDE (ExpiresAt, RevokedAt) FILTER ([RevokedAt] IS NULL),
+	- replaced `IX_user_sessions_user_id` with the filtered index (covers same query patterns).
+- Validation Summary:
+	- EF migration generated: `20260604051851_PhaseISO2Security`,
+	- schema impact is additive-only (no drop/rename of existing objects),
+	- no changes to GPA/CGPA tables or institution-mode schema contracts.
+
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Schema Posture)
 
 - Implementation Summary:
