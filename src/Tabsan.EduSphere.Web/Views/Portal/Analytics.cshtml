@@ -176,7 +176,7 @@ else
                 </div>
                 <div class="card-body">
                     <div id="overviewLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                    <canvas id="sampleChart" height="88"></canvas>
+                    <canvas id="sampleChart" height="70"></canvas>
                 </div>
             </div>
         }
@@ -191,29 +191,29 @@ else
                     <div class="col-12 col-lg-6">
                         <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
                         <div id="paymentStatusLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="paymentStatusChart" height="170"></canvas>
+                        <canvas id="paymentStatusChart" height="100"></canvas>
                     </div>
                     @if (!isFinanceOnly)
                     {
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
                             <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="studentDistributionChart" height="170"></canvas>
+                            <canvas id="studentDistributionChart" height="100"></canvas>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
                             <div id="departmentCountLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="departmentCountChart" height="170"></canvas>
+                            <canvas id="departmentCountChart" height="110"></canvas>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
                             <div id="courseTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="courseTrendChart" height="170"></canvas>
+                            <canvas id="courseTrendChart" height="100"></canvas>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
                             <div id="semesterTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="semesterTrendChart" height="170"></canvas>
+                            <canvas id="semesterTrendChart" height="100"></canvas>
                         </div>
                     }
                 </div>
@@ -245,7 +245,7 @@ else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
                                 <div id="performanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                                <canvas id="performanceChart" height="90"></canvas>
+                                <canvas id="performanceChart" height="72"></canvas>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-sm mb-0">
@@ -302,7 +302,7 @@ else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
                                 <div id="attendanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                                <canvas id="attendanceChart" height="120"></canvas>
+                                <canvas id="attendanceChart" height="80"></canvas>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-sm mb-0">
@@ -359,7 +359,7 @@ else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
                                 <div id="assignmentLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                                <canvas id="assignmentChart" height="120"></canvas>
+                                <canvas id="assignmentChart" height="85"></canvas>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-sm mb-0">
@@ -792,7 +792,10 @@ else
                                 'rgba(75, 192, 192, 1)',
                                 'rgba(255, 99, 132, 1)'
                             ],
-                            borderWidth: 1
+                            borderWidth: 1,
+                            categoryPercentage: 0.5,
+                            barPercentage: 0.65,
+                            maxBarThickness: 18
                         }]
                     },
                     options: {
@@ -807,13 +810,6 @@ else
                                 }
                             },
                             y: { beginAtZero: true }
-                        },
-                        datasets: {
-                            bar: {
-                                categoryPercentage: 0.55,
-                                barPercentage: 0.7,
-                                maxBarThickness: 24
-                            }
                         }
                     }
                 });
@@ -850,9 +846,9 @@ else
                             backgroundColor: 'rgba(13, 110, 253, 0.35)',
                             borderColor: 'rgba(13, 110, 253, 1)',
                             borderWidth: 1,
-                            categoryPercentage: 0.62,
-                            barPercentage: 0.8,
-                            maxBarThickness: 28
+                            categoryPercentage: 0.55,
+                            barPercentage: 0.7,
+                            maxBarThickness: 20
                         }]
                     },
                     options: {
@@ -943,14 +939,20 @@ else
                                 data: submitted,
                                 backgroundColor: 'rgba(255, 193, 7, 0.45)',
                                 borderColor: 'rgba(255, 193, 7, 1)',
-                                borderWidth: 1
+                                borderWidth: 1,
+                                categoryPercentage: 0.55,
+                                barPercentage: 0.7,
+                                maxBarThickness: 16
                             },
                             {
                                 label: 'Graded',
                                 data: graded,
                                 backgroundColor: 'rgba(13, 202, 240, 0.45)',
                                 borderColor: 'rgba(13, 202, 240, 1)',
-                                borderWidth: 1
+                                borderWidth: 1,
+                                categoryPercentage: 0.55,
+                                barPercentage: 0.7,
+                                maxBarThickness: 16
                             }
                         ]
                     },
@@ -1103,11 +1105,15 @@ else
                             data: values,
                             backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.45); }),
                             borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
-                            borderWidth: 1
+                            borderWidth: 1,
+                            categoryPercentage: 0.55,
+                            barPercentage: 0.7,
+                            maxBarThickness: 20
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: { y: { beginAtZero: true } }
                     }
