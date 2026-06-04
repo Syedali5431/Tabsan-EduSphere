@@ -84,6 +84,28 @@ public class User : AuditableEntity
     /// </summary>
     public bool MustChangePassword { get; private set; } = false;
 
+    // Phase 5 - GDPR / Data Protection fields
+
+    /// <summary>Whether the user has consented to activity monitoring (GDPR/privacy compliance). Null = not yet asked.</summary>
+    public bool? ConsentToMonitoring { get; private set; }
+
+    /// <summary>Date after which this user's data may be reviewed for deletion or anonymisation.</summary>
+    public DateTime? DataRetentionDate { get; private set; }
+
+    /// <summary>Records monitoring consent.</summary>
+    public void SetConsentToMonitoring(bool consent)
+    {
+        ConsentToMonitoring = consent;
+        Touch();
+    }
+
+    /// <summary>Sets or clears the data retention date.</summary>
+    public void SetDataRetentionDate(DateTime? retentionDate)
+    {
+        DataRetentionDate = retentionDate;
+        Touch();
+    }
+
     /// <summary>When true, this user has completed MFA enrollment and must pass MFA checks when policy requires it.</summary>
     public bool MfaIsEnabled { get; private set; } = false;
 

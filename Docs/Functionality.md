@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 5 Completion (Data Protection)
+
+### Implementation sync
+- Implemented AES-256-CBC encryption service with PBKDF2 key derivation (Encrypt/Decrypt).
+- Implemented data masking service for PII in UI (MaskEmail, MaskPhone, MaskName).
+- Created data_classification_entries table for ISO 27001 A.8.2.1 compliance (Public/Internal/Confidential/Restricted).
+- Added GDPR fields to users: ConsentToMonitoring, DataRetentionDate with domain methods.
+- Admin API: encrypt, decrypt, mask demo, and classification CRUD.
+
+### Validation sync
+- Full solution build succeeded. EF migration generated (PhaseISO5DataProtection). All additive.
+
 ## 2026-06-04 Update - ISO Phase 4 Completion (Backup & DR)
 
 ### Implementation sync

@@ -1,5 +1,10 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 5: Data Protection)
+- Runtime: AES-256 encryption service, PII masking, data_classification_entries table, GDPR ConsentToMonitoring + DataRetentionDate on users. Admin API for encrypt/decrypt/mask/classify.
+- Compatibility: additive schema (2 nullable columns + 1 new table + 2 indexes), no route removals.
+- Validation: full build passed, EF migration generated (PhaseISO5DataProtection).
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 4: Backup & DR)
 - Runtime delivery: backup_logs table, BackupLog entity with lifecycle methods, admin API for recording/querying/updating backup operations, monitoring endpoint for latest status per backup type.
 - Compatibility: additive schema-only (1 table + 2 indexes), no route removals, backward compatible.

@@ -4,6 +4,21 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| IEncryptionService.Encrypt | AES-256-CBC encrypt plaintext → Base64 ciphertext | src/Tabsan.EduSphere.Application/Interfaces/IEncryptionService.cs |
+| IEncryptionService.Decrypt | Decrypt Base64 ciphertext → plaintext | src/Tabsan.EduSphere.Application/Interfaces/IEncryptionService.cs |
+| EncryptionService | AES-256-CBC implementation with PBKDF2 key derivation | src/Tabsan.EduSphere.Infrastructure/Security/EncryptionService.cs |
+| IDataMaskingService.MaskEmail | Masks email as j***@domain.com | src/Tabsan.EduSphere.Application/Interfaces/IDataMaskingService.cs |
+| IDataMaskingService.MaskPhone | Masks phone as ***1234 | src/Tabsan.EduSphere.Application/Interfaces/IDataMaskingService.cs |
+| IDataMaskingService.MaskName | Masks last name as John D*** | src/Tabsan.EduSphere.Application/Interfaces/IDataMaskingService.cs |
+| DataMaskingService | PII masking implementation for UI display | src/Tabsan.EduSphere.Infrastructure/Security/DataMaskingService.cs |
+| DataClassificationEntry (entity) | Data classification entry (Public/Internal/Confidential/Restricted) | src/Tabsan.EduSphere.Domain/DataProtection/DataClassificationEntry.cs |
+| IDataClassificationRepository | Repository contract for classification entries | src/Tabsan.EduSphere.Domain/Interfaces/IDataClassificationRepository.cs |
+| DataClassificationRepository | EF Core implementation of classification persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/DataClassificationRepository.cs |
+| IDataClassificationService | Service contract for classification CRUD | src/Tabsan.EduSphere.Application/Interfaces/IDataClassificationService.cs |
+| DataClassificationService | Classification management implementation | src/Tabsan.EduSphere.Infrastructure/DataProtection/DataClassificationService.cs |
+| DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
+| User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | BackupLog (entity) | Immutable backup operation record with lifecycle methods (MarkCompleted/Failed/Verified) | src/Tabsan.EduSphere.Domain/Backup/BackupLog.cs |
 | IBackupLogRepository | Repository contract for backup operation logging | src/Tabsan.EduSphere.Domain/Interfaces/IBackupLogRepository.cs |
 | BackupLogRepository | EF Core implementation of backup log persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/BackupLogRepository.cs |

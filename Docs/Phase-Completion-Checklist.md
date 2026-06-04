@@ -13,7 +13,7 @@
 | 2 | Security | ✅ COMPLETED | `6d6a37f` |
 | 3 | User Activity Monitoring | ✅ COMPLETED | `1dcb854`+ |
 | 4 | Backup & DR | ✅ COMPLETED | `c992590`+ |
-| 5 | Data Protection | ⬜ Pending | — |
+| 5 | Data Protection | ✅ COMPLETED | `1f39506`+ |
 | 6 | Incident Management | ⬜ Pending | — |
 | 7 | Document Management | ⬜ Pending | — |
 | 8 | Backup Validation | ⬜ Pending | — |
