@@ -1,35 +1,5 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
-## 2026-06-03 Update - ISO Phase 1 Completion (Audit Logging System)
-
-### Implementation sync
-- Completed Phase 1 audit logging delivery with additive enhancements on existing audit infrastructure.
-- Audit records now capture and expose:
-	- actor user id,
-	- actor role,
-	- action,
-	- entity,
-	- timestamp,
-	- IP address,
-	- user-agent,
-	- before/after values.
-- Added immutable-log enforcement in persistence pipeline (audit rows cannot be edited/deleted).
-- Added admin audit monitoring UI with filterable logs by:
-	- user,
-	- module/entity,
-	- date range,
-	- action/query criteria.
-- Added export support for audit logs:
-	- CSV,
-	- Excel,
-	- PDF.
-- Added sidebar/menu route integration for advanced audit page access under existing permission model.
-
-### Validation sync
-- Full solution build succeeded after implementation.
-- EF migration generated for audit schema enhancement.
-- No regression in School/College/University runtime paths observed in build validation.
-
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Attendance)
 
 ### Implementation sync

@@ -1,20 +1,5 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-## Execution Update - 2026-06-03 (ISO Phase 1 - Audit Logging System)
-
-### Module impact summary
-- No new product module introduced; this slice extends the existing Audit and Settings governance surfaces.
-- Audit module now includes:
-  - enriched capture context (role + user-agent),
-  - append-only immutability enforcement,
-  - admin-facing filterable audit log viewer,
-  - export outputs (CSV, Excel, PDF).
-- Sidebar/module governance now routes advanced_audit key to the portal audit logs page under existing role/menu checks.
-
-### Validation summary
-- Full solution build succeeded.
-- EF migration generated for additive audit schema enhancements.
-
 ## Execution Update - 2026-06-03 (Institute Dynamic Model - Phase 4 Continuation)
 
 ### Module impact summary

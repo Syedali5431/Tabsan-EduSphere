@@ -1,21 +1,5 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-## 2026-06-03 Update - ISO Phase 1 Audit Logging (Schema Posture)
-
-- Implementation Summary:
-	- extended existing audit log table mapping (`audit_logs`) with additive columns:
-		- `ActorRole` (nvarchar(64), nullable),
-		- `UserAgent` (nvarchar(1024), nullable),
-	- added additive index:
-		- `IX_audit_logs_actor_role` on `ActorRole`,
-	- retained existing audit indexes and append-only table usage.
-
-- Validation Summary:
-	- EF migration generated:
-		- `20260603134857_PhaseISO1AuditLoggingEnhancements`,
-	- schema impact is additive-only (no drop/rename of existing objects),
-	- no changes to GPA/CGPA tables or institution-mode schema contracts.
-
 ## 2026-06-03 Update - Institute Dynamic Model Phase 4 Continuation (Schema Posture)
 
 - Implementation Summary:
