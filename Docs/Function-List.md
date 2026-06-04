@@ -19,6 +19,9 @@
 | DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
 | User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| IDataIntegrityService.RunIntegrityCheckAsync | Runs full data integrity check across 7 areas | src/Tabsan.EduSphere.Application/Interfaces/IDataIntegrityService.cs |
+| DataIntegrityService | EF-based integrity verification (audit coverage, orphans, stale records) | src/Tabsan.EduSphere.Infrastructure/Integrity/DataIntegrityService.cs |
+| DataIntegrityController.RunCheck | GET /api/v1/data-integrity/check — runs integrity check | src/Tabsan.EduSphere.API/Controllers/DataIntegrityController.cs |
 | BackupVerificationLog (entity) | Backup integrity check / restore test record | src/Tabsan.EduSphere.Domain/Backup/BackupVerificationLog.cs |
 | IBackupVerificationRepository | Repository contract for backup verifications | src/Tabsan.EduSphere.Domain/Interfaces/IBackupVerificationRepository.cs |
 | BackupVerificationRepository | EF Core implementation | src/Tabsan.EduSphere.Infrastructure/Repositories/BackupVerificationRepository.cs |

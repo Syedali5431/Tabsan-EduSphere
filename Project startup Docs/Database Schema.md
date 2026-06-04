@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 9 Data Integrity (Schema Posture)
+- Implementation: service-only — no schema changes. IDataIntegrityService + DataIntegrityService checks audit coverage, orphaned users, profile consistency, stale offerings, unpublished results, and pending modifications.
+- Validation: no EF migration needed. No table/column changes.
+
 ## 2026-06-04 Update - ISO Phase 8 Backup Validation (Schema Posture)
 - Implementation: new table `backup_verification_logs` (BackupLogId, VerificationType, VerifiedAt, VerifiedBy, IsSuccessful, DurationSeconds, Issues, VerifiedChecksum + BaseEntity). Indexes on (BackupLogId, VerifiedAt) and (IsSuccessful, VerifiedAt).
 - Validation: EF migration `*_PhaseISO8BackupValidation`, additive-only.
