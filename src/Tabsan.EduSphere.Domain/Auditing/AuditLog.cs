@@ -43,6 +43,9 @@ public class AuditLog
     /// <summary>Client device/user agent string captured from HttpContext headers.</summary>
     public string? UserAgent { get; private set; }
 
+    /// <summary>Client device information (browser/OS/app) captured at the time of action.</summary>
+    public string? DeviceInfo { get; private set; }
+
     private AuditLog() { }
 
     /// <summary>
@@ -52,7 +55,8 @@ public class AuditLog
     public AuditLog(string action, string entityName, string? entityId = null,
                     Guid? actorUserId = null, string? oldValuesJson = null,
                     string? newValuesJson = null, string? ipAddress = null,
-                    string? actorRole = null, string? userAgent = null)
+                    string? actorRole = null, string? userAgent = null,
+                    string? deviceInfo = null)
     {
         Action = action;
         EntityName = entityName;
@@ -63,5 +67,7 @@ public class AuditLog
         IpAddress = ipAddress;
         ActorRole = actorRole;
         UserAgent = userAgent;
+        DeviceInfo = deviceInfo;
     }
 }
+

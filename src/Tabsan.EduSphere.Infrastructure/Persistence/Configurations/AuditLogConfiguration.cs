@@ -22,6 +22,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.EntityId).HasMaxLength(100);
         builder.Property(a => a.IpAddress).HasMaxLength(64);
        builder.Property(a => a.UserAgent).HasMaxLength(1024);
+        builder.Property(a => a.DeviceInfo).HasMaxLength(1024);
 
         // Time-range queries on audit logs — clustered by OccurredAt.
         builder.HasIndex(a => a.OccurredAt)
@@ -40,3 +41,4 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
                .HasDatabaseName("IX_audit_logs_entity_occurred_at");
     }
 }
+

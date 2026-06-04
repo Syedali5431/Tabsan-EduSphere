@@ -5,7 +5,6 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Globalization;
-using System.Security.Claims;
 using System.Text;
 using Tabsan.EduSphere.Domain.Interfaces;
 
@@ -59,7 +58,7 @@ public sealed class AuditController : ControllerBase
             entityName: "AuditLog",
             newValuesJson: "{\"surface\":\"SearchLogs\"}"), ct);
 
-        var response = new
+                var response = new
         {
             page = page < 1 ? 1 : page,
             pageSize = Math.Clamp(pageSize, 1, 200),
@@ -75,6 +74,7 @@ public sealed class AuditController : ControllerBase
                 x.ActorRole,
                 x.IpAddress,
                 x.UserAgent,
+                x.DeviceInfo,
                 x.OldValuesJson,
                 x.NewValuesJson
             })
@@ -133,7 +133,7 @@ public sealed class AuditController : ControllerBase
     private static byte[] BuildCsv(IReadOnlyList<Domain.Auditing.AuditLog> items)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Id,OccurredAtUtc,Action,EntityName,EntityId,ActorUserId,ActorRole,IpAddress,UserAgent,OldValuesJson,NewValuesJson");
+                sb.AppendLine("Id,OccurredAtUtc,Action,EntityName,EntityId,ActorUserId,ActorRole,IpAddress,UserAgent,DeviceInfo,OldValuesJson,NewValuesJson");
         foreach (var item in items)
         {
             sb
@@ -146,6 +146,7 @@ public sealed class AuditController : ControllerBase
                 .Append(Csv(item.ActorRole)).Append(',')
                 .Append(Csv(item.IpAddress)).Append(',')
                 .Append(Csv(item.UserAgent)).Append(',')
+                .Append(Csv(item.DeviceInfo)).Append(',')
                 .Append(Csv(item.OldValuesJson)).Append(',')
                 .Append(Csv(item.NewValuesJson))
                 .AppendLine();
@@ -159,10 +160,10 @@ public sealed class AuditController : ControllerBase
         using var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("AuditLogs");
 
-        var headers = new[]
+                var headers = new[]
         {
             "Id", "OccurredAtUtc", "Action", "EntityName", "EntityId", "ActorUserId",
-            "ActorRole", "IpAddress", "UserAgent", "OldValuesJson", "NewValuesJson"
+            "ActorRole", "IpAddress", "UserAgent", "DeviceInfo", "OldValuesJson", "NewValuesJson"
         };
 
         for (var i = 0; i < headers.Length; i++)
@@ -175,7 +176,7 @@ public sealed class AuditController : ControllerBase
         var row = 2;
         foreach (var item in items)
         {
-            ws.Cell(row, 1).Value = item.Id;
+                        ws.Cell(row, 1).Value = item.Id;
             ws.Cell(row, 2).Value = item.OccurredAt.ToString("O", CultureInfo.InvariantCulture);
             ws.Cell(row, 3).Value = item.Action;
             ws.Cell(row, 4).Value = item.EntityName;
@@ -184,8 +185,9 @@ public sealed class AuditController : ControllerBase
             ws.Cell(row, 7).Value = item.ActorRole ?? string.Empty;
             ws.Cell(row, 8).Value = item.IpAddress ?? string.Empty;
             ws.Cell(row, 9).Value = item.UserAgent ?? string.Empty;
-            ws.Cell(row, 10).Value = item.OldValuesJson ?? string.Empty;
-            ws.Cell(row, 11).Value = item.NewValuesJson ?? string.Empty;
+            ws.Cell(row, 10).Value = item.DeviceInfo ?? string.Empty;
+            ws.Cell(row, 11).Value = item.OldValuesJson ?? string.Empty;
+            ws.Cell(row, 12).Value = item.NewValuesJson ?? string.Empty;
             row++;
         }
 

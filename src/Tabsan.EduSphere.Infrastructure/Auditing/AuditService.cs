@@ -38,9 +38,12 @@ public class AuditService : IAuditService
         var ipAddress = string.IsNullOrWhiteSpace(entry.IpAddress)
             ? TryResolveIpAddress(httpContext)
             : entry.IpAddress;
-        var userAgent = string.IsNullOrWhiteSpace(entry.UserAgent)
+                var userAgent = string.IsNullOrWhiteSpace(entry.UserAgent)
             ? TryResolveUserAgent(httpContext)
             : entry.UserAgent;
+        var deviceInfo = string.IsNullOrWhiteSpace(entry.DeviceInfo)
+            ? TryResolveDeviceInfo(httpContext)
+            : entry.DeviceInfo;
 
         var enriched = new AuditLog(
             action: entry.Action,
@@ -51,7 +54,8 @@ public class AuditService : IAuditService
             newValuesJson: entry.NewValuesJson,
             ipAddress: ipAddress,
             actorRole: actorRole,
-            userAgent: userAgent);
+            userAgent: userAgent,
+            deviceInfo: deviceInfo);
 
         await _db.AuditLogs.AddAsync(enriched, ct);
         await _db.SaveChangesAsync(ct);
@@ -86,8 +90,23 @@ public class AuditService : IAuditService
         return context.Connection.RemoteIpAddress?.ToString();
     }
 
-    private static string? TryResolveUserAgent(HttpContext? context)
+        private static string? TryResolveUserAgent(HttpContext? context)
         => context?.Request.Headers["User-Agent"].ToString();
+
+    private static string? TryResolveDeviceInfo(HttpContext? context)
+    {
+        if (context is null) return null;
+        
+        // Construct a concise device-info string from available HTTP headers.
+        var userAgent = context.Request.Headers["User-Agent"].ToString();
+        var platform = context.Request.Headers["Sec-CH-UA-Platform"].ToString();
+        var mobile = context.Request.Headers["Sec-CH-UA-Mobile"].ToString();
+        
+        if (!string.IsNullOrWhiteSpace(platform))
+            return string.IsNullOrWhiteSpace(mobile) ? $"{platform}; {userAgent}" : $"{platform} (Mobile: {mobile}); {userAgent}";
+        
+        return userAgent;
+    }
 
     public async Task<(IReadOnlyList<AuditLog> Items, int TotalCount)> SearchAsync(
         string? query = null,
