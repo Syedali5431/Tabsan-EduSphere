@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 10 Compliance Dashboard (Schema Posture)
+- Implementation: service-only — no schema changes. Compliance dashboard aggregates 8 tables across all phases into 7-section read-only response. All 10 ISO phases complete.
+- Validation: no EF migration needed.
+
 ## 2026-06-04 Update - ISO Phase 9 Data Integrity (Schema Posture)
 - Implementation: service-only — no schema changes. IDataIntegrityService + DataIntegrityService checks audit coverage, orphaned users, profile consistency, stale offerings, unpublished results, and pending modifications.
 - Validation: no EF migration needed. No table/column changes.
