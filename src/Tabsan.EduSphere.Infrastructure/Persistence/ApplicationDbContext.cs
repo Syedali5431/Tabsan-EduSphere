@@ -4,6 +4,7 @@ using Tabsan.EduSphere.Domain.Activity;
 using Tabsan.EduSphere.Domain.AiChat;
 using Tabsan.EduSphere.Domain.Backup;
 using Tabsan.EduSphere.Domain.DataProtection;
+using Tabsan.EduSphere.Domain.Documents;
 using Tabsan.EduSphere.Domain.Incidents;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Domain.Attendance;
@@ -87,6 +88,12 @@ public class ApplicationDbContext : DbContext
     // ── Incidents (Phase 6) ────────────────────────────────────────────────
     /// <summary>Security incident logs for ISO 27001 A.16.1.5.</summary>
     public DbSet<IncidentLog> IncidentLogs => Set<IncidentLog>();
+
+    // ── Documents (Phase 7) ────────────────────────────────────────────────
+    /// <summary>Versioned policy documents for ISO 9001 7.5.</summary>
+    public DbSet<PolicyDocument> PolicyDocuments => Set<PolicyDocument>();
+    /// <summary>Version history for policy documents.</summary>
+    public DbSet<PolicyDocumentVersion> PolicyDocumentVersions => Set<PolicyDocumentVersion>();
 
     // ── Phase 2: Academic Core ─────────────────────────────────────────────
     /// <summary>Degree programmes offered by departments.</summary>

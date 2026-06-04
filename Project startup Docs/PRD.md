@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 7: Document Management)
+- Runtime: policy_documents + policy_document_versions tables, version tracking, Draft→Published→Archived lifecycle, 7 API endpoints (read all, write admin). ISO 9001 7.5.
+- Compatibility: additive (2 new tables). Validation: build passed, migration generated.
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 6: Incident Management)
 - Runtime: incident_logs table, IncidentLog lifecycle entity, admin API for full incident management (CRUD + status flow + summary). ISO 27001 A.16.1.5.
 - Compatibility: additive (1 new table + 3 indexes). Validation: build passed, migration generated.

@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 7 Document Management (Schema Posture)
+- Implementation: new tables `policy_documents` (Title, Description, Content, Version, Status, Category, AccessLevel, PublishedAt, ArchivedAt) and `policy_document_versions` (DocumentId, VersionNumber, Content, ChangedBy, ChangedAt, ChangeNotes). Indexes: IX_policy_documents_status_category, IX_policy_documents_access_level, IX_policy_doc_versions_doc_version (unique).
+- Validation: EF migration `*_PhaseISO7DocumentManagement`, additive-only.
+
 ## 2026-06-04 Update - ISO Phase 6 Incident Management (Schema Posture)
 - Implementation: new table `incident_logs` (Title, Description, Severity, Category, Status, ReportedBy, ReportedAt, AssignedTo, ResolvedAt, Resolution + BaseEntity). Indexes: IX_incident_logs_status_reported, IX_incident_logs_severity_status, IX_incident_logs_reported_by.
 - Validation: EF migration `*_PhaseISO6IncidentManagement`, additive-only.

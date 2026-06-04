@@ -19,6 +19,13 @@
 | DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
 | User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| PolicyDocument (entity) | Versioned policy doc with Draft→Published→Archived lifecycle | src/Tabsan.EduSphere.Domain/Documents/PolicyDocument.cs |
+| PolicyDocumentVersion (entity) | Immutable version history for policy documents | src/Tabsan.EduSphere.Domain/Documents/PolicyDocumentVersion.cs |
+| IPolicyDocumentRepository | Repository contract for policy docs + versions | src/Tabsan.EduSphere.Domain/Interfaces/IPolicyDocumentRepository.cs |
+| PolicyDocumentRepository | EF Core implementation | src/Tabsan.EduSphere.Infrastructure/Repositories/PolicyDocumentRepository.cs |
+| IPolicyDocumentService | Policy doc CRUD + publish/archive + version tracking | src/Tabsan.EduSphere.Application/Interfaces/IPolicyDocumentService.cs |
+| PolicyDocumentService | Full policy doc management with version history | src/Tabsan.EduSphere.Infrastructure/Documents/PolicyDocumentService.cs |
+| PolicyDocumentController | API: 7 endpoints for policy docs (read all, write admin) | src/Tabsan.EduSphere.API/Controllers/PolicyDocumentController.cs |
 | IncidentLog (entity) | Security incident with lifecycle: Open→Investigating→Resolved→Closed | src/Tabsan.EduSphere.Domain/Incidents/IncidentLog.cs |
 | IIncidentRepository | Repository contract for incident management | src/Tabsan.EduSphere.Domain/Interfaces/IIncidentRepository.cs |
 | IncidentRepository | EF Core implementation of incident persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/IncidentRepository.cs |

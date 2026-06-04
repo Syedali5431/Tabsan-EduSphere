@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 7 Completion (Document Management)
+### Implementation sync: Created policy_documents + policy_document_versions tables with version tracking and Draft→Published→Archived lifecycle. Read-all access, write restricted to Admin. Version history via immutable entries.
+### Validation sync: Build succeeded. EF migration (PhaseISO7DocumentManagement) — 2 new tables.
+
 ## 2026-06-04 Update - ISO Phase 6 Completion (Incident Management)
 
 ### Implementation sync
