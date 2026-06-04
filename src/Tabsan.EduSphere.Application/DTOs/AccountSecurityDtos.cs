@@ -17,3 +17,22 @@ public record AccountLockoutStatusDto(
     int FailedAttempts,
     DateTime? LockedOutUntil
 );
+
+// ── Phase 2 - ISO Security: Session management DTOs ──────────────────────
+
+/// <summary>Summary of an active user session for the admin sessions screen.</summary>
+public sealed record ActiveSessionDto(
+    Guid SessionId,
+    Guid UserId,
+    string Username,
+    string? FullName,
+    string? Role,
+    string? DeviceInfo,
+    string? IpAddress,
+    DateTime CreatedAt,
+    DateTime? LastActivityAt,
+    DateTime ExpiresAt
+);
+
+/// <summary>Request body for admin to revoke a specific session.</summary>
+public sealed record RevokeSessionRequest(Guid SessionId);

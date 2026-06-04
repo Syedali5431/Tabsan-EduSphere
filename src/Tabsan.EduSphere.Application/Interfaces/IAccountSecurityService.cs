@@ -3,7 +3,7 @@ using Tabsan.EduSphere.Application.Dtos;
 namespace Tabsan.EduSphere.Application.Interfaces;
 
 /// <summary>
-/// Service for account security operations: lockout status, admin unlock, and admin password reset.
+/// Service for account security operations: lockout status, admin unlock, admin password reset, and session management.
 /// Lockout policy: locked after configurable consecutive failed attempts (default 5), 15 min lockout.
 /// Only Admin and SuperAdmin can unlock non-admin accounts and reset passwords.
 /// </summary>
@@ -23,4 +23,15 @@ public interface IAccountSecurityService
 
     /// <summary>Gets all currently locked-out non-admin accounts. Admin only.</summary>
     Task<IList<AccountLockoutStatusDto>> GetLockedAccountsAsync(CancellationToken ct = default);
+
+    // ── Phase 2 - ISO Security: Session management ──────────────────────
+
+    /// <summary>Returns a list of all active sessions with user info. Admin only.</summary>
+    Task<IList<ActiveSessionDto>> GetActiveSessionsAsync(CancellationToken ct = default);
+
+    /// <summary>Revokes a specific session by its ID. Returns false if not found or already revoked.</summary>
+    Task<bool> RevokeSessionAsync(Guid sessionId, Guid adminUserId, CancellationToken ct = default);
+
+    /// <summary>Revokes all active sessions for a user. Returns the count of revoked sessions.</summary>
+    Task<int> RevokeAllSessionsForUserAsync(Guid userId, Guid adminUserId, CancellationToken ct = default);
 }

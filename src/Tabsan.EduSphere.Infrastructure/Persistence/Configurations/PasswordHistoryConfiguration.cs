@@ -26,6 +26,10 @@ public class PasswordHistoryConfiguration : IEntityTypeConfiguration<PasswordHis
         builder.Property(p => p.CreatedAt)
                .IsRequired();
 
+        // Phase 2: Optional archival expiry for automatic history pruning
+        builder.Property(p => p.ExpiresAt)
+               .IsRequired(false);
+
         // Index for fast lookup of recent entries per user (used in reuse check).
         builder.HasIndex(p => new { p.UserId, p.CreatedAt })
                .HasDatabaseName("IX_password_history_user_created");

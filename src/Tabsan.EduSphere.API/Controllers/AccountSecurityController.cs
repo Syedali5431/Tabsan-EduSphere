@@ -107,4 +107,39 @@ public class AccountSecurityController : ControllerBase
             return BadRequest(new { message = e.Message });
         }
     }
+
+    // ── Phase 2 - ISO Security: Session management ─────────────────────────
+
+    /// <summary>Returns all currently active user sessions across the system. Admin only.</summary>
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetActiveSessions(CancellationToken ct)
+    {
+        var sessions = await _securityService.GetActiveSessionsAsync(ct);
+        return Ok(sessions);
+    }
+
+    /// <summary>Force-revokes a specific active session by session ID. Admin only.</summary>
+    [HttpPost("sessions/{sessionId:guid}/revoke")]
+    public async Task<IActionResult> RevokeSession(Guid sessionId, CancellationToken ct)
+    {
+        var adminId = GetUserId();
+        if (adminId == Guid.Empty) return Forbid();
+
+        var success = await _securityService.RevokeSessionAsync(sessionId, adminId, ct);
+        if (!success)
+            return NotFound(new { message = "Session not found or already revoked." });
+
+        return NoContent();
+    }
+
+    /// <summary>Force-revokes all active sessions for a specific user. Admin only.</summary>
+    [HttpPost("users/{userId:guid}/revoke-sessions")]
+    public async Task<IActionResult> RevokeAllUserSessions(Guid userId, CancellationToken ct)
+    {
+        var adminId = GetUserId();
+        if (adminId == Guid.Empty) return Forbid();
+
+        var count = await _securityService.RevokeAllSessionsForUserAsync(userId, adminId, ct);
+        return Ok(new { revokedCount = count });
+    }
 }

@@ -169,11 +169,26 @@ public class User : AuditableEntity
         return true;
     }
 
+    /// <summary>Phase 2: UTC timestamp of the most recent password change. Used for password ageing policy.</summary>
+    public DateTime? LastPasswordChangedAt { get; private set; }
+
     /// <summary>Replaces the stored hash with a newly generated hash after a password change.</summary>
     public void UpdatePasswordHash(string newHash)
     {
         PasswordHash = newHash;
+        LastPasswordChangedAt = DateTime.UtcNow;
+        MustChangePassword = false;
         Touch();
+    }
+
+    /// <summary>
+    /// Phase 2: Returns true when the password has exceeded the maximum allowed age.
+    /// Always returns false when LastPasswordChangedAt is null (accounts created before this feature).
+    /// </summary>
+    public bool IsPasswordExpired(int maxAgeDays)
+    {
+        if (!LastPasswordChangedAt.HasValue) return false;
+        return LastPasswordChangedAt.Value.AddDays(maxAgeDays) < DateTime.UtcNow;
     }
 
     /// <summary>Prevents the user from logging in. Their data is fully preserved.</summary>

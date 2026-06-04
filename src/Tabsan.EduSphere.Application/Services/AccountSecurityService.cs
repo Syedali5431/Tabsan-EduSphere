@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using Tabsan.EduSphere.Application.Auth;
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Auditing;
@@ -7,7 +9,7 @@ using Tabsan.EduSphere.Domain.Interfaces;
 namespace Tabsan.EduSphere.Application.Services;
 
 /// <summary>
-/// Implements account lockout management and admin-driven password reset.
+/// Implements account lockout management, admin-driven password reset, and session management.
 /// Lockout is applied by AuthService on failed login; this service provides
 /// admin visibility and unlock/reset capabilities.
 /// Only non-admin accounts are subject to automated lockout policy.
@@ -21,6 +23,9 @@ public class AccountSecurityService : IAccountSecurityService
     private readonly IEmailTemplateRenderer _templateRenderer;
     private readonly IAccountSecurityEmailQueue? _emailQueue;
     private readonly IAuditService _audit;
+    // Phase 2 - ISO Security
+    private readonly IUserSessionRepository _sessionRepo;
+    private readonly AuthSecurityOptions _security;
 
     public AccountSecurityService(
         IUserRepository userRepo,
@@ -29,7 +34,9 @@ public class AccountSecurityService : IAccountSecurityService
         IEmailSender emailSender,
         IEmailTemplateRenderer templateRenderer,
         IAuditService audit,
-        IAccountSecurityEmailQueue? emailQueue = null)
+        IOptions<AuthSecurityOptions> security,
+        IAccountSecurityEmailQueue? emailQueue = null,
+        IUserSessionRepository? sessionRepo = null)
     {
         _userRepo          = userRepo;
         _passwordHasher    = passwordHasher;
@@ -38,6 +45,8 @@ public class AccountSecurityService : IAccountSecurityService
         _templateRenderer  = templateRenderer;
         _audit             = audit;
         _emailQueue        = emailQueue;
+        _sessionRepo       = sessionRepo!;
+        _security          = security.Value;
     }
 
     public async Task<AccountLockoutStatusDto?> GetLockoutStatusAsync(Guid userId, CancellationToken ct = default)
@@ -149,7 +158,11 @@ public class AccountSecurityService : IAccountSecurityService
         _userRepo.Update(target);
         await _userRepo.SaveChangesAsync(ct);
 
-        await _passwordHistory.AddAsync(new PasswordHistoryEntry(target.Id, newHash), ct);
+        // Phase 2: Set history expiry to 2x the max password age for archival
+        var historyExpiry = _security.PasswordAgeing.MaxPasswordAgeDays > 0
+            ? DateTime.UtcNow.AddDays(_security.PasswordAgeing.MaxPasswordAgeDays * 2)
+            : (DateTime?)null;
+        await _passwordHistory.AddAsync(new PasswordHistoryEntry(target.Id, newHash, historyExpiry), ct);
         await _passwordHistory.SaveChangesAsync(ct);
 
         await _audit.LogAsync(new AuditLog(
@@ -198,6 +211,66 @@ public class AccountSecurityService : IAccountSecurityService
             u.FailedLoginAttempts,
             u.LockedOutUntil
         )).ToList();
+    }
+
+    // ── Phase 2 - ISO Security: Session management ────────────────────────
+
+    public async Task<IList<ActiveSessionDto>> GetActiveSessionsAsync(CancellationToken ct = default)
+    {
+        var sessions = await _sessionRepo.GetActiveSessionsAsync(ct);
+        return sessions.Select(s => new ActiveSessionDto(
+            SessionId: s.Id,
+            UserId: s.UserId,
+            Username: s.User?.Username ?? "(unknown)",
+            FullName: s.User?.FullName,
+            Role: s.User?.Role?.Name,
+            DeviceInfo: s.DeviceInfo,
+            IpAddress: s.IpAddress,
+            CreatedAt: s.CreatedAt,
+            LastActivityAt: s.LastActivityAt,
+            ExpiresAt: s.ExpiresAt
+        )).ToList();
+    }
+
+    public async Task<bool> RevokeSessionAsync(Guid sessionId, Guid adminUserId, CancellationToken ct = default)
+    {
+        var session = await _sessionRepo.GetByIdAsync(sessionId, ct);
+        if (session is null || session.RevokedAt is not null)
+            return false;
+
+        session.Revoke();
+        _sessionRepo.Update(session);
+        await _sessionRepo.SaveChangesAsync(ct);
+
+        await _audit.LogAsync(new AuditLog(
+            "AdminRevokeSession", "UserSession",
+            session.Id.ToString(),
+            actorUserId: adminUserId,
+            newValuesJson: $"{{\"userId\":\"{session.UserId}\"}}"), ct);
+
+        return true;
+    }
+
+    public async Task<int> RevokeAllSessionsForUserAsync(Guid userId, Guid adminUserId, CancellationToken ct = default)
+    {
+        var sessions = await _sessionRepo.GetActiveSessionsByUserIdAsync(userId, ct);
+        var count = 0;
+        foreach (var s in sessions)
+        {
+            s.Revoke();
+            _sessionRepo.Update(s);
+            count++;
+        }
+        if (count > 0)
+        {
+            await _sessionRepo.SaveChangesAsync(ct);
+            await _audit.LogAsync(new AuditLog(
+                "AdminRevokeAllSessions", "UserSession",
+                null,
+                actorUserId: adminUserId,
+                newValuesJson: $"{{\"userId\":\"{userId}\",\"count\":{count}}}"), ct);
+        }
+        return count;
     }
 }
 

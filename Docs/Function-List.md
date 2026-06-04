@@ -4,6 +4,33 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| User.LastPasswordChangedAt | Tracks UTC timestamp of most recent password change for ageing policy | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.IsPasswordExpired(maxAgeDays) | Returns true when password has exceeded the maximum allowed age | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| PasswordHistoryEntry.ExpiresAt | Optional UTC timestamp for history entry archival/pruning | src/Tabsan.EduSphere.Domain/Identity/PasswordHistoryEntry.cs |
+| UserSession.LastActivityAt | Tracks last authenticated request timestamp for idle timeout | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| UserSession.TouchActivity() | Updates LastActivityAt to current UTC — called on each authenticated action | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| UserSession.IsActiveWithinIdleTimeout(minutes) | Returns true when active and idle timeout not exceeded; falls back to CreatedAt for legacy sessions | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| PasswordAgeingSettings | Configuration for password ageing: MaxPasswordAgeDays (default 90) | src/Tabsan.EduSphere.Application/Auth/AuthSecurityOptions.cs |
+| SessionTimeoutSettings | Configuration for idle session timeout: Enabled (default true), IdleTimeoutMinutes (default 30) | src/Tabsan.EduSphere.Application/Auth/AuthSecurityOptions.cs |
+| ActiveSessionDto | DTO for active session display (SessionId, UserId, Username, FullName, Role, DeviceInfo, IpAddress, CreatedAt, LastActivityAt, ExpiresAt) | src/Tabsan.EduSphere.Application/DTOs/AccountSecurityDtos.cs |
+| RevokeSessionRequest | DTO for admin session revocation by session ID | src/Tabsan.EduSphere.Application/DTOs/AccountSecurityDtos.cs |
+| IUserSessionRepository.GetByIdAsync | Finds session by primary key for manual revocation | src/Tabsan.EduSphere.Application/Interfaces/IUserSessionRepository.cs |
+| IUserSessionRepository.GetActiveSessionsAsync | Returns all active sessions with user info for admin screen | src/Tabsan.EduSphere.Application/Interfaces/IUserSessionRepository.cs |
+| IUserSessionRepository.GetActiveSessionsByUserIdAsync | Returns active sessions for a specific user | src/Tabsan.EduSphere.Application/Interfaces/IUserSessionRepository.cs |
+| IUserSessionRepository.GetIdleSessionsAsync | Returns active sessions idle beyond timeout window | src/Tabsan.EduSphere.Application/Interfaces/IUserSessionRepository.cs |
+| IAccountSecurityService.GetActiveSessionsAsync | Admin interface for listing all active sessions | src/Tabsan.EduSphere.Application/Interfaces/IAccountSecurityService.cs |
+| IAccountSecurityService.RevokeSessionAsync | Admin interface for revoking a specific session | src/Tabsan.EduSphere.Application/Interfaces/IAccountSecurityService.cs |
+| IAccountSecurityService.RevokeAllSessionsForUserAsync | Admin interface for revoking all sessions for a user | src/Tabsan.EduSphere.Application/Interfaces/IAccountSecurityService.cs |
+| AccountSecurityService.GetActiveSessionsAsync | Returns all active sessions mapped to DTOs with user role info | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityService.RevokeSessionAsync | Force-revokes a session by ID with audit logging | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityService.RevokeAllSessionsForUserAsync | Force-revokes all active sessions for a user with audit logging | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| UserSessionRepository.GetByIdAsync | EF implementation — finds session by PK | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| UserSessionRepository.GetActiveSessionsAsync | EF implementation — active sessions with User+Role eager loading, ordered by activity | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| UserSessionRepository.GetActiveSessionsByUserIdAsync | EF implementation — user-scoped active session query | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| UserSessionRepository.GetIdleSessionsAsync | EF implementation — idle session detection using LastActivityAt/CreatedAt cutoff | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| AccountSecurityController.GetActiveSessions | GET /api/v1/account-security/sessions — lists all active sessions | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| AccountSecurityController.RevokeSession | POST /api/v1/account-security/sessions/{id}/revoke — force-revokes a session | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| AccountSecurityController.RevokeAllUserSessions | POST /api/v1/account-security/users/{id}/revoke-sessions — revokes all sessions for user | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
 | TryResolveActorUserId | Resolves actor user ID from JWT claims | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
 | TryResolveActorRole | Resolves actor role from JWT claims | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
 | TryResolveIpAddress | Resolves client IP from X-Forwarded-For header or connection | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |

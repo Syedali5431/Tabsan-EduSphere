@@ -34,4 +34,18 @@ public interface IUserSessionRepository
     /// Used to enforce the MaxUsers license limit before allowing a new login.
     /// </summary>
     Task<int> CountActiveSessionsAsync(CancellationToken ct = default);
+
+    // ── Phase 2 - ISO Security: Session management ───────────────────────────
+
+    /// <summary>Finds a session by its primary key for manual revocation.</summary>
+    Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct = default);
+
+    /// <summary>Returns all active sessions with user info for the admin sessions screen.</summary>
+    Task<IList<UserSession>> GetActiveSessionsAsync(CancellationToken ct = default);
+
+    /// <summary>Returns all active sessions for a specific user.</summary>
+    Task<IList<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Returns active sessions that have been idle beyond the timeout window.</summary>
+    Task<IList<UserSession>> GetIdleSessionsAsync(int idleTimeoutMinutes, CancellationToken ct = default);
 }

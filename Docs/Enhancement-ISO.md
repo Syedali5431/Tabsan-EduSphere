@@ -353,7 +353,7 @@ Validation:
 
 ---------------------------------------------------------------------
 
-PHASE 2 — SECURITY
+PHASE 2 — SECURITY ✅ COMPLETED
 
 Implement:
 - Strong password policy
@@ -364,6 +364,91 @@ Implement:
 
 Admin:
 - Active sessions screen
+
+### ✅ Implementation Summary
+
+#### 1. Schema Changes (Migration: PhaseISO2Security)
+
+| Column Added | Table | Type | Purpose |
+|-------------|-------|------|---------|
+| LastPasswordChangedAt | users | DATETIME2 NULL | Password ageing policy — records last password change timestamp |
+| ExpiresAt | password_history | DATETIME2 NULL | Automatic history archival — entries prunable after expiry |
+| LastActivityAt | user_sessions | DATETIME2 NULL | Idle session timeout — tracks last authenticated request |
+
+#### 2. New Index
+
+| Index Name | Columns | Type | Purpose |
+|-----------|---------|------|---------|
+| IX_user_sessions_active | UserId INCLUDE (ExpiresAt, RevokedAt) FILTER ([RevokedAt] IS NULL) | Filtered non-clustered | Active session queries for admin screen and idle timeout enforcement |
+
+#### 3. Domain Entity Updates
+
+- **User.cs**: Added `LastPasswordChangedAt` property; `UpdatePasswordHash` now sets it + clears `MustChangePassword`; added `IsPasswordExpired(maxAgeDays)` for ageing policy
+- **PasswordHistoryEntry.cs**: Added `ExpiresAt` property with optional constructor parameter for archival scheduling
+- **UserSession.cs**: Added `LastActivityAt` property; `TouchActivity()` method for session activity tracking; `IsActiveWithinIdleTimeout(minutes)` for idle timeout enforcement
+
+#### 4. Configuration: AuthSecurityOptions
+
+- Added `PasswordAgeingSettings` (MaxPasswordAgeDays, default 90)
+- Added `SessionTimeoutSettings` (Enabled, default true; IdleTimeoutMinutes, default 30)
+
+#### 5. Repository Updates
+
+- **IUserSessionRepository**: Added `GetByIdAsync`, `GetActiveSessionsAsync`, `GetActiveSessionsByUserIdAsync`, `GetIdleSessionsAsync`
+- **UserSessionRepository**: Implemented all new methods with eager-loaded User+Role navigation and idle cutoff calculation
+
+#### 6. Service Updates
+
+- **AuthService.LoginAsync**: Sets `LastActivityAt` on session creation via `TouchActivity()`; checks password ageing and returns `PasswordExpired` + `PasswordMaxAgeDays` in response
+- **AuthService.RefreshAsync**: Checks idle timeout before allowing refresh; touches `LastActivityAt` on each refresh
+- **AuthService.ChangePasswordAsync** / **ForceChangePasswordAsync**: Records `ExpiresAt` on password history entries (2x max age for retention)
+- **AccountSecurityService**: Implemented `GetActiveSessionsAsync`, `RevokeSessionAsync`, `RevokeAllSessionsForUserAsync` with audit logging; added `IUserSessionRepository` + `AuthSecurityOptions` dependencies
+
+#### 7. API Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | /api/v1/account-security/sessions | List all active sessions with user details |
+| POST | /api/v1/account-security/sessions/{id}/revoke | Force-revoke a specific session |
+| POST | /api/v1/account-security/users/{id}/revoke-sessions | Revoke all active sessions for a user |
+
+#### 8. DTO Updates
+
+- **LoginResponse**: Added `PasswordExpired`, `PasswordMaxAgeDays` fields
+- **ActiveSessionDto**: New record for session display (SessionId, UserId, Username, FullName, Role, DeviceInfo, IpAddress, CreatedAt, LastActivityAt, ExpiresAt)
+- **RevokeSessionRequest**: New record for session revocation
+
+#### 9. Files Changed
+
+| File | Change |
+|------|--------|
+| `Domain/Identity/User.cs` | Added LastPasswordChangedAt, IsPasswordExpired; updated UpdatePasswordHash |
+| `Domain/Identity/PasswordHistoryEntry.cs` | Added ExpiresAt; updated constructor |
+| `Domain/Identity/UserSession.cs` | Added LastActivityAt, TouchActivity, IsActiveWithinIdleTimeout |
+| `Application/Auth/AuthSecurityOptions.cs` | Added PasswordAgeingSettings, SessionTimeoutSettings |
+| `Application/Interfaces/IUserSessionRepository.cs` | Added GetByIdAsync, GetActiveSessionsAsync, GetActiveSessionsByUserIdAsync, GetIdleSessionsAsync |
+| `Application/Interfaces/IAccountSecurityService.cs` | Added GetActiveSessionsAsync, RevokeSessionAsync, RevokeAllSessionsForUserAsync |
+| `Application/Services/AccountSecurityService.cs` | Implemented session management; added IUserSessionRepository + AuthSecurityOptions deps; ExpiresAt on history |
+| `Application/Auth/AuthService.cs` | Password ageing check in LoginAsync; session timeout in RefreshAsync; TouchActivity; ExpiresAt on history |
+| `Application/DTOs/Auth/AuthDtos.cs` | Added PasswordExpired, PasswordMaxAgeDays to LoginResponse |
+| `Application/DTOs/AccountSecurityDtos.cs` | Added ActiveSessionDto, RevokeSessionRequest |
+| `Infrastructure/Persistence/Configurations/UserConfiguration.cs` | Added LastPasswordChangedAt config |
+| `Infrastructure/Persistence/Configurations/PasswordHistoryConfiguration.cs` | Added ExpiresAt config |
+| `Infrastructure/Persistence/Configurations/UserSessionConfiguration.cs` | Added LastActivityAt config + IX_user_sessions_active filtered index |
+| `Infrastructure/Repositories/UserSessionRepository.cs` | Implemented 4 new query methods |
+| `Infrastructure/Migrations/20260604051851_PhaseISO2Security.cs` | New migration: 3 columns + 1 filtered index |
+| `API/Controllers/AccountSecurityController.cs` | Added GET /sessions, POST /sessions/{id}/revoke, POST /users/{id}/revoke-sessions |
+
+### ✅ Validation Summary
+
+- **Build**: All projects compile successfully with zero errors.
+- **Migration**: `PhaseISO2Security` is valid and reversible (Up/Down symmetric). Adds 3 columns + 1 filtered index.
+- **Password ageing**: `UpdatePasswordHash` now records `LastPasswordChangedAt` and clears `MustChangePassword`. Login response includes `PasswordExpired` flag when password exceeds MaxPasswordAgeDays.
+- **Password history**: All password change paths (ChangePasswordAsync, ForceChangePasswordAsync, AccountSecurityService.ResetPasswordAsync) now record `ExpiresAt` (2x max age) on history entries.
+- **Session timeout**: `IsActiveWithinIdleTimeout` falls back to `CreatedAt` for legacy sessions with null `LastActivityAt`. Idle timeout configurable via `AuthSecurity:SessionTimeout:IdleTimeoutMinutes`.
+- **Session management API**: Admin/SuperAdmin can list active sessions, revoke individual sessions, and revoke all sessions for a user — all with audit logging.
+- **Backward compatibility**: All changes are additive (new nullable columns, new optional constructor parameters, new optional DTO fields). `LastActivityAt` is null for existing sessions, `LastPasswordChangedAt` is null for existing users — both guarded with null checks.
+- **No breaking changes**: Tenant/campus isolation intact, GPA/CGPA logic untouched, all existing routes preserved. `ClearMustChangePassword` call removed from ForceChangePasswordAsync (now handled by UpdatePasswordHash).
 
 ---------------------------------------------------------------------
 

@@ -230,12 +230,18 @@ public class AuthService : IAuthService
         var refreshExpiry = _tokenService.GetRefreshTokenExpiry();
 
         var session = new UserSession(user.Id, refreshHash, refreshExpiry, deviceInfo: request.DeviceInfo, ipAddress: ipAddress);
+        // Phase 2: Mark initial activity on session creation
+        session.TouchActivity();
         await _sessionRepo.AddAsync(session, ct);
 
         user.RecordLogin();
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync(ct);
         await _sessionRepo.SaveChangesAsync(ct);
+
+        // Phase 2: Check password ageing
+        var passwordExpired = _security.PasswordAgeing.MaxPasswordAgeDays > 0
+            && user.IsPasswordExpired(_security.PasswordAgeing.MaxPasswordAgeDays);
 
         await _audit.LogAsync(new AuditLog("Login", "User", user.Id.ToString(),
             actorUserId: user.Id,
@@ -249,11 +255,13 @@ public class AuthService : IAuthService
             Role: user.Role?.Name ?? string.Empty,
             UserId: user.Id,
             Username: user.Username,
-            MustChangePassword: user.MustChangePassword,
+            MustChangePassword: user.MustChangePassword || passwordExpired,
             MfaEnabled: mfaRequiredForThisLogin,
             SsoEnabled: _security.Sso.Enabled,
             SsoProvider: string.IsNullOrWhiteSpace(_security.Sso.Provider) ? null : _security.Sso.Provider,
-            SessionRiskLevel: riskLevel));
+            SessionRiskLevel: riskLevel,
+            PasswordExpired: passwordExpired,
+            PasswordMaxAgeDays: _security.PasswordAgeing.MaxPasswordAgeDays > 0 ? _security.PasswordAgeing.MaxPasswordAgeDays : null));
     }
 
     // ── Refresh ────────────────────────────────────────────────────────────────
@@ -273,6 +281,11 @@ public class AuthService : IAuthService
         if (session is null || !session.IsActive)
             return null;
 
+        // Phase 2: Check idle session timeout before allowing refresh
+        if (_security.SessionTimeout.Enabled
+            && !session.IsActiveWithinIdleTimeout(_security.SessionTimeout.IdleTimeoutMinutes))
+            return null;
+
         var user = await _userRepo.GetByIdAsync(session.UserId, ct);
         if (user is null || !user.IsActive)
             return null;
@@ -283,6 +296,8 @@ public class AuthService : IAuthService
         var newExpiry = _tokenService.GetRefreshTokenExpiry();
 
         session.Rotate(newHash, newExpiry);
+        // Phase 2: Mark activity on token refresh
+        session.TouchActivity();
         _sessionRepo.Update(session);
         await _sessionRepo.SaveChangesAsync(ct);
 
@@ -344,8 +359,11 @@ public class AuthService : IAuthService
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync(ct);
 
-        // Record in password history.
-        await _passwordHistory.AddAsync(new PasswordHistoryEntry(userId, newHash), ct);
+        // Record in password history with Phase 2 archival expiry.
+        var historyExpiry = _security.PasswordAgeing.MaxPasswordAgeDays > 0
+            ? DateTime.UtcNow.AddDays(_security.PasswordAgeing.MaxPasswordAgeDays * 2)
+            : (DateTime?)null;
+        await _passwordHistory.AddAsync(new PasswordHistoryEntry(userId, newHash, historyExpiry), ct);
         await _passwordHistory.SaveChangesAsync(ct);
 
         await _audit.LogAsync(new AuditLog("ChangePassword", "User", userId.ToString(),
@@ -452,13 +470,16 @@ public class AuthService : IAuthService
             return false;
 
         var newHash = _passwordHasher.Hash(newPassword);
+        // Phase 2: UpdatePasswordHash now sets LastPasswordChangedAt and clears MustChangePassword
         user.UpdatePasswordHash(newHash);
-        user.ClearMustChangePassword();
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync(ct);
 
         // Record in password history so that re-use rules apply going forward.
-        await _passwordHistory.AddAsync(new PasswordHistoryEntry(userId, newHash), ct);
+        var historyExpiry = _security.PasswordAgeing.MaxPasswordAgeDays > 0
+            ? DateTime.UtcNow.AddDays(_security.PasswordAgeing.MaxPasswordAgeDays * 2)
+            : (DateTime?)null;
+        await _passwordHistory.AddAsync(new PasswordHistoryEntry(userId, newHash, historyExpiry), ct);
         await _passwordHistory.SaveChangesAsync(ct);
 
         await _audit.LogAsync(new AuditLog("ForceChangePassword", "User", userId.ToString(),

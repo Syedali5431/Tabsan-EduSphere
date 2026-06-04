@@ -37,7 +37,10 @@ public sealed record LoginResponse(
     bool MfaEnabled = false,
     bool SsoEnabled = false,
     string? SsoProvider = null,
-    string SessionRiskLevel = "low");
+    string SessionRiskLevel = "low",
+    // Phase 2 - ISO Security
+    bool PasswordExpired = false,
+    int? PasswordMaxAgeDays = null);
 
 /// <summary>Request body sent to POST /api/v1/auth/refresh.</summary>
 public sealed record RefreshRequest([property: Required] string RefreshToken);

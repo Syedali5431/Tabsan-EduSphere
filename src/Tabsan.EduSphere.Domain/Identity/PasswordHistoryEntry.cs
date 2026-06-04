@@ -19,13 +19,17 @@ public class PasswordHistoryEntry
     /// <summary>UTC time when this entry was recorded (i.e., when this password was set).</summary>
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>Phase 2: Optional UTC timestamp when this history entry is eligible for archival/pruning.</summary>
+    public DateTime? ExpiresAt { get; private set; }
+
     private PasswordHistoryEntry() { }
 
     /// <summary>Creates a new history entry for the given user and hash.</summary>
-    public PasswordHistoryEntry(Guid userId, string passwordHash)
+    public PasswordHistoryEntry(Guid userId, string passwordHash, DateTime? expiresAt = null)
     {
         UserId       = userId;
         PasswordHash = passwordHash;
         CreatedAt    = DateTime.UtcNow;
+        ExpiresAt    = expiresAt;
     }
 }

@@ -70,6 +70,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.LockedOutUntil)
                .IsRequired(false);
 
+        // Phase 2: Password ageing tracking
+        builder.Property(u => u.LastPasswordChangedAt)
+               .IsRequired(false);
+
         // Filtered index on locked accounts — fast admin queries for locked users.
         builder.HasIndex(u => u.IsLockedOut)
                .HasFilter("[is_locked_out] = 1")

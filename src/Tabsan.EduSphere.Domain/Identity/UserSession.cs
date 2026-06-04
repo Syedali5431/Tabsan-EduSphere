@@ -34,8 +34,22 @@ public class UserSession : BaseEntity
     /// <summary>UTC timestamp when the session was explicitly revoked (logout or admin action). Null if still valid.</summary>
     public DateTime? RevokedAt { get; private set; }
 
+    /// <summary>Phase 2: UTC timestamp of the last authenticated request made with this session. Null until first activity.</summary>
+    public DateTime? LastActivityAt { get; private set; }
+
     /// <summary>Returns true when the session can still be used to obtain a new access token.</summary>
     public bool IsActive => RevokedAt == null && ExpiresAt > DateTime.UtcNow;
+
+    /// <summary>
+    /// Phase 2: Returns true when the session is active AND has not exceeded the idle timeout.
+    /// Falls back to CreatedAt when LastActivityAt is null (legacy sessions).
+    /// </summary>
+    public bool IsActiveWithinIdleTimeout(int idleTimeoutMinutes)
+    {
+        if (!IsActive) return false;
+        var lastActivity = LastActivityAt ?? CreatedAt;
+        return lastActivity.AddMinutes(idleTimeoutMinutes) > DateTime.UtcNow;
+    }
 
     private UserSession() { }
 
@@ -51,6 +65,9 @@ public class UserSession : BaseEntity
 
     /// <summary>Invalidates this session immediately (e.g. on explicit logout or token rotation).</summary>
     public void Revoke() => RevokedAt = DateTime.UtcNow;
+
+    /// <summary>Phase 2: Updates LastActivityAt to the current UTC time. Called on each authenticated action.</summary>
+    public void TouchActivity() => LastActivityAt = DateTime.UtcNow;
 
     /// <summary>
     /// Replaces the stored refresh token hash after a successful token rotation.

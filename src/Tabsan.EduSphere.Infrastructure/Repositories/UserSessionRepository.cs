@@ -49,4 +49,34 @@ public class UserSessionRepository : IUserSessionRepository
     public Task<int> CountActiveSessionsAsync(CancellationToken ct = default)
         => _db.UserSessions
               .CountAsync(s => s.RevokedAt == null && s.ExpiresAt > DateTime.UtcNow, ct);
+
+    // ── Phase 2 - ISO Security: Session management ─────────────────────────
+
+    public Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct = default)
+        => _db.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+    public async Task<IList<UserSession>> GetActiveSessionsAsync(CancellationToken ct = default)
+        => await _db.UserSessions
+            .Where(s => s.RevokedAt == null && s.ExpiresAt > DateTime.UtcNow)
+            .Include(s => s.User).ThenInclude(u => u.Role)
+            .OrderByDescending(s => s.LastActivityAt ?? s.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+    public async Task<IList<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken ct = default)
+        => await _db.UserSessions
+            .Where(s => s.UserId == userId && s.RevokedAt == null && s.ExpiresAt > DateTime.UtcNow)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+    public async Task<IList<UserSession>> GetIdleSessionsAsync(int idleTimeoutMinutes, CancellationToken ct = default)
+    {
+        var cutoff = DateTime.UtcNow.AddMinutes(-idleTimeoutMinutes);
+        return await _db.UserSessions
+            .Where(s => s.RevokedAt == null
+                        && s.ExpiresAt > DateTime.UtcNow
+                        && (s.LastActivityAt ?? s.CreatedAt) < cutoff)
+            .AsNoTracking()
+            .ToListAsync(ct);
+    }
 }
