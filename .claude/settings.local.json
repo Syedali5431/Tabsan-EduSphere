@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet build *)",
+      "Bash(taskkill /PID 46948 /F)",
+      "Bash(powershell *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git add *)"
+    ]
+  }
+}

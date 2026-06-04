@@ -879,7 +879,7 @@ Ensure:
 
 PHASE 10 — COMPLIANCE DASHBOARD
 
-Create dashboard:
+Create Menu "Audits" in settings to contain following menus with details:
 - Audit summary
 - Security alerts
 - Backup status
