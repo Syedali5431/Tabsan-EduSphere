@@ -1,8 +1,8 @@
 # SuperAdmin User Guide
 
-Version: 1.6  
-Date: 26 May 2026  
-Completion Status: Phase 38 complete (final separation baseline)
+Version: 1.7  
+Date: 04 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 ## 1. Purpose
 
@@ -129,18 +129,97 @@ For accessibility:
 - Keep high-contrast option available
 - Avoid theme policies that reduce readability
 
-## 9. Security and Audit Oversight
+## 9. Security and Audit Oversight (ISO 27001 Enhanced)
 
-Areas to monitor:
-- Account lockout trends
-- Password policy enforcement
-- Privileged changes and publication events
-- Administrative request lifecycle
+### 9.1 Audit Logging (ISO 27001 A.12.4)
 
-If Advanced Audit module is active:
-- Review high-risk action logs regularly
-- Archive logs per policy
-- Investigate anomalies quickly
+The audit_logs table now captures full context for every auditable action:
+- **ActorRole**: The role of the user performing the action.
+- **UserAgent & DeviceInfo**: Client browser and device details.
+- **CorrelationId**: Unique ID for tracing actions across distributed services.
+- **Severity**: Event severity — Info, Warning, Error, or Critical.
+- **EventCategory**: Event grouping — Security, Academic, Financial, System, Compliance, UserManagement.
+
+Audit logs are **immutable** — records cannot be updated or deleted. Any attempt to modify audit data is blocked at the database level.
+
+To review audit logs, use the audit dashboard at **Settings > Audit Logs** with filters for:
+- Actor user, role, action, entity name
+- Severity level and event category
+- Date range and correlation ID
+- Export to CSV, Excel, or PDF for compliance evidence
+
+### 9.2 Password Policy & Session Security (ISO 27001 A.9.4)
+
+- **Password Ageing**: Passwords expire after 90 days. Users are prompted to change on next login.
+- **Password History**: The last 5 passwords cannot be reused. History entries auto-expire.
+- **Account Lockout**: 5 failed attempts trigger account lockout.
+- **MFA (Multi-Factor Authentication)**: TOTP-based MFA available; enable in user profile.
+- **Idle Session Timeout**: Sessions without activity for 30 minutes are revoked.
+- **Session Management**: View and revoke active sessions at **Settings > Account Security > Active Sessions**.
+
+### 9.3 Login Activity Monitoring (ISO 27001 A.12.4.1)
+
+Every login attempt is recorded in the `login_activity_logs` table with:
+- Username, IP address, user agent, device info
+- Success/failure status and failure reason (InvalidCredentials, MfaRequired, ConcurrencyLimitReached, SessionRiskBlocked)
+- Risk level assessment (Low/Medium/High)
+- Account lockout state at time of attempt
+
+Review login activity at **Settings > Login Activity** with filters for user, status, risk level, date range.
+
+### 9.4 Data Protection & Classification (ISO 27001 A.8.2, A.18.1.4)
+
+- **Data Classification**: Entities tagged as Public, Internal, Confidential, or Restricted. View at **Settings > Data Protection > Classifications**.
+- **Encryption Service**: AES-256-CBC encryption available for sensitive data. Access via Data Protection API.
+- **Data Masking**: PII masking for UI display (email, phone, name).
+- **GDPR Consent**: `ConsentToMonitoring` flag on user accounts. `DataRetentionDate` for data lifecycle management.
+
+### 9.5 Incident Management (ISO 27001 A.16)
+
+Full incident lifecycle tracking at **Settings > Incidents**:
+- **Status flow**: Open → Investigating → Resolved → Closed (reopen supported)
+- **Severity**: Low / Medium / High / Critical
+- **Category**: Security / Breach / DataLoss / AccessViolation / System / Other
+- **Assignment**: Assign incidents to investigators; track resolution timeline
+
+### 9.6 Backup & Disaster Recovery (ISO 27001 A.17)
+
+Backup operations logged in `backup_logs` with:
+- Type (Full/Differential/Log), file path, size, duration
+- Status (Started/Completed/Failed/Verified), checksum, error details
+- Backup verification records in `backup_verification_logs` (IntegrityCheck, RestoreTest)
+
+Review backup status at **Settings > Backup**, including latest status summary per backup type.
+
+### 9.7 Policy Document Management (ISO 9001 7.5)
+
+Version-controlled policy documents at **Settings > Policy Documents**:
+- **Status**: Draft → Published → Archived
+- **Access Level**: Public / Internal / Confidential / Restricted
+- **Version History**: Every content update creates an immutable version record
+- **Categories**: Security, Compliance, Academic, Operations
+
+### 9.8 Compliance Dashboard (ISO 27001 + ISO 9001)
+
+Aggregated compliance posture at **Settings > Compliance** with 7 sections:
+1. **Audit**: Recent activity, severity distribution, event categories
+2. **Security**: Active sessions, password policy compliance, MFA adoption
+3. **Backup**: Latest operations, verification results, DR readiness
+4. **Incidents**: Status breakdown, severity distribution, aging
+5. **Activity**: Login trends, failure patterns, suspicious IPs
+6. **Data Protection**: Classification coverage, consent tracking
+7. **Documents**: Policy document status, version counts
+
+### 9.9 Data Integrity Checks (ISO 27001 A.12.7)
+
+Automated integrity verification at **Settings > Data Integrity** covers:
+- Audit coverage for critical entities
+- Orphaned active users without role assignments
+- Student accounts without profiles
+- Open offerings in closed semesters
+- Unpublished results with pending marks
+- Dropped enrollment consistency
+- Pending modification requests
 
 ## 10. Operational Workflows
 
@@ -183,20 +262,32 @@ If Advanced Audit module is active:
 - Inspect lockout and failed attempt controls
 - Validate identity provider/config state
 
-## 12. SuperAdmin Weekly Checklist
+## 12. SuperAdmin Weekly Checklist (ISO Enhanced)
 
 - Verify license health and upcoming expiry window
 - Review module status and any pending change requests
 - Review privileged access changes
 - Validate report and sidebar permission consistency
 - Check critical notifications and operational warnings
+- **Review Compliance Dashboard**: Check all 7 sections for anomalies
+- **Review Audit Logs**: Spot-check high-severity and security-category events
+- **Review Login Activity**: Check for suspicious IP patterns or brute-force attempts
+- **Review Open Incidents**: Ensure critical/high incidents are progressing
+- **Verify Backup Status**: Confirm latest backup completed successfully
 
-## 13. SuperAdmin Monthly Checklist
+## 13. SuperAdmin Monthly Checklist (ISO Enhanced)
 
 - Conduct role and permission audit
 - Review module utilization and disable unused optional modules
-- Validate backup and recovery readiness
+- Validate backup and recovery readiness — verify at least one RestoreTest passed
 - Review security findings and remediation progress
+- **Review Incident Trends**: Analyze incident categories and resolution times
+- **Review Password Policy Compliance**: Check password expiry status across users
+- **Review Active Sessions**: Revoke stale or suspicious sessions
+- **Review Data Classification Coverage**: Ensure all critical entities classified
+- **Review Policy Documents**: Update and publish any documents in Draft for >30 days
+- **Run Data Integrity Check**: Review findings and remediate warnings/errors
+- **Archive Expired Audit Logs**: Per institutional retention policy
 
 ## 14. Institute Parity Support Handover Checklist
 
@@ -245,6 +336,15 @@ Common parity-scope signals to record:
 - Correction operations require reasoned audit context and published-state eligibility before change.
 - Import report access is hardened through one-time token validation and expiry controls.
 - Full dummy validation now expects `DemoDatasetVersion = FullDummyData-v9` with mixed results lifecycle and attendance timeline seed data.
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- **ISO 27001 (Information Security)** and **ISO 9001 (Quality Management)** compliance instrumentation deployed across 10 phases.
+- New governance surfaces: Compliance Dashboard, Audit Logs (enhanced), Login Activity Monitor, Incident Management, Backup Status, Data Protection, Policy Documents, Data Integrity.
+- Audit logging enhanced with CorrelationId, Severity, EventCategory, ActorRole, UserAgent, DeviceInfo — all audit records immutable.
+- Security hardening: 90-day password ageing, password history with expiry, 30-minute idle session timeout, MFA support, session revocation.
+- 7 new compliance tables and 20+ new indexes for optimized compliance queries.
+- All changes are additive and backward-compatible. See Section 9 for full operational details.
 
 ## 15. SuperAdmin Governance Runbook
 

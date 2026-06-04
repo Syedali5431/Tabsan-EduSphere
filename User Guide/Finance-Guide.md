@@ -1,8 +1,8 @@
 # Finance User Guide
 
-Version: 1.0  
-Date: 02 June 2026  
-Completion Status: Detailed finance operations baseline  
+Version: 1.1  
+Date: 04 June 2026  
+Completion Status: Detailed finance operations baseline + ISO 27001 & ISO 9001 Compliance  
 
 ## 1. Purpose
 
@@ -32,6 +32,7 @@ Recent runtime synchronization includes:
 - Deterministic demo seed rows for payment filter testing.
 - Improved CSV payment import date compatibility for spreadsheet formats.
 - Stronger scope behavior in all-scope superadmin contexts when filtering by institution type.
+- **ISO Compliance (June 2026)**: Enhanced audit logging now captures all payment operations with full context. Payment data classified as Restricted per data protection scheme. Data masking applied to sensitive financial information in UI exports. Encryption service available for sensitive payment data.
 
 ## 4. Login and Session Safety
 
@@ -45,6 +46,16 @@ Security recommendations:
 - Do not share credentials.
 - Do not keep sessions open on unattended devices.
 - Report suspicious payment or access activity immediately.
+- **Enhanced Security**: Passwords expire every 90 days. Sessions timeout after 30 minutes of inactivity. All login attempts are monitored. Enable MFA in your profile settings for stronger account protection.
+
+### 4.1 Data Protection and Compliance (ISO 27001)
+
+Finance operations handle Restricted-classification data:
+- Payment records and financial transactions are classified as Restricted — highest protection level.
+- All payment operations are audit-logged with full context (who, what, when, from where).
+- Data masking hides sensitive fields in UI exports and reports.
+- AES-256 encryption is available for sensitive payment data storage and transmission.
+- Report any suspicious payment activity or data anomalies through the incident reporting system (Settings > Incidents).
 
 ## 5. Finance Dashboard Routine
 
@@ -234,6 +245,14 @@ Before each release window:
 - Export only what is needed for authorized tasks.
 - Avoid sharing raw files through unsecured channels.
 - Follow institution retention and deletion policy.
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Payment operations now fully audit-logged with immutable records.
+- Payment data classified as Restricted with enhanced protection controls.
+- Data masking and AES-256 encryption for sensitive financial data.
+- Enhanced password policy, session timeout, and login monitoring active.
+- All changes are additive and backward-compatible.
 
 ## 18. Conclusion
 

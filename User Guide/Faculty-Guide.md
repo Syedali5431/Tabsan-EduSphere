@@ -1,8 +1,8 @@
 # Faculty User Guide
 
-Version: 1.6  
-Date: 26 May 2026  
-Completion Status: Phase 38 complete (final separation baseline)
+Version: 1.7  
+Date: 04 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 ## 1. Purpose
 
@@ -16,6 +16,7 @@ This guide explains faculty workflows in Tabsan EduSphere: teaching setup, assig
 - Report and analytics requests now enforce assignment plus institute compatibility more strictly.
 - Parent notification fan-out is supported for published results and selected academic alerts where parent module is active.
 - Export behavior for analytics/reporting is standardized across synchronous and queued job paths.
+- **Security Enhancements (June 2026)**: Password policy now enforces 90-day expiry and prevents reuse of last 5 passwords. Sessions automatically timeout after 30 minutes of inactivity. All login attempts are monitored for account protection. Enable MFA in your profile settings for additional security. Report any suspicious activity through the incident reporting system.
 
 ## 1.2 Documentation Baseline (15 May 2026)
 
@@ -23,6 +24,7 @@ This guide explains faculty workflows in Tabsan EduSphere: teaching setup, assig
 - Student and faculty-facing labels remain institution-aware (Semester/Grade/Year) by policy.
 - User import templates are now role-specific under User Import Sheets and aligned to admin onboarding workflows.
 - Standard DB deployment run path is Scripts/01 through Scripts/05.
+- **ISO Compliance (New)**: Enhanced security controls active — password ageing, session timeout, login monitoring, and MFA support. Review Section 2.1 for details.
 
 ## 1.3 Final Release Packaging Update (Phase 37/38)
 
@@ -41,6 +43,15 @@ Faculty accounts are created by SuperAdmin or Admin. After login, your access de
 - Active modules
 
 If menus are missing, contact your admin to verify role and module assignment.
+
+### 2.1 Security and Account Protection (ISO 27001)
+
+Your account is protected by enhanced security controls:
+- **Password Policy**: Passwords must be 12+ characters with uppercase, lowercase, digit, and special character. Passwords expire every 90 days and cannot match your last 5 passwords.
+- **Session Timeout**: After 30 minutes of inactivity, your session is automatically revoked. You will need to log in again.
+- **Login Monitoring**: All login attempts (successful and failed) are recorded for your protection. Unusual activity triggers security alerts.
+- **MFA (Multi-Factor Authentication)**: Available in your profile settings. Strongly recommended for all faculty accounts.
+- **Audit Logging**: Key actions (grading, attendance changes, result publication) are logged with full context for compliance and traceability.
 
 ## 3. Faculty Dashboard
 
@@ -271,6 +282,14 @@ Use high-contrast or readable themes when reviewing long grading sessions.
 - University mode supports degree/transcript generation flows for authorized, scoped operations.
 - School/College mode exposes additional student certificate workflows managed by authorized staff, with student download visibility.
 - Period selector wording in certificate workflow is now context-aware (`Class` for university, `Semester` otherwise).
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Enhanced password policy (90-day expiry, 5-password history, 12-char minimum).
+- Idle session timeout (30 minutes) now enforced.
+- Login activity monitoring active — all authentication attempts logged.
+- MFA available for all faculty accounts.
+- All changes are additive and backward-compatible.
 
 ## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
 

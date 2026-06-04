@@ -1,9 +1,9 @@
 # Tabsan EduSphere – User Guide
 
-**Version:** 1.6  
-**Date:** 26 May 2026  
+**Version:** 1.7  
+**Date:** 04 June 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
-**Completion Status:** Phase 38 complete (final separation baseline)  
+**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)  
 **Audience:** Students, Faculty, Admins, Finance, Super Admins
 
 ---
@@ -63,6 +63,17 @@
 - Parent portal enhancements include linked-student read-only views and parent notification fan-out (where enabled).
 - UAT, SAT, and Output documentation are available in UAT-SAT docs/ for validation and acceptance.
 - Import/export (CSV, PDF, Excel) and index maintenance scripts are included for admins and IT staff.
+
+### ISO 27001 + ISO 9001 Compliance (Phase 1-10, June 2026)
+- **Audit Logging**: All sensitive actions are now recorded with full context — actor role, IP address, user agent, device info, correlation ID for tracing, severity level, and event category. Audit logs are immutable (cannot be modified or deleted).
+- **Security Hardening**: Password ageing policy (90-day maximum), password history with expiry, idle session timeout (30 minutes), and MFA support are now active.
+- **Login Activity Monitoring**: Every login attempt (success/failure/MFA/lockout) is recorded in the login_activity_logs table for security review.
+- **Backup & Disaster Recovery Logging**: All backup operations (Full/Differential/Log) are logged with checksums, duration, and status. Backup verification with integrity checks and restore tests is recorded.
+- **Data Protection**: Data classification scheme (Public/Internal/Confidential/Restricted) applied to all major entities. AES-256 encryption service and PII data masking available. GDPR consent tracking (ConsentToMonitoring) and data retention scheduling (DataRetentionDate) on user accounts.
+- **Incident Management**: Full incident lifecycle (Open → Investigating → Resolved → Closed) with severity classification (Low/Medium/High/Critical) and category tracking (Security/Breach/DataLoss/AccessViolation/System).
+- **Policy Document Management**: ISO 9001 documented information system with version tracking, access control levels, and Draft/Published/Archived lifecycle.
+- **Data Integrity Checks**: Automated integrity verification covering audit coverage, orphaned users, enrollment consistency, course/semester integrity, and pending modification requests.
+- **Compliance Dashboard**: Aggregated compliance posture available at Settings > Compliance with 7 operational sections — Audit, Security, Backup, Incidents, Activity, Data Protection, and Documents.
 
 ---
 
@@ -324,22 +335,38 @@ Use this matrix to understand common access expectations.
 
 Users should follow these security requirements at all times.
 
-- Use strong passwords and avoid reusing old passwords.
+- Use strong passwords (minimum 12 characters with uppercase, lowercase, digit, and special character).
+- Do not reuse your last 5 passwords — the system tracks password history.
+- Passwords expire after 90 days per ISO 27001 A.9.4.3 compliance.
 - Do not share credentials across users.
 - Change password immediately if compromise is suspected.
 - Log out from shared/public devices.
-- Report suspicious login attempts to Admin/SuperAdmin.
+- Report suspicious login attempts to Admin/SuperAdmin — all login activity is monitored and logged.
+- Sessions automatically timeout after 30 minutes of inactivity.
+- MFA (Multi-Factor Authentication) is available — enable it in your profile settings for additional account protection.
 
 ### Force-Change Password Expectations
 
-When prompted for forced change:
+When prompted for forced change (password expired or admin-required reset):
 
 1. Enter current password.
-2. Enter new password meeting policy constraints.
-3. Confirm new password exactly.
+2. Enter new password meeting policy constraints (12+ chars, mixed case, digit, special char).
+3. Confirm new password exactly. The new password must not match any of your last 5 passwords.
 4. Re-login and verify account access.
 
-## 11. Cross-Role Escalation Path
+## 11. Compliance Dashboard (ISO 27001 + ISO 9001)
+
+SuperAdmin users can access the compliance dashboard at **Settings > Compliance** to view:
+
+- **Audit Summary**: Recent audit activity, severity distribution, event categories.
+- **Security Status**: Active sessions, password policy compliance, MFA adoption rate.
+- **Backup Status**: Latest backup operations, verification results, DR readiness.
+- **Incident Overview**: Open/Investigating/Resolved incidents, severity breakdown.
+- **Activity Monitoring**: Login trends, failed attempt patterns, suspicious IP activity.
+- **Data Protection**: Classification coverage, consent tracking status.
+- **Document Management**: Policy document status (Published/Draft/Archived).
+
+## 12. Cross-Role Escalation Path (Updated)
 
 Use this route for fast and correct issue handling.
 
@@ -354,15 +381,17 @@ Use this route for fast and correct issue handling.
 
 4. SuperAdmin -> IT/Platform Team
 - Infrastructure failures, deployment regressions, security incidents.
+5. Any Role -> Incident Report
+- Security incidents, data breaches, suspicious activity → report via incident management workflow to Admin/SuperAdmin.
 
-## 12. Reporting and Export Standards
+## 13. Reporting and Export Standards
 
 - Use institution-appropriate filters before export.
 - Validate report scope (department/tenant/campus/time window).
 - Archive critical exports per institutional retention policy.
 - For queued exports, track job completion before sharing output.
 
-## 13. Common Operational Scenarios
+## 14. Common Operational Scenarios (Updated)
 
 1. Menu visible but route denied
 - Cause: role has sidebar visibility but lacks effective route entitlement.
@@ -380,7 +409,15 @@ Use this route for fast and correct issue handling.
 - Cause: filter mismatch between analytics and report view.
 - Action: rerun both with identical scope filters and compare totals.
 
-## 14. Support Ticket Template
+5. Suspicious login activity detected
+- Cause: failed login attempts from unknown IP or brute-force pattern.
+- Action: SuperAdmin reviews login_activity_logs and incident_logs; blocks suspicious IPs; forces password reset for affected accounts.
+
+6. Backup operation failed
+- Cause: insufficient disk space, network interruption, or permission issue.
+- Action: SuperAdmin checks backup_logs for error details; verifies backup_verification_logs for last successful backup; triggers manual retry.
+
+## 15. Support Ticket Template (Updated)
 
 Include these fields in every support request:
 
@@ -393,8 +430,9 @@ Include these fields in every support request:
 - Steps to reproduce
 - Expected vs actual behavior
 - Screenshot and correlation/request ID
+- For security incidents: include incident ID, severity assessment, and affected user/IP
 
-## 15. Release Readiness for End Users
+## 16. Release Readiness for End Users
 
 Before a major academic cycle starts:
 
@@ -403,9 +441,20 @@ Before a major academic cycle starts:
 - Core module visibility spot-tested by role.
 - Attendance and result pipelines validated with sample data.
 - Notification channels tested.
+- **ISO Compliance**: Verify compliance dashboard shows green status; confirm backup operations succeeding; verify audit logs recording; check no open critical incidents.
 
 After release:
 
 - Confirm no major access anomalies in first 24 hours.
 - Run role-based smoke scenarios.
 - Publish known-issues bulletin if needed.
+- Review compliance dashboard for any post-deployment anomalies.
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- ISO 27001 (Information Security) and ISO 9001 (Quality Management) compliance instrumentation completed across 10 phases.
+- New compliance tables: login_activity_logs, backup_logs, incident_logs, policy_documents, policy_document_versions, backup_verification_logs, data_classification_entries.
+- Enhanced audit_logs with CorrelationId, Severity, EventCategory, ActorRole, UserAgent, DeviceInfo.
+- Password ageing (90-day), password history expiry, idle session timeout (30 min), and MFA support active.
+- Compliance dashboard at Settings > Compliance with 7-section posture overview.
+- All changes are additive and backward-compatible.

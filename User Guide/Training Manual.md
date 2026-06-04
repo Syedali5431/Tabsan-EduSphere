@@ -2,10 +2,10 @@
 
 # Tabsan EduSphere – Training Manual
 
-**Version:** 1.7  
-**Date:** 28 May 2026  
+**Version:** 1.8  
+**Date:** 04 June 2026  
 **Aligned With PRD:** v1.8 | Modules v1.3  
-**Completion Status:** Phase 38 complete (final separation baseline)  
+**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)  
 **Audience:** Trainers, IT Staff, Finance, Super Admins, Department Coordinators
 
 ---
@@ -69,6 +69,18 @@
 - Include tenant operations settings behavior overview for SaaS/multi-tenant readiness context.
 - Verify role and institute filters work together for data scoping and authorization.
 
+### ISO 27001 + ISO 9001 Compliance Training (June 2026)
+- Include compliance dashboard walkthrough covering all 7 sections (Audit, Security, Backup, Incidents, Activity, Data Protection, Documents).
+- Include incident management lifecycle drill: creating, investigating, resolving, and closing incidents.
+- Include audit log review exercise: filtering by severity, event category, actor role, and date range.
+- Include backup status verification and backup verification log review.
+- Include policy document workflow: creating, updating (versioning), publishing, and archiving documents.
+- Include data classification walkthrough: assigning classification levels to entities and reviewing classification coverage.
+- Include data integrity check exercise: running checks, interpreting findings, and remediating issues.
+- Include login activity monitoring exercise: reviewing login patterns, identifying suspicious activity.
+- Include password policy and session security awareness: 90-day expiry, 5-password history, 30-min idle timeout, MFA setup.
+- Include data protection overview: encryption service, data masking, GDPR consent tracking.
+
 ---
 
 ## 2. Pre-Training Setup Checklist (Updated)
@@ -78,6 +90,8 @@
 - [ ] At least one test account per role exists (Student, Faculty, Admin, Super Admin)
 - [ ] Sample data is seeded: at least two departments, two programs, five courses, three semesters, and ten students
 - [ ] At least one assignment, one quiz, one result set, and one FYP meeting are pre-created
+- [ ] ISO compliance data seeded: login activity records, backup logs, incidents, policy documents, data classifications
+- [ ] Compliance dashboard accessible at Settings > Compliance with populated data
 - [ ] All trainers have reviewed the User Guide before delivery
 - [ ] Projector or screen share is ready for live demonstration
 - [ ] UAT, SAT, and Output docs in UAT-SAT docs/ are reviewed
@@ -367,7 +381,7 @@ Each participant should:
 
 ---
 
-## 14. Training Assessment Rubric
+## 14. Training Assessment Rubric (Updated)
 
 Score each participant area from 1 to 5.
 
@@ -376,17 +390,62 @@ Score each participant area from 1 to 5.
 3. Governance and role-boundary awareness
 4. Troubleshooting readiness
 5. Reporting/export accuracy
+6. **Security and compliance awareness (New)**: Can identify suspicious activity, understands password policy, knows incident reporting path
 
 Pass recommendation:
-- Average >= 4.0 with no score below 3 in governance awareness.
+- Average >= 4.0 with no score below 3 in governance awareness and security/compliance awareness.
 
 ---
 
-## 15. Post-Training Certification Checklist
+## 15. Post-Training Certification Checklist (Updated)
 
 - Participant completed all mandatory role exercises.
 - Participant passed scenario-based validation.
 - Participant can explain escalation path for scope/access issues.
+- **Participant can locate and interpret the Compliance Dashboard (SuperAdmin).**
+- **Participant can report a security incident through the incident management workflow.**
+- **Participant understands password policy, session timeout, and MFA setup.**
+
+## 15.1 ISO Compliance Training Module (New)
+
+### Session: Compliance Operations for SuperAdmins (90 minutes)
+
+1. **Compliance Dashboard Tour (20 min)**
+   - Navigate Settings > Compliance
+   - Review all 7 dashboard sections
+   - Demonstrate data sources and refresh behavior
+
+2. **Audit Logging Deep Dive (15 min)**
+   - Filter audit logs by severity, category, role, date
+   - Export audit logs (CSV/Excel/PDF)
+   - Demonstrate audit immutability
+
+3. **Incident Management Drill (20 min)**
+   - Create incident (various severities)
+   - Walk through Open → Investigating → Resolved → Closed
+   - Demonstrate reopen and reassignment
+
+4. **Backup & DR Operations (15 min)**
+   - Review backup_logs and backup_verification_logs
+   - Verify backup integrity and restore test results
+   - Demonstrate backup status summary interpretation
+
+5. **Policy Document Management (10 min)**
+   - Create, update (versioning), publish, archive documents
+   - Review version history
+
+6. **Data Integrity & Protection (10 min)**
+   - Run data integrity check
+   - Review findings and remediation steps
+   - Demonstrate data classification and encryption/masking
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- New ISO Compliance Training Module added (Section 15.1) covering all 10 ISO phases.
+- Training assessment rubric updated with security and compliance awareness criterion.
+- Pre-training checklist updated to require ISO compliance seed data.
+- Post-training certification includes compliance dashboard, incident reporting, and security policy awareness.
+- All changes are additive and backward-compatible.
 - Participant can produce one export/report relevant to their role.
 - Participant signed acknowledgment of security and privacy practices.
 

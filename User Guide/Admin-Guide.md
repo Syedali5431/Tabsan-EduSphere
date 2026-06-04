@@ -2,9 +2,9 @@
 
 # Admin User Guide
 
-Version: 1.6  
-Date: 26 May 2026  
-Completion Status: Phase 38 complete (final separation baseline)
+Version: 1.7  
+Date: 04 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 ## 1. Purpose
 
@@ -20,6 +20,7 @@ This guide covers departmental administration in Tabsan EduSphere: user operatio
 - Student lifecycle views support institution-driven academic-level wording (Semester/Grade/Year).
 - School stream support for Grades 9-12 with stream-aware subject filtering is available where School mode is active.
 - Parent-facing read-only features and notifications are available when parent portal module is enabled.
+- **ISO Compliance Features (June 2026)**: Incident reporting and tracking now available for department-level security events. Data classification scheme active — student and faculty data tagged with protection levels. Audit logging enhanced with full context capture (actor role, severity, event category). Password policy enforcement visible in user management. Policy documents accessible for department-level review.
 
 ## 1.2 Documentation Baseline (15 May 2026)
 
@@ -27,6 +28,7 @@ This guide covers departmental administration in Tabsan EduSphere: user operatio
 - User import templates are role-specific in User Import Sheets: faculty-admin-import-template.csv and students-import-template.csv.
 - Standard DB deployment run path is Scripts/01 through Scripts/05.
 - Cross-phase planning and enhancement tracking is consolidated in Docs/Consolidated-Execution-Enhancements-Issues.md.
+- **ISO Compliance (New)**: Incident reporting, data classification, and enhanced audit logging are now operational. See SuperAdmin-Guide.md for governance-level compliance management.
 
 ## 1.3 Final Release Packaging Update (Phase 37/38)
 
@@ -82,6 +84,24 @@ Typical tasks:
 Security notes:
 - Do not share temporary passwords in plain channels.
 - Enforce role correctness before enabling account access.
+
+### 4.X Incident Reporting (ISO 27001 A.16)
+
+Department admins can report security and operational incidents:
+- Navigate to Settings > Incidents and click "Report Incident".
+- Provide title, description, severity (Low/Medium/High/Critical), and category.
+- Incidents are reviewed by SuperAdmin and follow Open → Investigating → Resolved → Closed workflow.
+- Track incident status and resolution from the incident list view.
+
+### 4.Y Data Classification Awareness (ISO 27001 A.8.2)
+
+All major entity types are tagged with classification levels:
+- **Public**: Department listings, course catalog — unrestricted.
+- **Internal**: Course materials, timetables — institution use only.
+- **Confidential**: Student profiles, results — limited to authorized personnel.
+- **Restricted**: Payment data, financial records — need-to-know basis only.
+
+Be mindful of classification when sharing data or exporting reports.
 
 ## 5. Academic Structure and Scheduling
 
@@ -304,6 +324,14 @@ For change requests:
 - Additional certificate uploads are admin-managed and remain restricted by tenant/campus/department scope.
 - Degree/transcript actions are hidden automatically when university mode is disabled in policy/license.
 - Period filter wording is now context-aware (`Class` in university mode; `Semester` in non-university modes).
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Incident reporting workflow now available for Admin users to report security and operational events.
+- Data classification scheme applied across all major entities (Public/Internal/Confidential/Restricted).
+- Enhanced audit logging with severity, event category, and full context capture.
+- Password ageing policy (90-day) and session timeout (30 min) enforced.
+- All changes are additive and backward-compatible.
 
 ## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
 

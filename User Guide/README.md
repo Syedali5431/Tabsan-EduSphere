@@ -2,8 +2,8 @@
 
 This folder contains role-based manuals for day-to-day use of the platform.
 
-Version: 1.6 — updated 26 May 2026  
-Completion Status: Phase 38 complete (final separation baseline)
+Version: 1.7 — updated 04 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 Repository Sync Note (15 May 2026):
 
@@ -50,6 +50,18 @@ Repository Sync Note (15 May 2026):
 - User import templates are now role-specific under User Import Sheets: faculty-admin-import-template.csv and students-import-template.csv.
 - Standard database deployment run order is Scripts/01-Schema-Current.sql through Scripts/05-PostDeployment-Checks.sql.
 - Consolidated planning and enhancement history is maintained in Docs/Consolidated-Execution-Enhancements-Issues.md.
+- **ISO 27001 + ISO 9001 Compliance (New)**: The platform now includes full compliance instrumentation across 10 phases — audit logging with immutability, password ageing & session timeout, login activity monitoring, backup & DR logging, data protection & classification, incident management, policy document versioning, backup verification, data integrity checks, and a compliance dashboard. See SuperAdmin-Guide.md and Admin-Guide.md for operational details.
+- **Compliance Dashboard (New)**: SuperAdmin users can access the compliance dashboard at Settings > Compliance providing aggregated posture across audit, security, backup, incidents, activity, data protection, and documents.
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- **ISO 27001 (Information Security)** and **ISO 9001 (Quality Management)** compliance instrumentation deployed across 10 phases.
+- New compliance tables: login_activity_logs, backup_logs, incident_logs, policy_documents, policy_document_versions, backup_verification_logs, data_classification_entries.
+- New columns on existing tables: audit_logs (CorrelationId, Severity, EventCategory, ActorRole, UserAgent, DeviceInfo), users (LastPasswordChangedAt, ConsentToMonitoring, DataRetentionDate), password_history (ExpiresAt), user_sessions (LastActivityAt).
+- 20+ new performance indexes for compliance queries.
+- Compliance dashboard at Settings > Compliance with 7-section aggregated posture.
+- New API endpoints: login-activity, backup/logs, incidents, policy-documents, backup-verifications, data-protection, data-integrity/check, compliance/dashboard.
+- All changes are additive and backward-compatible — no existing APIs or workflows modified.
 
 ## Phase 40.2 Unified Update (2026-05-21)
 
@@ -156,6 +168,8 @@ The following outcomes should be achievable after reading the role-specific guid
 - User understands permission boundaries and when access denial is expected.
 - User can identify whether an issue is data, scope, module, or license related.
 - User can provide support-ready incident details (role, institution mode, tenant/campus, module, route, timestamp).
+- User understands basic security requirements: password policy, MFA, session timeout, and audit logging.
+- SuperAdmin users can interpret the Compliance Dashboard and escalate security incidents through the incident management workflow.
 
 ## Documentation Maintenance Protocol
 
@@ -166,3 +180,4 @@ When the product is updated, refresh these documents in this order:
 3. Update Training Manual.md with new session drills.
 4. Verify all internal references and script/version markers.
 5. Include a dated release-note block in each modified guide.
+6. Update ISO compliance sections when new controls or audit requirements are added.

@@ -1,8 +1,8 @@
 # Student User Guide
 
-Version: 1.6  
-Date: 26 May 2026  
-Completion Status: Phase 38 complete (final separation baseline)
+Version: 1.7  
+Date: 04 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 ## 1. Purpose
 
@@ -16,6 +16,7 @@ This guide helps students use Tabsan EduSphere for coursework, attendance, quizz
 - Parent-linked notification experience can be active in school-focused deployments where parent module is enabled.
 - Results, transcript, and data surfaces follow tighter role and institute scope boundaries for your privacy.
 - Performance analytics and trends are now available in some institutions; view your individual performance compared to class averages (Phase 31.2).
+- **Account Security (June 2026)**: Your account is now protected with enhanced security — passwords expire every 90 days, sessions timeout after 30 minutes of inactivity, and all login activity is monitored. Enable MFA (Multi-Factor Authentication) in your profile settings for extra protection.
 
 ## 1.2 Documentation Baseline (15 May 2026)
 
@@ -40,6 +41,15 @@ This guide helps students use Tabsan EduSphere for coursework, attendance, quizz
 4. If your institution allows student self-registration, use Sign Up with your registration number.
 
 If login fails multiple times, contact your department admin for account unlock support.
+
+### 2.1 Account Security and Privacy (ISO 27001)
+
+Your account is protected by institutional security standards:
+- **Strong Passwords**: Minimum 12 characters with uppercase, lowercase, digit, and special character. Change your password every 90 days when prompted. Your last 5 passwords cannot be reused.
+- **Session Safety**: Always log out when using shared or public computers. Your session automatically expires after 30 minutes of inactivity.
+- **Login Protection**: All login attempts are monitored. After 5 failed attempts, your account is temporarily locked. Contact your department admin if locked out.
+- **MFA (Multi-Factor Authentication)**: Enable in your profile settings for stronger account security.
+- **Data Privacy**: Your personal data is classified as Confidential and protected per GDPR. You have the right to access, correct, or request deletion of your data. Contact your institution's Data Protection Officer for privacy requests.
 
 ## 3. Dashboard Overview
 
@@ -230,6 +240,15 @@ Use this weekly:
 	- School/College context: students can view/download additional certificates uploaded by authorized admins.
 - Degree/transcript options may be hidden when university mode is disabled by active policy/license.
 - Period wording in related academic/certificate views is context-aware (`Class` in university mode; `Semester` in non-university modes).
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Enhanced password policy: 12-character minimum, 90-day expiry, 5-password history.
+- Idle session timeout: 30 minutes.
+- Login activity monitoring for account protection.
+- MFA available in profile settings.
+- Data privacy rights and consent tracking per GDPR.
+- All changes are additive and backward-compatible.
 
 ## Phase 40.5 Results and Attendance Governance Update (2026-05-28)
 

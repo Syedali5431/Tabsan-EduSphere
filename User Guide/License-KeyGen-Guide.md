@@ -1,9 +1,9 @@
 # License KeyGen User Guide
 
-Version: 1.6  
-Date: 26 May 2026  
+Version: 1.7  
+Date: 04 June 2026  
 Applies to: tools/KeyGen/KeyGen.cs  
-Completion Status: Phase 38 complete (final separation baseline)
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
 
 ## 1. Purpose
 
@@ -267,15 +267,16 @@ Run these checks in test and production.
 4. Publish revocation bulletin to operations owners.
 5. Confirm all environments reject old-key signatures.
 
-## 16. Security Baseline Controls
+## 16. Security Baseline Controls (ISO 27001 Enhanced)
 
 - Keep private keys only in HSM or managed vault where available.
 - Enforce MFA for all key-access accounts.
-- Log every private-key retrieval operation.
+- Log every private-key retrieval operation — all key operations are audit-logged with immutable records.
 - Rotate AES keys separately from RSA keys.
 - Never attach private keys in tickets, email, or chat.
+- **ISO 27001 Alignment**: Key management practices comply with ISO 27001 A.10 (Cryptography) controls. All license generation and key rotation events are captured in audit_logs with EventCategory='Security' and appropriate severity level.
 
-## 17. License Audit Record Template
+## 17. License Audit Record Template (ISO Enhanced)
 
 Minimum audit fields:
 
@@ -287,4 +288,13 @@ Minimum audit fields:
 - Approver and operator identities
 - Activation result and verification timestamp
 - Incident reference if reissued/revoked
+- Audit correlation ID for traceability across systems
+
+## Phase 40.6 ISO 27001 + ISO 9001 Compliance Update (2026-06-04)
+
+- Key management security controls aligned with ISO 27001 A.10 (Cryptography).
+- All license generation and key rotation events audit-logged with immutable records.
+- Audit record template enhanced with correlation ID for distributed tracing.
+- MFA enforcement and private-key vault storage requirements reaffirmed.
+- All changes are additive and backward-compatible.
 
