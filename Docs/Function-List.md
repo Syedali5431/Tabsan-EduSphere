@@ -4,6 +4,21 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| LoginActivityLog (entity) | Immutable record of every login attempt with structured fields for monitoring | src/Tabsan.EduSphere.Domain/Activity/LoginActivityLog.cs |
+| ILoginActivityRepository.AddAsync | Appends a new login activity record | src/Tabsan.EduSphere.Domain/Interfaces/ILoginActivityRepository.cs |
+| LoginActivityRepository.AddAsync | EF Core implementation — persists login activity entries | src/Tabsan.EduSphere.Infrastructure/Repositories/LoginActivityRepository.cs |
+| ILoginActivityService.GetActivityAsync | Paged query of login activity with filters | src/Tabsan.EduSphere.Application/Interfaces/ILoginActivityService.cs |
+| ILoginActivityService.GetSummaryAsync | Aggregated dashboard summary with daily breakdown, top failures, top IPs | src/Tabsan.EduSphere.Application/Interfaces/ILoginActivityService.cs |
+| LoginActivityService.GetActivityAsync | EF query implementation with user/status/risk/reason/date filters | src/Tabsan.EduSphere.Infrastructure/Activity/LoginActivityService.cs |
+| LoginActivityService.GetSummaryAsync | In-memory aggregation of login data for dashboard trends | src/Tabsan.EduSphere.Infrastructure/Activity/LoginActivityService.cs |
+| LoginActivityFilterDto | Filter DTO (query, userId, isSuccess, riskLevel, failureReason, fromUtc, toUtc, page, pageSize) | src/Tabsan.EduSphere.Application/DTOs/LoginActivityDtos.cs |
+| LoginActivityItemDto | Flat response DTO for login activity records | src/Tabsan.EduSphere.Application/DTOs/LoginActivityDtos.cs |
+| LoginActivitySummaryDto | Dashboard summary DTO with DailyBreakdown, TopFailureReasons, TopIps | src/Tabsan.EduSphere.Application/DTOs/LoginActivityDtos.cs |
+| AuthService.RecordLoginActivityAsync | Fire-and-forget helper that writes a LoginActivityLog entry after every login attempt | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| LoginActivityController.GetActivity | GET /api/v1/login-activity — paged query with Admin/SuperAdmin auth | src/Tabsan.EduSphere.API/Controllers/LoginActivityController.cs |
+| LoginActivityController.GetSummary | GET /api/v1/login-activity/summary — dashboard trends with daily breakdown | src/Tabsan.EduSphere.API/Controllers/LoginActivityController.cs |
+| LoginActivityLogConfiguration.Configure | EF Core fluent config for login_activity_logs table and 4 indexes | src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/LoginActivityLogConfiguration.cs |
+| ApplicationDbContext.LoginActivityLogs | DbSet for login_activity_logs table | src/Tabsan.EduSphere.Infrastructure/Persistence/ApplicationDbContext.cs |
 | User.LastPasswordChangedAt | Tracks UTC timestamp of most recent password change for ageing policy | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.IsPasswordExpired(maxAgeDays) | Returns true when password has exceeded the maximum allowed age | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | PasswordHistoryEntry.ExpiresAt | Optional UTC timestamp for history entry archival/pruning | src/Tabsan.EduSphere.Domain/Identity/PasswordHistoryEntry.cs |

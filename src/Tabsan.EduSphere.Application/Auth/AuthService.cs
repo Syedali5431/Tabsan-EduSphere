@@ -1,5 +1,6 @@
 using Tabsan.EduSphere.Application.DTOs.Auth;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Domain.Activity;
 using Tabsan.EduSphere.Domain.Auditing;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Interfaces;
@@ -25,6 +26,8 @@ public class AuthService : IAuthService
     private readonly ILicenseRepository _licenseRepo;
     private readonly ITotpService _totp;
     private readonly AuthSecurityOptions _security;
+    // Phase 3 - Login Activity Monitoring
+    private readonly ILoginActivityRepository _loginActivity;
 
     public AuthService(
         IUserRepository userRepo,
@@ -35,7 +38,8 @@ public class AuthService : IAuthService
         IPasswordHistoryRepository passwordHistory,
         ILicenseRepository licenseRepo,
         ITotpService totp,
-        IOptions<AuthSecurityOptions> security)
+        IOptions<AuthSecurityOptions> security,
+        ILoginActivityRepository? loginActivity = null)
     {
         _userRepo        = userRepo;
         _sessionRepo     = sessionRepo;
@@ -46,6 +50,7 @@ public class AuthService : IAuthService
         _licenseRepo     = licenseRepo;
         _totp            = totp;
         _security        = security.Value;
+        _loginActivity   = loginActivity!;
     }
 
     public Task<AuthSecurityProfileResponse> GetSecurityProfileAsync(CancellationToken ct = default)
@@ -84,6 +89,8 @@ public class AuthService : IAuthService
                 oldValuesJson: null,
                 newValuesJson: "{\"reason\":\"inactive_or_not_found\",\"username\":\"" + request.Username + "\"}",
                 ipAddress: ipAddress), ct);
+            await RecordLoginActivityAsync(null, request.Username, ipAddress, null, request.DeviceInfo,
+                false, nameof(LoginFailureReason.InvalidCredentials), null, false, ct);
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -97,6 +104,8 @@ public class AuthService : IAuthService
                 actorUserId: user.Id,
                 newValuesJson: "{\"reason\":\"locked_out\"}",
                 ipAddress: ipAddress), ct);
+            await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                false, nameof(LoginFailureReason.InvalidCredentials), null, true, ct);
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -115,6 +124,8 @@ public class AuthService : IAuthService
                 newValuesJson: "{\"reason\":\"invalid_password\",\"failedAttempts\":" + user.FailedLoginAttempts + "}",
                 ipAddress: ipAddress), ct);
 
+            await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                false, nameof(LoginFailureReason.InvalidCredentials), null, user.IsCurrentlyLockedOut(), ct);
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -136,6 +147,8 @@ public class AuthService : IAuthService
                     entityId: user.Id.ToString(),
                     actorUserId: user.Id,
                     ipAddress: ipAddress), ct);
+                await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                    false, nameof(LoginFailureReason.MfaRequired), null, false, ct);
                 return LoginResult.Fail(LoginFailureReason.MfaRequired);
             }
 
@@ -171,6 +184,8 @@ public class AuthService : IAuthService
                         entityId: user.Id.ToString(),
                         actorUserId: user.Id,
                         ipAddress: ipAddress), ct);
+                    await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                        false, nameof(LoginFailureReason.MfaRequired), null, false, ct);
                     return LoginResult.Fail(LoginFailureReason.MfaRequired);
                 }
             }
@@ -193,6 +208,8 @@ public class AuthService : IAuthService
                     oldValuesJson: "{\"previousIp\":\"" + (mostRecentSession?.IpAddress ?? string.Empty) + "\"}",
                     newValuesJson: "{\"currentIp\":\"" + (ipAddress ?? string.Empty) + "\",\"riskLevel\":\"" + riskLevel + "\"}",
                     ipAddress: ipAddress), ct);
+                await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                    false, nameof(LoginFailureReason.SessionRiskBlocked), riskLevel, false, ct);
                 return LoginResult.Fail(LoginFailureReason.SessionRiskBlocked);
             }
 
@@ -221,7 +238,11 @@ public class AuthService : IAuthService
             {
                 var activeSessions = await _sessionRepo.CountActiveSessionsAsync(ct);
                 if (activeSessions >= license.MaxUsers)
+                {
+                    await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                        false, nameof(LoginFailureReason.ConcurrencyLimitReached), riskLevel, false, ct);
                     return LoginResult.Fail(LoginFailureReason.ConcurrencyLimitReached);
+                }
             }
         }
 
@@ -247,6 +268,9 @@ public class AuthService : IAuthService
             actorUserId: user.Id,
             newValuesJson: "{\"riskLevel\":\"" + riskLevel + "\",\"mfaEnabled\":" + mfaRequiredForThisLogin.ToString().ToLowerInvariant() + "}",
             ipAddress: ipAddress), ct);
+
+        await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+            true, null, riskLevel, false, ct);
 
         return LoginResult.Ok(new LoginResponse(
             AccessToken: _tokenService.GenerateAccessToken(user),
@@ -486,6 +510,32 @@ public class AuthService : IAuthService
             actorUserId: userId), ct);
 
         return true;
+    }
+
+    // ── Phase 3: Login Activity Recording ──────────────────────────────────────
+
+    /// <summary>
+    /// Writes a structured login activity record for every attempt (success or failure).
+    /// Fire-and-forget — failures in activity recording do not affect the login flow.
+    /// </summary>
+    private async Task RecordLoginActivityAsync(
+        Guid? userId, string username, string? ipAddress, string? userAgent,
+        string? deviceInfo, bool isSuccess, string? failureReason,
+        string? riskLevel, bool userIsLockedOut, CancellationToken ct)
+    {
+        try
+        {
+            var entry = new LoginActivityLog(
+                userId, username, DateTime.UtcNow,
+                ipAddress, userAgent, deviceInfo,
+                isSuccess, failureReason, riskLevel, userIsLockedOut);
+            await _loginActivity.AddAsync(entry, ct);
+            await _loginActivity.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            // Non-fatal — login flow must not be blocked by activity recording failures.
+        }
     }
 
     private static string CalculateRiskLevel(string? currentIp, string? previousIp)

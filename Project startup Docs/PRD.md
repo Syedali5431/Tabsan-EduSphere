@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 3: User Activity Monitoring)
+- Runtime delivery in this slice:
+  - created login_activity_logs table capturing every login attempt with structured fields,
+  - integrated activity recording into all 8 login outcomes in AuthService with fire-and-forget safety,
+  - added admin query API with filters and dashboard summary endpoint (daily breakdown, top failures, top IPs),
+  - closed audit gap on ConcurrencyLimitReached.
+- Compatibility boundary: no route removals, additive schema-only (1 new table + 4 indexes), tenant/campus preserved, backward compatible.
+- Validation Summary: full solution build succeeded, EF migration generated (PhaseISO3LoginActivity).
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 2: Security)
 - Runtime delivery in this slice:
   - added password ageing enforcement with configurable max age and LoginResponse expiry signal,

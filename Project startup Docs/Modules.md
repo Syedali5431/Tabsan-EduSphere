@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update - 2026-06-04 (ISO Phase 3 - User Activity Monitoring)
+
+### Module impact summary
+- No new product module introduced; this slice extends existing Auth and Security monitoring surfaces.
+- Auth module now records every login attempt (success + failure) in the new login_activity_logs table.
+- New Login Activity monitoring API: paged queries with filters and dashboard summary with trends.
+- ConcurrencyLimitReached failures now tracked (was missing audit trail).
+
+### Validation summary
+- Full solution build succeeded. EF migration generated for login_activity_logs with 4 indexes.
+
 ## Execution Update - 2026-06-04 (ISO Phase 2 - Security)
 
 ### Module impact summary

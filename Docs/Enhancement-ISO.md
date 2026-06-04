@@ -452,7 +452,7 @@ Admin:
 
 ---------------------------------------------------------------------
 
-PHASE 3 — USER ACTIVITY MONITORING
+PHASE 3 — USER ACTIVITY MONITORING ✅ COMPLETED
 
 Create:
 LoginActivityLogs
@@ -464,6 +464,89 @@ Track:
 Dashboard:
 - Trends
 - Active sessions
+
+### ✅ Implementation Summary
+
+#### 1. Schema Changes (Migration: PhaseISO3LoginActivity)
+
+New table `login_activity_logs` with structured columns:
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| Id | UNIQUEIDENTIFIER PK | Primary key |
+| UserId | UNIQUEIDENTIFIER NULL | FK to user (null for unknown usernames) |
+| Username | NVARCHAR(100) NOT NULL | The submitted username |
+| AttemptedAt | DATETIME2 NOT NULL | UTC timestamp of the attempt |
+| IpAddress | NVARCHAR(64) NULL | Client IP address |
+| UserAgent | NVARCHAR(1024) NULL | Client user-agent string |
+| DeviceInfo | NVARCHAR(1024) NULL | Client device information |
+| IsSuccess | BIT NOT NULL | True if login succeeded |
+| FailureReason | NVARCHAR(50) NULL | Reason for failure (InvalidCredentials, ConcurrencyLimitReached, MfaRequired, SessionRiskBlocked) |
+| RiskLevel | NVARCHAR(20) NULL | Session risk level (low/medium/high) |
+| UserIsLockedOut | BIT NOT NULL | True if account was locked at attempt time |
+
+#### 2. Indexes
+
+| Index Name | Columns | Purpose |
+|-----------|---------|---------|
+| IX_login_activity_user_id | UserId | Per-user activity history |
+| IX_login_activity_attempted_at | AttemptedAt | Time-range queries for trends |
+| IX_login_activity_success_attempted | (IsSuccess, AttemptedAt) | Filter by success/failure over time |
+| IX_login_activity_ip_attempted | (IpAddress, AttemptedAt) | IP-based pattern detection |
+
+#### 3. Domain / Repository / Service
+
+- **LoginActivityLog** entity (`Domain/Activity/`): Immutable, append-only record with all context fields
+- **ILoginActivityRepository**: Add-only contract with AddAsync/SaveChangesAsync
+- **LoginActivityRepository** (`Infrastructure/Repositories/`): EF Core implementation
+- **ILoginActivityService** (`Application/Interfaces/`): Query contract for activity + summary
+- **LoginActivityService** (`Infrastructure/Activity/`): Paged queries with filters + aggregated dashboard summary with daily breakdown, top failure reasons, top IPs
+
+#### 4. AuthService Integration
+
+Every login attempt in `AuthService.LoginAsync` now writes a structured `LoginActivityLog` entry:
+- **User not found**: userId=null, isSuccess=false, failureReason=InvalidCredentials
+- **Account locked**: userId set, isSuccess=false, userIsLockedOut=true
+- **Wrong password**: userId set, isSuccess=false, failureReason=InvalidCredentials
+- **MFA missing/invalid**: userId set, isSuccess=false, failureReason=MfaRequired
+- **Session risk blocked**: userId set, isSuccess=false, failureReason=SessionRiskBlocked, riskLevel set
+- **Concurrency limit**: userId set, isSuccess=false, failureReason=ConcurrencyLimitReached (was missing audit trail before)
+- **Success**: userId set, isSuccess=true, riskLevel set
+
+Activity recording is fire-and-forget — failures do not block the login flow.
+
+#### 5. API Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | /api/v1/login-activity | Paged query with filters (userId, isSuccess, riskLevel, failureReason, fromUtc, toUtc, query) |
+| GET | /api/v1/login-activity/summary | Aggregated summary with daily breakdown, top 5 failure reasons, top 10 IPs (default 30-day range) |
+
+#### 6. Files Changed
+
+| Action | File |
+|--------|------|
+| CREATE | `Domain/Activity/LoginActivityLog.cs` |
+| CREATE | `Domain/Interfaces/ILoginActivityRepository.cs` |
+| CREATE | `Infrastructure/Persistence/Configurations/LoginActivityLogConfiguration.cs` |
+| CREATE | `Infrastructure/Repositories/LoginActivityRepository.cs` |
+| CREATE | `Infrastructure/Activity/LoginActivityService.cs` |
+| CREATE | `Application/Interfaces/ILoginActivityService.cs` |
+| CREATE | `Application/DTOs/LoginActivityDtos.cs` |
+| CREATE | `API/Controllers/LoginActivityController.cs` |
+| CREATE | `Infrastructure/Migrations/*_PhaseISO3LoginActivity.cs` |
+| UPDATE | `Infrastructure/Persistence/ApplicationDbContext.cs` — added DbSet |
+| UPDATE | `Application/Auth/AuthService.cs` — RecordLoginActivityAsync integration |
+
+### ✅ Validation Summary
+
+- **Build**: All projects compile successfully with zero errors.
+- **Migration**: `PhaseISO3LoginActivity` creates the `login_activity_logs` table with 4 indexes. Reversible Up/Down.
+- **Login flow**: All 8 login outcomes (1 success + 7 failure paths) now write structured activity records. Fire-and-forget pattern ensures activity recording failures never block login.
+- **ConcurrencyLimitReached**: Previously had no audit trail — now gets a login activity entry.
+- **API**: GET /login-activity supports filtering by user, status, risk level, failure reason, date range, and free-text search on username/IP. GET /login-activity/summary returns daily breakdown, top failure reasons, top IPs.
+- **Backward compatibility**: All changes are additive. New table, new endpoints — no modifications to existing tables or routes.
+- **No breaking changes**: Tenant/campus isolation intact, GPA/CGPA logic untouched.
 
 ---------------------------------------------------------------------
 

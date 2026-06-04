@@ -1,5 +1,13 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 3 User Activity Monitoring (Schema Posture)
+
+- Implementation Summary:
+	- created new table `login_activity_logs` with columns: Id, UserId, Username, AttemptedAt, IpAddress, UserAgent, DeviceInfo, IsSuccess, FailureReason, RiskLevel, UserIsLockedOut plus BaseEntity columns,
+	- added 4 indexes: IX_login_activity_user_id, IX_login_activity_attempted_at, IX_login_activity_success_attempted, IX_login_activity_ip_attempted.
+- Validation Summary:
+	- EF migration generated: `*_PhaseISO3LoginActivity`, schema additive-only.
+
 ## 2026-06-04 Update - ISO Phase 2 Security (Schema Posture)
 
 - Implementation Summary:

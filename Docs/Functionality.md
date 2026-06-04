@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 3 Completion (User Activity Monitoring)
+
+### Implementation sync
+- Created dedicated login_activity_logs table with structured columns for every login attempt (UserId, Username, IP, UserAgent, DeviceInfo, IsSuccess, FailureReason, RiskLevel, UserIsLockedOut).
+- Integrated activity recording into AuthService.LoginAsync — all 8 outcomes (success + 7 failure paths) fire-and-forget.
+- ConcurrencyLimitReached path now has an audit trail (was previously missing).
+- Added admin API: GET /login-activity (paged + filters) and GET /login-activity/summary (daily breakdown, top failure reasons, top IPs).
+
+### Validation sync
+- Full solution build succeeded.
+- EF migration generated (PhaseISO3LoginActivity) for new table with 4 indexes.
+
 ## 2026-06-04 Update - ISO Phase 2 Completion (Security)
 
 ### Implementation sync

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Activity;
 using Tabsan.EduSphere.Domain.AiChat;
 using Tabsan.EduSphere.Domain.Assignments;
 using Tabsan.EduSphere.Domain.Attendance;
@@ -67,6 +68,10 @@ public class ApplicationDbContext : DbContext
     // ── Audit ──────────────────────────────────────────────────────────────
     /// <summary>Append-only audit log for privileged actions.</summary>
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // ── Activity (Phase 3) ─────────────────────────────────────────────────
+    /// <summary>Append-only login activity log for security monitoring.</summary>
+    public DbSet<LoginActivityLog> LoginActivityLogs => Set<LoginActivityLog>();
 
     // ── Phase 2: Academic Core ─────────────────────────────────────────────
     /// <summary>Degree programmes offered by departments.</summary>

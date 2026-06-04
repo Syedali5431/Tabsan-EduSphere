@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - Development Plan Synchronization (ISO Phase 3: User Activity Monitoring)
+
+### Plan sync
+- Completed Phase 3: login_activity_logs table, AuthService integration (8 outcomes fire-and-forget), ILoginActivityService with paged queries + dashboard summary, LoginActivityController with 2 endpoints, 4 indexes.
+- All changes additive: 1 new table, 4 indexes, 2 new API endpoints.
+
+### Validation sync
+- Full solution build passed. EF migration generated. No breaking changes.
+
 ## 2026-06-04 Update - Development Plan Synchronization (ISO Phase 2: Security)
 
 ### Plan sync
