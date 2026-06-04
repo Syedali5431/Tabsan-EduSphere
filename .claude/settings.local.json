@@ -9,7 +9,13 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git pull *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(sqllocaldb info *)",
+      "Bash(sqllocaldb start *)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http)",
+      "Bash(curl -s http://localhost:5181/swagger/index.html -o /dev/null -w \"HTTP Status: %{http_code}\")",
+      "Bash(curl -s http://localhost:5063 -o /dev/null -w \"HTTP Status: %{http_code}\")"
     ]
   }
 }
