@@ -29,5 +29,11 @@ public interface IAuditService
         DateTime? toUtc = null,
         int page = 1,
         int pageSize = 50,
+        // Phase 1 - ISO Audit Enhancement filter parameters
+        string? actorRole = null,
+        string? severity = null,
+        string? eventCategory = null,
+        string? correlationId = null,
         CancellationToken ct = default);
 }
+

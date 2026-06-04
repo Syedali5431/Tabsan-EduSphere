@@ -37,6 +37,11 @@ public sealed class AuditController : ControllerBase
         [FromQuery] DateTime? toUtc,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
+        // Phase 1 - ISO Audit Enhancement filter parameters
+        [FromQuery] string? actorRole = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] string? eventCategory = null,
+        [FromQuery] string? correlationId = null,
         CancellationToken ct = default)
     {
         if (toUtc.HasValue && fromUtc.HasValue && toUtc.Value < fromUtc.Value)
@@ -51,6 +56,10 @@ public sealed class AuditController : ControllerBase
             toUtc: toUtc,
             page: page,
             pageSize: pageSize,
+            actorRole: actorRole,
+            severity: severity,
+            eventCategory: eventCategory,
+            correlationId: correlationId,
             ct: ct);
 
         await _audit.LogAsync(new Domain.Auditing.AuditLog(
@@ -75,6 +84,9 @@ public sealed class AuditController : ControllerBase
                 x.IpAddress,
                 x.UserAgent,
                 x.DeviceInfo,
+                x.CorrelationId,
+                x.Severity,
+                x.EventCategory,
                 x.OldValuesJson,
                 x.NewValuesJson
             })
@@ -93,6 +105,11 @@ public sealed class AuditController : ControllerBase
         [FromQuery] DateTime? fromUtc,
         [FromQuery] DateTime? toUtc,
         [FromQuery] int maxRows = 2000,
+        // Phase 1 - ISO Audit Enhancement filter parameters
+        [FromQuery] string? actorRole = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] string? eventCategory = null,
+        [FromQuery] string? correlationId = null,
         CancellationToken ct = default)
     {
         if (toUtc.HasValue && fromUtc.HasValue && toUtc.Value < fromUtc.Value)
@@ -112,6 +129,10 @@ public sealed class AuditController : ControllerBase
             toUtc: toUtc,
             page: 1,
             pageSize: requestedRows,
+            actorRole: actorRole,
+            severity: severity,
+            eventCategory: eventCategory,
+            correlationId: correlationId,
             ct: ct);
 
         await _audit.LogAsync(new Domain.Auditing.AuditLog(
@@ -133,7 +154,7 @@ public sealed class AuditController : ControllerBase
     private static byte[] BuildCsv(IReadOnlyList<Domain.Auditing.AuditLog> items)
     {
         var sb = new StringBuilder();
-                sb.AppendLine("Id,OccurredAtUtc,Action,EntityName,EntityId,ActorUserId,ActorRole,IpAddress,UserAgent,DeviceInfo,OldValuesJson,NewValuesJson");
+                sb.AppendLine("Id,OccurredAtUtc,Action,EntityName,EntityId,ActorUserId,ActorRole,IpAddress,UserAgent,DeviceInfo,CorrelationId,Severity,EventCategory,OldValuesJson,NewValuesJson");
         foreach (var item in items)
         {
             sb
@@ -147,6 +168,9 @@ public sealed class AuditController : ControllerBase
                 .Append(Csv(item.IpAddress)).Append(',')
                 .Append(Csv(item.UserAgent)).Append(',')
                 .Append(Csv(item.DeviceInfo)).Append(',')
+                .Append(Csv(item.CorrelationId)).Append(',')
+                .Append(Csv(item.Severity)).Append(',')
+                .Append(Csv(item.EventCategory)).Append(',')
                 .Append(Csv(item.OldValuesJson)).Append(',')
                 .Append(Csv(item.NewValuesJson))
                 .AppendLine();
@@ -163,7 +187,8 @@ public sealed class AuditController : ControllerBase
                 var headers = new[]
         {
             "Id", "OccurredAtUtc", "Action", "EntityName", "EntityId", "ActorUserId",
-            "ActorRole", "IpAddress", "UserAgent", "DeviceInfo", "OldValuesJson", "NewValuesJson"
+            "ActorRole", "IpAddress", "UserAgent", "DeviceInfo", "CorrelationId",
+            "Severity", "EventCategory", "OldValuesJson", "NewValuesJson"
         };
 
         for (var i = 0; i < headers.Length; i++)
@@ -186,8 +211,11 @@ public sealed class AuditController : ControllerBase
             ws.Cell(row, 8).Value = item.IpAddress ?? string.Empty;
             ws.Cell(row, 9).Value = item.UserAgent ?? string.Empty;
             ws.Cell(row, 10).Value = item.DeviceInfo ?? string.Empty;
-            ws.Cell(row, 11).Value = item.OldValuesJson ?? string.Empty;
-            ws.Cell(row, 12).Value = item.NewValuesJson ?? string.Empty;
+            ws.Cell(row, 11).Value = item.CorrelationId ?? string.Empty;
+            ws.Cell(row, 12).Value = item.Severity ?? string.Empty;
+            ws.Cell(row, 13).Value = item.EventCategory ?? string.Empty;
+            ws.Cell(row, 14).Value = item.OldValuesJson ?? string.Empty;
+            ws.Cell(row, 15).Value = item.NewValuesJson ?? string.Empty;
             row++;
         }
 
@@ -215,12 +243,14 @@ public sealed class AuditController : ControllerBase
                     table.ColumnsDefinition(columns =>
                     {
                         columns.RelativeColumn(1.2f);
-                        columns.RelativeColumn(2.2f);
-                        columns.RelativeColumn(1.4f);
-                        columns.RelativeColumn(1.4f);
                         columns.RelativeColumn(1.8f);
                         columns.RelativeColumn(1.2f);
-                        columns.RelativeColumn(1.4f);
+                        columns.RelativeColumn(1.2f);
+                        columns.RelativeColumn(1.5f);
+                        columns.RelativeColumn(1.0f);
+                        columns.RelativeColumn(1.0f);
+                        columns.RelativeColumn(1.0f);
+                        columns.RelativeColumn(1.0f);
                     });
 
                     static IContainer HeaderCell(IContainer container)
@@ -234,6 +264,8 @@ public sealed class AuditController : ControllerBase
                         header.Cell().Element(HeaderCell).Text("EntityId").SemiBold();
                         header.Cell().Element(HeaderCell).Text("Actor").SemiBold();
                         header.Cell().Element(HeaderCell).Text("Role").SemiBold();
+                        header.Cell().Element(HeaderCell).Text("Severity").SemiBold();
+                        header.Cell().Element(HeaderCell).Text("Category").SemiBold();
                         header.Cell().Element(HeaderCell).Text("IP").SemiBold();
                     });
 
@@ -245,6 +277,8 @@ public sealed class AuditController : ControllerBase
                         table.Cell().Padding(3).Text(item.EntityId ?? "-");
                         table.Cell().Padding(3).Text(item.ActorUserId?.ToString() ?? "-");
                         table.Cell().Padding(3).Text(item.ActorRole ?? "-");
+                        table.Cell().Padding(3).Text(item.Severity ?? "-");
+                        table.Cell().Padding(3).Text(item.EventCategory ?? "-");
                         table.Cell().Padding(3).Text(item.IpAddress ?? "-");
                     }
                 });

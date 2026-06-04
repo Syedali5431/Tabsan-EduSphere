@@ -41,9 +41,12 @@ public class AuditService : IAuditService
                 var userAgent = string.IsNullOrWhiteSpace(entry.UserAgent)
             ? TryResolveUserAgent(httpContext)
             : entry.UserAgent;
-        var deviceInfo = string.IsNullOrWhiteSpace(entry.DeviceInfo)
+                var deviceInfo = string.IsNullOrWhiteSpace(entry.DeviceInfo)
             ? TryResolveDeviceInfo(httpContext)
             : entry.DeviceInfo;
+
+        // Phase 1 - ISO Audit Enhancement: auto-resolve CorrelationId
+        var correlationId = entry.CorrelationId ?? TryResolveCorrelationId(httpContext);
 
         var enriched = new AuditLog(
             action: entry.Action,
@@ -55,7 +58,10 @@ public class AuditService : IAuditService
             ipAddress: ipAddress,
             actorRole: actorRole,
             userAgent: userAgent,
-            deviceInfo: deviceInfo);
+            deviceInfo: deviceInfo,
+            correlationId: correlationId,
+            severity: entry.Severity ?? "Info",
+            eventCategory: entry.EventCategory);
 
         await _db.AuditLogs.AddAsync(enriched, ct);
         await _db.SaveChangesAsync(ct);
@@ -93,6 +99,18 @@ public class AuditService : IAuditService
         private static string? TryResolveUserAgent(HttpContext? context)
         => context?.Request.Headers["User-Agent"].ToString();
 
+    /// <summary>
+    /// Resolves a correlation ID for distributed tracing from the request headers
+    /// or falls back to the ASP.NET Core trace identifier.
+    /// </summary>
+    private static string? TryResolveCorrelationId(HttpContext? context)
+    {
+        if (context is null) return null;
+
+        return context.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+            ?? context.TraceIdentifier;
+    }
+
     private static string? TryResolveDeviceInfo(HttpContext? context)
     {
         if (context is null) return null;
@@ -117,6 +135,10 @@ public class AuditService : IAuditService
         DateTime? toUtc = null,
         int page = 1,
         int pageSize = 50,
+        string? actorRole = null,
+        string? severity = null,
+        string? eventCategory = null,
+        string? correlationId = null,
         CancellationToken ct = default)
     {
         if (page < 1) page = 1;
@@ -145,6 +167,31 @@ public class AuditService : IAuditService
         if (toUtc.HasValue)
             auditQuery = auditQuery.Where(x => x.OccurredAt <= toUtc.Value);
 
+        // Phase 1 - ISO Audit Enhancement filters
+        if (!string.IsNullOrWhiteSpace(actorRole))
+        {
+            var roleFilter = actorRole.Trim();
+            auditQuery = auditQuery.Where(x => x.ActorRole == roleFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(severity))
+        {
+            var severityFilter = severity.Trim();
+            auditQuery = auditQuery.Where(x => x.Severity == severityFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(eventCategory))
+        {
+            var categoryFilter = eventCategory.Trim();
+            auditQuery = auditQuery.Where(x => x.EventCategory == categoryFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(correlationId))
+        {
+            var corrFilter = correlationId.Trim();
+            auditQuery = auditQuery.Where(x => x.CorrelationId == corrFilter);
+        }
+
         if (!string.IsNullOrWhiteSpace(query))
         {
             var q = query.Trim();
@@ -153,7 +200,11 @@ public class AuditService : IAuditService
                 EF.Functions.Like(x.Action, like)
                 || EF.Functions.Like(x.EntityName, like)
                 || (x.EntityId != null && EF.Functions.Like(x.EntityId, like))
-                || (x.IpAddress != null && EF.Functions.Like(x.IpAddress, like)));
+                || (x.IpAddress != null && EF.Functions.Like(x.IpAddress, like))
+                || (x.ActorRole != null && EF.Functions.Like(x.ActorRole, like))
+                || (x.Severity != null && EF.Functions.Like(x.Severity, like))
+                || (x.EventCategory != null && EF.Functions.Like(x.EventCategory, like))
+                || (x.CorrelationId != null && EF.Functions.Like(x.CorrelationId, like)));
         }
 
         var totalCount = await auditQuery.CountAsync(ct);

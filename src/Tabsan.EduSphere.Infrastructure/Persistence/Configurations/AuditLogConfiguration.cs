@@ -24,6 +24,11 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
        builder.Property(a => a.UserAgent).HasMaxLength(1024);
         builder.Property(a => a.DeviceInfo).HasMaxLength(1024);
 
+        // Phase 1 - ISO Audit Enhancement columns
+        builder.Property(a => a.CorrelationId).HasMaxLength(64);
+        builder.Property(a => a.Severity).HasMaxLength(20).HasDefaultValue("Info");
+        builder.Property(a => a.EventCategory).HasMaxLength(50);
+
         // Time-range queries on audit logs — clustered by OccurredAt.
         builder.HasIndex(a => a.OccurredAt)
                .HasDatabaseName("IX_audit_logs_occurred_at");
@@ -39,6 +44,23 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         // Composite for entity-type audit trail pages (filter by EntityName, order by OccurredAt).
         builder.HasIndex(a => new { a.EntityName, a.OccurredAt })
                .HasDatabaseName("IX_audit_logs_entity_occurred_at");
+
+        // Phase 1 - ISO Audit Enhancement indexes
+        builder.HasIndex(a => a.EventCategory)
+               .HasDatabaseName("IX_audit_logs_event_category")
+               .HasFilter("[EventCategory] IS NOT NULL");
+
+        builder.HasIndex(a => a.CorrelationId)
+               .HasDatabaseName("IX_audit_logs_correlation_id")
+               .HasFilter("[CorrelationId] IS NOT NULL");
+
+        builder.HasIndex(a => new { a.Severity, a.OccurredAt })
+               .HasDatabaseName("IX_audit_logs_severity_occurred_at")
+               .HasFilter("[Severity] IS NOT NULL");
+
+        builder.HasIndex(a => new { a.ActorRole, a.OccurredAt })
+               .HasDatabaseName("IX_audit_logs_actor_role_occurred_at")
+               .HasFilter("[ActorRole] IS NOT NULL");
     }
 }
 
