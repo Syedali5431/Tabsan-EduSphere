@@ -1,1335 +1,98 @@
-<!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
+# Function List — Tabsan EduSphere
 
-## 2026-06-04 Update - ISO Phase 1 Completion Part 2 (Audit Logging — CorrelationId, Severity, EventCategory)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- AuditService.TryResolveCorrelationId
-		- resolves CorrelationId from X-Correlation-Id header or falls back to HttpContext.TraceIdentifier.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- AuditLog (.ctor)
-		- extended with CorrelationId, Severity (default "Info"), EventCategory parameters.
-	- IAuditService.SearchAsync
-		- added Phase 1 filter parameters: actorRole, severity, eventCategory, correlationId.
-	- AuditService.SearchAsync
-		- free-text search extended to ActorRole, Severity, EventCategory, CorrelationId.
-		- exact-match filters added for actorRole, severity, eventCategory, correlationId.
-	- AuditService.LogAsync
-		- now auto-resolves CorrelationId from X-Correlation-Id header or TraceIdentifier.
-	- AuditController.SearchLogs
-		- added query params: actorRole, severity, eventCategory, correlationId.
-		- response payload now includes CorrelationId, Severity, EventCategory.
-	- AuditController.ExportLogs
-		- added Phase 1 filter query params for export filtering.
-	- AuditController.BuildCsv
-		- added CorrelationId, Severity, EventCategory columns.
-	- AuditController.BuildExcel
-		- added CorrelationId, Severity, EventCategory columns.
-	- AuditController.BuildPdf
-		- added Severity, Category columns.
-- EF Migration: `20260604043644_PhaseISO1AuditLoggingPart2`
-	- Added DeviceInfo, CorrelationId, Severity, EventCategory columns + 4 filtered indexes.
-
-## 2026-06-03 Update - ISO Phase 1 Completion (Audit Logging)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- AuditController.ExportLogs
-	- PortalController.AuditLogs
-	- PortalController.ExportAuditLogsCsv
-	- PortalController.ExportAuditLogsExcel
-	- PortalController.ExportAuditLogsPdf
-	- IEduApiClient.SearchAuditLogsAsync
-	- IEduApiClient.ExportAuditLogsCsvAsync
-	- IEduApiClient.ExportAuditLogsExcelAsync
-	- IEduApiClient.ExportAuditLogsPdfAsync
-	- EduApiClient.SearchAuditLogsAsync
-	- EduApiClient.ExportAuditLogsCsvAsync
-	- EduApiClient.ExportAuditLogsExcelAsync
-	- EduApiClient.ExportAuditLogsPdfAsync
-- Existing function behavior updates (no duplicate inventory rows added):
-	- AuditController.SearchLogs
-		- response payload now includes ActorRole and UserAgent.
-	- AuditService.LogAsync
-		- now auto-enriches audit records with ActorUserId, ActorRole, IP, and User-Agent from runtime context when not explicitly supplied.
-	- ApplicationDbContext.SaveChangesAsync
-		- now enforces append-only immutability for audit log rows (update/delete blocked).
-
-## 2026-06-03 Update - Phase 4 Continuation (Attendance Scope Alignment)
-
-### Attendance delta
-- Existing function behavior updates (no duplicate inventory rows added):
-  - PortalController.ValidateAttendanceWriteScopeAsync: removed mandatory semester/class requirement for write scope; period match now applies only when a period value is supplied.
-  - AttendancePageModel.CanSaveAttendance: no longer requires `SelectedSemesterName` for write enablement.
-
-### Validation summary
-- Diagnostics checks report no errors in touched attendance controller/model/view files.
-
-## 2026-06-03 Update - Phase 4 Progress (Results and Course Material Scope Relaxation)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- No new public controller/service/API signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.ValidateResultWriteScopeAsync
-		- removed mandatory semester/class requirement for write scope; period matching now applies only when a period filter is provided.
-	- PortalController.RenderResultsAsync
-		- now resolves and emits dynamic `PeriodLabel` for Results UI rendering.
-	- PortalController.CreateCourseMaterial
-		- now accepts optional period selection and resolves fallback period before create submission.
-	- ResultsPageModel.CanWriteResults
-		- no longer requires `SelectedSemesterName` for write enablement.
-
-### Validation summary
-- Diagnostics checks report no errors in touched controller/model/view files.
-
-## 2026-06-02 Update - Phase 3 Completion (UI/UX Adaptation)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- No new public controller/service/API signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.Courses
-		- now computes selected institution metadata and dynamic offering period label (`Class`/`Semester`/`Year`).
-	- PortalController.CreateCourse
-		- now normalizes School/College course creation payloads to non-semester metadata and hides semester-first assumptions.
-	- PortalController.CourseMaterial
-		- now emits dynamic period filter label/placeholder for School/College/University UI rendering.
-	- PortalController.CourseMaterialStudent
-		- now emits dynamic period filter label/placeholder for student-facing filters.
-	- PortalController.StudentLifecycle
-		- university period label now resolves `Semester` vs `Year` from configured level names.
-
-### Validation summary
-- Diagnostics checks report no errors in touched controller/model/view files.
-- Dynamic period semantics now render consistently in lifecycle, courses, course-material, and results surfaces.
-
-## 2026-06-02 Update - Phase 2 Completion (Institute-Based Academic Structure)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- No new public controller/service/API signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.StudentLifecycle
-		- now enforces School Class 1-10 and College Class 11-12 ranges.
-		- University level upper bound is now inferred from configured semester/year metadata instead of fixed max-level constants.
-		- selected level is clamped to institute-specific min/max boundaries before downstream calls.
-
-### Validation summary
-- Diagnostics checks report no errors in touched controller files.
-- Runtime range behavior now reflects institute-specific class/semester boundaries for lifecycle filtering.
-
-## 2026-06-02 Update - Phase 1 Completion (Institute-Scoped Runtime Stabilization)
-
-### Function inventory delta
-- Newly created public functions in this slice:
-	- No new public controller/service/API signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.ApproveResultModificationRequest
-		- now parses legacy/new result-modification payload shapes via safe key fallbacks and guarded decimal/guid extraction.
-	- PortalController.Discussion
-		- now resolves first available offering when caller does not provide an offering id, avoiding empty-state runtime failures.
-	- PortalController.Announcements
-		- now resolves first available offering and populates scoped offering options when offering id is missing.
-	- PortalController.StudentLifecycle
-		- now applies institute-aware period labels/ranges for school and college paths (class-based ranges), while keeping university behavior intact.
-
-### Script/runtime synchronization
-- Domain script packs now run as pure T-SQL without SQLCMD wrapper dependency:
-	- Scripts/School Scripts/01..05
-	- Scripts/College Scripts/01..05
-	- Scripts/University Scripts/01..05
-- LMS schema self-heal guards for discussion-thread runtime columns were added in domain schema wrappers.
-
-### Validation summary
-- No SQLCMD `:r` usage remains in School/College/University script packs.
-- Diagnostics report clean for all touched scripts and portal controller updates.
-- Legacy/new result-modification payload shapes now pass guarded parsing path without key lookup exceptions.
-
-## 2026-06-02 Update - Password Policy Hardening and Module-Sidebar Parity Synchronization
-
-### Function inventory delta
-- Newly created functions tracked in this slice (added once, no duplicate rows):
-	- AuthController.ForceChangePassword
-	- IAuthService.ForceChangePasswordAsync
-	- AuthService.ForceChangePasswordAsync
-	- IEduApiClient.ForceChangePasswordAsync
-	- EduApiClient.ForceChangePasswordAsync
-	- PasswordPolicyRules.BeSafePassword
-- Existing function behavior updates (no duplicate inventory rows added):
-	- AuthService.ChangePasswordAsync
-		- now enforces current-password verification and safe-password constraints before update.
-	- AuthController.ChangePassword
-		- now aligns request validation and response handling with the hardened password-policy flow.
-	- PortalController.ForceChangePassword
-		- now submits old-password plus new-password path and surfaces policy feedback correctly.
-	- SidebarMenuController.MenuModuleKeyMap
-		- synchronized timetable keys (`timetable_admin`, `timetable_teacher`, `timetable_student`) and `advanced_audit` mapping for module-sidebar parity.
-
-### Seed/runtime synchronization
-- DatabaseSeeder sidebar-key and role-access synchronization now includes missing module-parity keys:
-	- `degree_audit`,
-	- `graduation_eligibility`,
-	- `degree_rules`,
-	- `graduation_apply`,
-	- `graduation_applications`,
-	- `grading_config`,
-	- `lms_manage`,
-	- `course_material`,
-	- `discussion`,
-	- `announcements`,
-	- `study_plan`,
-	- `advanced_audit`.
-
-### Validation summary
-- Password-force-change flow now requires old password and applies strict safe-password policy before acceptance.
-- Sidebar/module settings now remain aligned for timetable and advanced audit paths, with deterministic role/menu visibility behavior.
-
-## 2026-06-01 Update - Payments Student Scope Filter Stabilization and Demo Seed v43
-
-### Function inventory delta
-- Newly created functions in this slice:
-	- No new function signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.LoadPaymentStudentsForScopeAsync
-		- now applies institution-type constrained loading even when tenant/campus are not selected (superadmin all-scope path), preventing cross-institution student leakage in Payments create/filter dropdowns.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v43` and adds deterministic Payments student-scope demo receipts:
-	- `RCPT-DEMO-PAY-SCP-U-043` (University)
-	- `RCPT-DEMO-PAY-SCP-C-043` (College)
-	- `RCPT-DEMO-PAY-SCP-S-043` (School)
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized v43 checks for the new scope-demo receipts plus dataset marker update.
-
-### Validation summary
-- Payments institution filter now returns scope-correct student lists in create/filter flows.
-- Deterministic v43 scope-demo receipts render only in their matching institution filters and under matching student filter selection.
-
-## 2026-06-01 Update - Payments Filter Demo Seed v42 and Import/Scope Reliability
-
-### Function inventory delta
-- Newly created functions in this slice:
-	- PortalController.BuildLicensedPaymentsInstitutionOptions
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.Payments
-		- now uses payment-specific institution option mapping so dropdown labels align with scoped payment data values.
-	- PortalController.ImportPaymentsCsv
-		- preserves scoped filter context and continues role-guarded batch import behavior.
-	- PortalController.ParsePaymentImportCsvAsync
-		- now accepts common spreadsheet date formats (`yyyy-MM-dd`, `dd/MM/yyyy`, `MM/dd/yyyy`, and dash variants) and emits explicit invalid-date guidance.
-	- EduApiClient.TryExtractApiErrorMessage
-		- now extracts `detail` in addition to `message`/`title` from ProblemDetails payloads so portal alerts surface the real backend error in development runs.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced to `FullDummyData-v42` and now adds deterministic Payments filter-demo receipts:
-	- `RCPT-DEMO-PAY-FLT-U-001` (University)
-	- `RCPT-DEMO-PAY-FLT-C-001` (College)
-	- `RCPT-DEMO-PAY-FLT-S-001` (School)
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized v42 checks for:
-	- demo dataset marker,
-	- deterministic payment filter-demo receipt presence,
-	- per-institution alignment of the three demo receipts.
-
-### Validation summary
-- Deterministic payment demo seed/check remains additive and idempotent.
-- Payments menu filter validation confirms institution and student filters return the expected seeded receipts.
-- CSV import with spreadsheet-style due-date formats now succeeds for demo/testing templates.
-
-## 2026-06-01 Update - Study Plan Filter Demo Seed Sync and Runtime Serialization Hardening
-
-### Function inventory delta
-- Newly created functions in this slice:
-	- PortalController.NormalizeAdvisorStatusValue
-	- PortalController.NormalizeCourseTypeValue
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.StudyPlan
-		- now accepts optional tenant/campus/department/student filters and keeps selected scope context.
-	- PortalController.StudyPlanDetail
-		- now preserves selected filter context on navigation.
-	- PortalController.CreateStudyPlan
-	- PortalController.AddStudyPlanCourse
-	- PortalController.RemoveStudyPlanCourse
-	- PortalController.DeleteStudyPlan
-	- PortalController.AdvisePlan
-		- all now preserve selected filter context in redirects.
-	- EduApiClient.StudyPlanApiModel.AdvisorStatus
-	- EduApiClient.StudyPlanCourseApiModel.CourseType
-	- EduApiClient.RecommendedCourseApiModel.CourseType
-		- switched to JsonElement-backed payload handling so numeric enum serialization from API no longer causes runtime string conversion failures.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql now includes deterministic Study Plan filter-demo rows for stable menu/filter testing:
-	- student profiles:
-		- 99999999-9999-9999-9999-999999999911 (University CS)
-		- 99999999-9999-9999-9999-999999999933 (College Commerce)
-		- 99999999-9999-9999-9999-999999999941 (School Math)
-	- study plans:
-		- 9A111111-1111-1111-1111-111111111101
-		- 9A111111-1111-1111-1111-111111111102
-		- 9A111111-1111-1111-1111-111111111103
-	- study plan courses:
-		- 9B222222-2222-2222-2222-222222222111 .. 9B222222-2222-2222-2222-222222222132
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized Study Plan deterministic checks for row totals and per-student plan/course coverage.
-
-### Validation summary
-- Deterministic seed remains additive and idempotent across reruns.
-- Runtime Study Plan filter checks confirm department->student narrowing works and data renders without not-found/unexpected-error/json-conversion failures.
-
-## 2026-06-01 Update - Generate Certificates School/College Filter Demo Stabilization and Seed Sync v41
-
-### Function inventory delta
-- Newly created functions in this slice:
-	- No new public controller/service/API function signature introduced.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.GradingConfig
-		- auto-selects the campus when only one campus exists for the selected tenant.
-	- EduApiClient.GetCampusesAsync
-		- adds resilient fallback: if tenant-filtered campus API response is empty, retries with all campuses and filters locally by tenant.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v41 and strengthens Generate Certificates school/college demo seeding:
-	- resolves school/college department/program IDs dynamically from current data,
-	- retains deterministic filter-demo rows 943/944,
-	- adds deterministic filter-demo rows:
-		- DEMO-CERT-COL-FILTER-945
-		- DEMO-CERT-SCH-FILTER-946
-	- adds matching deterministic users/enrollments for 945/946.
-- Scripts/05-PostDeployment-Checks.sql now includes v41-synchronized checks for:
-	- dataset marker,
-	- additional-certificate cohort counts,
-	- expanded filter-demo row and username counts,
-	- institution-type split checks for college vs school filter-demo rows.
-
-### Validation summary
-- Dummy seed remains additive and idempotent for deterministic IDs.
-- Runtime menu/filter checks confirm Grading Config cascading scope loads correctly and Generate Certificates demo datasets are now seeded for school/college filter testing.
-
-## 2026-06-01 Update - Generate Certificates License-Driven Institute Filter and Search Demo Seed v40
-
-### Function inventory delta
-- Newly created functions in this slice:
-	- PortalController.BuildLicensedInstitutionOptions
-	- PortalController.ResolveLicensedInstitutionSelection
-	- CertificateInstitutionOption (view model)
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController.GenerateCertificates
-		- institution filter options are now derived from license capability matrix and auto-select a single licensed institute.
-	- GenerateCertificates.cshtml table search index
-		- now includes non-university generated certificate title/document type text in row search keys.
-	- EduApiClient.DownloadCertificateTemplateAsync
-		- now surfaces non-404 API errors while preserving null return for true not-found template responses.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v40 and adds deterministic Generate Certificates search-demo rows:
-	- DEMO-CERT-COL-SEARCH-941
-	- DEMO-CERT-SCH-SEARCH-942
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized v40 checks for:
-	- dataset marker,
-	- expanded additional-certificate demo student counts,
-	- deterministic search-demo usernames.
-
-### Validation summary
-- Runtime checks confirm Institution filter now follows license options:
-	- single licensed institute => auto-selected and locked,
-	- multiple licensed institutes => selectable dropdown.
-- Search checks confirm typing student/program/department plus non-university certificate title/type narrows table rows as expected.
-
-## 2026-06-01 Update - Generate Certificates Additional Certificate Demo Seed v39 and Function Inventory Sync
-
-### Function inventory delta
-- Newly recorded runtime functions in this slice:
-	- CertificateGenerationController.DownloadDefaultAdditionalTemplate
-	- CertificateGenerationController.UploadAdditionalTemplate
-	- CertificateGenerationController.GenerateAdditionalCertificate
-	- PortalController.GenerateAdditionalCertificate
-	- EduApiClient.GenerateAdditionalCertificateAsync
-- Existing function updates (no duplicate inventory rows added):
-	- CertificateGenerationController.GetGraduatedStudents
-		- semesterId now narrows the student list for certificate walkthroughs.
-	- PortalController.GenerateCertificates
-		- now passes semesterId through to the API and exposes institution-scoped document options.
-	- PortalController.DownloadCertificateTemplate / UploadCertificateTemplate
-		- now support completion/report card template handling in addition to degree/transcript scope.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v39 and now includes deterministic additional-certificate demo rows for school/college walkthroughs:
-	- DEMO-CERT-COL-901
-	- DEMO-CERT-COL-902
-	- DEMO-CERT-SCH-911
-	- DEMO-CERT-SCH-912
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized v39 assertions for the new certificate demo cohort.
-
-### Validation summary
-- API and portal checks confirmed the Generate Certificates screen still loads and the scoped student rows render for both university and non-university flows.
-- Filter checks confirmed deterministic rows remain visible with tenant, campus, department, course/class, and semester narrowing.
-
-## 2026-05-31 Update - Generate Certificates Sidebar Guard Sync and Course Materials Demo Seed v38
-
-### Function inventory delta
-- No new public controller/service/API function signature was introduced in this slice.
-- Existing function behavior updates (no duplicate inventory rows added):
-	- PortalController (ActionMenuKeyMap)
-		- Added GenerateCertificates -> generate_certificates mapping so direct route guard and sidebar visibility remain synchronized.
-	- Shared/_Layout.cshtml (sidebar render conditions)
-		- Removed over-broad suppression of generate_certificates under Degree Audit-only hide branch.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v38 while retaining additive/idempotent deterministic seed behavior.
-- Course Materials demo pack remains deterministic and now includes cross-department rows used for portal filter testing:
-	- 27272727-2727-2727-2727-272727272701 ... 27272727-2727-2727-2727-272727272707
-	- CS=5 rows, BUS=1 row, ENG=1 row, active rows=6.
-- Scripts/05-PostDeployment-Checks.sql now includes synchronized v38 checks:
-	- DummySeed_DemoDatasetVersionIsV38
-	- DummySeed_CourseMaterialsDemo_CountV38
-	- DummySeed_CourseMaterialsDemo_ActiveCountV38
-	- DummySeed_CourseMaterialsDemo_DepartmentCount_CS_V38
-	- DummySeed_CourseMaterialsDemo_DepartmentCount_BUS_V38
-	- DummySeed_CourseMaterialsDemo_DepartmentCount_ENG_V38
-
-### Validation summary
-- Portal verification confirmed Generate Certificates menu/path rendering is available for scoped admin after guard/sidebar synchronization.
-- Generate Certificates filters and Course Materials demo rows render with deterministic data across CS/BUS/ENG slices.
-
-## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v37 and Verification Automation
-
-### Function inventory delta
-- Newly tracked utility functions in this slice (added once to avoid duplicates):
-	- verify-degree-rules-access.ps1::Add-Failure
-	- verify-degree-rules-access.ps1::Assert-True
-	- verify-degree-rules-access.ps1::Get-Title
-	- verify-degree-rules-access.ps1::ConvertFrom-SecureStringToPlainText
-	- verify-degree-rules-access.ps1::Invoke-ApiLogin
-	- verify-degree-rules-access.ps1::New-WebSessionForUser
-	- verify-degree-rules-access.ps1::Invoke-WebCheck
-	- verify-degree-rules-access.ps1::Invoke-ApiRuleAuthCheck
-	- verify-degree-rules-access-local-bootstrap.ps1::Get-SqlScalar
-	- verify-degree-rules-access-local-bootstrap.ps1::ConvertTo-SqlLiteral
-- Existing function behavior updates (no duplicate runtime inventory rows):
-	- PortalController.GraduationEligibility
-		- Deterministic demo/filter slice expanded to include second accelerated-track row.
-	- EduApiClient.GetEligibilityListAsync
-		- Verified filter split stability with expanded deterministic dataset.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v37 and expanded deterministic Graduation Eligibility cohort:
-	- added 2026-MAT-ACC-002,
-	- added deterministic user/profile/enrollment/result rows for additional accelerated-track filter coverage,
-	- retained additive/idempotent pattern for demo reloads.
-- Scripts/05-PostDeployment-Checks.sql now includes v37-specific deterministic check names and expanded ID lists:
-	- DummySeed_DemoDatasetVersionIsV37,
-	- DummySeed_DegreeAuditEligibilityDemo_StudentCountV37,
-	- DummySeed_DegreeAuditEligibilityDemo_BaseProgramCountV37,
-	- DummySeed_DegreeAuditEligibilityDemo_AccProgramCountV37,
-	- DummySeed_DegreeAuditEligibilityDemo_EnrollmentRowsCountV37,
-	- DummySeed_DegreeAuditEligibilityDemo_ResultRowsCountV37.
-
-### Validation summary
-- Runtime filter validation confirmed deterministic split behavior:
-	- base program filter => 4 rows,
-	- accelerated/filter-demo program filter => 2 rows.
-- DB verification confirmed v37 marker and expanded deterministic row coverage.
-
-## 2026-05-31 Update - Graduation Eligibility Filter Demo Seed v36 and Server-Side Graduation Guard
-
-### Function inventory delta
-- Newly tracked runtime functions in this slice (added once to avoid duplicates):
-	- StudentLifecycleController.GraduateStudent
-	- StudentLifecycleController.GraduateStudentsBatch
-	- StudentLifecycleService.GraduateStudentAsync
-	- StudentLifecycleService.GraduateStudentsBatchAsync
-- Existing function behavior updates (no duplicate inventory rows):
-	- PortalController.GraduationEligibility
-		- Verified deterministic program-filter behavior with v36 sample data split.
-	- PortalController.GraduationEligibilityGraduate
-		- Continues to call API graduation route; API now rejects ineligible students.
-
-### Seed/check synchronization
-- Scripts/03-FullDummyData.sql advanced marker to FullDummyData-v36 and expanded deterministic Graduation Eligibility demo/filter rows:
-	- 2026-MAT-AUD-004 (base math program)
-	- 2026-MAT-ACC-001 (math filter-demo program)
-	- additional deterministic enrollments and published results for filter/stability validation.
-- Scripts/05-PostDeployment-Checks.sql now includes v36-specific deterministic checks for:
-	- dataset marker,
-	- student/program split,
-	- deterministic enrollment/result row coverage for the expanded cohort.
-
-### Validation summary
-- Runtime menu/filter validation confirmed deterministic split behavior:
-	- All programs => 5 rows,
-	- Base program (2222...2431) => 4 rows,
-	- Filter-demo math program (4646...4803) => 1 row.
-- Server-side graduation guard validation confirmed direct graduation POST for ineligible students is blocked and does not mutate student status.
-
-## 2026-05-31 Update - Degree Audit Demo Seed v35, Sidebar Completion, and Function Inventory Synchronization
-
-### Function inventory delta
-- Newly recorded runtime functions in the tracker for the Degree Audit companion flows:
-	- PortalController.GraduationEligibility
-	- PortalController.GraduationEligibilityGraduate
-	- PortalController.DegreeRules
-	- PortalController.DegreeRuleCreate
-	- PortalController.DegreeRuleDelete
-	- EduApiClient.GetEligibilityListAsync
-	- EduApiClient.GetAllDegreeRulesAsync
-	- EduApiClient.CreateDegreeRuleAsync
-	- EduApiClient.DeleteDegreeRuleAsync
-	- DegreeAuditController.GetEligibilityList
-	- DegreeAuditController.GetAllRules
-	- DegreeAuditController.GetRuleByProgram
-	- DegreeAuditService.GetEligibilityListAsync
-	- DegreeAuditService.GetAllRulesAsync
-	- DegreeAuditService.GetRuleByProgramAsync
-- Existing function updated (no duplicate row added):
-	- DegreeAuditRepository.GetEarnedCreditsAsync
-		- Credit aggregation now falls back through course offering, course, then department tenant/campus scope so legacy university rows still contribute to earned-credit totals.
-
-### Seed/check runtime surface synchronization
-- Scripts/02-Seed-Core.sql updated to add the missing Degree Audit companion sidebar keys and role access rows:
-	- graduation_eligibility
-	- degree_rules
-- Scripts/03-FullDummyData.sql updated to `FullDummyData-v35` and now includes deterministic university Degree Audit demo rows for menu/filter walkthroughs:
-	- 2026-MAT-AUD-001 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8901`)
-	- 2026-MAT-AUD-002 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8902`)
-	- 2026-MAT-AUD-003 (`8A8A8A8A-8A8A-8A8A-8A8A-8A8A8A8A8903`)
-	- deterministic enrollment rows (`8C...8001`-`8C...8006`)
-	- deterministic published result rows (`8D...8101`-`8D...8106`)
-- Scripts/05-PostDeployment-Checks.sql updated with matching v35 and Degree Audit companion assertions:
-	- DummySeed_DemoDatasetVersionIsV35
-	- DummySeed_DegreeAuditEligibilityFilterDemo_StudentProfileCount
-	- DummySeed_DegreeAuditEligibilityFilterDemo_EnrollmentCount
-	- DummySeed_DegreeAuditEligibilityFilterDemo_ResultRowsCount
-	- DummySeed_DegreeAuditSidebarKeysCount
-	- DummySeed_DegreeAuditSidebarRoleAccessCount
-
-### Validation summary
-- Runtime verification confirmed the portal dashboard renders Degree Audit and Graduation Eligibility menu entries for `admin.math`.
-- Degree Audit page verification confirmed the deterministic selector rows render distinct seeded totals (`6`, `4`, `2` credits).
-- Graduation Eligibility filter verification confirmed the seeded three-row cohort renders correctly under the mathematics department/program filter.
-
-## 2026-05-31 Update - Prerequisites Filter Demo Seed v34 and Repository Payload Synchronization
-
-### Function inventory delta
-- No new public controller/service/API function signature was introduced in this Prerequisites v34 seed/check slice.
-- Existing function updated (no duplicate row added):
-	- PrerequisiteRepository.GetByCourseIdAsync
-		- Added eager loading of `Course` navigation in addition to `PrerequisiteCourse` so prerequisite list payload returns non-empty `CourseCode` and `CourseTitle`.
-
-### Seed/check runtime surface synchronization
-- Scripts/03-FullDummyData.sql updated to `FullDummyData-v34` and now includes deterministic Prerequisites filter demo rows:
-	- PRQ-101 (`58585858-5858-5858-5858-585858585801`)
-	- PRQ-201 (`59595959-5959-5959-5959-595959595901`)
-	- Prerequisite link (`5A5A5A5A-5A5A-5A5A-5A5A-5A5A5A5A5A01`): PRQ-201 requires PRQ-101
-- Scripts/05-PostDeployment-Checks.sql updated with matching v34 and prerequisites assertions:
-	- DummySeed_DemoDatasetVersionIsV34
-	- DummySeed_PrerequisitesFilterDemo_CourseRowsByIdCount
-	- DummySeed_PrerequisitesFilterDemo_LinkCount
-	- DummySeed_PrerequisitesFilterDemo_DepartmentScopedCourseCount
-	- DummySeed_PrerequisitesFilterDemo_CourseScopeAlignedCount
-- Runtime verification confirmed Prerequisites menu/filter loads deterministic rows and department-filter route rendering without page-load errors.
-
-## 2026-05-31 Update - Generate Certificates Filter Demo Seed v33 and Departments Institution Filter Synchronization
-
-### Function inventory delta
-- No new public controller/service/API function signature was introduced in the Generate Certificates v33 seed/check slice.
-- Existing function updated (no duplicate row added):
-	- DepartmentController.GetAll
-		- Added optional query parameter `institutionType` and applied institution-type filtering after existing scope/role filtering.
-
-### Seed/check runtime surface synchronization
-- Scripts/03-FullDummyData.sql updated to `FullDummyData-v33` and now includes deterministic Generate Certificates filter demo rows:
-	- DEMO-CERT-FILTER-CS-911
-	- DEMO-CERT-FILTER-BUS-912
-	- DEMO-CERT-FILTER-ENG-913
-- Scripts/05-PostDeployment-Checks.sql updated with matching v33 and filter-demo assertions:
-	- DummySeed_DemoDatasetVersionIsV33
-	- DummySeed_GenerateCertificatesFilterDemo_ProfilesByIdCount
-	- DummySeed_GenerateCertificatesFilterDemo_GraduatedStatusCount
-	- DummySeed_GenerateCertificatesFilterDemo_QueryCount_CS
-- Runtime verification confirmed Generate Certificates menu/filter visibility for the new deterministic rows and correct CS department filter isolation.
-
-## 2026-05-31 Update - Result Calculation Course-Type Filter Dummy Seed and Runtime Validation Synchronization
-
-### Result Calculation runtime additions
-- Added one new web runtime function for Result Calculation filter data loading:
-	- PortalController.ResultCalculationCourseFilterData
-- Existing Result Calculation runtime surfaces remain authoritative (no duplicate function rows added in this slice):
-	- PortalController.ResultCalculation
-	- PortalController.SaveResultCalculation
-	- EduApiClient.GetResultCalculationSettingsAsync
-	- EduApiClient.SaveResultCalculationSettingsAsync
-
-### Result Calculation validation summary
-- Scripts/03-FullDummyData.sql now enforces deterministic course-type filter demo flags for existing filter-demo course IDs:
-	- CRSFILENG -> HasSemesters=1
-	- CRSFILBUS -> HasSemesters=0
-	- CRSFILMAT -> HasSemesters=1
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersTrueCount
-	- DummySeed_ResultCalculationCourseTypeFilter_HasSemestersFalseCount
-- Runtime verification confirmed Result Calculation menu loads and course-type filter data endpoint returns expected split:
-	- hasSemesters=true includes CRSFILENG and CRSFILMAT, excludes CRSFILBUS
-	- hasSemesters=false includes CRSFILBUS, excludes CRSFILENG
-
-## 2026-05-31 Update - Generate Certificates Demo Seed v32 and Filter Validation Synchronization
-
-### Generate Certificates runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Generate Certificates runtime surface remains authoritative (no duplicate function inventory rows added).
-
-### Generate Certificates validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Generate Certificates filter demo rows and metadata marker FullDummyData-v32:
-	- DEMO-CERT-CS-901, DEMO-CERT-CS-904 (School of Computer Science)
-	- DEMO-CERT-BUS-902, DEMO-CERT-BUS-905 (School of Business Administration)
-	- DEMO-CERT-ENG-903, DEMO-CERT-ENG-906 (School of Engineering)
-- Scripts/05-PostDeployment-Checks.sql now validates v32 expanded assertions:
-	- DummySeed_DemoDatasetVersionIsV32
-	- DummySeed_GenerateCertificatesDemo_ProfilesByIdCount
-	- DummySeed_GenerateCertificatesDemo_GraduatedCount
-	- DummySeed_GenerateCertificatesDemo_ComputerScienceCount
-	- DummySeed_GenerateCertificatesDemo_BusinessCount
-	- DummySeed_GenerateCertificatesDemo_EngineeringCount
-	- DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount
-- SQL verification confirmed deterministic counts for marker/profile/graduated/department/enrollment checks at 1/6/6/2/2/2/6 respectively.
-
-## 2026-05-31 Update - Generate Certificates Demo Seed v31 and Filter Validation Synchronization
-
-### Generate Certificates runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Generate Certificates runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.GenerateCertificates
-	- EduApiClient.GetGraduatedCertificateStudentsAsync
-	- CertificateGenerationController.GetGraduatedStudents
-
-### Generate Certificates validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Generate Certificates filter demo rows and metadata marker FullDummyData-v31:
-	- DEMO-CERT-CS-901 (School of Computer Science)
-	- DEMO-CERT-BUS-902 (School of Business Administration)
-	- DEMO-CERT-ENG-903 (School of Engineering)
-- Scripts/03-FullDummyData.sql now includes deterministic enrollment rows for the above students.
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_DemoDatasetVersionIsV31
-	- DummySeed_GenerateCertificatesDemo_ProfilesByIdCount
-	- DummySeed_GenerateCertificatesDemo_GraduatedCount
-	- DummySeed_GenerateCertificatesDemo_ComputerScienceCount
-	- DummySeed_GenerateCertificatesDemo_BusinessCount
-	- DummySeed_GenerateCertificatesDemo_EngineeringCount
-	- DummySeed_GenerateCertificatesDemo_EnrollmentRowsByIdCount
-- SQL filter verification confirmed deterministic demo rows resolve correctly by department/course filter targets.
-
-## 2026-05-31 Update - Generate Certificates Template Import/Export and Runtime Validation Synchronization
-
-### Generate Certificates runtime additions
-- Added new runtime functions for certificate template lifecycle wiring (University scope):
-	- PortalController.DownloadCertificateTemplate
-	- PortalController.UploadCertificateTemplate
-	- EduApiClient.DownloadCertificateTemplateAsync
-	- EduApiClient.UploadCertificateTemplateAsync
-	- DegreeController.DownloadDefaultTranscriptTemplate
-	- DegreeController.UploadTranscriptTemplate
-- Existing generation/document runtime surfaces remain authoritative:
-	- PortalController.GenerateCertificates
-	- PortalController.GenerateDegreeCertificate
-	- PortalController.GenerateTranscriptCertificate
-	- CertificateGenerationController.GenerateDegreeCertificate
-	- CertificateGenerationController.GenerateTranscriptCertificate
-
-### Generate Certificates validation summary
-- Generate Certificates page now includes template management UI for Admin/SuperAdmin in university scope:
-	- Degree template: download default + import .docx
-	- Transcript template: download default + import .docx
-- Runtime verification confirmed:
-	- /Portal/GenerateCertificates loads without compile/runtime diagnostics in updated code path.
-	- /Portal/DownloadCertificateTemplate?templateType=degree returns download response.
-	- /Portal/DownloadCertificateTemplate?templateType=transcript returns download response.
-- Behavior remains additive: no route removals and no breaking signature changes.
-
-## 2026-05-31 Update - Courses Demo Seed v30 and Filter Validation Synchronization
-
-### Courses runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Courses runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.Courses
-	- PortalController.CreateCourse
-	- PortalController.DeactivateCourse
-	- PortalController.CreateOffering
-	- PortalController.DeleteOffering
-	- EduApiClient.GetCourseDetailsAsync
-	- EduApiClient.GetCourseOfferingsAsync
-	- EduApiClient.CreateCourseAsync
-	- EduApiClient.DeactivateCourseAsync
-	- EduApiClient.CreateOfferingAsync
-	- EduApiClient.DeleteOfferingAsync
-
-### Courses validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Courses filter demo rows and metadata marker FullDummyData-v30:
-	- CRSFILENG (Dummy Engineering)
-	- CRSFILBUS (School of Business Administration)
-	- CRSFILMAT (Mathematics Department)
-- Scripts/03-FullDummyData.sql now includes deterministic offering rows for the above course demo IDs and scope-alignment normalization for courses and offerings.
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_DemoDatasetVersionIsV30
-	- DummySeed_CoursesFilterDemo_CourseRowsByIdCount
-	- DummySeed_CoursesFilterDemo_ActiveCourseCount
-	- DummySeed_CoursesFilterDemo_OfferingsByIdCount
-	- DummySeed_CoursesFilterDemo_EngineeringCourseCount
-	- DummySeed_CoursesFilterDemo_BusinessCourseCount
-	- DummySeed_CoursesFilterDemo_MathCourseCount
-	- DummySeed_CoursesFilterDemo_CourseScopeAlignedCount
-	- DummySeed_CoursesFilterDemo_OfferingScopeAlignedCount
-	- DummySeed_DemoDatasetVersion_v30
-- Runtime verification confirmed Courses menu loads and department filters isolate deterministic demo rows without load-time errors.
-
-## 2026-05-31 Update - Programs Demo Seed v29 and Filter Validation Synchronization
-
-### Programs runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Programs runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.Programs
-	- PortalController.CreateProgram
-	- PortalController.UpdateProgram
-	- PortalController.SetProgramActive
-	- EduApiClient.GetProgramDetailsAsync
-	- EduApiClient.CreateProgramAsync
-	- EduApiClient.UpdateProgramAsync
-	- EduApiClient.ActivateProgramAsync
-	- EduApiClient.DeactivateProgramAsync
-	- ProgramController.GetAll
-	- ProgramController.Create
-	- ProgramController.Update
-	- ProgramController.Activate
-	- ProgramController.Deactivate
-
-### Programs validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Programs filter demo rows and metadata marker FullDummyData-v29:
-	- PRGFILENG (Dummy Engineering)
-	- PRGFILBUS (School of Business Administration)
-	- PRGFILMAT (Mathematics Department)
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_DemoDatasetVersionIsV29
-	- DummySeed_ProgramsFilterDemo_ByIdCount
-	- DummySeed_ProgramsFilterDemo_ActiveCount
-	- DummySeed_ProgramsFilterDemo_DummyEngineeringCount
-	- DummySeed_ProgramsFilterDemo_BusinessCount
-	- DummySeed_ProgramsFilterDemo_MathCount
-	- DummySeed_DemoDatasetVersion_v29
-- Runtime verification confirmed Programs menu loads and department filtering isolates seeded demo rows correctly without page-load errors.
-
-## 2026-05-31 Update - Degree Audit Demo Seed v28 and Filter Runtime Reliability Synchronization
-
-### Degree Audit runtime additions
-- No new public API route signature was introduced; existing runtime surfaces were stabilized for role-safe loading and deterministic demo/testing data:
-	- PortalController.DegreeAudit
-	- EduApiClient.GetMyDegreeAuditAsync
-	- EduApiClient.GetStudentDegreeAuditAsync
-	- DegreeAuditController.GetMyAudit
-	- DegreeAuditController.GetStudentAudit
-	- DegreeAuditService.GetAuditAsync
-- Existing Degree Audit UI/runtime flow enhancements added in this slice:
-	- non-student flow now loads a student picker and avoids student-only self-audit call path,
-	- Degree Audit page exposes deterministic student selection for admin/superadmin filter validation,
-	- institution-type guards were synchronized to avoid false negative checks when department navigation data is not populated.
-
-### Degree Audit validation summary
-- Scripts/03-FullDummyData.sql advanced to FullDummyData-v28 and now includes deterministic Degree Audit filter-demo data handling:
-	- grade-point population for deterministic Degree Audit cohorts,
-	- university deterministic grade-point coverage for menu/filter testing,
-	- idempotent reseed behavior preserved.
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_DemoDatasetVersionIsV28,
-	- DummySeed_DegreeAuditFilterDemo_ResultRowsCount,
-	- DummySeed_DegreeAuditFilterDemo_GradePointPopulatedCount,
-	- DummySeed_DegreeAuditUniversityDemo_ResultRowsCount,
-	- DummySeed_DegreeAuditUniversityDemo_StudentProfileCount,
-	- DummySeed_DegreeAuditUniversityDemo_GradePointPopulatedCount.
-- Runtime verification confirmed Degree Audit menu loads, student filter selection changes context correctly, and completed-course/audit cards render seeded data for selected deterministic students.
-
-## 2026-05-30 Update - Enrollments Demo Seed and Filter Reliability Synchronization
-
-### Enrollments runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Enrollments runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.Enrollments
-	- PortalController.SetEnrollmentActive
-	- PortalController.EnrollStudent
-	- PortalController.AdminDropEnrollment
-	- PortalController.StudentEnroll
-	- PortalController.StudentDropEnrollment
-	- EduApiClient.GetEnrollmentRosterAsync
-	- EduApiClient.AdminEnrollStudentAsync
-	- EduApiClient.AdminDropEnrollmentAsync
-	- EnrollmentController.GetRoster
-- Internal synchronization added for reliability:
-	- deterministic Enrollments filter-demo students extended to include DEMO-ENG-704 and DEMO-ENG-705,
-	- deterministic Enrollments demo rows are normalized back to Active/DroppedAt=NULL on reseed for repeatable demo runs.
-
-### Enrollments validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Enrollments demo coverage:
-	- DS-101 offering 66666666-6666-6666-6666-666666666661 with 3 active demo rows,
-	- DB-201 offering 66666666-6666-6666-6666-666666666662 with 5 active demo rows.
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_EnrollmentsFilterDemo_StudentProfilesCount
-	- DummySeed_EnrollmentsFilterDemo_DS101_ActiveCount
-	- DummySeed_EnrollmentsFilterDemo_DB201_ActiveCount
-	- dataset marker checks upgraded to FullDummyData-v27.
-- Runtime verification confirmed Enrollments menu loads and offering filter changes roster counts from 3 (DS-101) to 5 (DB-201) with deterministic rows displayed.
-
-## 2026-05-30 Update - Student Lifecycle Demo Seed and Filter Reliability Synchronization
-
-### Student Lifecycle runtime additions
-- No new public API/controller/service signature was introduced in this slice.
-- Existing Student Lifecycle runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.StudentLifecycle
-	- PortalController.GraduateStudent
-	- PortalController.PromoteStudent
-	- EduApiClient.GetGraduationCandidatesAsync
-	- EduApiClient.GetStudentsByAcademicLevelAsync
-	- StudentLifecycleController.GetGraduationCandidates
-	- StudentLifecycleController.GetStudentsByAcademicLevel
-- Internal synchronization added for reliability:
-	- StudentLifecycleRepository compatibility handling for legacy active status value `0` plus canonical `1`.
-	- StudentLifecycleService now resolves graduation candidate display names from linked user records.
-	- StudentLifecycleService enforces active-status compatibility in promotion validation.
-
-### Student Lifecycle validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic Student Lifecycle filter demo rows:
-	- 98989898-9898-9898-9898-989898989811 (DEMO-LIFE-CS-801, CS, semester 8, active)
-	- 98989898-9898-9898-9898-989898989812 (DEMO-LIFE-CS-101, CS, semester 1, active)
-	- 98989898-9898-9898-9898-989898989813 (DEMO-LIFE-ENG-201, Engineering, semester 2, active)
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_StudentLifecycleFilterDemo_ProfileCount
-	- DummySeed_StudentLifecycleFilterDemo_CSDeptCount
-	- DummySeed_StudentLifecycleFilterDemo_EngineeringDeptCount
-	- DummySeed_StudentLifecycleFilterDemo_StatusActiveCount
-	- DummySeed_StudentLifecycleFilterDemo_GraduationCandidateCount
-	- DummySeed_StudentLifecycleFilterDemo_Semester1Count
-	- DummySeed_StudentLifecycleFilterDemo_Semester2Count
-	- StudentLifecycle_LegacyStatus0Count
-- Runtime verification confirmed Student Lifecycle menu loads, filter states change result sets by department/semester, and seeded rows appear without screen-load exceptions.
-
-## 2026-05-30 Update - FYP Demo Seed and Menu Filter Synchronization
-
-### FYP runtime additions
-- No new API/controller/service method signature was introduced in this slice.
-- Existing FYP runtime surface remains authoritative (no duplicate function inventory rows added):
-  - PortalController.Fyp
-  - PortalController.CreateFypProject
-  - PortalController.AssignFypSupervisor
-  - EduApiClient.GetAllFypProjectsAsync
-  - EduApiClient.GetFypByDepartmentAsync
-  - FypController.GetByDepartment
-
-### FYP validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic FYP filter demo rows:
-  - 61616161-6161-6161-6161-616161616101 (CS Proposed)
-  - 61616161-6161-6161-6161-616161616102 (CS InProgress)
-  - 61616161-6161-6161-6161-616161616103 (Engineering Completed)
-- Scripts/03-FullDummyData.sql now includes one deterministic upcoming FYP meeting row:
-  - 62626262-6262-6262-6262-626262626201
-- Scripts/05-PostDeployment-Checks.sql now validates:
-  - DummySeed_FypFilterDemoRows_ByIdCount
-  - DummySeed_FypFilterDemo_CS_DepartmentCount
-  - DummySeed_FypFilterDemo_Engineering_DepartmentCount
-  - DummySeed_FypFilterDemo_UpcomingMeetingCount
-- Runtime verification confirmed FYP menu load succeeds and department filters isolate deterministic CS and Engineering demo projects correctly.
-
-## 2026-05-30 Update - Quizzes Demo Seed and Filter Reliability Synchronization
-
-### Quizzes runtime additions
-- No new API/controller/service method signature was introduced in this slice.
-- Existing Quizzes runtime surface remains authoritative (no duplicate function inventory rows added):
-  - PortalController.Quizzes
-  - PortalController.SetQuizActive
-  - EduApiClient.GetQuizzesByOfferingAsync
-  - QuizController.GetByOffering
-
-### Runtime behavior synchronization
-- Existing mappings and payload handling were synchronized so Quizzes UI actions post stable values:
-  - API quiz identifier mapping now prefers `quizId` for web quiz item identity.
-  - Activate action now guards against empty quiz id payload before issuing API write.
-  - Quizzes form hidden boolean payloads now submit explicit true/false values.
-  - Quiz summary contract now carries `IsActive` in listing responses for consistent Activate/Deactivate rendering.
-
-### Quizzes validation summary
-- Scripts/03-FullDummyData.sql now includes deterministic offering-501 Quizzes filter demo rows:
-  - 13131313-1313-1313-1313-131313131307 (active)
-  - 13131313-1313-1313-1313-131313131308 (inactive)
-- Scripts/05-PostDeployment-Checks.sql now validates:
-  - DummySeed_QuizRows_FilterDemoByIdCount
-  - DummySeed_QuizRows_Offering501_ActiveCount
-  - DummySeed_QuizRows_Offering501_InactiveCount
-- Runtime verification confirmed includeInactive=false excludes inactive demo quiz and includeInactive=true includes it.
-
-## 2026-05-30 Update - Results Internal Demo Seed and Filter Scope Alignment
-
-### Runtime additions
-- No new API/controller method signature was introduced in this slice.
-- Existing Results runtime surface remains authoritative (no duplicate function inventory rows added):
-	- PortalController.Results
-	- EduApiClient.GetResultsByOfferingAsync
-	- ResultController.GetResultsByOffering
-
-### Validation Summary
-- Scripts/03-FullDummyData.sql now includes deterministic Internal Results demo rows for offering 55555555-5555-5555-5555-555555555501:
-	- cccccccc-cccc-cccc-cccc-cccccccccc40
-	- cccccccc-cccc-cccc-cccc-cccccccccc41
-	- cccccccc-cccc-cccc-cccc-cccccccccc42
-- Scripts/03-FullDummyData.sql includes a scope-alignment block for offering 555...501 so TenantId/CampusId/InstitutionType are set for scoped Results filtering.
-- Scripts/05-PostDeployment-Checks.sql now validates:
-	- DummySeed_ResultRows_InternalDemoRowCount
-	- DummySeed_ResultRows_Offering501_InternalCount
-	- DummySeed_ResultOffering501_ScopeAligned
-- Runtime verification confirmed Results page renders Results 3 and includes registration numbers 2026-CS-0001, 2026-CS-0002, 2026-CS-0003 under Internal/Internal scoped filters.
-
-## 2026-05-30 Update - Students Demo Seed v26 and Outage-Resilient Menu Load
-
-### Runtime additions
-- Added one new helper in existing web controller flow:
-	- `PortalController.IsApiConnectivityException` (classifies HTTP/socket/timeout failures so menu guard and Students view handle temporary API outage gracefully).
-- Existing Students runtime surface remains authoritative:
-	- `PortalController.Students`
-	- `EduApiClient.GetDepartmentsAsync`
-	- `EduApiClient.GetStudentsAsync`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v26`.
-- Added deterministic Students filter demo records:
-	- `STUFILT-CS-901`, `STUFILT-CS-902` (Computer Science department)
-	- `STUFILT-BUS-903` (Business department)
-- `Scripts/05-PostDeployment-Checks.sql` extended with Students filter demo assertions and v26 marker checks.
-- Students page now shows friendly warning when API is unavailable instead of a developer exception page.
-
-## 2026-05-30 Update - Student Timetable Demo Seed v25 Expansion
-
-### Runtime additions
-- No new API/controller method signature added in this slice.
-- Existing Student Timetable runtime surface remains authoritative:
-	- `PortalController.TimetableStudent`
-	- `EduApiClient.GetTimetablesByDepartmentAsync`
-	- `EduApiClient.GetTimetableByIdAsync`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v25`.
-- Student Timetable demo pack expanded for Dummy Engineering with one additional published timetable (`2525...2903`) and three additional entries (`2626...2904` to `2626...2906`) covering Tuesday/Friday/Saturday filters.
-- `Scripts/05-PostDeployment-Checks.sql` extended with v25 and new day-of-week assertions for timetable `2525...2903`.
-
-## 2026-05-30 Update - Student Timetable Demo Seed v24 and Error Message Normalization
-
-### Runtime additions
-- Added one new internal helper in existing API client flow (no endpoint contract change):
-	- `EduApiClient.TryExtractApiErrorMessage` (extracts `detail`/`message`/`title` from JSON API error payloads so portal alerts show readable text).
-- Existing runtime surface retained for Student Timetable filter behavior:
-	- `PortalController.TimetableStudent`
-	- `EduApiClient.GetTimetablesByDepartmentAsync`
-	- `EduApiClient.GetTimetableByIdAsync`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` advanced to `FullDummyData-v24` and now includes deterministic Student Timetable demo pack rows for Dummy Engineering.
-- `Scripts/05-PostDeployment-Checks.sql` extended with v24 and Student Timetable demo assertions (timetable count + day-of-week entry checks).
-- Menu-path runtime validation confirmed Student Timetable filter behavior for timetable switch and day-of-week narrowing.
-
-## 2026-05-30 Update - Attendance Filter Demo Seed v23 and Student Filter Mapping Sync
-
-### Runtime additions
-- No new endpoint/method signature introduced in this slice.
-- Existing attendance/enrollment runtime surfaces were synchronized to fix student filter behavior without creating duplicate inventory entries:
-	- `EnrollmentController.GetRoster` (response contract extended with `StudentProfileId` while retaining enrollment `Id`)
-	- `EduApiClient.GetEnrollmentRosterAsync` (maps `StudentProfileId` for web usage)
-	- `PortalController.RenderAttendanceAsync` (student dropdown + roster filtering now use `StudentProfileId`)
-
-### Validation Summary
-- Deterministic attendance filter demo data added in `Scripts/03-FullDummyData.sql` with marker `FullDummyData-v23`.
-- `Scripts/05-PostDeployment-Checks.sql` extended with v23 and attendance filter demo assertions.
-- Attendance and Enter Attendance views now filter correctly when selecting a specific student.
-
-## 2026-05-30 Update - Announcements Demo Seed v22 and Filter Binding Sync
-
-### Runtime additions
-- No new runtime function signature was introduced in this synchronization slice.
-- Existing Announcements runtime surfaces remain authoritative (no duplicate function inventory rows added):
-	- `PortalController.Announcements`
-	- `PortalController.CreateAnnouncement`
-	- `PortalController.SetAnnouncementActive`
-	- `PortalController.DeleteAnnouncement`
-	- `EduApiClient.GetAnnouncementsAsync`
-	- `AnnouncementController.GetAnnouncements`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` upgraded to `FullDummyData-v22` and now includes deterministic active/inactive announcement seed rows for offering filter demos.
-- `Scripts/05-PostDeployment-Checks.sql` now validates the v22 marker and deterministic announcements filter dataset counts.
-- Announcements web filter binding fix is synchronized by removing conflicting `includeInactive=false` hidden input and defaulting `PortalController.Announcements` query flag to `false`.
-
-## 2026-05-29 Update - Discussion Demo Seed v21 and Filter Verification Sync
-
-### Runtime additions
-- No new application/runtime function signature was added in this synchronization slice.
-- Discussion menu/filter behavior continues to use existing runtime surfaces (no duplicate function inventory rows added):
-	- `PortalController.Discussion`
-	- `PortalController.DiscussionThreadDetail`
-	- `EduApiClient.GetDiscussionThreadsAsync`
-	- `DiscussionController.GetThreads`
-	- `DiscussionService.GetThreadsAsync`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` dataset marker updated to `FullDummyData-v21`.
-- Discussion demo seed expanded with additional offering-scoped threads/replies for filter demo/testing.
-- `Scripts/05-PostDeployment-Checks.sql` now validates v21 marker and offering-specific discussion coverage counts.
-
-## 2026-05-29 Update - Discussion Demo Seed v20 and Schema Sync
-
-### Runtime additions
-- No new C# application-layer function signature was introduced in this synchronization slice.
-- Existing Discussion runtime surfaces remain the active behavior path (no duplicate function inventory entries added):
-	- `PortalController.Discussion`
-	- `PortalController.DiscussionThreadDetail`
-	- `EduApiClient.GetDiscussionThreadsAsync`
-	- `DiscussionController.GetThreads`
-	- `DiscussionService.GetThreadsAsync`
-
-### Validation Summary
-- `Scripts/01-Schema-Current.sql` now includes Phase 31 Discussion enhancement migration coverage (`ThreadType`, `IssueSubType`, `IsSolved`, `ResolvedBy`, `ResolvedAt`, `TicketNumber`, `IsVisibleToAll`) and related indexes.
-- `Scripts/03-FullDummyData.sql` upgraded dataset marker to `FullDummyData-v20` and expanded Discussion sample rows with mixed states (pinned/open, FAQ, solved/closed) for demo/testing.
-- `Scripts/05-PostDeployment-Checks.sql` upgraded to v20 marker assertion and added resolved-discussion count verification.
-
-## 2026-05-29 Update - LMS Demo Seed v18 Function Inventory Sync
-
-### Runtime additions
-- No new application-layer function signature was introduced in this update.
-- Existing LMS runtime surfaces continue to be used:
-	- `PortalController.LmsManage`
-	- `EduApiClient.GetLmsModulesAsync`
-	- `LmsController.GetModules`
-
-### Validation Summary
-- `Scripts/03-FullDummyData.sql` upgraded to `FullDummyData-v18` with LMS offering-513 draft/published module scenarios and additional videos.
-- `Scripts/05-PostDeployment-Checks.sql` now validates LMS module/video coverage for offering 513.
-
-## 2026-05-29 Update - Demo Seed Expansion (Rubric/Gradebook)
-
-### Runtime additions
-- No new application-layer function signature was added in this synchronization slice.
-- Existing `GradebookService.GetGradebookAsync` fallback behavior is now backed by additional demo rows in SQL seed data for validation scenarios.
-
-### Validation Summary
-- Extended `Scripts/03-FullDummyData.sql` with offering `55555555-5555-5555-5555-555555555513` sample submissions and `Practical` result rows.
-- Extended `Scripts/05-PostDeployment-Checks.sql` with rubric submission and offering-513 practical-result verification checks.
-
-## 2026-05-29 Update - Institution-Aware Gradebook Function Inventory
-
-### Runtime additions
-| Function / Method | Purpose | File |
-|---|---|---|
-| IGradebookRepository.GetInstitutionTypeForOfferingAsync | Resolves offering-specific institution mode so gradebook output switches between GPA/CGPA and percentage behavior. | src/Tabsan.EduSphere.Domain/Interfaces/IGradebookRepository.cs |
-| GradebookRepository.GetInstitutionTypeForOfferingAsync | Reads institution type from the selected course offering in one scoped query. | src/Tabsan.EduSphere.Infrastructure/Repositories/GradebookRubricRepositories.cs |
-| IResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Returns active result components for the requested institution scope. | src/Tabsan.EduSphere.Domain/Interfaces/IResultRepository.cs |
-| ResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Applies institution filtering for active component rules and keeps legacy fallback behavior. | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentResultRepositories.cs |
-| GradebookService.GetGradebookAsync | Builds institution-aware aggregates: University weighted-total to GPA + CGPA, School/College percentage; includes fallback component derivation from existing result types when configured rules are missing. | src/Tabsan.EduSphere.Application/Assignments/GradebookService.cs |
-
-### Validation Summary
-- Unit test suite passed (`197/197`) after repository-contract updates in test stubs.
-- Runtime verification confirmed mixed behavior on seeded offerings:
-	- university offering renders GPA and CGPA columns,
-	- school/college offerings render Percentage column.
-
-## 2026-05-28 Update - Enter Results Acceptance Criteria Function Closure
-
-### Runtime additions
-- No new runtime function introduced in this closure phase.
-- Closure references existing runtime surfaces that satisfy acceptance criteria:
-	- `PortalController.CreateResult`, `PortalController.ImportResultCsv`, `PortalController.PublishAllResults`, `PortalController.CorrectResult`, `PortalController.DownloadResultImportReport`.
-	- `ResultsPageModel.CanWriteResults` and `CanPublishResults` for UI/action gating.
-
-### Validation Summary
-- Focused result-governance unit slice passed (`9/9`).
-- Report-token web integration passed (`3/3`).
-- Sidebar integration passed (`17/17`).
-
-## 2026-05-28 Update - Enter Results Non-Functional Function Inventory
-
-### Runtime additions
-- `PortalController.CorrectResult` now applies `ValidateResultWriteScopeAsync` for consistent write-scope enforcement.
-- `PortalController.CreateResult` and `PortalController.CorrectResult` now add defensive server-side mark-range validation messaging.
-- `PortalController.CreateResult`, `PortalController.CorrectResult`, and `PortalController.PublishAllResults` now emit structured operational logs for success and blocked outcomes.
-
-### Validation Summary
-- Web build passed after non-functional hardening.
-- Focused result-governance unit suite remained green (`9/9`).
-
-## 2026-05-28 Update - Enter Results Test Requirements Function Inventory
-
-### Runtime additions
-- No new runtime endpoint introduced in this slice.
-- Added focused unit test surface in `ResultServiceGovernanceTests` for:
-	- `ResultService.CorrectAsync` draft-correction guard.
-	- `ResultService.CorrectAsync` correction-reason audit propagation.
-	- `ResultService.PublishAllForOfferingAsync` draft-only publish behavior.
-
-### Validation Summary
-- Focused result-governance unit suites passed (`9/9`).
-- Web build passed after test-requirement expansion.
-
-## 2026-05-28 Update - Enter Results Publishing Rules Function Inventory
-
-### Runtime additions
-- `ResultsPageModel.CanPublishResults` and `PublishResultDisabledReason` added for publish-role governance state.
-- `PortalController.PublishAllResults` hardened with explicit Admin/SuperAdmin approval gating in web flow.
-- `CorrectResultRequest` expanded to include correction `Reason` for audit payload capture.
-- `Result.CorrectMarks` now enforces published-only correction invariant.
-- `ResultService.CorrectAsync` now captures correction reason in audit metadata and blocks correction of draft rows.
-
-### Validation Summary
-- Web build passed after publishing-rule hardening.
-- Focused unit tests passed (`6/6`) for publish-role and correction invariants.
-
-## 2026-05-28 Update - Enter Results Phase 5 Function Inventory
-
-### Runtime additions
-- No new controller actions or API endpoints were introduced in this phase.
-- Existing `ResultsPageModel.CanWriteResults` and `SaveResultDisabledReason` continue to drive write-action eligibility and UI guidance state.
-
-### Validation Summary
-- Web build passed after phase 5 result-entry table behavior update.
-- Focused unit coverage added for result write-guard eligibility conditions.
-
-## 2026-05-28 Update - Enter Results Phase 2 Filter Criteria Inventory
-
-### Phase 2 Implementation Summary
-- Phase 2 execution is filter-behavior and entry-scope enforcement alignment for Enter Results.
-- Existing Enter Results runtime entry surface remains `PortalController.EnterResults` and existing Results flow contracts.
-- No new controller, service, repository, or API function signature was introduced in this phase checkpoint.
-
-### Phase 2 Validation Summary
-- Function inventory reviewed and confirmed no additional runtime function entries are required for this phase.
-- Existing Enter Results function entries from Phase 0/1 remain the authoritative runtime references.
-
-## 2026-05-28 Update - Enter Results Phase 1 and Phase 2 Runtime Function Inventory
-
-### Runtime additions
-- `PortalController.DownloadResultCsvTemplate` added for Enter Results template generation and download.
-- `PortalController.ImportResultCsv` added for Enter Results CSV import with strict/non-strict validation behavior.
-- `PortalController.ValidateResultWriteScopeAsync` added for server-side required-filter and scope enforcement before result write actions.
-
-### Validation Summary
-- Web build passed with new Enter Results runtime function surfaces.
-- Existing sidebar/menu integration matrix remained green.
-
-## 2026-05-28 Update - Enter Results Phase 3 Template Function Inventory
-
-### Phase 3 Implementation Summary
-- `PortalController.DownloadResultCsvTemplate` now emits two explicit example rows in template CSV output.
-- `PortalController.ImportResultCsv` now skips template example rows so they are not treated as production writes.
-
-### Phase 3 Validation Summary
-- Web build passed after template/import guidance-row behavior updates.
-
-## 2026-05-28 Update - Enter Results Phase 4 Function Inventory
-
-### Runtime additions
-- `PortalController.DownloadResultImportReport` added for one-time, expiring import-report download.
-- `PortalController.ImportResultCsv` extended with upload-audit emission and row-level report-token generation.
-- `PortalController.ResultImportReports` and `ResultImportReportTtl` added for result report-token retention controls.
-
-### Validation Summary
-- Result import report web route integration tests passed (`3/3`).
-- Web build passed after phase 4 runtime additions.
-
-## 2026-05-28 Update - Enter Results Phase 0/1 Initial Inventory
-
-### Phase 0/1 Implementation Summary
-- Added governed sidebar key `enter_results` in menu seeding and role-access defaults.
-- Added `PortalController.EnterResults` as dedicated entry route for Enter Results menu navigation.
-- Added sidebar module-key mapping for `enter_results` to results-module entitlement behavior.
-
-### Phase 0/1 Validation Summary
-- Sidebar integration matrix passed with `enter_results` coverage.
-- Full solution build passed.
-
-## 2026-05-28 Update - Enter Attendance Phase 11 Integration Expectations Inventory
-
-### Phase 11 Implementation Summary
-- No new runtime function signatures were introduced in this closure slice.
-- Confirmed existing Enter Attendance, reporting, and authorization function surfaces remain behaviorally consistent under cross-module regression checks.
-
-### Phase 11 Validation Summary
-- Attendance-focused unit matrix passed (`20/20`).
-- Web route integration suite passed (`3/3`).
-- Integration regression batch (Sidebar, Authorization, Report Exports, Parent Portal) passed (`117/117`).
-- Full solution build passed.
-
-## 2026-05-28 Update - Enter Attendance Phase 9 Database Compliance Inventory
-
-### Phase 9 Implementation Summary
-- Added attendance index hardening in `Scripts/04-Maintenance-Indexes-And-Views.sql` for offering/date, student, and unique student/offering/date safeguards.
-- Added attendance index existence checks in `Scripts/05-PostDeployment-Checks.sql` and `Scripts/05-PostDeployment-Checks-Clean.sql`.
-- Confirmed duplicate prevention at database level remains enforced through unique attendance composite key.
-
-### Phase 9 Validation Summary
-- Solution build passed.
-- Attendance-focused unit matrix passed (`20/20`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 8 Compliance Inventory
-
-### Phase 8 Implementation Summary
-- Confirmed attendance enhancements remain confined to attendance feature surface and existing architecture patterns.
-- Confirmed existing sidebar governance and role restrictions remained unchanged.
-- Confirmed tenant/campus/department/course/semester scope checks remain active in attendance write paths.
-
-### Phase 8 Validation Summary
-- Attendance-focused unit matrix passed (`20/20`).
-- Web route integration suite passed (`3/3`).
-- Sidebar integration regression slice passed (`17/17`).
-- Full solution build passed.
-
-## 2026-05-28 Update - Enter Attendance Phase 7 Validation Inventory
-
-### Phase 7 Implementation Summary
-- Hardened `PortalController.BulkMarkAttendance` manual-entry validation for empty submissions.
-- Added duplicate Student+Date row detection for manual row submissions.
-- Enforced required per-row dates before attendance batch writes.
-
-### Phase 7 Validation Summary
-- Attendance-focused unit matrix passed (`20/20`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 6 Table Structure Inventory
-
-### Phase 6 Implementation Summary
-- Updated attendance row-entry table rendering to Student ID, Student Name, Date, and Present fields.
-- Added generic disabled row-table structure for incomplete filter/offering state.
-- Updated `PortalController.BulkMarkAttendance` to support and group per-row date submissions.
-
-### Phase 6 Validation Summary
-- Attendance-focused unit matrix passed (`18/18`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 5 UI Save Guard Inventory
-
-### Phase 5 Implementation Summary
-- Added `AttendancePageModel` required-filter save-state helpers for Enter Attendance write actions.
-- Updated attendance view to disable save/import controls until required filters are selected.
-- Added focused unit tests for required-filter save-state behavior.
-
-### Phase 5 Validation Summary
-- Attendance-focused unit matrix passed (`16/16`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 4.5 Web Integration Inventory
-
-### Phase 4.5 Implementation Summary
-- Added `Tabsan.EduSphere.WebIntegrationTests` project for real web-route verification.
-- Added `WebEntryPointMarker` for MVC-host integration bootstrapping.
-- Added route-level tests for `PortalController.DownloadAttendanceImportReport` valid, invalid, and expired token behavior.
-
-### Phase 4.5 Validation Summary
-- Attendance import unit matrix passed (`14/14`).
-- Web integration route suite passed (`3/3`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 4.4 UX Inventory
-
-### Phase 4.4 Implementation Summary
-- Added user-facing hint text near import report download action in attendance view.
-- No controller/action contract changes.
-
-### Phase 4.4 Validation Summary
-- Attendance import unit matrix passed (`14/14`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 4.3 Retention Inventory
-
-### Phase 4.3 Implementation Summary
-- Added report TTL and clock-provider controls for attendance import report lifecycle.
-- Hardened report download endpoint to differentiate unavailable versus expired tokens.
-
-### Phase 4.3 Validation Summary
-- Attendance import unit matrix passed (`14/14`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 4.2 Report Export Inventory
-
-### Phase 4.2 Implementation Summary
-- Extended `PortalController.ImportAttendanceCsv` to create report-token-linked CSV result artifacts.
-- Added `PortalController.DownloadAttendanceImportReport` endpoint and attendance view model token wiring.
-
-### Phase 4.2 Validation Summary
-- Attendance import unit matrix passed (`12/12`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 4.1 Audit Inventory
-
-### Phase 4.1 Implementation Summary
-- Added upload-audit metadata writing inside `PortalController.ImportAttendanceCsv`.
-- Added logger dependency to `PortalController` and updated unit-test constructor call sites.
-
-### Phase 4.1 Validation Summary
-- Focused portal controller unit suite passed (`14/14`).
-- Sidebar integration regression slice passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 3 Import UX Inventory
-
-### Phase 3 Implementation Summary
-- Extended `PortalController.ImportAttendanceCsv` with strict-mode and row-level validation detail handling.
-- Extended `AttendancePageModel` and attendance view to render import detail messages for CSV row feedback.
-
-### Phase 3 Validation Summary
-- Focused attendance matrix passed with strict-mode and warning-surface coverage (`9/9`).
-- Targeted sidebar integration suite passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Phase 2 Filter Enforcement Inventory
-
-### Phase 2 Implementation Summary
-- Added attendance filter-state fields in `AttendancePageModel` for Department, Course, and Class/Semester selection.
-- Added filter-context enforcement helper in `PortalController` for attendance write operations.
-- Added expanded unit-test matrix coverage for missing-filter guard behavior.
-
-### Phase 2 Validation Summary
-- Focused attendance test matrix passed (`8/8`).
-- Targeted sidebar integration suite passed (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance Roster Scope Hardening Inventory
-
-### Phase 1 Implementation Summary
-- Added roster-scope enforcement in `PortalController.BulkMarkAttendance` and `PortalController.CorrectAttendance`.
-- Added focused unit-test coverage in `PortalAttendanceCsvImportTests` for CSV matrix and manual scope guard paths.
-
-### Phase 1 Validation Summary
-- Focused unit test suite passed (`7/7`) for attendance CSV and roster-scope enforcement behavior.
-- Targeted sidebar integration suite remained green (`17/17`).
-
-## 2026-05-28 Update - Enter Attendance CSV Function Inventory
-
-### Phase 1 Implementation Summary
-- Added `PortalController.DownloadAttendanceCsvTemplate` to generate/download the CSV template.
-- Added `PortalController.ImportAttendanceCsv` to validate and import CSV attendance rows through existing bulk-mark paths.
-
-### Phase 1 Validation Summary
-- Web project build passed after CSV action and view wiring implementation.
-
-## 2026-05-28 Update - Enter Attendance Phase 1 Start Function Inventory
-
-### Phase 1 Implementation Summary
-- Added `PortalController.EnterAttendance` as the dedicated portal entry action for the new `enter_attendance` menu.
-- Updated `DatabaseSeeder.SeedSidebarMenusAsync(...)` so the new sidebar menu is seeded with Admin/Faculty access while keeping Student excluded.
-
-### Phase 1 Validation Summary
-- Focused sidebar integration coverage passed for the new menu visibility matrix.
-- Function inventory is updated only for runtime surface introduced in this slice; CSV import functions remain pending.
-
-## 2026-05-28 Update - Enter Attendance Phase 0 Function Inventory Note
-
-### Implementation Summary
-- Phase 0 for **Enter Attendance** is documentation-only and introduces no new runtime functions, controllers, services, repositories, or portal actions yet.
-- The governed menu key planned for later implementation is `enter_attendance` with default access restricted to **SuperAdmin**, **Admin**, and **Faculty**.
-
-### Validation Summary
-- Function inventory intentionally remains unchanged for Phase 0 to avoid duplicating planned behavior as implemented runtime surface.
-- Runtime function entries will be added in later phases when API, web, application, or infrastructure code is introduced.
+> Auto-maintained registry of all implemented functions, services, and API endpoints. Clean index — no summaries.
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
-| ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy | Loads layered configuration including parent/root `environments.json`, optional external profile file, and environment-variable overlays in deterministic order. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |
+| TryResolveActorUserId | Resolves actor user ID from JWT claims | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| TryResolveActorRole | Resolves actor role from JWT claims | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| TryResolveIpAddress | Resolves client IP from X-Forwarded-For header or connection | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| TryResolveUserAgent | Resolves User-Agent from request headers | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| TryResolveDeviceInfo | Resolves device info from Sec-CH-UA headers or User-Agent | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| TryResolveCorrelationId | Resolves CorrelationId from X-Correlation-Id header or HttpContext.TraceIdentifier | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| AuditService.LogAsync | Enriches and persists audit entries with auto-resolved context (userId, role, IP, user-agent, correlationId) | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| AuditService.SearchAsync | Queryable audit log search with Phase 1 filters (actorRole, severity, eventCategory, correlationId) | src/Tabsan.EduSphere.Infrastructure/Auditing/AuditService.cs |
+| IAuditService.LogAsync | Interface for writing audit log entries | src/Tabsan.EduSphere.Domain/Interfaces/IAuditService.cs |
+| IAuditService.SearchAsync | Interface for searching audit logs with Phase 1 filter parameters | src/Tabsan.EduSphere.Domain/Interfaces/IAuditService.cs |
+| AuditLog (entity) | Immutable audit record with bigint PK, CorrelationId, Severity, EventCategory | src/Tabsan.EduSphere.Domain/Auditing/AuditLog.cs |
+| EnforceImmutableAuditLogs | Blocks UPDATE/DELETE on audit_logs at DbContext level | src/Tabsan.EduSphere.Infrastructure/Persistence/ApplicationDbContext.cs |
+| AuditController.SearchLogs | GET /api/v1/audit/logs — filtered search with Phase 1 query params | src/Tabsan.EduSphere.API/Controllers/AuditController.cs |
+| AuditController.ExportLogs | GET /api/v1/audit/logs/export/{format} — CSV/Excel/PDF export with Phase 1 filters | src/Tabsan.EduSphere.API/Controllers/AuditController.cs |
+| AuditController.BuildCsv | Generates CSV byte array with CorrelationId, Severity, EventCategory columns | src/Tabsan.EduSphere.API/Controllers/AuditController.cs |
+| AuditController.BuildExcel | Generates Excel byte array with CorrelationId, Severity, EventCategory columns | src/Tabsan.EduSphere.API/Controllers/AuditController.cs |
+| AuditController.BuildPdf | Generates PDF byte array with Severity, Category columns | src/Tabsan.EduSphere.API/Controllers/AuditController.cs |
+| IEduApiClient.SearchAuditLogsAsync | Web client contract for audit log search | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.ExportAuditLogsCsvAsync | Web client contract for audit log CSV export | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.ExportAuditLogsExcelAsync | Web client contract for audit log Excel export | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.ExportAuditLogsPdfAsync | Web client contract for audit log PDF export | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.SearchAuditLogsAsync | Calls audit log search API endpoint | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ExportAuditLogsCsvAsync | Calls audit log CSV export API endpoint | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ExportAuditLogsExcelAsync | Calls audit log Excel export API endpoint | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ExportAuditLogsPdfAsync | Calls audit log PDF export API endpoint | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| PortalController.AuditLogs | Renders the admin audit monitoring UI with filterable logs | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ExportAuditLogsCsv | Web action for audit log CSV export from portal | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ExportAuditLogsExcel | Web action for audit log Excel export from portal | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ExportAuditLogsPdf | Web action for audit log PDF export from portal | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| AuditLogConfiguration.Configure | EF Core fluent config for audit_logs table, columns, and indexes | src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AuditLogConfiguration.cs |
+| AuthService.LoginAsync | Authenticates user, enforces lockout/MFA/session-risk/license concurrency, creates session | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.RefreshAsync | Rotates refresh token after validating session activity | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.LogoutAsync | Revokes the current user session | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.ChangePasswordAsync | Verifies old password, checks history (last 5), updates hash, logs audit | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.ForceChangePasswordAsync | Allows MustChangePassword user to set new password with policy enforcement | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.BeginMfaSetupAsync | Starts TOTP enrollment, returns QR/manual-key payload | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.EnableMfaAsync | Confirms MFA enrollment with TOTP code verification | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.RegenerateRecoveryCodesAsync | Regenerates MFA recovery codes | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| AuthService.GetSecurityProfileAsync | Returns authentication security features configuration (MFA, SSO, session risk) | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| IAuthService.LoginAsync | Interface for user authentication | src/Tabsan.EduSphere.Application/Interfaces/IAuthService.cs |
+| IAuthService.ChangePasswordAsync | Interface for password change | src/Tabsan.EduSphere.Application/Interfaces/IAuthService.cs |
+| IAuthService.ForceChangePasswordAsync | Interface for forced password change | src/Tabsan.EduSphere.Application/Interfaces/IAuthService.cs |
+| IAuthService.LogoutAsync | Interface for session logout | src/Tabsan.EduSphere.Application/Interfaces/IAuthService.cs |
+| IAuthService.RefreshAsync | Interface for token refresh | src/Tabsan.EduSphere.Application/Interfaces/IAuthService.cs |
+| PasswordPolicyRules.BeSafePassword | Enforces password strength: 12-16 chars, upper, lower, digit, symbol, banned patterns | src/Tabsan.EduSphere.Application/Validators/AuthValidators.cs |
+| AuthController.Login | POST /api/v1/auth/login — authenticates and returns JWT + refresh token | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthController.Refresh | POST /api/v1/auth/refresh — rotates refresh token | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthController.Logout | POST /api/v1/auth/logout — revokes current session | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthController.ChangePassword | PUT /api/v1/auth/change-password — changes authenticated user password | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthController.ForceChangePassword | POST /api/v1/auth/force-change-password — forced password change for MustChangePassword users | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthController.GetSecurityProfile | GET /api/v1/auth/security-profile — returns auth security feature flags | src/Tabsan.EduSphere.API/Controllers/AuthController.cs |
+| AuthSecurityOptions | Configuration class for MFA, SSO, session risk, password ageing, session timeout settings | src/Tabsan.EduSphere.Application/Auth/AuthSecurityOptions.cs |
+| AccountSecurityService.GetLockedAccountsAsync | Lists all currently locked non-admin accounts | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityService.GetLockoutStatusAsync | Returns lockout status for a specific user | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityService.UnlockAccountAsync | Unlocks a locked account and resets failed attempts | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityService.ResetPasswordAsync | Admin resets password for non-admin accounts | src/Tabsan.EduSphere.Application/Services/AccountSecurityService.cs |
+| AccountSecurityController.GetLockedAccounts | GET /api/v1/account-security/locked — lists locked accounts | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| AccountSecurityController.GetLockoutStatus | GET /api/v1/account-security/{userId}/status — user lockout status | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| AccountSecurityController.UnlockAccount | POST /api/v1/account-security/{userId}/unlock — unlocks account | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| AccountSecurityController.ResetPassword | POST /api/v1/account-security/{userId}/reset-password — admin password reset | src/Tabsan.EduSphere.API/Controllers/AccountSecurityController.cs |
+| TokenService.GenerateAccessToken | Creates JWT with user claims (sub, role, tenant, campus, studentProfileId) | src/Tabsan.EduSphere.Infrastructure/Auth/TokenService.cs |
+| TokenService.GenerateRefreshToken | Generates cryptographically random 64-byte refresh token | src/Tabsan.EduSphere.Infrastructure/Auth/TokenService.cs |
+| TokenService.HashRefreshToken | Produces SHA-256 hex hash of refresh token | src/Tabsan.EduSphere.Infrastructure/Auth/TokenService.cs |
+| PasswordHasher.Hash | Hashes password using ASP.NET Core Identity v3 PBKDF2 with HMACSHA512 | src/Tabsan.EduSphere.Infrastructure/Auth/PasswordHasher.cs |
+| PasswordHasher.Verify | Verifies password against stored hash | src/Tabsan.EduSphere.Infrastructure/Auth/PasswordHasher.cs |
+| User.RecordLogin | Sets LastLoginAt, resets failed attempts, clears lockout | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.RecordFailedLoginAttempt | Increments failed counter, locks account at threshold (5 attempts, 15 min) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.IsCurrentlyLockedOut | Returns true if account is locked and lockout period hasn't expired | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.UnlockAccount | Manually unlocks account (admin action) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.UpdatePasswordHash | Replaces password hash and records LastPasswordChangedAt | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| UserSession.IsActive | Computed property — true when not revoked and not expired | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| UserSession.Revoke | Invalidates session by setting RevokedAt | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| UserSession.Rotate | Replaces refresh token hash and expiry for token rotation | src/Tabsan.EduSphere.Domain/Identity/UserSession.cs |
+| PasswordHistoryEntry | Stores previous password hashes with optional ExpiresAt for archival | src/Tabsan.EduSphere.Domain/Identity/PasswordHistoryEntry.cs |
+| UserSessionRepository.GetActiveByHashAsync | Finds active session by refresh token hash | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| UserSessionRepository.GetMostRecentByUserIdAsync | Returns user's most recent session for risk assessment | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| UserSessionRepository.CountActiveSessionsAsync | Counts all active sessions for license concurrency enforcement | src/Tabsan.EduSphere.Infrastructure/Repositories/UserSessionRepository.cs |
+| PasswordHistoryRepository.GetRecentAsync | Returns last N password hashes for reuse prevention | src/Tabsan.EduSphere.Infrastructure/Repositories/PasswordHistoryRepository.cs |
+| UserRepository.GetLockedAccountsAsync | Returns all locked non-admin accounts | src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs |
+| UserRepository.GetByUsernameAsync | Finds user by username with role navigation | src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs |
+| AdminUserController.Create | POST /api/v1/admin-user — creates admin user with institution type | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
+| AdminUserController.GetAll | GET /api/v1/admin-user — lists admin users | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
+| AdminUserController.Update | PUT /api/v1/admin-user/{id} — updates admin user | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
+| UserSettingsController.GetProfile | GET /api/v1/user-settings/me — current user profile | src/Tabsan.EduSphere.API/Controllers/UserSettingsController.cs |
+| UserSettingsController.UpdateProfile | PUT /api/v1/user-settings/me — updates current user profile | src/Tabsan.EduSphere.API/Controllers/UserSettingsController.cs |
+| UserSettingsController.ResetPassword | POST /api/v1/user-settings/{userId}/reset-password — admin password reset to default | src/Tabsan.EduSphere.API/Controllers/UserSettingsController.cs |
+| ConfigurationBootstrapper.AddEduSphereConfigurationHierarchy | Loads layered configuration including parent/root environments.json, optional external profile file, and environment-variable overlays in deterministic order. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |
 | ConfigurationBootstrapper.InsertJsonSourceIfMissing | Adds JSON config sources idempotently and now supports absolute-path files through a physical file provider for reliable profile loading. | src/Tabsan.EduSphere.Application/Services/ConfigurationBootstrapper.cs |
-| ResultCalculationController.Get | Returns institute-scoped result calculation settings using `institutionType` filter with safe university fallback. | src/Tabsan.EduSphere.API/Controllers/ResultCalculationController.cs |
+| ResultCalculationController.Get | Returns institute-scoped result calculation settings using institutionType filter with safe university fallback. | src/Tabsan.EduSphere.API/Controllers/ResultCalculationController.cs |
 | ResultCalculationController.Save | Validates institute type and persists institute-scoped GPA/component rules. | src/Tabsan.EduSphere.API/Controllers/ResultCalculationController.cs |
 | ResultCalculationService.GetSettingsAsync | Retrieves institute-scoped GPA and component rules for result calculation settings. | src/Tabsan.EduSphere.Application/Assignments/ResultCalculationService.cs |
 | ResultCalculationService.SaveSettingsAsync | Validates and saves institute-scoped result-calculation components and GPA rules with weight/threshold checks. | src/Tabsan.EduSphere.Application/Assignments/ResultCalculationService.cs |
@@ -1337,11 +100,11 @@
 | ResultRepository.GetGpaScaleRulesAsync(InstitutionType, ...) | Returns GPA scale rules for the selected institution scope. | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentResultRepositories.cs |
 | ResultRepository.ReplaceCalculationRulesAsync(InstitutionType, ...) | Replaces existing result-calculation rules for only the selected institution scope. | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentResultRepositories.cs |
 | PortalController.GetCurrentUserId | Resolves current portal user id from claims for 2FA and secure user-context workflows. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
-| AnnouncementController.CreateAnnouncement | Normalizes invalid offering and runtime validation failures into consistent `400` responses instead of leaking unhandled API exceptions. | src/Tabsan.EduSphere.API/Controllers/AnnouncementController.cs |
+| AnnouncementController.CreateAnnouncement | Normalizes invalid offering and runtime validation failures into consistent 400 responses instead of leaking unhandled API exceptions. | src/Tabsan.EduSphere.API/Controllers/AnnouncementController.cs |
 | GraduationService.RejectInternalAsync | Converts optimistic-concurrency conflicts in graduation rejection flow into deterministic business error messaging for safe retries. | src/Tabsan.EduSphere.Application/Academic/GraduationService.cs |
-| LmsService.CreateModuleAsync | Guards LMS module creation against invalid/offline offerings at both pre-check and save stages to avoid FK-driven `500` responses. | src/Tabsan.EduSphere.Application/Lms/LmsService.cs |
+| LmsService.CreateModuleAsync | Guards LMS module creation against invalid/offline offerings at both pre-check and save stages to avoid FK-driven 500 responses. | src/Tabsan.EduSphere.Application/Lms/LmsService.cs |
 | PortalController.CreateAnnouncement | Blocks announcement posting when no valid offering is selected and returns a user-safe validation message. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
-| FypRepository.GetAllAsync(...) | Uses direct awaited EF execution (no `ContinueWith`) to avoid DbContext second-operation runtime faults in high-load FYP reads. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
+| FypRepository.GetAllAsync(...) | Uses direct awaited EF execution (no ContinueWith) to avoid DbContext second-operation runtime faults in high-load FYP reads. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
 | FypPanelRole.Internal / FypPanelRole.External | Backward-compatible enum aliases that safely map legacy panel-role database string values. | src/Tabsan.EduSphere.Domain/Fyp/FypProject.cs |
 | AddHealthChecks | Registers database, memory, CPU, network, and error-rate checks for continuous runtime health monitoring. | src/Tabsan.EduSphere.API/Program.cs |
 | AddOpenTelemetry | Publishes ASP.NET Core, HttpClient, runtime, and process metrics and exposes Prometheus scraping support. | src/Tabsan.EduSphere.API/Program.cs |
@@ -1363,7 +126,7 @@
 | TwoFactorSetupService.DisableAsync | Disables 2FA after validating the current code against the stored secret. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
 | TwoFactorSetupService.VerifyLoginAsync | Verifies the login hand-off code for the add-on 2FA challenge. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
 | TwoFactorSetupService.VerifySetupAsync | Confirms the initial enrollment code before enabling 2FA. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
-| AdminUserController.Create | Accepts optional `institutionType`, validates against active policy, persists to user, and returns assignment in response/list payloads. | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
+| AdminUserController.Create | Accepts optional institutionType, validates against active policy, persists to user, and returns assignment in response/list payloads. | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
 | AiChatService.GetConversationAsync | Returns a full conversation thread with message history for the requesting user. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
 | AiChatService.GetConversationsAsync | Returns the requesting user's conversation list for the AI chat experience. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
 | AiChatService.SendMessageAsync | Sends a user message to the AI provider and persists the response in conversation history. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
@@ -1374,9 +137,9 @@
 | AnalyticsService.GetPaymentStatusReportAsync(...) | Aggregates scoped paid vs unpaid receipt counts/amounts and supports course/semester-scoped filtering. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
 | AnalyticsService.GetPerformanceReportAsync(...) | Adds short-TTL distributed cache policy for expensive department/all performance analytics reads and supports course/semester scope. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
 | AnalyticsService.GetQuizStatsAsync(...) | Adds short-TTL distributed cache policy for expensive quiz analytics reads. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
-| BuildingRoomRepository.GetAllBuildingsAsync(...) | Returns building lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
-| BuildingRoomRepository.GetAllRoomsAsync(...) | Returns room lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
-| BuildingRoomRepository.GetRoomsByBuildingAsync(...) | Returns building-scoped room lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
+| BuildingRoomRepository.GetAllBuildingsAsync(...) | Returns building lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
+| BuildingRoomRepository.GetAllRoomsAsync(...) | Returns room lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
+| BuildingRoomRepository.GetRoomsByBuildingAsync(...) | Returns building-scoped room lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/BuildingRoomRepository.cs |
 | CanAccessExportJob | Enforces owner-or-superadmin and tenant/campus scope parity checks for export job access. | src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs |
 | CourseController.GetOfferings | Exposes department metadata for deterministic dependent filtering in web layer. | src/Tabsan.EduSphere.API/Controllers/CourseController.cs |
 | CourseMaterial.EnsureMaterialLocation | Enforces material-type-specific file/link requirements before persistence. | src/Tabsan.EduSphere.Domain/Lms/CourseMaterial.cs |
@@ -1393,8 +156,8 @@
 | DashboardCompositionController.GetContext(...) | Provides role- and policy-aware module/vocabulary/widget composition by aggregating visible modules, academic vocabulary, and widgets into one dashboard-context response. | src/Tabsan.EduSphere.API/Controllers/DashboardCompositionController.cs |
 | DashboardCompositionService.GetWidgets(...) | Adds short-TTL in-memory cache for dashboard widget composition keyed by role and institution policy state to reduce repeated composition cost. | src/Tabsan.EduSphere.Application/Services/DashboardCompositionService.cs |
 | DatabaseConnectionResolver.ResolveDefaultConnection | Resolves DB connection string from prioritized environment/deployment keys with backward-compatible fallback to legacy connection-string key. | src/Tabsan.EduSphere.Application/Services/DatabaseConnectionResolver.cs |
-| DatabaseSeeder.SeedRolesAsync | Seeds `Finance` role additively alongside existing system roles during startup bootstrap. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
-| DatabaseSeeder.SeedSidebarMenusAsync(...) | Makes sidebar role seeding self-healing by updating existing role-access values, including the new `enter_attendance` menu, so corrected visibility rules are enforced on already-seeded databases. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
+| DatabaseSeeder.SeedRolesAsync | Seeds Finance role additively alongside existing system roles during startup bootstrap. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
+| DatabaseSeeder.SeedSidebarMenusAsync(...) | Makes sidebar role seeding self-healing by updating existing role-access values, including the new enter_attendance menu, so corrected visibility rules are enforced on already-seeded databases. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
 | PortalController.EnterAttendance | Opens the new Enter Attendance menu route while reusing the current attendance screen and preserving guarded access. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.DownloadAttendanceCsvTemplate | Generates and downloads the Enter Attendance CSV template with required headers and sample rows. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.ImportAttendanceCsv | Validates Enter Attendance CSV rows and imports attendance using existing bulk-mark API calls grouped by date. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
@@ -1410,13 +173,13 @@
 | Department.SetTenantCampus(tenantId, campusId) | Assigns or clears tenant/campus ownership for department-level scoping while preserving InstitutionType behavior. | src/Tabsan.EduSphere.Domain/Academic/Department.cs |
 | DepartmentRepository.ApplyTenantCampusScope | Applies tenant/campus query filtering for department reads with SuperAdmin bypass. | src/Tabsan.EduSphere.Infrastructure/Repositories/DepartmentRepository.cs |
 | DeploymentTopologyResolver.Resolve | Resolves effective deployment mode, customer identity, domain, database name, and scaling settings from config and environment variables. | src/Tabsan.EduSphere.Application/Services/DeploymentTopologyResolver.cs |
-| EduApiClient.BuildAnalyticsQuery | Builds analytics query string including optional `courseId` and `semesterId` filters. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.BuildAnalyticsQuery | Builds analytics query string including optional courseId and semesterId filters. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.GetDashboardCompositionContextAsync(...) | Deserializes the aggregated dashboard-context endpoint response into a single Web client model. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.GetPaymentStatusAnalyticsAsync | Retrieves payment status analytics data for portal snapshots. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.GetPaymentSummaryReportAsync | Retrieves payment summary report data for the portal. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
-| EduApiClient.MapPayment | Consumes payment payload with compatibility fallback (`PaidDate ?? ConfirmedAt`) and update trail mapping. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.MapPayment | Consumes payment payload with compatibility fallback (PaidDate ?? ConfirmedAt) and update trail mapping. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.UpdatePaymentAsync | Web client method that calls the finance payment edit endpoint. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
-| EnsureDefaultTenantCampusAsync | Guarantees default tenant (`DEFAULT`) and default campus (`MAIN`) are present and active at startup. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
+| EnsureDefaultTenantCampusAsync | Guarantees default tenant (DEFAULT) and default campus (MAIN) are present and active at startup. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
 | EnsureTenantCampusBackfillAsync | Performs startup safety backfill for users/departments missing tenant/campus assignments. | src/Tabsan.EduSphere.Infrastructure/Persistence/DatabaseSeeder.cs |
 | GetAnalyticsAccessScope | Resolves effective analytics access scope from caller tenant/campus claims with superadmin bypass handling. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
 | GetAssignmentStatsAsync | Computes assignment statistics from grouped submission/enrollment snapshots instead of per-assignment query loops. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
@@ -1424,8 +187,8 @@
 | GetCurrentTenantId | Resolves caller tenant/campus claim scope used for export-job ownership checks. | src/Tabsan.EduSphere.API/Controllers/AnalyticsController.cs |
 | GetPerformanceReportAsync | Builds performance report using batched results/submissions aggregation instead of per-student round-trips. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
 | GetQuizStatsAsync | Aggregates quiz attempt statistics in a grouped pass rather than per-quiz queries. | src/Tabsan.EduSphere.Infrastructure/Analytics/AnalyticsService.cs |
-| GradebookService.GetGradebookAsync(...) | Removes sync-over-async `.Result` consumption from the gradebook request path by awaiting completed tasks. | src/Tabsan.EduSphere.Application/Assignments/GradebookService.cs |
-| HttpTenantScopeResolver.GetTenantScopeKey() | Resolves tenant scope from JWT claims or `X-Tenant-Code` request header for API-request-scoped operations. | src/Tabsan.EduSphere.API/Services/HttpTenantScopeResolver.cs |
+| GradebookService.GetGradebookAsync(...) | Removes sync-over-async .Result consumption from the gradebook request path by awaiting completed tasks. | src/Tabsan.EduSphere.Application/Assignments/GradebookService.cs |
+| HttpTenantScopeResolver.GetTenantScopeKey() | Resolves tenant scope from JWT claims or X-Tenant-Code request header for API-request-scoped operations. | src/Tabsan.EduSphere.API/Services/HttpTenantScopeResolver.cs |
 | IAnalyticsService.GetPaymentStatusReportAsync(..., courseId, semesterId) | Exposes filter-aware payment analytics contract including course/semester dimensions. | src/Tabsan.EduSphere.Application/Interfaces/IAnalyticsService.cs |
 | IEduApiClient.DownloadCourseMaterialFileAsync | Downloads Course Material files from API for portal-proxied file delivery. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | IEduApiClient.GetCourseMaterialsAsync | Fetches scoped course materials for portal pages with optional active-only filtering. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
@@ -1434,7 +197,7 @@
 | IEnrollmentRepository.GetWaitlistedByOfferingAsync | Returns waitlisted enrollments in queue order so promotion can be deterministic. | src/Tabsan.EduSphere.Domain/Interfaces/IEnrollmentRepository.cs |
 | INotificationRepository.GetForUserAsync(..., asNoTracking, ...) | Adds opt-in no-tracking control for read-heavy inbox retrieval while preserving tracked reads for mark-all-read operations. | src/Tabsan.EduSphere.Domain/Interfaces/INotificationRepository.cs |
 | InstitutionPolicyController.Save | Used by SuperAdmin matrix run to switch School/College/University modes and validate privileged access continuity. | src/Tabsan.EduSphere.API/Controllers/InstitutionPolicyController.cs |
-| InstitutionPolicyService.SavePolicyAsync | Persists institution policy flags to `portal_settings` by committing settings repository changes, enabling mode switches from uploaded licenses to be retained. | src/Tabsan.EduSphere.Application/Services/InstitutionPolicyService.cs |
+| InstitutionPolicyService.SavePolicyAsync | Persists institution policy flags to portal_settings by committing settings repository changes, enabling mode switches from uploaded licenses to be retained. | src/Tabsan.EduSphere.Application/Services/InstitutionPolicyService.cs |
 | IReportRepository.GetPaymentSummaryDataAsync | Queries filtered payment receipt reporting rows with tenant/campus-safe scope and academic dimensions. | src/Tabsan.EduSphere.Domain/Interfaces/IReportRepository.cs |
 | IStudentLifecycleService.UpdatePaymentReceiptAsync | Exposes finance receipt edit capability through the application contract. | src/Tabsan.EduSphere.Application/Interfaces/IStudentLifecycleService.cs |
 | ITenantScopeResolver.GetTenantScopeKey() | Provides a tenant-scope abstraction for application-layer tenant-aware key resolution. | src/Tabsan.EduSphere.Application/Interfaces/ITenantScopeResolver.cs |
@@ -1447,7 +210,7 @@
 | NotificationService.GetBadgeAsync(...) | Adds short-TTL in-memory cache for unread badge counts with cache-version keying. | src/Tabsan.EduSphere.Application/Notifications/NotificationService.cs |
 | NotificationService.GetInboxAsync(...) | Adds short-TTL in-memory cache for paged inbox reads with cache-version keying for mutation-safe freshness. | src/Tabsan.EduSphere.Application/Notifications/NotificationService.cs |
 | PaymentReceipt.UpdateDetails | Updates actionable receipt fields while preserving audit trail and blocking edits on Paid/Cancelled receipts. | src/Tabsan.EduSphere.Domain/StudentLifecycle/PaymentReceipt.cs |
-| PaymentReceiptController.Delete | Explicitly rejects receipt deletion requests with `405` to preserve immutable payment history. | src/Tabsan.EduSphere.API/Controllers/PaymentReceiptController.cs |
+| PaymentReceiptController.Delete | Explicitly rejects receipt deletion requests with 405 to preserve immutable payment history. | src/Tabsan.EduSphere.API/Controllers/PaymentReceiptController.cs |
 | PaymentReceiptController.Update | API endpoint for finance/admin users to edit actionable payment receipts. | src/Tabsan.EduSphere.API/Controllers/PaymentReceiptController.cs |
 | PortalController.BuildAnalyticsPageModelAsync | Loads payment status analytics into analytics page/snapshot model and summary cards. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.CreateCourseMaterial | Creates a course material from the portal manage page while preserving current filter state. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
@@ -1455,10 +218,10 @@
 | PortalController.SetCourseMaterialActive | Toggles material active state from the portal manage page. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.UpdateCourseMaterial | Updates course material metadata/location from the portal manage page. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.UpdatePayment | Web action that posts finance payment edits from the payments page. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
-| PortalController.UserImportTemplate(fileName) | Serves approved CSV template files from `User Import Sheets/` via filename allow-list with traversal-safe path resolution. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
-| QuizRepository.GetAllAttemptsForStudentAsync(...) | Returns student quiz attempts with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
-| QuizRepository.GetAttemptsAsync(...) | Returns quiz attempts with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
-| QuizRepository.GetByOfferingAsync(...) | Returns quiz lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
+| PortalController.UserImportTemplate(fileName) | Serves approved CSV template files from User Import Sheets/ via filename allow-list with traversal-safe path resolution. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| QuizRepository.GetAllAttemptsForStudentAsync(...) | Returns student quiz attempts with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
+| QuizRepository.GetAttemptsAsync(...) | Returns quiz attempts with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
+| QuizRepository.GetByOfferingAsync(...) | Returns quiz lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/QuizFypRepositories.cs |
 | refreshSnapshot | Fetches analytics snapshot and updates filters/cards/charts without full page reload. | src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml |
 | renderCourseTrend | Renders course trend line based on average assignment marks. | src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml |
 | renderDepartmentCounts | Renders department-wise student counts using a bar chart. | src/Tabsan.EduSphere.Web/Views/Portal/Analytics.cshtml |
@@ -1518,9 +281,9 @@
 | ReportService.GetResultSummaryAsync | Aggregates result report rows into summary totals and response payload. | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
 | ReportService.GetSemesterResultsAsync | Aggregates semester result rows into summary totals and response payload. | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
 | ReportService.GetStudentTranscriptAsync | Builds transcript response payload for a target student profile. | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
-| SettingsRepository.GetAllModuleRolesAsync(...) | Returns all module-role assignments with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
-| SettingsRepository.GetAllReportsAsync(...) | Returns report definitions with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
-| SettingsRepository.GetModuleRolesAsync(...) | Returns module-role assignments with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
+| SettingsRepository.GetAllModuleRolesAsync(...) | Returns all module-role assignments with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
+| SettingsRepository.GetAllReportsAsync(...) | Returns report definitions with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
+| SettingsRepository.GetModuleRolesAsync(...) | Returns module-role assignments with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
 | SettingsRepository.GetSubMenusAsync(...) | Uses AsNoTracking for read-only submenu retrieval. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
 | SettingsRepository.GetTopLevelMenusAsync(...) | Uses AsNoTracking + AsSplitQuery for include-heavy top-level sidebar graph retrieval. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
 | SettingsRepository.GetVisibleMenusForRoleAsync(...) | Uses AsNoTracking + AsSplitQuery for include-heavy role-scoped sidebar visibility reads. | src/Tabsan.EduSphere.Infrastructure/Repositories/SettingsRepository.cs |
@@ -1539,43 +302,43 @@
 | StartupVisibilityReporter.DescribeDatabaseType | Classifies the resolved connection string into a safe database-type label for logging. | src/Tabsan.EduSphere.Application/Services/StartupVisibilityReporter.cs |
 | StudentLifecycleRepository.ApplyPaymentAccessScope | Applies tenant/campus scope filtering to payment receipt lifecycle queries. | src/Tabsan.EduSphere.Infrastructure/Repositories/StudentLifecycleRepository.cs |
 | StudentLifecycleRepository.ApplyStudentAccessScope | Applies tenant/campus scope filtering to student profile lifecycle queries. | src/Tabsan.EduSphere.Infrastructure/Repositories/StudentLifecycleRepository.cs |
-| StudentLifecycleService.MapPaymentReceipt | Maps receipt state to output contract including `PaidDate` and `UpdatedAt` tracking fields. | src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs |
+| StudentLifecycleService.MapPaymentReceipt | Maps receipt state to output contract including PaidDate and UpdatedAt tracking fields. | src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs |
 | StudentLifecycleService.UpdatePaymentReceiptAsync | Applies finance receipt edits, persists them, and notifies the student of the update. | src/Tabsan.EduSphere.Application/Services/StudentLifecycleService.cs |
 | TenantIsolationResolver.Resolve | Resolves tenant isolation mode, tenant code/name/domain/database, and tenant config path from config and environment variables. | src/Tabsan.EduSphere.Application/Services/TenantIsolationResolver.cs |
 | TenantOperationsService.ReadSetting(all, rawKey, defaultValue) | Reads tenant-scoped values first and falls back to legacy unscoped keys for migration-safe compatibility. | src/Tabsan.EduSphere.Application/Services/SettingsServices.cs |
 | TenantOperationsService.ScopedCacheKey(key) | Builds tenant-scoped distributed-cache keys to prevent cross-tenant cache collisions. | src/Tabsan.EduSphere.Application/Services/SettingsServices.cs |
 | TenantOperationsService.ScopedSettingKey(key) | Builds tenant-scoped settings keys for onboarding/subscription/profile operations with default-tenant backward compatibility. | src/Tabsan.EduSphere.Application/Services/SettingsServices.cs |
-| TimetableRepository.GetByDepartmentAsync(...) | Returns timetable lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
-| TimetableRepository.GetEntriesByCourseOfferingAsync(...) | Returns course-offering timetable entries with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
-| TimetableRepository.GetPublishedByDepartmentAsync(...) | Returns published timetable lists with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
-| TimetableRepository.GetTeacherEntriesAsync(...) | Returns teacher timetable entries with direct async EF execution instead of `ContinueWith` bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
+| TimetableRepository.GetByDepartmentAsync(...) | Returns timetable lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
+| TimetableRepository.GetEntriesByCourseOfferingAsync(...) | Returns course-offering timetable entries with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
+| TimetableRepository.GetPublishedByDepartmentAsync(...) | Returns published timetable lists with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
+| TimetableRepository.GetTeacherEntriesAsync(...) | Returns teacher timetable entries with direct async EF execution instead of ContinueWith bridging. | src/Tabsan.EduSphere.Infrastructure/Repositories/TimetableRepository.cs |
 | UserImportController.ImportCsv | Accepts CSV uploads for bulk user import with optional strict mode and role-based access enforcement. | src/Tabsan.EduSphere.API/Controllers/UserImportController.cs |
 | UserImportService.ImportFromCsvAsync | Parses CSV imports with role/identity validation, strict-mode rollback support, and additive mobile/campus column compatibility. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
 | UserImportService.IsValidMobileNumber | Validates optional mobile/phone values to accepted character set before user import persistence. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
-| UserImportService.ResolveCampusAssignmentsIndex | Resolves optional campus-assignment header aliases (`CampusAssignments`/`CampusIds`) for backward-compatible CSV parsing. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
-| UserImportService.ResolvePhoneNumberIndex | Resolves optional mobile/phone header aliases (`MobileNumber`/`PhoneNumber`) for backward-compatible CSV parsing. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
+| UserImportService.ResolveCampusAssignmentsIndex | Resolves optional campus-assignment header aliases (CampusAssignments/CampusIds) for backward-compatible CSV parsing. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
+| UserImportService.ResolvePhoneNumberIndex | Resolves optional mobile/phone header aliases (MobileNumber/PhoneNumber) for backward-compatible CSV parsing. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
 | UserImportService.TryValidateCampusAssignments | Validates optional campus assignments as pipe-separated GUID values during CSV import. | src/Tabsan.EduSphere.Application/Services/UserImportService.cs |
 | User.SetTenantCampus(tenantId, campusId) | Assigns or clears tenant/campus ownership for user-level scoping without breaking existing identity flows. | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.ValidateTenantCampusPair | Prevents invalid user state by requiring TenantId and CampusId to be set/cleared together. | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | UserRepository.ApplyTenantCampusScope | Applies tenant/campus query filtering for user reads with SuperAdmin bypass. | src/Tabsan.EduSphere.Infrastructure/Repositories/UserRepository.cs |
-| DegreeController.Download | Downloads generated degree document and applies `.docx` fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
-| DegreeController.DownloadDefaultTemplate | Streams default degree `.docx` template from the degree/transcript generation export service. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.Download | Downloads generated degree document and applies .docx fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.DownloadDefaultTemplate | Streams default degree .docx template from the degree/transcript generation export service. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
 | DegreeController.Generate | Triggers degree document generation workflow for admin users. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
-| DegreeController.StudentDegree | Returns generated degree artifacts for the current student route `/student/degree`. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| DegreeController.StudentDegree | Returns generated degree artifacts for the current student route /student/degree. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
 | DegreeController.ResolveCurrentUserId | Resolves current caller user-id from NameIdentifier/sub claims for student artifact filtering. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
-| TranscriptController.Download | Downloads generated transcript document and applies `.docx` fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
-| TranscriptController.DownloadDefaultTemplate | Streams default transcript `.docx` template from the degree/transcript generation export service. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.Download | Downloads generated transcript document and applies .docx fallback when requested PDF is unavailable. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.DownloadDefaultTemplate | Streams default transcript .docx template from the degree/transcript generation export service. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TranscriptController.Generate | Triggers transcript document generation workflow for admin users. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
-| TranscriptController.StudentTranscript | Returns generated transcript artifacts for the current student route `/student/transcript`. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.StudentTranscript | Returns generated transcript artifacts for the current student route /student/transcript. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TranscriptController.ResolveCurrentUserId | Resolves current caller user-id from NameIdentifier/sub claims for student artifact filtering. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | TemplateExportService.GetDegreeTemplateAsync | Generates default Degree Word template bytes with the degree/transcript placeholder contract. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
-| TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with the degree/transcript placeholder contract including `{{COURSE_TABLE}}`. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
-| TemplateExportService.BuildTemplateDocument | Constructs in-memory `.docx` payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
-| DegreeController.UploadTemplate | Accepts isolated degree template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
+| TemplateExportService.GetTranscriptTemplateAsync | Generates default Transcript Word template bytes with the degree/transcript placeholder contract including {{COURSE_TABLE}}. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| TemplateExportService.BuildTemplateDocument | Constructs in-memory .docx payload from template text lines using OpenXML. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateExportService.cs |
+| DegreeController.UploadTemplate | Accepts isolated degree template .docx uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
 | AcademicDocumentTemplate.Create | Creates isolated storage metadata for degree/transcript templates. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
 | DegreeDocumentRecord.Create | Creates a persisted record for generated degree artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
 | TranscriptDocumentRecord.Create | Creates a persisted record for generated transcript artifacts. | src/Tabsan.EduSphere.Domain/Assignments/AcademicDocumentStorage.cs |
-| TranscriptController.UploadTemplate | Accepts isolated transcript template `.docx` uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
+| TranscriptController.UploadTemplate | Accepts isolated transcript template .docx uploads and persists K4 template metadata. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
 | QRCodeService.GeneratePng | Produces QR PNG byte array from verification payload using QRCoder. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | QRCodeService.GenerateDataUrl | Produces Base64 QR data URL for lightweight UI rendering support. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/QRCodeService.cs |
 | TwoFactorStateStore.DisableAsync | Clears the stored 2FA secret and disables 2FA for the current user. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
@@ -1588,10 +351,10 @@
 | IEduApiClient.VerifyTwoFactorSetupAsync | Sends a portal-side 2FA setup verification request to the API. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | DegreeController.EnsureDegreeTranscriptGenerationEnabledAsync | Checks the degree/transcript generation rollout flag before allowing degree controller actions. | src/Tabsan.EduSphere.API/Controllers/DegreeController.cs |
 | TranscriptController.EnsureDegreeTranscriptGenerationEnabledAsync | Checks the degree/transcript generation rollout flag before allowing transcript controller actions. | src/Tabsan.EduSphere.API/Controllers/TranscriptController.cs |
-| TemplateProcessorService.PopulateTemplate | Applies degree/transcript placeholder replacement and transcript table rendering to `.docx` template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.PopulateTemplate | Applies degree/transcript placeholder replacement and transcript table rendering to .docx template bytes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.ReplaceInMainBody | Replaces mapped placeholder tokens in main document body text nodes. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.ReplaceInHeadersAndFooters | Replaces mapped placeholder tokens in header and footer parts. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
-| TemplateProcessorService.ReplaceCourseTable | Replaces `{{COURSE_TABLE}}` marker with generated OpenXML table or empty-data text. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
+| TemplateProcessorService.ReplaceCourseTable | Replaces {{COURSE_TABLE}} marker with generated OpenXML table or empty-data text. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.BuildCourseTable | Builds transcript course table with required degree/transcript columns. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.BuildRow | Creates table row instances for course-table header and data rows. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
 | TemplateProcessorService.BuildCell | Creates formatted OpenXML table cell content (with bold header support). | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateProcessorService.cs |
@@ -1606,11 +369,11 @@
 | DegreeGenerationRequest.ToPayload | Maps degree generation request data to the template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | TranscriptGenerationRequest.ToPayload | Maps transcript generation request data to the template payload shape with default serial/date assignment. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/DocumentGenerationService.cs |
 | IPdfConverterAdapter.TryConvertToPdfAsync | Defines optional PDF conversion adapter contract for generated degree/transcript documents. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |
-| NoOpPdfConverterAdapter.TryConvertToPdfAsync | Default no-op adapter that returns null to preserve guaranteed `.docx` fallback behavior. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |
+| NoOpPdfConverterAdapter.TryConvertToPdfAsync | Default no-op adapter that returns null to preserve guaranteed .docx fallback behavior. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/PdfConverterAdapter.cs |
 | TemplateUploadService.UploadDegreeTemplateAsync | Validates and stores isolated degree template uploads in the academic document storage layer. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
 | TemplateUploadService.UploadTranscriptTemplateAsync | Validates and stores isolated transcript template uploads in the academic document storage layer. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
-| TemplateUploadService.UploadAsync | Shared upload pipeline for `.docx` templates, storage persistence, and metadata creation. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
-| TemplateUploadService.ValidateDocxAsync | Enforces `.docx`-only validation for isolated template uploads. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.UploadAsync | Shared upload pipeline for .docx templates, storage persistence, and metadata creation. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
+| TemplateUploadService.ValidateDocxAsync | Enforces .docx-only validation for isolated template uploads. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
 | TemplateUploadService.BuildVersion | Builds additive template version metadata for uploaded templates. | src/Tabsan.EduSphere.API/Services/DegreeTranscriptGeneration/TemplateUploadService.cs |
 | CertificateGenerationController.GetGraduatedStudents | Returns university-only graduated students filtered by tenant, campus, department, and course with role scope enforcement. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
 | CertificateGenerationController.GenerateDegreeCertificate | Generates degree certificate document for a scoped graduated student (Admin/SuperAdmin only). | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
@@ -1664,7 +427,7 @@
 | CertificateGenerationController.GetNonUniversityStudentForAdminManagementAsync | Validates school/college admin management scope for additional certificate upload operations. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
 | CertificateGenerationController.HasAdditionalCertificateReadScopeAsync | Enforces scoped read permissions for additional school/college certificates across Admin, Faculty, and Student users. | src/Tabsan.EduSphere.API/Controllers/CertificateGenerationController.cs |
 | PortalController.IsUniversityInstitutionType | Resolves institution type into university/non-university behavior for certificate workflow gating. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
-| PortalController.ResolvePeriodFilterLabel | Resolves dynamic period label (`Class` for university, `Semester` otherwise) for certificate filters. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ResolvePeriodFilterLabel | Resolves dynamic period label (Class for university, Semester otherwise) for certificate filters. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.ResolveCertificateInstitutionType | Resolves effective institution scope from selected department or identity for certificate page behavior. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.UploadStudentAdditionalCertificate | Uploads school/college additional certificates from portal with preserved tenant/campus/department/course filter context. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | PortalController.DownloadStudentAdditionalCertificate | Downloads uploaded school/college additional certificates from portal. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
@@ -1674,4 +437,43 @@
 | EduApiClient.GetStudentAdditionalCertificatesAsync | Calls API endpoint to retrieve additional school/college certificate metadata per student profile. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.UploadStudentAdditionalCertificateAsync | Uploads additional school/college certificate files through multipart API endpoint. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
 | EduApiClient.DownloadStudentAdditionalCertificateAsync | Downloads additional school/college certificate files by document id. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
-
+| IGradebookRepository.GetInstitutionTypeForOfferingAsync | Resolves offering-specific institution mode so gradebook output switches between GPA/CGPA and percentage behavior. | src/Tabsan.EduSphere.Domain/Interfaces/IGradebookRepository.cs |
+| GradebookRepository.GetInstitutionTypeForOfferingAsync | Reads institution type from the selected course offering in one scoped query. | src/Tabsan.EduSphere.Infrastructure/Repositories/GradebookRubricRepositories.cs |
+| IResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Returns active result components for the requested institution scope. | src/Tabsan.EduSphere.Domain/Interfaces/IResultRepository.cs |
+| ResultRepository.GetActiveComponentRulesAsync(InstitutionType, ...) | Applies institution filtering for active component rules and keeps legacy fallback behavior. | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentResultRepositories.cs |
+| GradebookService.GetGradebookAsync | Builds institution-aware aggregates: University weighted-total to GPA + CGPA, School/College percentage; includes fallback component derivation from existing result types when configured rules are missing. | src/Tabsan.EduSphere.Application/Assignments/GradebookService.cs |
+| PortalController.IsApiConnectivityException | Classifies HTTP/socket/timeout failures so menu guard and Students view handle temporary API outage gracefully. | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| EduApiClient.TryExtractApiErrorMessage | Extracts detail/message/title from JSON API error payloads so portal alerts show readable text. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.ForceChangePasswordAsync | Web client contract for forced password change | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| EduApiClient.ForceChangePasswordAsync | Calls forced password change API endpoint | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| PortalController.ForceChangePassword | Portal-side forced password change action with old+new password flow | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ValidateResultWriteScopeAsync | Enforces required-filter and scope enforcement before result write actions | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.RenderResultsAsync | Resolves and emits dynamic PeriodLabel for Results UI rendering | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.DownloadResultCsvTemplate | Generates and downloads Enter Results CSV template with example rows | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ImportResultCsv | Validates and imports CSV result rows, skips template example rows | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.DownloadResultImportReport | Serves one-time downloadable CSV import result reports using report tokens | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.PublishAllResults | Publishes all draft results for an offering with Admin/SuperAdmin gating | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.CorrectResult | Corrects published result marks with correction reason audit trail | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ResultCalculationCourseFilterData | Loads course-type filter data for result calculation settings page | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.BuildLicensedInstitutionOptions | Builds institution filter options from license capability matrix | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ResolveLicensedInstitutionSelection | Auto-selects single licensed institute or exposes multi-select dropdown | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.BuildLicensedPaymentsInstitutionOptions | Builds payment-specific institution option mapping with scoped labels | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.NormalizeAdvisorStatusValue | Normalizes advisor status enum values for study plan display | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.NormalizeCourseTypeValue | Normalizes course type enum values for study plan display | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.LoadPaymentStudentsForScopeAsync | Applies institution-type constrained loading for payment student dropdowns | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.ParsePaymentImportCsvAsync | Parses payment CSV with multiple date format support and validation guidance | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| StudentLifecycleController.GraduateStudent | API endpoint for single student graduation | src/Tabsan.EduSphere.API/Controllers/StudentLifecycleController.cs |
+| StudentLifecycleController.GraduateStudentsBatch | API endpoint for batch student graduation | src/Tabsan.EduSphere.API/Controllers/StudentLifecycleController.cs |
+| StudentLifecycleService.GraduateStudentAsync | Validates and executes single student graduation with eligibility checks | src/Tabsan.EduSphere.Application/Academic/StudentLifecycleService.cs |
+| StudentLifecycleService.GraduateStudentsBatchAsync | Validates and executes batch student graduation with eligibility checks | src/Tabsan.EduSphere.Application/Academic/StudentLifecycleService.cs |
+| DegreeAuditController.GetEligibilityList | Returns graduation eligibility list for scoped department/program | src/Tabsan.EduSphere.API/Controllers/DegreeAuditController.cs |
+| DegreeAuditController.GetAllRules | Returns all degree audit rules | src/Tabsan.EduSphere.API/Controllers/DegreeAuditController.cs |
+| DegreeAuditController.GetRuleByProgram | Returns degree rule for a specific academic program | src/Tabsan.EduSphere.API/Controllers/DegreeAuditController.cs |
+| DegreeAuditService.GetEligibilityListAsync | Aggregates graduation eligibility data from enrollment/result records | src/Tabsan.EduSphere.Application/Academic/DegreeAuditService.cs |
+| DegreeAuditService.GetAllRulesAsync | Returns all degree audit program rules | src/Tabsan.EduSphere.Application/Academic/DegreeAuditService.cs |
+| DegreeAuditService.GetRuleByProgramAsync | Returns degree rule for a specific program | src/Tabsan.EduSphere.Application/Academic/DegreeAuditService.cs |
+| DegreeAuditRepository.GetEarnedCreditsAsync | Aggregates earned credits with tenant/campus scope fallback chain | src/Tabsan.EduSphere.Infrastructure/Repositories/DegreeAuditRepository.cs |
+| DepartmentController.GetAll | Returns departments with optional institutionType filter and scope enforcement | src/Tabsan.EduSphere.API/Controllers/DepartmentController.cs |
+| PrerequisiteRepository.GetByCourseIdAsync | Returns prerequisites with eager-loaded Course navigation for full payload | src/Tabsan.EduSphere.Infrastructure/Repositories/PrerequisiteRepository.cs |
+| verify-degree-rules-access.ps1 functions | PowerShell verification automation for degree-rule access validation | Scripts/verify-degree-rules-access.ps1 |
+| verify-degree-rules-access-local-bootstrap.ps1 functions | Local bootstrap helpers for degree-rule verification scripts | Scripts/verify-degree-rules-access-local-bootstrap.ps1 |
