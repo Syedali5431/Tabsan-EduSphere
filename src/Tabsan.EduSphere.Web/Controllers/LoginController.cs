@@ -35,7 +35,7 @@ public class LoginController : Controller
     public async Task<IActionResult> Index(string? returnUrl = null, CancellationToken ct = default)
     {
         if (_api.IsConnected())
-            return RedirectToAction("Dashboard", "Portal");
+            return RedirectToAction(ResolveHomeAction(_api.GetSessionIdentity()?.Roles.FirstOrDefault()), "Portal");
 
         var apiBase = _configuredApiBaseUrl;
         await PopulateSecurityProfileAsync(apiBase, ct);
@@ -132,7 +132,9 @@ public class LoginController : Controller
             if (result.MustChangePassword)
                 return RedirectToAction("ForceChangePassword", "Portal");
 
-            var redirect = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action("Dashboard", "Portal")!;
+            var redirect = Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : Url.Action(ResolveHomeAction(result.Role), "Portal")!;
             return Redirect(redirect);
         }
         catch (HttpRequestException)
@@ -208,6 +210,14 @@ public class LoginController : Controller
             // Login page should still render even when security profile endpoint is unreachable.
         }
     }
+
+    private static string ResolveHomeAction(string? role)
+        => role?.ToLowerInvariant() switch
+        {
+            "superadmin" => nameof(PortalController.Dashboard),
+            "student" => nameof(PortalController.Announcements),
+            _ => nameof(PortalController.Helpdesk)
+        };
 
     private static bool TryNormalizeApiBaseUrl(string rawBaseUrl, out string normalized)
     {

@@ -674,14 +674,15 @@ public class EduApiClient : IEduApiClient
 
     public SessionIdentity? GetSessionIdentity()
     {
+        var token = GetConnection().AccessToken;
+        SessionIdentity? cached = null;
+
         var raw = ReadCookie(IdentityKey);
         if (!string.IsNullOrWhiteSpace(raw))
         {
             try
             {
-                var cached = JsonSerializer.Deserialize<SessionIdentity>(raw, _jsonOptions);
-                if (cached is not null)
-                    return cached;
+                cached = JsonSerializer.Deserialize<SessionIdentity>(raw, _jsonOptions);
             }
             catch
             {
@@ -689,8 +690,34 @@ public class EduApiClient : IEduApiClient
             }
         }
 
-        // Session cookies can become stale after restarts; recover identity from current access token.
-        var token = GetConnection().AccessToken;
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            var fromToken = DecodeJwtIdentity(token);
+            if (!string.IsNullOrWhiteSpace(fromToken.UserName)
+                || !string.IsNullOrWhiteSpace(fromToken.Email)
+                || fromToken.Roles.Count > 0)
+            {
+                var cachedUser = cached?.UserName?.Trim();
+                var tokenUser = fromToken.UserName?.Trim();
+                var rolesMatch = cached is not null
+                    && cached.Roles.Count == fromToken.Roles.Count
+                    && !cached.Roles.Except(fromToken.Roles, StringComparer.OrdinalIgnoreCase).Any();
+
+                if (cached is null
+                    || cached.Roles.Count == 0
+                    || !rolesMatch
+                    || (!string.IsNullOrWhiteSpace(tokenUser)
+                        && !string.Equals(cachedUser, tokenUser, StringComparison.OrdinalIgnoreCase)))
+                {
+                    WriteCookie(IdentityKey, JsonSerializer.Serialize(fromToken, _jsonOptions));
+                    return fromToken;
+                }
+            }
+        }
+
+        if (cached is not null)
+            return cached;
+
         if (string.IsNullOrWhiteSpace(token))
             return null;
 

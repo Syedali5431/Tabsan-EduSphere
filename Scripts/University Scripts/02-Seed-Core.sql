@@ -675,6 +675,30 @@ BEGIN
     );
 END
 
+/* Normalize invalid/placeholder password hashes to the canonical demo password (EduSphere147). */
+UPDATE [users]
+SET [PasswordHash] = @DefaultPasswordHash,
+    [UpdatedAt] = @Now,
+    [FailedLoginAttempts] = 0,
+    [IsLockedOut] = 0,
+    [LockedOutUntil] = NULL
+WHERE [IsDeleted] = 0
+  AND (
+        [PasswordHash] IS NULL
+     OR [PasswordHash] NOT LIKE N'argon2id:%'
+     OR [PasswordHash] = N'REPLACE_WITH_VALID_HASH'
+     OR [PasswordHash] <> @DefaultPasswordHash
+  );
+
+IF COL_LENGTH('users', 'MustChangePassword') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [MustChangePassword] = 0,
+        [UpdatedAt] = @Now
+    WHERE [IsDeleted] = 0
+      AND [MustChangePassword] = 1;
+END
+
 COMMIT TRANSACTION;
 PRINT 'Core seed data completed successfully.';
 

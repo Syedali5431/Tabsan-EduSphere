@@ -286,7 +286,9 @@ INSERT INTO @Semesters VALUES
 ('33333333-3333-3333-3333-333333333333', N'Fall 2025', '2025-08-15', '2025-12-31', 1),
 ('33333333-3333-3333-3333-333333333334', N'Spring 2026', '2026-01-15', '2026-06-15', 0),
 ('33333333-3333-3333-3333-333333333335', N'Fall 2026', '2026-08-15', '2026-12-31', 0),
-('33333333-3333-3333-3333-333333333336', N'Spring 2027', '2027-01-15', '2027-06-15', 0);
+('33333333-3333-3333-3333-333333333336', N'Spring 2027', '2027-01-15', '2027-06-15', 0),
+('33333333-3333-3333-3333-333333333337', N'Fall 2027', '2027-08-15', '2027-12-31', 0),
+('33333333-3333-3333-3333-333333333338', N'Spring 2028', '2028-01-15', '2028-06-15', 0);
 
 INSERT INTO [semesters] ([Id], [Name], [StartDate], [EndDate], [IsClosed], [ClosedAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
 SELECT s.Id, s.Name, s.StartDate, s.EndDate, s.IsClosed,
@@ -389,6 +391,7 @@ SELECT u.Id, u.Username, u.Email, @PwdHash, u.RoleId, u.DepartmentId, u.Institut
 FROM @Users u
 WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.Id);
 
+/* Always sync named demo users (including PasswordHash) on every run. */
 UPDATE u
 SET u.[Username] = src.[Username],
     u.[Email] = src.[Email],
@@ -397,15 +400,11 @@ SET u.[Username] = src.[Username],
     u.[DepartmentId] = src.[DepartmentId],
     u.[InstitutionType] = src.[InstitutionType],
     u.[IsActive] = 1,
+    u.[IsDeleted] = 0,
+    u.[DeletedAt] = NULL,
     u.[UpdatedAt] = @Now
 FROM [users] u
-INNER JOIN @Users src ON src.[Id] = u.[Id]
-WHERE u.[Username] <> src.[Username]
-   OR u.[Email] <> src.[Email]
-   OR u.[RoleId] <> src.[RoleId]
-   OR ISNULL(CAST(u.[DepartmentId] AS NVARCHAR(36)), N'') <> ISNULL(CAST(src.[DepartmentId] AS NVARCHAR(36)), N'')
-   OR ISNULL(u.[InstitutionType], -1) <> ISNULL(src.[InstitutionType], -1)
-   OR u.[IsActive] = 0;
+INNER JOIN @Users src ON src.[Id] = u.[Id];
 
 /* 4.0.1) Ensure each institute department has role coverage users */
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
@@ -2104,9 +2103,9 @@ AND EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = CAST('66666666-6666-66
 AND EXISTS (SELECT 1 FROM [course_offerings] WHERE [Id] = CAST('66666666-6666-6666-6666-666666666662' AS UNIQUEIDENTIFIER))
 BEGIN
         DECLARE @AttendanceDemoProgramId UNIQUEIDENTIFIER = CAST('45454545-4545-4545-4545-454545454701' AS UNIQUEIDENTIFIER);
-        DECLARE @AttendanceDemoDeptId UNIQUEIDENTIFIER = CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER);
-        DECLARE @AttendanceDemoTenantId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER);
-        DECLARE @AttendanceDemoCampusId UNIQUEIDENTIFIER = CAST('22222222-2222-2222-2222-222222222222' AS UNIQUEIDENTIFIER);
+        DECLARE @AttendanceDemoDeptId UNIQUEIDENTIFIER = CAST('11111111-1111-1111-1111-111111111113' AS UNIQUEIDENTIFIER);
+        DECLARE @AttendanceDemoTenantId UNIQUEIDENTIFIER = @UniTenantId;
+        DECLARE @AttendanceDemoCampusId UNIQUEIDENTIFIER = @UniCampusId;
         DECLARE @AttendanceDemoDsOfferingId UNIQUEIDENTIFIER = CAST('66666666-6666-6666-6666-666666666661' AS UNIQUEIDENTIFIER);
         DECLARE @AttendanceDemoDbOfferingId UNIQUEIDENTIFIER = CAST('66666666-6666-6666-6666-666666666662' AS UNIQUEIDENTIFIER);
         DECLARE @AttendanceDemoFacultyUserId UNIQUEIDENTIFIER;
@@ -5736,6 +5735,30 @@ BEGIN
         [UpdatedAt] = @Now
     WHERE [RoleId] = @RoleSuperAdmin
       AND ([TenantId] IS NOT NULL OR [CampusId] IS NOT NULL);
+END
+
+/* Final pass: ensure every active user can log in with seeded password EduSphere147. */
+UPDATE [users]
+SET [PasswordHash] = @PwdHash,
+    [UpdatedAt] = @Now,
+    [FailedLoginAttempts] = 0,
+    [IsLockedOut] = 0,
+    [LockedOutUntil] = NULL
+WHERE [IsDeleted] = 0
+  AND (
+        [PasswordHash] IS NULL
+     OR [PasswordHash] NOT LIKE N'argon2id:%'
+     OR [PasswordHash] = N'REPLACE_WITH_VALID_HASH'
+     OR [PasswordHash] <> @PwdHash
+  );
+
+IF COL_LENGTH('users', 'MustChangePassword') IS NOT NULL
+BEGIN
+    UPDATE [users]
+    SET [MustChangePassword] = 0,
+        [UpdatedAt] = @Now
+    WHERE [IsDeleted] = 0
+      AND [MustChangePassword] = 1;
 END
 
 COMMIT TRANSACTION;

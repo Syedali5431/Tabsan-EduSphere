@@ -37,6 +37,8 @@ Run scripts in this exact order.
 - Utility scripts available after baseline setup:
   - `06-Create-SuperAdmin-User.sql` to create/update an additional SuperAdmin account.
   - `07-Fix-Course-Institution-Scope.sql` to self-heal missing `courses`/`course_offerings` scope columns for compatibility with current API mappings.
+  - `08-Reset-Seeded-User-Passwords.sql` to replace placeholder/invalid `PasswordHash` values (for example `REPLACE_WITH_VALID_HASH`) with the canonical Argon2id hash for `EduSphere147`.
+  - `09-Fix-User-Roles-And-TenantScope.sql` to repair demo `RoleId` assignments and tenant/campus scope (including SuperAdmin tenant/campus reset).
 
 ## Example Commands
 
@@ -57,6 +59,8 @@ Run only when needed (after schema + seed):
 ```powershell
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/06-Create-SuperAdmin-User.sql
 sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/07-Fix-Course-Institution-Scope.sql
+sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/08-Reset-Seeded-User-Passwords.sql
+sqlcmd -S $server -d Tabsan-EduSphere -i Scripts/09-Fix-User-Roles-And-TenantScope.sql
 ```
 
 ## Phase 40.2 Unified Update (2026-05-21)
