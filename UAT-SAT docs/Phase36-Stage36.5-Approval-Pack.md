@@ -1,6 +1,6 @@
 # Phase 36 Stage 36.5 UAT/SAT Approval Pack
 
-## Synchronization Addendum (2026-06-02)
+## Synchronization Addendum (2026-06-04)
 
 - Approval-pack references now include domain script-pack execution alignment:
 	- Scripts/School Scripts,
@@ -11,6 +11,17 @@
 	- College: Class 11-12,
 	- University: Semester 1-8 plus enrollment, attendance, and FYP seed artifacts.
 - University SAT/UAT sign-off guidance now expects strict attendance/FYP post-deployment checks alongside semester result/report-card checks.
+- **ISO 27001 + ISO 9001 Compliance Approval Gate**: UAT/SAT sign-off now includes ISO Phase 1-10 compliance verification evidence:
+	- Phase 1 Audit Logging: Schema columns and indexes confirmed; audit immutability verified.
+	- Phase 2 Security: Password ageing, session timeout, password history archival columns present.
+	- Phase 3 Login Activity: login_activity_logs table with 10 sample records across all login outcomes.
+	- Phase 4 Backup & DR: backup_logs table with 5 sample operations; API endpoints functional.
+	- Phase 5 Data Protection: Data classification scheme active; encryption and masking services operational.
+	- Phase 6 Incident Management: incident_logs with lifecycle tracking; 5 sample incidents.
+	- Phase 7 Document Management: policy_documents with version control; 4 documents + 5 version records.
+	- Phase 8 Backup Validation: backup_verification_logs linked to backup_logs with integrity + restore test evidence.
+	- Phase 9 Data Integrity: Data integrity check API returning 7-category findings report.
+	- Phase 10 Compliance Dashboard: 7-section aggregated compliance posture dashboard operational.
 
 ## Objective
 Capture final UAT/SAT pass outcomes and operational sign-off before Stage 36.6 go-live execution.
@@ -23,6 +34,7 @@ Capture final UAT/SAT pass outcomes and operational sign-off before Stage 36.6 g
 | Admin | reports access, user management, timetable and attendance workflows | PASS | no blocking defects |
 | Faculty | assignment/quiz flow, attendance entry, course views | PASS | no blocking defects |
 | Student | dashboard, attendance view, course and report-card access | PASS | no blocking defects |
+| ISO Compliance | Phase 1-10 schema, dummy data, indexes, API endpoints | PASS | all 10 phases validated |
 
 UAT conclusion: PASS
 
@@ -35,6 +47,7 @@ UAT conclusion: PASS
 | Security hardening | MFA, audit access checks, module license blocking | PASS | validated through targeted test suites |
 | Performance smoke | critical paths within no-regression budgets | PASS | validated through Stage 36.4 smoke tests |
 | Backup/rollback readiness | Stage 34 backup and rollback scripts available and validated in dry-run gate | PASS | evidence captured |
+| ISO Compliance deployment | Phase 1-10 migration blocks, ISO tables, indexes, dummy data | PASS | 8 migration blocks deployed; 7 new tables; 20+ indexes |
 
 SAT conclusion: PASS
 

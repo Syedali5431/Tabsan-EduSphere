@@ -1,6 +1,6 @@
 # User Acceptance Testing (UAT)
 
-## UAT Synchronization Update (2026-06-02)
+## UAT Synchronization Update (2026-06-04)
 
 - Validate domain-specific script-pack path readiness for demo/UAT runs:
 	- Scripts/School Scripts,
@@ -15,6 +15,17 @@
 	- attendance,
 	- FYP projects.
 - Include check that University strict post-deployment checks pass for attendance/FYP coverage.
+- **ISO 27001 + ISO 9001 Compliance UAT Coverage (Phases 1-10)**:
+	- Phase 1 Audit Logging: Verify audit_logs has ActorRole, UserAgent, DeviceInfo, CorrelationId, Severity, EventCategory columns; audit immutability enforced.
+	- Phase 2 Security: Verify users.LastPasswordChangedAt, password_history.ExpiresAt, user_sessions.LastActivityAt columns; password ageing policy active; session idle timeout enforced; IX_user_sessions_active filtered index present.
+	- Phase 3 Login Activity Monitoring: Verify login_activity_logs table populated with sample success/failure attempts; 4 indexes present.
+	- Phase 4 Backup & DR: Verify backup_logs table populated with Full/Differential/Log backup records; API endpoints for backup recording and status summary.
+	- Phase 5 Data Protection: Verify users.ConsentToMonitoring, users.DataRetentionDate columns; data_classification_entries table with entity classification records; encryption/masking services available.
+	- Phase 6 Incident Management: Verify incident_logs table with sample incidents (Open/Investigating/Resolved/Closed); status flow transitions correctly.
+	- Phase 7 Document Management: Verify policy_documents + policy_document_versions tables; version tracking and access control functional.
+	- Phase 8 Backup Validation: Verify backup_verification_logs table with IntegrityCheck and RestoreTest records linked to backup_logs.
+	- Phase 9 Data Integrity: Verify GET /api/v1/data-integrity/check returns findings report covering audit coverage, orphaned users, enrollment consistency.
+	- Phase 10 Compliance Dashboard: Verify GET /api/v1/compliance/dashboard returns 7-section aggregated compliance posture (Audit, Security, Backup, Incidents, Activity, Data Protection, Documents).
 
 ## Purpose
 User acceptance testing confirms the product behaves correctly from an operator perspective before deployment handoff.
@@ -59,6 +70,7 @@ User acceptance testing confirms the product behaves correctly from an operator 
 - Finance payment workflows, report filters, and analytics scope are validated.
 - Admin, Faculty, Student, and Finance role workflows are validated end-to-end.
 - The unit-test build for the main application passed during this session.
+- **ISO 27001 + ISO 9001 Compliance**: All Phase 1-10 tables, columns, indexes verified; audit immutability confirmed; compliance dashboard operational; backup/DR logging active; incident management workflow validated; policy document versioning functional; data classification entries populated; login activity monitoring recording all login outcomes.
 
 ## Phase 40.2 Unified Update (2026-05-21)
 

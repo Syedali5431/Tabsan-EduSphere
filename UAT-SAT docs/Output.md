@@ -1,6 +1,6 @@
 # Student Lifecycle Output
 
-## Output Synchronization Update (2026-06-02)
+## Output Synchronization Update (2026-06-04)
 
 - Domain script-pack execution outputs are now aligned by institution mode:
 	- Scripts/School Scripts,
@@ -15,6 +15,14 @@
 	- attendance records,
 	- FYP project records.
 - University post-deployment output validation now includes strict attendance/FYP coverage assertions.
+- **ISO 27001 + ISO 9001 Compliance Output Coverage**: Lifecycle output now includes ISO compliance verification artifacts:
+	- Audit logs with full context (ActorRole, UserAgent, DeviceInfo, CorrelationId, Severity, EventCategory).
+	- Login activity records for all authentication outcomes (success, failure, lockout, MFA, concurrency).
+	- Backup operation logs with checksums and verification records (IntegrityCheck, RestoreTest).
+	- Security incident records with full lifecycle tracking (Open → Investigating → Resolved → Closed).
+	- Policy document version history with change tracking and access control.
+	- Data classification entries with justification and classifier attribution.
+	- Compliance dashboard output aggregating 7 operational dimensions.
 
 ## Reference Scenario
 This document captures the expected lifecycle of a single student across the supported institution modes.
@@ -55,9 +63,9 @@ This document captures the expected lifecycle of a single student across the sup
 
 ## Validation Basis
 
-This output reflects the currently implemented lifecycle services, progression rules, institution policy support, and license-gated access paths in the codebase.
+This output reflects the currently implemented lifecycle services, progression rules, institution policy support, and license-gated access paths in the codebase. Additionally, ISO 27001 (Information Security) and ISO 9001 (Quality Management) compliance instrumentation per Enhancement-ISO.md Phases 1-10 is now verified in lifecycle output evidence.
 
-## Current Baseline Notes (15 May 2026)
+## Current Baseline Notes (04 June 2026)
 
 - Institution parity is active for School, College, and University contexts.
 - Standard DB deployment verification chain is Scripts/01 through Scripts/05.
