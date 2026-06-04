@@ -4,6 +4,19 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| BackupLog (entity) | Immutable backup operation record with lifecycle methods (MarkCompleted/Failed/Verified) | src/Tabsan.EduSphere.Domain/Backup/BackupLog.cs |
+| IBackupLogRepository | Repository contract for backup operation logging | src/Tabsan.EduSphere.Domain/Interfaces/IBackupLogRepository.cs |
+| BackupLogRepository | EF Core implementation of backup log persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/BackupLogRepository.cs |
+| IBackupService.GetLogsAsync | Paged query of backup history with type/status/date filters | src/Tabsan.EduSphere.Application/Interfaces/IBackupService.cs |
+| IBackupService.RecordBackupStartAsync | Records start of a new backup operation | src/Tabsan.EduSphere.Application/Interfaces/IBackupService.cs |
+| IBackupService.UpdateBackupStatusAsync | Updates backup record to Completed/Failed/Verified | src/Tabsan.EduSphere.Application/Interfaces/IBackupService.cs |
+| IBackupService.GetStatusSummaryAsync | Returns latest backup status per type for monitoring dashboard | src/Tabsan.EduSphere.Application/Interfaces/IBackupService.cs |
+| BackupService | Full implementation of backup logging and querying | src/Tabsan.EduSphere.Infrastructure/Backup/BackupService.cs |
+| BackupController.GetLogs | GET /api/v1/backup/logs — paged backup history | src/Tabsan.EduSphere.API/Controllers/BackupController.cs |
+| BackupController.RecordBackup | POST /api/v1/backup/logs — record backup start | src/Tabsan.EduSphere.API/Controllers/BackupController.cs |
+| BackupController.UpdateStatus | PUT /api/v1/backup/logs/{id} — update backup status | src/Tabsan.EduSphere.API/Controllers/BackupController.cs |
+| BackupController.GetStatus | GET /api/v1/backup/status — latest backup summary | src/Tabsan.EduSphere.API/Controllers/BackupController.cs |
+| BackupLogConfiguration | EF Core fluent config for backup_logs table + 2 indexes | src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/BackupLogConfiguration.cs |
 | LoginActivityLog (entity) | Immutable record of every login attempt with structured fields for monitoring | src/Tabsan.EduSphere.Domain/Activity/LoginActivityLog.cs |
 | ILoginActivityRepository.AddAsync | Appends a new login activity record | src/Tabsan.EduSphere.Domain/Interfaces/ILoginActivityRepository.cs |
 | LoginActivityRepository.AddAsync | EF Core implementation — persists login activity entries | src/Tabsan.EduSphere.Infrastructure/Repositories/LoginActivityRepository.cs |

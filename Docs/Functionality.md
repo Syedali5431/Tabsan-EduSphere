@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 4 Completion (Backup & DR)
+
+### Implementation sync
+- Created backup_logs table tracking all backup operations with type, file, size, duration, status, checksum.
+- BackupLog entity includes lifecycle methods: MarkCompleted, MarkFailed, MarkVerified.
+- Admin API: GET /backup/logs (paged history), POST /backup/logs (record start), PUT /backup/logs/{id} (update status), GET /backup/status (latest summary per type).
+- External backup scripts integrate via API — record start then update status to Completed/Failed/Verified.
+
+### Validation sync
+- Full solution build succeeded. EF migration generated (PhaseISO4BackupDR).
+
 ## 2026-06-04 Update - ISO Phase 3 Completion (User Activity Monitoring)
 
 ### Implementation sync

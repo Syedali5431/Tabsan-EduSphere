@@ -1,5 +1,10 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 4: Backup & DR)
+- Runtime delivery: backup_logs table, BackupLog entity with lifecycle methods, admin API for recording/querying/updating backup operations, monitoring endpoint for latest status per backup type.
+- Compatibility: additive schema-only (1 table + 2 indexes), no route removals, backward compatible.
+- Validation: full solution build succeeded, EF migration generated (PhaseISO4BackupDR).
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 3: User Activity Monitoring)
 - Runtime delivery in this slice:
   - created login_activity_logs table capturing every login attempt with structured fields,

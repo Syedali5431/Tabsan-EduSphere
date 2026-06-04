@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 4 Backup & DR (Schema Posture)
+- Implementation: new table `backup_logs` (BackupType, FileName, FilePath, FileSizeBytes, DurationSeconds, Status, StartedAt, CompletedAt, ErrorMessage, Checksum, InitiatedBy + BaseEntity). Indexes: IX_backup_logs_status_started, IX_backup_logs_type_started.
+- Validation: EF migration `*_PhaseISO4BackupDR`, schema additive-only.
+
 ## 2026-06-04 Update - ISO Phase 3 User Activity Monitoring (Schema Posture)
 
 - Implementation Summary:
