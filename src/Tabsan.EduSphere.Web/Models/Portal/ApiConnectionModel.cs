@@ -2280,4 +2280,587 @@ public class DegreeRuleWebModel
 {
     public Guid    RuleId             { get; set; }
     public Guid    AcademicProgramId  { get; set; }
-    public s
+    public string  ProgramName        { get; set; } = "";
+    public int     MinTotalCredits    { get; set; }
+    public int     MinCoreCredits     { get; set; }
+    public int     MinElectiveCredits { get; set; }
+    public decimal MinGpa             { get; set; }
+    public List<RequiredCourseWebItem> RequiredCourses { get; set; } = new();
+}
+
+public class RequiredCourseWebItem
+{
+    public Guid   CourseId    { get; set; }
+    public string CourseCode  { get; set; } = "";
+    public string CourseTitle { get; set; } = "";
+}
+
+public class CreateDegreeRuleWebRequest
+{
+    public Guid   AcademicProgramId  { get; set; }
+    public int    MinTotalCredits    { get; set; }
+    public int    MinCoreCredits     { get; set; }
+    public int    MinElectiveCredits { get; set; }
+    public decimal MinGpa            { get; set; }
+    public List<Guid> RequiredCourseIds { get; set; } = new();
+}
+
+public class UpdateDegreeRuleWebRequest
+{
+    public int    MinTotalCredits    { get; set; }
+    public int    MinCoreCredits     { get; set; }
+    public int    MinElectiveCredits { get; set; }
+    public decimal MinGpa            { get; set; }
+    public List<Guid> RequiredCourseIds { get; set; } = new();
+}
+
+public class EligibilityListWebItem
+{
+    public Guid    StudentProfileId   { get; set; }
+    public string  StudentName        { get; set; } = "";
+    public string  RegistrationNumber { get; set; } = "";
+    public decimal Cgpa               { get; set; }
+    public int     TotalCreditsEarned { get; set; }
+    public bool    IsEligible         { get; set; }
+    public int     UnmetCount         { get; set; }
+}
+
+// Final-Touches Phase 17 Stage 17.2/17.1 — page view models
+public class DegreeAuditPageModel
+{
+    public DegreeAuditWebModel?         Audit       { get; set; }
+    public List<StudentItem>            Students    { get; set; } = new();
+    public Guid?                        SelectedStudentProfileId { get; set; }
+}
+
+public class DegreeRulesPageModel
+{
+    public List<DegreeRuleWebModel>     Rules           { get; set; } = new();
+    public CreateDegreeRuleWebRequest   CreateRequest   { get; set; } = new();
+    public List<LookupItem>             Programs        { get; set; } = new();
+}
+
+public class EligibilityPageModel
+{
+    public List<EligibilityListWebItem> Items          { get; set; } = new();
+    public Guid?                        DepartmentId   { get; set; }
+    public Guid?                        ProgramId      { get; set; }
+}
+
+// ── Phase 18: Graduation Workflow ─────────────────────────────────────────────
+public class GraduationApplicationWebModel
+{
+    public Guid      Id                 { get; set; }
+    public Guid      StudentProfileId   { get; set; }
+    public string    StudentName        { get; set; } = "";
+    public string    RegistrationNumber { get; set; } = "";
+    public string    ProgramName        { get; set; } = "";
+    public string    Status             { get; set; } = "";
+    public DateTime? SubmittedAt        { get; set; }
+    public DateTime? UpdatedAt          { get; set; }
+    public bool      HasCertificate     { get; set; }
+}
+
+public class GraduationApplicationPageItem
+{
+    public List<GraduationApplicationWebModel> Items { get; set; } = new();
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public int TotalCount { get; set; }
+    public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+}
+
+public class ApprovalHistoryWebItem
+{
+    public string   Stage        { get; set; } = "";
+    public string   ApproverName { get; set; } = "";
+    public bool     IsApproved   { get; set; }
+    public string?  Note         { get; set; }
+    public DateTime ActedAt      { get; set; }
+}
+
+public class GraduationApplicationDetailWebModel
+{
+    public Guid      Id                 { get; set; }
+    public Guid      StudentProfileId   { get; set; }
+    public string    StudentName        { get; set; } = "";
+    public string    RegistrationNumber { get; set; } = "";
+    public string    ProgramName        { get; set; } = "";
+    public string    Status             { get; set; } = "";
+    public string?   StudentNote        { get; set; }
+    public DateTime? SubmittedAt        { get; set; }
+    public DateTime? UpdatedAt          { get; set; }
+    public bool      HasCertificate     { get; set; }
+    public string?   CertificatePath    { get; set; }
+    public List<ApprovalHistoryWebItem> ApprovalHistory { get; set; } = new();
+}
+
+public class GraduationApplyPageModel
+{
+    public List<GraduationApplicationWebModel> Applications   { get; set; } = new();
+    public int                                 Page           { get; set; } = 1;
+    public int                                 PageSize       { get; set; } = 20;
+    public int                                 TotalCount     { get; set; }
+    public int                                 TotalPages     => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+    public bool                                CanSubmitNew   { get; set; }
+    public string?                             SuccessMessage { get; set; }
+    public string?                             ErrorMessage   { get; set; }
+}
+
+public class GraduationApplicationsPageModel
+{
+    public List<GraduationApplicationWebModel> Applications { get; set; } = new();
+    public string? StatusFilter                              { get; set; }
+    public Guid?   DepartmentFilter                         { get; set; }
+    public int     Page                                     { get; set; } = 1;
+    public int     PageSize                                 { get; set; } = 20;
+    public int     TotalCount                               { get; set; }
+    public int     TotalPages                               => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+    public List<LookupItem> Departments                     { get; set; } = new();
+}
+
+public class GraduationApplicationDetailPageModel
+{
+    public GraduationApplicationDetailWebModel? Application { get; set; }
+    public string?                              SuccessMessage { get; set; }
+    public string?                              ErrorMessage   { get; set; }
+}
+
+public class GraduatedCertificateStudentItem
+{
+    public Guid StudentProfileId { get; set; }
+    public Guid StudentUserId { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string RegistrationNumber { get; set; } = string.Empty;
+    public Guid DepartmentId { get; set; }
+    public string DepartmentName { get; set; } = string.Empty;
+    public Guid ProgramId { get; set; }
+    public string ProgramName { get; set; } = string.Empty;
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
+    public Guid? CourseId { get; set; }
+    public decimal Cgpa { get; set; }
+    public DateTime? GraduatedDate { get; set; }
+    public Guid? LatestDegreeDocumentId { get; set; }
+    public DateTime? LatestDegreeGeneratedAtUtc { get; set; }
+    public Guid? LatestTranscriptDocumentId { get; set; }
+    public DateTime? LatestTranscriptGeneratedAtUtc { get; set; }
+    public List<StudentAdditionalCertificateItem> AdditionalCertificates { get; set; } = new();
+}
+
+public class StudentAdditionalCertificateItem
+{
+    public Guid DocumentId { get; set; }
+    public Guid StudentProfileId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? DocumentType { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "application/octet-stream";
+    public DateTime UploadedAtUtc { get; set; }
+}
+
+public class CertificateDocumentTypeOption
+{
+    public string Value { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+}
+
+public class CertificateInstitutionOption
+{
+    public int Value { get; set; }
+    public string Label { get; set; } = string.Empty;
+}
+
+public class GenerateCertificatesPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public SessionIdentity? Identity { get; set; }
+    public bool CanManage { get; set; }
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public int? SelectedInstitutionType { get; set; }
+    public bool CanSelectInstitution { get; set; }
+    public bool ShowUniversityCertificates { get; set; }
+    public bool CanUploadAdditionalCertificates { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public List<CertificateDocumentTypeOption> AvailableDocumentTypes { get; set; } = new();
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
+    public List<GraduatedCertificateStudentItem> Students { get; set; } = new();
+}
+
+// ── Phase 19: Advanced Course Creation & Grading Config ───────────────────────
+public class GradeRangeItem
+{
+    public int    From  { get; set; }
+    public int    To    { get; set; }
+    public string Label { get; set; } = "";
+}
+
+public class GradingConfigPageModel
+{
+    public List<CourseItem>     Courses       { get; set; } = new();
+    public List<LookupItem>     Departments   { get; set; } = new();
+    public List<TenantItem>     Tenants       { get; set; } = new();
+    public List<CampusItem>     Campuses      { get; set; } = new();
+    public List<LookupItem>     Semesters     { get; set; } = new();
+    public List<LookupItem>     SubjectOfferings { get; set; } = new();
+    public int?                 SelectedInstitutionType { get; set; }
+    public Guid?                SelectedTenantId { get; set; }
+    public Guid?                SelectedCampusId { get; set; }
+    public Guid?                SelectedDepartmentId { get; set; }
+    public Guid?                SelectedCourseId  { get; set; }
+    public Guid?                SelectedSemesterId { get; set; }
+    public Guid?                SelectedSubjectOfferingId { get; set; }
+    public decimal              PassThreshold     { get; set; } = 50;
+    public string               GradingType       { get; set; } = "GPA";
+    public List<GradeRangeItem> GradeRanges       { get; set; } = new();
+    public List<InstitutionGradingSectionItem> InstitutionSections { get; set; } = new();
+    public bool                 CanManageInstitutionSections { get; set; }
+    public bool                 CanSelectTenantCampus { get; set; }
+    public bool                 IsUniversitySelected { get; set; }
+    public string?              SuccessMessage     { get; set; }
+    public string?              ErrorMessage       { get; set; }
+    public bool                 IsConnected        { get; set; }
+}
+
+public class InstitutionGradingSectionItem
+{
+    public int      InstitutionType { get; set; }
+    public string   Title           { get; set; } = string.Empty;
+    public decimal  PassThreshold   { get; set; }
+    public decimal  MinThreshold    { get; set; }
+    public decimal  MaxThreshold    { get; set; }
+    public bool     IsActive        { get; set; }
+    public string?  GradeRangesJson { get; set; }
+}
+
+// ── Phase 20: Learning Management System (LMS) ─────────────────────────────────
+public class LmsVideoItem
+{
+    public Guid    Id              { get; set; }
+    public Guid    ModuleId        { get; set; }
+    public string  Title           { get; set; } = string.Empty;
+    public string? StorageUrl      { get; set; }
+    public string? EmbedUrl        { get; set; }
+    public int?    DurationSeconds { get; set; }
+}
+
+public class LmsModuleItem
+{
+    public Guid           Id          { get; set; }
+    public Guid           OfferingId  { get; set; }
+    public string         Title       { get; set; } = string.Empty;
+    public int            WeekNumber  { get; set; }
+    public string?        Body        { get; set; }
+    public bool           IsPublished { get; set; }
+    public DateTime?      PublishedAt { get; set; }
+    public List<LmsVideoItem> Videos  { get; set; } = new();
+}
+
+public class CourseLmsPageModel
+{
+    public Guid               OfferingId    { get; set; }
+    public string             OfferingTitle { get; set; } = string.Empty;
+    public List<LmsModuleItem> Modules      { get; set; } = new();
+    public bool               IsConnected   { get; set; }
+}
+
+public class LmsManagePageModel
+{
+    public Guid               OfferingId    { get; set; }
+    public string             OfferingTitle { get; set; } = string.Empty;
+    public List<LmsModuleItem> Modules      { get; set; } = new();
+    public string?            SuccessMessage { get; set; }
+    public string?            ErrorMessage   { get; set; }
+    public bool               IsConnected    { get; set; }
+}
+
+public class DiscussionReplyItem
+{
+    public Guid     Id         { get; set; }
+    public Guid     ThreadId   { get; set; }
+    public Guid     AuthorId   { get; set; }
+    public string   AuthorName { get; set; } = string.Empty;
+    public string   Body       { get; set; } = string.Empty;
+    public DateTime CreatedAt  { get; set; }
+}
+
+public class DiscussionThreadItem
+{
+    public Guid     Id         { get; set; }
+    public Guid     OfferingId { get; set; }
+    public Guid     AuthorId   { get; set; }
+    public string   Title      { get; set; } = string.Empty;
+    public string   AuthorName { get; set; } = string.Empty;
+    public bool     IsPinned   { get; set; }
+    public bool     IsClosed   { get; set; }
+    public bool     IsSolved   { get; set; }
+    public string?  ResolvedByName { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string   TicketNumber { get; set; } = string.Empty;
+    public int      ReplyCount { get; set; }
+    public DateTime CreatedAt  { get; set; }
+    public List<DiscussionReplyItem> Replies { get; set; } = new();
+}
+
+public class DiscussionPageModel
+{
+    public Guid   OfferingId    { get; set; }
+    public Guid?  CurrentUserId { get; set; }
+    public bool   CanModerate   { get; set; }
+    public string OfferingTitle { get; set; } = string.Empty;
+    public List<DiscussionThreadItem> Threads { get; set; } = new();
+    public string? SuccessMessage { get; set; }
+    public string? ErrorMessage   { get; set; }
+    public bool    IsConnected    { get; set; }
+}
+
+public class DiscussionDetailPageModel
+{
+    public Guid                OfferingId { get; set; }
+    public Guid?               CurrentUserId { get; set; }
+    public bool                CanModerate { get; set; }
+    public DiscussionThreadItem? Thread   { get; set; }
+    public string?             SuccessMessage { get; set; }
+    public string?             ErrorMessage   { get; set; }
+    public bool                IsConnected    { get; set; }
+}
+
+public class AnnouncementItem
+{
+    public Guid     Id         { get; set; }
+    public Guid?    OfferingId { get; set; }
+    public string   Title      { get; set; } = string.Empty;
+    public string   Body       { get; set; } = string.Empty;
+    public string   AuthorName { get; set; } = string.Empty;
+    public bool     IsActive   { get; set; }
+    public DateTime PostedAt   { get; set; }
+}
+
+public class AnnouncementsPageModel
+{
+    public Guid   OfferingId    { get; set; }
+    public Guid?  SelectedDepartmentId { get; set; }
+    public string OfferingTitle { get; set; } = string.Empty;
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Offerings { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public bool   IncludeInactive { get; set; }
+    public bool   CanManage { get; set; }
+    public List<AnnouncementItem> Announcements { get; set; } = new();
+    public string? SuccessMessage { get; set; }
+    public string? ErrorMessage   { get; set; }
+    public bool    IsConnected    { get; set; }
+}
+
+public class CourseMaterialItem
+{
+    public Guid     Id                { get; set; }
+    public Guid     DepartmentId      { get; set; }
+    public Guid     AcademicProgramId { get; set; }
+    public Guid     SemesterId        { get; set; }
+    public Guid     CourseId          { get; set; }
+    public string   MaterialType      { get; set; } = string.Empty;
+    public string   Title             { get; set; } = string.Empty;
+    public string?  Description       { get; set; }
+    public string?  ExternalUrl       { get; set; }
+    public string?  BlobPath          { get; set; }
+    public string?  FileName          { get; set; }
+    public long?    FileSizeBytes     { get; set; }
+    public bool     IsActive          { get; set; }
+    public DateTime CreatedAt         { get; set; }
+    public DateTime UpdatedAt         { get; set; }
+}
+
+public class CourseMaterialManagePageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Programs { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedAcademicProgramId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
+    public bool ActiveOnly { get; set; } = true;
+    public bool CanManage { get; set; }
+}
+
+public class CourseMaterialStudentPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public List<TenantItem> Tenants { get; set; } = new();
+    public List<CampusItem> Campuses { get; set; } = new();
+    public List<LookupItem> Departments { get; set; } = new();
+    public List<LookupItem> Programs { get; set; } = new();
+    public List<LookupItem> Semesters { get; set; } = new();
+    public List<LookupItem> Courses { get; set; } = new();
+    public List<CourseMaterialItem> Materials { get; set; } = new();
+    public Guid? SelectedTenantId { get; set; }
+    public Guid? SelectedCampusId { get; set; }
+    public Guid? SelectedDepartmentId { get; set; }
+    public Guid? SelectedAcademicProgramId { get; set; }
+    public Guid? SelectedSemesterId { get; set; }
+    public Guid? SelectedCourseId { get; set; }
+    public string PeriodFilterLabel { get; set; } = "Semester";
+    public string PeriodFilterPlaceholder { get; set; } = "All Semesters";
+}
+
+// ── Phase 21: Study Planner ─────────────────────────────────────────────────
+public class StudyPlanCourseItem
+{
+    public Guid   CourseId    { get; set; }
+    public string CourseCode  { get; set; } = string.Empty;
+    public string CourseTitle { get; set; } = string.Empty;
+    public int    CreditHours { get; set; }
+    public string CourseType  { get; set; } = string.Empty;
+}
+
+public class StudyPlanItem
+{
+    public Guid                    Id                  { get; set; }
+    public Guid                    StudentProfileId    { get; set; }
+    public string                  PlannedSemesterName { get; set; } = string.Empty;
+    public string?                 Notes               { get; set; }
+    public string                  AdvisorStatus       { get; set; } = string.Empty;
+    public string?                 AdvisorNotes        { get; set; }
+    public Guid?                   ReviewedByUserId    { get; set; }
+    public int                     TotalCreditHours    { get; set; }
+    public List<StudyPlanCourseItem> Courses           { get; set; } = new();
+    public DateTime                CreatedAt           { get; set; }
+}
+
+public class StudyPlanPageModel
+{
+    public Guid                    StudentProfileId      { get; set; }
+    public Guid?                   SelectedTenantId      { get; set; }
+    public Guid?                   SelectedCampusId      { get; set; }
+    public Guid?                   SelectedDepartmentId  { get; set; }
+    public Guid?                   SelectedStudentProfileId { get; set; }
+    public List<LookupItem>        Tenants               { get; set; } = new();
+    public List<LookupItem>        Campuses              { get; set; } = new();
+    public List<LookupItem>        Departments           { get; set; } = new();
+    public List<StudentItem>       Students              { get; set; } = new();
+    public List<StudyPlanItem>     Plans                 { get; set; } = new();
+    public string?                 Message               { get; set; }
+    public string?                 SuccessMessage        { get; set; }
+    public string?                 ErrorMessage          { get; set; }
+    public bool                    IsConnected           { get; set; }
+}
+
+public class StudyPlanDetailPageModel
+{
+    public StudyPlanItem Plan                 { get; set; } = new();
+    public Guid?         SelectedTenantId     { get; set; }
+    public Guid?         SelectedCampusId     { get; set; }
+    public Guid?         SelectedDepartmentId { get; set; }
+    public Guid?         SelectedStudentProfileId { get; set; }
+    public string?       SuccessMessage       { get; set; }
+    public string?       ErrorMessage         { get; set; }
+    public bool          IsConnected          { get; set; }
+}
+
+public class RecommendationItem
+{
+    public Guid   CourseId    { get; set; }
+    public string CourseCode  { get; set; } = string.Empty;
+    public string CourseTitle { get; set; } = string.Empty;
+    public int    CreditHours { get; set; }
+    public string CourseType  { get; set; } = string.Empty;
+    public string Reason      { get; set; } = string.Empty;
+}
+
+public class RecommendationsPageModel
+{
+    public Guid                   StudentProfileId      { get; set; }
+    public string                 PlannedSemesterName   { get; set; } = string.Empty;
+    public int                    MaxCreditLoad         { get; set; }
+    public int                    RecommendedTotalCredits { get; set; }
+    public List<RecommendationItem> Recommendations     { get; set; } = new();
+    public string?                SuccessMessage        { get; set; }
+    public string?                ErrorMessage          { get; set; }
+    public bool                   IsConnected           { get; set; }
+}
+
+// ── Phase 24 — Dynamic Module & UI Composition ────────────────────────────────
+public class DashboardCompositionModel
+{
+    public bool                              IsConnected   { get; set; }
+    public bool                              CanManageModules { get; set; }
+    public string?                           Message       { get; set; }
+    public List<ModuleVisibilityItem>        Modules       { get; set; } = new();
+    public List<WidgetItem>                  Widgets       { get; set; } = new();
+    public string PeriodLabel       { get; set; } = "Semester";
+    public string ProgressionLabel  { get; set; } = "Progression";
+    public string GradingLabel      { get; set; } = "GPA/CGPA";
+    public string CourseLabel       { get; set; } = "Course";
+    public string StudentGroupLabel { get; set; } = "Batch";
+}
+
+public class ModuleVisibilityItem
+{
+    public string Key          { get; set; } = "";
+    public string Name         { get; set; } = "";
+    public bool   IsActive     { get; set; }
+    public bool   IsAccessible { get; set; }
+}
+
+public class WidgetItem
+{
+    public string Key   { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Icon  { get; set; } = "";
+    public int    Order { get; set; }
+}
+
+// ── Phase 27 — Student Portal Capability Matrix ───────────────────────────────
+public class PortalCapabilityMatrixPageModel
+{
+    public bool IsConnected { get; set; }
+    public string? Message { get; set; }
+    public bool IncludeSchool { get; set; }
+    public bool IncludeCollege { get; set; }
+    public bool IncludeUniversity { get; set; }
+    public List<PortalCapabilityMatrixItem> Rows { get; set; } = new();
+}
+
+public class PortalCapabilityMatrixItem
+{
+    public string CapabilityKey { get; set; } = "";
+    public string CapabilityName { get; set; } = "";
+    public string ModuleKey { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public string Route { get; set; } = "";
+    public string Description { get; set; } = "";
+    public bool IsModuleActive { get; set; }
+    public bool IsLicenseGated { get; set; }
+    public bool Student { get; set; }
+    public bool Faculty { get; set; }
+    public bool Admin { get; set; }
+    public bool SuperAdmin { get; set; }
+    public bool University { get; set; }
+    public bool School { get; set; }
+    public bool College { get; set; }
+}
