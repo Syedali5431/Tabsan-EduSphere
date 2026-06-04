@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update - 2026-06-04 (ISO Phase 8 - Backup Validation)
+### Module impact: Backup Verification surface — integrity checks and restore test tracking. Extends Phase 4 backup_logs.
+### Validation: Build succeeded. EF migration for backup_verification_logs.
+
 ## Execution Update - 2026-06-04 (ISO Phase 7 - Document Management)
 ### Module impact: Policy Documents surface with version tracking, access control, lifecycle management. Read-all, write-admin.
 ### Validation: Build succeeded. EF migration for 2 new tables.

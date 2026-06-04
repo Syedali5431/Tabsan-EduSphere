@@ -95,6 +95,10 @@ public class ApplicationDbContext : DbContext
     /// <summary>Version history for policy documents.</summary>
     public DbSet<PolicyDocumentVersion> PolicyDocumentVersions => Set<PolicyDocumentVersion>();
 
+    // ── Backup Verification (Phase 8) ─────────────────────────────────────
+    /// <summary>Backup verification and restore test logs for ISO 27001 A.17.1.3.</summary>
+    public DbSet<BackupVerificationLog> BackupVerificationLogs => Set<BackupVerificationLog>();
+
     // ── Phase 2: Academic Core ─────────────────────────────────────────────
     /// <summary>Degree programmes offered by departments.</summary>
     public DbSet<AcademicProgram> AcademicPrograms => Set<AcademicProgram>();

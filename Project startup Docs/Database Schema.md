@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 8 Backup Validation (Schema Posture)
+- Implementation: new table `backup_verification_logs` (BackupLogId, VerificationType, VerifiedAt, VerifiedBy, IsSuccessful, DurationSeconds, Issues, VerifiedChecksum + BaseEntity). Indexes on (BackupLogId, VerifiedAt) and (IsSuccessful, VerifiedAt).
+- Validation: EF migration `*_PhaseISO8BackupValidation`, additive-only.
+
 ## 2026-06-04 Update - ISO Phase 7 Document Management (Schema Posture)
 - Implementation: new tables `policy_documents` (Title, Description, Content, Version, Status, Category, AccessLevel, PublishedAt, ArchivedAt) and `policy_document_versions` (DocumentId, VersionNumber, Content, ChangedBy, ChangedAt, ChangeNotes). Indexes: IX_policy_documents_status_category, IX_policy_documents_access_level, IX_policy_doc_versions_doc_version (unique).
 - Validation: EF migration `*_PhaseISO7DocumentManagement`, additive-only.

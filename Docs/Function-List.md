@@ -19,6 +19,12 @@
 | DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
 | User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| BackupVerificationLog (entity) | Backup integrity check / restore test record | src/Tabsan.EduSphere.Domain/Backup/BackupVerificationLog.cs |
+| IBackupVerificationRepository | Repository contract for backup verifications | src/Tabsan.EduSphere.Domain/Interfaces/IBackupVerificationRepository.cs |
+| BackupVerificationRepository | EF Core implementation | src/Tabsan.EduSphere.Infrastructure/Repositories/BackupVerificationRepository.cs |
+| IBackupVerificationService | Verification query and creation service | src/Tabsan.EduSphere.Application/Interfaces/IBackupVerificationService.cs |
+| BackupVerificationService | Backup verification implementation | src/Tabsan.EduSphere.Infrastructure/Backup/BackupVerificationService.cs |
+| BackupVerificationController | API: 3 verification endpoints | src/Tabsan.EduSphere.API/Controllers/BackupVerificationController.cs |
 | PolicyDocument (entity) | Versioned policy doc with Draft→Published→Archived lifecycle | src/Tabsan.EduSphere.Domain/Documents/PolicyDocument.cs |
 | PolicyDocumentVersion (entity) | Immutable version history for policy documents | src/Tabsan.EduSphere.Domain/Documents/PolicyDocumentVersion.cs |
 | IPolicyDocumentRepository | Repository contract for policy docs + versions | src/Tabsan.EduSphere.Domain/Interfaces/IPolicyDocumentRepository.cs |

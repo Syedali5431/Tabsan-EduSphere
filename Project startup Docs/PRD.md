@@ -1,5 +1,8 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 8: Backup Validation)
+- Runtime: backup_verification_logs table, integrity checks + restore tests, 3 API endpoints. ISO 27001 A.17.1.3. Additive.
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 7: Document Management)
 - Runtime: policy_documents + policy_document_versions tables, version tracking, Draft→Published→Archived lifecycle, 7 API endpoints (read all, write admin). ISO 9001 7.5.
 - Compatibility: additive (2 new tables). Validation: build passed, migration generated.
