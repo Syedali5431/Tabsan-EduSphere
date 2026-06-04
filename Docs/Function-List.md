@@ -19,6 +19,13 @@
 | DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
 | User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| IncidentLog (entity) | Security incident with lifecycle: Open→Investigating→Resolved→Closed | src/Tabsan.EduSphere.Domain/Incidents/IncidentLog.cs |
+| IIncidentRepository | Repository contract for incident management | src/Tabsan.EduSphere.Domain/Interfaces/IIncidentRepository.cs |
+| IncidentRepository | EF Core implementation of incident persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/IncidentRepository.cs |
+| IIncidentService | Incident CRUD + status flow + summary | src/Tabsan.EduSphere.Application/Interfaces/IIncidentService.cs |
+| IncidentService | Full incident management implementation | src/Tabsan.EduSphere.Infrastructure/Incidents/IncidentService.cs |
+| IncidentController | API: GET/POST/PUT incidents + summary endpoint | src/Tabsan.EduSphere.API/Controllers/IncidentController.cs |
+| IncidentLogConfiguration | EF Core config for incident_logs table + 3 indexes | src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/IncidentLogConfiguration.cs |
 | BackupLog (entity) | Immutable backup operation record with lifecycle methods (MarkCompleted/Failed/Verified) | src/Tabsan.EduSphere.Domain/Backup/BackupLog.cs |
 | IBackupLogRepository | Repository contract for backup operation logging | src/Tabsan.EduSphere.Domain/Interfaces/IBackupLogRepository.cs |
 | BackupLogRepository | EF Core implementation of backup log persistence | src/Tabsan.EduSphere.Infrastructure/Repositories/BackupLogRepository.cs |

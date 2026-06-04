@@ -1,5 +1,15 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 6 Completion (Incident Management)
+
+### Implementation sync
+- Created incident_logs table with severity/category/status lifecycle (Open→Investigating→Resolved→Closed).
+- IncidentLog entity with domain methods: StartInvestigation, Resolve, Close, Reopen.
+- Admin API: CRUD incidents, status transitions, summary with counts by status.
+
+### Validation sync
+- Build succeeded. EF migration (PhaseISO6IncidentManagement) — new table + 3 indexes.
+
 ## 2026-06-04 Update - ISO Phase 5 Completion (Data Protection)
 
 ### Implementation sync

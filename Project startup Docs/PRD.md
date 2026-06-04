@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-04 - Product Requirements Synchronization (ISO Phase 6: Incident Management)
+- Runtime: incident_logs table, IncidentLog lifecycle entity, admin API for full incident management (CRUD + status flow + summary). ISO 27001 A.16.1.5.
+- Compatibility: additive (1 new table + 3 indexes). Validation: build passed, migration generated.
+
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 5: Data Protection)
 - Runtime: AES-256 encryption service, PII masking, data_classification_entries table, GDPR ConsentToMonitoring + DataRetentionDate on users. Admin API for encrypt/decrypt/mask/classify.
 - Compatibility: additive schema (2 nullable columns + 1 new table + 2 indexes), no route removals.

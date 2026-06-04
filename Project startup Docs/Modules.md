@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update - 2026-06-04 (ISO Phase 6 - Incident Management)
+
+### Module impact summary
+- New Incident Management surface: incident_logs table with severity/category/status lifecycle. Admin API for CRUD, status transitions, and summary.
+- Status flow: Open → Investigating → Resolved → Closed, with reopen support.
+
+### Validation summary
+- Build succeeded. EF migration for incident_logs with 3 indexes.
+
 ## Execution Update - 2026-06-04 (ISO Phase 5 - Data Protection)
 
 ### Module impact summary
