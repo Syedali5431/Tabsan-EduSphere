@@ -1,5 +1,35 @@
 <!-- markdownlint-disable MD012 MD022 MD032 MD041 MD060 -->
 
+## 2026-06-04 Update - ISO Phase 1 Completion Part 2 (Audit Logging — CorrelationId, Severity, EventCategory)
+
+### Function inventory delta
+- Newly created public functions in this slice:
+	- AuditService.TryResolveCorrelationId
+		- resolves CorrelationId from X-Correlation-Id header or falls back to HttpContext.TraceIdentifier.
+- Existing function behavior updates (no duplicate inventory rows added):
+	- AuditLog (.ctor)
+		- extended with CorrelationId, Severity (default "Info"), EventCategory parameters.
+	- IAuditService.SearchAsync
+		- added Phase 1 filter parameters: actorRole, severity, eventCategory, correlationId.
+	- AuditService.SearchAsync
+		- free-text search extended to ActorRole, Severity, EventCategory, CorrelationId.
+		- exact-match filters added for actorRole, severity, eventCategory, correlationId.
+	- AuditService.LogAsync
+		- now auto-resolves CorrelationId from X-Correlation-Id header or TraceIdentifier.
+	- AuditController.SearchLogs
+		- added query params: actorRole, severity, eventCategory, correlationId.
+		- response payload now includes CorrelationId, Severity, EventCategory.
+	- AuditController.ExportLogs
+		- added Phase 1 filter query params for export filtering.
+	- AuditController.BuildCsv
+		- added CorrelationId, Severity, EventCategory columns.
+	- AuditController.BuildExcel
+		- added CorrelationId, Severity, EventCategory columns.
+	- AuditController.BuildPdf
+		- added Severity, Category columns.
+- EF Migration: `20260604043644_PhaseISO1AuditLoggingPart2`
+	- Added DeviceInfo, CorrelationId, Severity, EventCategory columns + 4 filtered indexes.
+
 ## 2026-06-03 Update - ISO Phase 1 Completion (Audit Logging)
 
 ### Function inventory delta
@@ -24,10 +54,6 @@
 		- now auto-enriches audit records with ActorUserId, ActorRole, IP, and User-Agent from runtime context when not explicitly supplied.
 	- ApplicationDbContext.SaveChangesAsync
 		- now enforces append-only immutability for audit log rows (update/delete blocked).
-
-### Validation summary
-- EF migration generated for new audit fields/index.
-- Full solution build succeeded after function additions.
 
 ## 2026-06-03 Update - Phase 4 Continuation (Attendance Scope Alignment)
 
