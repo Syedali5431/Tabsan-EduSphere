@@ -140,12 +140,7 @@ FROM @Modules m
 WHERE NOT EXISTS (SELECT 1 FROM [modules] x WHERE x.[Key] = m.[Key]);
 
 INSERT INTO [module_status] ([Id], [ModuleId], [IsActive], [ActivatedAt], [Source], [ChangedBy], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), m.[Id], CASE WHEN m.[IsMandatory] = 1 THEN 1 ELSE 0 END,
-       CASE WHEN m.[IsMandatory] = 1 THEN @Now ELSE NULL END,
-       CASE WHEN m.[IsMandatory] = 1 THEN N'mandatory' ELSE N'seed' END,
-       NULL,
-       @Now,
-       NULL
+SELECT NEWID(), m.[Id], 1, @Now, N'seed', NULL, @Now, NULL
 FROM [modules] m
 WHERE NOT EXISTS (SELECT 1 FROM [module_status] s WHERE s.[ModuleId] = m.[Id]);
 

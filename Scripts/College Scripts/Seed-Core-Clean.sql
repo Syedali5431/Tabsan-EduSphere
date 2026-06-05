@@ -226,19 +226,19 @@ WHEN NOT MATCHED THEN
 MERGE INTO [module_status] AS tgt
 USING (
     SELECT m.[Id] AS [ModuleId],
-           CASE WHEN m.[IsMandatory] = 1 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS [IsActive],
-           CASE WHEN m.[IsMandatory] = 1 THEN N'mandatory' ELSE N'seed' END AS [Source]
+           CAST(1 AS bit) AS [IsActive],
+           N'seed' AS [Source]
     FROM [modules] m
 ) AS src
 ON tgt.[ModuleId] = src.[ModuleId]
 WHEN MATCHED THEN
-    UPDATE SET tgt.[IsActive] = src.[IsActive],
-               tgt.[ActivatedAt] = CASE WHEN src.[IsActive] = 1 THEN COALESCE(tgt.[ActivatedAt], @Now) ELSE NULL END,
+    UPDATE SET tgt.[IsActive] = 1,
+               tgt.[ActivatedAt] = COALESCE(tgt.[ActivatedAt], @Now),
                tgt.[Source] = src.[Source],
                tgt.[UpdatedAt] = @Now
 WHEN NOT MATCHED THEN
     INSERT ([Id], [ModuleId], [IsActive], [ActivatedAt], [Source], [ChangedBy], [CreatedAt], [UpdatedAt])
-    VALUES (NEWID(), src.[ModuleId], src.[IsActive], CASE WHEN src.[IsActive] = 1 THEN @Now ELSE NULL END, src.[Source], NULL, @Now, NULL);
+    VALUES (NEWID(), src.[ModuleId], 1, @Now, src.[Source], NULL, @Now, NULL);
 
 /* 5) Module permissions matrix */
 IF OBJECT_ID(N'[module_role_assignments]') IS NOT NULL
