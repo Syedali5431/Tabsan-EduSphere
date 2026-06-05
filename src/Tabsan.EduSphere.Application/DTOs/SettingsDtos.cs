@@ -66,7 +66,7 @@ public record SetThemeCommand(string? ThemeKey);
 // Sidebar Menu Settings DTOs
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// <summary>A sidebar menu item with its role access list.</summary>
+/// <summary>A sidebar menu item with its role access list and action permissions.</summary>
 public record SidebarMenuItemDto(
     Guid     Id,
     string   Key,
@@ -78,7 +78,21 @@ public record SidebarMenuItemDto(
     bool     IsSystemMenu,
     IList<SidebarMenuRoleAccessDto> RoleAccesses,
     IList<SidebarMenuItemDto>       SubMenus
-);
+)
+{
+    /// <summary>Current user can view this resource.</summary>
+    public bool CanView { get; init; }
+    /// <summary>Current user can create/add new records.</summary>
+    public bool CanAdd { get; init; }
+    /// <summary>Current user can edit/update records.</summary>
+    public bool CanEdit { get; init; }
+    /// <summary>Current user can deactivate/delete records.</summary>
+    public bool CanDeactivate { get; init; }
+    /// <summary>Current user can export data from this resource.</summary>
+    public bool CanExport { get; init; }
+    /// <summary>Current user can import data into this resource.</summary>
+    public bool CanImport { get; init; }
+}
 
 /// <summary>Role access entry for a sidebar menu item.</summary>
 public record SidebarMenuRoleAccessDto(

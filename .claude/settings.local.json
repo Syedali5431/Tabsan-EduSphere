@@ -15,7 +15,13 @@
       "Bash(sqllocaldb start *)",
       "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj --launch-profile http)",
       "Bash(curl -s http://localhost:5181/swagger/index.html -o /dev/null -w \"HTTP Status: %{http_code}\")",
-      "Bash(curl -s http://localhost:5063 -o /dev/null -w \"HTTP Status: %{http_code}\")"
+      "Bash(curl -s http://localhost:5063 -o /dev/null -w \"HTTP Status: %{http_code}\")",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(Get-FileHash \"C:\\\\Databases\\\\Tabsan-EduSphere\\\\Scripts\\\\03-FullDummyData.sql\")",
+      "Bash(Get-FileHash \"C:\\\\Databases\\\\Tabsan-EduSphere\\\\Scripts\\\\College Scripts\\\\03-FullDummyData.sql\")",
+      "Bash(Get-FileHash \"C:\\\\Databases\\\\Tabsan-EduSphere\\\\Scripts\\\\School Scripts\\\\03-FullDummyData.sql\")",
+      "Bash(Get-FileHash \"C:\\\\Databases\\\\Tabsan-EduSphere\\\\Scripts\\\\University Scripts\\\\03-FullDummyData.sql\")"
     ]
   }
 }

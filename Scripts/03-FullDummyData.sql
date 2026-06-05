@@ -44,6 +44,7 @@ BEGIN TRANSACTION;
 -- ==============================================================================
 
 DECLARE @Now        DATETIME2       = SYSUTCDATETIME();
+DECLARE @SuperAdminPwdHash NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
 DECLARE @PwdHash    NVARCHAR(512)   = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 -- Tenant GUIDs
@@ -152,8 +153,8 @@ BEGIN
     -- School department (InstitutionType = 0)
     (@SchSCIDeptId,  N'School Science Department',    N'SCH-SCI', 0, @SchTenantId, @SchCampusId, 1);
 
-    INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [TenantId], [CampusId], [IsActive], [CreatedAt], [UpdatedAt])
-    SELECT d.Id, d.Name, d.Code, d.InstitutionType, d.TenantId, d.CampusId, d.IsActive, @Now, NULL
+    INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [TenantId], [CampusId], [IsActive], [IsDeleted], [CreatedAt], [UpdatedAt])
+    SELECT d.Id, d.Name, d.Code, d.InstitutionType, d.TenantId, d.CampusId, d.IsActive, CAST(0 AS bit), @Now, NULL
     FROM @Departments d
     WHERE NOT EXISTS (SELECT 1 FROM [departments] x WHERE x.[Id] = d.Id);
 
@@ -190,8 +191,8 @@ BEGIN
     -- School
     (CAST('22222222-2222-2222-2222-222222222251' AS UNIQUEIDENTIFIER), N'School Science Class 1-10',   N'SCH-SCI-C1TO10', @SchSCIDeptId, 10, 8, 1);
 
-    INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [MaxCreditLoadPerSemester], [IsActive], [CreatedAt], [UpdatedAt])
-    SELECT p.Id, p.Name, p.Code, p.DepartmentId, p.TotalSemesters, p.MaxCreditLoadPerSemester, p.IsActive, @Now, NULL
+    INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [MaxCreditLoadPerSemester], [IsActive], [IsDeleted], [CreatedAt], [UpdatedAt])
+    SELECT p.Id, p.Name, p.Code, p.DepartmentId, p.TotalSemesters, p.MaxCreditLoadPerSemester, p.IsActive, CAST(0 AS bit), @Now, NULL
     FROM @Programs p
     WHERE EXISTS (SELECT 1 FROM [departments] d WHERE d.[Id] = p.[DepartmentId])
       AND NOT EXISTS (SELECT 1 FROM [academic_programs] x WHERE x.[Id] = p.Id);
@@ -229,8 +230,8 @@ BEGIN
     (CAST('33333333-3333-3333-3333-333333333309' AS UNIQUEIDENTIFIER), N'Past Fall 2025', '2025-09-01', '2026-01-15', 1),
     (CAST('33333333-3333-3333-3333-333333333310' AS UNIQUEIDENTIFIER), N'Past Spring 2026','2026-02-01', '2026-06-15', 1);
 
-    INSERT INTO [semesters] ([Id], [Name], [StartDate], [EndDate], [IsClosed], [ClosedAt], [CreatedAt], [UpdatedAt])
-    SELECT s.Id, s.Name, s.StartDate, s.EndDate, s.IsClosed, CASE WHEN s.IsClosed = 1 THEN @Now ELSE NULL END, @Now, NULL
+    INSERT INTO [semesters] ([Id], [Name], [StartDate], [EndDate], [IsClosed], [ClosedAt], [IsDeleted], [CreatedAt], [UpdatedAt])
+    SELECT s.Id, s.Name, s.StartDate, s.EndDate, s.IsClosed, CASE WHEN s.IsClosed = 1 THEN @Now ELSE NULL END, CAST(0 AS bit), @Now, NULL
     FROM @Semesters s
     WHERE NOT EXISTS (SELECT 1 FROM [semesters] x WHERE x.[Id] = s.Id);
 
@@ -299,8 +300,8 @@ BEGIN
     (CAST('44444444-4444-4444-4444-444444444303' AS UNIQUEIDENTIFIER), N'Arabic Grammar & Morphology', N'LANG-201', 3, @UniLANGDeptId, 1, N'Percentage', 1, NULL, 1),
     (CAST('44444444-4444-4444-4444-444444444304' AS UNIQUEIDENTIFIER), N'Arabic Conversation',         N'LANG-202', 2, @UniLANGDeptId, 2, N'Percentage', 1, NULL, 1);
 
-    INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [CourseType], [GradingType], [HasSemesters], [TotalSemesters], [IsActive], [CreatedAt], [UpdatedAt])
-    SELECT c.Id, c.Title, c.Code, c.CreditHours, c.DepartmentId, c.CourseType, c.GradingType, c.HasSemesters, c.TotalSemesters, c.IsActive, @Now, NULL
+    INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [CourseType], [GradingType], [HasSemesters], [TotalSemesters], [IsActive], [IsDeleted], [CreatedAt], [UpdatedAt])
+    SELECT c.Id, c.Title, c.Code, c.CreditHours, c.DepartmentId, c.CourseType, c.GradingType, c.HasSemesters, c.TotalSemesters, c.IsActive, CAST(0 AS bit), @Now, NULL
     FROM @Courses c
     WHERE EXISTS (SELECT 1 FROM [departments] d WHERE d.[Id] = c.[DepartmentId])
       AND NOT EXISTS (SELECT 1 FROM [courses] x WHERE x.[Id] = c.Id);
@@ -332,7 +333,7 @@ BEGIN
     INSERT INTO @Users VALUES
     -- ===== SuperAdmin (cross-institution) =====
     (CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), N'superadmin', N'superadmin@demo.local',
-     @PwdHash, @RoleSuperAdmin, NULL, NULL, NULL, NULL, 1, N'System Super Administrator'),
+     @SuperAdminPwdHash, @RoleSuperAdmin, NULL, NULL, NULL, NULL, 1, N'System Super Administrator'),
 
     -- ===== Finance (1 per institution) =====
     (CAST('66666666-6666-6666-6666-666666666610' AS UNIQUEIDENTIFIER), N'finance.uni', N'finance.uni@demo.local',
@@ -436,10 +437,10 @@ BEGIN
 
     INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId],
         [TenantId], [CampusId], [InstitutionType], [IsActive], [FullName], [LastPasswordChangedAt],
-        [ConsentToMonitoring], [DataRetentionDate], [CreatedAt], [UpdatedAt])
+        [ConsentToMonitoring], [DataRetentionDate], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT u.Id, u.Username, u.Email, u.PasswordHash, u.RoleId, u.DepartmentId,
         u.TenantId, u.CampusId, u.InstitutionType, u.IsActive, u.FullName,
-        DATEADD(DAY, -30, @Now), 1, DATEADD(YEAR, 7, @Now), @Now, NULL
+        DATEADD(DAY, -30, @Now), 1, DATEADD(YEAR, 7, @Now), CAST(0 AS bit), @Now, NULL
     FROM @Users u
     WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.Id);
 
@@ -581,9 +582,9 @@ BEGIN
     (CAST('99999999-9999-9999-9999-999999995112' AS UNIQUEIDENTIFIER), CAST('88888888-8888-8888-8888-888888885112' AS UNIQUEIDENTIFIER), N'2026-SCI-C07-002', CAST('22222222-2222-2222-2222-222222222251' AS UNIQUEIDENTIFIER), @SchSCIDeptId, 7,  0.00, DATEADD(DAY, -2200,@Now), 0);
 
     INSERT INTO [student_profiles] ([Id], [UserId], [RegistrationNumber], [ProgramId], [DepartmentId],
-        [CurrentSemesterNumber], [Cgpa], [AdmissionDate], [Status], [CreatedAt], [UpdatedAt])
+        [CurrentSemesterNumber], [Cgpa], [AdmissionDate], [Status], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT p.Id, p.UserId, p.RegistrationNumber, p.ProgramId, p.DepartmentId,
-        p.CurrentSemesterNumber, p.Cgpa, p.AdmissionDate, p.Status, @Now, NULL
+        p.CurrentSemesterNumber, p.Cgpa, p.AdmissionDate, p.Status, CAST(0 AS bit), @Now, NULL
     FROM @Profiles p
     WHERE EXISTS (SELECT 1 FROM [users] u WHERE u.[Id] = p.[UserId])
       AND NOT EXISTS (SELECT 1 FROM [student_profiles] x WHERE x.[Id] = p.Id);
@@ -744,9 +745,9 @@ BEGIN
     (CAST('55555555-5555-5555-5555-555555555512' AS UNIQUEIDENTIFIER), @SCH_URDU, @Sem2, @SCH_F3, 40, 1, @SchTenantId, @SchCampusId, 0);
 
     INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [FacultyUserId], [MaxEnrollment], [IsOpen],
-        [TenantId], [CampusId], [InstitutionType], [CreatedAt], [UpdatedAt])
+        [TenantId], [CampusId], [InstitutionType], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT o.Id, o.CourseId, o.SemesterId, o.FacultyUserId, o.MaxEnrollment, o.IsOpen,
-        o.TenantId, o.CampusId, o.InstitutionType, @Now, NULL
+        o.TenantId, o.CampusId, o.InstitutionType, CAST(0 AS bit), @Now, NULL
     FROM @Offerings o
     WHERE EXISTS (SELECT 1 FROM [courses] c WHERE c.[Id] = o.[CourseId])
       AND NOT EXISTS (SELECT 1 FROM [course_offerings] x WHERE x.[Id] = o.Id);
@@ -772,9 +773,9 @@ BEGIN
         SELECT co.Id AS OfferingId, co.CourseId, co.SemesterId, co.TenantId, co.CampusId, co.InstitutionType
         FROM [course_offerings] co
     )
-    INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [Status])
+    INSERT INTO [enrollments] ([Id], [StudentProfileId], [CourseOfferingId], [EnrolledAt], [Status], [CreatedAt])
     SELECT CONVERT(uniqueidentifier, CONCAT('DDDDDDDD-DDDD-DDDD-DDDD-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY e.ProfileId, o.OfferingId) AS VARCHAR(12)), 12))),
-           e.ProfileId, o.OfferingId, @Now, N'Active'
+           e.ProfileId, o.OfferingId, @Now, N'Active', @Now
     FROM eligible e
     CROSS APPLY (SELECT TOP 5 o.* FROM offerings o WHERE o.InstitutionType = e.InstitutionType ORDER BY o.OfferingId) o
     WHERE NOT EXISTS (
@@ -804,8 +805,8 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM [enrollments] e WHERE e.[CourseOfferingId] = co.Id)
       AND NOT EXISTS (SELECT TOP 1 1 FROM [assignments] a WHERE a.[CourseOfferingId] = co.Id);
 
-    INSERT INTO [assignments] ([Id], [CourseOfferingId], [Title], [Description], [DueDate], [MaxMarks], [IsPublished], [CreatedAt], [UpdatedAt])
-    SELECT a.Id, a.CourseOfferingId, a.Title, a.Description, a.DueDate, a.MaxMarks, a.IsPublished, @Now, NULL
+    INSERT INTO [assignments] ([Id], [CourseOfferingId], [Title], [Description], [DueDate], [MaxMarks], [IsPublished], [IsDeleted], [CreatedAt], [UpdatedAt])
+    SELECT a.Id, a.CourseOfferingId, a.Title, a.Description, a.DueDate, a.MaxMarks, a.IsPublished, CAST(0 AS bit), @Now, NULL
     FROM @Assignments a
     WHERE NOT EXISTS (SELECT 1 FROM [assignments] x WHERE x.[Id] = a.Id);
 END
@@ -813,12 +814,12 @@ END
 -- Submissions
 IF OBJECT_ID(N'[assignment_submissions]') IS NOT NULL
 BEGIN
-    INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [Status])
+    INSERT INTO [assignment_submissions] ([Id], [AssignmentId], [StudentProfileId], [FileUrl], [TextContent], [SubmittedAt], [Status], [CreatedAt])
     SELECT CAST(CONCAT('AAAAAAAA-AAAA-AAAA-AAAA-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY a.Id, e.StudentProfileId) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            a.Id, e.StudentProfileId,
            N'/uploads/submission_' + CAST(ROW_NUMBER() OVER (ORDER BY a.Id, e.StudentProfileId) AS NVARCHAR) + N'.pdf',
            N'Submitted assignment solution.',
-           DATEADD(DAY, -1, @Now), N'Submitted'
+           DATEADD(DAY, -1, @Now), N'Submitted', @Now
     FROM [assignments] a
     JOIN [enrollments] e ON e.[CourseOfferingId] = a.[CourseOfferingId]
     WHERE NOT EXISTS (
@@ -837,13 +838,13 @@ IF OBJECT_ID(N'[results]') IS NOT NULL
 BEGIN
     -- For each enrollment, create 3 result types: Quiz, Midterm, Final
     INSERT INTO [results] ([Id], [StudentProfileId], [CourseOfferingId], [ResultType],
-        [MarksObtained], [MaxMarks], [GradePoint], [IsPublished], [PublishedAt], [PublishedByUserId])
+        [MarksObtained], [MaxMarks], [GradePoint], [IsPublished], [PublishedAt], [PublishedByUserId], [CreatedAt])
     SELECT CAST(CONCAT('CCCCCCCC-CCCC-CCCC-CCCC-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY e.StudentProfileId, e.CourseOfferingId) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            e.StudentProfileId, e.CourseOfferingId,
            rt.ResultType, rt.MarksObtained, rt.MaxMarks,
            -- GPA for University IT/Business, NULL for percentage-based
            CASE WHEN d.InstitutionType = 2 AND d.Code IN ('CS','BUS') THEN CAST((rt.MarksObtained / NULLIF(rt.MaxMarks, 0)) * 4.0 AS DECIMAL(4,2)) ELSE NULL END,
-           1, @Now, CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER)
+           1, @Now, CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), @Now
     FROM [enrollments] e
     JOIN [course_offerings] co ON co.Id = e.CourseOfferingId
     JOIN [courses] c ON c.Id = co.CourseId
@@ -874,13 +875,13 @@ BEGIN
         SELECT DATEADD(DAY, n, DATEADD(DAY, -30, @Now)) AS RecDate
         FROM (SELECT TOP 30 ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n FROM sys.all_objects) nums
     )
-    INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId])
+    INSERT INTO [attendance_records] ([Id], [StudentProfileId], [CourseOfferingId], [Date], [Status], [MarkedByUserId], [CreatedAt])
     SELECT CAST(CONCAT('BBBBBBBB-BBBB-BBBB-BBBB-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY e.StudentProfileId, e.CourseOfferingId, d.RecDate) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            e.StudentProfileId, e.CourseOfferingId, d.RecDate,
            CASE WHEN ABS(CHECKSUM(NEWID())) % 10 < 7 THEN N'Present'
                 WHEN ABS(CHECKSUM(NEWID())) % 10 < 9 THEN N'Late'
                 ELSE N'Absent' END,
-           CAST('77777777-7777-7777-7777-777777777101' AS UNIQUEIDENTIFIER)
+           CAST('77777777-7777-7777-7777-777777777101' AS UNIQUEIDENTIFIER), @Now
     FROM [enrollments] e
     CROSS JOIN dates d
     WHERE NOT EXISTS (
@@ -902,10 +903,10 @@ IF OBJECT_ID(N'[institution_grading_profiles]') IS NOT NULL
 BEGIN
     INSERT INTO [institution_grading_profiles] ([Id], [InstitutionType], [PassThreshold], [GradeRangesJson], [IsActive], [CreatedAt], [UpdatedAt])
     SELECT * FROM (VALUES
-        (CAST('43434343-4343-4343-4343-434343434301' AS UNIQUEIDENTIFIER), 0, 50.00, N'[{"grade":"A+","from":90,"to":100},{"grade":"A","from":80,"to":89},{"grade":"B","from":70,"to":79},{"grade":"C","from":60,"to":69},{"grade":"D","from":50,"to":59},{"grade":"F","from":0,"to":49}]', 1),
-        (CAST('43434343-4343-4343-4343-434343434302' AS UNIQUEIDENTIFIER), 1, 55.00, N'[{"grade":"A+","from":90,"to":100},{"grade":"A","from":80,"to":89},{"grade":"B","from":70,"to":79},{"grade":"C","from":60,"to":69},{"grade":"D","from":55,"to":59},{"grade":"F","from":0,"to":54}]', 1),
-        (CAST('43434343-4343-4343-4343-434343434303' AS UNIQUEIDENTIFIER), 2, 60.00, N'[{"grade":"A","from":85,"to":100},{"grade":"B","from":75,"to":84},{"grade":"C","from":65,"to":74},{"grade":"D","from":60,"to":64},{"grade":"F","from":0,"to":59}]', 1)
-    ) v (Id, InstitutionType, PassThreshold, GradeRangesJson, IsActive)
+        (CAST('43434343-4343-4343-4343-434343434301' AS UNIQUEIDENTIFIER), 0, 50.00, N'[{"grade":"A+","from":90,"to":100},{"grade":"A","from":80,"to":89},{"grade":"B","from":70,"to":79},{"grade":"C","from":60,"to":69},{"grade":"D","from":50,"to":59},{"grade":"F","from":0,"to":49}]', 1, @Now, NULL),
+        (CAST('43434343-4343-4343-4343-434343434302' AS UNIQUEIDENTIFIER), 1, 55.00, N'[{"grade":"A+","from":90,"to":100},{"grade":"A","from":80,"to":89},{"grade":"B","from":70,"to":79},{"grade":"C","from":60,"to":69},{"grade":"D","from":55,"to":59},{"grade":"F","from":0,"to":54}]', 1, @Now, NULL),
+        (CAST('43434343-4343-4343-4343-434343434303' AS UNIQUEIDENTIFIER), 2, 60.00, N'[{"grade":"A","from":85,"to":100},{"grade":"B","from":75,"to":84},{"grade":"C","from":65,"to":74},{"grade":"D","from":60,"to":64},{"grade":"F","from":0,"to":59}]', 1, @Now, NULL)
+    ) v (Id, InstitutionType, PassThreshold, GradeRangesJson, IsActive, CreatedAt, UpdatedAt)
     WHERE NOT EXISTS (SELECT 1 FROM [institution_grading_profiles] x WHERE x.[Id] = v.Id);
 END
 
@@ -914,16 +915,16 @@ IF OBJECT_ID(N'[gpa_scale_rules]') IS NOT NULL
 BEGIN
     INSERT INTO [gpa_scale_rules] ([Id], [InstitutionType], [GradePoint], [MinimumScore], [DisplayOrder], [CreatedAt], [UpdatedAt])
     SELECT * FROM (VALUES
-        (CAST('41414141-4141-4141-4141-414141414101' AS UNIQUEIDENTIFIER), 2, 4.00, 85.00, 1),
-        (CAST('41414141-4141-4141-4141-414141414102' AS UNIQUEIDENTIFIER), 2, 3.70, 80.00, 2),
-        (CAST('41414141-4141-4141-4141-414141414103' AS UNIQUEIDENTIFIER), 2, 3.30, 75.00, 3),
-        (CAST('41414141-4141-4141-4141-414141414104' AS UNIQUEIDENTIFIER), 2, 3.00, 70.00, 4),
-        (CAST('41414141-4141-4141-4141-414141414105' AS UNIQUEIDENTIFIER), 2, 2.70, 65.00, 5),
-        (CAST('41414141-4141-4141-4141-414141414106' AS UNIQUEIDENTIFIER), 2, 2.30, 60.00, 6),
-        (CAST('41414141-4141-4141-4141-414141414107' AS UNIQUEIDENTIFIER), 2, 2.00, 55.00, 7),
-        (CAST('41414141-4141-4141-4141-414141414108' AS UNIQUEIDENTIFIER), 2, 1.70, 50.00, 8),
-        (CAST('41414141-4141-4141-4141-414141414109' AS UNIQUEIDENTIFIER), 2, 0.00,  0.00, 9)
-    ) v (Id, InstitutionType, GradePoint, MinimumScore, DisplayOrder)
+        (CAST('41414141-4141-4141-4141-414141414101' AS UNIQUEIDENTIFIER), 2, 4.00, 85.00, 1, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414102' AS UNIQUEIDENTIFIER), 2, 3.70, 80.00, 2, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414103' AS UNIQUEIDENTIFIER), 2, 3.30, 75.00, 3, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414104' AS UNIQUEIDENTIFIER), 2, 3.00, 70.00, 4, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414105' AS UNIQUEIDENTIFIER), 2, 2.70, 65.00, 5, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414106' AS UNIQUEIDENTIFIER), 2, 2.30, 60.00, 6, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414107' AS UNIQUEIDENTIFIER), 2, 2.00, 55.00, 7, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414108' AS UNIQUEIDENTIFIER), 2, 1.70, 50.00, 8, @Now, NULL),
+        (CAST('41414141-4141-4141-4141-414141414109' AS UNIQUEIDENTIFIER), 2, 0.00,  0.00, 9, @Now, NULL)
+    ) v (Id, InstitutionType, GradePoint, MinimumScore, DisplayOrder, CreatedAt, UpdatedAt)
     WHERE NOT EXISTS (SELECT 1 FROM [gpa_scale_rules] x WHERE x.[Id] = v.Id);
 END
 
@@ -933,17 +934,17 @@ BEGIN
     INSERT INTO [result_component_rules] ([Id], [InstitutionType], [Name], [Weightage], [DisplayOrder], [IsActive], [CreatedAt], [UpdatedAt])
     SELECT * FROM (VALUES
         -- School (0): Assignments + Quizzes + Midterm + Final
-        (CAST('42424242-4242-4242-4242-424242424201' AS UNIQUEIDENTIFIER), 0, N'Assignments', 25.00, 1, 1),
-        (CAST('42424242-4242-4242-4242-424242424202' AS UNIQUEIDENTIFIER), 0, N'Quizzes',     15.00, 2, 1),
-        (CAST('42424242-4242-4242-4242-424242424203' AS UNIQUEIDENTIFIER), 0, N'Midterm',     25.00, 3, 1),
-        (CAST('42424242-4242-4242-4242-424242424204' AS UNIQUEIDENTIFIER), 0, N'Final',       35.00, 4, 1),
+        (CAST('42424242-4242-4242-4242-424242424201' AS UNIQUEIDENTIFIER), 0, N'Assignments', 25.00, 1, 1, @Now, NULL),
+        (CAST('42424242-4242-4242-4242-424242424202' AS UNIQUEIDENTIFIER), 0, N'Quizzes',     15.00, 2, 1, @Now, NULL),
+        (CAST('42424242-4242-4242-4242-424242424203' AS UNIQUEIDENTIFIER), 0, N'Midterm',     25.00, 3, 1, @Now, NULL),
+        (CAST('42424242-4242-4242-4242-424242424204' AS UNIQUEIDENTIFIER), 0, N'Final',       35.00, 4, 1, @Now, NULL),
         -- College (1): ClassTests + Final
-        (CAST('42424242-4242-4242-4242-424242424211' AS UNIQUEIDENTIFIER), 1, N'ClassTests',  40.00, 1, 1),
-        (CAST('42424242-4242-4242-4242-424242424212' AS UNIQUEIDENTIFIER), 1, N'Final',       60.00, 2, 1),
+        (CAST('42424242-4242-4242-4242-424242424211' AS UNIQUEIDENTIFIER), 1, N'ClassTests',  40.00, 1, 1, @Now, NULL),
+        (CAST('42424242-4242-4242-4242-424242424212' AS UNIQUEIDENTIFIER), 1, N'Final',       60.00, 2, 1, @Now, NULL),
         -- University (2): Sessional + Final
-        (CAST('42424242-4242-4242-4242-424242424221' AS UNIQUEIDENTIFIER), 2, N'Sessional',   30.00, 1, 1),
-        (CAST('42424242-4242-4242-4242-424242424222' AS UNIQUEIDENTIFIER), 2, N'Final',       70.00, 2, 1)
-    ) v (Id, InstitutionType, Name, Weightage, DisplayOrder, IsActive)
+        (CAST('42424242-4242-4242-4242-424242424221' AS UNIQUEIDENTIFIER), 2, N'Sessional',   30.00, 1, 1, @Now, NULL),
+        (CAST('42424242-4242-4242-4242-424242424222' AS UNIQUEIDENTIFIER), 2, N'Final',       70.00, 2, 1, @Now, NULL)
+    ) v (Id, InstitutionType, Name, Weightage, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
     WHERE NOT EXISTS (SELECT 1 FROM [result_component_rules] x WHERE x.[Id] = v.Id);
 END
 
@@ -966,13 +967,13 @@ END
 -- degree_rules
 IF OBJECT_ID(N'[degree_rules]') IS NOT NULL
 BEGIN
-    INSERT INTO [degree_rules] ([Id], [AcademicProgramId], [MinTotalCredits], [MinCoreCredits], [MinElectiveCredits], [MinGpa], [CreatedAt], [UpdatedAt])
+    INSERT INTO [degree_rules] ([Id], [AcademicProgramId], [MinTotalCredits], [MinCoreCredits], [MinElectiveCredits], [MinGpa], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT CAST(CONCAT('46464646-4646-4646-4646-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY p.Id) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            p.Id,
            CASE WHEN p.TotalSemesters <= 2 THEN 40 WHEN p.TotalSemesters <= 4 THEN 72 ELSE 132 END,
            CASE WHEN p.TotalSemesters <= 2 THEN 24 WHEN p.TotalSemesters <= 4 THEN 48 ELSE 96 END,
            CASE WHEN p.TotalSemesters <= 2 THEN 8  WHEN p.TotalSemesters <= 4 THEN 12 ELSE 24 END,
-           2.00, @Now, NULL
+           2.00, CAST(0 AS bit), @Now, NULL
     FROM [academic_programs] p
     WHERE NOT EXISTS (SELECT 1 FROM [degree_rules] x WHERE x.[AcademicProgramId] = p.[Id]);
 END
@@ -1003,11 +1004,11 @@ PRINT 'Quizzes seeded.';
 
 IF OBJECT_ID(N'[course_content_modules]') IS NOT NULL
 BEGIN
-    INSERT INTO [course_content_modules] ([Id], [OfferingId], [Title], [WeekNumber], [Body], [IsPublished], [PublishedAt], [CreatedAt], [UpdatedAt])
+    INSERT INTO [course_content_modules] ([Id], [OfferingId], [Title], [WeekNumber], [Body], [IsPublished], [PublishedAt], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT CAST(CONCAT('50505050-5050-5050-5050-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY co.Id, w.WeekNum) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            co.Id, N'Week ' + CAST(w.WeekNum AS NVARCHAR) + N' — ' + c.Title,
            w.WeekNum, N'## Overview' + CHAR(13) + CHAR(10) + N'This module covers key concepts and provides reading materials, lecture notes, and exercises.',
-           1, @Now, @Now, NULL
+           1, @Now, CAST(0 AS bit), @Now, NULL
     FROM [course_offerings] co
     JOIN [courses] c ON c.Id = co.CourseId
     CROSS APPLY (VALUES (1),(2),(3),(4),(5),(6)) w(WeekNum)
@@ -1022,19 +1023,19 @@ PRINT 'LMS modules seeded.';
 
 IF OBJECT_ID(N'[school_streams]') IS NOT NULL
 BEGIN
-    INSERT INTO [school_streams] ([Id], [Name], [Description], [IsActive], [CreatedAt], [UpdatedAt])
+    INSERT INTO [school_streams] ([Id], [Name], [Description], [IsActive], [IsDeleted], [CreatedAt], [UpdatedAt])
     SELECT * FROM (VALUES
-        (CAST('34343434-3434-3434-3434-343434343401' AS UNIQUEIDENTIFIER), N'Science Stream', N'Physics, Chemistry, Maths, Computer Science for Grades 1-10', 1)
-    ) v (Id, Name, Description, IsActive)
+        (CAST('34343434-3434-3434-3434-343434343401' AS UNIQUEIDENTIFIER), N'Science Stream', N'Physics, Chemistry, Maths, Computer Science for Grades 1-10', 1, CAST(0 AS bit), @Now, NULL)
+    ) v (Id, Name, Description, IsActive, IsDeleted, CreatedAt, UpdatedAt)
     WHERE NOT EXISTS (SELECT 1 FROM [school_streams] x WHERE x.[Id] = v.Id);
 END
 
 IF OBJECT_ID(N'[student_stream_assignments]') IS NOT NULL
 BEGIN
-    INSERT INTO [student_stream_assignments] ([Id], [StudentProfileId], [SchoolStreamId], [AssignedAt], [AssignedByUserId])
+    INSERT INTO [student_stream_assignments] ([Id], [StudentProfileId], [SchoolStreamId], [AssignedAt], [AssignedByUserId], [CreatedAt])
     SELECT CAST(CONCAT('35353535-3535-3535-3535-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY sp.Id) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            sp.Id, CAST('34343434-3434-3434-3434-343434343401' AS UNIQUEIDENTIFIER),
-           @Now, CAST('66666666-6666-6666-6666-666666666625' AS UNIQUEIDENTIFIER)
+           @Now, CAST('66666666-6666-6666-6666-666666666625' AS UNIQUEIDENTIFIER), @Now
     FROM [student_profiles] sp
     WHERE sp.[DepartmentId] = @SchSCIDeptId
       AND NOT EXISTS (SELECT 1 FROM [student_stream_assignments] x WHERE x.[StudentProfileId] = sp.[Id]);
@@ -1048,7 +1049,7 @@ PRINT 'School streams seeded.';
 
 IF OBJECT_ID(N'[student_report_cards]') IS NOT NULL
 BEGIN
-    INSERT INTO [student_report_cards] ([Id], [StudentProfileId], [InstitutionType], [PeriodLabel], [PayloadJson], [GeneratedByUserId], [GeneratedAt])
+    INSERT INTO [student_report_cards] ([Id], [StudentProfileId], [InstitutionType], [PeriodLabel], [PayloadJson], [GeneratedByUserId], [GeneratedAt], [CreatedAt])
     SELECT CAST(CONCAT('39393939-3939-3939-3939-', RIGHT('000000000000' + CAST(ROW_NUMBER() OVER (ORDER BY sp.Id) AS VARCHAR(12)), 12)) AS UNIQUEIDENTIFIER),
            sp.Id,
            d.InstitutionType,
@@ -1056,7 +1057,7 @@ BEGIN
                 WHEN d.InstitutionType = 1 THEN N'Year ' + CAST(sp.CurrentSemesterNumber AS NVARCHAR)
                 ELSE N'Semester ' + CAST(sp.CurrentSemesterNumber AS NVARCHAR) END,
            N'{"results":[],"summary":{"total":500,"obtained":420,"percentage":84.0,"grade":"A"}}',
-           CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), @Now
+           CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), @Now, @Now
     FROM [student_profiles] sp
     JOIN [departments] d ON d.Id = sp.DepartmentId
     WHERE NOT EXISTS (SELECT 1 FROM [student_report_cards] x WHERE x.[StudentProfileId] = sp.[Id]);

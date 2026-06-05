@@ -65,6 +65,7 @@ BEGIN
 END;
 
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DECLARE @SuperAdminPasswordHash NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
 DECLARE @DefaultPasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 DECLARE @DefaultTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
 DECLARE @DefaultCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
@@ -215,7 +216,9 @@ VALUES
     (CAST('66666666-6666-6666-6666-666666666604' AS UNIQUEIDENTIFIER), N'student',    N'student@tabsan.local',    @RoleStudentId,    CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2);
 
 INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-SELECT u.[Id], u.[Username], u.[Email], @DefaultPasswordHash, u.[RoleId], u.[DepartmentId], u.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
+SELECT u.[Id], u.[Username], u.[Email],
+    CASE WHEN u.[RoleId] = @RoleSuperAdminId THEN @SuperAdminPasswordHash ELSE @DefaultPasswordHash END,
+    u.[RoleId], u.[DepartmentId], u.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
 FROM @CoreUsers u
 WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.[Id]);
 
@@ -702,14 +705,125 @@ END
 COMMIT TRANSACTION;
 PRINT 'Core seed data completed successfully.';
 
+-- ==============================================================================
+-- APPENDIX: Sidebar menu full role-access matrix + action permissions
+-- (Merged from 09-Update-Sidebar-Role-Access.sql and 10-Seed-Role-Permissions.sql)
+-- ==============================================================================
+
+/* ---- A1. Ensure all sidebar menu items exist ---- */
+DECLARE @items TABLE (MenuKey NVARCHAR(100), DisplayName NVARCHAR(150), Purpose NVARCHAR(500), ParentKey NVARCHAR(100) NULL, DisplayOrder INT);
+INSERT INTO @items VALUES
+(N'timetable_admin',      N'Timetable Admin',       N'Create, edit, publish and retire timetables.',                                                                    NULL,     1),
+(N'timetable_teacher',    N'Teacher Timetable',     N'Faculty-facing teaching schedule with room, time and section context.',                                         NULL,     2),
+(N'timetable_student',    N'Student Timetable',     N'Student class schedule by active program, semester and enrollment.',                                           NULL,     3),
+(N'students',             N'Students',              N'Manage student profile lifecycle, status and related records.',                                                 NULL,     4),
+(N'departments',          N'Departments',           N'Manage department masters and scoped ownership metadata.',                                                      NULL,     5),
+(N'enrollments',          N'Enrollments',           N'Manage roster enrollment, drops and status updates by offering.',                                              NULL,     6),
+(N'enter_attendance',     N'Enter Attendance',      N'Faculty workflow for manual attendance and CSV import with validation feedback.',                              NULL,     7),
+(N'enter_results',        N'Enter Results',         N'Faculty workflow for scoped result entry, correction, import and publish actions.',                            NULL,     8),
+(N'results',              N'Results',               N'Review and consume published results with transcript-related visibility.',                                     NULL,     9),
+(N'quizzes',              N'Quizzes',               N'Create, attempt and evaluate quiz activities.',                                                                NULL,    10),
+(N'analytics',            N'Analytics',             N'View performance, attendance and finance trends with filters.',                                                NULL,    11),
+(N'student_lifecycle',    N'Student Lifecycle',     N'Manage progression, graduation activation and student-state transitions.',                                     NULL,    12),
+(N'payments',             N'Payments',              N'Track, edit and confirm payment receipt lifecycle.',                                                           NULL,    13),
+(N'report_center',        N'Report Center',         N'Run, filter and export assigned reports by role and scope.',                                                   NULL,    14),
+(N'notifications',        N'Notifications',         N'Unified inbox for system, academic and workflow notifications.',                                               NULL,    15),
+(N'buildings',            N'Buildings',             N'Manage building master records for campus infrastructure.',                                                    NULL,    16),
+(N'rooms',                N'Rooms',                 N'Manage room inventory, capacity and usage metadata by building.',                                              NULL,    17),
+(N'helpdesk',             N'Helpdesk',              N'Ticket management for academic, technical and administrative support.',                                        NULL,    18),
+-- Academic sub-menus
+(N'programs',             N'Programs',              N'Manage academic programs, activation and scope metadata.',                                                     N'academic', 2),
+(N'gradebook',            N'Gradebook',             N'Manage component scores and aggregate performance by offering.',                                               N'academic', 5),
+(N'rubric_manage',        N'Rubric Management',     N'Create and manage assignment rubrics, criteria and level scoring matrices.',                                   N'academic', 6),
+(N'lms_manage',           N'LMS Manage',            N'Manage LMS integration and learning content governance settings.',                                             N'academic',10),
+(N'discussion',           N'Discussion',            N'Threaded discussions for course collaboration and Q&A.',                                                       N'academic',11),
+(N'announcements',        N'Announcements',         N'Create and consume scoped institutional and course announcements.',                                            N'academic',12),
+(N'study_plan',           N'Study Plan',            N'Plan future course path with advisor review workflow.',                                                        N'academic',13),
+(N'prerequisites',        N'Prerequisites',         N'Define prerequisite relationships for course eligibility.',                                                   N'academic',14),
+(N'grading_config',       N'Grading Config',        N'Maintain grading profiles, pass thresholds and ranges.',                                                      N'academic',15),
+(N'result_calculation',   N'Result Calculation',    N'Configure institution-scoped GPA rules and weighted components.',                                             N'academic',16),
+(N'accreditation',        N'Accreditation',         N'Manage accreditation templates, mappings and evidence structures.',                                            N'academic',17),
+(N'user_import',          N'User Import',           N'Bulk onboarding with validation, mapping and scoped controls.',                                               N'academic',18),
+-- Settings sub-menus
+(N'theme_settings',       N'Theme Settings',        N'Manage visual theme and appearance preferences.',                                                              N'settings', 5),
+(N'report_settings',      N'Report Settings',       N'Configure report definitions, visibility and access rules.',                                                  N'settings', 6);
+
+DECLARE @ik NVARCHAR(100), @in NVARCHAR(150), @ip NVARCHAR(500), @ipk NVARCHAR(100), @io INT;
+DECLARE ic CURSOR LOCAL FAST_FORWARD FOR SELECT MenuKey, DisplayName, Purpose, ParentKey, DisplayOrder FROM @items;
+OPEN ic; FETCH NEXT FROM ic INTO @ik, @in, @ip, @ipk, @io;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM [sidebar_menu_items] WHERE [Key] = @ik)
+    BEGIN
+        DECLARE @pid UNIQUEIDENTIFIER = NULL;
+        IF @ipk IS NOT NULL SELECT @pid = [Id] FROM [sidebar_menu_items] WHERE [Key] = @ipk;
+        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
+        VALUES (NEWID(), @in, @ip, @ik, @pid, @io, 1, 0, @Now, NULL, 0, NULL);
+    END
+    FETCH NEXT FROM ic INTO @ik, @in, @ip, @ipk, @io;
+END;
+CLOSE ic; DEALLOCATE ic;
+
+/* ---- A2. Full sidebar role-access matrix ---- */
+DELETE FROM [sidebar_menu_role_accesses] WHERE [RoleName] IN (N'Admin', N'Faculty', N'Student', N'Finance');
+
+INSERT INTO [sidebar_menu_role_accesses] ([Id], [SidebarMenuItemId], [RoleName], [IsAllowed], [CreatedAt], [UpdatedAt])
+SELECT NEWID(), m.[Id], ra.[RoleName], 1, @Now, NULL FROM [sidebar_menu_items] m JOIN (VALUES
+(N'dashboard',N'Admin'),(N'dashboard',N'Faculty'),(N'dashboard',N'Student'),(N'dashboard',N'Finance'),
+(N'tenant_management',N'Admin'),(N'campus_management',N'Admin'),(N'departments',N'Admin'),(N'programs',N'Admin'),
+(N'courses',N'Admin'),(N'enrollments',N'Admin'),(N'students',N'Admin'),(N'timetable_admin',N'Admin'),
+(N'timetable_teacher',N'Admin'),(N'timetable_student',N'Admin'),(N'assignments',N'Admin'),(N'enter_attendance',N'Admin'),
+(N'enter_results',N'Admin'),(N'gradebook',N'Admin'),(N'rubric_manage',N'Admin'),(N'quizzes',N'Admin'),
+(N'lms_manage',N'Admin'),(N'course_material',N'Admin'),(N'discussion',N'Admin'),(N'announcements',N'Admin'),
+(N'generate_certificates',N'Admin'),(N'result_calculation',N'Admin'),(N'prerequisites',N'Admin'),(N'grading_config',N'Admin'),
+(N'study_plan',N'Admin'),(N'attendance',N'Admin'),(N'results',N'Admin'),(N'student_lifecycle',N'Admin'),
+(N'buildings',N'Admin'),(N'rooms',N'Admin'),(N'report_settings',N'Admin'),(N'theme_settings',N'Admin'),
+(N'accreditation',N'Admin'),(N'notifications',N'Admin'),(N'user_import',N'Admin'),(N'user_settings',N'Admin'),
+(N'analytics',N'Admin'),(N'helpdesk',N'Admin'),(N'report_center',N'Admin'),(N'admin_users',N'Admin'),(N'payments',N'Admin'),
+(N'students',N'Faculty'),(N'timetable_teacher',N'Faculty'),(N'assignments',N'Faculty'),(N'enter_attendance',N'Faculty'),
+(N'enter_results',N'Faculty'),(N'gradebook',N'Faculty'),(N'quizzes',N'Faculty'),(N'lms_manage',N'Faculty'),
+(N'course_material',N'Faculty'),(N'discussion',N'Faculty'),(N'announcements',N'Faculty'),(N'result_calculation',N'Faculty'),
+(N'study_plan',N'Faculty'),(N'attendance',N'Faculty'),(N'timetable_student',N'Faculty'),(N'results',N'Faculty'),
+(N'theme_settings',N'Faculty'),(N'notifications',N'Faculty'),(N'user_settings',N'Faculty'),(N'analytics',N'Faculty'),
+(N'helpdesk',N'Faculty'),(N'report_center',N'Faculty'),
+(N'quizzes',N'Student'),(N'lms_manage',N'Student'),(N'course_material',N'Student'),(N'discussion',N'Student'),
+(N'announcements',N'Student'),(N'study_plan',N'Student'),(N'attendance',N'Student'),(N'timetable_student',N'Student'),
+(N'results',N'Student'),(N'theme_settings',N'Student'),(N'notifications',N'Student'),(N'user_settings',N'Student'),
+(N'analytics',N'Student'),(N'helpdesk',N'Student'),(N'report_center',N'Student'),
+(N'payments',N'Finance'),(N'theme_settings',N'Finance'),(N'notifications',N'Finance'),(N'user_settings',N'Finance'),
+(N'analytics',N'Finance'),(N'helpdesk',N'Finance'),(N'report_center',N'Finance')
+) ra([MenuKey], [RoleName]) ON ra.[MenuKey] = m.[Key]
+WHERE NOT EXISTS (SELECT 1 FROM [sidebar_menu_role_accesses] x WHERE x.[SidebarMenuItemId] = m.[Id] AND x.[RoleName] = ra.[RoleName]);
+
+/* ---- A3. Full role-resource action permissions ---- */
+IF OBJECT_ID(N'[role_resource_permissions]') IS NOT NULL
+BEGIN
+    DELETE FROM [role_resource_permissions] WHERE [RoleName] IN (N'SuperAdmin',N'Admin',N'Faculty',N'Student',N'Finance');
+
+    DECLARE @pm TABLE (MenuKey NVARCHAR(100), RoleName NVARCHAR(100), V BIT, A BIT, E BIT, D BIT, X BIT, I BIT);
+    -- SuperAdmin: all on all
+    INSERT INTO @pm VALUES (N'dashboard',N'SuperAdmin',1,0,0,0,0,0),(N'timetable_admin',N'SuperAdmin',1,1,1,1,1,1),(N'timetable_teacher',N'SuperAdmin',1,1,1,1,1,1),(N'timetable_student',N'SuperAdmin',1,1,1,1,1,1),(N'students',N'SuperAdmin',1,1,1,1,1,1),(N'departments',N'SuperAdmin',1,1,1,1,1,1),(N'enrollments',N'SuperAdmin',1,1,1,1,1,1),(N'enter_attendance',N'SuperAdmin',1,1,1,1,1,1),(N'enter_results',N'SuperAdmin',1,1,1,1,1,1),(N'results',N'SuperAdmin',1,1,1,1,1,1),(N'quizzes',N'SuperAdmin',1,1,1,1,1,1),(N'analytics',N'SuperAdmin',1,1,1,1,1,1),(N'student_lifecycle',N'SuperAdmin',1,1,1,1,1,1),(N'payments',N'SuperAdmin',1,1,1,1,1,1),(N'report_center',N'SuperAdmin',1,1,1,1,1,1),(N'notifications',N'SuperAdmin',1,1,1,1,1,1),(N'buildings',N'SuperAdmin',1,1,1,1,1,1),(N'rooms',N'SuperAdmin',1,1,1,1,1,1),(N'helpdesk',N'SuperAdmin',1,1,1,1,1,1),(N'courses',N'SuperAdmin',1,1,1,1,1,1),(N'programs',N'SuperAdmin',1,1,1,1,1,1),(N'attendance',N'SuperAdmin',1,1,1,1,1,1),(N'assignments',N'SuperAdmin',1,1,1,1,1,1),(N'gradebook',N'SuperAdmin',1,1,1,1,1,1),(N'rubric_manage',N'SuperAdmin',1,1,1,1,1,1),(N'degree_audit',N'SuperAdmin',1,1,1,1,1,1),(N'generate_certificates',N'SuperAdmin',1,1,1,1,1,1),(N'course_material',N'SuperAdmin',1,1,1,1,1,1),(N'lms_manage',N'SuperAdmin',1,1,1,1,1,1),(N'discussion',N'SuperAdmin',1,1,1,1,1,1),(N'announcements',N'SuperAdmin',1,1,1,1,1,1),(N'study_plan',N'SuperAdmin',1,1,1,1,1,1),(N'prerequisites',N'SuperAdmin',1,1,1,1,1,1),(N'grading_config',N'SuperAdmin',1,1,1,1,1,1),(N'result_calculation',N'SuperAdmin',1,1,1,1,1,1),(N'accreditation',N'SuperAdmin',1,1,1,1,1,1),(N'user_import',N'SuperAdmin',1,1,1,1,1,1),(N'user_settings',N'SuperAdmin',1,1,1,1,1,1),(N'admin_users',N'SuperAdmin',1,1,1,1,1,1),(N'tenant_management',N'SuperAdmin',1,1,1,1,1,1),(N'campus_management',N'SuperAdmin',1,1,1,1,1,1),(N'theme_settings',N'SuperAdmin',1,1,1,1,1,1),(N'report_settings',N'SuperAdmin',1,1,1,1,1,1);
+    -- Admin: all 6 on all
+    INSERT INTO @pm VALUES (N'dashboard',N'Admin',1,0,0,0,0,0),(N'timetable_admin',N'Admin',1,1,1,1,1,1),(N'timetable_teacher',N'Admin',1,1,1,1,1,1),(N'timetable_student',N'Admin',1,1,1,1,1,1),(N'students',N'Admin',1,1,1,1,1,1),(N'departments',N'Admin',1,1,1,1,1,1),(N'enrollments',N'Admin',1,1,1,1,1,1),(N'enter_attendance',N'Admin',1,1,1,1,1,1),(N'enter_results',N'Admin',1,1,1,1,1,1),(N'results',N'Admin',1,1,1,1,1,1),(N'quizzes',N'Admin',1,1,1,1,1,1),(N'analytics',N'Admin',1,1,1,1,1,1),(N'student_lifecycle',N'Admin',1,1,1,1,1,1),(N'payments',N'Admin',1,1,1,1,1,1),(N'report_center',N'Admin',1,1,1,1,1,1),(N'notifications',N'Admin',1,1,1,1,1,1),(N'buildings',N'Admin',1,1,1,1,1,1),(N'rooms',N'Admin',1,1,1,1,1,1),(N'helpdesk',N'Admin',1,1,1,1,1,1),(N'courses',N'Admin',1,1,1,1,1,1),(N'programs',N'Admin',1,1,1,1,1,1),(N'attendance',N'Admin',1,1,1,1,1,1),(N'assignments',N'Admin',1,1,1,1,1,1),(N'gradebook',N'Admin',1,1,1,1,1,1),(N'rubric_manage',N'Admin',1,1,1,1,1,1),(N'degree_audit',N'Admin',1,1,1,1,1,1),(N'generate_certificates',N'Admin',1,1,1,1,1,1),(N'course_material',N'Admin',1,1,1,1,1,1),(N'lms_manage',N'Admin',1,1,1,1,1,1),(N'discussion',N'Admin',1,1,1,1,1,1),(N'announcements',N'Admin',1,1,1,1,1,1),(N'study_plan',N'Admin',1,1,1,1,1,1),(N'prerequisites',N'Admin',1,1,1,1,1,1),(N'grading_config',N'Admin',1,1,1,1,1,1),(N'result_calculation',N'Admin',1,1,1,1,1,1),(N'accreditation',N'Admin',1,1,1,1,1,1),(N'user_import',N'Admin',1,1,1,1,1,1),(N'user_settings',N'Admin',1,1,1,1,1,1),(N'admin_users',N'Admin',1,1,1,1,1,1),(N'tenant_management',N'Admin',1,1,1,1,1,1),(N'campus_management',N'Admin',1,1,1,1,1,1),(N'theme_settings',N'Admin',1,1,1,1,1,1),(N'report_settings',N'Admin',1,1,1,1,1,1);
+    -- Faculty
+    INSERT INTO @pm VALUES (N'dashboard',N'Faculty',1,0,0,0,0,0),(N'assignments',N'Faculty',1,1,1,0,1,1),(N'enter_attendance',N'Faculty',1,1,1,0,1,1),(N'enter_results',N'Faculty',1,1,1,0,1,1),(N'gradebook',N'Faculty',1,1,1,0,1,1),(N'quizzes',N'Faculty',1,1,1,0,1,1),(N'lms_manage',N'Faculty',1,1,1,0,1,1),(N'course_material',N'Faculty',1,1,1,0,1,1),(N'discussion',N'Faculty',1,1,1,0,1,1),(N'announcements',N'Faculty',1,1,1,0,1,1),(N'attendance',N'Faculty',1,1,1,0,1,1),(N'results',N'Faculty',1,1,1,0,1,1),(N'result_calculation',N'Faculty',1,0,1,0,0,0),(N'study_plan',N'Faculty',1,0,1,0,0,0),(N'students',N'Faculty',1,0,0,0,1,0),(N'timetable_teacher',N'Faculty',1,0,0,0,1,0),(N'timetable_student',N'Faculty',1,0,0,0,1,0),(N'analytics',N'Faculty',1,0,0,0,1,0),(N'theme_settings',N'Faculty',1,0,0,0,0,0),(N'notifications',N'Faculty',1,0,0,0,0,0),(N'helpdesk',N'Faculty',1,1,1,0,1,0),(N'report_center',N'Faculty',1,0,0,0,1,0),(N'user_settings',N'Faculty',1,0,1,0,0,0);
+    -- Student
+    INSERT INTO @pm VALUES (N'dashboard',N'Student',1,0,0,0,0,0),(N'quizzes',N'Student',1,0,0,0,0,0),(N'lms_manage',N'Student',1,0,0,0,0,0),(N'course_material',N'Student',1,0,0,0,1,0),(N'discussion',N'Student',1,1,0,0,0,0),(N'announcements',N'Student',1,0,0,0,0,0),(N'study_plan',N'Student',1,0,0,0,0,0),(N'attendance',N'Student',1,0,0,0,0,0),(N'timetable_student',N'Student',1,0,0,0,0,0),(N'notifications',N'Student',1,0,0,0,0,0),(N'analytics',N'Student',1,0,0,0,1,0),(N'helpdesk',N'Student',1,1,0,0,0,0),(N'results',N'Student',1,0,0,0,1,0),(N'report_center',N'Student',1,0,0,0,1,0),(N'user_settings',N'Student',0,0,1,0,0,0),(N'theme_settings',N'Student',0,0,0,0,0,0);
+    -- Finance
+    INSERT INTO @pm VALUES (N'dashboard',N'Finance',1,0,0,0,0,0),(N'payments',N'Finance',1,1,1,1,1,1),(N'notifications',N'Finance',1,0,0,0,0,0),(N'analytics',N'Finance',1,0,0,0,1,0),(N'helpdesk',N'Finance',1,0,0,0,0,0),(N'report_center',N'Finance',1,0,0,0,1,0),(N'user_settings',N'Finance',0,0,1,0,0,0),(N'theme_settings',N'Finance',0,0,0,0,0,0);
+
+    INSERT INTO [role_resource_permissions] ([Id], [RoleName], [ResourceKey], [CanView], [CanAdd], [CanEdit], [CanDeactivate], [CanExport], [CanImport], [CreatedAt], [UpdatedAt])
+    SELECT NEWID(), pm.RoleName, pm.MenuKey, pm.V, pm.A, pm.E, pm.D, pm.X, pm.I, @Now, NULL FROM @pm pm;
+END;
+
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
-    
-    DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-    DECLARE @ErrorState INT = ERROR_STATE();
-    
-    RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+
+    DECLARE @ErrorMessage2 NVARCHAR(MAX) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity2 INT = ERROR_SEVERITY();
+    DECLARE @ErrorState2 INT = ERROR_STATE();
+
+    RAISERROR (@ErrorMessage2, @ErrorSeverity2, @ErrorState2);
 END CATCH;

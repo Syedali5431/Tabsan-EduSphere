@@ -1002,84 +1002,6 @@ GO
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
-)
-AND OBJECT_ID(N'[courses]') IS NOT NULL
-AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
-AND OBJECT_ID(N'[departments]') IS NOT NULL
-BEGIN
-    IF COL_LENGTH('courses', 'CampusId') IS NULL
-        ALTER TABLE [courses] ADD [CampusId] uniqueidentifier NULL;
-
-    IF COL_LENGTH('courses', 'InstitutionType') IS NULL
-        ALTER TABLE [courses] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_courses_InstitutionType] DEFAULT(3);
-
-    IF COL_LENGTH('courses', 'TenantId') IS NULL
-        ALTER TABLE [courses] ADD [TenantId] uniqueidentifier NULL;
-
-    IF COL_LENGTH('course_offerings', 'CampusId') IS NULL
-        ALTER TABLE [course_offerings] ADD [CampusId] uniqueidentifier NULL;
-
-    IF COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
-        ALTER TABLE [course_offerings] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_course_offerings_InstitutionType] DEFAULT(3);
-
-    IF COL_LENGTH('course_offerings', 'TenantId') IS NULL
-        ALTER TABLE [course_offerings] ADD [TenantId] uniqueidentifier NULL;
-
-    IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
-    AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
-    AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
-    BEGIN
-        EXEC(N'
-            UPDATE c
-            SET
-                c.[TenantId] = d.[TenantId],
-                c.[CampusId] = d.[CampusId],
-                c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
-            FROM [courses] c
-            INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
-            WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
-        ');
-    END;
-
-    EXEC(N'
-        UPDATE o
-        SET
-            o.[TenantId] = c.[TenantId],
-            o.[CampusId] = c.[CampusId],
-            o.[InstitutionType] = c.[InstitutionType]
-        FROM [course_offerings] o
-        INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
-        WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
-    ');
-
-    EXEC(N'
-        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_courses_scope_active'' AND [object_id] = OBJECT_ID(N''[courses]''))
-            CREATE INDEX [IX_courses_scope_active] ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
-    ');
-
-    EXEC(N'
-        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_course_offerings_scope_open'' AND [object_id] = OBJECT_ID(N''[course_offerings]''))
-            CREATE INDEX [IX_course_offerings_scope_open] ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
-    ');
-END;
-GO
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
-)
-AND OBJECT_ID(N'[courses]') IS NOT NULL
-AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
-AND OBJECT_ID(N'[departments]') IS NOT NULL
-BEGIN
-    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20260523021000_Phase47_CourseInstitutionScope', N'8.0.4');
-END;
-GO
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260429004340_AcademicCore'
 )
 BEGIN
@@ -1424,6 +1346,84 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260429004340_AcademicCore', N'8.0.8');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
+)
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
+BEGIN
+    IF COL_LENGTH('courses', 'CampusId') IS NULL
+        ALTER TABLE [courses] ADD [CampusId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('courses', 'InstitutionType') IS NULL
+        ALTER TABLE [courses] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_courses_InstitutionType] DEFAULT(3);
+
+    IF COL_LENGTH('courses', 'TenantId') IS NULL
+        ALTER TABLE [courses] ADD [TenantId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('course_offerings', 'CampusId') IS NULL
+        ALTER TABLE [course_offerings] ADD [CampusId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('course_offerings', 'InstitutionType') IS NULL
+        ALTER TABLE [course_offerings] ADD [InstitutionType] int NOT NULL CONSTRAINT [DF_course_offerings_InstitutionType] DEFAULT(3);
+
+    IF COL_LENGTH('course_offerings', 'TenantId') IS NULL
+        ALTER TABLE [course_offerings] ADD [TenantId] uniqueidentifier NULL;
+
+    IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
+    AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+    AND COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+    BEGIN
+        EXEC(N'
+            UPDATE c
+            SET
+                c.[TenantId] = d.[TenantId],
+                c.[CampusId] = d.[CampusId],
+                c.[InstitutionType] = CAST(d.[InstitutionType] AS int)
+            FROM [courses] c
+            INNER JOIN [departments] d ON d.[Id] = c.[DepartmentId]
+            WHERE c.[TenantId] IS NULL OR c.[CampusId] IS NULL OR c.[InstitutionType] = 3;
+        ');
+    END;
+
+    EXEC(N'
+        UPDATE o
+        SET
+            o.[TenantId] = c.[TenantId],
+            o.[CampusId] = c.[CampusId],
+            o.[InstitutionType] = c.[InstitutionType]
+        FROM [course_offerings] o
+        INNER JOIN [courses] c ON c.[Id] = o.[CourseId]
+        WHERE o.[TenantId] IS NULL OR o.[CampusId] IS NULL OR o.[InstitutionType] = 3;
+    ');
+
+    EXEC(N'
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_courses_scope_active'' AND [object_id] = OBJECT_ID(N''[courses]''))
+            CREATE INDEX [IX_courses_scope_active] ON [courses] ([TenantId], [CampusId], [InstitutionType], [IsActive]);
+    ');
+
+    EXEC(N'
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N''IX_course_offerings_scope_open'' AND [object_id] = OBJECT_ID(N''[course_offerings]''))
+            CREATE INDEX [IX_course_offerings_scope_open] ON [course_offerings] ([TenantId], [CampusId], [InstitutionType], [IsOpen]);
+    ');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260523021000_Phase47_CourseInstitutionScope'
+)
+AND OBJECT_ID(N'[courses]') IS NOT NULL
+AND OBJECT_ID(N'[course_offerings]') IS NOT NULL
+AND OBJECT_ID(N'[departments]') IS NOT NULL
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260523021000_Phase47_CourseInstitutionScope', N'8.0.4');
 END;
 GO
 
@@ -6297,6 +6297,40 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260604130000_PhaseISOPasswordHistoryIndex', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+-- ==============================================================================
+-- PHASE: RBAC Action Permissions
+-- Migration: Phase9_RoleResourcePermissions
+-- New Table: role_resource_permissions
+-- ==============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF OBJECT_ID(N'[role_resource_permissions]') IS NULL
+BEGIN
+    CREATE TABLE [role_resource_permissions] (
+        [Id] uniqueidentifier NOT NULL,
+        [RoleName] nvarchar(100) NOT NULL,
+        [ResourceKey] nvarchar(100) NOT NULL,
+        [CanView]       bit NOT NULL DEFAULT 0,
+        [CanAdd]        bit NOT NULL DEFAULT 0,
+        [CanEdit]       bit NOT NULL DEFAULT 0,
+        [CanDeactivate] bit NOT NULL DEFAULT 0,
+        [CanExport]     bit NOT NULL DEFAULT 0,
+        [CanImport]     bit NOT NULL DEFAULT 0,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_role_resource_permissions] PRIMARY KEY ([Id])
+    );
+
+    CREATE UNIQUE INDEX [IX_rrp_role_resource]
+        ON [role_resource_permissions] ([RoleName], [ResourceKey]);
 END;
 GO
 

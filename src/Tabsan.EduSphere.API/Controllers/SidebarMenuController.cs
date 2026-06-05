@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Tabsan.EduSphere.Application.Authorization;
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Application.Modules;
@@ -20,6 +21,7 @@ public class SidebarMenuController : ControllerBase
     private readonly ISidebarMenuService _service;
     private readonly IModuleEntitlementResolver _moduleEntitlement;
     private readonly IInstitutionPolicyService _institutionPolicy;
+    private readonly IPermissionService _permissions;
 
     private static readonly HashSet<string> UniversityOnlyMenuKeys =
         new(StringComparer.OrdinalIgnoreCase)
@@ -82,11 +84,13 @@ public class SidebarMenuController : ControllerBase
     public SidebarMenuController(
         ISidebarMenuService service,
         IModuleEntitlementResolver moduleEntitlement,
-        IInstitutionPolicyService institutionPolicy)
+        IInstitutionPolicyService institutionPolicy,
+        IPermissionService permissions)
     {
         _service = service;
         _moduleEntitlement = moduleEntitlement;
         _institutionPolicy = institutionPolicy;
+        _permissions = permissions;
     }
 
     // ── GET /api/v1/sidebar-menu/my-visible ───────────────────────────────────
@@ -101,11 +105,14 @@ public class SidebarMenuController : ControllerBase
     {
         var policy = await _institutionPolicy.GetPolicyAsync(ct);
 
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role") ?? string.Empty;
+
         if (User.IsInRole("SuperAdmin"))
         {
             var allMenus = await _service.GetTopLevelMenusAsync(ct);
             var policyFiltered = ApplyInstitutionPolicyFilters(allMenus, policy);
-            return Ok(policyFiltered.OrderBy(m => m.DisplayOrder));
+            var superAnnotated = AnnotatePermissions(policyFiltered, role);
+            return Ok(superAnnotated.OrderBy(m => m.DisplayOrder));
         }
 
         var effectiveRoles = User.Claims
@@ -127,7 +134,35 @@ public class SidebarMenuController : ControllerBase
         var visible = FilterVisible(topLevel, filteredRoles);
         visible = ApplyInstitutionPolicyFilters(visible, policy);
         var moduleFilteredVisible = await FilterByModuleActivationAsync(visible, ct);
-        return Ok(moduleFilteredVisible);
+        var annotated = AnnotatePermissions(moduleFilteredVisible, role);
+        return Ok(annotated);
+    }
+
+    /// <summary>Recursively annotates menu items with the current user's action permissions.</summary>
+    private IList<SidebarMenuItemDto> AnnotatePermissions(IList<SidebarMenuItemDto> menus, string role)
+    {
+        for (int i = 0; i < menus.Count; i++)
+        {
+            var menu = menus[i];
+            var perms = _permissions.GetPermissions(role, menu.Key);
+            var updated = menu with
+            {
+                CanView       = perms.CanView,
+                CanAdd        = perms.CanAdd,
+                CanEdit       = perms.CanEdit,
+                CanDeactivate = perms.CanDeactivate,
+                CanExport     = perms.CanExport,
+                CanImport     = perms.CanImport
+            };
+
+            if (updated.SubMenus.Count > 0)
+            {
+                updated = updated with { SubMenus = AnnotatePermissions(updated.SubMenus, role) };
+            }
+
+            menus[i] = updated;
+        }
+        return menus;
     }
 
     // ── GET /api/v1/sidebar-menu ──────────────────────────────────────────────

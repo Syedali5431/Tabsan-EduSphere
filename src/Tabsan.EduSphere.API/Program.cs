@@ -6,6 +6,7 @@ using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
@@ -37,9 +38,11 @@ using Tabsan.EduSphere.Infrastructure.Repositories;
 using Tabsan.EduSphere.Application.Services;
 using Tabsan.EduSphere.Infrastructure.Exporters;
 using Tabsan.EduSphere.Infrastructure.Integrations;
+using Tabsan.EduSphere.API.Authorization;
 using Tabsan.EduSphere.API.Services;
 using Tabsan.EduSphere.API.Services.TwoFactor;
 using Tabsan.EduSphere.API.Services.Setup;
+using Tabsan.EduSphere.Application.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -328,6 +331,8 @@ builder.Services.AddAuthorization(opts =>
     opts.AddPolicy("Student",    p => p.RequireRole("SuperAdmin", "Admin", "Faculty", "Student"));
 });
 
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
 // ── Infrastructure services ─────────────────────────────────────────────────────
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILicenseRepository, LicenseRepository>();
@@ -337,6 +342,10 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantScopeResolver, HttpTenantScopeResolver>();
 builder.Services.AddScoped<IAccessScopeResolver, HttpAccessScopeResolver>();
+
+// ── RBAC Permission Service ─────────────────────────────────────────────────
+builder.Services.AddScoped<IRoleResourcePermissionRepository, RoleResourcePermissionRepository>();
+builder.Services.AddSingleton<IPermissionService, PermissionService>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<TokenService>(); // also registered directly for AuthController resolving

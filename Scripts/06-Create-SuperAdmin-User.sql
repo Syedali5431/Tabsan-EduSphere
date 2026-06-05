@@ -39,7 +39,7 @@ DECLARE @Email NVARCHAR(256) = N'superadmin2@tabsan.local';
 DECLARE @Address NVARCHAR(500) = N'Head Office';
 DECLARE @FullName NVARCHAR(200) = N'Super Admin';
 DECLARE @FatherName NVARCHAR(200) = N'Founding Father';
-DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
+DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
 DECLARE @PhoneNumber NVARCHAR(32) = N'+61490000999';
 /* --------------------------------------------------------- */
 

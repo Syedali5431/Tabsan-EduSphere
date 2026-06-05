@@ -15,6 +15,7 @@ using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Licensing;
 using Tabsan.EduSphere.Domain.Modules;
 using Tabsan.EduSphere.Domain.Notifications;
+using Tabsan.EduSphere.Domain.Permissions;
 using Tabsan.EduSphere.Domain.Quizzes;
 using Tabsan.EduSphere.Domain.Settings;
 using Tabsan.EduSphere.Domain.Lms;
@@ -98,6 +99,10 @@ public class ApplicationDbContext : DbContext
     // ── Backup Verification (Phase 8) ─────────────────────────────────────
     /// <summary>Backup verification and restore test logs for ISO 27001 A.17.1.3.</summary>
     public DbSet<BackupVerificationLog> BackupVerificationLogs => Set<BackupVerificationLog>();
+
+    // ── RBAC Permissions ──────────────────────────────────────────────────
+    /// <summary>Action-level permissions per role per resource (View, Add, Edit, etc.).</summary>
+    public DbSet<RoleResourcePermission> RoleResourcePermissions => Set<RoleResourcePermission>();
 
     // ── Phase 2: Academic Core ─────────────────────────────────────────────
     /// <summary>Degree programmes offered by departments.</summary>
