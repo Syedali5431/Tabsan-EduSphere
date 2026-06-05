@@ -175,7 +175,6 @@ else
                     Analytics Overview
                 </div>
                 <div class="card-body">
-                    <div id="overviewLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                     <div style="height:300px;max-height:350px;"><canvas id="sampleChart"></canvas></div>
                 </div>
             </div>
@@ -190,30 +189,25 @@ else
                 <div class="row g-4">
                     <div class="col-12 col-lg-6">
                         <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
-                        <div id="paymentStatusLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                        <canvas id="paymentStatusChart" height="100"></canvas>
+                        <div style="height:300px;max-height:350px;"><canvas id="paymentStatusChart"></canvas></div>
                     </div>
                     @if (!isFinanceOnly)
                     {
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
-                            <div id="studentDistributionLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="studentDistributionChart" height="100"></canvas>
+                            <div style="height:300px;max-height:350px;"><canvas id="studentDistributionChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
-                            <div id="departmentCountLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
                             <div style="height:300px;max-height:350px;"><canvas id="departmentCountChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
-                            <div id="courseTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="courseTrendChart" height="100"></canvas>
+                            <div style="height:220px;max-height:250px;"><canvas id="courseTrendChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
-                            <div id="semesterTrendLegend" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <canvas id="semesterTrendChart" height="100"></canvas>
+                            <div style="height:220px;max-height:250px;"><canvas id="semesterTrendChart"></canvas></div>
                         </div>
                     }
                 </div>
@@ -244,7 +238,6 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
-                                <div id="performanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                                 <div style="height:300px;max-height:350px;"><canvas id="performanceChart"></canvas></div>
                             </div>
                             <div class="table-responsive">
@@ -301,8 +294,7 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
-                                <div id="attendanceLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
-                                <canvas id="attendanceChart" height="80"></canvas>
+                                <div style="height:220px;max-height:250px;"><canvas id="attendanceChart"></canvas></div>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-sm mb-0">
@@ -358,7 +350,6 @@ else
                         else
                         {
                             <div class="p-3 border-bottom bg-light-subtle">
-                                <div id="assignmentLegend" class="d-flex flex-wrap gap-2 mb-3"></div>
                                 <div style="height:300px;max-height:350px;"><canvas id="assignmentChart"></canvas></div>
                             </div>
                             <div class="table-responsive">
@@ -562,13 +553,6 @@ else
                 }
             }
 
-            function clearLegend(containerId) {
-                var container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = '';
-                }
-            }
-
             function clearChartCanvas(el, message) {
                 if (!el || !el.getContext) return;
                 var ctx = el.getContext('2d');
@@ -654,100 +638,6 @@ else
                 });
             }
 
-            function legendColor(dataset, idx) {
-                if (Array.isArray(dataset.backgroundColor)) {
-                    return dataset.backgroundColor[Math.min(idx, dataset.backgroundColor.length - 1)] || '#6c757d';
-                }
-                return dataset.borderColor || dataset.backgroundColor || '#6c757d';
-            }
-
-            function buildClickableLegend(containerId, chart) {
-                var container = document.getElementById(containerId);
-                if (!container || !chart || !chart.data || !chart.data.datasets) return;
-
-                container.innerHTML = '';
-
-                if (chart.config && (chart.config.type === 'pie' || chart.config.type === 'doughnut')) {
-                    var labels = chart.data.labels || [];
-                    var pieDataset = chart.data.datasets[0] || {};
-
-                    labels.forEach(function (rawLabel, dataIndex) {
-                        var item = document.createElement('button');
-                        item.type = 'button';
-                        item.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
-
-                        var swatch = document.createElement('span');
-                        swatch.style.width = '10px';
-                        swatch.style.height = '10px';
-                        swatch.style.borderRadius = '999px';
-                        swatch.style.display = 'inline-block';
-                        if (Array.isArray(pieDataset.backgroundColor)) {
-                            swatch.style.backgroundColor = pieDataset.backgroundColor[Math.min(dataIndex, pieDataset.backgroundColor.length - 1)] || '#6c757d';
-                        } else {
-                            swatch.style.backgroundColor = pieDataset.backgroundColor || '#6c757d';
-                        }
-
-                        var text = document.createElement('span');
-                        text.textContent = String(rawLabel || ('Segment ' + (dataIndex + 1)));
-
-                        item.appendChild(swatch);
-                        item.appendChild(text);
-
-                        var updateState = function () {
-                            var hidden = !chart.getDataVisibility(dataIndex);
-                            item.classList.toggle('opacity-50', hidden);
-                            item.classList.toggle('text-decoration-line-through', hidden);
-                        };
-
-                        item.addEventListener('click', function () {
-                            chart.toggleDataVisibility(dataIndex);
-                            chart.update();
-                            updateState();
-                        });
-
-                        updateState();
-                        container.appendChild(item);
-                    });
-
-                    return;
-                }
-
-                chart.data.datasets.forEach(function (dataset, datasetIndex) {
-                    var item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2';
-
-                    var swatch = document.createElement('span');
-                    swatch.style.width = '10px';
-                    swatch.style.height = '10px';
-                    swatch.style.borderRadius = '999px';
-                    swatch.style.backgroundColor = legendColor(dataset, datasetIndex);
-                    swatch.style.display = 'inline-block';
-
-                    var text = document.createElement('span');
-                    text.textContent = dataset.label || ('Series ' + (datasetIndex + 1));
-
-                    item.appendChild(swatch);
-                    item.appendChild(text);
-
-                    var updateState = function () {
-                        var hidden = !chart.isDatasetVisible(datasetIndex);
-                        item.classList.toggle('opacity-50', hidden);
-                        item.classList.toggle('text-decoration-line-through', hidden);
-                    };
-
-                    item.addEventListener('click', function () {
-                        var currentlyVisible = chart.isDatasetVisible(datasetIndex);
-                        chart.setDatasetVisibility(datasetIndex, !currentlyVisible);
-                        chart.update();
-                        updateState();
-                    });
-
-                    updateState();
-                    container.appendChild(item);
-                });
-            }
-
             function renderOverview(snapshot) {
                 var el = document.getElementById('sampleChart');
                 if (!el) return;
@@ -767,7 +657,7 @@ else
                 destroyChart(charts.overview);
 
                 if (!overviewValues.some(function (v) { return v > 0; })) {
-                    clearLegend('overviewLegend');
+
                     clearChartCanvas(el, 'No overview metrics available.');
                     charts.overview = null;
                     return;
@@ -801,7 +691,7 @@ else
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } },
                         scales: {
                             x: {
                                 ticks: {
@@ -814,7 +704,7 @@ else
                     }
                 });
 
-                buildClickableLegend('overviewLegend', charts.overview);
+
             }
 
             function renderPerformance(snapshot) {
@@ -830,7 +720,7 @@ else
                 destroyChart(charts.performance);
 
                 if (!labels.length) {
-                    clearLegend('performanceLegend');
+
                     clearChartCanvas(el, 'No performance data available.');
                     charts.performance = null;
                     return;
@@ -864,11 +754,11 @@ else
                             },
                             y: { beginAtZero: true, max: 100 }
                         },
-                        plugins: { legend: { display: false } }
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } }
                     }
                 });
 
-                buildClickableLegend('performanceLegend', charts.performance);
+
             }
 
             function renderAttendance(snapshot) {
@@ -881,7 +771,7 @@ else
                 destroyChart(charts.attendance);
 
                 if (!labels.length) {
-                    clearLegend('attendanceLegend');
+
                     clearChartCanvas(el, 'No attendance data available.');
                     charts.attendance = null;
                     return;
@@ -904,12 +794,12 @@ else
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } },
                         scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
 
-                buildClickableLegend('attendanceLegend', charts.attendance);
+
             }
 
             function renderAssignments(snapshot) {
@@ -923,7 +813,7 @@ else
                 destroyChart(charts.assignments);
 
                 if (!labels.length) {
-                    clearLegend('assignmentLegend');
+
                     clearChartCanvas(el, 'No assignment data available.');
                     charts.assignments = null;
                     return;
@@ -959,11 +849,11 @@ else
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } }
                     }
                 });
 
-                buildClickableLegend('assignmentLegend', charts.assignments);
+
             }
 
             function renderStudentDistribution(snapshot) {
@@ -989,14 +879,14 @@ else
                 destroyChart(charts.studentDistribution);
 
                 if (!labels.length) {
-                    clearLegend('studentDistributionLegend');
+
                     clearChartCanvas(el, 'No student distribution data available.');
                     charts.studentDistribution = null;
                     return;
                 }
 
                 charts.studentDistribution = new Chart(el, {
-                    type: 'pie',
+                    type: 'doughnut',
                     data: {
                         labels: labels,
                         datasets: [{
@@ -1004,16 +894,29 @@ else
                             data: values,
                             backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
                             borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
-                            borderWidth: 1
+                            borderWidth: 2,
+                            hoverBorderWidth: 3
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: false } }
+                        maintainAspectRatio: true,
+                        cutout: '55%',
+                        radius: '75%',
+                        layout: {
+                            padding: 24
+                        },
+                        plugins: {
+                            legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+                            tooltip: {
+                                padding: 12,
+                                cornerRadius: 6
+                            }
+                        }
                     }
                 });
 
-                buildClickableLegend('studentDistributionLegend', charts.studentDistribution);
+
             }
 
             function renderPaymentStatus(snapshot) {
@@ -1044,14 +947,14 @@ else
                 destroyChart(charts.paymentStatus);
 
                 if (!values.some(function (v) { return v > 0; })) {
-                    clearLegend('paymentStatusLegend');
+
                     clearChartCanvas(el, 'No payment status data available.');
                     charts.paymentStatus = null;
                     return;
                 }
 
                 charts.paymentStatus = new Chart(el, {
-                    type: 'pie',
+                    type: 'doughnut',
                     data: {
                         labels: labels,
                         datasets: [{
@@ -1059,16 +962,29 @@ else
                             data: values,
                             backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
                             borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
-                            borderWidth: 1
+                            borderWidth: 2,
+                            hoverBorderWidth: 3
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: false } }
+                        maintainAspectRatio: true,
+                        cutout: '55%',
+                        radius: '75%',
+                        layout: {
+                            padding: 24
+                        },
+                        plugins: {
+                            legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+                            tooltip: {
+                                padding: 12,
+                                cornerRadius: 6
+                            }
+                        }
                     }
                 });
 
-                buildClickableLegend('paymentStatusLegend', charts.paymentStatus);
+
             }
 
             function renderDepartmentCounts(snapshot) {
@@ -1090,7 +1006,7 @@ else
                 destroyChart(charts.departmentCounts);
 
                 if (!labels.length) {
-                    clearLegend('departmentCountLegend');
+
                     clearChartCanvas(el, 'No department distribution data available.');
                     charts.departmentCounts = null;
                     return;
@@ -1114,12 +1030,12 @@ else
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } },
                         scales: { y: { beginAtZero: true } }
                     }
                 });
 
-                buildClickableLegend('departmentCountLegend', charts.departmentCounts);
+
             }
 
             function renderCourseTrend(snapshot) {
@@ -1149,7 +1065,7 @@ else
                 destroyChart(charts.courseTrend);
 
                 if (!labels.length) {
-                    clearLegend('courseTrendLegend');
+
                     clearChartCanvas(el, 'No course trend data available.');
                     charts.courseTrend = null;
                     return;
@@ -1171,12 +1087,12 @@ else
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } },
                         scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
 
-                buildClickableLegend('courseTrendLegend', charts.courseTrend);
+
             }
 
             function renderSemesterTrend(snapshot) {
@@ -1223,7 +1139,7 @@ else
                 destroyChart(charts.semesterTrend);
 
                 if (!semesters.length) {
-                    clearLegend('semesterTrendLegend');
+
                     clearChartCanvas(el, 'No semester trend data available.');
                     charts.semesterTrend = null;
                     return;
@@ -1268,12 +1184,12 @@ else
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } } },
                         scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
 
-                buildClickableLegend('semesterTrendLegend', charts.semesterTrend);
+
             }
 
             function applySnapshot(snapshot) {
