@@ -1,11 +1,9 @@
 using Tabsan.EduSphere.Web.Services;
 using System.Security.Claims;
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Tabsan.EduSphere.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -208,7 +206,10 @@ if (useForwardedHeaders)
     app.UseForwardedHeaders();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseResponseCompression();
 // Final-Touches Phase 34 Stage 4.2 — apply cache headers only to static files, not authenticated/dynamic MVC responses.
 app.UseStaticFiles(new StaticFileOptions
@@ -224,10 +225,6 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    app.UseHttpsRedirection();
-}
 app.UseRouting();
 
 app.UseAuthentication();
