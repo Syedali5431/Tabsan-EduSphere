@@ -10036,6 +10036,11 @@ public class PortalController : Controller
     public async Task<IActionResult> GraduationApply(int page = 1, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
+
+        // Non-students (SuperAdmin, Admin, Faculty) should use the admin-facing list.
+        if (!User.IsInRole("Student"))
+            return RedirectToAction(nameof(GraduationApplications));
+
         var model = new GraduationApplyPageModel { Page = page < 1 ? 1 : page };
         try
         {
