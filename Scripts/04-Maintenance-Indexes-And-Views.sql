@@ -16,19 +16,19 @@ GO
 
 -- Attendance lookup by student + date
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_attendance_records_student_date')
-    CREATE INDEX [IX_attendance_records_student_date] ON [attendance_records] ([StudentId], [Date]);
+    CREATE INDEX [IX_attendance_records_student_date] ON [attendance_records] ([StudentProfileId], [Date]);
 
--- Attendance by semester
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_attendance_records_semester')
-    CREATE INDEX [IX_attendance_records_semester] ON [attendance_records] ([SemesterId]);
+-- Attendance by course offering
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_attendance_records_course_offering')
+    CREATE INDEX [IX_attendance_records_course_offering] ON [attendance_records] ([CourseOfferingId]);
 
--- Results by student + semester
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_results_student_semester')
-    CREATE INDEX [IX_results_student_semester] ON [results] ([StudentId], [SemesterId]);
+-- Results by student
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_results_student')
+    CREATE INDEX [IX_results_student] ON [results] ([StudentProfileId]);
 
--- Results by course
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_results_course')
-    CREATE INDEX [IX_results_course] ON [results] ([CourseId]);
+-- Results by course offering
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_results_course_offering')
+    CREATE INDEX [IX_results_course_offering] ON [results] ([CourseOfferingId]);
 
 -- Student profiles by program
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_student_profiles_program')
@@ -39,25 +39,28 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_student_profiles_departm
     CREATE INDEX [IX_student_profiles_department] ON [student_profiles] ([DepartmentId]);
 
 -- Enrollments by student
-IF COL_LENGTH('enrollments', 'StudentId') IS NOT NULL
+IF COL_LENGTH('enrollments', 'StudentProfileId') IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_enrollments_student')
-    CREATE INDEX [IX_enrollments_student] ON [enrollments] ([StudentId]);
+    CREATE INDEX [IX_enrollments_student] ON [enrollments] ([StudentProfileId]);
 
--- Assignments by semester
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_assignments_semester')
-    CREATE INDEX [IX_assignments_semester] ON [assignments] ([SemesterId]);
+-- Assignments by course offering
+IF COL_LENGTH('assignments', 'CourseOfferingId') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_assignments_course_offering')
+    CREATE INDEX [IX_assignments_course_offering] ON [assignments] ([CourseOfferingId]);
 
 -- Submissions by assignment + student
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_assignment_submissions_lookup')
-    CREATE INDEX [IX_assignment_submissions_lookup] ON [assignment_submissions] ([AssignmentId], [StudentId]);
+IF COL_LENGTH('assignment_submissions', 'StudentProfileId') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_assignment_submissions_lookup')
+    CREATE INDEX [IX_assignment_submissions_lookup] ON [assignment_submissions] ([AssignmentId], [StudentProfileId]);
 
--- Quizzes by semester
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_quizzes_semester')
-    CREATE INDEX [IX_quizzes_semester] ON [quizzes] ([SemesterId]);
+-- Quizzes by course offering
+IF COL_LENGTH('quizzes', 'CourseOfferingId') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_quizzes_course_offering')
+    CREATE INDEX [IX_quizzes_course_offering] ON [quizzes] ([CourseOfferingId]);
 
 -- FYP by student
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_fyp_projects_student')
-    CREATE INDEX [IX_fyp_projects_student] ON [fyp_projects] ([StudentId]);
+    CREATE INDEX [IX_fyp_projects_student] ON [fyp_projects] ([StudentProfileId]);
 
 -- Courses by department
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_courses_department')
@@ -81,28 +84,25 @@ AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_users_institution_type'
 IF OBJECT_ID('vw_StudentAttendanceSummary') IS NULL
     EXEC(N'CREATE VIEW vw_StudentAttendanceSummary AS
     SELECT sp.Id AS StudentProfileId, sp.RegistrationNumber, u.FullName,
-           s.[Name] AS SemesterName, s.Id AS SemesterId,
-           COUNT(CASE WHEN ar.IsPresent=1 THEN 1 END) AS DaysPresent,
+           COUNT(CASE WHEN ar.Status=N''Present'' THEN 1 END) AS DaysPresent,
            COUNT(ar.Id) AS TotalDays,
-           CASE WHEN COUNT(ar.Id)>0 THEN CAST(COUNT(CASE WHEN ar.IsPresent=1 THEN 1 END)*100.0/COUNT(ar.Id) AS DECIMAL(5,1)) ELSE 0 END AS AttendancePercentage
+           CASE WHEN COUNT(ar.Id)>0 THEN CAST(COUNT(CASE WHEN ar.Status=N''Present'' THEN 1 END)*100.0/COUNT(ar.Id) AS DECIMAL(5,1)) ELSE 0 END AS AttendancePercentage
     FROM student_profiles sp
     JOIN users u ON u.Id=sp.UserId
-    LEFT JOIN attendance_records ar ON ar.StudentId=sp.UserId
-    LEFT JOIN semesters s ON s.Id=ar.SemesterId
-    GROUP BY sp.Id, sp.RegistrationNumber, u.FullName, s.[Name], s.Id');
+    LEFT JOIN attendance_records ar ON ar.StudentProfileId=sp.Id
+    GROUP BY sp.Id, sp.RegistrationNumber, u.FullName');
 
 -- Student results summary
 IF OBJECT_ID('vw_StudentResultsSummary') IS NULL
     EXEC(N'CREATE VIEW vw_StudentResultsSummary AS
     SELECT sp.Id AS StudentProfileId, sp.RegistrationNumber, u.FullName,
-           s.[Name] AS SemesterName, COUNT(r.Id) AS SubjectsCount,
+           COUNT(r.Id) AS SubjectsCount,
            AVG(CAST(r.MarksObtained AS DECIMAL(5,1))) AS AvgMarks,
            SUM(r.MarksObtained) AS TotalObtained, SUM(r.MaxMarks) AS TotalMax
     FROM student_profiles sp
     JOIN users u ON u.Id=sp.UserId
-    LEFT JOIN results r ON r.StudentId=sp.UserId
-    LEFT JOIN semesters s ON s.Id=r.SemesterId
-    GROUP BY sp.Id, sp.RegistrationNumber, u.FullName, s.[Name]');
+    LEFT JOIN results r ON r.StudentProfileId=sp.Id
+    GROUP BY sp.Id, sp.RegistrationNumber, u.FullName');
 
 PRINT '04-Maintenance-Indexes-And-Views.sql completed.';
 GO

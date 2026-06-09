@@ -30,6 +30,11 @@ DECLARE @P_SPANISH UNIQUEIDENTIFIER = 'A0000004-0000-0000-0000-000000000004';
 DECLARE @P_ICS     UNIQUEIDENTIFIER = 'A0000005-0000-0000-0000-000000000005';
 DECLARE @P_SCIENCE UNIQUEIDENTIFIER = 'A0000006-0000-0000-0000-000000000006';
 
+-- Faculty user lookups (for MarkedByUserId in attendance)
+DECLARE @Fac_Uni UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=2);
+DECLARE @Fac_Col UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=1);
+DECLARE @Fac_Sch UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=0);
+
 PRINT 'Starting demo data generation...';
 
 -- ════════════════════════════════════════════════
@@ -66,8 +71,8 @@ BEGIN
             DECLARE @statSch NVARCHAR(10) = CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END;
             DECLARE @spIdSch UNIQUEIDENTIFIER = (SELECT Id FROM [student_profiles] WHERE [UserId]=@uidSch);
             IF NOT EXISTS (SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdSch AND [Date]=DATEADD(DAY,-@daySch,CAST(@Now AS DATE)))
-                INSERT INTO [attendance_records] ([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt])
-                SELECT NEWID(), @spIdSch, (SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'ENG001'), DATEADD(DAY,-@daySch,CAST(@Now AS DATE)), @statSch, @Now;
+                INSERT INTO [attendance_records] ([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt])
+                SELECT NEWID(), @spIdSch, (SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'ENG001'), DATEADD(DAY,-@daySch,CAST(@Now AS DATE)), @statSch, @Fac_Sch, @Now;
             SET @daySch += 1;
         END
 
@@ -119,8 +124,8 @@ BEGIN
             DECLARE @statCol NVARCHAR(10) = CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END;
             DECLARE @spIdCol UNIQUEIDENTIFIER = (SELECT Id FROM [student_profiles] WHERE [UserId]=@uidCol);
             IF NOT EXISTS (SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdCol AND [Date]=DATEADD(DAY,-@dayCol,CAST(@Now AS DATE)))
-                INSERT INTO [attendance_records] ([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt])
-                SELECT NEWID(), @spIdCol, (SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE CASE WHEN @yr=1 THEN N'ICS11%' ELSE N'ICS12%' END), DATEADD(DAY,-@dayCol,CAST(@Now AS DATE)), @statCol, @Now;
+                INSERT INTO [attendance_records] ([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt])
+                SELECT NEWID(), @spIdCol, (SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE CASE WHEN @yr=1 THEN N'ICS11%' ELSE N'ICS12%' END), DATEADD(DAY,-@dayCol,CAST(@Now AS DATE)), @statCol, @Fac_Col, @Now;
             SET @dayCol += 1;
         END
 
@@ -162,7 +167,7 @@ BEGIN
             INSERT INTO [student_profiles] ([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[CurrentSemesterNumber],[AdmissionDate],[Cgpa],[CreatedAt],[IsDeleted])
             VALUES (NEWID(), @uidB, @regB, @P_BSCS, @D_IT_Uni, @bscsSem, DATEADD(YEAR,-@bscsSem/2,@Now), 2.5+CAST(ABS(CHECKSUM(NEWID()))%15 AS FLOAT)/10, @Now, 0);
 
-        DECLARE @dayB INT = 1; WHILE @dayB <= 20 BEGIN DECLARE @statB NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdB UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidB); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdB AND [Date]=DATEADD(DAY,-@dayB,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt]) SELECT NEWID(),@spIdB,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'CS'+CAST(@bscsSem AS NVARCHAR)+N'%'),DATEADD(DAY,-@dayB,CAST(@Now AS DATE)),@statB,@Now; SET @dayB+=1; END
+        DECLARE @dayB INT = 1; WHILE @dayB <= 20 BEGIN DECLARE @statB NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdB UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidB); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdB AND [Date]=DATEADD(DAY,-@dayB,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt]) SELECT NEWID(),@spIdB,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'CS'+CAST(@bscsSem AS NVARCHAR)+N'%'),DATEADD(DAY,-@dayB,CAST(@Now AS DATE)),@statB,@Fac_Uni,@Now; SET @dayB+=1; END
 
         INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[CreatedAt])
         SELECT NEWID(),sp.Id,co.Id,CASE(ABS(CHECKSUM(NEWID()))%3)WHEN 0 THEN N'Final' WHEN 1 THEN N'Midterm' ELSE N'Sessional' END,50+ABS(CHECKSUM(NEWID()))%51,100,1,@Now FROM [student_profiles] sp CROSS APPLY(SELECT TOP 5 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'CS'+CAST(@bscsSem AS NVARCHAR)+N'%' OR c.Code LIKE N'MTH'+CAST(@bscsSem AS NVARCHAR)+N'%' ORDER BY c.Code)co WHERE sp.[UserId]=@uidB;
@@ -194,7 +199,7 @@ BEGIN
             INSERT INTO [student_profiles] ([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[CurrentSemesterNumber],[AdmissionDate],[Cgpa],[CreatedAt],[IsDeleted])
             VALUES (NEWID(), @uidBba, @regBba, @P_BBA, @D_BUS, @bbaSem, DATEADD(YEAR,-@bbaSem/2,@Now), 2.5+CAST(ABS(CHECKSUM(NEWID()))%15 AS FLOAT)/10, @Now, 0);
 
-        DECLARE @dayBB INT = 1; WHILE @dayBB <= 15 BEGIN DECLARE @statBB NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdBB UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidBba); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdBB AND [Date]=DATEADD(DAY,-@dayBB,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt]) SELECT NEWID(),@spIdBB,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MGT'+CAST(@bbaSem AS NVARCHAR)+N'%'),DATEADD(DAY,-@dayBB,CAST(@Now AS DATE)),@statBB,@Now; SET @dayBB+=1; END
+        DECLARE @dayBB INT = 1; WHILE @dayBB <= 15 BEGIN DECLARE @statBB NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdBB UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidBba); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdBB AND [Date]=DATEADD(DAY,-@dayBB,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt]) SELECT NEWID(),@spIdBB,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MGT'+CAST(@bbaSem AS NVARCHAR)+N'%'),DATEADD(DAY,-@dayBB,CAST(@Now AS DATE)),@statBB,@Fac_Uni,@Now; SET @dayBB+=1; END
 
         INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[CreatedAt])
         SELECT NEWID(),sp.Id,co.Id,CASE(ABS(CHECKSUM(NEWID()))%3)WHEN 0 THEN N'Final' WHEN 1 THEN N'Midterm' ELSE N'Sessional' END,50+ABS(CHECKSUM(NEWID()))%51,100,1,@Now FROM [student_profiles] sp CROSS APPLY(SELECT TOP 4 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MGT'+CAST(@bbaSem AS NVARCHAR)+N'%' OR c.Code LIKE N'ACC'+CAST(@bbaSem AS NVARCHAR)+N'%' ORDER BY c.Code)co WHERE sp.[UserId]=@uidBba;
@@ -222,7 +227,7 @@ BEGIN
             INSERT INTO [student_profiles] ([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[CurrentSemesterNumber],[AdmissionDate],[Cgpa],[CreatedAt],[IsDeleted])
             VALUES (NEWID(), @uidM, @regM, @P_MSE, @D_IT_Uni, @mseSem, DATEADD(YEAR,-@mseSem/2,@Now), 3.0+CAST(ABS(CHECKSUM(NEWID()))%10 AS FLOAT)/10, @Now, 0);
 
-        DECLARE @dayM INT = 1; WHILE @dayM <= 15 BEGIN DECLARE @statM NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdM UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidM); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdM AND [Date]=DATEADD(DAY,-@dayM,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt]) SELECT NEWID(),@spIdM,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MSE'+CAST(@mseSem AS NVARCHAR)+N'%'),DATEADD(DAY,-@dayM,CAST(@Now AS DATE)),@statM,@Now; SET @dayM+=1; END
+        DECLARE @dayM INT = 1; WHILE @dayM <= 15 BEGIN DECLARE @statM NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<8 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdM UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidM); DECLARE @coIdM UNIQUEIDENTIFIER=(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MSE'+CAST(@mseSem AS NVARCHAR)+N'%'); IF @coIdM IS NULL SET @coIdM=(SELECT TOP 1 Id FROM [course_offerings]); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdM AND [Date]=DATEADD(DAY,-@dayM,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt]) SELECT NEWID(),@spIdM,@coIdM,DATEADD(DAY,-@dayM,CAST(@Now AS DATE)),@statM,@Fac_Uni,@Now; SET @dayM+=1; END
 
         INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[CreatedAt])
         SELECT NEWID(),sp.Id,co.Id,CASE(ABS(CHECKSUM(NEWID()))%3)WHEN 0 THEN N'Final' WHEN 1 THEN N'Midterm' ELSE N'Sessional' END,60+ABS(CHECKSUM(NEWID()))%41,100,1,@Now FROM [student_profiles] sp CROSS APPLY(SELECT TOP 3 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'MSE'+CAST(@mseSem AS NVARCHAR)+N'%' ORDER BY c.Code)co WHERE sp.[UserId]=@uidM;
@@ -251,7 +256,7 @@ BEGIN
         INSERT INTO [student_profiles] ([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[CurrentSemesterNumber],[AdmissionDate],[Cgpa],[CreatedAt],[IsDeleted])
         VALUES (NEWID(), @uidSp, @regSp, @P_SPANISH, @D_IT_Uni, 1, @Now, 3.0+CAST(ABS(CHECKSUM(NEWID()))%10 AS FLOAT)/10, @Now, 0);
 
-    DECLARE @daySp INT = 1; WHILE @daySp <= 30 BEGIN DECLARE @statSp NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<9 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdSp UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidSp); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdSp AND [Date]=DATEADD(DAY,-@daySp,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[CreatedAt]) SELECT NEWID(),@spIdSp,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'SPN1%'),DATEADD(DAY,-@daySp,CAST(@Now AS DATE)),@statSp,@Now; SET @daySp+=1; END
+    DECLARE @daySp INT = 1; WHILE @daySp <= 30 BEGIN DECLARE @statSp NVARCHAR(10)=CASE WHEN ABS(CHECKSUM(NEWID()))%10<9 THEN N'Present' ELSE N'Absent' END; DECLARE @spIdSp UNIQUEIDENTIFIER=(SELECT Id FROM [student_profiles] WHERE [UserId]=@uidSp); IF NOT EXISTS(SELECT 1 FROM [attendance_records] WHERE [StudentProfileId]=@spIdSp AND [Date]=DATEADD(DAY,-@daySp,CAST(@Now AS DATE))) INSERT INTO [attendance_records]([Id],[StudentProfileId],[CourseOfferingId],[Date],[Status],[MarkedByUserId],[CreatedAt]) SELECT NEWID(),@spIdSp,(SELECT TOP 1 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'SPN1%'),DATEADD(DAY,-@daySp,CAST(@Now AS DATE)),@statSp,@Fac_Uni,@Now; SET @daySp+=1; END
 
     INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[CreatedAt])
     SELECT NEWID(),sp.Id,co.Id,N'Final',60+ABS(CHECKSUM(NEWID()))%41,100,1,@Now FROM [student_profiles] sp CROSS APPLY(SELECT TOP 3 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId WHERE c.Code LIKE N'SPN%' ORDER BY c.Code)co WHERE sp.[UserId]=@uidSp;

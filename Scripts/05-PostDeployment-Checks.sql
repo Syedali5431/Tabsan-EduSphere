@@ -17,7 +17,9 @@ PRINT '=== Tabsan EduSphere Post-Deployment Checks ===';
 PRINT '';
 
 -- Database version
-DECLARE @DbVer NVARCHAR(20) = (SELECT TOP 1 [DemoValue] FROM [Tabsan-EduSphere] WHERE [DemoKey]=N'db.version');
+DECLARE @DbVer NVARCHAR(20) = NULL;
+IF OBJECT_ID('[Tabsan-EduSphere]', 'U') IS NOT NULL
+    SET @DbVer = (SELECT TOP 1 [DemoValue] FROM [Tabsan-EduSphere] WHERE [DemoKey]=N'db.version');
 PRINT CONCAT('Database Version: ', ISNULL(@DbVer,N'NOT SET'));
 
 -- ═══════ ROLE COUNTS ═══════
@@ -90,7 +92,7 @@ END
 PRINT '';
 PRINT '--- Student Profiles ---';
 SELECT p.[Code] AS Program, COUNT(sp.[Id]) AS StudentCount
-FROM [academic_programs] p LEFT JOIN [student_profiles] sp ON sp.[ProgramId]=p.[Id] AND sp.[IsActive]=1
+FROM [academic_programs] p LEFT JOIN [student_profiles] sp ON sp.[ProgramId]=p.[Id] AND sp.[IsDeleted]=0
 GROUP BY p.[Code], p.[Id] ORDER BY p.[Code];
 
 -- ═══════ ATTENDANCE ═══════

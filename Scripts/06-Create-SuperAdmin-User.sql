@@ -17,7 +17,7 @@ DECLARE @Username NVARCHAR(100) = N'superadmin2';
 DECLARE @Email NVARCHAR(256) = N'superadmin2@tabsan.local';
 DECLARE @FullName NVARCHAR(200) = N'Super Admin 2';
 DECLARE @RoleId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name]=N'SuperAdmin');
-DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
+DECLARE @PasswordHash NVARCHAR(512) = N'argon2id:IC+ORGZ905PJHXorsasHdqZRTlTq+l6j5aMXLWduZO8=:42cW82PQ47be61NOshZkBebRNjeTL5C8NfE+VYx7+GA=';
 
 IF @RoleId IS NULL
 BEGIN

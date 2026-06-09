@@ -23,12 +23,15 @@ DECLARE @Now DATETIME2 = SYSUTCDATETIME();
 -- ═══════════════════════════════════════════════════════════════════
 -- 1. DATABASE VERSION
 -- ═══════════════════════════════════════════════════════════════════
-IF NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] WHERE [DemoKey] = N'db.version')
-    INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt])
-    VALUES (NEWID(), N'db.version', N'1.0', @Now);
-ELSE
-    UPDATE [Tabsan-EduSphere] SET [DemoValue] = N'1.0', [UpdatedAt] = @Now
-    WHERE [DemoKey] = N'db.version';
+IF OBJECT_ID('[Tabsan-EduSphere]', 'U') IS NOT NULL
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] WHERE [DemoKey] = N'db.version')
+        INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt])
+        VALUES (NEWID(), N'db.version', N'1.0', @Now);
+    ELSE
+        UPDATE [Tabsan-EduSphere] SET [DemoValue] = N'1.0', [UpdatedAt] = @Now
+        WHERE [DemoKey] = N'db.version';
+END
 
 -- ═══════════════════════════════════════════════════════════════════
 -- 2. ROLES (5 — no Parent role)
@@ -48,7 +51,7 @@ END
 -- ═══════════════════════════════════════════════════════════════════
 -- 3. PASSWORD HASHES (Argon2id — plain password: EduSphere147)
 -- ═══════════════════════════════════════════════════════════════════
-DECLARE @SuperAdminPwd NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
+DECLARE @SuperAdminPwd NVARCHAR(512) = N'argon2id:IC+ORGZ905PJHXorsasHdqZRTlTq+l6j5aMXLWduZO8=:42cW82PQ47be61NOshZkBebRNjeTL5C8NfE+VYx7+GA=';
 DECLARE @DefaultPwd    NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 -- ═══════════════════════════════════════════════════════════════════
