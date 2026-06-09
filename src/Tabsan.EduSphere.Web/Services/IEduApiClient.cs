@@ -2026,7 +2026,7 @@ public class EduApiClient : IEduApiClient
                 identity.Roles.AddRange(roles);
             }
         }
-        catch { /* ignore decode errors — identity stays default */ }
+        catch { /* ignore decode errors â€“ identity stays default */ }
 
         static bool TryReadRoleClaims(JsonElement root, out List<string> roles)
         {
