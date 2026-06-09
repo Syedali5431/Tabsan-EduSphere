@@ -8307,10 +8307,20 @@ public class PortalController : Controller
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
             }
 
-            model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            // Status check requires Admin/SuperAdmin; default to active for other roles.
+            // The API still enforces deactivation on every report-data endpoint.
+            if (identity?.IsAdmin == true || identity?.IsSuperAdmin == true)
+            {
+                model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+                if (!model.IsReportsActive)
+                    model.Message ??= "Reports are currently deactivated for the selected tenant/campus scope.";
+            }
+            else
+            {
+                model.IsReportsActive = true;
+            }
+
             model.Reports = await _api.GetReportCatalogAsync(ct);
-            if (!model.IsReportsActive)
-                model.Message ??= "Reports are currently deactivated for the selected tenant/campus scope.";
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
