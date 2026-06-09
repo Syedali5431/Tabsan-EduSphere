@@ -7210,11 +7210,20 @@ public class PortalController : Controller
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
             }
 
-            model.IsAnalyticsActive = await _api.GetAnalyticsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
-            if (!model.IsAnalyticsActive)
+            // Status check requires Admin/SuperAdmin; default to active for other roles.
+            // The API still enforces deactivation on every analytics data endpoint.
+            if (identity?.IsAdmin == true || identity?.IsSuperAdmin == true)
             {
-                model.Message = "Analytics is currently deactivated for the selected tenant/campus scope.";
-                return model;
+                model.IsAnalyticsActive = await _api.GetAnalyticsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+                if (!model.IsAnalyticsActive)
+                {
+                    model.Message = "Analytics is currently deactivated for the selected tenant/campus scope.";
+                    return model;
+                }
+            }
+            else
+            {
+                model.IsAnalyticsActive = true;
             }
 
             model.Departments = await _api.GetDepartmentsAsync(ct);
