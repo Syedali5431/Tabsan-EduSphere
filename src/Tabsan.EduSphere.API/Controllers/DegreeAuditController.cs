@@ -56,10 +56,8 @@ public class DegreeAuditController : ControllerBase
         if (policyResult is not null)
             return policyResult;
 
-        var callerResult = EnsureCallerUniversityOrSuperAdmin();
-        if (callerResult is not null)
-            return callerResult;
-
+        // Per-student department check below enforces university-only;
+        // caller-level gating is unnecessary here.
         var scope = ResolveEffectiveScope(tenantId, campusId);
         if (scope.Error is not null)
             return scope.Error;
@@ -96,10 +94,9 @@ public class DegreeAuditController : ControllerBase
         if (policyResult is not null)
             return policyResult;
 
-        var callerResult = EnsureCallerUniversityOrSuperAdmin();
-        if (callerResult is not null)
-            return callerResult;
-
+        // Caller institution-type gating is enforced per-student below,
+        // so admins/faculty on non-university setups can still look up
+        // audits for students who belong to university departments.
         var scope = ResolveEffectiveScope(tenantId, campusId);
         if (scope.Error is not null)
             return scope.Error;

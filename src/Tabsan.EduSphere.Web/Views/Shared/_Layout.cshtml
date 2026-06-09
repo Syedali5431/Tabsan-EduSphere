@@ -614,12 +614,21 @@
 
                         if (showDegreeAuditSidebar)
                         {
-                            groupedLinks.Add(("Academic Related", 4, 2620, "Degree Audit", "Portal", "DegreeAudit"));
-                            groupedLinks.Add(("Academic Related", 4, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
-                            groupedLinks.Add(("Academic Related", 4, 2640, "Degree Rules", "Portal", "DegreeRules"));
+                            if (!groupedLinks.Any(l => l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase) && l.Action.Equals("DegreeAudit", StringComparison.OrdinalIgnoreCase)))
+                                groupedLinks.Add(("Academic Related", 4, 2620, "Degree Audit", "Portal", "DegreeAudit"));
+                            if (!groupedLinks.Any(l => l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase) && l.Action.Equals("GraduationEligibility", StringComparison.OrdinalIgnoreCase)))
+                                groupedLinks.Add(("Academic Related", 4, 2630, "Graduation Eligibility", "Portal", "GraduationEligibility"));
+                            if (!groupedLinks.Any(l => l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase) && l.Action.Equals("DegreeRules", StringComparison.OrdinalIgnoreCase)))
+                                groupedLinks.Add(("Academic Related", 4, 2640, "Degree Rules", "Portal", "DegreeRules"));
                         }
 
-                        groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
+                        var hasGenCert = groupedLinks.Any(l =>
+                            l.Controller.Equals("Portal", StringComparison.OrdinalIgnoreCase)
+                            && l.Action.Equals("GenerateCertificates", StringComparison.OrdinalIgnoreCase));
+                        if (!hasGenCert)
+                        {
+                            groupedLinks.Add(("Academic Related", 4, 2645, "Generate Certificates", "Portal", "GenerateCertificates"));
+                        }
 
                         foreach (var link in superAdminFallbackLinks)
                         {

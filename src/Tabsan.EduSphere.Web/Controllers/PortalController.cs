@@ -350,10 +350,8 @@ public class PortalController : Controller
 
     private async Task<(bool Allowed, string Message)> CanUseDegreeAuditAsync(CancellationToken ct)
     {
-        var identity = _api.GetSessionIdentity();
-        if (identity is { IsSuperAdmin: false, InstitutionType: not null } && identity.InstitutionType.Value != 0)
-            return (false, "Degree Audit is available only for university institution type.");
-
+        // Note: caller institution-type gating is enforced per-student by the API;
+        // the Web gate only checks the license-level university capability toggle.
         try
         {
             var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
