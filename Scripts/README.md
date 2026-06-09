@@ -1,35 +1,96 @@
-# Tabsan EduSphere Database Scripts
+# Tabsan EduSphere — Database Scripts v1.0
 
-This folder is intentionally kept DB-focused and now contains only database setup, seed, maintenance, and validation scripts.
+## Execution Order
 
-## Script Set
+| # | Script | Purpose |
+|---|--------|---------|
+| 0 | `00-Cleanup-Master-Mistake.sql` | Drops existing database for fresh start |
+| 1 | `01-Schema-Current.sql` | Creates all tables (EF Migrations generated) |
+| 2 | `02-Seed-Core.sql` | Seeds roles, tenants, departments, programs, courses, semesters, core users |
+| 3 | `03-FullDummyData.sql` | Full demo data: 210+ students, attendance, results, assignments, quizzes, FYP |
+| 4 | `04-Maintenance-Indexes-And-Views.sql` | Performance indexes and summary views |
+| 5 | `05-PostDeployment-Checks.sql` | Validates data integrity |
+| 6 | `06-Create-SuperAdmin-User.sql` | Creates additional SuperAdmin (superadmin2) |
+| 9 | `09-Restructure-Sidebar-Menu.sql` | Sidebar navigation with role-based visibility |
 
-| Order | File | Purpose |
-| --- | --- | --- |
-| 00 | 00-Cleanup-Master-Mistake.sql | One-time cleanup if legacy app tables were accidentally created in master. |
-| 01 | 01-Schema-Current.sql | Creates/updates current database schema. |
-| 02 | 02-Seed-Core.sql | Seeds core roles, modules, departments, baseline users, and access matrices. |
-| 02A | Seed-Core-Clean.sql | Seeds clean baseline (no dummy/demo rows). |
-| 03 | 03-FullDummyData.sql | Seeds very high-volume dummy/demo data (current marker: FullDummyData-v43) across School/College/University institutes with tenant/campus-aware program coverage, including all-semester offerings/enrollments, school/college class timetables, institute-wide role users, and expanded attendance/results lifecycle coverage (published + draft states). |
-| 04 | 04-Maintenance-Indexes-And-Views.sql | Adds maintenance indexes and reporting views, including results lifecycle indexes used by publish/draft workflows. |
-| 05 | 05-PostDeployment-Checks.sql | Post-deployment checks for demo/full path, including attendance/results lifecycle and institution-coverage checks. |
-| 05A | 05-PostDeployment-Checks-Clean.sql | Post-deployment checks for clean path, including no-dummy assertions for attendance and results. |
-| 06 | 06-Create-SuperAdmin-User.sql | Utility script to create/update a SuperAdmin account with configurable username/email/hash. |
-| 07 | 07-Fix-Course-Institution-Scope.sql | Recovery/compatibility patch for missing courses and course_offerings scope columns (TenantId/CampusId/InstitutionType). |
+## Database Summary
 
-## Domain Script Packs
+| Item | Count |
+|------|-------|
+| **Institutes** | 3 (University, College, School) |
+| **Tenants** | 3 |
+| **Campuses** | 3 |
+| **Departments** | 4 |
+| **Academic Programs** | 6 |
+| **Courses** | 122 |
+| **Semesters** | 20 |
+| **Demo Students** | 210+ |
+| **FYP Projects** | 10 |
+| **Database Version** | 1.0 |
 
-- School pack: `Scripts/School Scripts/` (Class 1 to Class 10 dummy data with school results/marks)
-- College pack: `Scripts/College Scripts/` (Class 11 to Class 12 dummy data with college results/marks)
-- University pack: `Scripts/University Scripts/` (Semester 1 to Semester 8 dummy data with university results/marks)
+## Programs
 
-Each pack keeps the same 01-05 base sequence pattern and now also includes utility scripts 06 and 07.
+| Institute | Program | Duration | Students |
+|-----------|---------|----------|----------|
+| University | BSCS | 8 Semesters | 80 |
+| University | BBA | 8 Semesters | 80 |
+| University | MSE | 4 Semesters | 40 |
+| University | Spanish Language | 1 Year | 10 |
+| College | ICS | 2 Years | 20 |
+| School | Science | 10 Years (Class 1-10) | 100 |
 
-## Default Seeded Credentials
+## Login Credentials
 
-For scripts that seed users (`02-Seed-Core.sql`, `Seed-Core-Clean.sql`, `03-FullDummyData.sql`):
+**All passwords:** `EduSphere147`
 
-- Password: EduSphere147
+| Username | Role | Scope |
+|----------|------|-------|
+| `superadmin` | SuperAdmin | Global |
+| `superadmin2` | SuperAdmin | Global |
+| `admin.uni` | Admin | University |
+| `admin.col` | Admin | College |
+| `admin.sch` | Admin | School |
+| `faculty.uni` | Faculty | University |
+| `faculty.col` | Faculty | College |
+| `faculty.sch` | Faculty | School |
+| `student.uni` | Student | University |
+| `student.col` | Student | College |
+| `student.sch` | Student | School |
+| `finance.uni` | Finance | University |
+| `finance.col` | Finance | College |
+| `finance.sch` | Finance | School |
+
+Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`, `spanish3`).
+
+## Departments
+
+| Institute | Department | Code |
+|-----------|-----------|------|
+| University | Information Technology | IT |
+| University | Business Administration | BUS |
+| College | Information Technology | IT-COL |
+| School | Science Department | SCI |
+
+## Example Commands
+
+```powershell
+$server = "(localdb)\MSSQLLocalDB"
+
+sqlcmd -S $server -d master -i "Scripts/00-Cleanup-Master-Mistake.sql"
+sqlcmd -S $server -d master -i "Scripts/01-Schema-Current.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/02-Seed-Core.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/03-FullDummyData.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/04-Maintenance-Indexes-And-Views.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql"
+```
+
+Optional utilities:
+
+```powershell
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Restructure-Sidebar-Menu.sql"
+```
+
 
 ## Recommended Execution
 

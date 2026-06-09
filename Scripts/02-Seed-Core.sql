@@ -1,824 +1,509 @@
-SET ANSI_NULLS ON;
-GO
-
-SET QUOTED_IDENTIFIER ON;
-GO
-
-SET NOCOUNT ON;
-SET XACT_ABORT ON;
-
 /*
-  Seed core data script for Tabsan EduSphere.
+  Seed Core Data — Tabsan EduSphere v1.0
   
-  PREREQUISITES - MUST RUN FIRST IN THIS ORDER:
-  1. 01-Schema-Current.sql      - Creates all tables and schema (RUN THIS FIRST)
-  2. 02-Seed-Core.sql           - This script: seeds core data (roles, institutions, departments, users)
-  3. 03-FullDummyData.sql       - Adds comprehensive test data
+  Populates minimal required data: roles, tenants, campuses, departments,
+  academic programs, courses, semesters, and baseline users.
   
-  After all three scripts complete successfully:
-  4. 04-Maintenance-Indexes-And-Views.sql - Creates indexes and views
-  5. 05-PostDeployment-Checks.sql         - Validates data integrity
-
-  NOTE:
-  - This script must run AFTER 01-Schema-Current.sql
-  - This script must run BEFORE 03-FullDummyData.sql
-  - Includes comprehensive error handling with TRY-CATCH
+  Default password for ALL users: EduSphere147
+  
+  INSTITUTES (3):
+    University (2): BSCS 8 sem, BBA 8 sem, MSE 4 sem, Spanish Language 1 yr
+    College (1):     ICS (2 years, class 11-12)
+    School (0):      Science (10 years, class 1-10)
 */
 
-IF DB_ID(N'Tabsan-EduSphere') IS NULL
-BEGIN
-    RAISERROR('Database [Tabsan-EduSphere] does not exist. Run 01-Schema-Current.sql first.', 16, 1);
-    RETURN;
-END;
+SET NOCOUNT ON;
 GO
 
 USE [Tabsan-EduSphere];
 GO
 
-IF DB_NAME() <> N'Tabsan-EduSphere'
-BEGIN
-    RAISERROR('Failed to switch context to [Tabsan-EduSphere]. Aborting seed script.', 16, 1);
-    RETURN;
-END;
-GO
-
-BEGIN TRY
-BEGIN TRANSACTION;
-
--- VALIDATE CRITICAL PREREQUISITES - Check table existence FIRST before any queries
-IF OBJECT_ID(N'[roles]') IS NULL
-BEGIN
-    RAISERROR('ERROR: Table [roles] does not exist. You MUST run 01-Schema-Current.sql FIRST before running this script.', 16, 1);
-    RETURN;
-END;
-
-IF OBJECT_ID(N'[departments]') IS NULL
-BEGIN
-    RAISERROR('ERROR: Table [departments] does not exist. You MUST run 01-Schema-Current.sql FIRST before running this script.', 16, 1);
-    RETURN;
-END;
-
-IF OBJECT_ID(N'[users]') IS NULL
-BEGIN
-    RAISERROR('ERROR: Table [users] does not exist. You MUST run 01-Schema-Current.sql FIRST before running this script.', 16, 1);
-    RETURN;
-END;
-
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
-DECLARE @SuperAdminPasswordHash NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
-DECLARE @DefaultPasswordHash NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
-DECLARE @DefaultTenantId UNIQUEIDENTIFIER = CAST('f1000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
-DECLARE @DefaultCampusId UNIQUEIDENTIFIER = CAST('f2000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
 
-IF OBJECT_ID(N'[tenants]') IS NOT NULL
+-- ═══════════════════════════════════════════════════════════════════
+-- 1. DATABASE VERSION
+-- ═══════════════════════════════════════════════════════════════════
+IF NOT EXISTS (SELECT 1 FROM [Tabsan-EduSphere] WHERE [DemoKey] = N'db.version')
+    INSERT INTO [Tabsan-EduSphere] ([Id], [DemoKey], [DemoValue], [CreatedAt])
+    VALUES (NEWID(), N'db.version', N'1.0', @Now);
+ELSE
+    UPDATE [Tabsan-EduSphere] SET [DemoValue] = N'1.0', [UpdatedAt] = @Now
+    WHERE [DemoKey] = N'db.version';
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 2. ROLES (5 — no Parent role)
+-- ═══════════════════════════════════════════════════════════════════
+IF NOT EXISTS (SELECT 1 FROM [roles])
 BEGIN
-    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT @DefaultTenantId, N'DEFAULT', N'Default Tenant', 1, @Now, NULL, 0, NULL
-    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @DefaultTenantId);
-END;
+    SET IDENTITY_INSERT [roles] ON;
+    INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+    (1, N'SuperAdmin', N'Full platform access — manages license and all settings.', 1),
+    (2, N'Admin',      N'Institution-level administrator.', 1),
+    (3, N'Faculty',    N'Teaching staff with course-level access.', 1),
+    (4, N'Student',    N'Learner with self-service access.', 1),
+    (5, N'Finance',    N'Financial officer with payments and fee access.', 1);
+    SET IDENTITY_INSERT [roles] OFF;
+END
 
-IF OBJECT_ID(N'[campuses]') IS NOT NULL
+-- ═══════════════════════════════════════════════════════════════════
+-- 3. PASSWORD HASHES (Argon2id — plain password: EduSphere147)
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @SuperAdminPwd NVARCHAR(512) = N'argon2id:kot3aIW+GTcmK4Ji/jGD7BxrNOEh57PLaFMUZrZa5oM=:v+XYusZ0Eu9Xs8Sz/7Hi58z4SrS9KsJ/ynnr/iCkkSk=';
+DECLARE @DefaultPwd    NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 4. TENANTS & CAMPUSES (3 institutes → 3 tenants → 3 campuses)
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @T_Uni UNIQUEIDENTIFIER = '11111111-1111-1111-1111-111111111111';
+DECLARE @T_Col UNIQUEIDENTIFIER = '22222222-2222-2222-2222-222222222222';
+DECLARE @T_Sch UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333333';
+
+DECLARE @C_Uni UNIQUEIDENTIFIER = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA';
+DECLARE @C_Col UNIQUEIDENTIFIER = 'BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB';
+DECLARE @C_Sch UNIQUEIDENTIFIER = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC';
+
+-- Tenants
+INSERT INTO [tenants] ([Id], [Code], [Name], [IsDeleted], [CreatedAt])
+SELECT v.Id, v.Code, v.Name, 0, @Now
+FROM (VALUES
+    (@T_Uni, N'TABSAN-UNI', N'Tabsan University'),
+    (@T_Col, N'TABSAN-COL', N'Tabsan College'),
+    (@T_Sch, N'TABSAN-SCH', N'Tabsan School')
+) v(Id, Code, Name)
+WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = v.Id);
+
+-- Campuses
+INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsDeleted], [CreatedAt])
+SELECT v.Id, v.TenantId, v.Code, v.Name, 0, @Now
+FROM (VALUES
+    (@C_Uni, @T_Uni, N'MAIN-UNI', N'University Main Campus'),
+    (@C_Col, @T_Col, N'MAIN-COL', N'College Main Campus'),
+    (@C_Sch, @T_Sch, N'MAIN-SCH', N'School Main Campus')
+) v(Id, TenantId, Code, Name)
+WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = v.Id);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 5. DEPARTMENTS
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @D_IT   UNIQUEIDENTIFIER = 'D0000001-0000-0000-0000-000000000001';
+DECLARE @D_BUS  UNIQUEIDENTIFIER = 'D0000002-0000-0000-0000-000000000002';
+
+-- Insert with all columns including TenantId/CampusId/InstitutionType if they exist
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
 BEGIN
-    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT @DefaultCampusId, @DefaultTenantId, N'MAIN', N'Main Campus', 1, @Now, NULL, 0, NULL
-    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @DefaultCampusId);
-END;
-
-/* 1) System roles */
-MERGE INTO [roles] AS tgt
-USING (
-    SELECT N'SuperAdmin' AS [Name], N'Full platform access - manages license and all settings.' AS [Description], CAST(1 AS bit) AS [IsSystemRole]
-    UNION ALL SELECT N'Admin', N'Department-level admin - manages users and courses.', CAST(1 AS bit)
-    UNION ALL SELECT N'Faculty', N'Teaches courses and manages academic content.', CAST(1 AS bit)
-    UNION ALL SELECT N'Student', N'Enrolled student - accesses course and academic content.', CAST(1 AS bit)
-    UNION ALL SELECT N'Finance', N'Finance and fee workflow access.', CAST(1 AS bit)
-    UNION ALL SELECT N'Parent', N'Parent portal read-only learner progress visibility.', CAST(1 AS bit)
-) AS src
-ON tgt.[Name] = src.[Name]
-WHEN MATCHED THEN
-    UPDATE SET tgt.[Description] = src.[Description], tgt.[IsSystemRole] = src.[IsSystemRole]
-WHEN NOT MATCHED THEN
-    INSERT ([Name], [Description], [IsSystemRole])
-    VALUES (src.[Name], src.[Description], src.[IsSystemRole]);
-
-/* 2) Modules + default module_status */
-UPDATE [modules]
-SET [Key] = N'ai_chat', [UpdatedAt] = @Now
-WHERE [Key] = N'ai-chat'
-    AND NOT EXISTS (SELECT 1 FROM [modules] x WHERE x.[Key] = N'ai_chat');
-
-UPDATE [modules]
-SET [Key] = N'themes', [UpdatedAt] = @Now
-WHERE [Key] = N'theming'
-    AND NOT EXISTS (SELECT 1 FROM [modules] x WHERE x.[Key] = N'themes');
-
-UPDATE [modules]
-SET [Key] = N'advanced_audit', [UpdatedAt] = @Now
-WHERE [Key] = N'advanced-audit'
-    AND NOT EXISTS (SELECT 1 FROM [modules] x WHERE x.[Key] = N'advanced_audit');
-
-DECLARE @Modules TABLE ([Key] NVARCHAR(50), [Name] NVARCHAR(100), [IsMandatory] bit);
-INSERT INTO @Modules ([Key], [Name], [IsMandatory]) VALUES
-(N'authentication', N'Authentication', 1),
-(N'departments', N'Departments', 1),
-(N'sis', N'Student Information', 1),
-(N'courses', N'Courses', 0),
-(N'assignments', N'Assignments', 0),
-(N'quizzes', N'Quizzes', 0),
-(N'attendance', N'Attendance', 0),
-(N'results', N'Results / Grades', 0),
-(N'notifications', N'Notifications', 0),
-(N'fyp', N'Final Year Projects', 0),
-(N'ai_chat', N'AI Chatbot', 0),
-(N'reports', N'Reports', 0),
-(N'themes', N'UI Themes', 0),
-(N'advanced_audit', N'Advanced Audit Logging', 0);
-
-INSERT INTO [modules] ([Id], [Key], [Name], [IsMandatory], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), m.[Key], m.[Name], m.[IsMandatory], @Now, NULL
-FROM @Modules m
-WHERE NOT EXISTS (SELECT 1 FROM [modules] x WHERE x.[Key] = m.[Key]);
-
-INSERT INTO [module_status] ([Id], [ModuleId], [IsActive], [ActivatedAt], [Source], [ChangedBy], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), m.[Id], 1, @Now, N'seed', NULL, @Now, NULL
-FROM [modules] m
-WHERE NOT EXISTS (SELECT 1 FROM [module_status] s WHERE s.[ModuleId] = m.[Id]);
-
-/* 3) Portal settings */
-MERGE INTO [portal_settings] AS tgt
-USING (
-    SELECT N'portal.universityName' AS [Key], N'Tabsan EduSphere University' AS [Value]
-    UNION ALL SELECT N'portal.brandInitials', N'TE'
-    UNION ALL SELECT N'portal.theme', N'default'
-    UNION ALL SELECT N'portal.timeZone', N'UTC'
-    UNION ALL SELECT N'institution_include_school', N'true'
-    UNION ALL SELECT N'institution_include_college', N'true'
-    UNION ALL SELECT N'institution_include_university', N'true'
-) AS src
-ON tgt.[Key] = src.[Key]
-WHEN MATCHED THEN
-    UPDATE SET tgt.[Value] = src.[Value], tgt.[UpdatedAt] = @Now
-WHEN NOT MATCHED THEN
-    INSERT ([Id], [Key], [Value], [CreatedAt], [UpdatedAt])
-    VALUES (NEWID(), src.[Key], src.[Value], @Now, NULL);
-
-/* 4) Baseline institute-aware departments (School, College, University) */
-DECLARE @CoreDepartments TABLE ([Id] UNIQUEIDENTIFIER, [Name] NVARCHAR(200), [Code] NVARCHAR(20), [InstitutionType] INT);
-INSERT INTO @CoreDepartments ([Id], [Name], [Code], [InstitutionType]) VALUES
-(CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), N'Core University Department', N'CORE-UNI', 2),
-(CAST('21000000-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), N'Core College Department', N'CORE-COL', 1),
-(CAST('21000000-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), N'Core School Department', N'CORE-SCH', 0);
-
-INSERT INTO [departments] ([Id], [Name], [Code], [InstitutionType], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-SELECT d.[Id], d.[Name], d.[Code], d.[InstitutionType], 1, @Now, NULL, 0, NULL
-FROM @CoreDepartments d
-WHERE NOT EXISTS (SELECT 1 FROM [departments] x WHERE x.[Id] = d.[Id]);
-
-IF COL_LENGTH('departments', 'TenantId') IS NOT NULL AND COL_LENGTH('departments', 'CampusId') IS NOT NULL
+    INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt], [TenantId], [CampusId], [InstitutionType])
+    SELECT v.Id, v.Name, v.Code, 1, 0, @Now, v.TenantId, v.CampusId, v.InstitutionType
+    FROM (VALUES
+        (@D_IT,  N'Information Technology', N'IT',  @T_Uni, @C_Uni, 2),
+        (@D_BUS, N'Business Administration', N'BUS', @T_Uni, @C_Uni, 2)
+    ) v(Id, Name, Code, TenantId, CampusId, InstitutionType)
+    WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
+END
+ELSE
 BEGIN
-    UPDATE d
-    SET d.[TenantId] = @DefaultTenantId,
-        d.[CampusId] = @DefaultCampusId,
-        d.[UpdatedAt] = @Now
-    FROM [departments] d
-    WHERE d.[Id] IN (SELECT [Id] FROM @CoreDepartments)
-      AND (d.[TenantId] IS NULL OR d.[CampusId] IS NULL);
-END;
+    INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt])
+    SELECT v.Id, v.Name, v.Code, 1, 0, @Now
+    FROM (VALUES
+        (@D_IT,  N'Information Technology', N'IT'),
+        (@D_BUS, N'Business Administration', N'BUS')
+    ) v(Id, Name, Code)
+    WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
+END
 
-/* 4.1) Baseline users (default password: EduSphere147) */
-DECLARE @RoleSuperAdminId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
-DECLARE @RoleAdminId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Admin');
-DECLARE @RoleFacultyId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Faculty');
-DECLARE @RoleStudentId INT = (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'Student');
+-- ═══════════════════════════════════════════════════════════════════
+-- 6. ACADEMIC PROGRAMS
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @P_BSCS    UNIQUEIDENTIFIER = 'A0000001-0000-0000-0000-000000000001';
+DECLARE @P_BBA     UNIQUEIDENTIFIER = 'A0000002-0000-0000-0000-000000000002';
+DECLARE @P_MSE     UNIQUEIDENTIFIER = 'A0000003-0000-0000-0000-000000000003';
+DECLARE @P_SPANISH UNIQUEIDENTIFIER = 'A0000004-0000-0000-0000-000000000004';
+DECLARE @P_ICS     UNIQUEIDENTIFIER = 'A0000005-0000-0000-0000-000000000005';
+DECLARE @P_SCIENCE UNIQUEIDENTIFIER = 'A0000006-0000-0000-0000-000000000006';
 
-DECLARE @CoreUsers TABLE
-(
-    [Id] UNIQUEIDENTIFIER,
-    [Username] NVARCHAR(100),
-    [Email] NVARCHAR(256),
-    [FullName] NVARCHAR(200) NULL,
-    [FatherName] NVARCHAR(200) NULL,
-    [RoleId] INT,
-    [DepartmentId] UNIQUEIDENTIFIER NULL,
-    [InstitutionType] INT NULL
+INSERT INTO [academic_programs] ([Id], [Name], [Code], [DepartmentId], [TotalSemesters], [IsActive], [IsDeleted], [CreatedAt])
+SELECT v.Id, v.Name, v.Code, v.DeptId, v.TotalSemesters, 1, 0, @Now
+FROM (VALUES
+    (@P_BSCS,    N'Bachelors of Science in Computer Sciences', N'BSCS',    @D_IT,  8),
+    (@P_BBA,     N'Bachelor of Business Administration',       N'BBA',     @D_BUS, 8),
+    (@P_MSE,     N'Masters in Computer Engineering',           N'MSE',     @D_IT,  4),
+    (@P_SPANISH, N'Spanish Language Course',                    N'SPANISH', @D_IT,  2),
+    (@P_ICS,     N'Intermediate in Computer Science',           N'ICS',     @D_IT,  2),
+    (@P_SCIENCE, N'Science',                                    N'SCIENCE', @D_IT,  10)
+) v(Id, Name, Code, DeptId, TotalSemesters)
+WHERE NOT EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = v.Id);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 7. COURSES (subjects per program per semester)
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @CourseData TABLE (Id UNIQUEIDENTIFIER, Title NVARCHAR(200), Code NVARCHAR(20), CreditHours INT, DeptId UNIQUEIDENTIFIER);
+
+-- BSCS Courses (8 semesters, ~5 per semester)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'Introduction to Programming',      N'CS101', 3, @D_IT),
+(NEWID(), N'Calculus I',                       N'MTH101', 3, @D_IT),
+(NEWID(), N'English Composition',              N'ENG101', 3, @D_IT),
+(NEWID(), N'Introduction to Computing',        N'CS102', 3, @D_IT),
+(NEWID(), N'Physics I',                        N'PHY101', 4, @D_IT),
+(NEWID(), N'Object Oriented Programming',      N'CS201', 4, @D_IT),
+(NEWID(), N'Calculus II',                      N'MTH201', 3, @D_IT),
+(NEWID(), N'Digital Logic Design',             N'CS202', 4, @D_IT),
+(NEWID(), N'Communication Skills',             N'ENG201', 3, @D_IT),
+(NEWID(), N'Discrete Mathematics',             N'MTH202', 3, @D_IT),
+(NEWID(), N'Data Structures',                  N'CS301', 4, @D_IT),
+(NEWID(), N'Database Systems',                 N'CS302', 4, @D_IT),
+(NEWID(), N'Probability & Statistics',         N'MTH301', 3, @D_IT),
+(NEWID(), N'Computer Networks',                N'CS303', 3, @D_IT),
+(NEWID(), N'Linear Algebra',                   N'MTH302', 3, @D_IT),
+(NEWID(), N'Operating Systems',                N'CS401', 4, @D_IT),
+(NEWID(), N'Software Engineering',             N'CS402', 4, @D_IT),
+(NEWID(), N'Theory of Automata',               N'CS403', 3, @D_IT),
+(NEWID(), N'Web Technologies',                 N'CS404', 3, @D_IT),
+(NEWID(), N'Numerical Computing',              N'MTH401', 3, @D_IT),
+(NEWID(), N'Artificial Intelligence',          N'CS501', 4, @D_IT),
+(NEWID(), N'Compiler Construction',            N'CS502', 4, @D_IT),
+(NEWID(), N'Computer Architecture',            N'CS503', 3, @D_IT),
+(NEWID(), N'Human Computer Interaction',       N'CS504', 3, @D_IT),
+(NEWID(), N'Professional Practices',           N'CS505', 2, @D_IT),
+(NEWID(), N'Information Security',             N'CS601', 4, @D_IT),
+(NEWID(), N'Distributed Computing',            N'CS602', 3, @D_IT),
+(NEWID(), N'Mobile App Development',           N'CS603', 4, @D_IT),
+(NEWID(), N'Data Warehousing',                 N'CS604', 3, @D_IT),
+(NEWID(), N'Technical Writing',                N'ENG601', 3, @D_IT),
+(NEWID(), N'Final Year Project I',             N'CS701', 3, @D_IT),
+(NEWID(), N'Machine Learning',                 N'CS702', 4, @D_IT),
+(NEWID(), N'Cloud Computing',                  N'CS703', 3, @D_IT),
+(NEWID(), N'Software Project Management',      N'CS704', 3, @D_IT),
+(NEWID(), N'Ethics in Computing',              N'CS705', 2, @D_IT),
+(NEWID(), N'Final Year Project II',            N'CS801', 4, @D_IT),
+(NEWID(), N'Data Science',                     N'CS802', 3, @D_IT),
+(NEWID(), N'Network Security',                 N'CS803', 3, @D_IT),
+(NEWID(), N'Entrepreneurship',                 N'MGT801', 3, @D_IT),
+(NEWID(), N'Emerging Technologies',            N'CS804', 3, @D_IT);
+
+-- BBA Courses (8 semesters, ~5 per semester)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'Principles of Management',         N'MGT101', 3, @D_BUS),
+(NEWID(), N'Financial Accounting',             N'ACC101', 3, @D_BUS),
+(NEWID(), N'Business Mathematics',             N'MTH101B', 3, @D_BUS),
+(NEWID(), N'Micro Economics',                  N'ECO101', 3, @D_BUS),
+(NEWID(), N'Business Communication',           N'ENG101B', 3, @D_BUS),
+(NEWID(), N'Organizational Behavior',          N'MGT201', 3, @D_BUS),
+(NEWID(), N'Cost Accounting',                  N'ACC201', 3, @D_BUS),
+(NEWID(), N'Macro Economics',                  N'ECO201', 3, @D_BUS),
+(NEWID(), N'Business Statistics',              N'STT201', 3, @D_BUS),
+(NEWID(), N'Marketing Management',             N'MKT201', 3, @D_BUS),
+(NEWID(), N'Human Resource Management',        N'MGT301', 3, @D_BUS),
+(NEWID(), N'Financial Management',             N'FIN301', 3, @D_BUS),
+(NEWID(), N'Business Law',                     N'LAW301', 3, @D_BUS),
+(NEWID(), N'Management Accounting',            N'ACC301', 3, @D_BUS),
+(NEWID(), N'Consumer Behavior',                N'MKT301', 3, @D_BUS),
+(NEWID(), N'Operations Management',            N'MGT401', 3, @D_BUS),
+(NEWID(), N'Corporate Finance',                N'FIN401', 3, @D_BUS),
+(NEWID(), N'International Business',           N'INT401', 3, @D_BUS),
+(NEWID(), N'Brand Management',                 N'MKT401', 3, @D_BUS),
+(NEWID(), N'Taxation Management',              N'TAX401', 3, @D_BUS),
+(NEWID(), N'Strategic Management',             N'MGT501', 3, @D_BUS),
+(NEWID(), N'Investment Banking',               N'FIN501', 3, @D_BUS),
+(NEWID(), N'Supply Chain Management',          N'SCM501', 3, @D_BUS),
+(NEWID(), N'Digital Marketing',                N'MKT501', 3, @D_BUS),
+(NEWID(), N'Business Research Methods',        N'RES501', 3, @D_BUS),
+(NEWID(), N'Project Management',               N'MGT601', 3, @D_BUS),
+(NEWID(), N'Islamic Banking',                  N'FIN601', 3, @D_BUS),
+(NEWID(), N'Business Ethics',                  N'ETH601', 3, @D_BUS),
+(NEWID(), N'E-Commerce',                       N'ECM601', 3, @D_BUS),
+(NEWID(), N'Leadership',                       N'MGT602', 3, @D_BUS),
+(NEWID(), N'Change Management',                N'MGT701', 3, @D_BUS),
+(NEWID(), N'Risk Management',                  N'FIN701', 3, @D_BUS),
+(NEWID(), N'Total Quality Management',         N'TQM701', 3, @D_BUS),
+(NEWID(), N'Entrepreneurship',                 N'ENT701', 3, @D_BUS),
+(NEWID(), N'Business Analytics',               N'BAN701', 3, @D_BUS),
+(NEWID(), N'Capstone Project',                 N'CAP801', 4, @D_BUS),
+(NEWID(), N'Corporate Governance',             N'CGV801', 3, @D_BUS),
+(NEWID(), N'Global Business Strategy',         N'GBS801', 3, @D_BUS),
+(NEWID(), N'Innovation Management',            N'INN801', 3, @D_BUS),
+(NEWID(), N'Financial Derivatives',            N'FIN801', 3, @D_BUS);
+
+-- MSE Courses (4 semesters, ~5 per semester)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'Advanced Computer Architecture',   N'MSE501', 3, @D_IT),
+(NEWID(), N'Advanced Algorithms',              N'MSE502', 4, @D_IT),
+(NEWID(), N'Research Methodology',             N'MSE503', 3, @D_IT),
+(NEWID(), N'Network Design & Analysis',        N'MSE504', 3, @D_IT),
+(NEWID(), N'Advanced Databases',               N'MSE505', 3, @D_IT),
+(NEWID(), N'Parallel Computing',               N'MSE601', 3, @D_IT),
+(NEWID(), N'Embedded Systems',                 N'MSE602', 4, @D_IT),
+(NEWID(), N'Software Quality Assurance',       N'MSE603', 3, @D_IT),
+(NEWID(), N'Cyber Security',                   N'MSE604', 3, @D_IT),
+(NEWID(), N'Big Data Analytics',               N'MSE605', 3, @D_IT),
+(NEWID(), N'Internet of Things',               N'MSE701', 3, @D_IT),
+(NEWID(), N'Computer Vision',                  N'MSE702', 3, @D_IT),
+(NEWID(), N'Natural Language Processing',      N'MSE703', 3, @D_IT),
+(NEWID(), N'Thesis I',                         N'MSE704', 3, @D_IT),
+(NEWID(), N'Blockchain Technology',            N'MSE705', 3, @D_IT),
+(NEWID(), N'Thesis II',                        N'MSE801', 4, @D_IT),
+(NEWID(), N'Deep Learning',                    N'MSE802', 3, @D_IT),
+(NEWID(), N'Cloud & Edge Computing',           N'MSE803', 3, @D_IT),
+(NEWID(), N'Robotics',                         N'MSE804', 3, @D_IT),
+(NEWID(), N'Seminar on Emerging Tech',         N'MSE805', 2, @D_IT);
+
+-- Spanish Language (1 year / 2 semesters)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'Spanish Grammar I',                N'SPN101', 3, @D_IT),
+(NEWID(), N'Spanish Vocabulary I',             N'SPN102', 3, @D_IT),
+(NEWID(), N'Spanish Conversation I',           N'SPN103', 2, @D_IT),
+(NEWID(), N'Spanish Grammar II',               N'SPN201', 3, @D_IT),
+(NEWID(), N'Spanish Vocabulary II',            N'SPN202', 3, @D_IT),
+(NEWID(), N'Spanish Conversation II',          N'SPN203', 2, @D_IT);
+
+-- ICS (College - 2 years)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'Computer Fundamentals',            N'ICS111', 3, @D_IT),
+(NEWID(), N'Programming Fundamentals',         N'ICS112', 4, @D_IT),
+(NEWID(), N'English I',                        N'ENG111', 3, @D_IT),
+(NEWID(), N'Mathematics I',                    N'MTH111', 3, @D_IT),
+(NEWID(), N'Physics',                          N'PHY111', 3, @D_IT),
+(NEWID(), N'Object Oriented Programming',      N'ICS121', 4, @D_IT),
+(NEWID(), N'Database Fundamentals',            N'ICS122', 3, @D_IT),
+(NEWID(), N'English II',                       N'ENG121', 3, @D_IT),
+(NEWID(), N'Mathematics II',                   N'MTH121', 3, @D_IT),
+(NEWID(), N'Web Development',                  N'ICS123', 3, @D_IT);
+
+-- School Science (Classes 1-10)
+INSERT INTO @CourseData VALUES
+(NEWID(), N'English',                          N'ENG001', 3, @D_IT),
+(NEWID(), N'Mathematics',                      N'MTH001', 3, @D_IT),
+(NEWID(), N'Science',                          N'SCI001', 3, @D_IT),
+(NEWID(), N'Social Studies',                   N'SST001', 2, @D_IT),
+(NEWID(), N'Computer Science',                 N'CS001',  2, @D_IT),
+(NEWID(), N'Urdu',                             N'URD001', 2, @D_IT),
+(NEWID(), N'Islamiat',                         N'ISL001', 2, @D_IT),
+(NEWID(), N'Physical Education',               N'PE001',  1, @D_IT);
+
+INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [IsDeleted], [CreatedAt])
+SELECT d.Id, d.Title, d.Code, d.CreditHours, d.DeptId, 1, 0, @Now
+FROM @CourseData d
+WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Code] = d.Code);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 8. SEMESTERS
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @SemData TABLE (Id UNIQUEIDENTIFIER, Name NVARCHAR(100), StartDate DATETIME2, EndDate DATETIME2);
+
+-- University: 8 semesters for BSCS/BBA, 4 for MSE, 2 for Spanish
+INSERT INTO @SemData VALUES
+(NEWID(), N'Semester 1  (2026)',  '2026-01-15', '2026-06-15'),
+(NEWID(), N'Semester 2  (2026)',  '2026-07-01', '2026-12-15'),
+(NEWID(), N'Semester 3  (2027)',  '2027-01-15', '2027-06-15'),
+(NEWID(), N'Semester 4  (2027)',  '2027-07-01', '2027-12-15'),
+(NEWID(), N'Semester 5  (2028)',  '2028-01-15', '2028-06-15'),
+(NEWID(), N'Semester 6  (2028)',  '2028-07-01', '2028-12-15'),
+(NEWID(), N'Semester 7  (2029)',  '2029-01-15', '2029-06-15'),
+(NEWID(), N'Semester 8  (2029)',  '2029-07-01', '2029-12-15');
+
+-- College: 2 years (ICS year 1, year 2)
+INSERT INTO @SemData VALUES
+(NEWID(), N'ICS Year 1 (2026)',   '2026-04-01', '2027-03-31'),
+(NEWID(), N'ICS Year 2 (2027)',   '2027-04-01', '2028-03-31');
+
+-- School: 10 classes
+INSERT INTO @SemData VALUES
+(NEWID(), N'Class 1  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 2  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 3  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 4  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 5  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 6  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 7  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 8  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 9  (2026)',     '2026-04-01', '2027-03-31'),
+(NEWID(), N'Class 10 (2026)',     '2026-04-01', '2027-03-31');
+
+INSERT INTO [semesters] ([Id], [Name], [StartDate], [EndDate], [IsClosed], [IsDeleted], [CreatedAt])
+SELECT d.Id, d.Name, d.StartDate, d.EndDate, 0, 0, @Now
+FROM @SemData d
+WHERE NOT EXISTS (SELECT 1 FROM [semesters] WHERE [Name] = d.Name);
+
+-- Store semester IDs for later use
+DECLARE @SemUni1  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 1  (2026)');
+DECLARE @SemUni2  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 2  (2026)');
+DECLARE @SemUni3  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 3  (2027)');
+DECLARE @SemUni4  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 4  (2027)');
+DECLARE @SemUni5  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 5  (2028)');
+DECLARE @SemUni6  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 6  (2028)');
+DECLARE @SemUni7  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 7  (2029)');
+DECLARE @SemUni8  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Semester 8  (2029)');
+DECLARE @SemICS1  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'ICS Year 1 (2026)');
+DECLARE @SemICS2  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'ICS Year 2 (2027)');
+DECLARE @SemSch1  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Class 1  (2026)');
+DECLARE @SemSch10 UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Class 10 (2026)');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 9. CORE USERS (baseline for login)
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @R_SuperAdmin INT = 1, @R_Admin INT = 2, @R_Faculty INT = 3, @R_Student INT = 4, @R_Finance INT = 5;
+
+DECLARE @CoreUsers TABLE (
+    Id UNIQUEIDENTIFIER, Username NVARCHAR(100), Email NVARCHAR(256),
+    FullName NVARCHAR(200), RoleId INT, DeptId UNIQUEIDENTIFIER NULL,
+    TenantId UNIQUEIDENTIFIER NULL, CampusId UNIQUEIDENTIFIER NULL, InstitutionType INT NULL
 );
 
-INSERT INTO @CoreUsers ([Id], [Username], [Email], [RoleId], [DepartmentId], [InstitutionType])
-VALUES
-    (CAST('66666666-6666-6666-6666-666666666601' AS UNIQUEIDENTIFIER), N'superadmin', N'superadmin@tabsan.local', @RoleSuperAdminId, NULL, NULL),
-    (CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER), N'admin',      N'admin@tabsan.local',      @RoleAdminId,      CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2),
-    (CAST('66666666-6666-6666-6666-666666666603' AS UNIQUEIDENTIFIER), N'faculty',    N'faculty@tabsan.local',    @RoleFacultyId,    CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2),
-    (CAST('66666666-6666-6666-6666-666666666604' AS UNIQUEIDENTIFIER), N'student',    N'student@tabsan.local',    @RoleStudentId,    CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 2);
+-- SuperAdmin (global, no tenant/campus)
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666601', N'superadmin', N'superadmin@tabsan.local', N'Super Admin', @R_SuperAdmin, NULL, NULL, NULL, NULL);
 
-INSERT INTO [users] ([Id], [Username], [Email], [PasswordHash], [RoleId], [DepartmentId], [InstitutionType], [IsActive], [LastLoginAt], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-SELECT u.[Id], u.[Username], u.[Email],
-    CASE WHEN u.[RoleId] = @RoleSuperAdminId THEN @SuperAdminPasswordHash ELSE @DefaultPasswordHash END,
-    u.[RoleId], u.[DepartmentId], u.[InstitutionType], 1, NULL, @Now, NULL, 0, NULL
-FROM @CoreUsers u
-WHERE NOT EXISTS (SELECT 1 FROM [users] x WHERE x.[Id] = u.[Id]);
+-- University Admins
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666602', N'admin.uni', N'admin.uni@tabsan.local', N'University Admin', @R_Admin, @D_IT, @T_Uni, @C_Uni, 2);
 
-UPDATE u
-SET u.[Username] = src.[Username],
-    u.[Email] = src.[Email],
-    u.[PasswordHash] = @DefaultPasswordHash,
-    u.[RoleId] = src.[RoleId],
-    u.[DepartmentId] = src.[DepartmentId],
-    u.[InstitutionType] = src.[InstitutionType],
-    u.[IsActive] = 1,
-    u.[IsDeleted] = 0,
-    u.[DeletedAt] = NULL,
-    u.[UpdatedAt] = @Now
-FROM [users] u
-INNER JOIN @CoreUsers src ON src.[Id] = u.[Id];
+-- College Admin
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666603', N'admin.col', N'admin.col@tabsan.local', N'College Admin', @R_Admin, @D_IT, @T_Col, @C_Col, 1);
 
-IF COL_LENGTH('users', 'FullName') IS NOT NULL
+-- School Admin
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666604', N'admin.sch', N'admin.sch@tabsan.local', N'School Admin', @R_Admin, @D_IT, @T_Sch, @C_Sch, 0);
+
+-- Faculty (one per department)
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666605', N'faculty.uni', N'faculty.uni@tabsan.local', N'Dr. Ahmad Khan', @R_Faculty, @D_IT, @T_Uni, @C_Uni, 2),
+('66666666-6666-6666-6666-666666666606', N'faculty.col', N'faculty.col@tabsan.local', N'Prof. Rashid Iqbal', @R_Faculty, @D_IT, @T_Col, @C_Col, 1),
+('66666666-6666-6666-6666-666666666607', N'faculty.sch', N'faculty.sch@tabsan.local', N'Ms. Amna Javed', @R_Faculty, @D_IT, @T_Sch, @C_Sch, 0);
+
+-- Students (one per program)
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666608', N'student.uni', N'student.uni@tabsan.local', N'Ali Hassan', @R_Student, @D_IT, @T_Uni, @C_Uni, 2),
+('66666666-6666-6666-6666-666666666609', N'student.col', N'student.col@tabsan.local', N'Arslan Mehmood', @R_Student, @D_IT, @T_Col, @C_Col, 1),
+('66666666-6666-6666-6666-666666666610', N'student.sch', N'student.sch@tabsan.local', N'Ahmed Raza', @R_Student, @D_IT, @T_Sch, @C_Sch, 0);
+
+-- Finance Officers
+INSERT INTO @CoreUsers VALUES
+('66666666-6666-6666-6666-666666666611', N'finance.uni', N'finance.uni@tabsan.local', N'Finance Officer Uni', @R_Finance, @D_IT, @T_Uni, @C_Uni, 2),
+('66666666-6666-6666-6666-666666666612', N'finance.col', N'finance.col@tabsan.local', N'Finance Officer Col', @R_Finance, @D_IT, @T_Col, @C_Col, 1),
+('66666666-6666-6666-6666-666666666613', N'finance.sch', N'finance.sch@tabsan.local', N'Finance Officer Sch', @R_Finance, @D_IT, @T_Sch, @C_Sch, 0);
+
+-- Insert/update users
+MERGE [users] AS t
+USING @CoreUsers AS s ON t.[Id] = s.[Id]
+WHEN MATCHED THEN UPDATE SET
+    t.[Username] = s.[Username], t.[Email] = s.[Email], t.[FullName] = s.[FullName],
+    t.[RoleId] = s.[RoleId], t.[DepartmentId] = s.[DeptId],
+    t.[TenantId] = s.[TenantId], t.[CampusId] = s.[CampusId],
+    t.[InstitutionType] = ISNULL(s.[InstitutionType], t.[InstitutionType]),
+    t.[PasswordHash] = CASE WHEN s.RoleId = @R_SuperAdmin THEN @SuperAdminPwd ELSE @DefaultPwd END,
+    t.[IsActive] = 1, t.[IsDeleted] = 0, t.[DeletedAt] = NULL, t.[UpdatedAt] = @Now
+WHEN NOT MATCHED THEN INSERT
+    ([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[TenantId],[CampusId],[InstitutionType],[IsActive],[CreatedAt],[IsDeleted])
+    VALUES (s.[Id],s.[Username],s.[Email],s.[FullName],
+            CASE WHEN s.RoleId = @R_SuperAdmin THEN @SuperAdminPwd ELSE @DefaultPwd END,
+            s.[RoleId],s.[DeptId],s.[TenantId],s.[CampusId],s.[InstitutionType],1,@Now,0);
+
+-- Department-specific IT dept for College and School
+DECLARE @D_IT_Col UNIQUEIDENTIFIER = 'D0000003-0000-0000-0000-000000000003';
+DECLARE @D_IT_Sch UNIQUEIDENTIFIER = 'D0000004-0000-0000-0000-000000000004';
+
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
 BEGIN
-    UPDATE u
-    SET u.[FullName] = CASE u.[Username]
-        WHEN N'superadmin' THEN N'Tabsan Super Admin'
-        WHEN N'admin' THEN N'Core Admin'
-        WHEN N'faculty' THEN N'Core Faculty'
-        WHEN N'student' THEN N'Core Student'
-        ELSE u.[FullName]
+    INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt], [TenantId], [CampusId], [InstitutionType])
+    SELECT v.Id, v.Name, v.Code, 1, 0, @Now, v.TenantId, v.CampusId, v.InstitutionType
+    FROM (VALUES
+        (@D_IT_Col, N'Information Technology', N'IT-COL', @T_Col, @C_Col, 1),
+        (@D_IT_Sch, N'Science Department',     N'SCI',   @T_Sch, @C_Sch, 0)
+    ) v(Id, Name, Code, TenantId, CampusId, InstitutionType)
+    WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
+END
+ELSE
+BEGIN
+    INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt])
+    SELECT v.Id, v.Name, v.Code, 1, 0, @Now
+    FROM (VALUES
+        (@D_IT_Col, N'Information Technology', N'IT-COL'),
+        (@D_IT_Sch, N'Science Department',     N'SCI')
+    ) v(Id, Name, Code)
+    WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
+END
+
+-- Update department TenantId/CampusId/InstitutionType if columns exist
+IF COL_LENGTH('departments', 'TenantId') IS NOT NULL
+BEGIN
+    UPDATE [departments] SET [TenantId] = @T_Col WHERE [Id] = @D_IT_Col AND [TenantId] IS NULL;
+    UPDATE [departments] SET [TenantId] = @T_Sch WHERE [Id] = @D_IT_Sch AND [TenantId] IS NULL;
+END
+IF COL_LENGTH('departments', 'CampusId') IS NOT NULL
+BEGIN
+    UPDATE [departments] SET [CampusId] = @C_Col WHERE [Id] = @D_IT_Col AND [CampusId] IS NULL;
+    UPDATE [departments] SET [CampusId] = @C_Sch WHERE [Id] = @D_IT_Sch AND [CampusId] IS NULL;
+END
+IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
+BEGIN
+    UPDATE [departments] SET [InstitutionType] = 1 WHERE [Id] = @D_IT_Col AND [InstitutionType] IS NULL;
+    UPDATE [departments] SET [InstitutionType] = 0 WHERE [Id] = @D_IT_Sch AND [InstitutionType] IS NULL;
+END
+
+-- Update programs for College & School departments (they were inserted under @D_IT)
+IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_ICS AND [DepartmentId] = @D_IT)
+    UPDATE [academic_programs] SET [DepartmentId] = @D_IT_Col WHERE [Id] = @P_ICS;
+
+IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_SCIENCE AND [DepartmentId] = @D_IT)
+    UPDATE [academic_programs] SET [DepartmentId] = @D_IT_Sch WHERE [Id] = @P_SCIENCE;
+
+-- Update faculty/student core users to correct departments
+UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] IN (N'faculty.col', N'student.col');
+UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] IN (N'faculty.sch', N'student.sch');
+UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] = N'admin.col';
+UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] = N'admin.sch';
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 10. COURSE OFFERINGS (course + semester pairs)
+-- ═══════════════════════════════════════════════════════════════════
+INSERT INTO [course_offerings] ([Id], [CourseId], [SemesterId], [MaxEnrollment], [IsOpen], [IsDeleted], [CreatedAt])
+SELECT NEWID(), c.Id,
+    CASE
+        -- School: all to Class 1
+        WHEN c.[Code] LIKE N'ENG001' OR c.[Code] LIKE N'MTH001' OR c.[Code] LIKE N'SCI001'
+          OR c.[Code] LIKE N'SST001' OR c.[Code] LIKE N'CS001'  OR c.[Code] LIKE N'URD001'
+          OR c.[Code] LIKE N'ISL001' OR c.[Code] LIKE N'PE001'  THEN @SemSch1
+        -- College ICS Year 1
+        WHEN c.[Code] LIKE N'ICS11%' OR c.[Code] LIKE N'ENG111' OR c.[Code] LIKE N'MTH111' OR c.[Code] LIKE N'PHY111' THEN @SemICS1
+        -- College ICS Year 2
+        WHEN c.[Code] LIKE N'ICS12%' OR c.[Code] LIKE N'ENG121' OR c.[Code] LIKE N'MTH121' THEN @SemICS2
+        -- Spanish Sem 1
+        WHEN c.[Code] LIKE N'SPN1%' THEN @SemUni1
+        -- Spanish Sem 2
+        WHEN c.[Code] LIKE N'SPN2%' THEN @SemUni2
+        -- MSE Semester mapping (MSE5xx→1, MSE6xx→2, MSE7xx→3, MSE8xx→4)
+        WHEN c.[Code] LIKE N'MSE5%' THEN @SemUni1
+        WHEN c.[Code] LIKE N'MSE6%' THEN @SemUni2
+        WHEN c.[Code] LIKE N'MSE7%' THEN @SemUni3
+        WHEN c.[Code] LIKE N'MSE8%' THEN @SemUni4
+        -- BSCS/BBA: digit after letters determines semester
+        WHEN c.[Code] LIKE N'CS1%' OR c.[Code] LIKE N'MTH1%' OR c.[Code] LIKE N'ENG1%' OR c.[Code] LIKE N'PHY1%'
+          OR c.[Code] LIKE N'MGT1%' OR c.[Code] LIKE N'ACC1%' OR c.[Code] LIKE N'ECO1%' OR c.[Code] LIKE N'STT1%'
+          OR c.[Code] LIKE N'MKT1%' THEN @SemUni1
+        WHEN c.[Code] LIKE N'CS2%' OR c.[Code] LIKE N'MTH2%' OR c.[Code] LIKE N'ENG2%'
+          OR c.[Code] LIKE N'MGT2%' OR c.[Code] LIKE N'ACC2%' OR c.[Code] LIKE N'ECO2%' OR c.[Code] LIKE N'STT2%'
+          OR c.[Code] LIKE N'MKT2%' OR c.[Code] LIKE N'FIN2%' THEN @SemUni2
+        WHEN c.[Code] LIKE N'CS3%' OR c.[Code] LIKE N'MTH3%'
+          OR c.[Code] LIKE N'MGT3%' OR c.[Code] LIKE N'ACC3%' OR c.[Code] LIKE N'FIN3%' OR c.[Code] LIKE N'LAW3%'
+          OR c.[Code] LIKE N'MKT3%' THEN @SemUni3
+        WHEN c.[Code] LIKE N'CS4%' OR c.[Code] LIKE N'MTH4%'
+          OR c.[Code] LIKE N'MGT4%' OR c.[Code] LIKE N'FIN4%' OR c.[Code] LIKE N'INT4%' OR c.[Code] LIKE N'MKT4%'
+          OR c.[Code] LIKE N'TAX4%' THEN @SemUni4
+        WHEN c.[Code] LIKE N'CS5%' OR c.[Code] LIKE N'ENG5%' OR c.[Code] LIKE N'MGT5%' OR c.[Code] LIKE N'FIN5%'
+          OR c.[Code] LIKE N'SCM5%' OR c.[Code] LIKE N'MKT5%' OR c.[Code] LIKE N'RES5%' THEN @SemUni5
+        WHEN c.[Code] LIKE N'CS6%' OR c.[Code] LIKE N'ENG6%' OR c.[Code] LIKE N'MGT6%' OR c.[Code] LIKE N'FIN6%'
+          OR c.[Code] LIKE N'ETH6%' OR c.[Code] LIKE N'ECM6%' THEN @SemUni6
+        WHEN c.[Code] LIKE N'CS7%' OR c.[Code] LIKE N'MGT7%' OR c.[Code] LIKE N'FIN7%' OR c.[Code] LIKE N'TQM7%'
+          OR c.[Code] LIKE N'ENT7%' OR c.[Code] LIKE N'BAN7%' THEN @SemUni7
+        WHEN c.[Code] LIKE N'CS8%' OR c.[Code] LIKE N'MGT8%' OR c.[Code] LIKE N'CAP8%' OR c.[Code] LIKE N'CGV8%'
+          OR c.[Code] LIKE N'GBS8%' OR c.[Code] LIKE N'INN8%' OR c.[Code] LIKE N'FIN8%' THEN @SemUni8
+        ELSE @SemUni1
     END,
-    u.[UpdatedAt] = @Now
-    FROM [users] u
-    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
-END;
+    30, 1, 0, @Now
+FROM [courses] c
+WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [CourseId] = c.[Id]);
 
-IF COL_LENGTH('users', 'FatherName') IS NOT NULL
-BEGIN
-    UPDATE u
-    SET u.[FatherName] = CASE u.[Username]
-        WHEN N'superadmin' THEN N'Founding Father'
-        WHEN N'admin' THEN N'Admin Father'
-        WHEN N'faculty' THEN N'Faculty Father'
-        WHEN N'student' THEN N'Student Father'
-        ELSE u.[FatherName]
-    END,
-    u.[UpdatedAt] = @Now
-    FROM [users] u
-    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
-END;
+PRINT CONCAT('Course offerings created: ', @@ROWCOUNT);
 
-IF COL_LENGTH('users', 'TenantId') IS NOT NULL AND COL_LENGTH('users', 'CampusId') IS NOT NULL
-BEGIN
-    UPDATE u
-    SET u.[TenantId] = CASE WHEN r.[Name] = N'SuperAdmin' THEN NULL ELSE @DefaultTenantId END,
-        u.[CampusId] = CASE WHEN r.[Name] = N'SuperAdmin' THEN NULL ELSE @DefaultCampusId END,
-        u.[UpdatedAt] = @Now
-    FROM [users] u
-    INNER JOIN [roles] r ON r.[Id] = u.[RoleId]
-    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
-END;
-
-IF COL_LENGTH('users', 'PhoneNumber') IS NOT NULL
-BEGIN
-    UPDATE u
-    SET u.[PhoneNumber] = CASE u.[Username]
-        WHEN N'superadmin' THEN N'+61490000001'
-        WHEN N'admin' THEN N'+61490000002'
-        WHEN N'faculty' THEN N'+61490000003'
-        WHEN N'student' THEN N'+61490000004'
-        ELSE u.[PhoneNumber]
-    END,
-    u.[UpdatedAt] = @Now
-    FROM [users] u
-    WHERE u.[Id] IN (SELECT [Id] FROM @CoreUsers);
-END;
-
-IF OBJECT_ID(N'[password_history]') IS NOT NULL
-BEGIN
-    INSERT INTO [password_history] ([Id], [UserId], [PasswordHash], [CreatedAt])
-    SELECT NEWID(), u.[Id], @DefaultPasswordHash, @Now
-    FROM @CoreUsers u
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM [password_history] ph
-        WHERE ph.[UserId] = u.[Id]
-          AND ph.[PasswordHash] = @DefaultPasswordHash
-    );
-END
-
-/* 4.2) Baseline admin-to-department assignment for menu-scoped pages */
-IF OBJECT_ID(N'[admin_department_assignments]') IS NOT NULL
-BEGIN
-    DECLARE @CoreAdminUserId UNIQUEIDENTIFIER = CAST('66666666-6666-6666-6666-666666666602' AS UNIQUEIDENTIFIER);
-    DECLARE @CoreAdminDepartmentId UNIQUEIDENTIFIER = CAST('21000000-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER);
-
-    IF EXISTS (SELECT 1 FROM [users] WHERE [Id] = @CoreAdminUserId)
-       AND EXISTS (SELECT 1 FROM [departments] WHERE [Id] = @CoreAdminDepartmentId)
-       AND NOT EXISTS (
-           SELECT 1
-           FROM [admin_department_assignments] a
-           WHERE a.[AdminUserId] = @CoreAdminUserId
-             AND a.[DepartmentId] = @CoreAdminDepartmentId
-             AND a.[RemovedAt] IS NULL)
-    BEGIN
-        INSERT INTO [admin_department_assignments] ([Id], [AdminUserId], [DepartmentId], [AssignedAt], [RemovedAt], [CreatedAt], [UpdatedAt])
-        VALUES (NEWID(), @CoreAdminUserId, @CoreAdminDepartmentId, @Now, NULL, @Now, NULL);
-    END
-END
-
-/* 5) Baseline report definitions + role assignments */
--- Normalize legacy report keys from older seed scripts to current underscore keys.
-UPDATE [report_definitions]
-SET [Key] = N'academic_transcript', [UpdatedAt] = @Now
-WHERE [Key] = N'academic-transcript'
-    AND NOT EXISTS (SELECT 1 FROM [report_definitions] x WHERE x.[Key] = N'academic_transcript');
-
-UPDATE [report_definitions]
-SET [Key] = N'attendance_summary', [UpdatedAt] = @Now
-WHERE [Key] = N'attendance-summary'
-    AND NOT EXISTS (SELECT 1 FROM [report_definitions] x WHERE x.[Key] = N'attendance_summary');
-
-UPDATE [report_definitions]
-SET [Key] = N'result_summary', [UpdatedAt] = @Now
-WHERE [Key] = N'result-sheet'
-    AND NOT EXISTS (SELECT 1 FROM [report_definitions] x WHERE x.[Key] = N'result_summary');
-
-DECLARE @Reports TABLE ([Key] NVARCHAR(100), [Name] NVARCHAR(150), [Purpose] NVARCHAR(500));
-INSERT INTO @Reports ([Key], [Name], [Purpose]) VALUES
-(N'attendance_summary', N'Attendance Summary', N'Per-student attendance percentage per course offering, filterable by semester and department.'),
-(N'result_summary', N'Result Summary', N'All published result entries with marks and percentage, filterable by semester, offering, or student.'),
-(N'gpa_report', N'GPA & CGPA Report', N'Per-student current semester GPA and cumulative CGPA, filterable by department and program.'),
-(N'enrollment_summary', N'Enrollment Summary', N'Course offering seat utilisation showing enrolled count versus maximum capacity.'),
-(N'semester_results', N'Semester Results', N'Full published result set for a selected semester with optional department filter.'),
-(N'student_transcript', N'Student Transcript', N'Full academic record for a selected student including all result components.'),
-(N'low_attendance_warning', N'Low Attendance Warning', N'Students whose attendance falls below a configurable threshold.'),
-(N'fyp_status', N'FYP Status Report', N'Final Year Project status overview filterable by department and project status.'),
-(N'payment_summary', N'Payment Summary', N'Payment receipt summary for finance workflows with campus, department, course, class, semester, year, and month filters.');
-
-INSERT INTO [report_definitions] ([Id], [Name], [Purpose], [Key], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-SELECT NEWID(), r.[Name], r.[Purpose], r.[Key], 1, @Now, NULL, 0, NULL
-FROM @Reports r
-WHERE NOT EXISTS (SELECT 1 FROM [report_definitions] d WHERE d.[Key] = r.[Key]);
-
-INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), d.[Id], rr.[RoleName], @Now, NULL
-FROM [report_definitions] d
-CROSS APPLY (VALUES (N'SuperAdmin'), (N'Admin'), (N'Faculty')) rr([RoleName])
-WHERE d.[Key] IN (
-        N'attendance_summary',
-        N'result_summary',
-        N'gpa_report',
-        N'enrollment_summary',
-        N'semester_results',
-        N'student_transcript',
-        N'low_attendance_warning',
-        N'fyp_status')
-  AND NOT EXISTS (
-      SELECT 1
-      FROM [report_role_assignments] x
-      WHERE x.[ReportDefinitionId] = d.[Id] AND x.[RoleName] = rr.[RoleName]
-  );
-
-INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), d.[Id], rr.[RoleName], @Now, NULL
-FROM [report_definitions] d
-CROSS APPLY (VALUES (N'SuperAdmin'), (N'Admin'), (N'Finance')) rr([RoleName])
-WHERE d.[Key] = N'payment_summary'
-    AND NOT EXISTS (
-            SELECT 1
-            FROM [report_role_assignments] x
-            WHERE x.[ReportDefinitionId] = d.[Id] AND x.[RoleName] = rr.[RoleName]
-    );
-
-INSERT INTO [report_role_assignments] ([Id], [ReportDefinitionId], [RoleName], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), d.[Id], N'Student', @Now, NULL
-FROM [report_definitions] d
-WHERE d.[Key] = N'student_transcript'
-    AND NOT EXISTS (
-            SELECT 1
-            FROM [report_role_assignments] x
-            WHERE x.[ReportDefinitionId] = d.[Id] AND x.[RoleName] = N'Student'
-    );
-
-/* 6) Baseline sidebar menus */
-DECLARE @DashboardId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'dashboard');
-IF @DashboardId IS NULL
-BEGIN
-    SET @DashboardId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@DashboardId, N'Dashboard', N'Main landing page', N'dashboard', NULL, 1, 1, 1, @Now, NULL, 0, NULL);
-END
-
-DECLARE @AcademicId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'academic');
-IF @AcademicId IS NULL
-BEGIN
-    SET @AcademicId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@AcademicId, N'Academic', N'Core academic operations', N'academic', NULL, 2, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @CoursesMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'courses');
-IF @CoursesMenuId IS NULL
-BEGIN
-    SET @CoursesMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@CoursesMenuId, N'Courses', N'Course catalog and offerings', N'courses', @AcademicId, 1, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @AttendanceMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'attendance');
-IF @AttendanceMenuId IS NULL
-BEGIN
-    SET @AttendanceMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@AttendanceMenuId, N'Attendance', N'Attendance marking and views', N'attendance', @AcademicId, 2, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @ProgramsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'programs');
-IF @ProgramsMenuId IS NULL
-BEGIN
-    SET @ProgramsMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@ProgramsMenuId, N'Programs', N'Program catalog and semester structure management', N'programs', @AcademicId, 3, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @DegreeAuditMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'degree_audit');
-IF @DegreeAuditMenuId IS NULL
-BEGIN
-    SET @DegreeAuditMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@DegreeAuditMenuId, N'Degree Audit', N'Evaluate completion progress against degree requirements.', N'degree_audit', @AcademicId, 4, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @GraduationEligibilityMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'graduation_eligibility');
-IF @GraduationEligibilityMenuId IS NULL
-BEGIN
-    SET @GraduationEligibilityMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@GraduationEligibilityMenuId, N'Graduation Eligibility', N'Filter and review graduation readiness for university students.', N'graduation_eligibility', @AcademicId, 5, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @DegreeRulesMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'degree_rules');
-IF @DegreeRulesMenuId IS NULL
-BEGIN
-    SET @DegreeRulesMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@DegreeRulesMenuId, N'Degree Rules', N'Inspect configured university degree rules and required courses.', N'degree_rules', @AcademicId, 6, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @GenerateCertificatesMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'generate_certificates');
-IF @GenerateCertificatesMenuId IS NULL
-BEGIN
-    SET @GenerateCertificatesMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@GenerateCertificatesMenuId, N'Generate Certificates', N'University degree and transcript workflow plus non-university additional certificates.', N'generate_certificates', @AcademicId, 7, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @CourseMaterialMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'course_material');
-IF @CourseMaterialMenuId IS NULL
-BEGIN
-    SET @CourseMaterialMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@CourseMaterialMenuId, N'Course Material', N'Course material management and learner consumption surfaces.', N'course_material', @AcademicId, 8, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @SettingsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'settings');
-IF @SettingsMenuId IS NULL
-BEGIN
-    SET @SettingsMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@SettingsMenuId, N'Settings', N'Platform configuration and governance', N'settings', NULL, 3, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @UserSettingsMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'user_settings');
-IF @UserSettingsMenuId IS NULL
-BEGIN
-    SET @UserSettingsMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@UserSettingsMenuId, N'User Settings', N'Update personal details and account password', N'user_settings', @SettingsMenuId, 1, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @AdminUsersMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'admin_users');
-IF @AdminUsersMenuId IS NULL
-BEGIN
-    SET @AdminUsersMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@AdminUsersMenuId, N'Admin Users', N'Administrative user lifecycle management', N'admin_users', @SettingsMenuId, 1, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @TenantManagementMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'tenant_management');
-IF @TenantManagementMenuId IS NULL
-BEGIN
-    SET @TenantManagementMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@TenantManagementMenuId, N'Tenant Management', N'Tenant registry and lifecycle operations', N'tenant_management', @SettingsMenuId, 2, 1, 0, @Now, NULL, 0, NULL);
-END
-
-DECLARE @CampusManagementMenuId UNIQUEIDENTIFIER = (SELECT TOP 1 [Id] FROM [sidebar_menu_items] WHERE [Key] = N'campus_management');
-IF @CampusManagementMenuId IS NULL
-BEGIN
-    SET @CampusManagementMenuId = NEWID();
-    INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (@CampusManagementMenuId, N'Campus Management', N'Campus registry and campus-level governance', N'campus_management', @SettingsMenuId, 3, 1, 0, @Now, NULL, 0, NULL);
-END
-
-INSERT INTO [sidebar_menu_role_accesses] ([Id], [SidebarMenuItemId], [RoleName], [IsAllowed], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), m.[Id], ra.[RoleName], ra.[IsAllowed], @Now, NULL
-FROM [sidebar_menu_items] m
-JOIN (VALUES
-    (N'dashboard', N'SuperAdmin', 1),
-    (N'dashboard', N'Admin', 1),
-    (N'dashboard', N'Faculty', 1),
-    (N'dashboard', N'Student', 1),
-    (N'academic', N'SuperAdmin', 1),
-    (N'academic', N'Admin', 1),
-    (N'timetable_admin', N'Admin', 1),
-    (N'timetable_teacher', N'Admin', 1),
-    (N'timetable_teacher', N'Faculty', 1),
-    (N'timetable_student', N'Student', 1),
-    (N'courses', N'SuperAdmin', 1),
-    (N'courses', N'Admin', 1),
-    (N'courses', N'Faculty', 1),
-    (N'programs', N'SuperAdmin', 1),
-    (N'programs', N'Admin', 1),
-    (N'programs', N'Faculty', 1),
-    (N'degree_audit', N'SuperAdmin', 1),
-    (N'degree_audit', N'Admin', 1),
-    (N'degree_audit', N'Faculty', 1),
-    (N'degree_audit', N'Student', 1),
-    (N'graduation_eligibility', N'SuperAdmin', 1),
-    (N'graduation_eligibility', N'Admin', 1),
-    (N'degree_rules', N'SuperAdmin', 1),
-    (N'generate_certificates', N'SuperAdmin', 1),
-    (N'generate_certificates', N'Admin', 1),
-    (N'generate_certificates', N'Faculty', 1),
-    (N'generate_certificates', N'Student', 1),
-    (N'course_material', N'SuperAdmin', 1),
-    (N'course_material', N'Admin', 1),
-    (N'course_material', N'Faculty', 1),
-    (N'course_material', N'Student', 1),
-    (N'assignments', N'SuperAdmin', 1),
-    (N'assignments', N'Admin', 1),
-    (N'assignments', N'Faculty', 1),
-    (N'assignments', N'Student', 1),
-    (N'attendance', N'SuperAdmin', 1),
-    (N'attendance', N'Admin', 1),
-    (N'attendance', N'Faculty', 1),
-    (N'attendance', N'Student', 1),
-    (N'settings', N'SuperAdmin', 1),
-    (N'settings', N'Admin', 1),
-    (N'admin_users', N'SuperAdmin', 1),
-    (N'admin_users', N'Admin', 1),
-    (N'tenant_management', N'SuperAdmin', 1),
-    (N'campus_management', N'SuperAdmin', 1),
-    (N'campus_management', N'Admin', 1)
-) ra([MenuKey], [RoleName], [IsAllowed]) ON ra.[MenuKey] = m.[Key]
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM [sidebar_menu_role_accesses] x
-    WHERE x.[SidebarMenuItemId] = m.[Id] AND x.[RoleName] = ra.[RoleName]
-);
-
-/* 7) License baseline state */
-IF OBJECT_ID(N'[license_state]') IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM [license_state])
-BEGIN
-    INSERT INTO [license_state]
-        ([Id], [LicenseHash], [LicenseType], [Status], [ActivatedAt], [ExpiresAt], [CreatedAt], [UpdatedAt])
-    VALUES
-        ('0f0f0f0f-0f0f-0f0f-0f0f-0f0f0f0f0f01',
-         N'SEED-LICENSE-HASH-CHANGE-IN-PROD',
-         N'Education',
-         N'Active',
-         @Now,
-         DATEADD(year, 1, @Now),
-         @Now,
-         NULL);
-END
-
-IF OBJECT_ID(N'[license_state]') IS NOT NULL
-BEGIN
-    IF COL_LENGTH('license_state', 'ActivatedDomain') IS NOT NULL
-    BEGIN
-        UPDATE [license_state]
-        SET [ActivatedDomain] = COALESCE([ActivatedDomain], N'tabsan.local')
-        WHERE [ActivatedDomain] IS NULL;
-    END
-
-    IF COL_LENGTH('license_state', 'MaxUsers') IS NOT NULL
-    BEGIN
-        UPDATE [license_state]
-        SET [MaxUsers] = CASE WHEN [MaxUsers] < 100000 THEN 100000 ELSE [MaxUsers] END;
-    END
-END
-
-/* 8) Module role access matrix */
-IF OBJECT_ID(N'[module_role_assignments]') IS NOT NULL
-BEGIN
-    DECLARE @ModuleRoleMatrix TABLE ([ModuleKey] NVARCHAR(50), [RoleName] NVARCHAR(50));
-    INSERT INTO @ModuleRoleMatrix ([ModuleKey], [RoleName]) VALUES
-    (N'authentication', N'SuperAdmin'),
-    (N'authentication', N'Admin'),
-    (N'authentication', N'Faculty'),
-    (N'authentication', N'Student'),
-    (N'departments', N'SuperAdmin'),
-    (N'departments', N'Admin'),
-    (N'sis', N'SuperAdmin'),
-    (N'sis', N'Admin'),
-    (N'sis', N'Faculty'),
-    (N'courses', N'SuperAdmin'),
-    (N'courses', N'Admin'),
-    (N'courses', N'Faculty'),
-    (N'courses', N'Student'),
-    (N'assignments', N'SuperAdmin'),
-    (N'assignments', N'Admin'),
-    (N'assignments', N'Faculty'),
-    (N'assignments', N'Student'),
-    (N'quizzes', N'SuperAdmin'),
-    (N'quizzes', N'Admin'),
-    (N'quizzes', N'Faculty'),
-    (N'quizzes', N'Student'),
-    (N'attendance', N'SuperAdmin'),
-    (N'attendance', N'Admin'),
-    (N'attendance', N'Faculty'),
-    (N'attendance', N'Student'),
-    (N'results', N'SuperAdmin'),
-    (N'results', N'Admin'),
-    (N'results', N'Faculty'),
-    (N'results', N'Student'),
-    (N'notifications', N'SuperAdmin'),
-    (N'notifications', N'Admin'),
-    (N'notifications', N'Faculty'),
-    (N'notifications', N'Student'),
-    (N'fyp', N'SuperAdmin'),
-    (N'fyp', N'Admin'),
-    (N'fyp', N'Faculty'),
-    (N'fyp', N'Student'),
-    (N'ai_chat', N'SuperAdmin'),
-    (N'ai_chat', N'Admin'),
-    (N'ai_chat', N'Faculty'),
-    (N'ai_chat', N'Student'),
-    (N'reports', N'SuperAdmin'),
-    (N'reports', N'Admin'),
-    (N'reports', N'Faculty'),
-    (N'reports', N'Student'),
-    (N'themes', N'SuperAdmin'),
-    (N'themes', N'Admin'),
-    (N'themes', N'Faculty'),
-    (N'themes', N'Student'),
-    (N'advanced_audit', N'SuperAdmin'),
-    (N'advanced_audit', N'Admin');
-
-    INSERT INTO [module_role_assignments] ([Id], [ModuleId], [RoleName], [CreatedAt], [UpdatedAt])
-    SELECT NEWID(), m.[Id], matrix.[RoleName], @Now, NULL
-    FROM @ModuleRoleMatrix matrix
-    INNER JOIN [modules] m ON m.[Key] = matrix.[ModuleKey]
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM [module_role_assignments] x
-        WHERE x.[ModuleId] = m.[Id] AND x.[RoleName] = matrix.[RoleName]
-    );
-END
-
-/* Normalize invalid/placeholder password hashes to the canonical demo password (EduSphere147). */
-UPDATE [users]
-SET [PasswordHash] = @DefaultPasswordHash,
-    [UpdatedAt] = @Now,
-    [FailedLoginAttempts] = 0,
-    [IsLockedOut] = 0,
-    [LockedOutUntil] = NULL
-WHERE [IsDeleted] = 0
-  AND (
-        [PasswordHash] IS NULL
-     OR [PasswordHash] NOT LIKE N'argon2id:%'
-     OR [PasswordHash] = N'REPLACE_WITH_VALID_HASH'
-     OR [PasswordHash] <> @DefaultPasswordHash
-  );
-
-IF COL_LENGTH('users', 'MustChangePassword') IS NOT NULL
-BEGIN
-    UPDATE [users]
-    SET [MustChangePassword] = 0,
-        [UpdatedAt] = @Now
-    WHERE [IsDeleted] = 0
-      AND [MustChangePassword] = 1;
-END
-
-COMMIT TRANSACTION;
-PRINT 'Core seed data completed successfully.';
-
--- ==============================================================================
--- APPENDIX: Sidebar menu full role-access matrix + action permissions
--- (Merged from 09-Update-Sidebar-Role-Access.sql and 10-Seed-Role-Permissions.sql)
--- ==============================================================================
-
-/* ---- A1. Ensure all sidebar menu items exist ---- */
-DECLARE @items TABLE (MenuKey NVARCHAR(100), DisplayName NVARCHAR(150), Purpose NVARCHAR(500), ParentKey NVARCHAR(100) NULL, DisplayOrder INT);
-INSERT INTO @items VALUES
-(N'timetable_admin',      N'Timetable Admin',       N'Create, edit, publish and retire timetables.',                                                                    NULL,     1),
-(N'timetable_teacher',    N'Teacher Timetable',     N'Faculty-facing teaching schedule with room, time and section context.',                                         NULL,     2),
-(N'timetable_student',    N'Student Timetable',     N'Student class schedule by active program, semester and enrollment.',                                           NULL,     3),
-(N'students',             N'Students',              N'Manage student profile lifecycle, status and related records.',                                                 NULL,     4),
-(N'departments',          N'Departments',           N'Manage department masters and scoped ownership metadata.',                                                      NULL,     5),
-(N'enrollments',          N'Enrollments',           N'Manage roster enrollment, drops and status updates by offering.',                                              NULL,     6),
-(N'enter_attendance',     N'Enter Attendance',      N'Faculty workflow for manual attendance and CSV import with validation feedback.',                              NULL,     7),
-(N'enter_results',        N'Enter Results',         N'Faculty workflow for scoped result entry, correction, import and publish actions.',                            NULL,     8),
-(N'results',              N'Results',               N'Review and consume published results with transcript-related visibility.',                                     NULL,     9),
-(N'quizzes',              N'Quizzes',               N'Create, attempt and evaluate quiz activities.',                                                                NULL,    10),
-(N'analytics',            N'Analytics',             N'View performance, attendance and finance trends with filters.',                                                NULL,    11),
-(N'student_lifecycle',    N'Student Lifecycle',     N'Manage progression, graduation activation and student-state transitions.',                                     NULL,    12),
-(N'payments',             N'Payments',              N'Track, edit and confirm payment receipt lifecycle.',                                                           NULL,    13),
-(N'report_center',        N'Report Center',         N'Run, filter and export assigned reports by role and scope.',                                                   NULL,    14),
-(N'notifications',        N'Notifications',         N'Unified inbox for system, academic and workflow notifications.',                                               NULL,    15),
-(N'buildings',            N'Buildings',             N'Manage building master records for campus infrastructure.',                                                    NULL,    16),
-(N'rooms',                N'Rooms',                 N'Manage room inventory, capacity and usage metadata by building.',                                              NULL,    17),
-(N'helpdesk',             N'Helpdesk',              N'Ticket management for academic, technical and administrative support.',                                        NULL,    18),
--- Academic sub-menus
-(N'programs',             N'Programs',              N'Manage academic programs, activation and scope metadata.',                                                     N'academic', 2),
-(N'gradebook',            N'Gradebook',             N'Manage component scores and aggregate performance by offering.',                                               N'academic', 5),
-(N'rubric_manage',        N'Rubric Management',     N'Create and manage assignment rubrics, criteria and level scoring matrices.',                                   N'academic', 6),
-(N'lms_manage',           N'LMS Manage',            N'Manage LMS integration and learning content governance settings.',                                             N'academic',10),
-(N'discussion',           N'Discussion',            N'Threaded discussions for course collaboration and Q&A.',                                                       N'academic',11),
-(N'announcements',        N'Announcements',         N'Create and consume scoped institutional and course announcements.',                                            N'academic',12),
-(N'study_plan',           N'Study Plan',            N'Plan future course path with advisor review workflow.',                                                        N'academic',13),
-(N'prerequisites',        N'Prerequisites',         N'Define prerequisite relationships for course eligibility.',                                                   N'academic',14),
-(N'grading_config',       N'Grading Config',        N'Maintain grading profiles, pass thresholds and ranges.',                                                      N'academic',15),
-(N'result_calculation',   N'Result Calculation',    N'Configure institution-scoped GPA rules and weighted components.',                                             N'academic',16),
-(N'accreditation',        N'Accreditation',         N'Manage accreditation templates, mappings and evidence structures.',                                            N'academic',17),
-(N'user_import',          N'User Import',           N'Bulk onboarding with validation, mapping and scoped controls.',                                               N'academic',18),
--- Settings sub-menus
-(N'theme_settings',       N'Theme Settings',        N'Manage visual theme and appearance preferences.',                                                              N'settings', 5),
-(N'report_settings',      N'Report Settings',       N'Configure report definitions, visibility and access rules.',                                                  N'settings', 6);
-
-DECLARE @ik NVARCHAR(100), @in NVARCHAR(150), @ip NVARCHAR(500), @ipk NVARCHAR(100), @io INT;
-DECLARE ic CURSOR LOCAL FAST_FORWARD FOR SELECT MenuKey, DisplayName, Purpose, ParentKey, DisplayOrder FROM @items;
-OPEN ic; FETCH NEXT FROM ic INTO @ik, @in, @ip, @ipk, @io;
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM [sidebar_menu_items] WHERE [Key] = @ik)
-    BEGIN
-        DECLARE @pid UNIQUEIDENTIFIER = NULL;
-        IF @ipk IS NOT NULL SELECT @pid = [Id] FROM [sidebar_menu_items] WHERE [Key] = @ipk;
-        INSERT INTO [sidebar_menu_items] ([Id], [Name], [Purpose], [Key], [ParentId], [DisplayOrder], [IsActive], [IsSystemMenu], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-        VALUES (NEWID(), @in, @ip, @ik, @pid, @io, 1, 0, @Now, NULL, 0, NULL);
-    END
-    FETCH NEXT FROM ic INTO @ik, @in, @ip, @ipk, @io;
-END;
-CLOSE ic; DEALLOCATE ic;
-
-/* ---- A2. Full sidebar role-access matrix ---- */
-DELETE FROM [sidebar_menu_role_accesses] WHERE [RoleName] IN (N'Admin', N'Faculty', N'Student', N'Finance');
-
-INSERT INTO [sidebar_menu_role_accesses] ([Id], [SidebarMenuItemId], [RoleName], [IsAllowed], [CreatedAt], [UpdatedAt])
-SELECT NEWID(), m.[Id], ra.[RoleName], 1, @Now, NULL FROM [sidebar_menu_items] m JOIN (VALUES
-(N'dashboard',N'Admin'),(N'dashboard',N'Faculty'),(N'dashboard',N'Student'),(N'dashboard',N'Finance'),
-(N'tenant_management',N'Admin'),(N'campus_management',N'Admin'),(N'departments',N'Admin'),(N'programs',N'Admin'),
-(N'courses',N'Admin'),(N'enrollments',N'Admin'),(N'students',N'Admin'),(N'timetable_admin',N'Admin'),
-(N'timetable_teacher',N'Admin'),(N'timetable_student',N'Admin'),(N'assignments',N'Admin'),(N'enter_attendance',N'Admin'),
-(N'enter_results',N'Admin'),(N'gradebook',N'Admin'),(N'rubric_manage',N'Admin'),(N'quizzes',N'Admin'),
-(N'lms_manage',N'Admin'),(N'course_material',N'Admin'),(N'discussion',N'Admin'),(N'announcements',N'Admin'),
-(N'generate_certificates',N'Admin'),(N'result_calculation',N'Admin'),(N'prerequisites',N'Admin'),(N'grading_config',N'Admin'),
-(N'study_plan',N'Admin'),(N'attendance',N'Admin'),(N'results',N'Admin'),(N'student_lifecycle',N'Admin'),
-(N'buildings',N'Admin'),(N'rooms',N'Admin'),(N'report_settings',N'Admin'),(N'theme_settings',N'Admin'),
-(N'accreditation',N'Admin'),(N'notifications',N'Admin'),(N'user_import',N'Admin'),(N'user_settings',N'Admin'),
-(N'analytics',N'Admin'),(N'helpdesk',N'Admin'),(N'report_center',N'Admin'),(N'admin_users',N'Admin'),(N'payments',N'Admin'),
-(N'students',N'Faculty'),(N'timetable_teacher',N'Faculty'),(N'assignments',N'Faculty'),(N'enter_attendance',N'Faculty'),
-(N'enter_results',N'Faculty'),(N'gradebook',N'Faculty'),(N'quizzes',N'Faculty'),(N'lms_manage',N'Faculty'),
-(N'course_material',N'Faculty'),(N'discussion',N'Faculty'),(N'announcements',N'Faculty'),(N'result_calculation',N'Faculty'),
-(N'study_plan',N'Faculty'),(N'attendance',N'Faculty'),(N'timetable_student',N'Faculty'),(N'results',N'Faculty'),
-(N'theme_settings',N'Faculty'),(N'notifications',N'Faculty'),(N'user_settings',N'Faculty'),(N'analytics',N'Faculty'),
-(N'helpdesk',N'Faculty'),(N'report_center',N'Faculty'),
-(N'quizzes',N'Student'),(N'lms_manage',N'Student'),(N'course_material',N'Student'),(N'discussion',N'Student'),
-(N'announcements',N'Student'),(N'study_plan',N'Student'),(N'attendance',N'Student'),(N'timetable_student',N'Student'),
-(N'results',N'Student'),(N'theme_settings',N'Student'),(N'notifications',N'Student'),(N'user_settings',N'Student'),
-(N'analytics',N'Student'),(N'helpdesk',N'Student'),(N'report_center',N'Student'),
-(N'payments',N'Finance'),(N'theme_settings',N'Finance'),(N'notifications',N'Finance'),(N'user_settings',N'Finance'),
-(N'analytics',N'Finance'),(N'helpdesk',N'Finance'),(N'report_center',N'Finance')
-) ra([MenuKey], [RoleName]) ON ra.[MenuKey] = m.[Key]
-WHERE NOT EXISTS (SELECT 1 FROM [sidebar_menu_role_accesses] x WHERE x.[SidebarMenuItemId] = m.[Id] AND x.[RoleName] = ra.[RoleName]);
-
-/* ---- A3. Full role-resource action permissions ---- */
-IF OBJECT_ID(N'[role_resource_permissions]') IS NOT NULL
-BEGIN
-    DELETE FROM [role_resource_permissions] WHERE [RoleName] IN (N'SuperAdmin',N'Admin',N'Faculty',N'Student',N'Finance');
-
-    DECLARE @pm TABLE (MenuKey NVARCHAR(100), RoleName NVARCHAR(100), V BIT, A BIT, E BIT, D BIT, X BIT, I BIT);
-    -- SuperAdmin: all on all
-    INSERT INTO @pm VALUES (N'dashboard',N'SuperAdmin',1,0,0,0,0,0),(N'timetable_admin',N'SuperAdmin',1,1,1,1,1,1),(N'timetable_teacher',N'SuperAdmin',1,1,1,1,1,1),(N'timetable_student',N'SuperAdmin',1,1,1,1,1,1),(N'students',N'SuperAdmin',1,1,1,1,1,1),(N'departments',N'SuperAdmin',1,1,1,1,1,1),(N'enrollments',N'SuperAdmin',1,1,1,1,1,1),(N'enter_attendance',N'SuperAdmin',1,1,1,1,1,1),(N'enter_results',N'SuperAdmin',1,1,1,1,1,1),(N'results',N'SuperAdmin',1,1,1,1,1,1),(N'quizzes',N'SuperAdmin',1,1,1,1,1,1),(N'analytics',N'SuperAdmin',1,1,1,1,1,1),(N'student_lifecycle',N'SuperAdmin',1,1,1,1,1,1),(N'payments',N'SuperAdmin',1,1,1,1,1,1),(N'report_center',N'SuperAdmin',1,1,1,1,1,1),(N'notifications',N'SuperAdmin',1,1,1,1,1,1),(N'buildings',N'SuperAdmin',1,1,1,1,1,1),(N'rooms',N'SuperAdmin',1,1,1,1,1,1),(N'helpdesk',N'SuperAdmin',1,1,1,1,1,1),(N'courses',N'SuperAdmin',1,1,1,1,1,1),(N'programs',N'SuperAdmin',1,1,1,1,1,1),(N'attendance',N'SuperAdmin',1,1,1,1,1,1),(N'assignments',N'SuperAdmin',1,1,1,1,1,1),(N'gradebook',N'SuperAdmin',1,1,1,1,1,1),(N'rubric_manage',N'SuperAdmin',1,1,1,1,1,1),(N'degree_audit',N'SuperAdmin',1,1,1,1,1,1),(N'generate_certificates',N'SuperAdmin',1,1,1,1,1,1),(N'course_material',N'SuperAdmin',1,1,1,1,1,1),(N'lms_manage',N'SuperAdmin',1,1,1,1,1,1),(N'discussion',N'SuperAdmin',1,1,1,1,1,1),(N'announcements',N'SuperAdmin',1,1,1,1,1,1),(N'study_plan',N'SuperAdmin',1,1,1,1,1,1),(N'prerequisites',N'SuperAdmin',1,1,1,1,1,1),(N'grading_config',N'SuperAdmin',1,1,1,1,1,1),(N'result_calculation',N'SuperAdmin',1,1,1,1,1,1),(N'accreditation',N'SuperAdmin',1,1,1,1,1,1),(N'user_import',N'SuperAdmin',1,1,1,1,1,1),(N'user_settings',N'SuperAdmin',1,1,1,1,1,1),(N'admin_users',N'SuperAdmin',1,1,1,1,1,1),(N'tenant_management',N'SuperAdmin',1,1,1,1,1,1),(N'campus_management',N'SuperAdmin',1,1,1,1,1,1),(N'theme_settings',N'SuperAdmin',1,1,1,1,1,1),(N'report_settings',N'SuperAdmin',1,1,1,1,1,1);
-    -- Admin: all 6 on all
-    INSERT INTO @pm VALUES (N'dashboard',N'Admin',1,0,0,0,0,0),(N'timetable_admin',N'Admin',1,1,1,1,1,1),(N'timetable_teacher',N'Admin',1,1,1,1,1,1),(N'timetable_student',N'Admin',1,1,1,1,1,1),(N'students',N'Admin',1,1,1,1,1,1),(N'departments',N'Admin',1,1,1,1,1,1),(N'enrollments',N'Admin',1,1,1,1,1,1),(N'enter_attendance',N'Admin',1,1,1,1,1,1),(N'enter_results',N'Admin',1,1,1,1,1,1),(N'results',N'Admin',1,1,1,1,1,1),(N'quizzes',N'Admin',1,1,1,1,1,1),(N'analytics',N'Admin',1,1,1,1,1,1),(N'student_lifecycle',N'Admin',1,1,1,1,1,1),(N'payments',N'Admin',1,1,1,1,1,1),(N'report_center',N'Admin',1,1,1,1,1,1),(N'notifications',N'Admin',1,1,1,1,1,1),(N'buildings',N'Admin',1,1,1,1,1,1),(N'rooms',N'Admin',1,1,1,1,1,1),(N'helpdesk',N'Admin',1,1,1,1,1,1),(N'courses',N'Admin',1,1,1,1,1,1),(N'programs',N'Admin',1,1,1,1,1,1),(N'attendance',N'Admin',1,1,1,1,1,1),(N'assignments',N'Admin',1,1,1,1,1,1),(N'gradebook',N'Admin',1,1,1,1,1,1),(N'rubric_manage',N'Admin',1,1,1,1,1,1),(N'degree_audit',N'Admin',1,1,1,1,1,1),(N'generate_certificates',N'Admin',1,1,1,1,1,1),(N'course_material',N'Admin',1,1,1,1,1,1),(N'lms_manage',N'Admin',1,1,1,1,1,1),(N'discussion',N'Admin',1,1,1,1,1,1),(N'announcements',N'Admin',1,1,1,1,1,1),(N'study_plan',N'Admin',1,1,1,1,1,1),(N'prerequisites',N'Admin',1,1,1,1,1,1),(N'grading_config',N'Admin',1,1,1,1,1,1),(N'result_calculation',N'Admin',1,1,1,1,1,1),(N'accreditation',N'Admin',1,1,1,1,1,1),(N'user_import',N'Admin',1,1,1,1,1,1),(N'user_settings',N'Admin',1,1,1,1,1,1),(N'admin_users',N'Admin',1,1,1,1,1,1),(N'tenant_management',N'Admin',1,1,1,1,1,1),(N'campus_management',N'Admin',1,1,1,1,1,1),(N'theme_settings',N'Admin',1,1,1,1,1,1),(N'report_settings',N'Admin',1,1,1,1,1,1);
-    -- Faculty
-    INSERT INTO @pm VALUES (N'dashboard',N'Faculty',1,0,0,0,0,0),(N'assignments',N'Faculty',1,1,1,0,1,1),(N'enter_attendance',N'Faculty',1,1,1,0,1,1),(N'enter_results',N'Faculty',1,1,1,0,1,1),(N'gradebook',N'Faculty',1,1,1,0,1,1),(N'quizzes',N'Faculty',1,1,1,0,1,1),(N'lms_manage',N'Faculty',1,1,1,0,1,1),(N'course_material',N'Faculty',1,1,1,0,1,1),(N'discussion',N'Faculty',1,1,1,0,1,1),(N'announcements',N'Faculty',1,1,1,0,1,1),(N'attendance',N'Faculty',1,1,1,0,1,1),(N'results',N'Faculty',1,1,1,0,1,1),(N'result_calculation',N'Faculty',1,0,1,0,0,0),(N'study_plan',N'Faculty',1,0,1,0,0,0),(N'students',N'Faculty',1,0,0,0,1,0),(N'timetable_teacher',N'Faculty',1,0,0,0,1,0),(N'timetable_student',N'Faculty',1,0,0,0,1,0),(N'analytics',N'Faculty',1,0,0,0,1,0),(N'theme_settings',N'Faculty',1,0,0,0,0,0),(N'notifications',N'Faculty',1,0,0,0,0,0),(N'helpdesk',N'Faculty',1,1,1,0,1,0),(N'report_center',N'Faculty',1,0,0,0,1,0),(N'user_settings',N'Faculty',1,0,1,0,0,0);
-    -- Student
-    INSERT INTO @pm VALUES (N'dashboard',N'Student',1,0,0,0,0,0),(N'quizzes',N'Student',1,0,0,0,0,0),(N'lms_manage',N'Student',1,0,0,0,0,0),(N'course_material',N'Student',1,0,0,0,1,0),(N'discussion',N'Student',1,1,0,0,0,0),(N'announcements',N'Student',1,0,0,0,0,0),(N'study_plan',N'Student',1,0,0,0,0,0),(N'attendance',N'Student',1,0,0,0,0,0),(N'timetable_student',N'Student',1,0,0,0,0,0),(N'notifications',N'Student',1,0,0,0,0,0),(N'analytics',N'Student',1,0,0,0,1,0),(N'helpdesk',N'Student',1,1,0,0,0,0),(N'results',N'Student',1,0,0,0,1,0),(N'report_center',N'Student',1,0,0,0,1,0),(N'user_settings',N'Student',0,0,1,0,0,0),(N'theme_settings',N'Student',0,0,0,0,0,0);
-    -- Finance
-    INSERT INTO @pm VALUES (N'dashboard',N'Finance',1,0,0,0,0,0),(N'payments',N'Finance',1,1,1,1,1,1),(N'notifications',N'Finance',1,0,0,0,0,0),(N'analytics',N'Finance',1,0,0,0,1,0),(N'helpdesk',N'Finance',1,0,0,0,0,0),(N'report_center',N'Finance',1,0,0,0,1,0),(N'user_settings',N'Finance',0,0,1,0,0,0),(N'theme_settings',N'Finance',0,0,0,0,0,0);
-
-    INSERT INTO [role_resource_permissions] ([Id], [RoleName], [ResourceKey], [CanView], [CanAdd], [CanEdit], [CanDeactivate], [CanExport], [CanImport], [CreatedAt], [UpdatedAt])
-    SELECT NEWID(), pm.RoleName, pm.MenuKey, pm.V, pm.A, pm.E, pm.D, pm.X, pm.I, @Now, NULL FROM @pm pm;
-END;
-
-END TRY
-BEGIN CATCH
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION;
-
-    DECLARE @ErrorMessage2 NVARCHAR(MAX) = ERROR_MESSAGE();
-    DECLARE @ErrorSeverity2 INT = ERROR_SEVERITY();
-    DECLARE @ErrorState2 INT = ERROR_STATE();
-
-    RAISERROR (@ErrorMessage2, @ErrorSeverity2, @ErrorState2);
-END CATCH;
+PRINT '02-Seed-Core.sql completed successfully.';
+GO
