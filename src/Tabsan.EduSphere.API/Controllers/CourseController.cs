@@ -278,7 +278,10 @@ public class CourseController : ControllerBase
 
         offerings = await ApplyStudentStreamFilteringAsync(offerings, ct);
 
-        return Ok(offerings.Select(MapCourseOfferingResponse));
+        return Ok(offerings
+            .OrderBy(o => o.Course.Code)
+            .ThenBy(o => o.Semester.StartDate)
+            .Select(MapCourseOfferingResponse));
     }
 
     // ── GET /api/v1/course/offerings/my ───────────────────────────────────────

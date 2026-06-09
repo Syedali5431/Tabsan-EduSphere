@@ -7294,7 +7294,11 @@ public class PortalController : Controller
             model.Semesters = offerings
                 .GroupBy(o => new { o.SemesterId, o.SemesterName })
                 .Select(g => new LookupItem { Id = g.Key.SemesterId, Name = g.Key.SemesterName })
-                .OrderBy(s => s.Name)
+                .OrderBy(s =>
+                {
+                    var idx = allSemesters.FindIndex(a => a.Id == s.Id);
+                    return idx < 0 ? int.MaxValue : idx;
+                })
                 .ToList();
 
             // When there are no offerings yet for current scope, fall back to catalog semesters.

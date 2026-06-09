@@ -46,20 +46,22 @@ public class CourseRepository : ICourseRepository
                     .OrderBy(o => o.Course.Code)
                     .ToListAsync(ct);
 
-    /// <summary>Returns all offerings for a semester with Course, Semester navigation loaded.</summary>
+    /// <summary>Returns all offerings for a semester with Course, Semester navigation loaded, ordered by course code.</summary>
     public async Task<IReadOnlyList<CourseOffering>> GetOfferingsBySemesterAsync(Guid semesterId, CancellationToken ct = default)
         => await _db.CourseOfferings
                     .Include(o => o.Course)
                     .Include(o => o.Semester)
                     .Where(o => o.SemesterId == semesterId)
+                    .OrderBy(o => o.Course.Code)
                     .ToListAsync(ct);
 
-    /// <summary>Returns all offerings for a department (filtered by course.departmentId) with related entities loaded.</summary>
+    /// <summary>Returns all offerings for a department (filtered by course.departmentId) with related entities loaded, ordered by course code.</summary>
     public async Task<IReadOnlyList<CourseOffering>> GetOfferingsByDepartmentAsync(Guid departmentId, CancellationToken ct = default)
         => await _db.CourseOfferings
                     .Include(o => o.Course)
                     .Include(o => o.Semester)
                     .Where(o => o.Course.DepartmentId == departmentId)
+                    .OrderBy(o => o.Course.Code)
                     .ToListAsync(ct);
 
     /// <summary>Returns all offerings assigned to the given faculty user.</summary>

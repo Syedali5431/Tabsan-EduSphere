@@ -2929,7 +2929,7 @@ public class EduApiClient : IEduApiClient
             FacultyName  = o.FacultyName ?? "",
             SemesterName = o.SemesterName ?? "",
             IsActive     = o.IsActive
-        }).ToList();
+        }).OrderBy(o => o.CourseCode).ThenBy(o => o.SemesterName).ToList();
     }
 
     public async Task<List<LookupItem>> GetMyOfferingsAsync(CancellationToken ct)
