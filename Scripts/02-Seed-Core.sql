@@ -450,11 +450,67 @@ IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_ICS AND [Department
 IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_SCIENCE AND [DepartmentId] = @D_IT)
     UPDATE [academic_programs] SET [DepartmentId] = @D_IT_Sch WHERE [Id] = @P_SCIENCE;
 
+-- Update courses for College & School departments (they were inserted under @D_IT)
+UPDATE [courses] SET [DepartmentId] = @D_IT_Col
+WHERE [Code] LIKE N'ICS%' OR [Code] IN (N'ENG111', N'MTH111', N'PHY111', N'ENG121', N'MTH121');
+
+UPDATE [courses] SET [DepartmentId] = @D_IT_Sch
+WHERE [Code] IN (N'ENG001', N'MTH001', N'SCI001', N'SST001', N'CS001', N'URD001', N'ISL001', N'PE001');
+
 -- Update faculty/student core users to correct departments
 UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] IN (N'faculty.col', N'student.col');
 UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] IN (N'faculty.sch', N'student.sch');
 UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] = N'admin.col';
 UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] = N'admin.sch';
+
+-- Additional faculty (5 per department) and finance (2 per tenant) users
+DECLARE @MoreUsers TABLE (
+    Username NVARCHAR(100), Email NVARCHAR(256), FullName NVARCHAR(200),
+    RoleId INT, DeptId UNIQUEIDENTIFIER, TenantId UNIQUEIDENTIFIER,
+    CampusId UNIQUEIDENTIFIER, InstitutionType INT NULL
+);
+
+-- 4 more University IT faculty (1 already exists as faculty.uni)
+INSERT INTO @MoreUsers VALUES
+(N'faculty.uni.it2', N'faculty.uni.it2@uni.local', N'Prof. Sana Tariq', 3, @D_IT, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.it3', N'faculty.uni.it3@uni.local', N'Dr. Bilal Haider', 3, @D_IT, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.it4', N'faculty.uni.it4@uni.local', N'Prof. Nadia Sheikh', 3, @D_IT, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.it5', N'faculty.uni.it5@uni.local', N'Dr. Omer Farooq', 3, @D_IT, @T_Uni, @C_Uni, 2);
+
+-- 5 University Business faculty (BBA)
+INSERT INTO @MoreUsers VALUES
+(N'faculty.uni.bus1', N'faculty.uni.bus1@uni.local', N'Dr. Hassan Raza', 3, @D_BUS, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.bus2', N'faculty.uni.bus2@uni.local', N'Prof. Ayesha Malik', 3, @D_BUS, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.bus3', N'faculty.uni.bus3@uni.local', N'Dr. Imran Qureshi', 3, @D_BUS, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.bus4', N'faculty.uni.bus4@uni.local', N'Prof. Fatima Noor', 3, @D_BUS, @T_Uni, @C_Uni, 2),
+(N'faculty.uni.bus5', N'faculty.uni.bus5@uni.local', N'Dr. Zain Abbas', 3, @D_BUS, @T_Uni, @C_Uni, 2);
+
+-- 4 more College IT faculty (1 already exists as faculty.col)
+INSERT INTO @MoreUsers VALUES
+(N'faculty.col.it2', N'faculty.col.it2@col.local', N'Ms. Rabia Khan', 3, @D_IT_Col, @T_Col, @C_Col, 1),
+(N'faculty.col.it3', N'faculty.col.it3@col.local', N'Mr. Faisal Shah', 3, @D_IT_Col, @T_Col, @C_Col, 1),
+(N'faculty.col.it4', N'faculty.col.it4@col.local', N'Ms. Hira Butt', 3, @D_IT_Col, @T_Col, @C_Col, 1),
+(N'faculty.col.it5', N'faculty.col.it5@col.local', N'Mr. Tariq Mehmood', 3, @D_IT_Col, @T_Col, @C_Col, 1);
+
+-- 4 more School Science faculty (1 already exists as faculty.sch)
+INSERT INTO @MoreUsers VALUES
+(N'faculty.sch.sci2', N'faculty.sch.sci2@sch.local', N'Mr. Kamran Shah', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
+(N'faculty.sch.sci3', N'faculty.sch.sci3@sch.local', N'Ms. Nida Hassan', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
+(N'faculty.sch.sci4', N'faculty.sch.sci4@sch.local', N'Mr. Asif Iqbal', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
+(N'faculty.sch.sci5', N'faculty.sch.sci5@sch.local', N'Ms. Saba Riaz', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0);
+
+-- 1 more finance per tenant (1 already exists each)
+INSERT INTO @MoreUsers VALUES
+(N'finance.uni2', N'finance.uni2@uni.local', N'Ayesha Saddiq', 5, NULL, @T_Uni, @C_Uni, 2),
+(N'finance.col2', N'finance.col2@col.local', N'Yasir Nawaz', 5, NULL, @T_Col, @C_Col, 1),
+(N'finance.sch2', N'finance.sch2@sch.local', N'Hina Pervez', 5, NULL, @T_Sch, @C_Sch, 0);
+
+INSERT INTO [users] ([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[TenantId],[CampusId],[InstitutionType],[IsActive],[CreatedAt],[IsDeleted])
+SELECT NEWID(), s.Username, s.Email, s.FullName, @DefaultPwd,
+    s.RoleId, s.DeptId, s.TenantId, s.CampusId, s.InstitutionType,
+    1, @Now, 0
+FROM @MoreUsers s
+WHERE NOT EXISTS (SELECT 1 FROM [users] WHERE [Username] = s.Username);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- 10. COURSE OFFERINGS (course + semester pairs)

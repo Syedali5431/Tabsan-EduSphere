@@ -1980,7 +1980,7 @@ public class EduApiClient : IEduApiClient
         });
     }
 
-    // â”€â”€ JWT identity decoding (no signature validation â€” display use only) â”€
+    // ── JWT identity decoding (no signature validation — display use only) ──
 
     private static SessionIdentity DecodeJwtIdentity(string token)
     {
@@ -2026,7 +2026,7 @@ public class EduApiClient : IEduApiClient
                 identity.Roles.AddRange(roles);
             }
         }
-        catch { /* ignore decode errors â€“ identity stays default */ }
+        catch { /* ignore decode errors — identity stays default */ }
 
         static bool TryReadRoleClaims(JsonElement root, out List<string> roles)
         {

@@ -229,7 +229,7 @@ else
                                     @foreach (var o in Model.Offerings)
                                     {
                                         <tr>
-                                            <td>@o.CourseCode â€” @o.CourseTitle</td>
+                                            <td>@o.CourseCode — @o.CourseTitle</td>
                                             <td>@o.FacultyName</td>
                                             <td>@o.SemesterName</td>
                                             <td class="text-center">
@@ -466,17 +466,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="mb-3">
                         <label class="form-label">Course <span class="text-danger">*</span></label>
                         <select name="courseId" class="form-select" required>
-                            <option value="">Select a courseâ€¦</option>
+                            <option value="">Select a course…</option>
                             @foreach (var c in Model.Courses)
                             {
-                                <option value="@c.Id">@c.Code â€” @c.Title</option>
+                                <option value="@c.Id">@c.Code — @c.Title</option>
                             }
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">@periodLabel <span class="text-danger">*</span></label>
                         <select name="semesterId" class="form-select" required>
-                            <option value="">Select a @periodLabel.ToLowerInvariant()â€¦</option>
+                            <option value="">Select a @periodLabel.ToLowerInvariant()…</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id">@s.Name</option>
@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="mb-3">
                         <label class="form-label">Faculty (optional)</label>
                         <select name="facultyUserId" class="form-select">
-                            <option value="">â€” None â€”</option>
+                            <option value="">— None —</option>
                             @foreach (var f in Model.Faculty)
                             {
                                 <option value="@f.Id">@f.DisplayName</option>
