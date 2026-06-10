@@ -109,7 +109,7 @@
 
 - **ISO/IEC 27001 (Information Security)** — Extensively implemented
   - Immutable audit logging with full context (actor, IP, user agent, severity, correlation ID)
-  - 90-day password ageing, 5-password history, 30-minute idle session timeout
+  - 90-day password ageing, 5-password history, 5-minute idle session timeout
   - MFA/2FA support, session revocation, login activity monitoring
   - Backup operations logged with checksums and restore test verification
   - AES-256 encryption, PII data masking, data classification (Public/Internal/Confidential/Restricted)
@@ -131,6 +131,16 @@
 - Performance insights with trend analysis and KPI tracking
 - Export-ready reporting pipeline for operational and strategic use
 - Scoped exports with standardized output patterns
+
+---
+
+## Recent Enhancements (2026-06-10)
+
+- **MFA Single-Step Login** — TOTP validation on the same login page; returns proper error codes.
+- **Active-Only Filters** — Deactivated tenants and campuses no longer appear in portal dropdowns.
+- **Enhanced Reports** — Program and Department columns added to all summary reports.
+- **Semester Sort** — Semesters now sorted ascending (Semester 1 before Semester 2).
+- **Report Flexibility** — All reports run without requiring mandatory filter selection.
 
 ---
 
