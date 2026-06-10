@@ -50,8 +50,8 @@ public sealed class PasswordAgeingSettings
 // Phase 2 - ISO Security: Session idle timeout
 public sealed class SessionTimeoutSettings
 {
-    /// <summary>Idle session timeout in minutes. Sessions inactive beyond this are revoked. Default: 30.</summary>
-    public int IdleTimeoutMinutes { get; init; } = 30;
+    /// <summary>Idle session timeout in minutes. Sessions inactive beyond this are revoked. Default: 5.</summary>
+    public int IdleTimeoutMinutes { get; init; } = 5;
 
     /// <summary>Whether idle session timeout enforcement is enabled.</summary>
     public bool Enabled { get; init; } = true;
