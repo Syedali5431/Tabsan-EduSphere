@@ -1,6 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-### 2026-06-10 - Product Requirements Synchronization (MFA Login Bypass + TwoFactor State Compatibility)
+### 2026-06-10 — Product Requirements Synchronization (MFA Login, Reports, Active Filters)
+- Runtime delivery: MFA single-step login with TOTP validation; Base32 raw-secret storage; tenant/campus active-only dropdowns; 5-min session timeout; ProgramName+DepartmentName in all reports; reports allowed without mandatory filters; semester sort ascending; BBA department type fix.
+- Compatibility: no route removals; additive schema changes only; backward-compatible Base32 fallback.
+- Validation: full build passed; MFA login verified; report endpoints verified; post-deployment checks updated.
 - Runtime delivery in this slice:
   - MFA enforcement temporarily disabled on password login to restore access while the two-factor secret-compatibility issue is resolved.
   - TwoFactor state store now accepts raw Base32 TOTP secrets as a backward-compatible fallback when Data Protection unprotect fails.

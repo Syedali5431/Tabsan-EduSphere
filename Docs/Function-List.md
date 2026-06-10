@@ -231,6 +231,25 @@
 | TwoFactorController.ResendRecoveryCodes | POST /api/v1/two-factor/recovery-codes — regenerates recovery codes for an authenticated user. | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
 | TotpService.Base32Decode | Decodes a Base32-encoded TOTP secret into raw key bytes for HMAC computation. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
 | TotpService.Base32Encode | Encodes raw key bytes into a Base32 string for TOTP secret provisioning. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
+| AuthService.LoginAsync | Single-step MFA login: validates TOTP only when user has MFA enabled; returns MfaCodeRequired or InvalidMfaCode. | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| LoginController.Index (POST) | Forwards MFA code to API login, surfaces MFA-required/MFA-invalid error messaging from API responses. | src/Tabsan.EduSphere.Web/Controllers/LoginController.cs |
+| IEduApiClient.GetSecurityProfileAsync | Fetches auth security profile from API to determine whether MFA/SSO prompts should render. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.GetTenantsAsync | Returns active-only tenants for dropdowns via client-side .Where(t => t.IsActive) filter. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| CampusController.GetAll | Returns campuses filtered by activeOnly=true (default) to hide deactivated campuses from dropdowns. | src/Tabsan.EduSphere.API/Controllers/CampusController.cs |
+| ReportController | All report endpoints: relaxed scope enforcement; Faculty and Admin can run reports without mandatory department/course filters. | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportService.GetAttendanceSummaryAsync | Populates ProgramName and DepartmentName from academic_programs left-join. | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportRepository | All four report queries (attendance, result, assignment, quiz) now left-join academic_programs for ProgramName. | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportRepository.cs |
+| SemesterRepository.GetAllAsync | Returns semesters sorted by StartDate ascending (oldest first). | src/Tabsan.EduSphere.Infrastructure/Repositories/AcademicProgramRepository.cs |
+| SessionTimeoutSettings.IdleTimeoutMinutes | Session idle timeout reduced from 30 to 5 minutes. | src/Tabsan.EduSphere.Application/Auth/AuthSecurityOptions.cs |
+| TwoFactorSetupService.ResetAsync | Resets 2FA for a user using a valid recovery code and restores a fresh secret. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
+| TwoFactorStateStore.TryUnprotect | Decrypts Data-Protection-encrypted TOTP secret with backward-compatible Base32 fallback for raw secrets. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| TwoFactorStateStore.IsValidBase32Secret | Validates whether a string is a syntactically correct Base32 TOTP secret. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| TwoFactorStateStore.HardDeleteAsync | Permanently removes MFA secret, recovery codes, and disables MFA for a user. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| ITwoFactorStateStore.HardDeleteAsync | Interface for permanent MFA secret and recovery-code removal. | src/Tabsan.EduSphere.Application/Interfaces/ITwoFactorStateStore.cs |
+| TwoFactorController.Reset | POST /api/v1/two-factor/reset — resets 2FA using a recovery code. | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.ResendRecoveryCodes | POST /api/v1/two-factor/recovery-codes — regenerates recovery codes for an authenticated user. | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TotpService.Base32Decode | Decodes a Base32-encoded TOTP secret into raw key bytes for HMAC computation. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
+| TotpService.Base32Encode | Encodes raw key bytes into a Base32 string for TOTP secret provisioning. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
 | AuthService.LoginAsync | Updated: MFA enforcement temporarily disabled on login; password-only authentication restored. | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
 | LoginController.Index (POST) | Updated: forwards MFA code to API login and surfaces MFA-required error messaging from the API response. | src/Tabsan.EduSphere.Web/Controllers/LoginController.cs |
 | IEduApiClient.GetSecurityProfileAsync | Fetches auth security profile from API to determine whether MFA/SSO prompts should render. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |

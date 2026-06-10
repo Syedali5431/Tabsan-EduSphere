@@ -2,7 +2,19 @@
 
 ## UAT Synchronization Update (2026-06-10)
 
-- Validate MFA-disabled login flow: sign in with username/password only and confirm access is granted without MFA prompt.
+- Validate MFA login with correct TOTP code returns 200 + JWT (superadmin with MFA enabled).
+- Validate MFA login without code returns 400 MFA_CODE_REQUIRED.
+- Validate MFA login with wrong code returns 401 INVALID_MFA_CODE.
+- Validate TwoFactor Settings page: setup, verify, disable, login-test flows.
+- Validate deactivated tenants do NOT appear in portal dropdowns.
+- Validate deactivated campuses do NOT appear in portal dropdowns.
+- Validate session logs out after 5 minutes of inactivity.
+- Validate Attendance/Result/Assignment/Quiz reports show Reg. No., Student, Program, and Department columns.
+- Validate all reports generate without selecting department/course filter.
+- Validate semesters appear in ascending order (Semester 1 before Semester 2).
+- Validate BBA department allows Degree Audit (InstitutionType = University).
+
+## UAT Synchronization Update (2026-06-04)
 - Validate TwoFactor Settings page loads for authenticated admin/superadmin users.
 - Validate TwoFactor Setup flow: begin setup, scan QR code, verify with TOTP code, confirm enabled status.
 - Validate TwoFactor Disable flow: enter current TOTP code, confirm MFA is disabled.

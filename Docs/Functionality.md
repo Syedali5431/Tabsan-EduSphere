@@ -1,6 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
-## 2026-06-10 Update — MFA Login Bypass, Base32 State Fallback, and Two-Factor UI Wiring
+## 2026-06-10 Update — MFA Login Fix, Report Columns, Active-Only Filters, Session Timeout
+### Implementation sync
+- MFA: single-step TOTP validation restored; MFA enforced only when user has individually enabled it. AuthService.LoginAsync returns 400 MFA_CODE_REQUIRED (missing code) or 401 INVALID_MFA_CODE (wrong code).
+- TwoFactor: Base32 raw-secret storage in TwoFactorStateStore survives Data Protection key rotation.
+- Tenants/Campuses: deactivated tenants hidden from dropdowns via .Where(t => t.IsActive); CampusController defaults to activeOnly=true.
+- Session timeout: idle timeout reduced from 30min to 5min (AuthSecurityOptions.IdleTimeoutMinutes).
+- Reports: ProgramName + DepartmentName columns added to Attendance, Result, Assignment, and Quiz summary DTOs via left-join on academic_programs.
+- Reports: all report endpoints now run without requiring department/course filter (Faculty/Admin scope enforcement relaxed).
+- Semester sorting: changed from descending to ascending by StartDate.
+- BBA department: InstitutionType corrected from College(2) to University(0).
+- Duplicate DTO files consolidated (ReportCatalogItemResponse.cs removed).
+
+### Validation sync
+- Build succeeded for API and Web projects.
+- Login flow verified: 400 MFA_CODE_REQUIRED, 401 INVALID_MFA_CODE, 200 with correct TOTP.
+- Report endpoints verified to return data without filter selection.
+- Semester list verified ascending (Semester 1 before Semester 2).
 ### Implementation sync
 - AuthService.LoginAsync: MFA enforcement temporarily disabled on password login to unblock access while the two-factor secret-compatibility issue is resolved.
 - TwoFactorStateStore.TryUnprotect: Added backward-compatible Base32 fallback so raw TOTP secrets stored without Data Protection encryption are accepted during login verification.

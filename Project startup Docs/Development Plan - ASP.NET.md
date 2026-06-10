@@ -1,6 +1,22 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-## 2026-06-10 Update - Development Plan Synchronization (MFA Login Bypass + TwoFactor State Compatibility)
+## 2026-06-10 Update — MFA Login, Report Columns, Active Filters, Session Timeout
+### Plan sync
+- Auth module: MFA enforced only when user has individually enabled it; single-step TOTP validation with proper error codes (400/401).
+- TwoFactor: secrets stored as raw Base32 to survive Data Protection key rotation.
+- Tenant/Campus: deactivated entities hidden from all portal dropdowns.
+- Session: idle timeout set to 5 minutes.
+- Reports: ProgramName + DepartmentName added to all 4 summary report types via academic_programs left-join.
+- Reports: all endpoints now allow execution without mandatory department/course filter.
+- Semester sort: ascending by StartDate.
+- BBA department: InstitutionType corrected to University(0).
+- DTO files: duplicate ReportCatalogItemResponse.cs removed; consolidated in ReportDtos.cs.
+
+### Validation sync
+- Full solution build passed. API and Web projects compile cleanly.
+- MFA login verified (400/401/200 responses correct).
+- Report endpoints return data without filter selection.
+- Post-deployment checks added for semester sort, BBA type, certificate menu count.
 ### Plan sync
 - Auth module: MFA enforcement temporarily disabled on password login to unblock access.
 - TwoFactor state store: Added backward-compatible Base32 fallback so raw TOTP secrets stored outside Data Protection are accepted.

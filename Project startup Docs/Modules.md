@@ -1,6 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-## Execution Update - 2026-06-10 (MFA Login Bypass + TwoFactor State Compatibility)
+## Execution Update — 2026-06-10 (MFA Login, Reports, Active Filters, Session Timeout)
+### Module impact: Auth, TwoFactor, Reports, Portal Navigation
+- Auth: MFA enforced only for users who have enabled it; 400/401 error codes.
+- TwoFactor: secrets stored raw Base32; survives Data Protection key rotation.
+- Portal: deactivated tenants/campuses hidden from all dropdowns.
+- Session: idle timeout 5 minutes.
+- Reports: ProgramName + DepartmentName in all summaries; no mandatory filters.
+- Academic: semester sort ascending; BBA InstitutionType corrected to University.
+### Validation: build passed; MFA and reports verified; post-deployment checks updated.
 ### Module impact summary
 - Auth module: MFA enforcement temporarily bypassed on password login. Password-only authentication restored.
 - TwoFactor module: State store now includes Base32 fallback for raw TOTP secrets; HardDeleteAsync for permanent removal; ResetAsync for recovery-code-based reset.

@@ -2,7 +2,18 @@
 
 ## SAT Synchronization Update (2026-06-10)
 
-- Confirm MFA login bypass is active in deployed environment: username/password login succeeds without MFA challenge.
+- Confirm MFA single-step login works with correct TOTP code in deployed environment.
+- Confirm MFA returns 400 (missing code) and 401 (wrong code) correctly.
+- Confirm TwoFactor Settings page accessible and functional.
+- Confirm deactivated tenants and campuses hidden from dropdowns.
+- Confirm session idle timeout is 5 minutes.
+- Confirm reports include Reg. No., Student, Program, Department columns.
+- Confirm reports generate without mandatory filter selection.
+- Confirm semesters sorted ascending.
+- Confirm BBA department Degree Audit works.
+- Confirm no duplicate Generate Certificates sidebar entries.
+
+## SAT Synchronization Update (2026-06-04)
 - Confirm TwoFactor Settings page loads and is accessible to authorized roles in the deployed portal.
 - Confirm TwoFactor Setup, Verify, Disable, and Login Test flows function correctly in the deployed environment.
 - Confirm TwoFactor Reset via recovery code works and provisions a new valid secret.
