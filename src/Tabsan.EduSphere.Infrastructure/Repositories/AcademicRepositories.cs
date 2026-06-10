@@ -67,9 +67,9 @@ public class SemesterRepository : ISemesterRepository
     private readonly ApplicationDbContext _db;
     public SemesterRepository(ApplicationDbContext db) => _db = db;
 
-    /// <summary>Returns all semesters ordered by start date descending (most recent first).</summary>
+    /// <summary>Returns all semesters ordered by start date ascending (oldest first).</summary>
     public async Task<IReadOnlyList<Semester>> GetAllAsync(CancellationToken ct = default)
-        => await _db.Semesters.OrderByDescending(s => s.StartDate).ToListAsync(ct);
+        => await _db.Semesters.OrderBy(s => s.StartDate).ToListAsync(ct);
 
     /// <summary>Returns the semester with the given ID, or null.</summary>
     public Task<Semester?> GetByIdAsync(Guid id, CancellationToken ct = default)

@@ -1169,8 +1169,10 @@ public sealed class ReportController : ControllerBase
             return Forbid();
 
         var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(adminUserId, ct);
+        // If admin has no department assignments, allow the report to run
+        // without department-level scoping (tenant/campus scope still applies).
         if (allowedDepartmentIds.Count == 0)
-            return Forbid();
+            return null;
 
         if (departmentId.HasValue && !allowedDepartmentIds.Contains(departmentId.Value))
             return Forbid();
@@ -1195,10 +1197,6 @@ public sealed class ReportController : ControllerBase
             if (instituteScope is not null)
                 return instituteScope;
         }
-
-        // Multi-department admin scope requires at least one explicit filter to avoid cross-dept aggregate leakage.
-        if (!departmentId.HasValue && !courseOfferingId.HasValue)
-            return BadRequest("Admin must select a department or course offering for report generation.");
 
         return null;
     }
