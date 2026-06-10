@@ -1169,10 +1169,8 @@ public sealed class ReportController : ControllerBase
             return Forbid();
 
         var allowedDepartmentIds = await _adminAssignments.GetDepartmentIdsForAdminAsync(adminUserId, ct);
-        // If admin has no department assignments, allow the report to run
-        // without department-level scoping (tenant/campus scope still applies).
         if (allowedDepartmentIds.Count == 0)
-            return null;
+            return null; // Allow admins without department assignments to run reports
 
         if (departmentId.HasValue && !allowedDepartmentIds.Contains(departmentId.Value))
             return Forbid();
