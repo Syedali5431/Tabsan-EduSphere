@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Tabsan.EduSphere.Web.Models.Portal;
@@ -88,12 +89,20 @@ public class LoginController : Controller
             {
                 ViewData["Error"] = response.StatusCode switch
                 {
+                    System.Net.HttpStatusCode.BadRequest
+                        => "MFA code is required. Enter your MFA code and sign in again.",
+
                     System.Net.HttpStatusCode.Unauthorized
-                        => "Invalid username or password.",
+                        => await IsInvalidMfaCodeResponseAsync(response)
+                            ? "Invalid MFA code. Please try again."
+                            : "Invalid username or password.",
+
                     System.Net.HttpStatusCode.PreconditionRequired
                         => "MFA is required. Enter your MFA code and sign in again.",
+
                     System.Net.HttpStatusCode.Locked
                         => "Login blocked by session risk controls. Retry from a trusted network or contact support.",
+
                     _
                         => $"Login failed (HTTP {(int)response.StatusCode})."
                 };
@@ -244,5 +253,18 @@ public class LoginController : Controller
 
         normalized = uri.ToString().TrimEnd('/');
         return true;
+    }
+
+    private static async Task<bool> IsInvalidMfaCodeResponseAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            return body.Contains("INVALID_MFA_CODE", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -41,6 +41,12 @@ public class AuthController : ControllerBase
                 LoginFailureReason.ConcurrencyLimitReached
                     => StatusCode(403, new { message = "Login limit reached. The maximum number of concurrent users allowed by the current license has been reached. Please contact your administrator." }),
 
+                LoginFailureReason.MfaCodeRequired
+                    => BadRequest(new { error = "MFA_CODE_REQUIRED" }),
+
+                LoginFailureReason.InvalidMfaCode
+                    => Unauthorized(new { error = "INVALID_MFA_CODE" }),
+
                 LoginFailureReason.MfaRequired
                     => StatusCode(StatusCodes.Status428PreconditionRequired, new { message = "Multi-factor authentication is required for this deployment. Provide a valid MFA code and retry." }),
 

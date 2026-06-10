@@ -134,30 +134,26 @@ public class AuthService : IAuthService
 
         var roleName = user.Role?.Name ?? string.Empty;
 
-        // MFA is required when the user has individually enabled it, OR when
-        // deployment policy mandates it for this user's role (even if not set up yet).
+        // MFA is enforced only when the user has individually enabled it
+        // (MfaIsEnabled = true + valid TOTP secret stored).
+        // Deployment policy (RequireForPasswordLogin/RequireForPrivilegedRolesOnly)
+        // informs the UI but does not block login — only individual MFA setup gates access.
         var userHasMfa = user.MfaIsEnabled && !string.IsNullOrWhiteSpace(user.MfaTotpSecret);
-        var policyRequiresMfa = _security.Mfa.Enabled
-                                && _security.Mfa.RequireForPasswordLogin
-                                && (!_security.Mfa.RequireForPrivilegedRolesOnly || IsPrivilegedRole(roleName));
 
-        // MFA enforcement is temporarily disabled on login due to a known issue.
-        var mfaRequiredForThisLogin = false;
-
-        if (mfaRequiredForThisLogin)
+        if (userHasMfa)
         {
             var provided = request.MfaCode?.Trim();
-            if (string.IsNullOrWhiteSpace(provided) || !userHasMfa)
+            if (string.IsNullOrWhiteSpace(provided))
             {
                 await _audit.LogAsync(new AuditLog(
-                    "MfaChallengeFailed",
+                    "MfaCodeMissing",
                     "User",
                     entityId: user.Id.ToString(),
                     actorUserId: user.Id,
                     ipAddress: ipAddress), ct);
                 await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
-                    false, nameof(LoginFailureReason.MfaRequired), null, false, ct);
-                return LoginResult.Fail(LoginFailureReason.MfaRequired);
+                    false, nameof(LoginFailureReason.MfaCodeRequired), null, false, ct);
+                return LoginResult.Fail(LoginFailureReason.MfaCodeRequired);
             }
 
             // Get decrypted secret via the TwoFactor state store (secrets are Data Protection encrypted).
@@ -167,11 +163,11 @@ public class AuthService : IAuthService
             var validTotp = !string.IsNullOrWhiteSpace(decryptedSecret)
                 && _totp.ValidateCode(
                     decryptedSecret,
-                provided,
-                DateTime.UtcNow,
-                _security.Mfa.TotpDigits,
-                _security.Mfa.TotpStepSeconds,
-                _security.Mfa.TotpAllowedDriftWindows);
+                    provided,
+                    DateTime.UtcNow,
+                    _security.Mfa.TotpDigits,
+                    _security.Mfa.TotpStepSeconds,
+                    _security.Mfa.TotpAllowedDriftWindows);
 
             if (!validTotp)
             {
@@ -192,14 +188,14 @@ public class AuthService : IAuthService
                 else
                 {
                     await _audit.LogAsync(new AuditLog(
-                        "MfaChallengeFailed",
+                        "MfaCodeInvalid",
                         "User",
                         entityId: user.Id.ToString(),
                         actorUserId: user.Id,
                         ipAddress: ipAddress), ct);
                     await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
-                        false, nameof(LoginFailureReason.MfaRequired), null, false, ct);
-                    return LoginResult.Fail(LoginFailureReason.MfaRequired);
+                        false, nameof(LoginFailureReason.InvalidMfaCode), null, false, ct);
+                    return LoginResult.Fail(LoginFailureReason.InvalidMfaCode);
                 }
             }
         }
@@ -279,7 +275,7 @@ public class AuthService : IAuthService
 
         await _audit.LogAsync(new AuditLog("Login", "User", user.Id.ToString(),
             actorUserId: user.Id,
-            newValuesJson: "{\"riskLevel\":\"" + riskLevel + "\",\"mfaEnabled\":" + mfaRequiredForThisLogin.ToString().ToLowerInvariant() + "}",
+            newValuesJson: "{\"riskLevel\":\"" + riskLevel + "\",\"mfaEnabled\":" + userHasMfa.ToString().ToLowerInvariant() + "}",
             ipAddress: ipAddress), ct);
 
         await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
@@ -293,7 +289,7 @@ public class AuthService : IAuthService
             UserId: user.Id,
             Username: user.Username,
             MustChangePassword: user.MustChangePassword || passwordExpired,
-            MfaEnabled: mfaRequiredForThisLogin,
+            MfaEnabled: userHasMfa,
             SsoEnabled: _security.Sso.Enabled,
             SsoProvider: string.IsNullOrWhiteSpace(_security.Sso.Provider) ? null : _security.Sso.Provider,
             SessionRiskLevel: riskLevel,

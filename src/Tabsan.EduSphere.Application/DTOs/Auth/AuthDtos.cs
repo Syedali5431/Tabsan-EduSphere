@@ -100,7 +100,13 @@ public enum LoginFailureReason
     MfaRequired,
 
     /// <summary>Session risk control blocked this sign-in attempt.</summary>
-    SessionRiskBlocked
+    SessionRiskBlocked,
+
+    /// <summary>User has MFA enabled but no MFA code was provided in the login request.</summary>
+    MfaCodeRequired,
+
+    /// <summary>User has MFA enabled and provided a code, but the TOTP validation failed.</summary>
+    InvalidMfaCode
 }
 
 /// <summary>

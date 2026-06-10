@@ -192,6 +192,7 @@ public interface IEduApiClient
     Task RemoveAdminFromDepartmentAsync(Guid adminUserId, Guid departmentId, CancellationToken ct);
 
     // Tenant and Campus Management (Phase 5)
+    /// <summary>Returns active tenants only for use in portal dropdowns.</summary>
     Task<List<TenantItem>> GetTenantsAsync(CancellationToken ct);
     Task CreateTenantAsync(string code, string name, CancellationToken ct);
     Task UpdateTenantAsync(Guid id, string newName, CancellationToken ct);
@@ -1354,7 +1355,6 @@ public class EduApiClient : IEduApiClient
     {
         var connection = GetConnection();
         if (connection is null) return null;
-        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, $"api/v1/graduation/{applicationId}/certificate");
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadAsByteArrayAsync(ct);
@@ -1463,7 +1463,6 @@ public class EduApiClient : IEduApiClient
     public async Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct)
     {
         var path = $"api/v1/certificate-generation/documents/{documentId}/download?format={Uri.EscapeDataString(string.IsNullOrWhiteSpace(format) ? "docx" : format)}";
-        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
@@ -1510,7 +1509,6 @@ public class EduApiClient : IEduApiClient
     public async Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct)
     {
         var path = $"api/v1/certificate-generation/documents/custom/{documentId}/download";
-        using var request = CreateRequest(System.Net.Http.HttpMethod.Get, path);
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
@@ -2485,7 +2483,7 @@ public class EduApiClient : IEduApiClient
     public async Task<List<TenantItem>> GetTenantsAsync(CancellationToken ct)
     {
         var raw = await GetAsync<List<TenantApiDto>>("api/v1/tenant", ct) ?? new();
-        return raw.Select(t => new TenantItem
+        return raw.Where(t => t.IsActive).Select(t => new TenantItem
         {
             Id = t.Id,
             Code = t.Code ?? string.Empty,

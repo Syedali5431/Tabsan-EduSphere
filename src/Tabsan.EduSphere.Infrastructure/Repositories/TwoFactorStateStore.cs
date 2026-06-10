@@ -47,7 +47,7 @@ public sealed class TwoFactorStateStore : ITwoFactorStateStore
         if (user is null)
             return false;
 
-        _db.Entry(user).Property(nameof(User.MfaTotpSecret)).CurrentValue = _protector.Protect(secretKey);
+        _db.Entry(user).Property(nameof(User.MfaTotpSecret)).CurrentValue = secretKey; // stored raw (Base32) to survive Data Protection key rotation
         _db.Entry(user).Property(nameof(User.MfaRecoveryCodesHashJson)).CurrentValue = null;
         _db.Entry(user).Property(nameof(User.MfaIsEnabled)).CurrentValue = false;
         user.Touch();
