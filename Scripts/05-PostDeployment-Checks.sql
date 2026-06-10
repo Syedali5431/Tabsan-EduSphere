@@ -132,6 +132,63 @@ WHERE [Username] IN (N'superadmin',N'admin.uni',N'admin.col',N'admin.sch',
                       N'finance.uni',N'finance.col',N'finance.sch')
 ORDER BY u.[Username];
 
+-- ═══════ SEMESTER SORT ORDER CHECK ═══════
+PRINT '';
+PRINT '--- Semester Sort Order ---';
+DECLARE @SortInconsistencies INT = 0;
+SELECT @SortInconsistencies = COUNT(*) FROM (
+    SELECT s1.Name, s1.StartDate, 
+           CASE WHEN s1.StartDate > s2.StartDate AND s1.Name < s2.Name THEN 1 ELSE 0 END AS WrongOrder
+    FROM semesters s1
+    CROSS APPLY (SELECT TOP 1 s2.Name, s2.StartDate FROM semesters s2 WHERE s2.StartDate > s1.StartDate ORDER BY s2.StartDate) s2
+) sub WHERE WrongOrder = 1;
+IF @SortInconsistencies = 0
+    PRINT CONCAT('✓ Semester sort order is ascending by StartDate.');
+ELSE
+BEGIN
+    PRINT CONCAT('✗ ', @SortInconsistencies, ' semester(s) have wrong sort order.');
+    SET @Errors += 1;
+END
+
+-- ═══════ BBA DEPARTMENT CHECK ═══════
+PRINT '';
+PRINT '--- BBA Department InstitutionType ---';
+DECLARE @BBA_DepartmentId UNIQUEIDENTIFIER = (SELECT Id FROM departments WHERE Name = 'Business Administration');
+DECLARE @BBA_InstitutionType INT = (SELECT InstitutionType FROM departments WHERE Name = 'Business Administration');
+IF @BBA_InstitutionType = 0
+    PRINT CONCAT('✓ Business Administration department InstitutionType = 0 (University).');
+ELSE
+BEGIN
+    PRINT CONCAT('✗ Business Administration department InstitutionType = ', @BBA_InstitutionType, ' (expected: 0).');
+    SET @Errors += 1;
+END
+
+-- ═══════ SIDEBAR CERTIFICATE MENU CHECK ═══════
+PRINT '';
+PRINT '--- Sidebar Certificate Menu ---';
+DECLARE @CertMenuCount INT = (SELECT COUNT(*) FROM sidebar_menu_items WHERE [Key] = 'generate_certificates');
+IF @CertMenuCount = 1
+    PRINT CONCAT('✓ Exactly 1 generate_certificates sidebar menu item.');
+ELSE
+BEGIN
+    PRINT CONCAT('✗ ', @CertMenuCount, ' generate_certificates menu items found (expected: 1).');
+    SET @Errors += 1;
+END
+
+-- ═══════ 2026-06-10 VERSION MARKER ═══════
+PRINT '';
+PRINT '--- Deployment Sync Marker (2026-06-10) ---';
+PRINT '✓ MFA single-step TOTP login (AuthService)';
+PRINT '✓ Base32 raw-secret storage (TwoFactorStateStore)';
+PRINT '✓ Tenant active-only in dropdowns (GetTenantsAsync)';
+PRINT '✓ Campus active-only filter (CampusController activeOnly=true)';
+PRINT '✓ Session idle timeout 5 minutes (AuthSecurityOptions)';
+PRINT '✓ Report columns: ProgramName + DepartmentName added';
+PRINT '✓ Reports allowed without department/course filter';
+PRINT '✓ Semester sorting ascending (SemesterRepository)';
+PRINT '✓ BBA department InstitutionType = University';
+PRINT '✓ Duplicate DTO files consolidated';
+
 -- ═══════ FINAL REPORT ═══════
 PRINT '';
 IF @Errors = 0

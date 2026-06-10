@@ -2,6 +2,13 @@
   Full Dummy Data — Tabsan EduSphere v1.0
   Generates 210+ students and full academic data across 3 institutes.
   Uses correct EF Core schema column names.
+
+  --- 2026-06-10 Deployment Sync ---
+  BBA department InstitutionType = 0 (University) — corrected from College(2).
+  Semester sort order: ascending by StartDate.
+  Campus active-only filter: activeOnly=true default in CampusController.
+  Tenant active-only filter: .Where(t => t.IsActive) in GetTenantsAsync.
+  Reports: ProgramName + DepartmentName columns added to all summaries.
 */
 SET NOCOUNT ON;
 GO
