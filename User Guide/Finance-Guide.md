@@ -1,8 +1,8 @@
 # Finance User Guide
 
-Version: 1.1  
-Date: 04 June 2026  
-Completion Status: Detailed finance operations baseline + ISO 27001 & ISO 9001 Compliance  
+Version: 1.2  
+Date: 10 June 2026  
+Completion Status: Detailed finance operations baseline + ISO 27001 & ISO 9001 Compliance + 2026-06-10 Enhancements  
 
 ## 1. Purpose
 

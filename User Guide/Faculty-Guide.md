@@ -1,12 +1,19 @@
 # Faculty User Guide
 
-Version: 1.7  
-Date: 04 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
+Version: 1.8  
+Date: 10 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+
+## 1.1 What's New (June 2026)
+
+- **Reports** — Attendance, Result, Assignment, and Quiz reports now include Program and Department columns; reports can run without mandatory filter selection.
+- **Semester Order** — Semester lists now sorted ascending (Semester 1 first).
+- **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.
+- **Session Timeout** — Idle session logout at 5 minutes.
 
 ## 1. Purpose
 
-This guide explains faculty workflows in Tabsan EduSphere: teaching setup, assignments, quizzes, attendance, results, FYP supervision, and notifications.
+This guide explains faculty workflows in Tabsan EduSphere: teaching setup, assignments, quizzes, attendance, results, FYP supervision, notifications, and reporting.
 
 ## 1.1 What's New (May 2026)
 

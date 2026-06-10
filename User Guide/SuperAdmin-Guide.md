@@ -1,14 +1,22 @@
 # SuperAdmin User Guide
 
-Version: 1.7  
-Date: 04 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
+Version: 1.8  
+Date: 10 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
 
 ## 1. Purpose
 
 This guide is for platform-level administrators responsible for licensing, module governance, role access controls, and cross-department platform operations in Tabsan EduSphere.
 
-## 1.1 What's New (May 2026)
+## 1.1 What's New (June 2026)
+
+- **MFA Login** — TOTP code validated on same login page; returns 400/401.
+- **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.
+- **Reports** — Program + Department columns; run without filter selection.
+- **Session Timeout** — 5-minute idle logout.
+- **Semester Order** — Ascending (oldest first).
+
+## 1.2 What's New (May 2026)
 
 ### Governance and Enforcement (Phase 24)
 - Backend module enforcement and module-aware sidebar visibility now operate together for safer governance (Phase 24.2-24.3).

@@ -2,15 +2,23 @@
 
 # Admin User Guide
 
-Version: 1.7  
-Date: 04 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
+Version: 1.8  
+Date: 10 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
 
 ## 1. Purpose
 
 This guide covers departmental administration in Tabsan EduSphere: user operations, academic structure, course offerings, timetables, reporting, and operational oversight.
 
-## 1.1 What's New (May 2026)
+## 1.1 What's New (June 2026)
+
+- **Reports** — Program + Department columns in summaries; reports run without mandatory filters.
+- **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.
+- **MFA Login** — TOTP code validated on same login page.
+- **Session Timeout** — 5-minute idle logout.
+- **Semester Order** — Ascending chronological.
+
+## 1.2 What's New (May 2026)
 
 - Module-aware sidebar filtering is now enforced with backend module licensing checks for protected routes.
 - Advanced analytics now include top performers ranking, performance trend analysis, and comparative department metrics (Phase 31.2).

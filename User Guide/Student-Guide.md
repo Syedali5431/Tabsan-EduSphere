@@ -1,8 +1,8 @@
 # Student User Guide
 
-Version: 1.7  
-Date: 04 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
+Version: 1.8  
+Date: 10 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
 
 ## 1. Purpose
 

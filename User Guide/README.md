@@ -2,8 +2,17 @@
 
 This folder contains role-based manuals for day-to-day use of the platform.
 
-Version: 1.7 — updated 04 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)
+Version: 1.8 — updated 10 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+
+## 2026-06-10 Enhancements
+
+- **MFA Single-Step Login** — 2FA code validated on the same login page; proper error codes (400/401).
+- **Active-Only Filters** — Deactivated tenants and campuses hidden from all portal dropdowns.
+- **Enhanced Reports** — Program and Department columns added to all summary reports.
+- **Reports Without Filters** — All report endpoints run without mandatory department/course selection.
+- **Session Timeout** — Idle timeout reduced to 5 minutes.
+- **Semester Sorting** — Semesters now ascending (Semester 1 before Semester 2).
 
 Repository Sync Note (15 May 2026):
 
