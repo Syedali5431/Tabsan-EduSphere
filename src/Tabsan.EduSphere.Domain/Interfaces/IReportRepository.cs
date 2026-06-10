@@ -152,6 +152,7 @@ public sealed record AttendanceReportRow(
     string CourseTitle,
     string SemesterName,
     string DepartmentName,
+    string? ProgramName,
     int TotalSessions,
     int AttendedSessions,
     decimal AttendancePercentage);
@@ -168,7 +169,8 @@ public sealed record ResultReportRow(
     decimal Percentage,
     DateTime? PublishedAt,
     Guid SemesterId,
-    string DepartmentName);
+    string DepartmentName,
+    string? ProgramName);
 
 public sealed record AssignmentReportRow(
     Guid StudentProfileId,
@@ -183,7 +185,8 @@ public sealed record AssignmentReportRow(
     string Status,
     decimal? MarksAwarded,
     Guid SemesterId,
-    string DepartmentName);
+    string DepartmentName,
+    string? ProgramName);
 
 public sealed record QuizReportRow(
     Guid StudentProfileId,
@@ -198,7 +201,8 @@ public sealed record QuizReportRow(
     string AttemptStatus,
     decimal? TotalScore,
     Guid SemesterId,
-    string DepartmentName);
+    string DepartmentName,
+    string? ProgramName);
 
 public sealed record GpaReportRow(
     Guid StudentProfileId,

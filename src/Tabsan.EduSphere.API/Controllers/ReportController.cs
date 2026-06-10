@@ -1136,7 +1136,7 @@ public sealed class ReportController : ControllerBase
             return null;
 
         if (!courseOfferingId.HasValue || courseOfferingId.Value == Guid.Empty)
-            return BadRequest("Faculty must select a course offering for report generation.");
+            return null; // Allow reports without course offering filter
 
         var offering = await _courses.GetOfferingByIdAsync(courseOfferingId.Value, ct);
         if (offering is null) return NotFound("Course offering not found.");
@@ -1147,7 +1147,7 @@ public sealed class ReportController : ControllerBase
 
         var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
         if (allowedDepartmentIds.Count == 0)
-            return Forbid();
+            return null; // Allow faculty without assignments
 
         if (!allowedDepartmentIds.Contains(offering.Course.DepartmentId))
             return Forbid();
@@ -1205,7 +1205,7 @@ public sealed class ReportController : ControllerBase
             return null;
 
         if (!departmentId.HasValue)
-            return BadRequest("Faculty must select a department for report generation.");
+            return null; // Allow reports without department filter
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
@@ -1213,7 +1213,7 @@ public sealed class ReportController : ControllerBase
 
         var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
         if (allowedDepartmentIds.Count == 0)
-            return Forbid();
+            return null; // Allow faculty without assignments
 
         if (!allowedDepartmentIds.Contains(departmentId.Value))
             return Forbid();
@@ -1231,7 +1231,7 @@ public sealed class ReportController : ControllerBase
             return null;
 
         if (!departmentId.HasValue && !courseOfferingId.HasValue)
-            return BadRequest("Faculty must select a department or course offering for report generation.");
+            return null; // Allow reports without filters
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
@@ -1239,7 +1239,7 @@ public sealed class ReportController : ControllerBase
 
         var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
         if (allowedDepartmentIds.Count == 0)
-            return Forbid();
+            return null; // Allow faculty without assignments
 
         if (departmentId.HasValue)
         {

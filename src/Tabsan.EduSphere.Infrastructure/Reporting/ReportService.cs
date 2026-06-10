@@ -82,6 +82,7 @@ public sealed class ReportService : IReportService
 
             var rows = raw.Select(r => new AttendanceSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
+                r.ProgramName, r.DepartmentName,
                 r.CourseOfferingId, r.CourseCode, r.CourseTitle,
                 r.TotalSessions, r.AttendedSessions, r.AttendancePercentage)).ToList();
 
@@ -114,6 +115,7 @@ public sealed class ReportService : IReportService
 
             var rows = raw.Select(r => new ResultSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
+                r.ProgramName, r.DepartmentName,
                 r.CourseCode, r.CourseTitle, r.ResultType,
                 r.MarksObtained, r.MaxMarks, r.Percentage, r.PublishedAt)).ToList();
 
@@ -149,6 +151,7 @@ public sealed class ReportService : IReportService
 
             var rows = raw.Select(r => new AssignmentSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
+                r.ProgramName, r.DepartmentName,
                 r.CourseCode, r.CourseTitle, r.AssignmentTitle,
                 r.DueDate, r.SubmittedAt, r.Status, r.MarksAwarded)).ToList();
 
@@ -184,6 +187,7 @@ public sealed class ReportService : IReportService
 
             var rows = raw.Select(r => new QuizSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
+                r.ProgramName, r.DepartmentName,
                 r.CourseCode, r.CourseTitle, r.QuizTitle,
                 r.StartedAt, r.FinishedAt, r.AttemptStatus, r.TotalScore)).ToList();
 

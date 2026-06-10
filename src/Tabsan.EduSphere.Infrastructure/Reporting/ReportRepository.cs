@@ -59,6 +59,8 @@ public sealed class ReportRepository : IReportRepository
             join c   in _db.Courses          on co.CourseId          equals c.Id
             join sem in _db.Semesters        on co.SemesterId        equals sem.Id
             join dep in _db.Departments      on c.DepartmentId       equals dep.Id
+            join prog in _db.AcademicPrograms on sp.ProgramId        equals prog.Id into progJoin
+            from prog in progJoin.DefaultIfEmpty()
             where (semesterId        == null || co.SemesterId       == semesterId)
                && (courseOfferingId  == null || ar.CourseOfferingId == courseOfferingId)
                && (studentProfileId  == null || ar.StudentProfileId == studentProfileId)
@@ -75,13 +77,14 @@ public sealed class ReportRepository : IReportRepository
                 CourseTitle = c.Title,
                 SemesterName    = sem.Name,
                 DepartmentName  = dep.Name,
+                ProgramName     = prog != null ? prog.Name : null,
                 IsPresent       = ar.Status == AttendanceStatus.Present
             };
 
         var raw = await query.ToListAsync(ct);
 
         return raw
-            .GroupBy(r => new { r.StudentProfileId, r.RegistrationNumber, r.StudentName, r.CourseOfferingId, r.CourseCode, r.CourseTitle, r.SemesterName, r.DepartmentName })
+            .GroupBy(r => new { r.StudentProfileId, r.RegistrationNumber, r.StudentName, r.CourseOfferingId, r.CourseCode, r.CourseTitle, r.SemesterName, r.DepartmentName, r.ProgramName })
             .Select(g => new AttendanceReportRow(
                 g.Key.StudentProfileId,
                 g.Key.RegistrationNumber,
@@ -91,6 +94,7 @@ public sealed class ReportRepository : IReportRepository
                 g.Key.CourseTitle,
                 g.Key.SemesterName,
                 g.Key.DepartmentName,
+                g.Key.ProgramName,
                 TotalSessions:     g.Count(),
                 AttendedSessions:  g.Count(r => r.IsPresent),
                 AttendancePercentage: g.Count() == 0 ? 0m
@@ -132,6 +136,8 @@ public sealed class ReportRepository : IReportRepository
             join co  in _db.CourseOfferings  on a.CourseOfferingId  equals co.Id
             join c   in _db.Courses          on co.CourseId         equals c.Id
             join dep in _db.Departments      on c.DepartmentId      equals dep.Id
+            join prog in _db.AcademicPrograms on sp.ProgramId       equals prog.Id into progJoin
+            from prog in progJoin.DefaultIfEmpty()
             where (semesterId       == null || co.SemesterId      == semesterId)
                && (courseOfferingId == null || a.CourseOfferingId == courseOfferingId)
                && (studentProfileId == null || s.StudentProfileId == studentProfileId)
@@ -152,7 +158,8 @@ public sealed class ReportRepository : IReportRepository
                 s.Status.ToString(),
                 s.MarksAwarded,
                 co.SemesterId,
-                dep.Name)
+                dep.Name,
+                prog != null ? prog.Name : null)
         ).ToListAsync(ct);
     }
 
@@ -173,6 +180,8 @@ public sealed class ReportRepository : IReportRepository
             join co  in _db.CourseOfferings  on q.CourseOfferingId  equals co.Id
             join c   in _db.Courses          on co.CourseId         equals c.Id
             join dep in _db.Departments      on c.DepartmentId      equals dep.Id
+            join prog in _db.AcademicPrograms on sp.ProgramId       equals prog.Id into progJoin
+            from prog in progJoin.DefaultIfEmpty()
             where (semesterId       == null || co.SemesterId      == semesterId)
                && (courseOfferingId == null || q.CourseOfferingId == courseOfferingId)
                && (studentProfileId == null || a.StudentProfileId == studentProfileId)
@@ -193,7 +202,8 @@ public sealed class ReportRepository : IReportRepository
                 a.Status.ToString(),
                 a.TotalScore,
                 co.SemesterId,
-                dep.Name)
+                dep.Name,
+                prog != null ? prog.Name : null)
         ).ToListAsync(ct);
     }
 
@@ -225,6 +235,8 @@ public sealed class ReportRepository : IReportRepository
             join co  in _db.CourseOfferings  on r.CourseOfferingId  equals co.Id
             join c   in _db.Courses          on co.CourseId         equals c.Id
             join dep in _db.Departments      on c.DepartmentId      equals dep.Id
+            join prog in _db.AcademicPrograms on sp.ProgramId       equals prog.Id into progJoin
+            from prog in progJoin.DefaultIfEmpty()
             where r.IsPublished
                && (semesterId       == null || co.SemesterId       == semesterId)
                && (courseOfferingId == null || r.CourseOfferingId  == courseOfferingId)
@@ -246,7 +258,8 @@ public sealed class ReportRepository : IReportRepository
                 r.MaxMarks == 0 ? 0m : Math.Round((decimal)r.MarksObtained / r.MaxMarks * 100, 2),
                 r.PublishedAt,
                 co.SemesterId,
-                dep.Name);
+                dep.Name,
+                prog != null ? prog.Name : null);
     }
 
     // ── GPA Data ───────────────────────────────────────────────────────────────
