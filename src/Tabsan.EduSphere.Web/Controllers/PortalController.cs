@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Globalization;
@@ -617,7 +615,7 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public IActionResult TwoFactorSettings()
+    public async Task<IActionResult> TwoFactorSettings()
     {
         ViewData["Title"] = "Two-Factor Authentication";
         var model = new TwoFactorSettingsPageModel
@@ -625,6 +623,23 @@ public class PortalController : Controller
             IsConnected = _api.IsConnected(),
             CurrentUserId = GetCurrentUserId()
         };
+
+        if (_api.IsConnected())
+        {
+            try
+            {
+                var status = await _api.GetTwoFactorStatusAsync(HttpContext.RequestAborted);
+                if (status is not null)
+                {
+                    model.TwoFactorEnabled = status.TwoFactorEnabled;
+                    model.HasStoredSecret = status.HasStoredSecret;
+                }
+            }
+            catch
+            {
+                // Status fetch is best-effort; page still renders.
+            }
+        }
 
         return View(model);
     }
@@ -653,6 +668,7 @@ public class PortalController : Controller
             }
 
             model.TwoFactorEnabled = setup.TwoFactorEnabled;
+            model.HasStoredSecret = true; // Setup returns a secret (new or existing).
             model.Issuer = setup.Issuer;
             model.AccountName = setup.AccountName;
             model.ManualKey = setup.ManualKey;
@@ -698,6 +714,7 @@ public class PortalController : Controller
             }
 
             model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.HasStoredSecret = result.TwoFactorEnabled;
             model.Message = result.Message;
         }
         catch (Exception ex)
@@ -738,6 +755,84 @@ public class PortalController : Controller
             }
 
             model.TwoFactorEnabled = result.TwoFactorEnabled;
+            // Secret is preserved on disable so user can re-enable later.
+            model.HasStoredSecret = true;
+            model.Message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnableTwoFactor(string code, CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            model.Message = "Enter an authenticator code to enable 2FA.";
+            return View(nameof(TwoFactorSettings), model);
+        }
+
+        try
+        {
+            var result = await _api.EnableTwoFactorAsync(code, ct);
+            if (result is null)
+            {
+                model.Message = "Unable to enable 2FA right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.HasStoredSecret = result.TwoFactorEnabled;
+            model.Message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            model.Message = ex.Message;
+        }
+
+        return View(nameof(TwoFactorSettings), model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetTwoFactorSetup(CancellationToken ct)
+    {
+        ViewData["Title"] = "Two-Factor Authentication";
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        var model = new TwoFactorSettingsPageModel
+        {
+            IsConnected = true,
+            CurrentUserId = GetCurrentUserId()
+        };
+
+        try
+        {
+            var result = await _api.ResetTwoFactorSetupAsync(ct);
+            if (result is null)
+            {
+                model.Message = "Unable to reset the setup right now. Please try again.";
+                return View(nameof(TwoFactorSettings), model);
+            }
+
+            model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.HasStoredSecret = false; // Reset wipes the secret.
             model.Message = result.Message;
         }
         catch (Exception ex)
@@ -784,6 +879,7 @@ public class PortalController : Controller
             }
 
             model.TwoFactorEnabled = result.TwoFactorEnabled;
+            model.HasStoredSecret = result.TwoFactorEnabled; // Login-verify only works when secret exists.
             model.Message = result.Message;
         }
         catch (Exception ex)

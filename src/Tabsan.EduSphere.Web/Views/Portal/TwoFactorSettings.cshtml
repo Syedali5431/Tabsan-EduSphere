@@ -3,6 +3,8 @@
     ViewData["Title"] = "Two-Factor Authentication";
     var message = TempData["Message"] as string ?? Model.Message;
     var hasSetup = !string.IsNullOrWhiteSpace(Model.QrCodeDataUrl);
+    var isEnabled = Model.TwoFactorEnabled;
+    var hasStoredSecret = Model.HasStoredSecret;
 }
 
 <style>
@@ -141,9 +143,27 @@
                         <i class="bi bi-qr-code-scan me-1"></i> Start 2FA Setup
                     </button>
                 </form>
+                @if (hasSetup || hasStoredSecret)
+                {
+                    <form asp-action="ResetTwoFactorSetup" method="post" class="d-inline ms-2">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                        </button>
+                    </form>
+                }
             </div>
         </div>
     </div>
+
+    @if (hasSetup)
+    {
+        <div class="alert alert-warning border-0 shadow-sm mb-3 py-2 small">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Setup in progress.</strong> Scan the QR code or enter the manual key in your authenticator app, then verify below.
+            Clicking <strong>Reset</strong> clears this setup so you can start fresh.
+        </div>
+    }
 
     @if (!string.IsNullOrWhiteSpace(message))
     {
@@ -203,8 +223,16 @@
                         <div class="d-flex align-items-start gap-3 p-3 rounded-4 bg-light border">
                             <i class="bi bi-shield-check fs-3 text-success"></i>
                             <div>
-                                <div class="fw-semibold mb-1">Setup has not started yet.</div>
-                                <div class="mini-hint">Click <strong>Start 2FA Setup</strong> to generate a new secret, QR code, and manual key.</div>
+                                @if (hasStoredSecret)
+                                {
+                                    <div class="fw-semibold mb-1">Setup already completed.</div>
+                                    <div class="mini-hint">Your authenticator app is registered. Use <strong>Enable 2FA</strong> on the right to turn it on with a code, or click <strong>Start 2FA Setup</strong> to view the QR / manual key again.</div>
+                                }
+                                else
+                                {
+                                    <div class="fw-semibold mb-1">Setup has not started yet.</div>
+                                    <div class="mini-hint">Click <strong>Start 2FA Setup</strong> to generate a new secret, QR code, and manual key.</div>
+                                }
                             </div>
                         </div>
                     }
@@ -213,36 +241,65 @@
         </div>
 
         <div class="col-12 col-xl-5 d-flex flex-column gap-4">
-            <div class="security-card card">
-                <div class="card-header">
-                    <div class="small text-uppercase opacity-75">Confirm setup</div>
-                    <div class="h5 mb-0">Verify the first TOTP code</div>
+            @if (hasSetup)
+            {
+                <div class="security-card card">
+                    <div class="card-header">
+                        <div class="small text-uppercase opacity-75">Confirm setup</div>
+                        <div class="h5 mb-0">Verify the first TOTP code</div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form asp-action="VerifyTwoFactorSetup" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="setupCode" class="form-label fw-semibold">Authenticator code</label>
+                            <input id="setupCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
+                            <button type="submit" class="btn btn-success w-100">Verify and Enable</button>
+                        </form>
+                        <div class="mini-hint mt-3">After a valid code is confirmed, the protected secret stays stored and 2FA becomes active.</div>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form asp-action="VerifyTwoFactorSetup" method="post">
-                        @Html.AntiForgeryToken()
-                        <label for="setupCode" class="form-label fw-semibold">Authenticator code</label>
-                        <input id="setupCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                        <button type="submit" class="btn btn-success w-100">Verify and Enable</button>
-                    </form>
-                    <div class="mini-hint mt-3">After a valid code is confirmed, the protected secret stays stored and 2FA becomes active.</div>
-                </div>
-            </div>
+            }
 
-            <div class="security-card card">
-                <div class="card-header">
-                    <div class="small text-uppercase opacity-75">Disable</div>
-                    <div class="h5 mb-0">Turn off 2FA with a valid code</div>
+            @if (isEnabled)
+            {
+                <div class="security-card card">
+                    <div class="card-header">
+                        <div class="small text-uppercase opacity-75">Disable</div>
+                        <div class="h5 mb-0">Turn off 2FA</div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form asp-action="DisableTwoFactor" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="disableCode" class="form-label fw-semibold">Current authenticator code</label>
+                            <input id="disableCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
+                            <button type="submit" class="btn btn-outline-danger w-100">Disable 2FA</button>
+                        </form>
+                        <div class="mini-hint mt-3">Your authenticator registration is preserved so you can re-enable later.</div>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form asp-action="DisableTwoFactor" method="post">
-                        @Html.AntiForgeryToken()
-                        <label for="disableCode" class="form-label fw-semibold">Current authenticator code</label>
-                        <input id="disableCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                        <button type="submit" class="btn btn-outline-danger w-100">Disable 2FA</button>
-                    </form>
+            }
+            else if (hasStoredSecret)
+            {
+                <div class="security-card card">
+                    <div class="card-header">
+                        <div class="small text-uppercase opacity-75">Enable</div>
+                        <div class="h5 mb-0">Turn on 2FA</div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start gap-2 mb-3 p-2 rounded-3 bg-light small">
+                            <i class="bi bi-info-circle-fill text-primary"></i>
+                            <span>Your authenticator app is already registered. Enter a code to re-enable.</span>
+                        </div>
+                        <form asp-action="EnableTwoFactor" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="enableCode" class="form-label fw-semibold">Authenticator code</label>
+                            <input id="enableCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
+                            <button type="submit" class="btn btn-success w-100">Enable 2FA</button>
+                        </form>
+                        <div class="mini-hint mt-3">No new setup needed — just verify with your existing authenticator app.</div>
+                    </div>
                 </div>
-            </div>
+            }
 
             <div class="security-card card">
                 <div class="card-header">

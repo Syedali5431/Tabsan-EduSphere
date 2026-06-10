@@ -98,6 +98,7 @@ public class LoginController : Controller
                         => $"Login failed (HTTP {(int)response.StatusCode})."
                 };
                 ViewData["ReturnUrl"] = returnUrl;
+                ViewData["Username"] = username; // Preserve so user doesn't re-type.
                 await PopulateSecurityProfileAsync(apiBase, ct);
                 return View();
             }

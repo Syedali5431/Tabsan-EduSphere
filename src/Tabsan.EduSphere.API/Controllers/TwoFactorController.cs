@@ -33,6 +33,25 @@ public sealed class TwoFactorController : ControllerBase
         return response is null ? NotFound(new { message = "User not found or inactive." }) : Ok(response);
     }
 
+    /// <summary>Returns the current 2FA status without modifying any state.</summary>
+    [HttpGet("status")]
+    [Authorize]
+    public async Task<IActionResult> Status(CancellationToken ct)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Forbid();
+
+        var snapshot = await _twoFactor.GetStatusAsync(userId, ct);
+        if (snapshot is null)
+            return NotFound(new { message = "User not found or inactive." });
+
+        return Ok(new
+        {
+            twoFactorEnabled = snapshot.TwoFactorEnabled,
+            hasStoredSecret = !string.IsNullOrWhiteSpace(snapshot.SecretKey)
+        });
+    }
+
     /// <summary>Confirms the initial TOTP code after setup has been displayed to the user.</summary>
     [HttpPost("verify")]
     [Authorize]
@@ -59,6 +78,34 @@ public sealed class TwoFactorController : ControllerBase
         return ok
             ? Ok(new TwoFactorVerificationResponse(true, false, "2FA disabled."))
             : BadRequest(new { message = "Invalid 2FA disable code or 2FA is not enabled." });
+    }
+
+    /// <summary>Re-enables 2FA using an existing stored secret and a valid TOTP code.</summary>
+    [HttpPost("enable")]
+    [Authorize]
+    public async Task<IActionResult> Enable([FromBody] TwoFactorVerifyRequest request, CancellationToken ct)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Forbid();
+
+        var ok = await _twoFactor.EnableWithCodeAsync(userId, request.Code, ct);
+        return ok
+            ? Ok(new TwoFactorVerificationResponse(true, true, "2FA enabled."))
+            : BadRequest(new { message = "Invalid code or no existing 2FA registration. Start a new setup instead." });
+    }
+
+    /// <summary>Clears a pending 2FA setup so the user can start fresh.</summary>
+    [HttpPost("reset-setup")]
+    [Authorize]
+    public async Task<IActionResult> ResetSetup(CancellationToken ct)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Forbid();
+
+        var ok = await _twoFactor.ResetSetupAsync(userId, ct);
+        return ok
+            ? Ok(new TwoFactorVerificationResponse(true, false, "Pending 2FA setup cleared."))
+            : BadRequest(new { message = "No pending 2FA setup to reset." });
     }
 
     /// <summary>

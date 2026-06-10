@@ -23,6 +23,9 @@ public interface ITwoFactorStateStore
     /// <summary>Marks 2FA as enabled after the confirmation code has been validated.</summary>
     Task<bool> EnableAsync(Guid userId, CancellationToken ct = default);
 
-    /// <summary>Clears the stored 2FA secret and disables 2FA for the user.</summary>
+    /// <summary>Sets MfaIsEnabled=false while preserving the stored secret for later re-enable.</summary>
     Task<bool> DisableAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Fully clears the stored 2FA secret, recovery codes, and disables 2FA.</summary>
+    Task<bool> HardDeleteAsync(Guid userId, CancellationToken ct = default);
 }

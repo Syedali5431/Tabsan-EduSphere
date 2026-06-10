@@ -23,6 +23,9 @@ public interface IEduApiClient
     Task<TwoFactorSetupApiModel?> BeginTwoFactorSetupAsync(CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorSetupAsync(string code, CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> DisableTwoFactorAsync(string code, CancellationToken ct);
+    Task<TwoFactorOperationResultApiModel?> EnableTwoFactorAsync(string code, CancellationToken ct);
+    Task<TwoFactorOperationResultApiModel?> ResetTwoFactorSetupAsync(CancellationToken ct);
+    Task<TwoFactorStatusApiModel?> GetTwoFactorStatusAsync(CancellationToken ct);
     Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorLoginAsync(Guid userId, string code, CancellationToken ct);
     Task<StudentProfileSummaryItem?> GetMyStudentProfileAsync(CancellationToken ct);
 
@@ -786,6 +789,15 @@ public class EduApiClient : IEduApiClient
 
     public Task<TwoFactorOperationResultApiModel?> DisableTwoFactorAsync(string code, CancellationToken ct)
         => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/disable", new { code }, ct);
+
+    public Task<TwoFactorOperationResultApiModel?> EnableTwoFactorAsync(string code, CancellationToken ct)
+        => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/enable", new { code }, ct);
+
+    public Task<TwoFactorOperationResultApiModel?> ResetTwoFactorSetupAsync(CancellationToken ct)
+        => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/reset-setup", new { }, ct);
+
+    public Task<TwoFactorStatusApiModel?> GetTwoFactorStatusAsync(CancellationToken ct)
+        => GetAsync<TwoFactorStatusApiModel>("api/v1/2fa/status", ct);
 
     public Task<TwoFactorOperationResultApiModel?> VerifyTwoFactorLoginAsync(Guid userId, string code, CancellationToken ct)
         => PostAsync<object, TwoFactorOperationResultApiModel>("api/v1/2fa/login-verify", new { userId, code }, ct);

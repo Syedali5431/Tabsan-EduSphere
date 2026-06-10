@@ -15,7 +15,8 @@ public sealed class TotpService : ITotpService
     public string BuildProvisioningUri(string issuer, string accountName, string secret, int digits, int stepSeconds)
     {
         var encodedIssuer = Uri.EscapeDataString(issuer);
-        var encodedAccount = Uri.EscapeDataString(accountName);
+        // Most authenticator apps don't decode %40 back to @, so preserve it literally.
+        var encodedAccount = Uri.EscapeDataString(accountName).Replace("%40", "@");
         return $"otpauth://totp/{encodedIssuer}:{encodedAccount}?secret={secret}&issuer={encodedIssuer}&digits={digits}&period={stepSeconds}";
     }
 

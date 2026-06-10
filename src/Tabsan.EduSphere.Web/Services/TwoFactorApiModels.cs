@@ -12,3 +12,7 @@ public sealed record TwoFactorOperationResultApiModel(
     bool Success,
     bool TwoFactorEnabled,
     string Message);
+
+public sealed record TwoFactorStatusApiModel(
+    bool TwoFactorEnabled,
+    bool HasStoredSecret);

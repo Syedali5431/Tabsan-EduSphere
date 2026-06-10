@@ -331,6 +331,7 @@ public class TwoFactorSettingsPageModel
     public string? Message { get; set; }
     public Guid? CurrentUserId { get; set; }
     public bool TwoFactorEnabled { get; set; }
+    public bool HasStoredSecret { get; set; }
     public string? Issuer { get; set; }
     public string? AccountName { get; set; }
     public string? ManualKey { get; set; }

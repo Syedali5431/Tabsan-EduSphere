@@ -76,6 +76,18 @@ public sealed class TwoFactorStateStore : ITwoFactorStateStore
         if (user is null)
             return false;
 
+        _db.Entry(user).Property(nameof(User.MfaIsEnabled)).CurrentValue = false;
+        user.Touch();
+
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task<bool> HardDeleteAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null)
+            return false;
+
         _db.Entry(user).Property(nameof(User.MfaTotpSecret)).CurrentValue = null;
         _db.Entry(user).Property(nameof(User.MfaRecoveryCodesHashJson)).CurrentValue = null;
         _db.Entry(user).Property(nameof(User.MfaIsEnabled)).CurrentValue = false;
@@ -95,7 +107,21 @@ public sealed class TwoFactorStateStore : ITwoFactorStateStore
         }
         catch
         {
-            return null;
+            // If the stored secret is a raw Base32 TOTP key from an older deployment,
+            // treat it as the secret value rather than failing the entire login flow.
+            return IsValidBase32Secret(protectedSecret) ? protectedSecret : null;
         }
+    }
+
+    private static bool IsValidBase32Secret(string secret)
+    {
+        if (string.IsNullOrWhiteSpace(secret))
+            return false;
+
+        secret = secret.Trim().ToUpperInvariant();
+        if (secret.Length < 16 || secret.Length > 128)
+            return false;
+
+        return secret.All(c => (c >= 'A' && c <= 'Z') || (c >= '2' && c <= '7'));
     }
 }
