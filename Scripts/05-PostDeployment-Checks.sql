@@ -143,7 +143,7 @@ SELECT @SortInconsistencies = COUNT(*) FROM (
     CROSS APPLY (SELECT TOP 1 s2.Name, s2.StartDate FROM semesters s2 WHERE s2.StartDate > s1.StartDate ORDER BY s2.StartDate) s2
 ) sub WHERE WrongOrder = 1;
 IF @SortInconsistencies = 0
-    PRINT CONCAT('✓ Semester sort order is ascending by StartDate.');
+    PRINT N'✓ Semester sort order is ascending by StartDate.';
 ELSE
 BEGIN
     PRINT CONCAT('✗ ', @SortInconsistencies, ' semester(s) have wrong sort order.');
@@ -156,7 +156,7 @@ PRINT '--- BBA Department InstitutionType ---';
 DECLARE @BBA_DepartmentId UNIQUEIDENTIFIER = (SELECT Id FROM departments WHERE Name = 'Business Administration');
 DECLARE @BBA_InstitutionType INT = (SELECT InstitutionType FROM departments WHERE Name = 'Business Administration');
 IF @BBA_InstitutionType = 0
-    PRINT CONCAT('✓ Business Administration department InstitutionType = 0 (University).');
+    PRINT N'✓ Business Administration department InstitutionType = 0 (University).';
 ELSE
 BEGIN
     PRINT CONCAT('✗ Business Administration department InstitutionType = ', @BBA_InstitutionType, ' (expected: 0).');
@@ -168,7 +168,7 @@ PRINT '';
 PRINT '--- Sidebar Certificate Menu ---';
 DECLARE @CertMenuCount INT = (SELECT COUNT(*) FROM sidebar_menu_items WHERE [Key] = 'generate_certificates');
 IF @CertMenuCount = 1
-    PRINT CONCAT('✓ Exactly 1 generate_certificates sidebar menu item.');
+    PRINT N'✓ Exactly 1 generate_certificates sidebar menu item.';
 ELSE
 BEGIN
     PRINT CONCAT('✗ ', @CertMenuCount, ' generate_certificates menu items found (expected: 1).');
