@@ -1355,6 +1355,7 @@ public class EduApiClient : IEduApiClient
     {
         var connection = GetConnection();
         if (connection is null) return null;
+        using var request = CreateRequest(HttpMethod.Get, $"api/v1/graduation/{applicationId}/certificate");
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadAsByteArrayAsync(ct);
@@ -1463,6 +1464,7 @@ public class EduApiClient : IEduApiClient
     public async Task<byte[]?> DownloadGeneratedCertificateDocumentAsync(Guid documentId, string format, CancellationToken ct)
     {
         var path = $"api/v1/certificate-generation/documents/{documentId}/download?format={Uri.EscapeDataString(string.IsNullOrWhiteSpace(format) ? "docx" : format)}";
+        using var request = CreateRequest(HttpMethod.Get, path);
         using var response = await CreateClient().SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
@@ -1509,7 +1511,8 @@ public class EduApiClient : IEduApiClient
     public async Task<byte[]?> DownloadStudentAdditionalCertificateAsync(Guid documentId, CancellationToken ct)
     {
         var path = $"api/v1/certificate-generation/documents/custom/{documentId}/download";
-        using var response = await CreateClient().SendAsync(request, ct);
+        using var req = CreateRequest(HttpMethod.Get, path);
+        using var response = await CreateClient().SendAsync(req, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
