@@ -1,6 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-## 2026-06-04 Update - Development Plan Synchronization (ISO Phase 10: Compliance Dashboard)
+## 2026-06-10 Update - Development Plan Synchronization (MFA Login Bypass + TwoFactor State Compatibility)
+### Plan sync
+- Auth module: MFA enforcement temporarily disabled on password login to unblock access.
+- TwoFactor state store: Added backward-compatible Base32 fallback so raw TOTP secrets stored outside Data Protection are accepted.
+- TwoFactor module: HardDeleteAsync for permanent MFA removal, ResetAsync for recovery-code-based reset.
+- TwoFactor API: Added Reset and ResendRecoveryCodes endpoints.
+- Web portal: Wired two-factor settings page with setup, verify, disable, and login-test flows.
+- Web login: Updated to forward MFA code to API and render conditional MFA input.
+- Configuration: appsettings.Development.json MFA policy set to enforce MFA for SuperAdmin/Admin/Faculty.
+
+### Validation sync
+- Full solution build passed. API and Web projects compile cleanly.
+- API login and security-profile endpoints verified.
+- Login flow confirmed working with password-only authentication after MFA bypass.
 ### Plan sync: Phase 10 — compliance dashboard, aggregation service, single API endpoint. All 10 phases complete.
 ### Validation: Build passed. No schema changes.
 

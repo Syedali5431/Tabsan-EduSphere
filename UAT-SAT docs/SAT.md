@@ -1,5 +1,15 @@
 # Site Acceptance Testing (SAT)
 
+## SAT Synchronization Update (2026-06-10)
+
+- Confirm MFA login bypass is active in deployed environment: username/password login succeeds without MFA challenge.
+- Confirm TwoFactor Settings page loads and is accessible to authorized roles in the deployed portal.
+- Confirm TwoFactor Setup, Verify, Disable, and Login Test flows function correctly in the deployed environment.
+- Confirm TwoFactor Reset via recovery code works and provisions a new valid secret.
+- Confirm security-profile endpoint returns correct MFA policy configuration for the deployed instance.
+- Confirm login page renders MFA code input field and appropriate error messaging when MFA policy is active.
+- Confirm all two-factor API endpoints (Setup, Verify, Disable, LoginVerify, Reset, ResendRecoveryCodes) respond correctly in the deployed environment.
+
 ## SAT Synchronization Update (2026-06-04)
 
 - Include domain script-pack verification as part of SAT execution evidence:

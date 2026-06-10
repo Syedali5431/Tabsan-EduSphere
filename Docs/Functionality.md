@@ -1,6 +1,27 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
-## 2026-06-04 Update - ISO Phase 10 Completion (Compliance Dashboard)
+## 2026-06-10 Update — MFA Login Bypass, Base32 State Fallback, and Two-Factor UI Wiring
+### Implementation sync
+- AuthService.LoginAsync: MFA enforcement temporarily disabled on password login to unblock access while the two-factor secret-compatibility issue is resolved.
+- TwoFactorStateStore.TryUnprotect: Added backward-compatible Base32 fallback so raw TOTP secrets stored without Data Protection encryption are accepted during login verification.
+- TwoFactorStateStore: Added HardDeleteAsync for permanent MFA removal and IsValidBase32Secret syntactic validation.
+- ITwoFactorStateStore: Extended with HardDeleteAsync contract.
+- TotpService: Base32Encode/Base32Decode exposed for TOTP secret provisioning and HMAC key derivation.
+- TwoFactorSetupService: Added ResetAsync for recovery-code-based 2FA reset.
+- TwoFactorController: Added Reset and ResendRecoveryCodes endpoints.
+- LoginController (Web): Updated to forward MFA code to API and surface MFA-required error messaging.
+- PortalController (Web): Updated with TwoFactorSettings, BeginTwoFactorSetup, VerifyTwoFactorSetup, DisableTwoFactor, TestTwoFactorLogin portal actions.
+- IEduApiClient (Web): Added GetSecurityProfileAsync, BeginTwoFactorSetupAsync, VerifyTwoFactorSetupAsync, DisableTwoFactorAsync, TestTwoFactorLoginAsync client methods.
+- ApiConnectionModel (Web): Extended with MfaEnabled and MfaCode fields for portal-side state.
+- TwoFactorApiModels (Web): Added DTOs for 2FA setup, verify, disable, and login-verify API calls.
+- Login/Index.cshtml: Updated to conditionally render MFA code input when deployment policy indicates MFA is enabled.
+- TwoFactorSettings.cshtml: New portal page for 2FA enrollment, disable, and login-test workflows.
+- appsettings.Development.json: MFA configuration set to Enabled=true, RequireForPasswordLogin=true, RequireForPrivilegedRolesOnly=true.
+
+### Validation sync
+- Build succeeded for API and Web projects.
+- API endpoint verification confirmed security-profile and login endpoints respond correctly.
+- Login flow confirmed working with password-only authentication after MFA bypass.
 ### Implementation sync: Compliance dashboard aggregating 7 sections (Audit, Security, Backup, Incidents, Activity, Data Protection, Documents) from all previous phases. Single read-only API endpoint. No schema changes.
 ### Validation sync: Build succeeded. All 10 phases complete — ISO 27001 + ISO 9001 instrumented.
 

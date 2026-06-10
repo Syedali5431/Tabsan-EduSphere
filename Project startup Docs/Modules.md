@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update - 2026-06-10 (MFA Login Bypass + TwoFactor State Compatibility)
+### Module impact summary
+- Auth module: MFA enforcement temporarily bypassed on password login. Password-only authentication restored.
+- TwoFactor module: State store now includes Base32 fallback for raw TOTP secrets; HardDeleteAsync for permanent removal; ResetAsync for recovery-code-based reset.
+- TwoFactor API: Two new endpoints — Reset (POST) and ResendRecoveryCodes (POST).
+- Web portal: TwoFactorSettings page wired with full setup/verify/disable/login-test flows.
+- Web login: Conditional MFA code rendering and API-driven MFA-required messaging.
+### Validation summary
+- Full solution build succeeded. API login endpoint and security-profile endpoint verified.
+- Password-only login confirmed working after bypass.
+
 ## Execution Update - 2026-06-04 (ISO Phase 10 - Compliance Dashboard)
 ### Module impact: Compliance Dashboard — single read-only endpoint aggregating all ISO phases. 7 dashboard sections. All 10 phases complete.
 

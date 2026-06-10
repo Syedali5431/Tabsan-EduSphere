@@ -1,6 +1,15 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
-### 2026-06-04 - Product Requirements Synchronization (ISO Phase 10: Compliance Dashboard)
+### 2026-06-10 - Product Requirements Synchronization (MFA Login Bypass + TwoFactor State Compatibility)
+- Runtime delivery in this slice:
+  - MFA enforcement temporarily disabled on password login to restore access while the two-factor secret-compatibility issue is resolved.
+  - TwoFactor state store now accepts raw Base32 TOTP secrets as a backward-compatible fallback when Data Protection unprotect fails.
+  - TwoFactor module extended with permanent deletion (HardDeleteAsync) and recovery-code-based reset (ResetAsync).
+  - TwoFactor API extended with Reset and ResendRecoveryCodes endpoints.
+  - Web portal wired with two-factor settings page supporting setup, verify, disable, and login-test workflows.
+  - Login page updated with conditional MFA code input and API-driven MFA-required messaging.
+- Compatibility boundary: no route removals, additive schema-only changes, backward-compatible Base32 fallback, tenant/campus preserved.
+- Validation Summary: full solution build succeeded, API login endpoint verified, password-only login confirmed working.
 - Runtime: compliance dashboard aggregating all 10 phases — 7-section read-only API. All 10 ISO phases complete. ISO 27001 + ISO 9001 instrumented.
 
 ### 2026-06-04 - Product Requirements Synchronization (ISO Phase 9: Data Integrity)

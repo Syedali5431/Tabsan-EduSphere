@@ -1,5 +1,17 @@
 # User Acceptance Testing (UAT)
 
+## UAT Synchronization Update (2026-06-10)
+
+- Validate MFA-disabled login flow: sign in with username/password only and confirm access is granted without MFA prompt.
+- Validate TwoFactor Settings page loads for authenticated admin/superadmin users.
+- Validate TwoFactor Setup flow: begin setup, scan QR code, verify with TOTP code, confirm enabled status.
+- Validate TwoFactor Disable flow: enter current TOTP code, confirm MFA is disabled.
+- Validate TwoFactor Login Test: after setup, confirm login-verify hand-off works correctly.
+- Validate TwoFactor Reset: use a recovery code to reset 2FA and confirm a fresh secret is provisioned.
+- Validate security-profile endpoint returns correct MFA policy flags for the deployment.
+- Validate login page renders MFA code input field when deployment MFA policy is active.
+- Validate login page shows appropriate error messaging when MFA code is missing or invalid.
+
 ## UAT Synchronization Update (2026-06-04)
 
 - Validate domain-specific script-pack path readiness for demo/UAT runs:

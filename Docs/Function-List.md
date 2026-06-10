@@ -222,6 +222,24 @@
 | TwoFactorSetupService.DisableAsync | Disables 2FA after validating the current code against the stored secret. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
 | TwoFactorSetupService.VerifyLoginAsync | Verifies the login hand-off code for the add-on 2FA challenge. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
 | TwoFactorSetupService.VerifySetupAsync | Confirms the initial enrollment code before enabling 2FA. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
+| TwoFactorSetupService.ResetAsync | Resets 2FA for a user using a valid recovery code and restores a fresh secret. | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
+| TwoFactorStateStore.TryUnprotect | Decrypts Data-Protection-encrypted TOTP secret with backward-compatible Base32 fallback for raw secrets. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| TwoFactorStateStore.IsValidBase32Secret | Validates whether a string is a syntactically correct Base32 TOTP secret. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| TwoFactorStateStore.HardDeleteAsync | Permanently removes MFA secret, recovery codes, and disables MFA for a user. | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| ITwoFactorStateStore.HardDeleteAsync | Interface for permanent MFA secret and recovery-code removal. | src/Tabsan.EduSphere.Application/Interfaces/ITwoFactorStateStore.cs |
+| TwoFactorController.Reset | POST /api/v1/two-factor/reset — resets 2FA using a recovery code. | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.ResendRecoveryCodes | POST /api/v1/two-factor/recovery-codes — regenerates recovery codes for an authenticated user. | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TotpService.Base32Decode | Decodes a Base32-encoded TOTP secret into raw key bytes for HMAC computation. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
+| TotpService.Base32Encode | Encodes raw key bytes into a Base32 string for TOTP secret provisioning. | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
+| AuthService.LoginAsync | Updated: MFA enforcement temporarily disabled on login; password-only authentication restored. | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| LoginController.Index (POST) | Updated: forwards MFA code to API login and surfaces MFA-required error messaging from the API response. | src/Tabsan.EduSphere.Web/Controllers/LoginController.cs |
+| IEduApiClient.GetSecurityProfileAsync | Fetches auth security profile from API to determine whether MFA/SSO prompts should render. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.DisableTwoFactorAsync | Calls API to disable 2FA after validating the current TOTP code. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.TestTwoFactorLoginAsync | Calls API to verify a pending 2FA login hand-off code. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.VerifyTwoFactorSetupAsync | Calls API to confirm initial 2FA enrollment with a TOTP code. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| IEduApiClient.BeginTwoFactorSetupAsync | Calls API to start 2FA enrollment and returns QR/manual-key payload. | src/Tabsan.EduSphere.Web/Services/EduApiClient.cs |
+| ApiConnectionModel | Updated with MfaEnabled and MfaCode fields for portal-side MFA state tracking. | src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs |
+| TwoFactorApiModels | DTOs for portal-side 2FA setup, verify, disable, and login-verify API calls. | src/Tabsan.EduSphere.Web/Services/TwoFactorApiModels.cs |
 | AdminUserController.Create | Accepts optional institutionType, validates against active policy, persists to user, and returns assignment in response/list payloads. | src/Tabsan.EduSphere.API/Controllers/AdminUserController.cs |
 | AiChatService.GetConversationAsync | Returns a full conversation thread with message history for the requesting user. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
 | AiChatService.GetConversationsAsync | Returns the requesting user's conversation list for the AI chat experience. | src/Tabsan.EduSphere.Application/AiChat/AiChatService.cs |
