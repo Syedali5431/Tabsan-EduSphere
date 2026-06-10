@@ -19,11 +19,13 @@ public sealed class CampusController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId = null, [FromQuery] bool activeOnly = true, CancellationToken ct = default)
     {
         var query = _db.Campuses.AsNoTracking();
         if (tenantId.HasValue)
             query = query.Where(c => c.TenantId == tenantId.Value);
+        if (activeOnly)
+            query = query.Where(c => c.IsActive);
 
         var campuses = await query
             .OrderBy(c => c.Code)
