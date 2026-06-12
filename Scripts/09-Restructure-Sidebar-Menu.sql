@@ -30,6 +30,14 @@ DECLARE @mEnterAtt      UNIQUEIDENTIFIER = NEWID();
 DECLARE @mEnterRes      UNIQUEIDENTIFIER = NEWID();
 DECLARE @mGradebook     UNIQUEIDENTIFIER = NEWID();
 DECLARE @mRubric        UNIQUEIDENTIFIER = NEWID();
+DECLARE @mLookups       UNIQUEIDENTIFIER = NEWID();
+DECLARE @mPayments      UNIQUEIDENTIFIER = NEWID();
+DECLARE @mReportCenter  UNIQUEIDENTIFIER = NEWID();
+DECLARE @mHelpdesk      UNIQUEIDENTIFIER = NEWID();
+DECLARE @mAiChat        UNIQUEIDENTIFIER = NEWID();
+DECLARE @mAnalytics     UNIQUEIDENTIFIER = NEWID();
+DECLARE @mSystemSet     UNIQUEIDENTIFIER = NEWID();
+DECLARE @mAdminUsers    UNIQUEIDENTIFIER = NEWID();
 DECLARE @mQuizzes       UNIQUEIDENTIFIER = NEWID();
 DECLARE @mLms           UNIQUEIDENTIFIER = NEWID();
 DECLARE @mCourseMat     UNIQUEIDENTIFIER = NEWID();
@@ -82,7 +90,8 @@ VALUES
 (@mEnterAtt,  N'Enter Attendance',       N'Mark student attendance',          N'enter_attendance',         NULL, 23, 1, 0, 0, @Now),
 (@mEnterRes,  N'Enter Results',          N'Enter student results',            N'enter_results',            NULL, 24, 1, 0, 0, @Now),
 (@mGradebook, N'Gradebook',              N'View and manage gradebook',        N'gradebook',                NULL, 25, 1, 0, 0, @Now),
-(@mRubric,    N'Rubric Management',      N'Manage assessment rubrics',        N'rubric_management',        NULL, 26, 1, 0, 0, @Now),
+(@mLookups,   N'Lookups',               N'Reference data and lookup masters', N'lookups',                  NULL, 17, 1, 0, 0, @Now),
+(@mRubric,    N'Rubric Management',      N'Manage assessment rubrics',        N'rubric_manage',            NULL, 26, 1, 0, 0, @Now),
 (@mQuizzes,   N'Quizzes',                N'Manage quizzes and tests',         N'quizzes',                  NULL, 27, 1, 0, 0, @Now),
 (@mLms,       N'LMS Manage',             N'Learning management system',       N'lms_manage',               NULL, 28, 1, 0, 0, @Now),
 (@mCourseMat, N'Course Material',        N'Upload and manage course content', N'course_material',           NULL, 29, 1, 0, 0, @Now),
@@ -117,39 +126,51 @@ VALUES
 (@mAccred,    N'Accreditation',          N'Manage accreditation templates',   N'accreditation',            NULL, 91, 1, 0, 0, @Now),
 (@mAudit,     N'Advanced Audit',         N'View detailed audit logs',         N'audit_logs',               NULL, 92, 1, 0, 0, @Now),
 (@mNotif,     N'Notifications',          N'View system notifications',        N'notifications',            NULL, 93, 1, 0, 0, @Now),
-(@mUserImp,   N'User Import',            N'Import users from CSV',            N'user_import',              NULL, 94, 1, 0, 0, @Now);
+(@mUserImp,   N'User Import',            N'Import users from CSV',            N'user_import',              NULL, 94, 1, 0, 0, @Now),
+(@mPayments,  N'Payments',               N'Track and manage payment receipts', N'payments',                 NULL, 65, 1, 0, 0, @Now),
+(@mReportCenter,N'Report Center',         N'Run filter and export reports',     N'report_center',            NULL, 66, 1, 0, 0, @Now),
+(@mHelpdesk,  N'Helpdesk',               N'Ticket management and support',     N'helpdesk',                 NULL, 67, 1, 0, 0, @Now),
+(@mAiChat,    N'AI Chat',                N'AI assistant for contextual help',  N'ai_chat',                  NULL, 68, 1, 0, 0, @Now),
+(@mAnalytics, N'Analytics',              N'Performance and trends dashboards', N'analytics',                NULL, 69, 1, 0, 0, @Now),
+(@mSystemSet, N'System Settings',        N'Platform-level system configuration',N'system_settings',         NULL, 95, 1, 0, 0, @Now),
+(@mAdminUsers,N'Admin Users',            N'Manage admin account lifecycle',    N'admin_users',              NULL, 96, 1, 0, 0, @Now);
 
 -- ═══════ ROLE-BASED ACCESS ═══════
 -- SuperAdmin: all menus
 INSERT INTO [sidebar_menu_role_accesses] ([Id],[SidebarMenuItemId],[RoleName],[IsAllowed],[CreatedAt])
 SELECT NEWID(), m.Id, N'SuperAdmin', 1, @Now FROM [sidebar_menu_items] m;
 
--- Admin: all except some student-specific
+-- Admin: all except dashboard and SuperAdmin-only settings
 INSERT INTO [sidebar_menu_role_accesses] ([Id],[SidebarMenuItemId],[RoleName],[IsAllowed],[CreatedAt])
 SELECT NEWID(), m.Id, N'Admin', 1, @Now FROM [sidebar_menu_items] m
-WHERE m.[Key] NOT IN (N'two_factor_auth', N'student_lifecycle', N'fyp');
+WHERE m.[Key] NOT IN (N'dashboard',N'module_composition',N'sidebar_settings',N'license_update',
+    N'dashboard_settings',N'institution_policy',N'library_config',N'system_settings',
+    N'report_settings',N'admin_users',N'tenant_management',N'campus_management');
 
--- Faculty: teaching-related
+-- Faculty: teaching + academic + personal (no admin settings, no finance)
 INSERT INTO [sidebar_menu_role_accesses] ([Id],[SidebarMenuItemId],[RoleName],[IsAllowed],[CreatedAt])
 SELECT NEWID(), m.Id, N'Faculty', 1, @Now FROM [sidebar_menu_items] m
-WHERE m.[Key] IN (N'dashboard',N'timetable_teacher',N'assignments',N'enter_attendance',
-    N'enter_results',N'gradebook',N'rubric_management',N'quizzes',
-    N'lms_manage',N'course_material',N'discussion',N'announcements',
-    N'students',N'attendance',N'results',N'fyp',N'notifications',
-    N'courses',N'enrollments',N'study_plan');
+WHERE m.[Key] IN (N'dashboard',N'timetable_teacher',N'timetable_student',N'assignments',
+    N'enter_attendance',N'attendance',N'enter_results',N'results',N'gradebook',
+    N'rubric_manage',N'quizzes',N'course_material',N'discussion',N'announcements',
+    N'degree_audit',N'graduation_apply',N'study_plan',N'fyp',
+    N'helpdesk',N'report_center',N'ai_chat',N'analytics',N'notifications',
+    N'theme_settings',N'courses');
 
--- Student: self-service
+-- Student: self-service (view/submit only, no CRUD)
 INSERT INTO [sidebar_menu_role_accesses] ([Id],[SidebarMenuItemId],[RoleName],[IsAllowed],[CreatedAt])
 SELECT NEWID(), m.Id, N'Student', 1, @Now FROM [sidebar_menu_items] m
 WHERE m.[Key] IN (N'dashboard',N'timetable_student',N'assignments',N'quizzes',
     N'course_material',N'discussion',N'announcements',N'attendance',
     N'results',N'fyp',N'study_plan',N'degree_audit',N'generate_certificates',
-    N'graduation_apply',N'notifications',N'student_lifecycle');
+    N'graduation_apply',N'payments',N'helpdesk',N'ai_chat',N'notifications',
+    N'theme_settings',N'two_factor_auth');
 
--- Finance: limited access
+-- Finance: payments, payment reports, payment analytics, personal settings
 INSERT INTO [sidebar_menu_role_accesses] ([Id],[SidebarMenuItemId],[RoleName],[IsAllowed],[CreatedAt])
 SELECT NEWID(), m.Id, N'Finance', 1, @Now FROM [sidebar_menu_items] m
-WHERE m.[Key] IN (N'dashboard',N'students',N'notifications');
+WHERE m.[Key] IN (N'dashboard',N'payments',N'report_center',N'analytics',
+    N'theme_settings',N'notifications');
 
 PRINT 'Sidebar menu structure created successfully.';
 GO

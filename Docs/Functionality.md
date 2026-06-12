@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-12 Update — Phase 1 DB Script Validation (Final Check)
+### Implementation sync
+- BBA department InstitutionType: fixed from 2 (College) to 0 (University) via direct DB UPDATE.
+- sidebar_menu_items: populated from empty state via updated 09-Restructure-Sidebar-Menu.sql (58 menu items, 5 roles).
+- 09-Restructure-Sidebar-Menu.sql: fixed `rubric_management` → `rubric_manage` key mismatch. Added 8 missing menus: `lookups`, `payments`, `report_center`, `helpdesk`, `ai_chat`, `analytics`, `system_settings`, `admin_users`. Updated role access matrix (SuperAdmin=58, Admin=46, Faculty=25, Student=20, Finance=6).
+- 05-PostDeployment-Checks.sql: updated tenant count expectation from 3 → 4 (DEFAULT tenant is intentional).
+- Docs/Final-check.md: created with 11-phase validation plan, documentation sync policy, and Phase 1 results.
+
+### Validation sync
+- Post-deployment checks: 0 failures (down from 3 initial failures).
+- BBA InstitutionType: confirmed 0 (University). ✓
+- Sidebar generate_certificates menu: 1 item confirmed. ✓
+- Tenant count: 4 (DEFAULT + TABSAN-SCH/COL/UNI). ✓
+- All 363 users (1 SuperAdmin, 3 Admin, 20 Faculty, 333 Student, 6 Finance) verified active.
+- Core login users (13) all active with correct roles.
+- Known gaps identified: `course_materials` table missing from schema; `study_plans` and `payment_receipts` have 0 demo rows; timetable/course-material demo GUID checks reference non-existent GUIDs.
+
 ## 2026-06-10 Update — MFA Login Fix, Report Columns, Active-Only Filters, Session Timeout
 ### Implementation sync
 - MFA: single-step TOTP validation restored; MFA enforced only when user has individually enabled it. AuthService.LoginAsync returns 400 MFA_CODE_REQUIRED (missing code) or 401 INVALID_MFA_CODE (wrong code).

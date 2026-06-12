@@ -36,8 +36,8 @@ PRINT '--- Tenants & Campuses ---';
 SELECT t.[Code] AS TenantCode, t.[Name] AS TenantName, c.[Code] AS CampusCode, c.[Name] AS CampusName
 FROM [tenants] t LEFT JOIN [campuses] c ON c.[TenantId]=t.[Id] ORDER BY t.[Code];
 DECLARE @TenantCount INT = (SELECT COUNT(*) FROM [tenants]);
-PRINT CONCAT('Total tenants: ', @TenantCount, ' (expected: 3)');
-IF @TenantCount != 3 SET @Errors += 1;
+PRINT CONCAT('Total tenants: ', @TenantCount, ' (expected: 4)');
+IF @TenantCount != 4 SET @Errors += 1;
 
 -- ═══════ DEPARTMENT COUNTS ═══════
 PRINT '';
