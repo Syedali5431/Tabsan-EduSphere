@@ -1,5 +1,20 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-12 Update — Phase 2 License-Based Institute Enforcement (Final Check)
+### Implementation sync
+- Institution policy: seeded `institution_include_school`, `institution_include_college`, `institution_include_university` in `portal_settings` (all enabled for dev).
+- 02-Seed-Core.sql: added institution policy seeding block with IF NOT EXISTS guards.
+- SidebarMenuController.cs: added `study_plan` to `UniversityOnlyMenuKeys` (was missing — study plan is semester-based, university-only).
+- Architecture verified: `InstitutionPolicyService` → `portal_settings` → `InstitutionPolicySnapshot` → sidebar filter + capability matrix → Web dropdown options.
+- Module-level gating: `ModuleDescriptor.AllowedTypes` restricts `fyp` to University only.
+
+### Validation sync
+- DB: institution policy settings confirmed (all 3 types enabled).
+- API build succeeded after `study_plan` addition.
+- University-only menus (7 total): `degree_audit`, `graduation_eligibility`, `degree_rules`, `graduation_apply`, `graduation_applications`, `fyp`, `study_plan` hidden when `IncludeUniversity=false`.
+- Certificate types: University → Degree + Transcript; School/College → Completion + Report Card.
+- Period labels: "Semester" for University, "Class" for School/College.
+
 ## 2026-06-12 Update — Phase 1 DB Script Validation (Final Check)
 ### Implementation sync
 - BBA department InstitutionType: fixed from 2 (College) to 0 (University) via direct DB UPDATE.

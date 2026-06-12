@@ -564,5 +564,19 @@ WHERE NOT EXISTS (SELECT 1 FROM [course_offerings] WHERE [CourseId] = c.[Id]);
 
 PRINT CONCAT('Course offerings created: ', @@ROWCOUNT);
 
+-- ═══════ Institution Policy Settings (Phase 23 — License Policy Kernel) ═══════
+-- Seeds the portal_settings entries that control which institution types are enabled.
+-- SuperAdmin can toggle these via Institution Policy page without redeployment.
+IF NOT EXISTS (SELECT 1 FROM [portal_settings] WHERE [Key] = 'institution_include_school')
+    INSERT INTO [portal_settings] ([Id], [Key], [Value], [CreatedAt])
+    VALUES (NEWID(), 'institution_include_school', 'true', SYSUTCDATETIME());
+
+IF NOT EXISTS (SELECT 1 FROM [portal_settings] WHERE [Key] = 'institution_include_college')
+    INSERT INTO [portal_settings] ([Id], [Key], [Value], [CreatedAt])
+    VALUES (NEWID(), 'institution_include_college', 'true', SYSUTCDATETIME());
+
+IF NOT EXISTS (SELECT 1 FROM [portal_settings] WHERE [Key] = 'institution_include_university')
+    INSERT INTO [portal_settings] ([Id], [Key], [Value], [CreatedAt])
+    VALUES (NEWID(), 'institution_include_university', 'true', SYSUTCDATETIME());
 PRINT '02-Seed-Core.sql completed successfully.';
 GO

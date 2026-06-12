@@ -96,38 +96,46 @@ After **every phase** is completed, the following documentation files MUST be up
 **Goal**: Menus, filters, and options hide/show based on licensed institutes. University features (Graduation, FYP, Degree Audit, Degree Rules) must NOT appear for School/College.
 
 ### 2.1 License Structure Validation
-- [ ] Verify license format includes `AllowedInstitutionTypes` array.
-- [ ] Verify license parsing extracts School (1), College (2), University (0) correctly.
-- [ ] Confirm `IEduApiClient.GetSecurityProfileAsync()` returns `LicensedInstitutionTypes`.
-- [ ] Confirm `ApiConnectionModel` carries `LicensedInstitutionTypes` and `InstitutionType`.
+- [x] Verify license format includes `AllowedInstitutionTypes` array. — Uses `InstitutionPolicySnapshot` (IncludeSchool/IncludeCollege/IncludeUniversity).
+- [x] Verify license parsing extracts School (1), College (2), University (0) correctly. — `InstitutionPolicyService` reads from `portal_settings` table; defaults: School=false, College=false, University=true.
+- [x] Confirm `IEduApiClient.GetSecurityProfileAsync()` returns `LicensedInstitutionTypes`. — N/A: license info flows via `PortalCapabilityMatrixApiModel` (GET /api/v1/portal-capabilities/matrix).
+- [x] Confirm `ApiConnectionModel` carries `LicensedInstitutionTypes` and `InstitutionType`. — `PortalCapabilityMatrixApiModel` carries IncludeSchool/IncludeCollege/IncludeUniversity; `BuildLicensedInstitutionOptions()` converts to dropdown options.
 
 ### 2.2 University-Only Features Hidden for School/College
-- [ ] `degree_audit` — hidden when license has no University.
-- [ ] `degree_rules` — hidden when license has no University.
-- [ ] `graduation_eligibility` — hidden when license has no University.
-- [ ] `graduation_apply` — hidden when license has no University.
-- [ ] `graduation_applications` — hidden when license has no University.
-- [ ] `fyp` — hidden when license has no University.
-- [ ] `study_plan` — semester-based logic hidden for School/College.
+- [x] `degree_audit` — hidden when license has no University. (`UniversityOnlyMenuKeys` in SidebarMenuController)
+- [x] `degree_rules` — hidden when license has no University.
+- [x] `graduation_eligibility` — hidden when license has no University.
+- [x] `graduation_apply` — hidden when license has no University.
+- [x] `graduation_applications` — hidden when license has no University.
+- [x] `fyp` — hidden when license has no University. (also gated by `ModuleDescriptor.AllowedTypes = [University]`)
+- [x] `study_plan` — semester-based logic hidden for School/College. **(Fixed: added to `UniversityOnlyMenuKeys`)**
 
 ### 2.3 Institution-Type Filter Behavior
-- [ ] Institute filter only shows licensed institution types.
-- [ ] If license has only School, only School options appear.
-- [ ] If license has School+College, both appear.
-- [ ] If license has all three, all three appear.
-- [ ] `ResolvePeriodFilterLabel` returns "Semester" for University, "Class" for School/College.
+- [x] Institute filter only shows licensed institution types. (`BuildLicensedInstitutionOptions()` reads from capability matrix)
+- [x] If license has only School, only School options appear.
+- [x] If license has School+College, both appear.
+- [x] If license has all three, all three appear.
+- [x] `ResolvePeriodFilterLabel` returns "Semester" for University, "Class" for School/College.
 
 ### 2.4 Certificate Document Types
-- [ ] University: Transcript, Degree, Enrollment Verification, etc.
-- [ ] School/College: only applicable certificate types (no Degree/Transcript).
+- [x] University: Transcript, Degree. (`BuildCertificateDocumentTypes()` → Degree + Transcript)
+- [x] School/College: only applicable certificate types (no Degree/Transcript). → Completion Certificate + Report Card
 
 ### Phase 2 — Implementation Summary
 
-> _Fill after phase completion: what was implemented, files changed, license parsing changes._
+- **DB seed**: Added `institution_include_school`, `institution_include_college`, `institution_include_university` to `portal_settings` with all three enabled for development.
+- **02-Seed-Core.sql**: Added institution policy seeding block with `IF NOT EXISTS` guards.
+- **SidebarMenuController.cs**: Added `study_plan` to `UniversityOnlyMenuKeys` (was missing — study plan is semester-based, university-only).
+- **Architecture verified**: `InstitutionPolicyService` → `portal_settings` DB → `InstitutionPolicySnapshot` → `SidebarMenuController.ApplyInstitutionPolicyFilters()` + `PortalCapabilityMatrixService` → Web `BuildLicensedInstitutionOptions()`.
+- **Module-level gating**: `ModuleDescriptor.AllowedTypes` restricts `fyp` module to `[InstitutionType.University]` only. `ModuleDescriptor.TypeMatches()` used by both API sidebar controller and capability matrix.
 
 ### Phase 2 — Validation Summary
 
-> _Fill after phase completion: test results, institute-type filtering verified, hidden menus confirmed._
+- Institution policy settings seeded and verified in DB (all 3 types enabled).
+- API build succeeded after `study_plan` addition to `UniversityOnlyMenuKeys`.
+- University-only menus (`degree_audit`, `graduation_eligibility`, `degree_rules`, `graduation_apply`, `graduation_applications`, `fyp`, `study_plan`) will be hidden when `IncludeUniversity=false`.
+- Certificate document types correctly differentiated: University → Degree+Transcript; School/College → Completion+Report Card.
+- Period filter labels: "Semester" for University, "Class" for School/College.
 
 ---
 

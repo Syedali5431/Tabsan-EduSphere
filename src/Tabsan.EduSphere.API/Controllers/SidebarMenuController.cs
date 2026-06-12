@@ -31,7 +31,8 @@ public class SidebarMenuController : ControllerBase
             "degree_rules",
             "graduation_apply",
             "graduation_applications",
-            "fyp"
+            "fyp",
+            "study_plan"
         };
 
     private static readonly IReadOnlyDictionary<string, string> MenuModuleKeyMap =

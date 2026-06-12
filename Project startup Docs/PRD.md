@@ -1,5 +1,10 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-12 — Product Requirements Synchronization (Final Check Phase 1 & 2)
+- Phase 1: DB scripts validated and fixed. BBA department InstitutionType corrected. Sidebar menus populated (58 items across 5 roles). Post-deployment checks pass with 0 failures.
+- Phase 2: License-based institution enforcement verified. Institution policy controls which menus/features appear per institution type. study_plan restricted to University-only. Certificate types gated per institution.
+- Compatibility: additive only — no route removals, no schema changes, no breaking changes.
+
 ### 2026-06-10 — Product Requirements Synchronization (MFA Login, Reports, Active Filters)
 - Runtime delivery: MFA single-step login with TOTP validation; Base32 raw-secret storage; tenant/campus active-only dropdowns; 5-min session timeout; ProgramName+DepartmentName in all reports; reports allowed without mandatory filters; semester sort ascending; BBA department type fix.
 - Compatibility: no route removals; additive schema changes only; backward-compatible Base32 fallback.

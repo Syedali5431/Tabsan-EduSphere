@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-12 Update — Phase 1 DB Validation & Phase 2 License Enforcement (Final Check)
+### Plan sync
+- Phase 1: All 7 DB scripts validated. BBA InstitutionType fixed (2→0). sidebar_menu_items populated (58 items, 5 roles). 09-Restructure-Sidebar-Menu.sql fixed and extended with 8 missing menus. Post-deployment checks: 0 failures.
+- Phase 2: License-based institution enforcement verified. Institution policy seeded in portal_settings (all 3 types enabled). study_plan added to UniversityOnlyMenuKeys (7 menus now hidden for non-University). Certificate document types gated by institution type.
+- Known gaps: course_materials table missing from schema; study_plans and payment_receipts need demo data.
+
+### Validation sync
+- Build passed for API and Web projects.
+- Post-deployment checks: 0 failures.
+- Sidebar menu role access: SuperAdmin=58, Admin=46, Faculty=25, Student=20, Finance=6.
+
 ## 2026-06-10 Update — MFA Login, Report Columns, Active Filters, Session Timeout
 ### Plan sync
 - Auth module: MFA enforced only when user has individually enabled it; single-step TOTP validation with proper error codes (400/401).

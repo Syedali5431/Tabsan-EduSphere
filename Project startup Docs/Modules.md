@@ -1,5 +1,13 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update — 2026-06-12 (Phase 1 DB Validation & Phase 2 License Enforcement)
+### Module impact: Sidebar Menu, Institution Policy, Seed Scripts
+- Sidebar Menu: 09-Restructure-Sidebar-Menu.sql updated — 58 menu items, fixed rubric_manage key, added 8 missing menus (lookups, payments, report_center, helpdesk, ai_chat, analytics, system_settings, admin_users). Role access matrix aligned.
+- Institution Policy: portal_settings seeded with institution_include_school/college/university. study_plan added to UniversityOnlyMenuKeys.
+- Seed Scripts: 02-Seed-Core.sql extended with institution policy seeding. 05-PostDeployment-Checks.sql tenant count updated to 4.
+- No schema changes. No breaking changes.
+### Validation: build passed; post-deployment checks 0 failures; sidebar menus populated.
+
 ## Execution Update — 2026-06-10 (MFA Login, Reports, Active Filters, Session Timeout)
 ### Module impact: Auth, TwoFactor, Reports, Portal Navigation
 - Auth: MFA enforced only for users who have enabled it; 400/401 error codes.
