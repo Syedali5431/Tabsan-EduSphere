@@ -4090,10 +4090,15 @@ public class PortalController : Controller
 
                 model.Results = await _api.GetMyResultsAsync(effectiveTenantId, effectiveCampusId, ct);
 
-                var allowedOfferingIds = studentOfferings.Select(o => o.Id).ToHashSet();
-                model.Results = model.Results
-                    .Where(r => allowedOfferingIds.Contains(r.CourseOfferingId))
-                    .ToList();
+                // Only scope results to enrolled offerings when the student has active enrollments.
+                // Seed/demo data may include results without matching enrollment records.
+                if (studentOfferings.Count > 0)
+                {
+                    var allowedOfferingIds = studentOfferings.Select(o => o.Id).ToHashSet();
+                    model.Results = model.Results
+                        .Where(r => allowedOfferingIds.Contains(r.CourseOfferingId))
+                        .ToList();
+                }
 
                 var selectedOfferingId = model.SelectedSubjectOfferingId ?? model.SelectedOfferingId;
                 if (selectedOfferingId.HasValue)

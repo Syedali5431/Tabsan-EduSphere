@@ -42,7 +42,8 @@ public sealed class TemplateProcessorService
 
             ReplaceInMainBody(document, replacements);
             ReplaceInHeadersAndFooters(document, replacements);
-            ReplaceCourseTable(document, transcriptRows);
+            ReplaceLogo(document);
+            ReplaceCourseTable(document, transcriptRows, payload.InstitutionType);
             document.MainDocumentPart?.Document.Save();
         }
 
@@ -84,6 +85,7 @@ public sealed class TemplateProcessorService
 
         foreach (var footerPart in document.MainDocumentPart?.FooterParts ?? Enumerable.Empty<FooterPart>())
         {
+            // Replace placeholders in footer text
             foreach (var textNode in footerPart.Footer.Descendants<Text>())
             {
                 var current = textNode.Text;
@@ -95,11 +97,62 @@ public sealed class TemplateProcessorService
                 textNode.Text = current;
             }
 
+            // Add logo to footer — insert at the beginning of the first paragraph
+            var firstParagraph = footerPart.Footer.Descendants<Paragraph>().FirstOrDefault();
+            if (firstParagraph != null)
+            {
+                var logoRun = new Run(
+                    new RunProperties(
+                        new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+                        new Bold(),
+                        new FontSize { Val = "20" },
+                        new Color { Val = "1F4E79" }),
+                    new Text("Tabsan EduSphere  |  "));
+                firstParagraph.InsertAt(logoRun, 0);
+            }
+
             footerPart.Footer.Save();
         }
     }
 
-    private static void ReplaceCourseTable(WordprocessingDocument document, IReadOnlyList<TranscriptCourseRow>? transcriptRows)
+    private static void ReplaceLogo(WordprocessingDocument document)
+    {
+        var body = document.MainDocumentPart?.Document.Body;
+        if (body == null) return;
+
+        var markerParagraph = body.Descendants<Paragraph>()
+            .FirstOrDefault(p => p.InnerText.Contains("{{LOGO}}", StringComparison.Ordinal));
+
+        if (markerParagraph == null) return;
+
+        // Replace {{LOGO}} placeholder with a styled institution name acting as logo.
+        // Clear the marker paragraph and add formatted runs.
+        markerParagraph.RemoveAllChildren<Run>();
+
+        var logoRun = new Run(
+            new RunProperties(
+                new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+                new Bold(),
+                new FontSize { Val = "36" },        // 18pt
+                new Color { Val = "1F4E79" }),       // Dark blue
+            new Text("Tabsan EduSphere"));
+
+        markerParagraph.Append(logoRun);
+
+        // Add a subtle underline/separator below the logo
+        var separatorRun = new Run(
+            new RunProperties(
+                new RunFonts { Ascii = "Calibri" },
+                new FontSize { Val = "16" },          // 8pt
+                new Color { Val = "808080" }),        // Gray
+            new Text("________________________________"));
+
+        // Insert separator after the logo paragraph
+        var sepParagraph = new Paragraph(separatorRun);
+        markerParagraph.InsertAfterSelf(sepParagraph);
+    }
+
+    private static void ReplaceCourseTable(WordprocessingDocument document, IReadOnlyList<TranscriptCourseRow>? transcriptRows, int institutionType)
     {
         var body = document.MainDocumentPart?.Document.Body;
         if (body == null)
@@ -122,12 +175,12 @@ public sealed class TemplateProcessorService
             return;
         }
 
-        var table = BuildCourseTable(transcriptRows);
+        var table = BuildCourseTable(transcriptRows, institutionType);
         markerParagraph.InsertAfterSelf(table);
         markerParagraph.Remove();
     }
 
-    private static Table BuildCourseTable(IReadOnlyList<TranscriptCourseRow> rows)
+    private static Table BuildCourseTable(IReadOnlyList<TranscriptCourseRow> rows, int institutionType)
     {
         var table = new Table(
             new TableProperties(
@@ -139,16 +192,55 @@ public sealed class TemplateProcessorService
                     new InsideHorizontalBorder { Val = BorderValues.Single, Size = 6 },
                     new InsideVerticalBorder { Val = BorderValues.Single, Size = 6 })));
 
-        table.Append(BuildRow("Sr No", "Subject Name", "Credit Hours", "Obtained Marks", "Total Marks", "GPA/Percent", isHeader: true));
-        foreach (var row in rows)
+        // University uses GPA; School/College uses Percentage.
+        var gradeHeader = institutionType == 2 ? "GPA" : "Percent";
+
+        // Group rows by semester
+        var grouped = rows
+            .GroupBy(r => r.SemesterName)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        var serialCounter = 0;
+
+        foreach (var semesterGroup in grouped)
         {
-            table.Append(BuildRow(
-                row.SerialNumber,
-                row.CourseName,
-                row.CreditHours <= 0 ? "-" : row.CreditHours.ToString("0.##"),
-                row.ObtainedMarks,
-                row.TotalMarks,
-                row.SgpaOrMarks));
+            // Semester header row (spans all 6 columns)
+            var semesterLabel = string.IsNullOrWhiteSpace(semesterGroup.Key) ? "Semester" : semesterGroup.Key;
+            var headerRow = new TableRow(
+                new TableCell(
+                    new Paragraph(
+                        new Run(
+                            new RunProperties(new Bold(), new FontSize { Val = "22" }),
+                            new Text(semesterLabel))),
+                    new TableCellProperties(
+                        new GridSpan { Val = 6 },
+                        new Shading { Fill = "E8EDF2", Val = ShadingPatternValues.Clear })));
+            table.Append(headerRow);
+
+            // Column headers for this semester group
+            table.Append(BuildRow("Sr No", "Subject Name", "Credit Hours", "Obtained Marks", "Total Marks", gradeHeader, isHeader: true));
+
+            foreach (var row in semesterGroup)
+            {
+                serialCounter++;
+                table.Append(BuildRow(
+                    serialCounter.ToString(),
+                    row.CourseName,
+                    row.CreditHours <= 0 ? "-" : row.CreditHours.ToString("0.##"),
+                    row.ObtainedMarks,
+                    row.TotalMarks,
+                    row.SgpaOrMarks));
+            }
+
+            // Add a small gap row between semesters
+            if (semesterGroup != grouped.Last())
+            {
+                table.Append(new TableRow(
+                    new TableCell(
+                        new Paragraph(new Run(new Text(" "))),
+                        new TableCellProperties(new GridSpan { Val = 6 }))));
+            }
         }
 
         return table;
@@ -192,7 +284,8 @@ public sealed record DocumentTemplatePayload(
     string SemesterGpaSummary,
     string IssueDate,
     string SerialNumber,
-    string VerificationUrl);
+    string VerificationUrl,
+    int InstitutionType = 2); // 0=School, 1=College, 2=University
 
 public sealed record TranscriptCourseRow(
     string SerialNumber,
@@ -200,4 +293,5 @@ public sealed record TranscriptCourseRow(
     decimal CreditHours,
     string ObtainedMarks,
     string TotalMarks,
-    string SgpaOrMarks);
+    string SgpaOrMarks,
+    string SemesterName = "");

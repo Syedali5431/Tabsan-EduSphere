@@ -307,7 +307,8 @@ public sealed record DegreeGenerationRequest(
     string? FinalGpa = null,
     string? SemesterGpaSummary = null,
     string? IssueDate = null,
-    string? SerialNumber = null)
+    string? SerialNumber = null,
+    int InstitutionType = 2)
 {
     public DocumentTemplatePayload ToPayload() => new(
     StudentName: StudentName,
@@ -323,7 +324,8 @@ public sealed record DegreeGenerationRequest(
     SemesterGpaSummary: SemesterGpaSummary ?? "",
     IssueDate: IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
     SerialNumber: SerialNumber ?? $"DEG-{DateTime.UtcNow:yyyyMMddHHmmss}",
-    VerificationUrl: "{{QR_CODE}}");
+    VerificationUrl: "{{QR_CODE}}",
+    InstitutionType: InstitutionType);
 }
 
 public sealed record TranscriptGenerationRequest(
@@ -341,7 +343,8 @@ public sealed record TranscriptGenerationRequest(
     string? FinalGpa = null,
     string? SemesterGpaSummary = null,
     string? IssueDate = null,
-    string? SerialNumber = null)
+    string? SerialNumber = null,
+    int InstitutionType = 2)
 {
     public DocumentTemplatePayload ToPayload() => new(
     StudentName: StudentName,
@@ -357,5 +360,6 @@ public sealed record TranscriptGenerationRequest(
     SemesterGpaSummary: SemesterGpaSummary ?? "",
     IssueDate: IssueDate ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
     SerialNumber: SerialNumber ?? $"TRN-{DateTime.UtcNow:yyyyMMddHHmmss}",
-    VerificationUrl: "{{QR_CODE}}");
+    VerificationUrl: "{{QR_CODE}}",
+    InstitutionType: InstitutionType);
 }

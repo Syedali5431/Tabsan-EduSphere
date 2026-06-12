@@ -68,8 +68,24 @@ public class BulkPromotionService : IBulkPromotionService
 
     public async Task<BulkPromotionBatchDto> SubmitAsync(Guid batchId, CancellationToken ct = default)
     {
+        // Load entries first — the EF configuration ignores the Entries navigation,
+        // so the domain model's _entries list is always empty after materialization.
+        // We validate against the persisted entries instead.
+        var entries = await _repo.GetEntriesAsync(batchId, ct);
+        if (entries.Count == 0)
+            throw new InvalidOperationException("Cannot submit an empty batch.");
+
         var batch = await _repo.GetBatchByIdAsync(batchId, ct)
             ?? throw new KeyNotFoundException($"Batch {batchId} not found.");
+
+        if (batch.Status != BulkPromotionStatus.Draft)
+            throw new InvalidOperationException("Only a Draft batch can be submitted.");
+
+        // Populate the in-memory _entries list so the domain Submit() check passes.
+        // These are transient objects used only to satisfy the domain guard clause;
+        // EF ignores the Entries navigation so they won't be persisted.
+        foreach (var entry in entries)
+            batch.AddEntry(entry.StudentProfileId, entry.Decision);
 
         batch.Submit();
         _repo.UpdateBatch(batch);

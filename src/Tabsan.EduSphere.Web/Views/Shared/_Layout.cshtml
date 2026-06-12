@@ -41,7 +41,8 @@
             studentSemesterNumber = 0;
         }
     }
-    var canStudentSeeFyp = !isStudent || studentSemesterNumber >= 8;
+    var studentInstitutionType = sessionId?.InstitutionType ?? 0;
+    var canStudentSeeFyp = !isStudent || (studentInstitutionType == 2 && studentSemesterNumber >= 8);
 
     var restrictedSettingsActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {

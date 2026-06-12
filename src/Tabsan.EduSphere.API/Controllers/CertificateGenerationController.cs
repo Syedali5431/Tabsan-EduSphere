@@ -281,7 +281,8 @@ public class CertificateGenerationController : ControllerBase
             RegistrationNumber: student.RegistrationNumber,
             DepartmentName: student.Department.Name,
             ProgramName: student.Program?.Name,
-            FinalGpa: student.Cgpa.ToString("0.00"));
+            FinalGpa: student.Cgpa.ToString("0.00"),
+            InstitutionType: (int)student.Department.InstitutionType);
 
         var doc = await _documents.GenerateDegreeAsync(request, ct);
         return Ok(doc);
@@ -295,9 +296,10 @@ public class CertificateGenerationController : ControllerBase
         if (student is null)
             return Forbid();
 
-        var transcriptContext = await BuildTranscriptContextAsync(student, semesterId, ct);
+        // For transcript, include ALL published results (all completed semesters).
+        var transcriptContext = await BuildTranscriptContextAsync(student, ct);
         if (transcriptContext.Rows.Count == 0)
-            return BadRequest(new { message = "No published results found for the selected student/semester." });
+            return BadRequest(new { message = "No published results found for this student." });
 
         var studentName = await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct);
         var request = new TranscriptGenerationRequest(
@@ -310,9 +312,10 @@ public class CertificateGenerationController : ControllerBase
             RegistrationNumber: student.RegistrationNumber,
             DepartmentName: student.Department.Name,
             ProgramName: student.Program?.Name,
-            ClassName: semesterId.HasValue ? await ResolveClassNameAsync(Array.Empty<string>(), semesterId, ct) : "All",
+            ClassName: "All Semesters",
             FinalGpa: transcriptContext.FinalCgpa,
-            SemesterGpaSummary: transcriptContext.SemesterGpaSummary);
+            SemesterGpaSummary: transcriptContext.SemesterGpaSummary,
+            InstitutionType: (int)student.Department.InstitutionType);
 
         var doc = await _documents.GenerateTranscriptAsync(request, ct);
         return Ok(doc);
@@ -505,10 +508,47 @@ public class CertificateGenerationController : ControllerBase
 
         var studentName = await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct);
         var fatherName = await ResolveFatherNameAsync(student.UserId, ct);
-        var resultSummary = BuildResultSummary(reportRows);
-        var className = await ResolveClassNameAsync(reportRows.Select(r => r.SemesterName).Distinct().ToList(), semesterId, ct);
+
+        var semesterNames = reportRows.Select(r => r.SemesterName).Distinct().ToList();
+        var className = await ResolveClassNameAsync(semesterNames, semesterId, ct);
+
+        // For completion certificates, use only the final class results for percentage calculation.
+        IReadOnlyCollection<TranscriptResultProjection> completionRows = reportRows;
+        if (normalizedType == CompletionDocumentType)
+        {
+            className = student.Department.InstitutionType switch
+            {
+                InstitutionType.School => $"Class {student.CurrentSemesterNumber} (2026)",
+                InstitutionType.College => $"Class {student.CurrentSemesterNumber + 10} (2026)",
+                _ => className
+            };
+
+            // Filter to only the final class results for the completion percentage.
+            var finalClassLabel = student.Department.InstitutionType switch
+            {
+                InstitutionType.School => "Class 10",
+                InstitutionType.College => "Class 12",
+                _ => ""
+            };
+            completionRows = reportRows
+                .Where(r => r.SemesterName.StartsWith(finalClassLabel, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (completionRows.Count == 0)
+                completionRows = reportRows; // fallback if no final class results found
+        }
+
+        var resultSummary = BuildResultSummary(completionRows);
+
+        // For marks sheets with multiple classes, show the range.
+        if (normalizedType != CompletionDocumentType && semesterNames.Count > 1)
+        {
+            var sorted = semesterNames.OrderBy(n => n).ToList();
+            className = $"{sorted.First()} to {sorted.Last()}";
+        }
 
         var templateBytes = await GetAdditionalTemplateBytesAsync(normalizedType, ct);
+        var institutionType = (int)student.Department.InstitutionType;
+        var finalScoreLabel = institutionType == 2 ? "CGPA" : "Percentage";
         var payload = new DocumentTemplatePayload(
             StudentName: studentName,
             FatherName: fatherName,
@@ -517,25 +557,31 @@ public class CertificateGenerationController : ControllerBase
             ProgramName: student.Program?.Name ?? "",
             ClassName: className,
             DegreeTitle: student.Program?.Name ?? "",
-            Cgpa: student.Cgpa.ToString("0.00"),
-            FinalPercentage: resultSummary.FinalPercentage,
-            FinalGpa: student.Cgpa.ToString("0.00"),
+            Cgpa: institutionType == 2 ? student.Cgpa.ToString("0.00") : "",
+            FinalPercentage: institutionType != 2 ? resultSummary.FinalPercentage : "",
+            FinalGpa: institutionType == 2 ? student.Cgpa.ToString("0.00") : "",
             SemesterGpaSummary: resultSummary.SemesterSummary,
             IssueDate: DateTime.UtcNow.ToString("yyyy-MM-dd"),
             SerialNumber: $"{(normalizedType == CompletionDocumentType ? "CMP" : "RPT")}-{DateTime.UtcNow:yyyyMMddHHmmss}",
-            VerificationUrl: "N/A");
+            VerificationUrl: "N/A",
+            InstitutionType: institutionType);
 
-        var reportTableRows = reportRows
-            .OrderBy(r => r.SemesterName)
-            .ThenBy(r => r.CourseCode)
-            .Select((r, index) => new TranscriptCourseRow(
-                SerialNumber: (index + 1).ToString(),
-                CourseName: string.IsNullOrWhiteSpace(r.CourseCode) ? r.CourseTitle : $"{r.CourseCode} - {r.CourseTitle}",
-                CreditHours: 0,
-                ObtainedMarks: r.MarksObtained.ToString("0.##"),
-                TotalMarks: r.MaxMarks.ToString("0.##"),
-                SgpaOrMarks: $"{r.Percentage:0.##}%"))
-            .ToList();
+        // For completion certificates, no marks table — only student info, percentage, and class.
+        // For marks sheets, include all results across all completed classes.
+        var reportTableRows = normalizedType == CompletionDocumentType
+            ? new List<TranscriptCourseRow>()
+            : reportRows
+                .OrderBy(r => r.SemesterName)
+                .ThenBy(r => r.CourseCode)
+                .Select((r, index) => new TranscriptCourseRow(
+                    SerialNumber: (index + 1).ToString(),
+                    CourseName: string.IsNullOrWhiteSpace(r.CourseCode) ? r.CourseTitle : $"{r.CourseCode} - {r.CourseTitle}",
+                    CreditHours: 0,
+                    ObtainedMarks: r.MarksObtained.ToString("0.##"),
+                    TotalMarks: r.MaxMarks.ToString("0.##"),
+                    SgpaOrMarks: $"{r.Percentage:0.##}%",
+                    SemesterName: r.SemesterName))
+                .ToList();
 
         var generatedBytes = _templateProcessor.PopulateTemplate(templateBytes, payload, reportTableRows);
 
@@ -596,6 +642,13 @@ public class CertificateGenerationController : ControllerBase
 
     private async Task<StudentProfile?> GetStudentInScopeAsync(Guid studentProfileId, CancellationToken ct)
     {
+        // SuperAdmin bypasses all scope/policy checks.
+        if (_accessScope.IsSuperAdmin())
+            return await _db.StudentProfiles
+                .Include(s => s.Department)
+                .Include(s => s.Program)
+                .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
+
         var policy = await _institutionPolicy.GetPolicyAsync(ct);
         if (!policy.IncludeUniversity)
             return null;
@@ -607,9 +660,6 @@ public class CertificateGenerationController : ControllerBase
 
         if (student is null || student.Department.InstitutionType != InstitutionType.University)
             return null;
-
-        if (_accessScope.IsSuperAdmin())
-            return student;
 
         var callerId = GetCurrentUserId();
         if (callerId == Guid.Empty)
@@ -695,13 +745,13 @@ public class CertificateGenerationController : ControllerBase
 
     private async Task<string> ResolveStudentNameAsync(Guid userId, string fallback, CancellationToken ct)
     {
-        var userName = await _db.Users
+        var fullName = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => u.Username)
+            .Select(u => u.FullName)
             .FirstOrDefaultAsync(ct);
 
-        return string.IsNullOrWhiteSpace(userName) ? fallback : userName;
+        return string.IsNullOrWhiteSpace(fullName) ? fallback : fullName;
     }
 
     private async Task<string> ResolveFatherNameAsync(Guid userId, CancellationToken ct)
@@ -715,15 +765,15 @@ public class CertificateGenerationController : ControllerBase
         return string.IsNullOrWhiteSpace(fatherName) ? "-" : fatherName;
     }
 
-    private async Task<TranscriptBuildContext> BuildTranscriptContextAsync(StudentProfile student, Guid? semesterId, CancellationToken ct)
+    private async Task<TranscriptBuildContext> BuildTranscriptContextAsync(StudentProfile student, CancellationToken ct)
     {
+        // Include ALL published results for this student — transcript covers all completed semesters.
         var publishedRows = await (
             from result in _db.Results.AsNoTracking()
             where result.StudentProfileId == student.Id && result.IsPublished
             join offering in _db.CourseOfferings.AsNoTracking() on result.CourseOfferingId equals offering.Id
             join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
             join semester in _db.Semesters.AsNoTracking() on offering.SemesterId equals semester.Id
-            where !semesterId.HasValue || offering.SemesterId == semesterId.Value
             select new TranscriptResultProjection(
                 offering.Id,
                 offering.SemesterId,
@@ -774,7 +824,8 @@ public class CertificateGenerationController : ControllerBase
                 CreditHours: g.Key.CreditHours,
                 ObtainedMarks: obtained.ToString("0.##"),
                 TotalMarks: max.ToString("0.##"),
-                SgpaOrMarks: gradePoint.ToString("0.00")));
+                SgpaOrMarks: gradePoint.ToString("0.00"),
+                SemesterName: g.Key.SemesterName));
         }
 
         var semesterLabels = publishedRows
@@ -802,6 +853,7 @@ public class CertificateGenerationController : ControllerBase
 
     private async Task<List<TranscriptResultProjection>> BuildNonUniversityReportRowsAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
     {
+        // For marks sheets / report cards, include ALL published results across all completed classes.
         return await (
             from result in _db.Results.AsNoTracking()
             where result.StudentProfileId == studentProfileId && result.IsPublished
@@ -831,7 +883,7 @@ public class CertificateGenerationController : ControllerBase
         return student.Department.InstitutionType switch
         {
             InstitutionType.School => student.CurrentSemesterNumber >= 10,
-            InstitutionType.College => student.CurrentSemesterNumber >= 12,
+            InstitutionType.College => student.CurrentSemesterNumber >= 2,   // Class 12 completed
             _ => false
         };
     }
@@ -881,6 +933,13 @@ public class CertificateGenerationController : ControllerBase
 
     private async Task<StudentProfile?> GetNonUniversityStudentForAdminManagementAsync(Guid studentProfileId, CancellationToken ct)
     {
+        // SuperAdmin bypasses all scope checks.
+        if (_accessScope.IsSuperAdmin())
+            return await _db.StudentProfiles
+                .Include(s => s.Department)
+                .Include(s => s.Program)
+                .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
+
         var student = await _db.StudentProfiles
             .Include(s => s.Department)
             .Include(s => s.Program)
@@ -888,9 +947,6 @@ public class CertificateGenerationController : ControllerBase
 
         if (student is null || student.Department.InstitutionType == InstitutionType.University)
             return null;
-
-        if (_accessScope.IsSuperAdmin())
-            return student;
 
         var callerId = GetCurrentUserId();
         if (callerId == Guid.Empty)

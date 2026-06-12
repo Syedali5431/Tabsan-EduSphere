@@ -24,6 +24,9 @@ public class BulkPromotionBatchConfiguration : IEntityTypeConfiguration<BulkProm
         builder.Property(x => x.CreatedByUserId).IsRequired();
         builder.Property(x => x.ReviewNote).HasMaxLength(1000);
 
+        // Entries are managed as a separate aggregate via the repository pattern.
+        // The domain model's _entries list is populated at runtime via AddEntry().
+        // EF is configured to ignore the navigation to avoid field/property conflicts.
         builder.Ignore(x => x.Entries);
 
         builder.HasIndex(x => new { x.Status, x.CreatedAt })
