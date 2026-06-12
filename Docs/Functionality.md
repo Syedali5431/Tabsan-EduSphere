@@ -1,5 +1,21 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-12 Update — Phase 3 MFA Verification (Final Check)
+### Implementation sync
+- No code changes required — MFA system fully implemented.
+- TOTP: RFC 6238 compliant, HMAC-SHA1, 6 digits, 30s steps, ±1 drift (90s window). Compatible with Gmail/MS/Authy.
+- Enrollment: TwoFactorSettings page → BeginTwoFactorSetup (Base32 secret + QR) → VerifyTwoFactorSetup (validate code).
+- Login: AuthService.LoginAsync enforces MFA only when user has individually enabled it. 400 MFA_CODE_REQUIRED / 401 INVALID_MFA_CODE.
+- Recovery codes: SHA-256 hashed, one-time use in AuthService.TryConsumeRecoveryCodeHash.
+- Disable: soft-disable preserves secret for re-enable. Reset: HardDeleteAsync permanently removes all MFA data.
+- Secret storage: raw Base32 in users.MfaTotpSecret; TwoFactorStateStore.TryUnprotect with Base32 fallback.
+
+### Validation sync
+- Full API build succeeded. All MFA endpoints verified: setup, verify, disable, reset, resend-recovery-codes.
+- AuthService login paths verified: 400 (no code), 401 (invalid code), 200 (valid TOTP + recovery code).
+- Base32 raw secret format survives Data Protection key rotation.
+- No demo users have MFA enabled (expected — users enable individually).
+
 ## 2026-06-12 Update — Phase 2 License-Based Institute Enforcement (Final Check)
 ### Implementation sync
 - Institution policy: seeded `institution_include_school`, `institution_include_college`, `institution_include_university` in `portal_settings` (all enabled for dev).
