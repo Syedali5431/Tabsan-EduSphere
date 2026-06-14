@@ -375,7 +375,7 @@ public interface IEduApiClient
     Task RejectFypProjectAsync(Guid id, string remarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task AssignFypSupervisorAsync(Guid id, Guid supervisorUserId, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task CompleteFypProjectAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
-    Task EnterFypResultAsync(Guid id, string result, Guid? tenantId, Guid? campusId, CancellationToken ct);
+    Task EnterFypResultAsync(Guid id, string result, decimal? gradePoint, decimal? marks, decimal? maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task RequestFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
     Task ApproveFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct);
 
@@ -4336,8 +4336,8 @@ public class EduApiClient : IEduApiClient
     public Task CompleteFypProjectAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/fyp/{id}/complete{BuildFypScopeQuery(tenantId, campusId)}", new { }, ct);
 
-    public Task EnterFypResultAsync(Guid id, string result, Guid? tenantId, Guid? campusId, CancellationToken ct)
-        => PostAsync<object, object>($"api/v1/fyp/{id}/result{BuildFypScopeQuery(tenantId, campusId)}", new { result }, ct);
+    public Task EnterFypResultAsync(Guid id, string result, decimal? gradePoint, decimal? marks, decimal? maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
+        => PostAsync<object, object>($"api/v1/fyp/{id}/result{BuildFypScopeQuery(tenantId, campusId)}", new { result, gradePoint, marks, maxMarks }, ct);
 
     public Task RequestFypCompletionAsync(Guid id, Guid? tenantId, Guid? campusId, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/fyp/{id}/request-completion{BuildFypScopeQuery(tenantId, campusId)}", new { }, ct);
@@ -4354,6 +4354,9 @@ public class EduApiClient : IEduApiClient
         Description    = f.Description,
         Status         = f.Status ?? "",
         FinalResult    = f.FinalResult,
+        FypGradePoint  = f.FypGradePoint,
+        FypMarks       = f.FypMarks,
+        FypMaxMarks    = f.FypMaxMarks,
         StudentName    = f.StudentName ?? "",
         SupervisorName = f.SupervisorName,
         DepartmentName = f.DepartmentName ?? "",
@@ -4372,6 +4375,9 @@ public class EduApiClient : IEduApiClient
         public string? Description    { get; set; }
         public string? Status         { get; set; }
         public string? FinalResult    { get; set; }
+        public decimal? FypGradePoint { get; set; }
+        public decimal? FypMarks      { get; set; }
+        public decimal? FypMaxMarks   { get; set; }
         public string? StudentName    { get; set; }
         public string? SupervisorName { get; set; }
         public string? DepartmentName { get; set; }

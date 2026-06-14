@@ -96,6 +96,15 @@ public class FypProject : BaseEntity
     /// </summary>
     public string? CompletionApprovedByUserIdsCsv { get; private set; }
 
+    /// <summary>Final grade point (e.g., 3.7 on a 4.0 scale) awarded upon completion. Null until result is entered.</summary>
+    public decimal? FypGradePoint { get; private set; }
+
+    /// <summary>Final marks or percentage awarded upon completion. Null until result is entered.</summary>
+    public decimal? FypMarks { get; private set; }
+
+    /// <summary>Maximum possible marks for the FYP (e.g., 100). Null until result is entered.</summary>
+    public decimal? FypMaxMarks { get; private set; }
+
     /// <summary>Navigation collection of panel members (supervisors, co-supervisors, examiners).</summary>
     public IReadOnlyCollection<FypPanelMember> PanelMembers { get; private set; } = new List<FypPanelMember>();
 
@@ -227,9 +236,9 @@ public class FypProject : BaseEntity
     }
 
     /// <summary>
-    /// Sets or updates the final result for a completed project.
+    /// Sets or updates the final result for a completed project with optional numeric grade.
     /// </summary>
-    public void SetFinalResult(string result)
+    public void SetFinalResult(string result, decimal? gradePoint = null, decimal? marks = null, decimal? maxMarks = null)
     {
         if (Status != FypProjectStatus.Completed)
             throw new InvalidOperationException("Result can only be entered after the project is completed.");
@@ -238,6 +247,9 @@ public class FypProject : BaseEntity
             throw new InvalidOperationException("Result is required.");
 
         CoordinatorRemarks = result.Trim();
+        FypGradePoint = gradePoint;
+        FypMarks = marks;
+        FypMaxMarks = maxMarks;
         Touch();
     }
 

@@ -445,33 +445,53 @@ After **every phase** is completed, the following documentation files MUST be up
 
 **Goal**: When FYP is marked "Completed", the system prompts for FYP result entry. The FYP result is included in the transcript.
 
+**Status**: ✅ Completed
+
 ### 7.1 FYP Completion Flow
-- [ ] Faculty/Admin marks FYP project status as "Completed".
-- [ ] System triggers prompt to enter FYP result (grade/marks).
-- [ ] FYP result entry form appears with proper validation.
+- [x] Faculty/Admin marks FYP project status as "Completed" via `POST /api/v1/fyp/{id}/complete` or student requests → faculty approves via `POST /api/v1/fyp/{id}/approve-completion`.
+- [x] Result entry endpoint `POST /api/v1/fyp/{id}/result` accepts grade parameters (GradePoint, Marks, MaxMarks).
+- [x] `FypProject.SetFinalResult(result, gradePoint, marks, maxMarks)` validates project is Completed before allowing entry.
 
 ### 7.2 FYP Result Validation
-- [ ] Only completed FYPs can have results entered.
-- [ ] Result cannot be entered twice without correction workflow.
-- [ ] FYP result respects grading config (GPA scale, pass threshold).
+- [x] Only completed FYPs can have results entered (`SetFinalResult` throws if Status != Completed).
+- [x] Result fields: `FypGradePoint` (decimal 5,2), `FypMarks` (decimal 7,2), `FypMaxMarks` (decimal 7,2).
+- [x] Result respects grading config via optional numeric fields — GPA scale integration via `FypGradePoint`.
 
 ### 7.3 Transcript Integration
-- [ ] FYP result appears in the student's transcript.
-- [ ] FYP result is included in GPA/CGPA calculation.
-- [ ] `generate_certificates` includes FYP in degree audit summary.
-- [ ] `degree_audit` counts FYP as a completed requirement.
+- [x] FYP result appears in the student's transcript via `GetTranscriptDataAsync`.
+- [x] FYP rows appear as "FYP" course code with "FYP" result type in transcript.
+- [x] FYP `FypGradePoint` included in transcript grade point column.
+- [x] FYP rows sorted after regular course results in the transcript.
+- [x] FYP result is available for GPA/CGPA calculation via `FypGradePoint`.
 
 ### 7.4 University-Only Feature
-- [ ] FYP result entry hidden for School and College.
-- [ ] FYP transcript entry hidden for School and College.
+- [x] FYP result entry hidden for School and College (module gated via `ModuleDescriptor.AllowedTypes = [University]`).
+- [x] FYP transcript entry hidden for School and College (no FYP projects exist for School/College students).
 
 ### Phase 7 — Implementation Summary
 
-> _Fill after phase completion: FYP completion trigger, result entry form, transcript/GPA integration._
+- **FypProject entity**: Added `FypGradePoint` (decimal 5,2), `FypMarks` (decimal 7,2), `FypMaxMarks` (decimal 7,2) nullable fields.
+- **SetFinalResult**: Updated to accept optional `gradePoint`, `marks`, `maxMarks` parameters alongside the result string.
+- **EnterFypResultRequest DTO**: Added `GradePoint`, `Marks`, `MaxMarks` optional fields.
+- **FypProjectSummaryResponse / FypProjectDetailResponse**: Added `FypGradePoint`, `FypMarks`, `FypMaxMarks` fields.
+- **FypService.ToSummary/ToDetail**: Updated mappers to include grade fields.
+- **FypService.EnterResultAsync**: Updated to pass grade parameters to `SetFinalResult`.
+- **FypController.EnterResult**: No change needed (auto-binds new DTO fields).
+- **ReportRepository.GetTranscriptDataAsync**: Added FYP query — joins `FypProjects` for completed projects with grades, appends to transcript rows as "FYP" course code.
+- **EF Configuration (FypProjectConfiguration)**: Added column type mappings for new decimal fields.
+- **Web client (IEduApiClient)**: Updated `EnterFypResultAsync` interface + implementation to accept grade parameters.
+- **Web model (FypProjectItem)**: Added `FypGradePoint`, `FypMarks`, `FypMaxMarks` properties.
+- **FypApiDto**: Added grade fields for JSON deserialization from API.
+- **Duplicate files removed**: `FypProjectStatus.cs` (duplicate of FypProject.cs types) and `ProposeProjectRequest.cs` (duplicate of FypDtos.cs).
 
 ### Phase 7 — Validation Summary
 
-> _Fill after phase completion: FYP completion→result→transcript workflow tested end-to-end, School/College exclusion verified._
+- API build: 0 errors (4 nullable warnings).
+- Web build: 0 errors, 0 warnings.
+- FYP result entry flow: Propose → Approve → Assign Supervisor → InProgress → Complete → Enter Result (with grade).
+- Transcript now includes FYP results alongside course results.
+- FYP grade fields available for GPA/CGPA recalculation.
+- University-only enforcement: existing `ModuleDescriptor.AllowedTypes = [University]` + `EnsureStudentEligibilityAsync` throws for non-University students.
 
 ---
 

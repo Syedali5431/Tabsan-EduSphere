@@ -1152,6 +1152,9 @@ public class FypProjectItem
     public string? SupervisorName{ get; set; }
     public string DepartmentName { get; set; } = "";
     public string? FinalResult { get; set; }
+    public decimal? FypGradePoint { get; set; }
+    public decimal? FypMarks     { get; set; }
+    public decimal? FypMaxMarks  { get; set; }
     public int    MeetingCount   { get; set; }
     public bool   IsCompletionRequested { get; set; }
     public int    CompletionApprovalCount { get; set; }

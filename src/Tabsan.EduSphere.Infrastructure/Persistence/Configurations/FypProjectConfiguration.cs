@@ -18,6 +18,9 @@ internal sealed class FypProjectConfiguration : IEntityTypeConfiguration<FypProj
         builder.Property(p => p.Description).HasMaxLength(8000).IsRequired();
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(p => p.CoordinatorRemarks).HasMaxLength(2000);
+        builder.Property(p => p.FypGradePoint).HasColumnType("decimal(5,2)");
+        builder.Property(p => p.FypMarks).HasColumnType("decimal(7,2)");
+        builder.Property(p => p.FypMaxMarks).HasColumnType("decimal(7,2)");
 
         builder.HasIndex(p => p.StudentProfileId);
         builder.HasIndex(p => new { p.DepartmentId, p.Status });

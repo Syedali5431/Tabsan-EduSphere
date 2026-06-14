@@ -371,6 +371,33 @@ public sealed class ReportRepository : IReportRepository
                 r.PublishedAt)
         ).ToListAsync(ct);
 
+        // Phase 7: Include completed FYP projects with grades in the transcript.
+        var fypRows = await (
+            from fyp in _db.FypProjects
+            join dep in _db.Departments on fyp.DepartmentId equals dep.Id
+            where fyp.StudentProfileId == studentProfileId
+               && fyp.Status == FypProjectStatus.Completed
+               && fyp.FypGradePoint.HasValue
+            orderby fyp.CreatedAt
+            select new TranscriptResultRow(
+                "FYP",
+                fyp.Title,
+                "Final Year",
+                "FYP",
+                fyp.FypMarks ?? 0m,
+                fyp.FypMaxMarks ?? 100m,
+                fyp.FypMaxMarks.HasValue && fyp.FypMaxMarks > 0
+                    ? Math.Round((fyp.FypMarks ?? 0m) / fyp.FypMaxMarks.Value * 100, 2)
+                    : 0m,
+                fyp.FypGradePoint,
+                fyp.UpdatedAt)
+        ).ToListAsync(ct);
+
+        var allRows = rows.Concat(fypRows)
+            .OrderBy(r => r.SemesterName)
+            .ThenBy(r => r.CourseCode)
+            .ToList();
+
         return new TranscriptReportRepoResult(
             profile.Id,
             profile.RegistrationNumber,
@@ -378,7 +405,7 @@ public sealed class ReportRepository : IReportRepository
             profile.ProgramName,
             profile.DepartmentName,
             profile.Cgpa,
-            rows);
+            allRows);
     }
 
     // ── Low Attendance Warning ─────────────────────────────────────────────────

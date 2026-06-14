@@ -146,7 +146,7 @@ public sealed class FypService : IFypService
         var project = await _repo.GetByIdAsync(projectId, ct);
         if (project is null) return false;
 
-        project.SetFinalResult(request.Result);
+        project.SetFinalResult(request.Result, request.GradePoint, request.Marks, request.MaxMarks);
         _repo.Update(project);
         await _repo.SaveChangesAsync(ct);
         return true;
@@ -297,7 +297,9 @@ public sealed class FypService : IFypService
     /// <summary>Maps a <see cref="FypProject"/> to a <see cref="FypProjectSummaryResponse"/>.</summary>
     private static FypProjectSummaryResponse ToSummary(FypProject p) => new(
         p.Id, p.StudentProfileId, p.DepartmentId, p.Title,
-        p.Status.ToString(), p.GetFinalResult(), p.SupervisorUserId,
+        p.Status.ToString(), p.GetFinalResult(),
+        p.FypGradePoint, p.FypMarks, p.FypMaxMarks,
+        p.SupervisorUserId,
         p.IsCompletionRequested,
         p.GetCompletionApprovedUserIds().Count,
         BuildRequiredApproverIds(p).Count,
@@ -306,7 +308,9 @@ public sealed class FypService : IFypService
     /// <summary>Maps a <see cref="FypProject"/> (with details loaded) to a <see cref="FypProjectDetailResponse"/>.</summary>
     private static FypProjectDetailResponse ToDetail(FypProject p) => new(
         p.Id, p.StudentProfileId, p.DepartmentId, p.Title, p.Description,
-        p.Status.ToString(), p.GetFinalResult(), p.SupervisorUserId, p.CoordinatorRemarks,
+        p.Status.ToString(), p.GetFinalResult(),
+        p.FypGradePoint, p.FypMarks, p.FypMaxMarks,
+        p.SupervisorUserId, p.CoordinatorRemarks,
         p.PanelMembers.Select(m => new PanelMemberResponse(m.Id, m.UserId, m.Role.ToString())).ToList(),
         p.Meetings.Select(ToMeetingResponse).ToList());
 

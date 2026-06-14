@@ -7155,7 +7155,7 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> EnterFypResult(Guid id, Guid? departmentId, string result, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    public async Task<IActionResult> EnterFypResult(Guid id, Guid? departmentId, string result, decimal? gradePoint, decimal? marks, decimal? maxMarks, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
@@ -7164,7 +7164,7 @@ public class PortalController : Controller
                 var identity = _api.GetSessionIdentity();
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
-                await _api.EnterFypResultAsync(id, result, effectiveTenantId, effectiveCampusId, ct);
+                await _api.EnterFypResultAsync(id, result, gradePoint, marks, maxMarks, effectiveTenantId, effectiveCampusId, ct);
                 TempData["PortalMessage"] = "FYP result saved.";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }

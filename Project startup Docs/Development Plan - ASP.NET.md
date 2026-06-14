@@ -5434,3 +5434,13 @@ A feature is complete only when:
 - Verified IPermissionService deactivation control (SuperAdmin only).
 - No code changes — all enforcement in place from prior phases.
 - Menu counts: SuperAdmin 58, Admin 46, Faculty 25, Student 20, Finance 6.
+
+---
+
+## Phase 7 FYP Result Entry & Transcript Integration Update (2026-06-14)
+
+- Added FypGradePoint, FypMarks, FypMaxMarks decimal fields to FypProject entity with EF column type mappings.
+- Updated FYP result entry (controller, service, DTOs, Web client, Web model) for numeric grade support.
+- Integrated FYP into transcript: GetTranscriptDataAsync now includes completed FYP projects with grades.
+- Removed duplicate files: FypProjectStatus.cs, ProposeProjectRequest.cs.
+- Build verified: API 0 errors, Web 0 errors 0 warnings.

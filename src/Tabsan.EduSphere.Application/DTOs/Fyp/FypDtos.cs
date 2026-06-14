@@ -34,7 +34,10 @@ public record AssignSupervisorRequest(
 
 /// <summary>Request to enter/update the final result of a completed FYP project.</summary>
 public record EnterFypResultRequest(
-    string Result);
+    string Result,
+    decimal? GradePoint = null,
+    decimal? Marks = null,
+    decimal? MaxMarks = null);
 
 /// <summary>Response after a faculty completion approval submission.</summary>
 public record ApproveCompletionResponse(
@@ -78,6 +81,9 @@ public record FypProjectSummaryResponse(
     string Title,
     string Status,
     string? FinalResult,
+    decimal? FypGradePoint,
+    decimal? FypMarks,
+    decimal? FypMaxMarks,
     Guid? SupervisorUserId,
     bool IsCompletionRequested,
     int CompletionApprovalCount,
@@ -93,6 +99,9 @@ public record FypProjectDetailResponse(
     string Description,
     string Status,
     string? FinalResult,
+    decimal? FypGradePoint,
+    decimal? FypMarks,
+    decimal? FypMaxMarks,
     Guid? SupervisorUserId,
     string? CoordinatorRemarks,
     IReadOnlyList<PanelMemberResponse> PanelMembers,

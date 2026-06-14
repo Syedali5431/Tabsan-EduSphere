@@ -6196,3 +6196,13 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - Verified SuperAdmin-only deactivation capability via IPermissionService (PermissionFlags.All vs None).
 - No code changes required — architecture implemented in prior phases, verified via code review.
 - 5 roles correctly restricted: SuperAdmin (58 menus), Admin (46), Faculty (25), Student (20), Finance (6).
+
+---
+
+## Phase 7 FYP Result Entry & Transcript Integration Update (2026-06-14)
+
+- Added numeric grade fields to FypProject entity: FypGradePoint, FypMarks, FypMaxMarks.
+- Updated FYP result entry flow to support numeric grades alongside result text.
+- Integrated FYP results into student transcript (ReportRepository.GetTranscriptDataAsync).
+- FYP rows appear as "FYP" course code with grade point in transcript.
+- Removed duplicate source files: FypProjectStatus.cs, ProposeProjectRequest.cs.

@@ -1,5 +1,26 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-14 Update — Phase 7 FYP Result Entry & Transcript Integration (Final Check)
+### Implementation sync
+- Added FypGradePoint (decimal 5,2), FypMarks (decimal 7,2), FypMaxMarks (decimal 7,2) nullable fields to FypProject entity.
+- Updated SetFinalResult to accept optional gradePoint, marks, maxMarks parameters.
+- Updated EnterFypResultRequest DTO with optional grade fields.
+- Updated FypProjectSummaryResponse and FypProjectDetailResponse to include grade fields.
+- Updated FypService.ToSummary/ToDetail mappers for new grade fields.
+- Updated FypService.EnterResultAsync to pass grade parameters.
+- Updated EF configuration (FypProjectConfiguration) with decimal column type mappings.
+- Updated Web client (IEduApiClient + FypApiDto) with grade field support.
+- Updated Web model (FypProjectItem) with grade properties.
+- Integrated FYP results into transcript via ReportRepository.GetTranscriptDataAsync — FYP rows appended with "FYP" course code.
+- Removed duplicate files: FypProjectStatus.cs (duplicate types) and ProposeProjectRequest.cs (duplicate DTOs).
+
+### Validation sync
+- API build: 0 errors. Web build: 0 errors, 0 warnings.
+- FYP result entry now accepts numeric grades alongside result text.
+- Transcript displays FYP results after course results with grade point column populated.
+- University-only enforcement unchanged — ModuleDescriptor.AllowedTypes = [University] + student eligibility check.
+- FYP grade fields available for GPA/CGPA recalculation.
+
 ## 2026-06-14 Update — Phase 6 Role-Based Sidebar Menu Restrictions (Final Check)
 ### Implementation sync
 - Verified 5-layer filtering pipeline in SidebarMenuController: role-based DB filter → institution policy → module activation → permission annotation.

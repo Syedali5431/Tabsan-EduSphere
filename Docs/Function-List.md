@@ -633,3 +633,8 @@
 | ReportController.ExportLowAttendance* | API: GET /api/v1/reports/low-attendance/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
 | ReportController.ExportFypStatus* | API: GET /api/v1/reports/fyp-status/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
 | PortalController.ResolveLicensedInstitutionTypesAsync | Resolves licensed institution types from portal capability matrix for catalog filtering | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| FypProject.FypGradePoint | Final grade point awarded upon FYP completion (decimal 5,2) | src/Tabsan.EduSphere.Domain/Fyp/FypProject.cs |
+| FypProject.FypMarks | Final marks awarded upon FYP completion (decimal 7,2) | src/Tabsan.EduSphere.Domain/Fyp/FypProject.cs |
+| FypProject.FypMaxMarks | Maximum possible marks for FYP (decimal 7,2) | src/Tabsan.EduSphere.Domain/Fyp/FypProject.cs |
+| FypProject.SetFinalResult | Sets result with optional grade point, marks, maxMarks for completed FYP | src/Tabsan.EduSphere.Domain/Fyp/FypProject.cs |
+| ReportRepository.GetTranscriptDataAsync (updated) | Now includes completed FYP projects with grades in transcript output | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportRepository.cs |
