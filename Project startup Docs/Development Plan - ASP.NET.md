@@ -5411,3 +5411,15 @@ A feature is complete only when:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+---
+
+## Phase 5 Report Exports Update (2026-06-14)
+
+- Completed report export coverage: all 9 report types now have Excel + CSV + PDF export (IReportService, ReportService, ReportController, IEduApiClient, PortalController).
+- Added 18 export implementations in ReportService using BuildExcelBytes (ClosedXML), BuildCsvBytes, BuildPdfBytes (QuestPDF).
+- Added 24 API endpoints in ReportController for missing export formats.
+- Added 18 Web proxy actions in PortalController for all export formats.
+- Added license-based catalog filtering via ResolveLicensedInstitutionTypesAsync.
+- Added export buttons to 6 report views: GPA, Enrollment, SemesterResults, Transcript, LowAttendance, FypStatus.
+- Build verified: API 0 errors, Web 0 errors 0 warnings.

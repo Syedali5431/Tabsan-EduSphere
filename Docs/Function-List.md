@@ -610,3 +610,26 @@
 | PrerequisiteRepository.GetByCourseIdAsync | Returns prerequisites with eager-loaded Course navigation for full payload | src/Tabsan.EduSphere.Infrastructure/Repositories/PrerequisiteRepository.cs |
 | verify-degree-rules-access.ps1 functions | PowerShell verification automation for degree-rule access validation | Scripts/verify-degree-rules-access.ps1 |
 | verify-degree-rules-access-local-bootstrap.ps1 functions | Local bootstrap helpers for degree-rule verification scripts | Scripts/verify-degree-rules-access-local-bootstrap.ps1 |
+| ReportService.ExportGpaReportCsvAsync | GPA report CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportGpaReportPdfAsync | GPA report PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportEnrollmentSummaryExcelAsync | Enrollment summary Excel export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportEnrollmentSummaryCsvAsync | Enrollment summary CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportEnrollmentSummaryPdfAsync | Enrollment summary PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportSemesterResultsExcelAsync | Semester results Excel export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportSemesterResultsCsvAsync | Semester results CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportSemesterResultsPdfAsync | Semester results PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportTranscriptCsvAsync | Student transcript CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportTranscriptPdfAsync | Student transcript PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportLowAttendanceExcelAsync | Low attendance warning Excel export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportLowAttendanceCsvAsync | Low attendance warning CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportLowAttendancePdfAsync | Low attendance warning PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportFypStatusExcelAsync | FYP status report Excel export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportFypStatusCsvAsync | FYP status report CSV export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportService.ExportFypStatusPdfAsync | FYP status report PDF export | src/Tabsan.EduSphere.Infrastructure/Reporting/ReportService.cs |
+| ReportController.ExportGpaReportCsv/Pdf | API: GET /api/v1/reports/gpa-report/export/{csv,pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ExportEnrollmentSummary* | API: GET /api/v1/reports/enrollment-summary/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ExportSemesterResults* | API: GET /api/v1/reports/semester-results/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ExportStudentTranscriptCsv/Pdf | API: GET /api/v1/reports/student-transcript/export/{csv,pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ExportLowAttendance* | API: GET /api/v1/reports/low-attendance/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| ReportController.ExportFypStatus* | API: GET /api/v1/reports/fyp-status/export{/,/csv,/pdf} | src/Tabsan.EduSphere.API/Controllers/ReportController.cs |
+| PortalController.ResolveLicensedInstitutionTypesAsync | Resolves licensed institution types from portal capability matrix for catalog filtering | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |

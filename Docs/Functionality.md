@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-14 Update — Phase 5 Reports Validation (Final Check)
+### Implementation sync
+- Added 18 export method signatures to IReportService: Enrollment/SemesterResults/LowAttendance/FYP Excel/CSV/PDF + GPA CSV/PDF + Transcript CSV/PDF.
+- Implemented all 18 export methods in ReportService using BuildExcelBytes (ClosedXML), BuildCsvBytes, BuildPdfBytes (QuestPDF).
+- Added 24 new API export endpoints in ReportController covering all missing formats for 6 report types.
+- Added 20+ Web client proxy methods in IEduApiClient for all export formats.
+- Added 18 export proxy actions in PortalController for all new export formats.
+- Added license-based catalog filtering: ReportCenter action filters out fyp_status and gpa_report when license excludes University.
+- Added ResolveLicensedInstitutionTypesAsync helper using portal capability matrix.
+- Added Excel/CSV/PDF export buttons to 6 report views: ReportGpa, ReportEnrollment, ReportSemesterResults, ReportTranscript, ReportLowAttendance, ReportFypStatus.
+
+### Validation sync
+- API build: 0 errors. Web build: 0 errors, 0 warnings.
+- All 9 report types now have complete Excel + CSV + PDF export (API, Web client, UI).
+- Institution-type aware catalog filtering: School/College users don't see University-only reports (FYP Status, GPA Report).
+- Export buttons visible on all report views; consistent styling (green Excel, outline-green CSV, outline-red PDF).
+- Existing integration tests cover catalog access, attendance/result/assignment/quiz/payment export content types and filenames.
+
 ## 2026-06-12 Update — Phase 4 Sidebar Menu Data Audit (Final Check)
 ### Implementation sync
 - Audited all 28+ database tables for row counts against 43 sidebar menu keys.

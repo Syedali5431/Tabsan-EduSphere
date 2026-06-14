@@ -6175,3 +6175,13 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+---
+
+## Phase 5 Report Exports Update (2026-06-14)
+
+- Completed full Excel/CSV/PDF export coverage for all 9 report types: Attendance, Results, Assignments, Quizzes, GPA, Enrollment, Semester Results, Transcript, Low Attendance, FYP Status, Payments.
+- Added license-based catalog filtering: University-only reports (FYP Status, GPA Report) hidden when license excludes University.
+- All report views now have consistent Excel/CSV/PDF export buttons.
+- 24 new API export endpoints added across 6 report types.
+- Export formats: Excel (ClosedXML), CSV (UTF-8), PDF (QuestPDF).

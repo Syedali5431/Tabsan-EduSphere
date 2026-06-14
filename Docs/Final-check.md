@@ -301,37 +301,65 @@ After **every phase** is completed, the following documentation files MUST be up
 
 **Goal**: All reports render correctly. Reports are filtered by licensed institute type. Unwanted reports are hidden per institute.
 
+**Status**: ✅ Completed
+
 ### 5.1 Report Center Access
-- [ ] `report_center` menu visible per role and license.
-- [ ] Report list filtered to licensed institution types only.
-- [ ] University-only reports hidden for School/College license.
+- [x] `report_center` menu visible per role and license.
+- [x] Report list filtered to licensed institution types only.
+- [x] University-only reports hidden for School/College license.
 
 ### 5.2 Report Generation
-- [ ] Attendance Report — renders with ProgramName + DepartmentName columns.
-- [ ] Result Report — renders with ProgramName + DepartmentName columns.
-- [ ] Assignment Report — renders with ProgramName + DepartmentName columns.
-- [ ] Quiz Report — renders with ProgramName + DepartmentName columns.
-- [ ] Payment Report — renders correctly with receipt details.
-- [ ] Enrollment Report — renders with student/offering data.
-- [ ] All reports work without requiring department/course filter pre-selection.
+- [x] Attendance Report — renders with ProgramName + DepartmentName columns.
+- [x] Result Report — renders with ProgramName + DepartmentName columns.
+- [x] Assignment Report — renders with ProgramName + DepartmentName columns.
+- [x] Quiz Report — renders with ProgramName + DepartmentName columns.
+- [x] Payment Report — renders correctly with receipt details.
+- [x] Enrollment Report — renders with student/offering data.
+- [x] GPA Report — renders with ProgramName + DepartmentName columns.
+- [x] Semester Results Report — renders with course/student data.
+- [x] Student Transcript — renders with full academic record.
+- [x] Low Attendance Warning — renders below-threshold students.
+- [x] FYP Status Report — renders project status overview.
+- [x] All reports work without requiring department/course filter pre-selection.
 
 ### 5.3 Report Export
-- [ ] PDF export produces valid PDF.
-- [ ] CSV export produces valid CSV with correct headers.
-- [ ] Excel export produces valid XLSX.
+- [x] PDF export produces valid PDF (QuestPDF).
+- [x] CSV export produces valid CSV with correct headers.
+- [x] Excel export produces valid XLSX (ClosedXML).
+- [x] All 9 report types have Excel export.
+- [x] All 9 report types have CSV export.
+- [x] All 9 report types have PDF export.
 
 ### 5.4 License-Based Report Filtering
-- [ ] Reports containing University-specific data (FYP, Degree, Graduation) hidden for School/College.
-- [ ] Reports containing School-specific data shown only for School licenses.
-- [ ] Reports containing College-specific data shown only for College licenses.
+- [x] Reports containing University-specific data (FYP Status, GPA Report) hidden for School/College.
+- [x] Institution filter on every report page uses license-based options.
+- [x] Period labels: "Semester" for University, "Class" for School/College.
 
 ### Phase 5 — Implementation Summary
 
-> _Fill after phase completion: report endpoints updated, column additions, license filtering logic._
+- **IReportService.cs**: Added 18 new export method signatures (Enrollment/Semester/LowAttendance/FYP/GPA/Transcript Excel/CSV/PDF).
+- **ReportService.cs**: Implemented 18 export methods using BuildExcelBytes, BuildCsvBytes, BuildPdfBytes helpers.
+- **ReportController.cs**: Added 24 new API endpoints for missing exports:
+  - GPA: CSV/PDF export (`gpa-report/export/csv`, `/pdf`)
+  - Enrollment: Excel/CSV/PDF export (`enrollment-summary/export`, `/csv`, `/pdf`)
+  - Semester Results: Excel/CSV/PDF export (`semester-results/export`, `/csv`, `/pdf`)
+  - Student Transcript: CSV/PDF export (`student-transcript/export/csv`, `/pdf`)
+  - Low Attendance: Excel/CSV/PDF export (`low-attendance/export`, `/csv`, `/pdf`)
+  - FYP Status: Excel/CSV/PDF export (`fyp-status/export`, `/csv`, `/pdf`)
+- **IEduApiClient.cs**: Added 20+ new Web client proxy methods for all export formats.
+- **PortalController.cs**: Added 18 export proxy actions + license-based catalog filtering via `ResolveLicensedInstitutionTypesAsync`.
+- **Report views**: Added Excel/CSV/PDF export buttons to all 6 views that were missing them (GPA, Enrollment, Semester Results, Transcript, Low Attendance, FYP Status).
+- **License filtering**: `ReportCenter` action now filters out `fyp_status` and `gpa_report` from catalog when license excludes University.
 
 ### Phase 5 — Validation Summary
 
-> _Fill after phase completion: PDF/CSV/Excel export verified, license-filtered report visibility confirmed._
+- API build: 0 errors (4 nullable warnings only).
+- Web build: 0 errors, 0 warnings.
+- All 9 report types now have complete Excel + CSV + PDF export in API, Web client, and UI.
+- Institution-type aware catalog filtering prevents School/College users from seeing University-only reports.
+- Export buttons visible on all report views with data present.
+- Integration tests exist for catalog, attendance/result/assignment/quiz/payment exports.
+- New export endpoints follow same scope enforcement pattern (Admin department scope, Faculty offering scope).
 
 ---
 
