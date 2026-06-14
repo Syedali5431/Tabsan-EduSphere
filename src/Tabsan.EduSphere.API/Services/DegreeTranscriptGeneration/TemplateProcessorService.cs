@@ -201,7 +201,7 @@ public sealed class TemplateProcessorService
         headerRow.Append(BuildHeaderCell("Credit Hrs", "800"));
         headerRow.Append(BuildHeaderCell("Marks", "800"));
         headerRow.Append(BuildHeaderCell("Max", "800"));
-        headerRow.Append(BuildHeaderCell(institutionType == 2 ? "GPA" : "%", "800"));
+        headerRow.Append(BuildHeaderCell(institutionType == 0 ? "GPA" : "%", "800"));
         table.Append(headerRow);
 
         // ── Group by Semester ──

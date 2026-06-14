@@ -272,16 +272,31 @@ public class CertificateGenerationController : ControllerBase
         if (student is null)
             return Forbid();
 
+        // Only University students can get a degree
+        if (student.Department.InstitutionType != InstitutionType.University)
+            return BadRequest(new { message = "Degree certificates are only available for university students. School/College students should use Completion Certificate." });
+
+        // Check if student has enough published results to qualify
+        var publishedResultCount = await _db.Results
+            .AsNoTracking()
+            .CountAsync(r => r.StudentProfileId == studentProfileId && r.IsPublished, ct);
+
+        if (publishedResultCount == 0)
+            return BadRequest(new { message = "No published results found. Degree requires completed course results." });
+
+        var isUniversity = student.Department.InstitutionType == InstitutionType.University;
+        var cgpaValue = isUniversity ? student.Cgpa.ToString("0.00") : "";
+
         var request = new DegreeGenerationRequest(
             StudentId: student.Id,
             StudentName: await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct),
             FatherName: await ResolveFatherNameAsync(student.UserId, ct),
             DegreeTitle: $"{student.Program?.Name ?? "Degree"}",
-            Cgpa: student.Cgpa.ToString("0.00"),
+            Cgpa: cgpaValue,
             RegistrationNumber: student.RegistrationNumber,
             DepartmentName: student.Department.Name,
             ProgramName: student.Program?.Name,
-            FinalGpa: student.Cgpa.ToString("0.00"),
+            FinalGpa: cgpaValue,
             InstitutionType: (int)student.Department.InstitutionType);
 
         var doc = await _documents.GenerateDegreeAsync(request, ct);
@@ -500,7 +515,7 @@ public class CertificateGenerationController : ControllerBase
             return Forbid();
 
         if (normalizedType == CompletionDocumentType && !IsCompletionEligible(student))
-            return BadRequest(new { message = "Completion certificate can be generated only after class 10 (School) or class 12 (College)." });
+            return BadRequest(new { message = "Completion certificate can be generated only after completing all classes: Class 10 (School) or Class 11 & 12 (College)." });
 
         var reportRows = await BuildNonUniversityReportRowsAsync(student.Id, semesterId, ct);
         if (reportRows.Count == 0)
@@ -548,7 +563,7 @@ public class CertificateGenerationController : ControllerBase
 
         var templateBytes = await GetAdditionalTemplateBytesAsync(normalizedType, ct);
         var institutionType = (int)student.Department.InstitutionType;
-        var finalScoreLabel = institutionType == 2 ? "CGPA" : "Percentage";
+        var isUniversity = institutionType == 0;
         var payload = new DocumentTemplatePayload(
             StudentName: studentName,
             FatherName: fatherName,
@@ -557,9 +572,9 @@ public class CertificateGenerationController : ControllerBase
             ProgramName: student.Program?.Name ?? "",
             ClassName: className,
             DegreeTitle: student.Program?.Name ?? "",
-            Cgpa: institutionType == 2 ? student.Cgpa.ToString("0.00") : "",
-            FinalPercentage: institutionType != 2 ? resultSummary.FinalPercentage : "",
-            FinalGpa: institutionType == 2 ? student.Cgpa.ToString("0.00") : "",
+            Cgpa: isUniversity ? student.Cgpa.ToString("0.00") : "",
+            FinalPercentage: !isUniversity ? resultSummary.FinalPercentage : "",
+            FinalGpa: isUniversity ? student.Cgpa.ToString("0.00") : "",
             SemesterGpaSummary: resultSummary.SemesterSummary,
             IssueDate: DateTime.UtcNow.ToString("yyyy-MM-dd"),
             SerialNumber: $"{(normalizedType == CompletionDocumentType ? "CMP" : "RPT")}-{DateTime.UtcNow:yyyyMMddHHmmss}",
@@ -875,7 +890,7 @@ public class CertificateGenerationController : ControllerBase
             .ToListAsync(ct);
     }
 
-    private static bool IsCompletionEligible(StudentProfile student)
+    private bool IsCompletionEligible(StudentProfile student)
     {
         if (student.Status == StudentStatus.Graduated)
             return true;
@@ -883,9 +898,26 @@ public class CertificateGenerationController : ControllerBase
         return student.Department.InstitutionType switch
         {
             InstitutionType.School => student.CurrentSemesterNumber >= 10,
-            InstitutionType.College => student.CurrentSemesterNumber >= 2,   // Class 12 completed
+            InstitutionType.College => HasCompletedBothClassesAsync(student.Id).GetAwaiter().GetResult(),
             _ => false
         };
+    }
+
+    private async Task<bool> HasCompletedBothClassesAsync(Guid studentProfileId)
+    {
+        // College requires published results in BOTH Class 11 and Class 12
+        var classSemesters = await _db.Results
+            .AsNoTracking()
+            .Where(r => r.StudentProfileId == studentProfileId && r.IsPublished)
+            .Join(_db.CourseOfferings, r => r.CourseOfferingId, co => co.Id, (r, co) => new { r, co.SemesterId })
+            .Join(_db.Semesters, x => x.SemesterId, s => s.Id, (x, s) => s.Name)
+            .Distinct()
+            .ToListAsync();
+
+        var hasClass11 = classSemesters.Any(n => n.Contains("Class 11", StringComparison.OrdinalIgnoreCase));
+        var hasClass12 = classSemesters.Any(n => n.Contains("Class 12", StringComparison.OrdinalIgnoreCase));
+
+        return hasClass11 && hasClass12;
     }
 
     private static ResultSummary BuildResultSummary(IReadOnlyCollection<TranscriptResultProjection> rows)
