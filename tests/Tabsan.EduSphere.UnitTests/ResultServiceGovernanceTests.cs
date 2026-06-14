@@ -89,7 +89,20 @@ public class ResultServiceGovernanceTests
             return Task.CompletedTask;
         }
 
-        public Task<(IReadOnlyList<AuditLog> Items, int TotalCount)> SearchAsync(string? query = null, Guid? actorUserId = null, string? action = null, string? entityName = null, DateTime? fromUtc = null, DateTime? toUtc = null, int page = 1, int pageSize = 50, CancellationToken ct = default)
+        public Task<(IReadOnlyList<AuditLog> Items, int TotalCount)> SearchAsync(
+            string? query = null,
+            Guid? actorUserId = null,
+            string? action = null,
+            string? entityName = null,
+            DateTime? fromUtc = null,
+            DateTime? toUtc = null,
+            int page = 1,
+            int pageSize = 50,
+            string? actorRole = null,
+            string? severity = null,
+            string? eventCategory = null,
+            string? correlationId = null,
+            CancellationToken ct = default)
             => Task.FromResult(((IReadOnlyList<AuditLog>)Entries, Entries.Count));
     }
 

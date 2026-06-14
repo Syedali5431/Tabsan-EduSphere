@@ -195,6 +195,15 @@ file sealed class StubTwoFactorStateStore : ITwoFactorStateStore
         _snapshot = _snapshot with { TwoFactorEnabled = false, SecretKey = null };
         return Task.FromResult(true);
     }
+
+    public Task<bool> HardDeleteAsync(Guid userId, CancellationToken ct = default)
+    {
+        if (_snapshot is null || _snapshot.UserId != userId)
+            return Task.FromResult(false);
+
+        _snapshot = null;
+        return Task.FromResult(true);
+    }
 }
 
 file sealed class StubTotpService : ITotpService

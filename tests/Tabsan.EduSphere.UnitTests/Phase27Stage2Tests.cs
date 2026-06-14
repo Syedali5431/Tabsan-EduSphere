@@ -212,6 +212,7 @@ public class AuthSecurityUxTests
             new StubPasswordHistoryRepository(),
             new StubLicenseRepository(),
             totpService,
+            new StubTwoFactorStateStore(null),
             Options.Create(options));
     }
 
@@ -294,6 +295,18 @@ file sealed class StubSessionRepository : IUserSessionRepository
 
     public Task<int> CountActiveSessionsAsync(CancellationToken ct = default)
         => Task.FromResult(0);
+
+    public Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct = default)
+        => Task.FromResult<UserSession?>(null);
+
+    public Task<IList<UserSession>> GetActiveSessionsAsync(CancellationToken ct = default)
+        => Task.FromResult<IList<UserSession>>([]);
+
+    public Task<IList<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult<IList<UserSession>>([]);
+
+    public Task<IList<UserSession>> GetIdleSessionsAsync(int idleTimeoutMinutes, CancellationToken ct = default)
+        => Task.FromResult<IList<UserSession>>([]);
 }
 
 file sealed class StubTokenService : ITokenService
@@ -328,6 +341,10 @@ file sealed class StubAuditService : IAuditService
         DateTime? toUtc = null,
         int page = 1,
         int pageSize = 50,
+        string? actorRole = null,
+        string? severity = null,
+        string? eventCategory = null,
+        string? correlationId = null,
         CancellationToken ct = default)
         => Task.FromResult(((IReadOnlyList<AuditLog>)[], 0));
 }
@@ -382,4 +399,26 @@ file sealed class StubTotpService : ITotpService
 
     public bool ValidateCode(string secret, string code, DateTime utcNow, int digits, int stepSeconds, int allowedDriftWindows)
         => _validCodes.Contains(code);
+}
+
+file sealed class StubTwoFactorStateStore : ITwoFactorStateStore
+{
+    private TwoFactorStateSnapshot? _snapshot;
+
+    public StubTwoFactorStateStore(TwoFactorStateSnapshot? snapshot) => _snapshot = snapshot;
+
+    public Task<TwoFactorStateSnapshot?> GetAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(_snapshot is not null && _snapshot.UserId == userId ? _snapshot : null);
+
+    public Task<bool> SaveSetupAsync(Guid userId, string secretKey, CancellationToken ct = default)
+        => Task.FromResult(true);
+
+    public Task<bool> EnableAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(true);
+
+    public Task<bool> DisableAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(true);
+
+    public Task<bool> HardDeleteAsync(Guid userId, CancellationToken ct = default)
+        => Task.FromResult(true);
 }
