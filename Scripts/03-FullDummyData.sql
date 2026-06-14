@@ -297,3 +297,378 @@ CLOSE semCur; DEALLOCATE semCur;
 
 PRINT '03-FullDummyData.sql completed successfully.';
 GO
+
+-- ════════════════════════════════════════════════
+-- PHASE 4 SUPPLEMENT: Demo data for 14 empty tables
+-- ════════════════════════════════════════════════
+SET NOCOUNT ON;
+GO
+USE [Tabsan-EduSphere];
+GO
+
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DECLARE @Fac_Uni UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=2);
+DECLARE @Fac_Col UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=1);
+DECLARE @Fac_Sch UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=3 AND InstitutionType=0);
+DECLARE @Adm_Uni UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=2 AND InstitutionType=2);
+DECLARE @Stu_Uni UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=4 AND InstitutionType=2);
+DECLARE @Stu_Col UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=4 AND InstitutionType=1);
+DECLARE @Stu_Sch UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=4 AND InstitutionType=0);
+DECLARE @Fin_User UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [users] WHERE RoleId=5);
+DECLARE @D_IT_Uni UNIQUEIDENTIFIER = 'D0000001-0000-0000-0000-000000000001';
+DECLARE @D_BUS    UNIQUEIDENTIFIER = 'D0000002-0000-0000-0000-000000000002';
+DECLARE @D_IT_Col UNIQUEIDENTIFIER = 'D0000003-0000-0000-0000-000000000003';
+DECLARE @D_IT_Sch UNIQUEIDENTIFIER = 'D0000004-0000-0000-0000-000000000004';
+DECLARE @T_Uni UNIQUEIDENTIFIER = '11111111-1111-1111-1111-111111111111';
+DECLARE @T_Col UNIQUEIDENTIFIER = '22222222-2222-2222-2222-222222222222';
+DECLARE @T_Sch UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333333';
+DECLARE @C_Uni UNIQUEIDENTIFIER = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA';
+DECLARE @C_Col UNIQUEIDENTIFIER = 'BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB';
+DECLARE @C_Sch UNIQUEIDENTIFIER = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC';
+DECLARE @P_BSCS UNIQUEIDENTIFIER = 'A0000001-0000-0000-0000-000000000001';
+DECLARE @P_BBA  UNIQUEIDENTIFIER = 'A0000002-0000-0000-0000-000000000002';
+DECLARE @P_SCIENCE UNIQUEIDENTIFIER = 'A0000006-0000-0000-0000-000000000006';
+
+PRINT '--- Phase 4 Supplement: Seeding 14 empty tables ---';
+
+-- ════════════════════════════════════════════════
+-- 1. BUILDINGS (3 per campus = 9 total)
+-- ════════════════════════════════════════════════
+PRINT '1. Buildings...';
+IF NOT EXISTS (SELECT 1 FROM [buildings])
+BEGIN
+    INSERT INTO [buildings] ([Id],[TenantId],[CampusId],[Name],[Code],[IsActive],[CreatedAt],[IsDeleted],[DeletedAt])
+    VALUES
+    (NEWID(),@T_Uni,@C_Uni,N'Main Academic Block',N'UNI-MAIN',1,@Now,0,NULL),
+    (NEWID(),@T_Uni,@C_Uni,N'Science & Technology Wing',N'UNI-SCI',1,@Now,0,NULL),
+    (NEWID(),@T_Uni,@C_Uni,N'Business & Management Centre',N'UNI-BIZ',1,@Now,0,NULL),
+    (NEWID(),@T_Col,@C_Col,N'College Main Building',N'COL-MAIN',1,@Now,0,NULL),
+    (NEWID(),@T_Col,@C_Col,N'College IT Block',N'COL-IT',1,@Now,0,NULL),
+    (NEWID(),@T_Col,@C_Col,N'College Library Block',N'COL-LIB',1,@Now,0,NULL),
+    (NEWID(),@T_Sch,@C_Sch,N'School Main Building',N'SCH-MAIN',1,@Now,0,NULL),
+    (NEWID(),@T_Sch,@C_Sch,N'School Junior Wing',N'SCH-JR',1,@Now,0,NULL),
+    (NEWID(),@T_Sch,@C_Sch,N'School Senior Wing',N'SCH-SR',1,@Now,0,NULL);
+END
+
+-- ════════════════════════════════════════════════
+-- 2. ROOMS (3 per building = 27 total)
+-- ════════════════════════════════════════════════
+PRINT '2. Rooms...';
+IF NOT EXISTS (SELECT 1 FROM [rooms])
+BEGIN
+    DECLARE @bldId UNIQUEIDENTIFIER;
+    DECLARE bldCur CURSOR FOR SELECT Id FROM [buildings] ORDER BY [Name];
+    OPEN bldCur; FETCH NEXT FROM bldCur INTO @bldId;
+    DECLARE @roomNum INT = 1;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [rooms] ([Id],[TenantId],[CampusId],[Number],[BuildingId],[Capacity],[IsActive],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),NULL,NULL,CONCAT(N'R',@roomNum),@bldId,30+ABS(CHECKSUM(NEWID()))%50,1,@Now,0,NULL);
+        INSERT INTO [rooms] ([Id],[TenantId],[CampusId],[Number],[BuildingId],[Capacity],[IsActive],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),NULL,NULL,CONCAT(N'R',@roomNum+1),@bldId,20+ABS(CHECKSUM(NEWID()))%40,1,@Now,0,NULL);
+        INSERT INTO [rooms] ([Id],[TenantId],[CampusId],[Number],[BuildingId],[Capacity],[IsActive],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),NULL,NULL,CONCAT(N'R',@roomNum+2),@bldId,10+ABS(CHECKSUM(NEWID()))%30,1,@Now,0,NULL);
+        SET @roomNum += 3;
+        FETCH NEXT FROM bldCur INTO @bldId;
+    END
+    CLOSE bldCur; DEALLOCATE bldCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 3. TIMETABLE ENTRIES (5 entries per timetable)
+-- ════════════════════════════════════════════════
+PRINT '3. Timetable entries...';
+IF NOT EXISTS (SELECT 1 FROM [timetable_entries])
+BEGIN
+    DECLARE @ttId UNIQUEIDENTIFIER;
+    DECLARE ttCur CURSOR FOR SELECT Id FROM [timetables];
+    OPEN ttCur; FETCH NEXT FROM ttCur INTO @ttId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [timetable_entries] ([Id],[TimetableId],[DayOfWeek],[StartTime],[EndTime],[SubjectName],[RoomNumber],[FacultyName],[CourseOfferingId],[CreatedAt])
+        VALUES
+        (NEWID(),@ttId,1,N'09:00',N'10:30',N'Introduction to Computing',N'R1',N'Dr. Ahmed Khan',NULL,@Now),
+        (NEWID(),@ttId,1,N'11:00',N'12:30',N'Data Structures',N'R2',N'Dr. Sarah Ali',NULL,@Now),
+        (NEWID(),@ttId,3,N'09:00',N'10:30',N'Calculus I',N'R3',N'Prof. Bilal Hussain',NULL,@Now),
+        (NEWID(),@ttId,3,N'11:00',N'12:30',N'English Composition',N'R1',N'Ms. Fatima Noor',NULL,@Now),
+        (NEWID(),@ttId,5,N'09:00',N'10:30',N'Programming Lab',N'R2',N'Dr. Ahmed Khan',NULL,@Now);
+        FETCH NEXT FROM ttCur INTO @ttId;
+    END
+    CLOSE ttCur; DEALLOCATE ttCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 4. ENROLLMENTS (2-3 per student with course offerings)
+-- ════════════════════════════════════════════════
+PRINT '4. Enrollments...';
+IF NOT EXISTS (SELECT 1 FROM [enrollments])
+BEGIN
+    INSERT INTO [enrollments] ([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+    SELECT NEWID(), sp.Id, co.Id, @Now, N'Active', @Now
+    FROM [student_profiles] sp
+    CROSS APPLY (SELECT TOP 2 co.Id FROM [course_offerings] co JOIN [courses] c ON c.Id=co.CourseId ORDER BY NEWID()) co
+    WHERE NOT EXISTS (SELECT 1 FROM [enrollments] e WHERE e.StudentProfileId=sp.Id AND e.CourseOfferingId=co.Id);
+END
+
+-- ════════════════════════════════════════════════
+-- 5. ASSIGNMENTS (2 per course offering)
+-- ════════════════════════════════════════════════
+PRINT '5. Assignments...';
+IF NOT EXISTS (SELECT 1 FROM [assignments])
+BEGIN
+    DECLARE @coId UNIQUEIDENTIFIER;
+    DECLARE coCur CURSOR FOR SELECT TOP 30 Id FROM [course_offerings] ORDER BY NEWID();
+    OPEN coCur; FETCH NEXT FROM coCur INTO @coId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [assignments] ([Id],[CourseOfferingId],[Title],[Description],[DueDate],[MaxMarks],[IsPublished],[PublishedAt],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES
+        (NEWID(),@coId,N'Assignment 1: Research Paper',N'Write a 2000-word research paper on the course topic.',DATEADD(DAY,14,@Now),100,1,@Now,@Now,0,NULL);
+        INSERT INTO [assignments] ([Id],[CourseOfferingId],[Title],[Description],[DueDate],[MaxMarks],[IsPublished],[PublishedAt],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES
+        (NEWID(),@coId,N'Assignment 2: Problem Set',N'Complete all problems from Chapters 3-5.',DATEADD(DAY,21,@Now),50,1,@Now,@Now,0,NULL);
+        FETCH NEXT FROM coCur INTO @coId;
+    END
+    CLOSE coCur; DEALLOCATE coCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 6. QUIZZES (1 per course offering)
+-- ════════════════════════════════════════════════
+PRINT '6. Quizzes...';
+IF NOT EXISTS (SELECT 1 FROM [quizzes])
+BEGIN
+    DECLARE @qcoId UNIQUEIDENTIFIER;
+    DECLARE qcoCur CURSOR FOR SELECT TOP 30 Id FROM [course_offerings] ORDER BY NEWID();
+    OPEN qcoCur; FETCH NEXT FROM qcoCur INTO @qcoId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [quizzes] ([Id],[CourseOfferingId],[Title],[Instructions],[TimeLimitMinutes],[MaxAttempts],[IsPublished],[IsActive],[CreatedByUserId],[CreatedAt])
+        VALUES (NEWID(),@qcoId,N'Quiz: Mid-Term Review',N'Answer all questions. No external materials allowed.',30,2,1,1,ISNULL(@Fac_Uni,@Adm_Uni),@Now);
+        FETCH NEXT FROM qcoCur INTO @qcoId;
+    END
+    CLOSE qcoCur; DEALLOCATE qcoCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 7. NOTIFICATIONS (system + user-generated)
+-- ════════════════════════════════════════════════
+PRINT '7. Notifications...';
+IF NOT EXISTS (SELECT 1 FROM [notifications])
+BEGIN
+    DECLARE @nId1 UNIQUEIDENTIFIER = NEWID(), @nId2 UNIQUEIDENTIFIER = NEWID(), @nId3 UNIQUEIDENTIFIER = NEWID();
+    INSERT INTO [notifications] ([Id],[Title],[Body],[Type],[SenderUserId],[IsSystemGenerated],[IsActive],[CreatedAt])
+    VALUES
+    (@nId1,N'Welcome to EduSphere',N'Your account has been created successfully. Please complete your profile.',N'System',NULL,1,1,@Now),
+    (@nId2,N'New Assignment Posted',N'A new assignment has been posted for your enrolled course.',N'Academic',@Fac_Uni,0,1,@Now),
+    (@nId3,N'Fee Payment Reminder',N'Please pay your semester fees by the due date to avoid late charges.',N'Finance',@Fin_User,0,1,@Now);
+
+    -- Send to all students
+    INSERT INTO [notification_recipients] ([Id],[NotificationId],[RecipientUserId],[IsRead],[ReadAt],[CreatedAt])
+    SELECT NEWID(), n.Id, u.Id, 0, NULL, @Now
+    FROM [notifications] n
+    CROSS JOIN (SELECT Id FROM [users] WHERE RoleId=4) u
+    WHERE NOT EXISTS (SELECT 1 FROM [notification_recipients] nr WHERE nr.NotificationId=n.Id AND nr.RecipientUserId=u.Id);
+END
+
+-- ════════════════════════════════════════════════
+-- 8. PAYMENT RECEIPTS (3 per student)
+-- ════════════════════════════════════════════════
+PRINT '8. Payment receipts...';
+IF NOT EXISTS (SELECT 1 FROM [payment_receipts])
+BEGIN
+    DECLARE @pIdx INT = 1;
+    DECLARE @spId UNIQUEIDENTIFIER;
+    DECLARE spCur CURSOR FOR SELECT TOP 50 Id FROM [student_profiles] ORDER BY [RegistrationNumber];
+    OPEN spCur; FETCH NEXT FROM spCur INTO @spId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [payment_receipts] ([Id],[StudentProfileId],[CreatedByUserId],[ReceiptNo],[Status],[Amount],[Description],[DueDate],[Notes],[CreatedAt],[UpdatedAt],[IsDeleted],[DeletedAt])
+        VALUES
+        (NEWID(),@spId,ISNULL(@Fin_User,@Adm_Uni),CONCAT(N'RCP-',FORMAT(@pIdx,N'00000')),2,5000.00,N'Semester Tuition Fee',DATEADD(DAY,30,@Now),N'Paid in full',@Now,@Now,0,NULL);
+        SET @pIdx += 1;
+        INSERT INTO [payment_receipts] ([Id],[StudentProfileId],[CreatedByUserId],[ReceiptNo],[Status],[Amount],[Description],[DueDate],[Notes],[CreatedAt],[UpdatedAt],[IsDeleted],[DeletedAt])
+        VALUES
+        (NEWID(),@spId,ISNULL(@Fin_User,@Adm_Uni),CONCAT(N'RCP-',FORMAT(@pIdx,N'00000')),1,2500.00,N'Library & Lab Fee',DATEADD(DAY,15,@Now),N'Pending',@Now,@Now,0,NULL);
+        SET @pIdx += 1;
+        INSERT INTO [payment_receipts] ([Id],[StudentProfileId],[CreatedByUserId],[ReceiptNo],[Status],[Amount],[Description],[DueDate],[Notes],[CreatedAt],[UpdatedAt],[IsDeleted],[DeletedAt])
+        VALUES
+        (NEWID(),@spId,ISNULL(@Fin_User,@Adm_Uni),CONCAT(N'RCP-',FORMAT(@pIdx,N'00000')),0,1000.00,N'Sports & Activity Fee',DATEADD(DAY,-10,@Now),N'Overdue',@Now,@Now,0,NULL);
+        SET @pIdx += 1;
+        FETCH NEXT FROM spCur INTO @spId;
+    END
+    CLOSE spCur; DEALLOCATE spCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 9. STUDY PLANS (University students only)
+-- ════════════════════════════════════════════════
+PRINT '9. Study plans...';
+IF NOT EXISTS (SELECT 1 FROM [study_plans])
+BEGIN
+    INSERT INTO [study_plans] ([Id],[StudentProfileId],[PlannedSemesterName],[Notes],[AdvisorStatus],[ReviewedByUserId],[CreatedAt],[IsDeleted],[DeletedAt])
+    SELECT NEWID(), sp.Id, CONCAT(N'Semester ',sp.CurrentSemesterNumber+1),
+           CONCAT(N'Plan to take 5 courses in Semester ',sp.CurrentSemesterNumber+1),
+           1, @Fac_Uni, @Now, 0, NULL
+    FROM [student_profiles] sp
+    JOIN [departments] d ON d.Id=sp.DepartmentId
+    WHERE d.InstitutionType=0  -- University only
+      AND NOT EXISTS (SELECT 1 FROM [study_plans] s WHERE s.StudentProfileId=sp.Id);
+
+    -- Add courses to study plans
+    DECLARE @planId UNIQUEIDENTIFIER;
+    DECLARE planCur CURSOR FOR SELECT Id FROM [study_plans];
+    OPEN planCur; FETCH NEXT FROM planCur INTO @planId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [study_plan_courses] ([Id],[StudyPlanId],[CourseId],[CreatedAt])
+        SELECT NEWID(), @planId, c.Id, @Now
+        FROM [courses] c WHERE c.DepartmentId=@D_IT_Uni
+        ORDER BY NEWID() OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY;
+        FETCH NEXT FROM planCur INTO @planId;
+    END
+    CLOSE planCur; DEALLOCATE planCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 10. COURSE ANNOUNCEMENTS (2 per offering)
+-- ════════════════════════════════════════════════
+PRINT '10. Course announcements...';
+IF NOT EXISTS (SELECT 1 FROM [course_announcements])
+BEGIN
+    DECLARE @acoId UNIQUEIDENTIFIER;
+    DECLARE acoCur CURSOR FOR SELECT TOP 20 Id FROM [course_offerings] ORDER BY NEWID();
+    OPEN acoCur; FETCH NEXT FROM acoCur INTO @acoId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [course_announcements] ([Id],[OfferingId],[AuthorId],[Title],[Body],[PostedAt],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),@acoId,ISNULL(@Fac_Uni,@Adm_Uni),N'Welcome to the Course',N'Welcome everyone! Please review the syllabus and course schedule.',@Now,@Now,0,NULL);
+        INSERT INTO [course_announcements] ([Id],[OfferingId],[AuthorId],[Title],[Body],[PostedAt],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),@acoId,ISNULL(@Fac_Uni,@Adm_Uni),N'Mid-Term Exam Schedule',N'The mid-term exam will be held in Week 8. Covering chapters 1-6.',DATEADD(DAY,7,@Now),@Now,0,NULL);
+        FETCH NEXT FROM acoCur INTO @acoId;
+    END
+    CLOSE acoCur; DEALLOCATE acoCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 11. DISCUSSION THREADS + REPLIES (2 per offering)
+-- ════════════════════════════════════════════════
+PRINT '11. Discussion threads...';
+IF NOT EXISTS (SELECT 1 FROM [discussion_threads])
+BEGIN
+    DECLARE @dcoId UNIQUEIDENTIFIER;
+    DECLARE dcoCur CURSOR FOR SELECT TOP 15 Id FROM [course_offerings] ORDER BY NEWID();
+    OPEN dcoCur; FETCH NEXT FROM dcoCur INTO @dcoId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        DECLARE @dtId1 UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [discussion_threads] ([Id],[OfferingId],[Title],[AuthorId],[IsPinned],[IsClosed],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (@dtId1,@dcoId,N'Questions about Assignment 1',ISNULL(@Stu_Uni,@Adm_Uni),0,0,@Now,0,NULL);
+        -- Add reply
+        INSERT INTO [discussion_replies] ([Id],[ThreadId],[AuthorId],[Body],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),@dtId1,ISNULL(@Fac_Uni,@Adm_Uni),N'Great question! Please refer to the assignment guidelines posted in the announcements.',@Now,0,NULL);
+
+        DECLARE @dtId2 UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [discussion_threads] ([Id],[OfferingId],[Title],[AuthorId],[IsPinned],[IsClosed],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (@dtId2,@dcoId,N'Study Group Formation',ISNULL(@Stu_Uni,@Adm_Uni),1,0,@Now,0,NULL);
+        INSERT INTO [discussion_replies] ([Id],[ThreadId],[AuthorId],[Body],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (NEWID(),@dtId2,ISNULL(@Stu_Col,@Stu_Uni),N'I am interested! Let us form a group for the final exam preparation.',@Now,0,NULL);
+        FETCH NEXT FROM dcoCur INTO @dcoId;
+    END
+    CLOSE dcoCur; DEALLOCATE dcoCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 12. SUPPORT TICKETS (5 sample tickets)
+-- ════════════════════════════════════════════════
+PRINT '12. Support tickets...';
+IF NOT EXISTS (SELECT 1 FROM [support_tickets])
+BEGIN
+    INSERT INTO [support_tickets] ([Id],[SubmitterId],[DepartmentId],[Category],[Subject],[Body],[Status],[AssignedToId],[ReopenWindowDays],[CreatedAt],[IsDeleted],[DeletedAt])
+    VALUES
+    (NEWID(),ISNULL(@Stu_Uni,@Adm_Uni),@D_IT_Uni,1,N'Cannot access course materials',N'I am unable to download the lecture slides for CS101.',0,NULL,7,@Now,0,NULL),
+    (NEWID(),ISNULL(@Stu_Col,@Stu_Uni),@D_IT_Col,2,N'Payment not reflected',N'I paid my fees yesterday but the portal still shows pending.',0,NULL,7,@Now,0,NULL),
+    (NEWID(),ISNULL(@Fac_Uni,@Adm_Uni),@D_IT_Uni,3,N'Attendance sync issue',N'Attendance records for my class are not syncing properly.',1,@Adm_Uni,7,@Now,0,NULL),
+    (NEWID(),ISNULL(@Stu_Sch,@Adm_Uni),@D_IT_Sch,1,N'Login issue',N'I forgot my password and the reset link is not working.',0,NULL,14,@Now,0,NULL),
+    (NEWID(),ISNULL(@Fac_Col,@Adm_Uni),@D_IT_Col,4,N'Feature request: Batch grading',N'It would be helpful to have batch grading for assignments.',2,@Adm_Uni,30,@Now,0,NULL);
+END
+
+-- ════════════════════════════════════════════════
+-- 13. RUBRICS (1 per assignment with criteria + levels)
+-- ════════════════════════════════════════════════
+PRINT '13. Rubrics...';
+IF NOT EXISTS (SELECT 1 FROM [rubrics])
+BEGIN
+    DECLARE @aId UNIQUEIDENTIFIER;
+    DECLARE aCur CURSOR FOR SELECT TOP 10 Id FROM [assignments] ORDER BY NEWID();
+    OPEN aCur; FETCH NEXT FROM aCur INTO @aId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        DECLARE @rId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [rubrics] ([Id],[AssignmentId],[Title],[IsActive],[CreatedAt],[IsDeleted],[DeletedAt])
+        VALUES (@rId,@aId,N'Grading Rubric',1,@Now,0,NULL);
+
+        -- Criteria 1
+        DECLARE @c1 UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [rubric_criteria] ([Id],[RubricId],[Name],[MaxPoints],[DisplayOrder],[CreatedAt])
+        VALUES (@c1,@rId,N'Content Quality',40,1,@Now);
+        INSERT INTO [rubric_levels] ([Id],[CriterionId],[Label],[PointsAwarded],[DisplayOrder],[CreatedAt])
+        VALUES
+        (NEWID(),@c1,N'Excellent',40,1,@Now),
+        (NEWID(),@c1,N'Good',30,2,@Now),
+        (NEWID(),@c1,N'Satisfactory',20,3,@Now),
+        (NEWID(),@c1,N'Needs Improvement',10,4,@Now);
+
+        -- Criteria 2
+        DECLARE @c2 UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [rubric_criteria] ([Id],[RubricId],[Name],[MaxPoints],[DisplayOrder],[CreatedAt])
+        VALUES (@c2,@rId,N'Organization & Structure',30,2,@Now);
+        INSERT INTO [rubric_levels] ([Id],[CriterionId],[Label],[PointsAwarded],[DisplayOrder],[CreatedAt])
+        VALUES
+        (NEWID(),@c2,N'Well-structured',30,1,@Now),
+        (NEWID(),@c2,N'Mostly organized',20,2,@Now),
+        (NEWID(),@c2,N'Somewhat disorganized',10,3,@Now);
+
+        -- Criteria 3
+        DECLARE @c3 UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO [rubric_criteria] ([Id],[RubricId],[Name],[MaxPoints],[DisplayOrder],[CreatedAt])
+        VALUES (@c3,@rId,N'Grammar & Presentation',30,3,@Now);
+        INSERT INTO [rubric_levels] ([Id],[CriterionId],[Label],[PointsAwarded],[DisplayOrder],[CreatedAt])
+        VALUES
+        (NEWID(),@c3,N'Error-free',30,1,@Now),
+        (NEWID(),@c3,N'Few minor errors',20,2,@Now),
+        (NEWID(),@c3,N'Several errors',10,3,@Now);
+
+        FETCH NEXT FROM aCur INTO @aId;
+    END
+    CLOSE aCur; DEALLOCATE aCur;
+END
+
+-- ════════════════════════════════════════════════
+-- 14. COURSE PREREQUISITES (chain pattern)
+-- ════════════════════════════════════════════════
+PRINT '14. Course prerequisites...';
+IF NOT EXISTS (SELECT 1 FROM [course_prerequisites])
+BEGIN
+    DECLARE @c101 UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [courses] WHERE [Code]=N'CS101' AND [DepartmentId]=@D_IT_Uni);
+    DECLARE @c201 UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [courses] WHERE [Code]=N'CS201' AND [DepartmentId]=@D_IT_Uni);
+    DECLARE @c301 UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [courses] WHERE [Code]=N'CS301' AND [DepartmentId]=@D_IT_Uni);
+    DECLARE @eng UNIQUEIDENTIFIER  = (SELECT TOP 1 Id FROM [courses] WHERE [Code]=N'ENG001');
+    DECLARE @mth UNIQUEIDENTIFIER  = (SELECT TOP 1 Id FROM [courses] WHERE [Code]=N'MTH001');
+
+    IF @c101 IS NOT NULL AND @c201 IS NOT NULL
+        INSERT INTO [course_prerequisites] ([Id],[CourseId],[PrerequisiteCourseId],[CreatedAt])
+        VALUES (NEWID(),@c201,@c101,@Now);
+    IF @c201 IS NOT NULL AND @c301 IS NOT NULL
+        INSERT INTO [course_prerequisites] ([Id],[CourseId],[PrerequisiteCourseId],[CreatedAt])
+        VALUES (NEWID(),@c301,@c201,@Now);
+    IF @eng IS NOT NULL AND @c101 IS NOT NULL
+        INSERT INTO [course_prerequisites] ([Id],[CourseId],[PrerequisiteCourseId],[CreatedAt])
+        VALUES (NEWID(),@c101,@eng,@Now);
+    IF @mth IS NOT NULL AND @c201 IS NOT NULL
+        INSERT INTO [course_prerequisites] ([Id],[CourseId],[PrerequisiteCourseId],[CreatedAt])
+        VALUES (NEWID(),@c201,@mth,@Now);
+END
+
+PRINT '--- Phase 4 Supplement completed ---';
+GO
