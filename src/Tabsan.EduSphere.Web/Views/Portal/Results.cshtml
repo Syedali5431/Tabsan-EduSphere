@@ -189,9 +189,27 @@ else
 
                     @if (!User.IsInRole("Student"))
                     {
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Institute</label>
+                            @if (Model.AvailableInstitutionTypes?.Count > 1)
+                            {
+                                <select id="institutionType" name="institutionType" class="form-select"
+                                        data-cascade="institution" onchange="this.form.submit()">
+                                    <option value="">All</option>
+                                    @foreach (var it in Model.AvailableInstitutionTypes)
+                                    {
+                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
+                            }
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Department <span class="text-danger">*</span></label>
-                            <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <select id="departmentId" name="departmentId" class="form-select" data-cascade="department" onchange="this.form.submit()">
                                 <option value="">Select department</option>
                                 @foreach (var d in Model.Departments)
                                 {
@@ -876,6 +894,7 @@ else
 }
 
 @section Scripts {
+<script src="~/js/cascading-filters.js" asp-append-version="true"></script>
 <script>
 // Toggle the Promote checkbox row so it is only visible when Result Type = "Final".
 // Promotion after Midterm / Quiz / Assignment results is not a supported workflow.

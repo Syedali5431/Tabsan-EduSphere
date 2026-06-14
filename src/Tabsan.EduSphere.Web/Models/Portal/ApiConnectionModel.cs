@@ -946,6 +946,8 @@ public class AttendancePageModel
     public Guid?  SelectedStudentId    { get; set; }
     public string? SelectedSemesterName { get; set; }
     public string PeriodLabel { get; set; } = "Semester";
+    public int? SelectedInstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public string? ImportReportToken { get; set; }
     public bool CanSaveAttendance =>
         SelectedOfferingId.HasValue
@@ -1010,6 +1012,8 @@ public class ResultsPageModel
     public string? SelectedBatch { get; set; }
     public string? SelectedSemesterName { get; set; }
     public string PeriodLabel { get; set; } = "Semester";
+    public int? SelectedInstitutionType { get; set; }
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public string? ImportReportToken { get; set; }
     public bool CanWriteResults =>
         SelectedOfferingId.HasValue

@@ -34,7 +34,7 @@ else
             <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end">
                     @if (User.IsInRole("SuperAdmin"))
                     {
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Tenant</label>
                             <select name="tenantId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Tenants</option>
@@ -44,7 +44,7 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Campus</label>
                             <select name="campusId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
@@ -57,9 +57,31 @@ else
                     }
                     @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                     {
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Institute</label>
+                            @if (Model.AvailableInstitutionTypes?.Count > 1)
+                            {
+                                <select id="institutionType" name="institutionType" class="form-select"
+                                        data-cascade="institution" onchange="this.form.submit()">
+                                    <option value="">All</option>
+                                    @foreach (var it in Model.AvailableInstitutionTypes)
+                                    {
+                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <select class="form-select" disabled>
+                                    <option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option>
+                                </select>
+                            }
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Department</label>
-                            <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <select id="departmentId" name="departmentId" class="form-select"
+                                    data-cascade="department" onchange="this.form.submit()"
+                                    @(Model.SelectedDepartmentId.HasValue ? null : "")>
                                 <option value="">All Departments</option>
                                 @foreach (var d in Model.Departments)
                                 {
@@ -67,9 +89,11 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Course/Subject</label>
-                            <select name="courseId" class="form-select" onchange="this.form.submit()">
+                        <div class="col-md-2">
+                            <label class="form-label">Course</label>
+                            <select id="courseId" name="courseId" class="form-select"
+                                    data-cascade="course" onchange="this.form.submit()"
+                                    @(Model.SelectedCourseId.HasValue || Model.SelectedDepartmentId.HasValue ? null : "disabled")>
                                 <option value="">All Courses</option>
                                 @foreach (var c in Model.Courses)
                                 {
@@ -77,10 +101,10 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">@periodLabel</label>
+                        <div class="col-md-2">
+                            <label class="form-label" data-period-label>@periodLabel</label>
                             <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                                <option value="">All @periodLabel</option>
+                                <option value="" data-period-placeholder>All @periodLabel</option>
                                 @foreach (var s in Model.SemesterOptions)
                                 {
                                     <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>
@@ -500,6 +524,7 @@ else
 }
 
 @section Scripts {
+<script src="~/js/cascading-filters.js" asp-append-version="true"></script>
 <script>
 document.getElementById('correctAttendanceModal')?.addEventListener('show.bs.modal', function(e) {
     var btn = e.relatedTarget;

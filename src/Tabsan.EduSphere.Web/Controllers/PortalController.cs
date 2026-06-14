@@ -3636,6 +3636,16 @@ public class PortalController : Controller
         try
         {
             var sessionId = _api.GetSessionIdentity();
+
+            // Phase 8: Populate institution type filter options.
+            try
+            {
+                var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+                model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(matrix);
+                model.PeriodLabel = ResolvePeriodFilterLabel(model.AvailableInstitutionTypes, model.SelectedInstitutionType);
+            }
+            catch { /* non-critical; keep defaults */ }
+
             var effectiveTenantId = sessionId?.IsSuperAdmin == true ? model.SelectedTenantId : sessionId?.TenantId;
             var effectiveCampusId = sessionId?.IsSuperAdmin == true ? model.SelectedCampusId : sessionId?.CampusId;
             var isStudent = sessionId?.IsStudent == true;
@@ -3953,6 +3963,15 @@ public class PortalController : Controller
         }
 
         model.ExamTypeOptions = BuildResultExamTypeOptions();
+
+        // Phase 8: Populate institution type filter options.
+        try
+        {
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(matrix);
+            model.PeriodLabel = ResolvePeriodFilterLabel(model.AvailableInstitutionTypes, model.SelectedInstitutionType);
+        }
+        catch { /* non-critical */ }
 
         if (!model.IsConnected)
             return View("Results", model);
