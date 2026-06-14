@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-14 Update — Phase 8 Cascading Filter System (Final Check)
+### Implementation sync
+- Created wwwroot/js/cascading-filters.js — shared AJAX cascade component with data-cascade attributes.
+- Added institution type filter to Attendance.cshtml and Results.cshtml (before department in filter order).
+- Added data-cascade attributes for Institute → Department → Course → Semester/Class cascade.
+- Added dynamic period labels via data-period-label/data-period-placeholder (Semester vs Class).
+- Added cascading-filters.js include to Assignments.cshtml.
+- Added AvailableInstitutionTypes and SelectedInstitutionType to AttendancePageModel and ResultsPageModel.
+- Populated institution type filter in PortalController.RenderAttendanceAsync and RenderResultsAsync from capability matrix.
+
+### Validation sync
+- Web build: 0 errors.
+- Institution → Department → Course → Semester/Class cascade order enforced.
+- Progressive disclosure: child filters disabled until parent selected.
+- Dynamic labels: resolvePeriodLabel() returns "Semester" for University, "Class" for School/College.
+- Report views already had institution filtering from Phase 5.
+
 ## 2026-06-14 Update — Phase 7 FYP Result Entry & Transcript Integration (Final Check)
 ### Implementation sync
 - Added FypGradePoint (decimal 5,2), FypMarks (decimal 7,2), FypMaxMarks (decimal 7,2) nullable fields to FypProject entity.

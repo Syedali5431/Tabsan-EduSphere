@@ -5444,3 +5444,14 @@ A feature is complete only when:
 - Integrated FYP into transcript: GetTranscriptDataAsync now includes completed FYP projects with grades.
 - Removed duplicate files: FypProjectStatus.cs, ProposeProjectRequest.cs.
 - Build verified: API 0 errors, Web 0 errors 0 warnings.
+
+---
+
+## Phase 8 Cascading Filter System Update (2026-06-14)
+
+- Created cascading-filters.js: AJAX cascade component with data-cascade attributes for Institute → Department → Course → Semester/Class.
+- Added institution type filter to Attendance and Results views.
+- Added dynamic period labels via JS (Semester vs Class based on institution type).
+- Added AvailableInstitutionTypes/SelectedInstitutionType to AttendancePageModel and ResultsPageModel.
+- Populated institution type in RenderAttendanceAsync/RenderResultsAsync from capability matrix.
+- Build verified: Web 0 errors.

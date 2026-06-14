@@ -6206,3 +6206,12 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - Integrated FYP results into student transcript (ReportRepository.GetTranscriptDataAsync).
 - FYP rows appear as "FYP" course code with grade point in transcript.
 - Removed duplicate source files: FypProjectStatus.cs, ProposeProjectRequest.cs.
+
+---
+
+## Phase 8 Cascading Filter System Update (2026-06-14)
+
+- Created cascading-filters.js shared AJAX component for Institute → Department → Course → Semester/Class cascade.
+- Added institution type filter to Attendance and Results views with licensed type options.
+- Added dynamic period labels: "Semester" for University, "Class" for School/College.
+- Progressive disclosure: child filters disabled until parent selected; AJAX fetches filtered options from API.
