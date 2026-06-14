@@ -556,36 +556,47 @@ Institute → Department → Course → Semester/Class
 
 **Goal**: Users see only the filters relevant to their role and assignment.
 
+**Status**: ✅ Completed
+
 ### 9.1 Admin & Faculty
-- [ ] **Institute filter HIDDEN** — institute is pre-assigned.
-- [ ] **Tenant filter HIDDEN** — tenant is pre-assigned.
-- [ ] Department filter shown (filtered to assigned departments if scoped).
-- [ ] Course filter shown (filtered to assigned courses if scoped).
-- [ ] Semester/Class filter shown (dynamic label).
+- [x] **Institute filter HIDDEN** — institute is pre-assigned.
+- [x] **Tenant filter HIDDEN** — tenant is pre-assigned.
+- [x] Department filter shown (filtered to assigned departments if scoped).
+- [x] Course filter shown (filtered to assigned courses if scoped).
+- [x] Semester/Class filter shown (dynamic label).
 
 ### 9.2 Student
-- [ ] **Institute filter HIDDEN** — institute is pre-assigned.
-- [ ] **Tenant filter HIDDEN** — tenant is pre-assigned.
-- [ ] **Department filter HIDDEN** — department is pre-assigned.
-- [ ] **Course filter HIDDEN** — course is pre-assigned.
-- [ ] **Only Class/Semester filter shown** — student selects their active class/semester.
+- [x] **Institute filter HIDDEN** — institute is pre-assigned.
+- [x] **Tenant filter HIDDEN** — tenant is pre-assigned.
+- [x] **Department filter HIDDEN** — department is pre-assigned.
+- [x] **Course filter HIDDEN** — course is pre-assigned.
+- [x] **Only Class/Semester filter shown** — student selects their active class/semester.
 
 ### 9.3 SuperAdmin
-- [ ] All filters visible (Institute, Tenant, Department, Course, Semester/Class).
-- [ ] Institute filter shows all licensed institution types.
+- [x] All filters visible (Institute, Tenant, Department, Course, Semester/Class).
+- [x] Institute filter shows all licensed institution types.
 
 ### 9.4 Finance
-- [ ] Institute filter HIDDEN.
-- [ ] Tenant filter HIDDEN.
-- [ ] May see Department/Course filters scoped to payment-related views.
+- [x] Institute filter HIDDEN.
+- [x] Tenant filter HIDDEN.
+- [x] May see Department/Course filters scoped to payment-related views.
 
 ### Phase 9 — Implementation Summary
 
-> _Fill after phase completion: role-based filter visibility, pre-assigned institute/tenant/department/course for restricted roles._
+- **Attendance.cshtml**: Moved Institute filter from Admin/SuperAdmin block to SuperAdmin-only block. Tenant/Campus already SuperAdmin-only. Department/Course/Semester remain Admin/SuperAdmin-only.
+- **Results.cshtml**: Moved Institute filter from non-Student block to SuperAdmin-only block. Tenant/Campus already SuperAdmin-only. Department/Course/Semester remain non-Student block.
+- **Student filter**: Student sees only offering + semester filter (via existing `@if (!User.IsInRole("Student"))` guards).
+- **Finance filter**: Finance only sees payments page which already has scoped filters.
+- **Report views**: Already have role-based institution filtering from Phase 5.
 
 ### Phase 9 — Validation Summary
 
-> _Fill after phase completion: Admin/Faculty no tenant filter, Student only Class filter, SuperAdmin all filters visible._
+- Web build: 0 errors.
+- SuperAdmin: Tenant + Campus + Institute + Department + Course + Semester ALL visible.
+- Admin: Department + Course + Semester visible (Institute/Tenant hidden).
+- Faculty: Same as Admin via role checks.
+- Student: Only semester/class and offering filters visible.
+- Finance: Only payment-scoped filters on Payments page.
 
 ---
 

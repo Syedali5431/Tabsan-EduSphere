@@ -160,7 +160,7 @@ else
             <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Tenant</label>
                             <select name="tenantId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Tenants</option>
@@ -170,7 +170,7 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Campus</label>
                             <select name="campusId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
@@ -180,15 +180,6 @@ else
                                 }
                             </select>
                         </div>
-                    }
-                    else
-                    {
-                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                    }
-
-                    @if (!User.IsInRole("Student"))
-                    {
                         <div class="col-md-2">
                             <label class="form-label">Institute</label>
                             @if (Model.AvailableInstitutionTypes?.Count > 1)
@@ -207,6 +198,15 @@ else
                                 <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
                             }
                         </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
+
+                    @if (!User.IsInRole("Student"))
+                    {
                         <div class="col-md-2">
                             <label class="form-label">Department <span class="text-danger">*</span></label>
                             <select id="departmentId" name="departmentId" class="form-select" data-cascade="department" onchange="this.form.submit()">
