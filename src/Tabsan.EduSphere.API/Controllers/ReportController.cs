@@ -674,6 +674,52 @@ public sealed class ReportController : ControllerBase
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "gpa-report.xlsx");
     }
 
+    /// <summary>Downloads GPA report as CSV.</summary>
+    [HttpGet("gpa-report/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportGpaReportCsv(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? programId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportGpaReportCsvAsync(request, ct);
+        return File(bytes, "text/csv", "gpa-report.csv");
+    }
+
+    /// <summary>Downloads GPA report as PDF.</summary>
+    [HttpGet("gpa-report/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportGpaReportPdf(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? programId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportGpaReportPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "gpa-report.pdf");
+    }
+
     // ── Enrollment Summary ─────────────────────────────────────────────────────
 
     /// <summary>Returns course offering enrollment utilisation data.</summary>
@@ -697,6 +743,75 @@ public sealed class ReportController : ControllerBase
         var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetEnrollmentSummaryAsync(request, ct);
         return Ok(result);
+    }
+
+    /// <summary>Downloads enrollment summary as an Excel file.</summary>
+    [HttpGet("enrollment-summary/export")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportEnrollmentSummary(
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportEnrollmentSummaryExcelAsync(request, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "enrollment-summary.xlsx");
+    }
+
+    /// <summary>Downloads enrollment summary as CSV.</summary>
+    [HttpGet("enrollment-summary/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportEnrollmentSummaryCsv(
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportEnrollmentSummaryCsvAsync(request, ct);
+        return File(bytes, "text/csv", "enrollment-summary.csv");
+    }
+
+    /// <summary>Downloads enrollment summary as PDF.</summary>
+    [HttpGet("enrollment-summary/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportEnrollmentSummaryPdf(
+        [FromQuery] Guid? semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportEnrollmentSummaryPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "enrollment-summary.pdf");
     }
 
     // ── Semester Results ───────────────────────────────────────────────────────
@@ -725,6 +840,84 @@ public sealed class ReportController : ControllerBase
         var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetSemesterResultsAsync(request, ct);
         return Ok(result);
+    }
+
+    /// <summary>Downloads semester results as an Excel file.</summary>
+    [HttpGet("semester-results/export")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportSemesterResults(
+        [FromQuery] Guid semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (semesterId == Guid.Empty)
+            return BadRequest("semesterId is required.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportSemesterResultsExcelAsync(request, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "semester-results.xlsx");
+    }
+
+    /// <summary>Downloads semester results as CSV.</summary>
+    [HttpGet("semester-results/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportSemesterResultsCsv(
+        [FromQuery] Guid semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (semesterId == Guid.Empty)
+            return BadRequest("semesterId is required.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportSemesterResultsCsvAsync(request, ct);
+        return File(bytes, "text/csv", "semester-results.csv");
+    }
+
+    /// <summary>Downloads semester results as PDF.</summary>
+    [HttpGet("semester-results/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportSemesterResultsPdf(
+        [FromQuery] Guid semesterId,
+        [FromQuery] Guid? departmentId,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        if (semesterId == Guid.Empty)
+            return BadRequest("semesterId is required.");
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportSemesterResultsPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "semester-results.pdf");
     }
 
     // ── Stage 4.2: Student Transcript ─────────────────────────────────────────
@@ -760,6 +953,36 @@ public sealed class ReportController : ControllerBase
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "student-transcript.xlsx");
     }
 
+    /// <summary>Downloads student transcript as CSV.</summary>
+    [HttpGet("student-transcript/export/csv")]
+    [Authorize]
+    public async Task<IActionResult> ExportStudentTranscriptCsv(
+        [FromQuery] Guid studentProfileId,
+        CancellationToken ct)
+    {
+        if (studentProfileId == Guid.Empty)
+            return BadRequest("studentProfileId is required.");
+
+        var request = new TranscriptRequest(studentProfileId);
+        var bytes = await _reports.ExportTranscriptCsvAsync(request, ct);
+        return File(bytes, "text/csv", "student-transcript.csv");
+    }
+
+    /// <summary>Downloads student transcript as PDF.</summary>
+    [HttpGet("student-transcript/export/pdf")]
+    [Authorize]
+    public async Task<IActionResult> ExportStudentTranscriptPdf(
+        [FromQuery] Guid studentProfileId,
+        CancellationToken ct)
+    {
+        if (studentProfileId == Guid.Empty)
+            return BadRequest("studentProfileId is required.");
+
+        var request = new TranscriptRequest(studentProfileId);
+        var bytes = await _reports.ExportTranscriptPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "student-transcript.pdf");
+    }
+
     // ── Stage 4.2: Low Attendance Warning ─────────────────────────────────────
 
     /// <summary>Returns students whose attendance is below the given threshold.</summary>
@@ -788,6 +1011,84 @@ public sealed class ReportController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Downloads low attendance warning as an Excel file.</summary>
+    [HttpGet("low-attendance/export")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportLowAttendance(
+        [FromQuery] decimal threshold = 75m,
+        [FromQuery] Guid? departmentId = null,
+        [FromQuery] Guid? courseOfferingId = null,
+        [FromQuery] int? institutionType = null,
+        CancellationToken ct = default)
+    {
+        threshold = 75m;
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, courseOfferingId, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportLowAttendanceExcelAsync(request, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "low-attendance.xlsx");
+    }
+
+    /// <summary>Downloads low attendance warning as CSV.</summary>
+    [HttpGet("low-attendance/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportLowAttendanceCsv(
+        [FromQuery] decimal threshold = 75m,
+        [FromQuery] Guid? departmentId = null,
+        [FromQuery] Guid? courseOfferingId = null,
+        [FromQuery] int? institutionType = null,
+        CancellationToken ct = default)
+    {
+        threshold = 75m;
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, courseOfferingId, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportLowAttendanceCsvAsync(request, ct);
+        return File(bytes, "text/csv", "low-attendance.csv");
+    }
+
+    /// <summary>Downloads low attendance warning as PDF.</summary>
+    [HttpGet("low-attendance/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportLowAttendancePdf(
+        [FromQuery] decimal threshold = 75m,
+        [FromQuery] Guid? departmentId = null,
+        [FromQuery] Guid? courseOfferingId = null,
+        [FromQuery] int? institutionType = null,
+        CancellationToken ct = default)
+    {
+        threshold = 75m;
+
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, courseOfferingId, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportLowAttendancePdfAsync(request, ct);
+        return File(bytes, "application/pdf", "low-attendance.pdf");
+    }
+
     // ── Stage 4.2: FYP Status Report ──────────────────────────────────────────
 
     /// <summary>Returns all FYP project rows, optionally filtered by department and status.</summary>
@@ -811,6 +1112,75 @@ public sealed class ReportController : ControllerBase
         var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
         var result = await _reports.GetFypStatusReportAsync(request, ct);
         return Ok(result);
+    }
+
+    /// <summary>Downloads FYP status report as an Excel file.</summary>
+    [HttpGet("fyp-status/export")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportFypStatus(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] string? status,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportFypStatusExcelAsync(request, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "fyp-status.xlsx");
+    }
+
+    /// <summary>Downloads FYP status report as CSV.</summary>
+    [HttpGet("fyp-status/export/csv")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportFypStatusCsv(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] string? status,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportFypStatusCsvAsync(request, ct);
+        return File(bytes, "text/csv", "fyp-status.csv");
+    }
+
+    /// <summary>Downloads FYP status report as PDF.</summary>
+    [HttpGet("fyp-status/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportFypStatusPdf(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] string? status,
+        [FromQuery] int? institutionType,
+        CancellationToken ct)
+    {
+        var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
+        if (scope.ErrorResult is not null) return scope.ErrorResult;
+
+        var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
+        if (scoped is not null) return scoped;
+
+        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (scoped is not null) return scoped;
+
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var bytes = await _reports.ExportFypStatusPdfAsync(request, ct);
+        return File(bytes, "application/pdf", "fyp-status.pdf");
     }
 
     /// <summary>Returns finance payment receipts with optional calendar and academic filters.</summary>

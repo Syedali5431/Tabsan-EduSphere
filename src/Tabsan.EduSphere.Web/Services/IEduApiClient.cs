@@ -139,6 +139,14 @@ public interface IEduApiClient
     Task<byte[]> ExportQuizSummaryCsvAsync(Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportQuizSummaryPdfAsync(Guid? semesterId, Guid? departmentId, Guid? offeringId, Guid? studentId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportGpaReportAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportGpaReportCsvAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportGpaReportPdfAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportEnrollmentSummaryAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportEnrollmentSummaryCsvAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportEnrollmentSummaryPdfAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportSemesterResultsAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportSemesterResultsCsvAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportSemesterResultsPdfAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct);
 
     // Stage 4.2: Additional Reports
     Task<TranscriptWebModel?> GetStudentTranscriptReportAsync(Guid studentProfileId, CancellationToken ct);
@@ -146,6 +154,14 @@ public interface IEduApiClient
     Task<FypStatusWebModel?> GetFypStatusReportAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
     Task<PaymentSummaryWebModel?> GetPaymentSummaryReportAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportStudentTranscriptCsvAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportStudentTranscriptPdfAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportLowAttendanceAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportLowAttendanceCsvAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportLowAttendancePdfAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryCsvAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryPdfAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
@@ -5352,6 +5368,143 @@ public class EduApiClient : IEduApiClient
 
     public Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct)
         => GetBytesAsync($"api/v1/reports/student-transcript/export?studentProfileId={studentProfileId}", ct);
+
+    public Task<byte[]> ExportStudentTranscriptCsvAsync(Guid studentProfileId, CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/student-transcript/export/csv?studentProfileId={studentProfileId}", ct);
+
+    public Task<byte[]> ExportStudentTranscriptPdfAsync(Guid studentProfileId, CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/student-transcript/export/pdf?studentProfileId={studentProfileId}", ct);
+
+    public Task<byte[]> ExportGpaReportCsvAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (departmentId.HasValue) parts.Add($"departmentId={departmentId.Value}");
+        if (programId.HasValue)    parts.Add($"programId={programId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/gpa-report/export/csv{qs}", ct);
+    }
+
+    public Task<byte[]> ExportGpaReportPdfAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (departmentId.HasValue) parts.Add($"departmentId={departmentId.Value}");
+        if (programId.HasValue)    parts.Add($"programId={programId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/gpa-report/export/pdf{qs}", ct);
+    }
+
+    public Task<byte[]> ExportEnrollmentSummaryAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (semesterId.HasValue)      parts.Add($"semesterId={semesterId.Value}");
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/enrollment-summary/export{qs}", ct);
+    }
+
+    public Task<byte[]> ExportEnrollmentSummaryCsvAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (semesterId.HasValue)      parts.Add($"semesterId={semesterId.Value}");
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/enrollment-summary/export/csv{qs}", ct);
+    }
+
+    public Task<byte[]> ExportEnrollmentSummaryPdfAsync(Guid? semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (semesterId.HasValue)      parts.Add($"semesterId={semesterId.Value}");
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/enrollment-summary/export/pdf{qs}", ct);
+    }
+
+    public Task<byte[]> ExportSemesterResultsAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"semesterId={semesterId}" };
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/semester-results/export?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportSemesterResultsCsvAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"semesterId={semesterId}" };
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/semester-results/export/csv?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportSemesterResultsPdfAsync(Guid semesterId, Guid? departmentId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"semesterId={semesterId}" };
+        if (departmentId.HasValue)    parts.Add($"departmentId={departmentId.Value}");
+        if (institutionType.HasValue) parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/semester-results/export/pdf?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportLowAttendanceAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"threshold={threshold}" };
+        if (departmentId.HasValue)     parts.Add($"departmentId={departmentId.Value}");
+        if (courseOfferingId.HasValue) parts.Add($"courseOfferingId={courseOfferingId.Value}");
+        if (institutionType.HasValue)  parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/low-attendance/export?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportLowAttendanceCsvAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"threshold={threshold}" };
+        if (departmentId.HasValue)     parts.Add($"departmentId={departmentId.Value}");
+        if (courseOfferingId.HasValue) parts.Add($"courseOfferingId={courseOfferingId.Value}");
+        if (institutionType.HasValue)  parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/low-attendance/export/csv?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportLowAttendancePdfAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string> { $"threshold={threshold}" };
+        if (departmentId.HasValue)     parts.Add($"departmentId={departmentId.Value}");
+        if (courseOfferingId.HasValue) parts.Add($"courseOfferingId={courseOfferingId.Value}");
+        if (institutionType.HasValue)  parts.Add($"institutionType={institutionType.Value}");
+        return GetBytesAsync($"api/v1/reports/low-attendance/export/pdf?{string.Join("&", parts)}", ct);
+    }
+
+    public Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
+        if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
+        if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/fyp-status/export{qs}", ct);
+    }
+
+    public Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
+        if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
+        if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/fyp-status/export/csv{qs}", ct);
+    }
+
+    public Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    {
+        var parts = new List<string>();
+        if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
+        if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
+        if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
+        return GetBytesAsync($"api/v1/reports/fyp-status/export/pdf{qs}", ct);
+    }
 
     public Task<byte[]> ExportPaymentSummaryAsync(
         int? year,

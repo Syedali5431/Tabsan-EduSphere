@@ -71,7 +71,15 @@
                     {
                         <div class="col-md-1">
                                      <a href="@Url.Action("ExportGpaReport", "Portal", new { departmentId = Model.DepartmentId, programId = Model.ProgramId, institutionType = Model.InstitutionType })"
-                                         class="btn btn-success btn-sm w-100" title="Export Excel"><i class="bi bi-download me-1"></i><span>Excel</span></a>
+                                         class="btn btn-success btn-sm w-100" title="Export Excel"><i class="bi bi-file-earmark-excel me-1"></i><span>Excel</span></a>
+                        </div>
+                        <div class="col-md-1">
+                                     <a href="@Url.Action("ExportGpaReportCsv", "Portal", new { departmentId = Model.DepartmentId, programId = Model.ProgramId, institutionType = Model.InstitutionType })"
+                                         class="btn btn-outline-success btn-sm w-100" title="Export CSV"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
+                        </div>
+                        <div class="col-md-1">
+                                     <a href="@Url.Action("ExportGpaReportPdf", "Portal", new { departmentId = Model.DepartmentId, programId = Model.ProgramId, institutionType = Model.InstitutionType })"
+                                         class="btn btn-outline-danger btn-sm w-100" title="Export PDF"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
                         </div>
                     }
                 </div>

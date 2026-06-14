@@ -57,6 +57,30 @@ public interface IReportService
     /// <summary>Returns an Excel workbook (.xlsx) byte array for the GPA report.</summary>
     Task<byte[]> ExportGpaReportExcelAsync(GpaReportRequest request, CancellationToken ct = default);
 
+    /// <summary>Returns a CSV byte array for the GPA report.</summary>
+    Task<byte[]> ExportGpaReportCsvAsync(GpaReportRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the GPA report.</summary>
+    Task<byte[]> ExportGpaReportPdfAsync(GpaReportRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns an Excel workbook for the enrollment summary report.</summary>
+    Task<byte[]> ExportEnrollmentSummaryExcelAsync(EnrollmentSummaryRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a CSV byte array for the enrollment summary report.</summary>
+    Task<byte[]> ExportEnrollmentSummaryCsvAsync(EnrollmentSummaryRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the enrollment summary report.</summary>
+    Task<byte[]> ExportEnrollmentSummaryPdfAsync(EnrollmentSummaryRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns an Excel workbook for the semester results report.</summary>
+    Task<byte[]> ExportSemesterResultsExcelAsync(SemesterResultsRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a CSV byte array for the semester results report.</summary>
+    Task<byte[]> ExportSemesterResultsCsvAsync(SemesterResultsRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the semester results report.</summary>
+    Task<byte[]> ExportSemesterResultsPdfAsync(SemesterResultsRequest request, CancellationToken ct = default);
+
     // ── Stage 4.2: Additional reports ─────────────────────────────────────────
     Task<TranscriptReportResponse?>    GetStudentTranscriptAsync(TranscriptRequest request, CancellationToken ct = default);
     Task<LowAttendanceReportResponse>  GetLowAttendanceWarningAsync(LowAttendanceRequest request, CancellationToken ct = default);
@@ -65,6 +89,31 @@ public interface IReportService
 
     /// <summary>Returns an Excel workbook (.xlsx) byte array for the student transcript.</summary>
     Task<byte[]> ExportTranscriptExcelAsync(TranscriptRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a CSV byte array for the student transcript.</summary>
+    Task<byte[]> ExportTranscriptCsvAsync(TranscriptRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the student transcript.</summary>
+    Task<byte[]> ExportTranscriptPdfAsync(TranscriptRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns an Excel workbook for the low attendance warning report.</summary>
+    Task<byte[]> ExportLowAttendanceExcelAsync(LowAttendanceRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a CSV byte array for the low attendance warning report.</summary>
+    Task<byte[]> ExportLowAttendanceCsvAsync(LowAttendanceRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the low attendance warning report.</summary>
+    Task<byte[]> ExportLowAttendancePdfAsync(LowAttendanceRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns an Excel workbook for the FYP status report.</summary>
+    Task<byte[]> ExportFypStatusExcelAsync(FypStatusRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a CSV byte array for the FYP status report.</summary>
+    Task<byte[]> ExportFypStatusCsvAsync(FypStatusRequest request, CancellationToken ct = default);
+
+    /// <summary>Returns a PDF byte array for the FYP status report.</summary>
+    Task<byte[]> ExportFypStatusPdfAsync(FypStatusRequest request, CancellationToken ct = default);
+
     Task<byte[]> ExportPaymentSummaryExcelAsync(PaymentSummaryRequest request, CancellationToken ct = default);
     Task<byte[]> ExportPaymentSummaryCsvAsync(PaymentSummaryRequest request, CancellationToken ct = default);
     Task<byte[]> ExportPaymentSummaryPdfAsync(PaymentSummaryRequest request, CancellationToken ct = default);

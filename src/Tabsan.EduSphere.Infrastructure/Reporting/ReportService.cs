@@ -562,6 +562,114 @@ public sealed class ReportService : IReportService
         return BuildExcelBytes("GPA Report", headers, rows);
     }
 
+    public async Task<byte[]> ExportGpaReportCsvAsync(
+        GpaReportRequest request, CancellationToken ct = default)
+    {
+        var report = await GetGpaReportAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Program", "Department", "Semester", "CGPA", "Semester GPA" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.ProgramName, r.DepartmentName,
+            r.CurrentSemester.ToString(), r.Cgpa.ToString("F2"), r.CurrentSemesterGpa.ToString("F2")
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportGpaReportPdfAsync(
+        GpaReportRequest request, CancellationToken ct = default)
+    {
+        var report = await GetGpaReportAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Program", "Dept", "Sem", "CGPA", "Sem GPA" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.ProgramName, r.DepartmentName,
+            r.CurrentSemester.ToString(), r.Cgpa.ToString("F2"), r.CurrentSemesterGpa.ToString("F2")
+        }).ToList();
+        return BuildPdfBytes("GPA Report", headers, rows);
+    }
+
+    // ── Enrollment Summary Exports ───────────────────────────────────────────
+
+    public async Task<byte[]> ExportEnrollmentSummaryExcelAsync(
+        EnrollmentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetEnrollmentSummaryAsync(request, ct);
+        var headers = new[] { "Course Code", "Course Title", "Semester", "Max Enrollment", "Enrolled", "Available Seats" };
+        var rows = report.Rows.Select(r => new object[]
+        {
+            r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.MaxEnrollment, r.EnrolledCount, r.AvailableSeats
+        }).ToList();
+        return BuildExcelBytes("Enrollment Summary", headers, rows);
+    }
+
+    public async Task<byte[]> ExportEnrollmentSummaryCsvAsync(
+        EnrollmentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetEnrollmentSummaryAsync(request, ct);
+        var headers = new[] { "Course Code", "Course Title", "Semester", "Max Enrollment", "Enrolled", "Available Seats" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.MaxEnrollment.ToString(), r.EnrolledCount.ToString(), r.AvailableSeats.ToString()
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportEnrollmentSummaryPdfAsync(
+        EnrollmentSummaryRequest request, CancellationToken ct = default)
+    {
+        var report = await GetEnrollmentSummaryAsync(request, ct);
+        var headers = new[] { "Course", "Title", "Semester", "Max", "Enrolled", "Available" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.MaxEnrollment.ToString(), r.EnrolledCount.ToString(), r.AvailableSeats.ToString()
+        }).ToList();
+        return BuildPdfBytes("Enrollment Summary", headers, rows);
+    }
+
+    // ── Semester Results Exports ─────────────────────────────────────────────
+
+    public async Task<byte[]> ExportSemesterResultsExcelAsync(
+        SemesterResultsRequest request, CancellationToken ct = default)
+    {
+        var report = await GetSemesterResultsAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "%" };
+        var rows = report.Rows.Select(r => new object[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.ResultType,
+            r.MarksObtained, r.MaxMarks, r.Percentage
+        }).ToList();
+        return BuildExcelBytes("Semester Results", headers, rows);
+    }
+
+    public async Task<byte[]> ExportSemesterResultsCsvAsync(
+        SemesterResultsRequest request, CancellationToken ct = default)
+    {
+        var report = await GetSemesterResultsAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "%" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.ResultType,
+            r.MarksObtained.ToString("F2"), r.MaxMarks.ToString("F2"), r.Percentage.ToString("F2")
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportSemesterResultsPdfAsync(
+        SemesterResultsRequest request, CancellationToken ct = default)
+    {
+        var report = await GetSemesterResultsAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course", "Title", "Type", "Marks", "Max", "%" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.ResultType,
+            r.MarksObtained.ToString("F2"), r.MaxMarks.ToString("F2"), r.Percentage.ToString("F2")
+        }).ToList();
+        return BuildPdfBytes("Semester Results", headers, rows);
+    }
+
     public async Task<byte[]> ExportPaymentSummaryExcelAsync(
         PaymentSummaryRequest request, CancellationToken ct = default)
     {
@@ -658,6 +766,124 @@ public sealed class ReportService : IReportService
             r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
         }).ToList();
         return BuildExcelBytes($"Transcript_{report.RegistrationNumber}", headers, rows);
+    }
+
+    public async Task<byte[]> ExportTranscriptCsvAsync(
+        TranscriptRequest request, CancellationToken ct = default)
+    {
+        var report = await GetStudentTranscriptAsync(request, ct);
+        if (report is null) return Array.Empty<byte>();
+
+        var headers = new[] { "Course Code", "Course Title", "Semester", "Component", "Marks", "Max Marks", "%", "Grade Point", "Published" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.CourseCode, r.CourseTitle, r.SemesterName, r.ResultType,
+            r.MarksObtained.ToString("F2"), r.MaxMarks.ToString("F2"),
+            r.Percentage.ToString("F2"),
+            r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
+            r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportTranscriptPdfAsync(
+        TranscriptRequest request, CancellationToken ct = default)
+    {
+        var report = await GetStudentTranscriptAsync(request, ct);
+        if (report is null) return Array.Empty<byte>();
+
+        var headers = new[] { "Course", "Title", "Semester", "Type", "Marks", "Max", "%", "GP", "Published" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.CourseCode, r.CourseTitle, r.SemesterName, r.ResultType,
+            r.MarksObtained.ToString("F2"), r.MaxMarks.ToString("F2"),
+            r.Percentage.ToString("F2"),
+            r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
+            r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
+        }).ToList();
+        return BuildPdfBytes($"Transcript - {report.RegistrationNumber}", headers, rows);
+    }
+
+    // ── Low Attendance Warning Exports ───────────────────────────────────────
+
+    public async Task<byte[]> ExportLowAttendanceExcelAsync(
+        LowAttendanceRequest request, CancellationToken ct = default)
+    {
+        var report = await GetLowAttendanceWarningAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Semester", "Total Sessions", "Attended", "Attendance %" };
+        var rows = report.Rows.Select(r => new object[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.TotalSessions, r.AttendedSessions, r.AttendancePercentage
+        }).ToList();
+        return BuildExcelBytes("Low Attendance Warning", headers, rows);
+    }
+
+    public async Task<byte[]> ExportLowAttendanceCsvAsync(
+        LowAttendanceRequest request, CancellationToken ct = default)
+    {
+        var report = await GetLowAttendanceWarningAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Semester", "Total Sessions", "Attended", "Attendance %" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.TotalSessions.ToString(), r.AttendedSessions.ToString(), r.AttendancePercentage.ToString("F2")
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportLowAttendancePdfAsync(
+        LowAttendanceRequest request, CancellationToken ct = default)
+    {
+        var report = await GetLowAttendanceWarningAsync(request, ct);
+        var headers = new[] { "Reg No", "Student", "Course", "Title", "Semester", "Total", "Attended", "%" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.SemesterName,
+            r.TotalSessions.ToString(), r.AttendedSessions.ToString(), r.AttendancePercentage.ToString("F2")
+        }).ToList();
+        return BuildPdfBytes("Low Attendance Warning", headers, rows);
+    }
+
+    // ── FYP Status Exports ───────────────────────────────────────────────────
+
+    public async Task<byte[]> ExportFypStatusExcelAsync(
+        FypStatusRequest request, CancellationToken ct = default)
+    {
+        var report = await GetFypStatusReportAsync(request, ct);
+        var headers = new[] { "Title", "Student", "Reg No", "Department", "Supervisor", "Status", "Proposed", "Meetings" };
+        var rows = report.Rows.Select(r => new object[]
+        {
+            r.Title, r.StudentName, r.RegistrationNumber, r.DepartmentName,
+            r.SupervisorName, r.Status, r.ProposedAt.ToString("yyyy-MM-dd"), r.MeetingCount
+        }).ToList();
+        return BuildExcelBytes("FYP Status", headers, rows);
+    }
+
+    public async Task<byte[]> ExportFypStatusCsvAsync(
+        FypStatusRequest request, CancellationToken ct = default)
+    {
+        var report = await GetFypStatusReportAsync(request, ct);
+        var headers = new[] { "Title", "Student", "Reg No", "Department", "Supervisor", "Status", "Proposed", "Meetings" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.Title, r.StudentName, r.RegistrationNumber, r.DepartmentName,
+            r.SupervisorName, r.Status, r.ProposedAt.ToString("yyyy-MM-dd"), r.MeetingCount.ToString()
+        });
+        return BuildCsvBytes(headers, rows);
+    }
+
+    public async Task<byte[]> ExportFypStatusPdfAsync(
+        FypStatusRequest request, CancellationToken ct = default)
+    {
+        var report = await GetFypStatusReportAsync(request, ct);
+        var headers = new[] { "Title", "Student", "Reg No", "Dept", "Supervisor", "Status", "Proposed", "Meetings" };
+        var rows = report.Rows.Select(r => new[]
+        {
+            r.Title, r.StudentName, r.RegistrationNumber, r.DepartmentName,
+            r.SupervisorName, r.Status, r.ProposedAt.ToString("yyyy-MM-dd"), r.MeetingCount.ToString()
+        }).ToList();
+        return BuildPdfBytes("FYP Status", headers, rows);
     }
 
     // ── Stage 4.2: Low Attendance Warning ─────────────────────────────────────

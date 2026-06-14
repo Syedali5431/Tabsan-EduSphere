@@ -67,6 +67,21 @@
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
                     </div>
+                    @if (Model.Report is not null)
+                    {
+                        <div class="col-md-1">
+                            <a href="@Url.Action("ExportSemesterResults", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, institutionType = Model.InstitutionType })"
+                               class="btn btn-success btn-sm w-100" title="Export Excel"><i class="bi bi-file-earmark-excel me-1"></i><span>Excel</span></a>
+                        </div>
+                        <div class="col-md-1">
+                            <a href="@Url.Action("ExportSemesterResultsCsv", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, institutionType = Model.InstitutionType })"
+                               class="btn btn-outline-success btn-sm w-100" title="Export CSV"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
+                        </div>
+                        <div class="col-md-1">
+                            <a href="@Url.Action("ExportSemesterResultsPdf", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, institutionType = Model.InstitutionType })"
+                               class="btn btn-outline-danger btn-sm w-100" title="Export PDF"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
+                        </div>
+                    }
                 </div>
             </div>
         </form>
