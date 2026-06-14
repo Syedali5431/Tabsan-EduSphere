@@ -103,11 +103,11 @@ public sealed class TemplateProcessorService
             {
                 var logoRun = new Run(
                     new RunProperties(
-                        new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+                        new RunFonts { Ascii = "Georgia", HighAnsi = "Georgia" },
                         new Bold(),
-                        new FontSize { Val = "20" },
-                        new Color { Val = "1F4E79" }),
-                    new Text("Tabsan EduSphere  |  "));
+                        new FontSize { Val = "18" },
+                        new Color { Val = "1A3A5C" }),
+                    new Text("Tabsan EduSphere  |  ") { Space = SpaceProcessingModeValues.Preserve });
                 firstParagraph.InsertAt(logoRun, 0);
             }
 
@@ -131,21 +131,21 @@ public sealed class TemplateProcessorService
 
         var logoRun = new Run(
             new RunProperties(
-                new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+                new RunFonts { Ascii = "Georgia", HighAnsi = "Georgia" },
                 new Bold(),
-                new FontSize { Val = "36" },        // 18pt
-                new Color { Val = "1F4E79" }),       // Dark blue
-            new Text("Tabsan EduSphere"));
+                new FontSize { Val = "40" },
+                new Color { Val = "1A3A5C" }),
+            new Text("★ T A B S A N   E D U S P H E R E ★"));
 
         markerParagraph.Append(logoRun);
 
-        // Add a subtle underline/separator below the logo
+        // Gold separator below the logo
         var separatorRun = new Run(
             new RunProperties(
                 new RunFonts { Ascii = "Calibri" },
-                new FontSize { Val = "16" },          // 8pt
-                new Color { Val = "808080" }),        // Gray
-            new Text("________________________________"));
+                new FontSize { Val = "16" },
+                new Color { Val = "C9A84C" }),
+            new Text("________________________________") { Space = SpaceProcessingModeValues.Preserve });
 
         // Insert separator after the logo paragraph
         var sepParagraph = new Paragraph(separatorRun);
@@ -184,90 +184,142 @@ public sealed class TemplateProcessorService
     {
         var table = new Table(
             new TableProperties(
+                new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
                 new TableBorders(
-                    new TopBorder { Val = BorderValues.Single, Size = 8 },
-                    new BottomBorder { Val = BorderValues.Single, Size = 8 },
-                    new LeftBorder { Val = BorderValues.Single, Size = 8 },
-                    new RightBorder { Val = BorderValues.Single, Size = 8 },
-                    new InsideHorizontalBorder { Val = BorderValues.Single, Size = 6 },
-                    new InsideVerticalBorder { Val = BorderValues.Single, Size = 6 })));
+                    new TopBorder { Val = BorderValues.Single, Size = 8, Color = "C9A84C" },
+                    new BottomBorder { Val = BorderValues.Single, Size = 8, Color = "C9A84C" },
+                    new LeftBorder { Val = BorderValues.Single, Size = 4, Color = "E0E0E0" },
+                    new RightBorder { Val = BorderValues.Single, Size = 4, Color = "E0E0E0" },
+                    new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4, Color = "E8ECF1" },
+                    new InsideVerticalBorder { Val = BorderValues.Single, Size = 4, Color = "E8ECF1" }),
+                new TableJustification { Val = TableRowAlignmentValues.Center }));
 
-        // University uses GPA; School/College uses Percentage.
-        var gradeHeader = institutionType == 2 ? "GPA" : "Percent";
+        // ── Column Headers ──
+        var headerRow = new TableRow();
+        headerRow.Append(BuildHeaderCell("Sr.", "600"));
+        headerRow.Append(BuildHeaderCell("Subject", "2000"));
+        headerRow.Append(BuildHeaderCell("Credit Hrs", "800"));
+        headerRow.Append(BuildHeaderCell("Marks", "800"));
+        headerRow.Append(BuildHeaderCell("Max", "800"));
+        headerRow.Append(BuildHeaderCell(institutionType == 2 ? "GPA" : "%", "800"));
+        table.Append(headerRow);
 
-        // Group rows by semester
+        // ── Group by Semester ──
         var grouped = rows
             .GroupBy(r => r.SemesterName)
             .OrderBy(g => g.Key)
             .ToList();
 
-        var serialCounter = 0;
+        var serial = 0;
+        var rowIndex = 0;
 
         foreach (var semesterGroup in grouped)
         {
-            // Semester header row (spans all 6 columns)
-            var semesterLabel = string.IsNullOrWhiteSpace(semesterGroup.Key) ? "Semester" : semesterGroup.Key;
-            var headerRow = new TableRow(
-                new TableCell(
-                    new Paragraph(
-                        new Run(
-                            new RunProperties(new Bold(), new FontSize { Val = "22" }),
-                            new Text(semesterLabel))),
-                    new TableCellProperties(
-                        new GridSpan { Val = 6 },
-                        new Shading { Fill = "E8EDF2", Val = ShadingPatternValues.Clear })));
-            table.Append(headerRow);
-
-            // Column headers for this semester group
-            table.Append(BuildRow("Sr No", "Subject Name", "Credit Hours", "Obtained Marks", "Total Marks", gradeHeader, isHeader: true));
+            var semLabel = string.IsNullOrWhiteSpace(semesterGroup.Key) ? "Semester" : semesterGroup.Key;
+            
+            // Semester header row
+            var semRow = new TableRow();
+            var semCell = new TableCell(
+                new TableCellProperties(
+                    new GridSpan { Val = 6 },
+                    new Shading { Val = ShadingPatternValues.Clear, Fill = "F0F4F8" }),
+                new Paragraph(
+                    new ParagraphProperties(
+                        new SpacingBetweenLines { Before = "40", After = "40" }),
+                    new Run(
+                        new RunProperties(
+                            new RunFonts { Ascii = "Georgia", HighAnsi = "Georgia" },
+                            new Bold(),
+                            new FontSize { Val = "22" },
+                            new Color { Val = "1A1A2E" }),
+                        new Text("📖  " + semLabel) { Space = SpaceProcessingModeValues.Preserve })));
+            semRow.Append(semCell);
+            table.Append(semRow);
 
             foreach (var row in semesterGroup)
             {
-                serialCounter++;
-                table.Append(BuildRow(
-                    serialCounter.ToString(),
-                    row.CourseName,
-                    row.CreditHours <= 0 ? "-" : row.CreditHours.ToString("0.##"),
-                    row.ObtainedMarks,
-                    row.TotalMarks,
-                    row.SgpaOrMarks));
-            }
+                serial++;
+                var isEven = rowIndex % 2 == 1;
+                var bgColor = isEven ? "FAFBFC" : "FFFFFF";
 
-            // Add a small gap row between semesters
-            if (semesterGroup != grouped.Last())
-            {
-                table.Append(new TableRow(
-                    new TableCell(
-                        new Paragraph(new Run(new Text(" "))),
-                        new TableCellProperties(new GridSpan { Val = 6 }))));
+                var dataRow = new TableRow();
+                dataRow.Append(BuildDataCell(serial.ToString(), "600", bgColor, "1A1A2E", bold: true));
+                dataRow.Append(BuildDataCell(row.CourseName, "2000", bgColor, "1A1A2E", alignLeft: true));
+                var credits = row.CreditHours <= 0 ? "-" : row.CreditHours.ToString("0.##");
+                dataRow.Append(BuildDataCell(credits, "800", bgColor, MutedText));
+                dataRow.Append(BuildDataCell(row.ObtainedMarks, "800", bgColor, "1A1A2E", bold: true));
+                dataRow.Append(BuildDataCell(row.TotalMarks, "800", bgColor, MutedText));
+                dataRow.Append(BuildDataCell(row.SgpaOrMarks, "800", bgColor, NavyBlue, bold: true));
+                table.Append(dataRow);
+                rowIndex++;
             }
         }
+
+        // ── Totals Row ──
+        var totalRow = new TableRow();
+        totalRow.Append(new TableCell(
+            new TableCellProperties(
+                new GridSpan { Val = 3 },
+                new Shading { Val = ShadingPatternValues.Clear, Fill = "FEF9E7" }),
+            new Paragraph(
+                new ParagraphProperties(new Justification { Val = JustificationValues.Right }),
+                new Run(
+                    new RunProperties(
+                        new RunFonts { Ascii = "Georgia" },
+                        new Bold(),
+                        new FontSize { Val = "22" },
+                        new Color { Val = NavyBlue }),
+                    new Text("Cumulative GPA: ") { Space = SpaceProcessingModeValues.Preserve }))));
+        totalRow.Append(BuildDataCell("", "800", "FEF9E7", NavyBlue));
+        totalRow.Append(BuildDataCell("", "800", "FEF9E7", NavyBlue));
+        totalRow.Append(BuildDataCell("{{CGPA}}", "800", "FEF9E7", NavyBlue, bold: true));
+        table.Append(totalRow);
 
         return table;
     }
 
-    private static TableRow BuildRow(string c1, string c2, string c3, string c4, string c5, string c6, bool isHeader = false)
+    private static TableCell BuildHeaderCell(string text, string width)
     {
-        return new TableRow(
-            BuildCell(c1, isHeader),
-            BuildCell(c2, isHeader),
-            BuildCell(c3, isHeader),
-            BuildCell(c4, isHeader),
-            BuildCell(c5, isHeader),
-            BuildCell(c6, isHeader));
+        return new TableCell(
+            new TableCellProperties(
+                new TableCellWidth { Width = width, Type = TableWidthUnitValues.Dxa },
+                new Shading { Val = ShadingPatternValues.Clear, Fill = "1A1A2E" }),
+            new Paragraph(
+                new ParagraphProperties(
+                    new Justification { Val = JustificationValues.Center },
+                    new SpacingBetweenLines { Before = "40", After = "40" }),
+                new Run(
+                    new RunProperties(
+                        new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+                        new Bold(),
+                        new FontSize { Val = "20" },
+                        new Color { Val = "C9A84C" }),
+                    new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
     }
 
-    private static TableCell BuildCell(string value, bool isHeader)
+    private static TableCell BuildDataCell(string text, string width, string bgColor, string textColor,
+        bool bold = false, bool alignLeft = false)
     {
-        var runProperties = isHeader ? new RunProperties(new Bold()) : null;
-        var run = runProperties == null
-            ? new Run(new Text(value))
-            : new Run(runProperties, new Text(value));
+        var runProps = new RunProperties(
+            new RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" },
+            new FontSize { Val = "20" },
+            new Color { Val = textColor });
+        if (bold) runProps.Append(new Bold());
+
+        var paraProps = new ParagraphProperties(
+            new Justification { Val = alignLeft ? JustificationValues.Left : JustificationValues.Center },
+            new SpacingBetweenLines { Before = "20", After = "20" });
 
         return new TableCell(
-            new Paragraph(run),
-            new TableCellProperties(new TableCellWidth { Type = TableWidthUnitValues.Auto }));
+            new TableCellProperties(
+                new TableCellWidth { Width = width, Type = TableWidthUnitValues.Dxa },
+                new Shading { Val = ShadingPatternValues.Clear, Fill = bgColor }),
+            new Paragraph(paraProps, new Run(runProps, new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
     }
+
+    // Color constants for table formatting
+    private const string NavyBlue = "1A3A5C";
+    private const string MutedText = "666666";
 }
 
 public sealed record DocumentTemplatePayload(
