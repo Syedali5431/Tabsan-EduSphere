@@ -604,9 +604,9 @@ public class CertificateGenerationController : ControllerBase
         var studentFolder = Path.Combine(root, studentProfileId.ToString("N"));
         Directory.CreateDirectory(studentFolder);
 
-        var fileName = normalizedType == CompletionDocumentType
-            ? $"completion-certificate-{DateTime.UtcNow:yyyyMMddHHmmss}.docx"
-            : $"report-card-{DateTime.UtcNow:yyyyMMddHHmmss}.docx";
+        var safeRegNo = SanitizeFileName(student.RegistrationNumber);
+        var certTypeName = normalizedType == CompletionDocumentType ? "Completion" : "ReportCard";
+        var fileName = $"{safeRegNo}-{certTypeName}.docx";
         var fullPath = Path.Combine(studentFolder, fileName);
 
         await System.IO.File.WriteAllBytesAsync(fullPath, generatedBytes, ct);
@@ -1386,6 +1386,14 @@ public class CertificateGenerationController : ControllerBase
         var path = GetAdditionalCertificateIndexPath();
         var json = JsonSerializer.Serialize(entries);
         await System.IO.File.WriteAllTextAsync(path, json, ct);
+    }
+
+    private static string SanitizeFileName(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "unknown";
+        var invalid = Path.GetInvalidFileNameChars();
+        var sanitized = new string(input.Select(c => Array.IndexOf(invalid, c) >= 0 ? '-' : c).ToArray());
+        return string.IsNullOrWhiteSpace(sanitized) ? "unknown" : sanitized;
     }
 
     private Guid GetCurrentUserId()

@@ -86,7 +86,8 @@ public sealed class DocumentGenerationService
         var outputRoot = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "Degree-Transcript-Generation", "generated-documents");
         Directory.CreateDirectory(outputRoot);
 
-        var baseName = $"{type.ToString().ToLowerInvariant()}-{serial}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var safeRegNo = SanitizeFileName(payload.RegistrationNumber);
+        var baseName = $"{safeRegNo}-{type}";
         var docxPath = Path.Combine(outputRoot, $"{baseName}.docx");
         await File.WriteAllBytesAsync(docxPath, processed, ct);
 
@@ -272,6 +273,14 @@ public sealed class DocumentGenerationService
             .Select(g => g.OrderByDescending(d => d.GeneratedAtUtc).First())
             .OrderByDescending(d => d.GeneratedAtUtc)
             .ToList();
+    }
+
+    private static string SanitizeFileName(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "unknown";
+        var invalid = Path.GetInvalidFileNameChars();
+        var sanitized = new string(input.Select(c => Array.IndexOf(invalid, c) >= 0 ? '-' : c).ToArray());
+        return string.IsNullOrWhiteSpace(sanitized) ? "unknown" : sanitized;
     }
 }
 
