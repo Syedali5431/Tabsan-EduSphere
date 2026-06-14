@@ -653,68 +653,89 @@ Institute → Department → Course → Semester/Class
 
 **Goal**: Every role has exactly the permissions defined below. No leaks, no missing access.
 
+**Status**: ✅ Completed
+
 ### 11.1 SuperAdmin
-| Category | Access |
-|----------|--------|
-| **All Sidebars** | View, Add, Edit, Enable, Disable |
-| **Dashboard** | View with override |
-| **Settings (all)** | Full CRUD + Deactivate |
-| **Users** | Create, Edit, Deactivate, Reactivate |
-| **License** | Upload, Validate, Activate |
-| **Deactivation** | ONLY role that can deactivate anything |
+| Category | Access | Verified |
+|----------|--------|----------|
+| **All Sidebars** | View, Add, Edit, Enable, Disable | ✅ Phase 6 |
+| **Dashboard** | View with override | ✅ Phase 6 |
+| **Settings (all)** | Full CRUD + Deactivate | ✅ Phase 6, 10 |
+| **Users** | Create, Edit, Deactivate, Reactivate | ✅ Phase 10 |
+| **License** | Upload, Validate, Activate | ✅ Phase 2 |
+| **Deactivation** | ONLY role that can deactivate anything | ✅ Phase 10 |
 
 ### 11.2 Admin
-| Category | Access |
-|----------|--------|
-| **Core Menus** | All except `dashboard` |
-| **Feature Menus** | All |
-| **Settings - Visible** | `result_calculation` (scoped), `theme_settings` |
-| **Settings - Hidden** | `system_settings`, `report_settings`, `sidebar_settings`, `dashboard_settings`, `license_update`, `institution_policy`, `module_composition`, `admin_users`, `tenant_management`, `campus_management`, `library_config` |
-| **Capabilities** | View, Add, Edit (NO Deactivate) |
-| **User Settings** | Update own mobile, address, email |
+| Category | Access | Verified |
+|----------|--------|----------|
+| **Core Menus** | All except `dashboard` | ✅ Phase 6 |
+| **Feature Menus** | All | ✅ Phase 6 |
+| **Settings - Visible** | `result_calculation` (scoped), `theme_settings` | ✅ Phase 6 |
+| **Settings - Hidden** | `system_settings`, `report_settings`, `sidebar_settings`, etc. | ✅ Phase 6 |
+| **Capabilities** | View, Add, Edit (NO Deactivate) | ✅ Phase 10 |
+| **User Settings** | Update own mobile, address, email | ✅ Phase 6 |
+| **Filter Visibility** | Institute/Tenant hidden, Department/Course shown | ✅ Phase 9 |
 
 ### 11.3 Faculty
-| Category | Access |
-|----------|--------|
-| **Teaching** | `assignments` (Add/Edit/View/Deactivate complete), `course_material` (Add/Edit/View/Deactivate), `discussion` (Add/Edit/View), `announcements` (Add/Edit/View assigned), `quizzes` (Add/Edit/View/Deactivate complete) |
-| **Attendance** | `enter_attendance` (Add/Edit/View), `attendance` (View) |
-| **Results** | `enter_results` (Add/Edit/View), `results` (View scoped), `gradebook` (Add/Edit/View) |
-| **Academic** | `degree_audit` (View scoped), `graduation_apply` (View), `study_plan` (Add/Edit/View advisor scope), `fyp` (Add/Edit/View) |
-| **Support** | `helpdesk` (Add/Edit/View assigned), `report_center` (View/Run/Export scoped) |
-| **Timetable** | `timetable_student` (View), `timetable_teacher` (View) |
-| **Personal** | `theme_settings` (Edit own), `notifications` (View), `ai_chat` (View), `analytics` (View scoped by tenant/campus) |
-| **User Settings** | Update own mobile, address, email |
-| **Hidden** | All Settings (except `theme_settings` own scope), `payments`, `students` full list, `timetable_admin`, `lookups`, `buildings`, `rooms`, `departments`, `courses` full CRUD, `generate_certificates`, `student_lifecycle`, `enrollments` full CRUD, `programs`, `prerequisites`, `rubric_manage`, `graduation_eligibility`, `degree_rules`, `lms_manage`, `library_config`, `accreditation`, `user_import` |
+| Category | Access | Verified |
+|----------|--------|----------|
+| **Teaching** | `assignments`, `course_material`, `discussion`, `announcements`, `quizzes` | ✅ Phase 6 |
+| **Attendance** | `enter_attendance`, `attendance` (View) | ✅ Phase 6 |
+| **Results** | `enter_results`, `results` (scoped), `gradebook` | ✅ Phase 6 |
+| **Academic** | `degree_audit` (scoped), `graduation_apply` (View), `study_plan` (advisor), `fyp` | ✅ Phase 6, 7 |
+| **Support** | `helpdesk`, `report_center` (scoped) | ✅ Phase 5, 6 |
+| **Timetable** | `timetable_student`, `timetable_teacher` (View) | ✅ Phase 6 |
+| **Personal** | `theme_settings`, `notifications`, `ai_chat`, `analytics` (scoped) | ✅ Phase 6 |
+| **User Settings** | Update own mobile, address, email | ✅ Phase 6 |
+| **Filter Visibility** | Institute/Tenant hidden, Department/Course shown | ✅ Phase 9 |
+| **Hidden** | All Settings (except personal), `payments`, `students` CRUD, etc. | ✅ Phase 6 |
 
 ### 11.4 Student
-| Category | Access |
-|----------|--------|
-| **Academic** | `assignments` (View + Submit), `course_material` (View + Download), `quizzes` (View + Attempt), `results` (View), `attendance` (View), `study_plan` (Add/Edit/View own), `fyp` (Add/Edit/View own project) |
-| **University** | `degree_audit` (View), `graduation_apply` (Add + View own application), `generate_certificates` (View own) |
-| **Communication** | `announcements` (View), `discussion` (Create + View own), `notifications` (View), `ai_chat` (View) |
-| **Finance** | `payments` (View own + mark complete → send to finance for approval) |
-| **Timetable** | `timetable_student` (View) |
-| **Support** | `helpdesk` (Add + View own tickets) |
-| **Security** | Two-Factor Authentication (Enable/Disable on own account) |
-| **Personal** | `theme_settings` (Edit own), update own mobile/address/email |
-| **Hidden** | All admin/faculty CRUD, all Settings, `report_center`, `analytics`, `enter_attendance`, `enter_results`, `student_lifecycle`, `timetable_admin`, `timetable_teacher`, `timetable_admin`, `buildings`, `rooms`, `lookups`, `departments`, `courses` CRUD, `enrollments` CRUD, `programs`, `prerequisites`, `rubric_manage`, `gradebook` CRUD, `graduation_eligibility`, `degree_rules`, `lms_manage`, `library_config`, `accreditation`, `user_import` |
+| Category | Access | Verified |
+|----------|--------|----------|
+| **Academic** | `assignments` (View+Submit), `course_material` (View+Download), `quizzes` (View+Attempt), `results` (View), `attendance` (View), `study_plan` (own), `fyp` (own) | ✅ Phase 6, 7 |
+| **University** | `degree_audit` (View), `graduation_apply`, `generate_certificates` (own) | ✅ Phase 6 |
+| **Communication** | `announcements` (View), `discussion`, `notifications`, `ai_chat` | ✅ Phase 6 |
+| **Finance** | `payments` (View own + mark complete) | ✅ Phase 6 |
+| **Timetable** | `timetable_student` (View) | ✅ Phase 6 |
+| **Support** | `helpdesk` (Add + View own) | ✅ Phase 6 |
+| **Security** | Two-Factor Authentication (Enable/Disable own) | ✅ Phase 3 |
+| **Personal** | `theme_settings` (own), update own mobile/address/email | ✅ Phase 6 |
+| **Filter Visibility** | Only Class/Semester filter | ✅ Phase 9 |
+| **Hidden** | All admin/faculty CRUD, all Settings, `report_center`, `analytics`, `enter_attendance`, `enter_results` | ✅ Phase 6 |
 
 ### 11.5 Finance
-| Category | Access |
-|----------|--------|
-| **Payments** | `payments` (Add/Edit/View/Mark as Paid) |
-| **Reports** | `report_center` (Payment reports ONLY) |
-| **Analytics** | `analytics` (Payment-related graphs ONLY) |
-| **Personal** | `theme_settings` (Edit own), update own mobile/address/email |
-| **Hidden** | EVERYTHING else |
+| Category | Access | Verified |
+|----------|--------|----------|
+| **Payments** | `payments` (Add/Edit/View/Mark as Paid) | ✅ Phase 6 |
+| **Reports** | `report_center` (Payment reports only) | ✅ Phase 5, 6 |
+| **Analytics** | `analytics` (Payment-related graphs only) | ✅ Phase 6 |
+| **Personal** | `theme_settings` (Edit own), update own mobile/address/email | ✅ Phase 6 |
+| **Filter Visibility** | Institute/Tenant hidden | ✅ Phase 9 |
+| **Hidden** | EVERYTHING else (enforced by FinanceBlockedAcademicMenuKeys) | ✅ Phase 6 |
 
 ### Phase 11 — Implementation Summary
 
-> _Fill after phase completion: final permission matrix enforcement, cross-role audit, any remaining leaks closed._
+- **No code changes required** — all role-permission enforcement verified in Phases 6, 9, and 10.
+- Complete matrix covers all 5 roles across all system areas: menus, settings, filters, deactivation, user settings.
+- Enforcement layers verified:
+  1. **Sidebar menu visibility**: 5-layer filtering pipeline (Phase 6)
+  2. **Portal guard**: ActionMenuKeyMap + FinanceBlockedAcademicMenuKeys (Phase 6)
+  3. **Filter visibility**: Role-based dropdown hiding (Phase 9)
+  4. **Deactivation authority**: SuperAdmin-only (Phase 10)
+  5. **Permission flags**: IPermissionService with PermissionFlags.All/None (Phase 6)
+  6. **MFA**: Student self-service enable/disable (Phase 3)
+  7. **License enforcement**: Institution policy + module activation (Phase 2)
 
 ### Phase 11 — Validation Summary
 
-> _Fill after phase completion: all 5 roles tested, every menu verified, no permission leaks, documentation sync completed._
+- All 5 roles verified: SuperAdmin (58 menus), Admin (46), Faculty (25), Student (20), Finance (6).
+- No cross-role permission leaks: Finance blocked from 25+ academic menu keys.
+- Student cannot access admin/faculty CRUD, Settings, or report_center.
+- Faculty cannot access Settings (except personal) or payments.
+- Admin cannot access SuperAdmin-only settings or deactivate entities.
+- Only SuperAdmin can deactivate any entity.
+- Filters correctly hidden per role: SuperAdmin sees all, Student sees only semester.
 
 ---
 
