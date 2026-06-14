@@ -150,8 +150,8 @@ END
 -- ════════════════════════════════════════════════
 -- 3. UPDATE PROFILE: Mark as Class 10 completed
 -- ════════════════════════════════════════════════
-UPDATE [student_profiles] SET [CurrentSemesterNumber]=10, [Cgpa]=3.45 WHERE [Id]=@spId;
-PRINT 'Profile updated: CGPA 3.45, Class 10 completed.';
+UPDATE [student_profiles] SET [CurrentSemesterNumber]=10, [Cgpa]=NULL WHERE [Id]=@spId;
+PRINT 'Profile updated: Class 10 completed (percentage-based grading for school).';
 
 -- ════════════════════════════════════════════════
 -- 4. COURSE ANNOUNCEMENTS for Class 10
