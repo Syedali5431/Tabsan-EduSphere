@@ -1088,65 +1088,248 @@ public class CertificateGenerationController : ControllerBase
 
     private static byte[] BuildAdditionalTemplateDocument(string normalizedType)
     {
-        var lines = normalizedType == CompletionDocumentType
-            ? new[]
-            {
-                "Completion Certificate",
-                string.Empty,
-                "Institution: {{DepartmentName}}",
-                "Class/Year: {{ClassName}}",
-                "Registration #: {{RegistrationNumber}}",
-                "Student: {{StudentName}}",
-                "Father Name: {{FatherName}}",
-                "Program: {{ProgramName}}",
-                "Final Percentage: {{FinalPercentage}}%",
-                "Issued On: {{IssueDate}}",
-                "Certificate No: {{SerialNumber}}",
-                string.Empty,
-                "{{COURSE_TABLE}}",
-                string.Empty,
-                "Authorized Signatory: ______________________",
-                "Seal/Logo Area"
-            }
-            : new[]
-            {
-                "Report Card",
-                string.Empty,
-                "Institution: {{DepartmentName}}",
-                "Class/Year: {{ClassName}}",
-                "Registration #: {{RegistrationNumber}}",
-                "Student: {{StudentName}}",
-                "Father Name: {{FatherName}}",
-                "Program/Class: {{ProgramName}}",
-                "Issued On: {{IssueDate}}",
-                "Certificate No: {{SerialNumber}}",
-                string.Empty,
-                "{{COURSE_TABLE}}",
-                string.Empty,
-                "Per Class Percentage: {{SemesterGpaSummary}}",
-                "Final Percentage: {{FinalPercentage}}%",
-                string.Empty,
-                "Authorized Signatory: ______________________",
-                "Seal/Logo Area"
-            };
+        // Brand colors
+        const string NavyBlue = "1A3A5C";
+        const string Gold = "C9A84C";
+        const string White = "FFFFFF";
+        const string LightGray = "F5F6FA";
+        const string DarkText = "1A1A1A";
+        const string MutedText = "666666";
 
         using var stream = new MemoryStream();
-        using (var wordDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, true))
+        using (var doc = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, true))
         {
-            var mainPart = wordDocument.AddMainDocumentPart();
+            var mainPart = doc.AddMainDocumentPart();
             mainPart.Document = new Document();
             var body = new Body();
 
-            foreach (var line in lines)
+            // Page setup
+            body.Append(new SectionProperties(
+                new PageMargin { Top = 720, Right = 720, Bottom = 720, Left = 720, Header = 360, Footer = 360 },
+                new PageBorders(
+                    new TopBorder { Val = BorderValues.Double, Size = 24, Color = NavyBlue, Space = 12 },
+                    new BottomBorder { Val = BorderValues.Double, Size = 24, Color = NavyBlue, Space = 12 },
+                    new LeftBorder { Val = BorderValues.Double, Size = 24, Color = NavyBlue, Space = 12 },
+                    new RightBorder { Val = BorderValues.Double, Size = 24, Color = NavyBlue, Space = 12 })));
+
+            if (normalizedType == CompletionDocumentType)
             {
-                body.Append(new Paragraph(new Run(new Text(line) { Space = SpaceProcessingModeValues.Preserve })));
+                BuildCompletionTemplate(body, NavyBlue, Gold, White, DarkText, MutedText);
             }
+            else
+            {
+                BuildReportCardTemplate(body, NavyBlue, Gold, White, LightGray, DarkText, MutedText);
+            }
+
+            // Footer
+            var footerPart = mainPart.AddNewPart<FooterPart>();
+            footerPart.Footer = new Footer();
+            footerPart.Footer.Append(new Paragraph(
+                new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                new Run(
+                    new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "16" }, new Color { Val = MutedText }),
+                    new Text("Tabsan EduSphere — Official Document  |  Generated on {{IssueDate}}  |  Electronically generated") { Space = SpaceProcessingModeValues.Preserve })));
+            footerPart.Footer.Save();
 
             mainPart.Document.Append(body);
             mainPart.Document.Save();
         }
-
         return stream.ToArray();
+    }
+
+    private static void BuildCompletionTemplate(Body body, string navy, string gold, string white, string dark, string muted)
+    {
+        // Header
+        AddCenteredPara(body, "★ T A B S A N   E D U S P H E R E ★", "Georgia", "14", muted, spacingAfter: "60");
+        AddCenteredPara(body, "{{DepartmentName}}", "Calibri", "32", navy, bold: true, spacingAfter: "200");
+
+        // Badge
+        var badgePara = new Paragraph(
+            new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { After = "200" }),
+            new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new Bold(), new FontSize { Val = "22" }, new Color { Val = white }, new Shading { Val = ShadingPatternValues.Clear, Fill = gold }),
+                new Text("CERTIFICATE OF COMPLETION") { Space = SpaceProcessingModeValues.Preserve }));
+        body.Append(badgePara);
+        AddCenteredPara(body, "", "Calibri", "12", white, spacingAfter: "100");
+
+        // Title
+        AddCenteredPara(body, "Completion Certificate", "Georgia", "48", navy, bold: true, spacingAfter: "60");
+        AddCenteredPara(body, "This is proudly presented to", "Georgia", "24", muted, italic: true, spacingAfter: "200");
+
+        // Student Name
+        AddCenteredPara(body, "{{StudentName}}", "Georgia", "44", "8B0000", bold: true, spacingAfter: "60");
+        AddCenteredPara(body, "Son / Daughter of {{FatherName}}", "Calibri", "20", muted, spacingAfter: "300");
+
+        // Details
+        AddCenteredPara(body, "for successfully completing", "Calibri", "22", dark, spacingAfter: "60");
+        AddCenteredPara(body, "{{ProgramName}}", "Georgia", "28", navy, bold: true, spacingAfter: "60");
+        AddCenteredPara(body, "{{ClassName}}", "Calibri", "20", dark, spacingAfter: "300");
+
+        // Info rows
+        AddInfoRow(body, "Registration No", "{{RegistrationNumber}}", navy, muted);
+        AddInfoRow(body, "Final Percentage", "{{FinalPercentage}}%", navy, muted);
+        AddCenteredPara(body, "", "Calibri", "12", white, spacingAfter: "200");
+
+        // Date & Serial
+        AddCenteredPara(body, "Issue Date: {{IssueDate}}", "Calibri", "20", muted, spacingAfter: "60");
+        AddCenteredPara(body, "Certificate No: {{SerialNumber}}", "Calibri", "20", muted, spacingAfter: "300");
+
+        // Signature block
+        AddCenteredPara(body, "___________________________________", "Calibri", "20", gold, spacingAfter: "200");
+        var sigTable = new Table(new TableProperties(
+            new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
+            new TableBorders(new InsideHorizontalBorder { Val = BorderValues.None }, new InsideVerticalBorder { Val = BorderValues.None },
+                new TopBorder { Val = BorderValues.None }, new BottomBorder { Val = BorderValues.None },
+                new LeftBorder { Val = BorderValues.None }, new RightBorder { Val = BorderValues.None }),
+            new TableJustification { Val = TableRowAlignmentValues.Center }));
+        var sr = new TableRow();
+        sr.Append(SigCell("________________________", navy));
+        sr.Append(SigCell("________________________", navy));
+        sr.Append(SigCell("________________________", navy));
+        sigTable.Append(sr);
+        var nr = new TableRow();
+        nr.Append(SigNameCell("Principal / Director", dark));
+        nr.Append(SigNameCell("Class Teacher", dark));
+        nr.Append(SigNameCell("Examination Controller", dark));
+        sigTable.Append(nr);
+        body.Append(sigTable);
+    }
+
+    private static void BuildReportCardTemplate(Body body, string navy, string gold, string white, string lightGray, string dark, string muted)
+    {
+        // Header
+        var hdrTable = new Table(new TableProperties(
+            new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
+            new TableBorders(new BottomBorder { Val = BorderValues.Single, Size = 12, Color = gold }),
+            new Shading { Val = ShadingPatternValues.Clear, Fill = navy },
+            new TableJustification { Val = TableRowAlignmentValues.Center }));
+        var hr = new TableRow();
+        var leftCell = new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "3500", Type = TableWidthUnitValues.Pct }),
+            new Paragraph(new ParagraphProperties(new SpacingBetweenLines { After = "40" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new Bold(), new FontSize { Val = "36" }, new Color { Val = white }),
+                    new Text("{{DepartmentName}}") { Space = SpaceProcessingModeValues.Preserve })),
+            new Paragraph(new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "20" }, new Color { Val = gold }),
+                new Text("Academic Report Card  |  {{ProgramName}}") { Space = SpaceProcessingModeValues.Preserve })));
+        hr.Append(leftCell);
+        var rightCell = new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "1500", Type = TableWidthUnitValues.Pct }, new Shading { Val = ShadingPatternValues.Clear, Fill = gold }),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new Bold(), new FontSize { Val = "22" }, new Color { Val = navy }),
+                    new Text("REPORT CARD") { Space = SpaceProcessingModeValues.Preserve })),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "16" }, new Color { Val = navy }),
+                    new Text("{{SerialNumber}}") { Space = SpaceProcessingModeValues.Preserve })));
+        hr.Append(rightCell);
+        hdrTable.Append(hr);
+        body.Append(hdrTable);
+
+        // Student info grid
+        var infoTable = new Table(new TableProperties(
+            new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
+            new TableBorders(new BottomBorder { Val = BorderValues.Single, Size = 6, Color = gold }),
+            new Shading { Val = ShadingPatternValues.Clear, Fill = lightGray },
+            new TableJustification { Val = TableRowAlignmentValues.Center }));
+        var ir = new TableRow();
+        ir.Append(InfoCell("Student Name", "{{StudentName}}", navy, muted));
+        ir.Append(InfoCell("Father Name", "{{FatherName}}", navy, muted));
+        ir.Append(InfoCell("Registration No", "{{RegistrationNumber}}", navy, muted));
+        ir.Append(InfoCell("Class / Year", "{{ClassName}}", navy, muted));
+        infoTable.Append(ir);
+        body.Append(infoTable);
+
+        // Summary cards
+        var sumTable = new Table(new TableProperties(
+            new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
+            new TableBorders(new BottomBorder { Val = BorderValues.Single, Size = 6, Color = gold }),
+            new Shading { Val = ShadingPatternValues.Clear, Fill = navy },
+            new TableJustification { Val = TableRowAlignmentValues.Center }));
+        var sr2 = new TableRow();
+        sr2.Append(SummaryCell("{{FinalPercentage}}%", "Final Percentage", gold, white));
+        sr2.Append(SummaryCell("{{FinalGpa}}", "Final GPA", gold, white));
+        sr2.Append(SummaryCell("{{ClassName}}", "Duration", gold, white));
+        sr2.Append(SummaryCell("{{IssueDate}}", "Issue Date", gold, white));
+        sumTable.Append(sr2);
+        body.Append(sumTable);
+
+        // Section title
+        body.Append(new Paragraph(new ParagraphProperties(
+            new ParagraphBorders(new BottomBorder { Val = BorderValues.Single, Size = 8, Color = gold, Space = 6 }),
+            new Shading { Val = ShadingPatternValues.Clear, Fill = lightGray },
+            new SpacingBetweenLines { Before = "200", After = "100" }),
+            new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new Bold(), new FontSize { Val = "24" }, new Color { Val = navy }),
+                new Text("📚  Academic Record") { Space = SpaceProcessingModeValues.Preserve })));
+
+        // Course table placeholder
+        AddCenteredPara(body, "{{COURSE_TABLE}}", "Calibri", "22", dark, spacingAfter: "200");
+
+        // Semester summary
+        AddCenteredPara(body, "{{SemesterGpaSummary}}", "Calibri", "20", muted, spacingAfter: "200");
+
+        // Footer info
+        AddCenteredPara(body, "Issue Date: {{IssueDate}}  |  Certificate No: {{SerialNumber}}", "Calibri", "16", muted, spacingAfter: "100");
+    }
+
+    private static void AddCenteredPara(Body body, string text, string font, string fontSize, string color,
+        bool bold = false, bool italic = false, string spacingAfter = "120")
+    {
+        var rp = new RunProperties(new RunFonts { Ascii = font, HighAnsi = font }, new FontSize { Val = fontSize }, new Color { Val = color });
+        if (bold) rp.Append(new Bold());
+        if (italic) rp.Append(new Italic());
+        body.Append(new Paragraph(
+            new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { After = spacingAfter }),
+            new Run(rp, new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
+    }
+
+    private static void AddInfoRow(Body body, string label, string value, string navy, string muted)
+    {
+        body.Append(new Paragraph(
+            new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { After = "60" }),
+            new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "20" }, new Color { Val = muted }),
+                new Text(label + ": ") { Space = SpaceProcessingModeValues.Preserve }),
+            new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new FontSize { Val = "22" }, new Bold(), new Color { Val = navy }),
+                new Text(value) { Space = SpaceProcessingModeValues.Preserve })));
+    }
+
+    private static TableCell SigCell(string text, string color)
+    {
+        return new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "1600", Type = TableWidthUnitValues.Pct }),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { Before = "200", After = "60" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "18" }, new Color { Val = color }),
+                    new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
+    }
+
+    private static TableCell SigNameCell(string role, string dark)
+    {
+        return new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "1600", Type = TableWidthUnitValues.Pct }),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new FontSize { Val = "20" }, new Bold(), new Color { Val = dark }),
+                    new Text(role) { Space = SpaceProcessingModeValues.Preserve })));
+    }
+
+    private static TableCell InfoCell(string label, string value, string navy, string muted)
+    {
+        return new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "1250", Type = TableWidthUnitValues.Pct }),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { Before = "40", After = "20" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "14" }, new Color { Val = muted }),
+                    new Text(label) { Space = SpaceProcessingModeValues.Preserve })),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { After = "40" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new Bold(), new FontSize { Val = "20" }, new Color { Val = navy }),
+                    new Text(value) { Space = SpaceProcessingModeValues.Preserve })));
+    }
+
+    private static TableCell SummaryCell(string value, string label, string gold, string white)
+    {
+        return new TableCell(
+            new TableCellProperties(new TableCellWidth { Width = "1250", Type = TableWidthUnitValues.Pct }),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { Before = "60", After = "20" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Georgia" }, new Bold(), new FontSize { Val = "36" }, new Color { Val = gold }),
+                    new Text(value) { Space = SpaceProcessingModeValues.Preserve })),
+            new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }, new SpacingBetweenLines { After = "60" }),
+                new Run(new RunProperties(new RunFonts { Ascii = "Calibri" }, new FontSize { Val = "16" }, new Color { Val = white }),
+                    new Text(label) { Space = SpaceProcessingModeValues.Preserve })));
     }
 
     private static async Task<List<AdditionalCertificateIndexEntry>> ListAdditionalCertificatesAsync(CancellationToken ct)
