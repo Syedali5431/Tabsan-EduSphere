@@ -2,8 +2,16 @@
 
 This folder contains role-based manuals for day-to-day use of the platform.
 
-Version: 1.8 — updated 10 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+Version: 1.9 — updated 15 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
+
+## 2026-06-15 Certificate Enhancements
+
+- **Professional Certificates** — All 4 certificate types (Degree, Transcript, Completion, Report Card) use professional DOCX templates with navy+gold branding.
+- **Institution-Aware Scoring** — University=GPA/CGPA; School/College=Percentage.
+- **Certificate Naming** — Files named as {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- **Completion Eligibility** — School≥Class10; College=Class11+12 results.
+- **Degree Restricted** — University-only; School/College directed to Completion Certificate.
 
 ## 2026-06-10 Enhancements
 

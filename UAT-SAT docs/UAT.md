@@ -1,5 +1,14 @@
 # User Acceptance Testing (UAT)
 
+## UAT Synchronization Update (2026-06-15)
+
+- Validate professional certificate generation for School student: Transcript, Completion Certificate, Report Card generated with correct naming ({RegNo}-Type.docx).
+- Validate Degree certificate blocked for School student (400 response directing to Completion Certificate).
+- Validate University=GPA/CGPA on certificates; School/College=Percentage.
+- Validate Completion eligibility: School≥Class10; College requires Class 11 AND Class 12 results.
+- Validate certificate files saved with proper naming: e.g., COL-REG-11-06-Transcript.docx.
+- Validate all 4 certificate types (Degree, Transcript, Completion, Report Card) generate with professional DOCX formatting.
+
 ## UAT Synchronization Update (2026-06-10)
 
 - Validate MFA login with correct TOTP code returns 200 + JWT (superadmin with MFA enabled).

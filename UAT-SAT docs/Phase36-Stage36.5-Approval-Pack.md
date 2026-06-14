@@ -1,5 +1,15 @@
 # Phase 36 Stage 36.5 UAT/SAT Approval Pack
 
+## Synchronization Addendum (2026-06-15)
+
+- Professional certificate generation now included in UAT/SAT sign-off:
+	- All 4 certificate types (Degree, Transcript, Completion, Report Card) generate with professional DOCX formatting (navy+gold, double borders, signatures).
+	- Institution-aware scoring: University=GPA, School/College=Percentage.
+	- Certificate naming: {RegNo}-{Type}.docx.
+	- Completion eligibility: School≥Class10, College=Class11+12 results.
+	- Degree restricted to University only.
+	- LibreOffice PDF adapter with graceful fallback.
+
 ## Synchronization Addendum (2026-06-04)
 
 - Approval-pack references now include domain script-pack execution alignment:

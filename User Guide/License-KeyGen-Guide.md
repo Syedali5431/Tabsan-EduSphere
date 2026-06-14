@@ -177,6 +177,14 @@ After issuing a license:
 - SuperAdmin post-license verification should include scoped Program and Report Center behavior checks by tenant/campus context.
 - Continue strict key handling while expanding validation checklists to include scope-aware access and settings governance surfaces.
 
+## Phase 40.5 Professional Certificates Update (2026-06-15)
+
+- License verification should confirm certificate capability flags for all institution types.
+- University licenses govern Degree generation; School/College licenses govern Completion and Report Card.
+- Institution-type scoring is license-aware: GPA for University, Percentage for School/College.
+- Certificate naming follows {RegNo}-{Type}.docx pattern across all institution modes.
+- LibreOffice PDF adapter availability should be documented in deployment notes.
+
 ## Phase 40.4 Institution-Aware Certificates Update (2026-05-26)
 
 - License verification should confirm university capability flags because they govern degree/transcript visibility.

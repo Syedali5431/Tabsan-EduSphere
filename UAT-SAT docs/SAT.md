@@ -1,5 +1,13 @@
 # Site Acceptance Testing (SAT)
 
+## SAT Synchronization Update (2026-06-15)
+
+- Confirm professional certificate generation works in deployed environment: Degree (University), Transcript, Completion (School/College), Report Card.
+- Confirm University=GPA/CGPA; School/College=Percentage on all certificates.
+- Confirm Completion Certificate blocked when School student hasn't completed Class 10, or College student lacks Class 11+12 results.
+- Confirm Degree Certificate blocked for School/College students (400 with guidance to use Completion).
+- Confirm certificate files named as {RegNo}-{Type}.docx.
+
 ## SAT Synchronization Update (2026-06-10)
 
 - Confirm MFA single-step login works with correct TOTP code in deployed environment.

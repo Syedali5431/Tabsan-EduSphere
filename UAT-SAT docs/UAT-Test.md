@@ -1,5 +1,15 @@
 # UAT Test Plan
 
+## UAT Test Plan Synchronization Update (2026-06-15)
+
+- Add professional certificate generation test cases:
+	- Generate Transcript for School student → verify professional DOCX with navy+gold branding, course table, summary cards.
+	- Generate Completion Certificate for School student (Class 10 complete) → verify eligibility check passes, document generated.
+	- Generate Report Card for School student → verify percentage-based scoring, per-class summary.
+	- Attempt Degree generation for School student → verify 400 response with guidance message.
+	- Verify file naming: {RegNo}-{Type}.docx with sanitized registration numbers.
+	- Verify institution-type scoring: University certs show GPA, School/College certs show Percentage.
+
 ## UAT Test Plan Synchronization Update (2026-06-04)
 
 - Add deterministic domain script-pack checks:

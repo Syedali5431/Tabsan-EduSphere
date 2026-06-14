@@ -2,15 +2,24 @@
 
 # Tabsan EduSphere – Training Manual
 
-**Version:** 1.8  
-**Date:** 04 June 2026  
-**Aligned With PRD:** v1.8 | Modules v1.3  
-**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)  
+**Version:** 1.9  
+**Date:** 15 June 2026  
+**Aligned With PRD:** v1.9 | Modules v1.4  
+**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + Professional Certificate Generation  
 **Audience:** Trainers, IT Staff, Finance, Super Admins, Department Coordinators
 
 ---
 
-## 0. Training Updates (May 2026)
+## 0. Training Updates (June 2026)
+
+### Professional Certificate Generation (15 June 2026)
+- Include trainer walkthrough for all 4 certificate types with professional DOCX formatting.
+- University scenario: Generate Degree (double navy border, gold badge, signature block) and Transcript (landscape, summary cards, course table).
+- School scenario: Generate Completion Certificate (classic style, Class 10 verification) and Report Card (modern header, info grid, percentage summary).
+- College scenario: Generate Completion Certificate (Class 11+12 verification) and Report Card.
+- Scoring rule validation: University=GPA/CGPA (4.0); School/College=Percentage (0-100%).
+- Eligibility rule training: Degree blocked for School/College (400 response); Completion requires Class 10 (School) or Class 11+12 (College).
+- Certificate naming: {RegNo}-{Type}.docx with sanitized file names.
 
 ### Startup Reliability Synchronization (27 May 2026)
 - Add trainer pre-check: ensure SQL target is running before API startup smoke validation.

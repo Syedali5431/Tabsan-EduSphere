@@ -227,6 +227,15 @@ Use this weekly:
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
 
+## Phase 40.7 Professional Certificates Update (2026-06-15)
+
+- Certificates are now generated as professional DOCX documents with navy+gold branding and signature blocks.
+- File naming: {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- University students see GPA/CGPA; School/College students see Percentage on certificates.
+- Completion Certificate available after Class 10 (School) or Class 11+12 (College).
+- Report Card shows all class percentages with professional formatting.
+- Students can view and download their own certificates from the portal.
+
 ## Phase 40.3 Scoped Governance Update (2026-05-25)
 
 - Student-facing access behavior remains role-safe, with stronger tenant and campus scoped governance in shared environments.

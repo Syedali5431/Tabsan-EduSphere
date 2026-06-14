@@ -1,8 +1,8 @@
 # SuperAdmin User Guide
 
-Version: 1.8  
-Date: 10 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+Version: 1.9  
+Date: 15 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
 
 ## 1. Purpose
 
@@ -10,6 +10,10 @@ This guide is for platform-level administrators responsible for licensing, modul
 
 ## 1.1 What's New (June 2026)
 
+- **Professional Certificates** — All 4 certificate types now use professional DOCX templates with navy+gold branding.
+- **Institution-Aware Scoring** — University=GPA; School/College=Percentage. Completion eligibility: School≥Class10, College=Class11+12.
+- **Certificate Naming** — {RegNo}-{Type}.docx with sanitized filenames.
+- **LibreOffice PDF** — Headless DOCX→PDF adapter with auto-detection.
 - **MFA Login** — TOTP code validated on same login page; returns 400/401.
 - **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.
 - **Reports** — Program + Department columns; run without filter selection.

@@ -1,14 +1,22 @@
 # Tabsan EduSphere – User Guide
 
-**Version:** 1.7  
-**Date:** 04 June 2026  
-**Aligned With PRD:** v1.8 | Modules v1.3  
-**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10)  
+**Version:** 1.8  
+**Date:** 15 June 2026  
+**Aligned With PRD:** v1.9 | Modules v1.4  
+**Completion Status:** Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + Professional Certificate Generation  
 **Audience:** Students, Faculty, Admins, Finance, Super Admins
 
 ---
 
-## 0. What’s New (May 2026)
+## 0. What's New (June 2026)
+
+### Professional Certificate Generation (15 June 2026)
+- All 4 certificate types now generate professional DOCX documents with navy+gold branding, double borders, Georgia/Calibri typography, and signature blocks.
+- Institution-aware scoring: University displays GPA/CGPA (4.0 scale); School and College display Percentage (0-100%).
+- File naming convention: {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- Completion Certificate eligibility: School requires Class 10 complete; College requires BOTH Class 11 AND Class 12 results.
+- Degree certificates are University-only; School/College students are directed to Completion Certificate.
+- LibreOffice PDF adapter for headless DOCX→PDF conversion with graceful fallback.
 
 ### Startup Reliability Synchronization (27 May 2026)
 - Startup environment profile detection is now consistently resolved from layered configuration sources.

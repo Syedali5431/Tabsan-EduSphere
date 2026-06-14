@@ -1,11 +1,13 @@
 # Faculty User Guide
 
-Version: 1.8  
-Date: 10 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+Version: 1.9  
+Date: 15 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
 
 ## 1.1 What's New (June 2026)
 
+- **Professional Certificates** — Generate and view professional Degree, Transcript, Completion, and Report Card documents.
+- **Scoring Rules** — University=GPA/CGPA; School/College=Percentage on all certificates.
 - **Reports** — Attendance, Result, Assignment, and Quiz reports now include Program and Department columns; reports can run without mandatory filter selection.
 - **Semester Order** — Semester lists now sorted ascending (Semester 1 first).
 - **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.

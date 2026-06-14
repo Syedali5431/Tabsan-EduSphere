@@ -1,5 +1,13 @@
 # Student Lifecycle Output
 
+## Output Synchronization Update (2026-06-15)
+
+- Certificate output now includes professional DOCX files named as {RegNo}-{Type}.docx.
+- School lifecycle output now produces: Transcript, Completion Certificate, and Report Card for Class 1-10 students.
+- College lifecycle output produces: Transcript, Completion Certificate (Class 11+12), and Report Card.
+- University lifecycle output produces: Degree and Transcript with GPA-based scoring.
+- All certificate outputs use navy+gold branding, double borders, and professional typography.
+
 ## Output Synchronization Update (2026-06-04)
 
 - Domain script-pack execution outputs are now aligned by institution mode:

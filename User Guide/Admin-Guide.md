@@ -2,9 +2,9 @@
 
 # Admin User Guide
 
-Version: 1.8  
-Date: 10 June 2026  
-Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-10 Enhancements
+Version: 1.9  
+Date: 15 June 2026  
+Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
 
 ## 1. Purpose
 
@@ -12,6 +12,9 @@ This guide covers departmental administration in Tabsan EduSphere: user operatio
 
 ## 1.1 What's New (June 2026)
 
+- **Professional Certificates** — Generate professional Degree, Transcript, Completion, and Report Card documents with navy+gold branding and signature blocks.
+- **Scoring Rules** — University=GPA/CGPA; School/College=Percentage. Certificates auto-adapt.
+- **Certificate Naming** — Files named as {RegNo}-{Type}.docx.
 - **Reports** — Program + Department columns in summaries; reports run without mandatory filters.
 - **Dropdown Filters** — Deactivated tenants/campuses hidden from dropdowns.
 - **MFA Login** — TOTP code validated on same login page.
