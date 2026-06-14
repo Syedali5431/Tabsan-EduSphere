@@ -41,7 +41,7 @@
 - **Advanced Results & Grading System** — GPA + Percentage dual support
 - **Automated Degree Audit & Graduation Eligibility**
 - **Attendance Management** — Manual entry + bulk CSV import with validation
-- **Certificate & Transcript Generation** — Institution-aware document workflows
+- **Certificate & Transcript Generation** — Professional institution-aware documents: Degree, Transcript, Completion Certificate, Report Card
 - **Finance & Payment Management** — Full receipt lifecycle with reporting
 - **Powerful Analytics Dashboard** — Real-time insights and trend analysis
 - **Multi-Tenant & Multi-Campus Management** — Scoped data isolation
@@ -65,7 +65,7 @@
 | **LMS** | Course materials, assignments, quizzes, discussions, announcements |
 | **Results & Grading** | Enter results, gradebook, rubrics, GPA calculation, grading config |
 | **Attendance** | Manual entry, CSV bulk import, attendance analytics, alerts |
-| **Certificates** | Degree, transcript, and institution-specific certificate generation |
+| **Certificates** | Professional Degree, Transcript, Completion Certificate, and Report Card generation with GPA/Percentage rules |
 | **Finance** | Payment receipts, fee tracking, payment status, financial reporting |
 | **Analytics** | Real-time dashboards, trend analysis, exportable reports |
 | **User Management** | User import, role assignment, admin users, student lifecycle |
@@ -133,6 +133,14 @@
 - Scoped exports with standardized output patterns
 
 ---
+
+## Recent Enhancements (2026-06-15)
+
+- **Professional Certificate Generation** — All 4 certificate types (Degree, Transcript, Completion, Report Card) now generate professional DOCX documents with navy+gold branding, double borders, Georgia/Calibri typography, and signature blocks.
+- **Institution-Aware Scoring** — University certificates display GPA/CGPA; School and College certificates display Percentage. No more incorrect GPA labels.
+- **Completion Eligibility Rules** — School requires Class 10 complete; College requires BOTH Class 11 AND Class 12 results.
+- **Certificate File Naming** — Files saved as {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- **LibreOffice PDF Adapter** — Headless DOCX→PDF conversion with auto-detection and graceful fallback.
 
 ## Recent Enhancements (2026-06-10)
 
@@ -213,4 +221,4 @@
 
 ---
 
-*Document version: 3.0 | Updated: 2026-06-05 | Pricing: AUD 3.00/user/year (unchanged)*
+*Document version: 3.1 | Updated: 2026-06-15 | Pricing: AUD 3.00/user/year (unchanged)*
