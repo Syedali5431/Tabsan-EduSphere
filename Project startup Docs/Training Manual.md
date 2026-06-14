@@ -1,6 +1,22 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (15 June 2026):
+- Add trainer coverage for professional certificate generation across all 4 types:
+	- Degree: University-only, double navy border, gold badge, signature blocks.
+	- Transcript: Landscape layout, dark navy header, summary cards (CGPA/Percentage/Duration), course table.
+	- Completion Certificate: School/College, elegant classic style, class completion verification.
+	- Report Card: Modern table layout, student info grid, per-class percentage summary.
+- Add trainer workflow for certificate naming convention: {RegNo}-{Type}.docx.
+- Add trainer verification of institution-type scoring rules:
+	- University → GPA/CGPA (4.0 scale).
+	- School → Percentage (0-100%).
+	- College → Percentage (0-100%).
+- Add trainer walkthrough for completion eligibility:
+	- School: Student must have CurrentSemesterNumber ≥ 10.
+	- College: Student must have published results in BOTH Class 11 and Class 12.
+- Add trainer verification that Degree generation is blocked for School/College students (400 response).
+
 Training synchronization update (02 June 2026):
 - Add trainer coverage for domain-specific script-pack execution paths:
 	- Scripts/School Scripts,

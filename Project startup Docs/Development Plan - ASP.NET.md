@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-15 Update — Certificate Generation Professional Templates & Eligibility Fixes
+### Plan sync
+- Certificate templates fully redesigned: professional DOCX with double borders, navy+gold brand colors, Georgia/Calibri fonts, signature blocks, footer.
+- All 4 certificate types now professional: Degree, Transcript, Completion Certificate, Report Card.
+- File naming convention: {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- Institution-type scoring fixed: University uses GPA/CGPA, School and College use Percentage.
+- Completion eligibility fixed: School requires Class 10 complete, College requires BOTH Class 11 AND Class 12 results.
+- Degree restricted to University only (School/College get 400 directing to Completion Certificate).
+- LibreOffice PDF adapter added with auto-detection and graceful NoOp fallback.
+
+### Validation sync
+- Build: 0 errors. All 4 certificate types generated and verified.
+- School student col11s6 (COL-REG-11-06): Transcript, Completion, ReportCard generated. Degree correctly blocked.
+
 ## 2026-06-12 Update — Phase 1 DB Validation & Phase 2 License Enforcement (Final Check)
 ### Plan sync
 - Phase 1: All 7 DB scripts validated. BBA InstitutionType fixed (2→0). sidebar_menu_items populated (58 items, 5 roles). 09-Restructure-Sidebar-Menu.sql fixed and extended with 8 missing menus. Post-deployment checks: 0 failures.

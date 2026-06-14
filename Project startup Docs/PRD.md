@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-15 — Certificate Generation Professional Templates & Scoring Fixes
+- Certificate templates: Fully professional DOCX design with navy+gold brand colors, double page borders, Georgia/Calibri typography, signature blocks, and footer.
+- All 4 certificate types: Degree (University), Transcript, Completion Certificate (School/College), Report Card (School/College).
+- File naming: {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- Scoring fix: University=GPA/CGPA; School and College=Percentage. No more incorrect GPA labels on school/college certs.
+- Completion eligibility: School=Class10 complete; College=Class11 AND Class12 results required.
+- Degree eligibility: University-only with published results requirement. School/College students directed to Completion Certificate.
+- PDF conversion: LibreOffice headless adapter with auto-detection.
+
 ### 2026-06-12 — Product Requirements Synchronization (Final Check Phase 1 & 2)
 - Phase 1: DB scripts validated and fixed. BBA department InstitutionType corrected. Sidebar menus populated (58 items across 5 roles). Post-deployment checks pass with 0 failures.
 - Phase 2: License-based institution enforcement verified. Institution policy controls which menus/features appear per institution type. study_plan restricted to University-only. Certificate types gated per institution.

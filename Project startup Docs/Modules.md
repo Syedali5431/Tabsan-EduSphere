@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update — 2026-06-15 (Certificate Generation Professional Templates)
+### Module impact: Certificate Generation, Degree-Transcript Pipeline
+- Certificate Generation: All 4 document types now use professional DOCX templates with navy+gold brand identity, double borders, signature blocks, and student info grids.
+- TemplateExportService: Builds professional Degree and Transcript templates with page borders, Georgia/Calibri fonts, summary cards, and footer.
+- TemplateProcessorService: Enhanced course table with dark navy headers, alternating row colors, semester grouping, and CGPA totals row.
+- Naming: Certificates saved as {RegNo}-{Type}.docx with sanitized file names.
+- PDF: LibreOfficePdfConverterAdapter added for headless DOCX→PDF with graceful fallback.
+- Eligibility: School=Percentage not GPA; College completion requires Class 11+12 results; Degree restricted to University.
+- No schema changes. No breaking changes.
+### Validation: build passed; all 4 certificate types generated and verified.
+
 ## Execution Update — 2026-06-12 (Phase 1 DB Validation & Phase 2 License Enforcement)
 ### Module impact: Sidebar Menu, Institution Policy, Seed Scripts
 - Sidebar Menu: 09-Restructure-Sidebar-Menu.sql updated — 58 menu items, fixed rubric_manage key, added 8 missing menus (lookups, payments, report_center, helpdesk, ai_chat, analytics, system_settings, admin_users). Role access matrix aligned.

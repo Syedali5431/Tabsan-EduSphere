@@ -1,6 +1,17 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (15 June 2026):
+- Certificate generation now produces professional-looking documents:
+	- Degree: Elegant double-border layout with navy+gold branding.
+	- Transcript: Landscape with summary cards, course table, and verification QR.
+	- Completion Certificate: Classic style with gold badge and signature blocks.
+	- Report Card: Modern design with colored header and academic record table.
+- Certificate file names follow the pattern {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx).
+- Scoring displays are institution-aware: University shows GPA/CGPA; School and College show Percentage.
+- Completion Certificate requires: Class 10 complete (School) or Class 11+12 complete (College).
+- Degree certificates are for University students only; School/College users should use Completion Certificate.
+
 User guide synchronization update (02 June 2026):
 - Added domain script-pack execution references for environment walkthroughs:
    - Scripts/School Scripts,
