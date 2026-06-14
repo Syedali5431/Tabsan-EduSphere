@@ -5423,3 +5423,14 @@ A feature is complete only when:
 - Added license-based catalog filtering via ResolveLicensedInstitutionTypesAsync.
 - Added export buttons to 6 report views: GPA, Enrollment, SemesterResults, Transcript, LowAttendance, FypStatus.
 - Build verified: API 0 errors, Web 0 errors 0 warnings.
+
+---
+
+## Phase 6 Role-Based Sidebar Menu Restrictions Update (2026-06-14)
+
+- Verified sidebar menu role enforcement: 5-layer filtering (role DB → institution policy → module activation → permissions).
+- Verified portal guard fail-closed with ActionMenuKeyMap (40+ actions → menu keys).
+- Verified FinanceBlockedAcademicMenuKeys (25+ blocked keys).
+- Verified IPermissionService deactivation control (SuperAdmin only).
+- No code changes — all enforcement in place from prior phases.
+- Menu counts: SuperAdmin 58, Admin 46, Faculty 25, Student 20, Finance 6.

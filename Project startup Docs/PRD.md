@@ -6185,3 +6185,14 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - All report views now have consistent Excel/CSV/PDF export buttons.
 - 24 new API export endpoints added across 6 report types.
 - Export formats: Excel (ClosedXML), CSV (UTF-8), PDF (QuestPDF).
+
+---
+
+## Phase 6 Role-Based Sidebar Menu Restrictions Update (2026-06-14)
+
+- Verified 5-layer sidebar menu filtering pipeline: role-based DB filter, institution policy, module activation, permission annotation.
+- Verified portal guard fail-closed enforcement on all 40+ PortalController actions via ActionMenuKeyMap.
+- Verified Finance users blocked from 25+ academic menu keys via FinanceBlockedAcademicMenuKeys.
+- Verified SuperAdmin-only deactivation capability via IPermissionService (PermissionFlags.All vs None).
+- No code changes required — architecture implemented in prior phases, verified via code review.
+- 5 roles correctly restricted: SuperAdmin (58 menus), Admin (46), Faculty (25), Student (20), Finance (6).

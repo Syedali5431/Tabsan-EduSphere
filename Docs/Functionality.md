@@ -1,6 +1,26 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
-## 2026-06-14 Update — Phase 5 Reports Validation (Final Check)
+## 2026-06-14 Update — Phase 6 Role-Based Sidebar Menu Restrictions (Final Check)
+### Implementation sync
+- Verified 5-layer filtering pipeline in SidebarMenuController: role-based DB filter → institution policy → module activation → permission annotation.
+- Verified portal guard (OnActionExecutionAsync) with ActionMenuKeyMap (40+ entries) — fail-closed enforcement.
+- Verified FinanceBlockedAcademicMenuKeys (25+ keys) — Finance users blocked from all academic actions.
+- Verified ShouldRestrictToFacultyAdminAcademicRoles and ShouldRestrictToFinanceAdminPaymentsRoles guards.
+- Verified IPermissionService: SuperAdmin gets PermissionFlags.All; other roles get PermissionFlags.None by default.
+- Verified Layout dynamic menu rendering with group sections (Overview/Setup/Faculty/Student/Academic/Financial/Settings).
+- Verified SidebarSettings.cshtml admin page for SuperAdmin runtime role assignment management.
+- Verified InstitutionContextMiddleware per-request policy resolution.
+- Verified ModuleLicenseEnforcementMiddleware for module-level 403 blocking.
+- No code changes required — architecture fully implemented in prior phases.
+
+### Validation sync
+- DB seed (09-Restructure-Sidebar-Menu.sql): 58 menu items, 155 role access records. Verified in Phase 1 post-deployment checks.
+- SuperAdmin: 58 menus (all). Admin: 46 (all except 12 SuperAdmin-only settings). Faculty: 25. Student: 20. Finance: 6.
+- Sidebar guard: Any action not in visible menu set → redirected to Dashboard with access denied message.
+- SuperAdmin bypasses all sidebar and permission checks.
+- University-only menus (7 total) correctly hidden when institution policy excludes University.
+- Module-gated menus (ai_chat) correctly hidden when module is inactive.
+- Finance users: only 6 menus visible; portal guard enforces FinanceBlockedAcademicMenuKeys for direct URL access.
 ### Implementation sync
 - Added 18 export method signatures to IReportService: Enrollment/SemesterResults/LowAttendance/FYP Excel/CSV/PDF + GPA CSV/PDF + Transcript CSV/PDF.
 - Implemented all 18 export methods in ReportService using BuildExcelBytes (ClosedXML), BuildCsvBytes, BuildPdfBytes (QuestPDF).

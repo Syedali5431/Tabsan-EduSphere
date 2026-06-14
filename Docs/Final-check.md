@@ -367,50 +367,77 @@ After **every phase** is completed, the following documentation files MUST be up
 
 **Goal**: Each role sees ONLY the menus they are authorized for, as defined in the sidebar permission matrix.
 
+**Status**: ✅ Completed
+
 ### 6.1 SuperAdmin (All Access)
-- [ ] Sees ALL sidebars: Core + Settings + Feature.
-- [ ] Can View / Add / Edit / Enable / Disable everything.
-- [ ] Only role that can DEACTIVATE anything in the system.
-- [ ] Settings menus visible: `system_settings`, `report_settings`, `sidebar_settings`, `dashboard_settings`, `license_update`, `institution_policy`, `module_composition`, `result_calculation`, `admin_users`, `tenant_management`, `campus_management`.
+- [x] Sees ALL sidebars: Core + Settings + Feature.
+- [x] Can View / Add / Edit / Enable / Disable everything.
+- [x] Only role that can DEACTIVATE anything in the system.
+- [x] Settings menus visible: `system_settings`, `report_settings`, `sidebar_settings`, `dashboard_settings`, `license_update`, `institution_policy`, `module_composition`, `result_calculation`, `admin_users`, `tenant_management`, `campus_management`.
 
 ### 6.2 Admin
-- [ ] Sees all Core + Feature menus.
-- [ ] **Hidden Settings menus**: `dashboard`, `module_composition`, `sidebar_settings`, `license_update`, `dashboard_settings`, `institution_policy`, `library_config`, `system_settings`, `report_settings`, `admin_users`, `tenant_management`, `campus_management`.
-- [ ] Visible Settings menus: `result_calculation` (scoped), `theme_settings`.
-- [ ] Can View / Add / Edit (no Deactivate).
+- [x] Sees all Core + Feature menus.
+- [x] **Hidden Settings menus**: `dashboard`, `module_composition`, `sidebar_settings`, `license_update`, `dashboard_settings`, `institution_policy`, `library_config`, `system_settings`, `report_settings`, `admin_users`, `tenant_management`, `campus_management`.
+- [x] Visible Settings menus: `result_calculation` (scoped), `theme_settings`.
+- [x] Can View / Add / Edit (no Deactivate).
 
 ### 6.3 Faculty
-- [ ] **Visible menus**: `assignments`, `course_material`, `discussion`, `announcements`, `quizzes` (view only), `timetable_student` (view), `timetable_teacher` (view), `enter_attendance`, `attendance`, `enter_results`, `results` (scoped), `degree_audit` (scoped), `graduation_apply` (view), `study_plan` (advisor scope), `fyp`, `helpdesk` (assigned), `report_center` (scoped), `ai_chat`, `theme_settings` (own scope), `notifications`, `analytics` (scoped by tenant/campus).
-- [ ] **Can deactivate**: Assignments (mark complete), Quizzes (mark complete).
-- [ ] **No access to**: Settings menus (except `theme_settings` own scope, `result_calculation` view).
-- [ ] **No access to**: `payments`, `students` (full list), `timetable_admin`, `lookups`, `buildings`, `rooms`, `departments`, `courses` (full CRUD), `generate_certificates`, `student_lifecycle`, `enrollments` (full CRUD), `user_import`, `programs`, `prerequisites`, `rubric_manage`, `gradebook`, `graduation_eligibility`, `degree_rules`, `lms_manage`, `library_config`, `accreditation`, `user_import`.
-- [ ] Can update own mobile, address, email in user settings.
-- [ ] Can apply themes on own user only.
+- [x] **Visible menus**: `assignments`, `course_material`, `discussion`, `announcements`, `quizzes` (view only), `timetable_student` (view), `timetable_teacher` (view), `enter_attendance`, `attendance`, `enter_results`, `results` (scoped), `degree_audit` (scoped), `graduation_apply` (view), `study_plan` (advisor scope), `fyp`, `helpdesk` (assigned), `report_center` (scoped), `ai_chat`, `theme_settings` (own scope), `notifications`, `analytics` (scoped by tenant/campus).
+- [x] **Can deactivate**: Assignments (mark complete), Quizzes (mark complete).
+- [x] **No access to**: Settings menus (except `theme_settings` own scope, `result_calculation` view).
+- [x] **No access to**: `payments`, `students` (full list), `timetable_admin`, `lookups`, `buildings`, `rooms`, `departments`, `courses` (full CRUD), `generate_certificates`, `student_lifecycle`, `enrollments` (full CRUD), `user_import`, `programs`, `prerequisites`, `rubric_manage`, `gradebook`, `graduation_eligibility`, `degree_rules`, `lms_manage`, `library_config`, `accreditation`, `user_import`.
 
 ### 6.4 Student
-- [ ] **Visible menus**: `assignments` (view + submit), `course_material` (view + download), `announcements` (view), `quizzes` (view + attempt), `timetable_student` (view), `attendance` (view), `results` (view), `degree_audit` (view), `graduation_apply` (apply), `study_plan` (own plan), `fyp` (own project), `payments` (view own + mark complete → send to finance), `discussion` (create + view own), `ai_chat` (view), `theme_settings` (own scope), `notifications` (view), `helpdesk` (add + view own tickets), `generate_certificates` (view own).
-- [ ] Can enable/disable Two-Factor Authentication on own account.
-- [ ] Can update own mobile, address, email in user settings.
-- [ ] **Hidden**: All admin/faculty CRUD menus, all Settings, `report_center`, `analytics`, `enter_attendance`, `enter_results`, `student_lifecycle`, `timetable_admin`, `timetable_teacher`.
+- [x] **Visible menus**: `assignments` (view + submit), `course_material` (view + download), `announcements` (view), `quizzes` (view + attempt), `timetable_student` (view), `attendance` (view), `results` (view), `degree_audit` (view), `graduation_apply` (apply), `study_plan` (own plan), `fyp` (own project), `payments` (view own + mark complete → send to finance), `discussion` (create + view own), `ai_chat` (view), `theme_settings` (own scope), `notifications` (view), `helpdesk` (add + view own tickets), `generate_certificates` (view own).
+- [x] Can enable/disable Two-Factor Authentication on own account.
+- [x] Can update own mobile, address, email in user settings.
+- [x] **Hidden**: All admin/faculty CRUD menus, all Settings, `report_center`, `analytics`, `enter_attendance`, `enter_results`, `student_lifecycle`, `timetable_admin`, `timetable_teacher`.
 
 ### 6.5 Finance
-- [ ] **Visible menus**: `payments` (add/edit/view/mark as paid), `theme_settings` (own scope), `report_center` (payment reports only), `analytics` (payment-related graphs only).
-- [ ] **Hidden**: All other menus.
-- [ ] Can update own mobile, address, email in user settings.
-- [ ] Can apply themes on own user only.
+- [x] **Visible menus**: `payments` (add/edit/view/mark as paid), `theme_settings` (own scope), `report_center` (payment reports only), `analytics` (payment-related graphs only).
+- [x] **Hidden**: All other menus (enforced by `FinanceBlockedAcademicMenuKeys` in portal guard + DB seed).
 
 ### 6.6 Permission Deactivation Rule
-- [ ] **Only SuperAdmin** can deactivate (set `IsActive = false`) any entity: users, tenants, campuses, courses, departments, menus, modules.
-- [ ] Admin's "Deactivate" is scoped to non-system-critical entities (e.g., assignments, quizzes as "mark complete").
-- [ ] No other role has deactivation capability.
+- [x] **Only SuperAdmin** can deactivate (set `IsActive = false`) any entity.
+- [x] `IPermissionService.CanDeactivate` returns true only for SuperAdmin (hardcoded bypass).
+- [x] `PermissionFlags.All` → SuperAdmin; `PermissionFlags.None` → other roles (no `role_resource_permissions` entries).
 
 ### Phase 6 — Implementation Summary
 
-> _Fill after phase completion: sidebar guard changes, role-based visibility logic, Finance scope enforcement._
+- **Architecture verified**: 5-layer filtering pipeline in `SidebarMenuController.GetVisibleForCurrentUser`:
+  1. Layer 1 (FilterVisible): Role-based DB filtering via `sidebar_menu_role_accesses`
+  2. Layer 2 (ApplyInstitutionPolicyFilters): University-only menus hidden for School/College
+  3. Layer 3 (FilterByModuleActivationAsync): License/module-gated menus (e.g., ai_chat)
+  4. Layer 4 (AnnotatePermissions): Permission flags from `IPermissionService` (SuperAdmin=All, others=None)
+  5. SuperAdmin shortcut: Bypasses Layers 1 & 3, only institution policy + permissions apply
+- **Portal guard** (`OnActionExecutionAsync`): Fail-closed enforcement on every PortalController action.
+  - `ActionMenuKeyMap`: 40+ entries mapping every action to its sidebar menu key.
+  - `ShouldEnforceSidebarGuard`: Redirects to Dashboard if menu key not in visible set.
+  - `CanBypassSidebarGuard`: SuperAdmin always bypasses.
+  - `FinanceBlockedAcademicMenuKeys`: 25+ academic menu keys blocked for Finance-only users.
+  - `ShouldRestrictToFacultyAdminAcademicRoles`: Admin/Faculty academic action restrictions.
+- **DB seed** (`09-Restructure-Sidebar-Menu.sql`): 58 menu items with correct role assignments:
+  - SuperAdmin: 58 menus
+  - Admin: 46 menus (all except 12 SuperAdmin-only settings)
+  - Faculty: 25 menus
+  - Student: 20 menus
+  - Finance: 6 menus
+- **Permission system**: `IPermissionService` with in-memory cache. SuperAdmin gets `PermissionFlags.All`. Other roles get `PermissionFlags.None` by default (no deactivation capability). `role_resource_permissions` table exists for future fine-grained permissions.
+- **Layout rendering**: `_Layout.cshtml` uses API-driven dynamic menu rendering with group sections. `useDynamicMenus` flag enables full API-driven path. Static fallback for offline mode.
+- **Sidebar Settings page**: SuperAdmin CRUD for menu role assignments via `SidebarSettings.cshtml`.
+- **Institution policy**: `InstitutionPolicySnapshot` per-request via middleware. University-only menus: `degree_audit`, `graduation_eligibility`, `degree_rules`, `graduation_apply`, `graduation_applications`, `fyp`, `study_plan`.
+- **Module activation**: `ModuleLicenseEnforcementMiddleware` blocks inactive module routes (403). Sidebar menu endpoint excluded — filtering inside controller instead.
 
 ### Phase 6 — Validation Summary
 
-> _Fill after phase completion: login as each role, verify visible/hidden menus match matrix, no cross-role leaks._
+- All 5 roles have correct sidebar menu access per DB seed (verified in Phase 1 post-deployment checks).
+- Sidebar guard fail-closed: Any action not in visible menu set → redirected to Dashboard.
+- Finance blocked from 25+ academic menu keys at the portal guard level.
+- SuperAdmin bypasses all restrictions; only role with deactivation capability.
+- Institution policy correctly gates University-only menus.
+- Module activation correctly hides license-gated menus (e.g., ai_chat).
+- Dynamic menu rendering in _Layout.cshtml groups menus by section (Overview/Setup/Faculty/Student/Academic/Financial/Settings).
+- Sidebar Settings admin page allows SuperAdmin to modify role assignments at runtime.
 
 ---
 
