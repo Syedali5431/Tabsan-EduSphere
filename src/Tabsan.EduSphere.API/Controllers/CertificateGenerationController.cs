@@ -567,6 +567,11 @@ public class CertificateGenerationController : ControllerBase
             var finalClass = semesterNames
                 .OrderByDescending(n => n)
                 .FirstOrDefault() ?? className;
+            // Strip "Semester " or "Class " prefix, keep just the number and year
+            finalClass = finalClass
+                .Replace("Semester ", "")
+                .Replace("Class ", "")
+                .Trim();
             className = finalClass;
         }
 
