@@ -1527,28 +1527,28 @@ public class CertificateGenerationController : ControllerBase
         string strengths, remarks;
         if (pct >= 90)
         {
-            strengths = "• Outstanding academic performance across all classes<br>• Excellent grasp of all core subjects<br>• Consistently maintained top-tier results<br>• Certificate of Completion with Distinction";
-            remarks = "• Exceptional student with bright academic future<br>• Strongly recommended for advanced studies<br>• Demonstrates leadership potential<br>• Ready for competitive higher education programs";
+            strengths = "• Exceptional academic achievement<br>• Outstanding grasp of all core subjects<br>• Consistently top-tier performance<br>• Certificate of Completion with Distinction";
+            remarks = "• Demonstrates excellent analytical ability, consistency, and academic discipline<br>• Highly recommended for advanced academic and enrichment opportunities<br>• Ready for the most competitive higher education pathways<br>• A model student with bright prospects";
         }
         else if (pct >= 80)
         {
-            strengths = "• Very good academic performance throughout<br>• Strong understanding of core subjects<br>• Consistent improvement across classes<br>• All classes completed with good standing";
-            remarks = "• Well-prepared for higher education<br>• Shows dedication and good study habits<br>• Recommended for science/technology streams<br>• Continue building on strong foundation";
+            strengths = "• Strong academic performance<br>• Very good grasp of subject matter<br>• Reliable and consistent results<br>• All classes completed with good standing";
+            remarks = "• Shows solid understanding of concepts and reliable performance<br>• Well-suited for academically rigorous pathways<br>• Continue building on this strong foundation<br>• Recommended for science and technology streams";
         }
         else if (pct >= 70)
         {
-            strengths = "• Satisfactory performance across all classes<br>• Good grasp of fundamental concepts<br>• All classes completed successfully<br>• Steady progress throughout academic journey";
-            remarks = "• Continue focusing on core subjects for improvement<br>• Consider additional tutoring for challenging areas<br>• Good potential with consistent effort<br>• Recommended to strengthen Math and Science skills";
+            strengths = "• Satisfactory performance<br>• Consistent progress across classes<br>• All classes completed successfully<br>• Steady academic development";
+            remarks = "• Displays steady development with room for growth<br>• With focused effort, can further strengthen understanding and achieve higher outcomes<br>• Consider additional practice in challenging subjects<br>• Good potential with continued dedication";
         }
         else if (pct >= 60)
         {
-            strengths = "• All classes completed and passed<br>• Basic understanding of core subjects demonstrated<br>• Consistent attendance and participation<br>• Perseverance through academic challenges";
-            remarks = "• Focus on strengthening fundamental concepts<br>• Extra attention to Math and English recommended<br>• Consider remedial support for improvement<br>• Vocational or skills-based paths may be suitable";
+            strengths = "• Basic proficiency achieved<br>• Demonstrates genuine effort<br>• All classes passed<br>• Perseverance through challenges";
+            remarks = "• Meets minimum academic expectations<br>• Continued practice needed to reinforce core concepts and improve consistency<br>• Focus on strengthening Math and English fundamentals<br>• Consider remedial support for targeted improvement";
         }
         else
         {
-            strengths = "• All classes attempted with effort<br>• Willingness to learn and improve<br>• Regular attendance maintained<br>• Determination to complete the program";
-            remarks = "• Significant improvement needed in core subjects<br>• Remedial education strongly recommended<br>• Focus on foundational Math and English skills<br>• Consider vocational training pathways";
+            strengths = "• Developing understanding<br>• Shows perseverance and determination<br>• All classes attempted<br>• Willingness to learn and improve";
+            remarks = "• Requires additional support to build foundational knowledge<br>• Targeted improvement strategies recommended<br>• Focus on core Math and English skills<br>• Consider vocational or skills-based educational pathways";
         }
 
         return (strengths, remarks);
