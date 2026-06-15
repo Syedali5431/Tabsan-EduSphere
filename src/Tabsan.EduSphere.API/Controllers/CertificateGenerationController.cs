@@ -584,6 +584,22 @@ public class CertificateGenerationController : ControllerBase
         var finalPct = resultSummary.FinalPercentage;
         var serialNumber = $"{(normalizedType == CompletionDocumentType ? "CMP" : "RPT")}-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
+        // For Report Card, compute percentage from the most recent class only (not average across all classes)
+        if (normalizedType != CompletionDocumentType)
+        {
+            var lastClassName = semesterNames.OrderByDescending(n => n).FirstOrDefault();
+            if (lastClassName != null)
+            {
+                var lastClassRows = reportRows.Where(r => r.SemesterName == lastClassName).ToList();
+                if (lastClassRows.Count > 0)
+                {
+                    var totalObtained = lastClassRows.Sum(r => r.MarksObtained);
+                    var totalMax = lastClassRows.Sum(r => r.MaxMarks);
+                    finalPct = totalMax > 0 ? ((totalObtained / totalMax) * 100m).ToString("0.##") : "0";
+                }
+            }
+        }
+
         string htmlContent;
         string certTypeName;
 
