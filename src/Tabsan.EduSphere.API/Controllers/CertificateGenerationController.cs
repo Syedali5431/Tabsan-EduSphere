@@ -581,24 +581,10 @@ public class CertificateGenerationController : ControllerBase
 
         var safeRegNo = SanitizeFileName(student.RegistrationNumber);
         var issueDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        var finalPct = resultSummary.FinalPercentage;
         var serialNumber = $"{(normalizedType == CompletionDocumentType ? "CMP" : "RPT")}-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-        // For Report Card, compute percentage from the most recent class only (not average across all classes)
-        if (normalizedType != CompletionDocumentType)
-        {
-            var lastClassName = semesterNames.OrderByDescending(n => n).FirstOrDefault();
-            if (lastClassName != null)
-            {
-                var lastClassRows = reportRows.Where(r => r.SemesterName == lastClassName).ToList();
-                if (lastClassRows.Count > 0)
-                {
-                    var totalObtained = lastClassRows.Sum(r => r.MarksObtained);
-                    var totalMax = lastClassRows.Sum(r => r.MaxMarks);
-                    finalPct = totalMax > 0 ? ((totalObtained / totalMax) * 100m).ToString("0.##") : "0";
-                }
-            }
-        }
+        // Compute final percentage from the last class only (not average across all classes)
+        var finalPct = ComputeLastClassPercentage(reportRows, semesterNames, resultSummary.FinalPercentage);
 
         string htmlContent;
         string certTypeName;
@@ -805,7 +791,10 @@ public class CertificateGenerationController : ControllerBase
             .Select(u => u.FullName)
             .FirstOrDefaultAsync(ct);
 
-        return string.IsNullOrWhiteSpace(fullName) ? fallback : fullName;
+        var name = string.IsNullOrWhiteSpace(fullName) ? fallback : fullName;
+        // Strip year suffixes like "Y11", "Y12", "Y1", "Y2" etc.
+        name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+Y\d+$", "");
+        return name.Trim();
     }
 
     private async Task<string> ResolveFatherNameAsync(Guid userId, CancellationToken ct)
@@ -1476,7 +1465,7 @@ public class CertificateGenerationController : ControllerBase
             var ss = (int)marks.Where(m => m.CourseTitle.Contains("Social", StringComparison.OrdinalIgnoreCase) || m.CourseTitle.Contains("Urdu", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var urdu = (int)marks.Where(m => m.CourseTitle.Contains("Islamiat", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var avg = marks.Count > 0 ? marks.Average(m => m.Percentage) : 0m;
-            var grade = avg >= 90 ? "A" : avg >= 80 ? "B+" : avg >= 70 ? "B" : "C";
+            var grade = avg >= 90 ? "A+" : avg >= 80 ? "A" : avg >= 70 ? "B+" : avg >= 60 ? "B" : "C";
 
             result.Add(new HtmlCertificateService.ClasswiseRow
             {
@@ -1505,6 +1494,18 @@ public class CertificateGenerationController : ControllerBase
         // Take the first number found
         var match = System.Text.RegularExpressions.Regex.Match(cleaned, @"^\d+");
         return match.Success ? int.Parse(match.Value) : 0;
+    }
+
+    private static string ComputeLastClassPercentage(List<TranscriptResultProjection> reportRows,
+        List<string> semesterNames, string fallback)
+    {
+        var lastClassName = semesterNames.OrderByDescending(n => n).FirstOrDefault();
+        if (lastClassName == null) return fallback;
+        var lastClassRows = reportRows.Where(r => r.SemesterName == lastClassName).ToList();
+        if (lastClassRows.Count == 0) return fallback;
+        var totalObtained = lastClassRows.Sum(r => r.MarksObtained);
+        var totalMax = lastClassRows.Sum(r => r.MaxMarks);
+        return totalMax > 0 ? ((totalObtained / totalMax) * 100m).ToString("0.##") : "0";
     }
 
     private async Task<string> GetAttendancePercentAsync(Guid studentProfileId, CancellationToken ct)
