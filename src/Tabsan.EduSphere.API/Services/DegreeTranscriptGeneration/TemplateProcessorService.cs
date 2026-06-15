@@ -52,16 +52,118 @@ public sealed class TemplateProcessorService
 
     private static void ReplaceInMainBody(WordprocessingDocument document, IReadOnlyDictionary<string, string> replacements)
     {
-        var textNodes = document.MainDocumentPart?.Document.Body?.Descendants<Text>() ?? Enumerable.Empty<Text>();
-        foreach (var textNode in textNodes)
+        var body = document.MainDocumentPart?.Document.Body;
+        if (body == null) return;
+
+        // Process paragraphs: concatenate text across all runs, replace, then write back
+        foreach (var paragraph in body.Descendants<Paragraph>())
         {
-            var current = textNode.Text;
-            foreach (var pair in replacements)
+            var runs = paragraph.Elements<Run>().ToList();
+            if (runs.Count == 0) continue;
+
+            // Build combined text and track which run each character belongs to
+            var segments = new List<(Run Run, int Start, int Length)>();
+            var combined = new System.Text.StringBuilder();
+            foreach (var run in runs)
             {
-                current = current.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
+                var textElements = run.Elements<Text>().ToList();
+                foreach (var t in textElements)
+                {
+                    var start = combined.Length;
+                    combined.Append(t.Text);
+                    segments.Add((run, start, t.Text.Length));
+                }
             }
 
-            textNode.Text = current;
+            var fullText = combined.ToString();
+            if (string.IsNullOrWhiteSpace(fullText)) continue;
+
+            // Check if any placeholder exists in the combined text
+            var hasPlaceholder = false;
+            foreach (var key in replacements.Keys)
+            {
+                if (fullText.Contains(key, StringComparison.Ordinal))
+                {
+                    hasPlaceholder = true;
+                    break;
+                }
+            }
+            if (!hasPlaceholder) continue;
+
+            // Apply replacements to combined text
+            var replaced = fullText;
+            foreach (var pair in replacements)
+            {
+                replaced = replaced.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
+            }
+
+            // Write back: clear all text elements and set first run with full replaced text
+            foreach (var run in runs)
+            {
+                run.RemoveAllChildren<Text>();
+            }
+            var firstText = runs[0].Elements<Text>().FirstOrDefault();
+            if (firstText != null)
+            {
+                firstText.Text = replaced;
+            }
+            else
+            {
+                runs[0].Append(new Text(replaced) { Space = SpaceProcessingModeValues.Preserve });
+            }
+        }
+
+        // Also process tables (paragraphs inside table cells)
+        foreach (var table in body.Descendants<Table>())
+        {
+            foreach (var paragraph in table.Descendants<Paragraph>())
+            {
+                var runs = paragraph.Elements<Run>().ToList();
+                if (runs.Count == 0) continue;
+
+                var combined = new System.Text.StringBuilder();
+                foreach (var run in runs)
+                {
+                    foreach (var t in run.Elements<Text>())
+                    {
+                        combined.Append(t.Text);
+                    }
+                }
+
+                var fullText = combined.ToString();
+                if (string.IsNullOrWhiteSpace(fullText)) continue;
+
+                var hasPlaceholder = false;
+                foreach (var key in replacements.Keys)
+                {
+                    if (fullText.Contains(key, StringComparison.Ordinal))
+                    {
+                        hasPlaceholder = true;
+                        break;
+                    }
+                }
+                if (!hasPlaceholder) continue;
+
+                var replaced = fullText;
+                foreach (var pair in replacements)
+                {
+                    replaced = replaced.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
+                }
+
+                foreach (var run in runs)
+                {
+                    run.RemoveAllChildren<Text>();
+                }
+                var ft = runs[0].Elements<Text>().FirstOrDefault();
+                if (ft != null)
+                {
+                    ft.Text = replaced;
+                }
+                else
+                {
+                    runs[0].Append(new Text(replaced) { Space = SpaceProcessingModeValues.Preserve });
+                }
+            }
         }
     }
 
