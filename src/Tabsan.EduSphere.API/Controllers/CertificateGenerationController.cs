@@ -559,11 +559,13 @@ public class CertificateGenerationController : ControllerBase
 
         var resultSummary = BuildResultSummary(completionRows);
 
-        // For marks sheets with multiple classes, show the range.
-        if (normalizedType != CompletionDocumentType && semesterNames.Count > 1)
+        // For marks sheets / report cards, show the most recent class, not a range.
+        if (normalizedType != CompletionDocumentType)
         {
-            var sorted = semesterNames.OrderBy(n => n).ToList();
-            className = $"{sorted.First()} to {sorted.Last()}";
+            var finalClass = semesterNames
+                .OrderByDescending(n => n)
+                .FirstOrDefault() ?? className;
+            className = finalClass;
         }
 
         var templateBytes = await GetAdditionalTemplateBytesAsync(normalizedType, ct);
