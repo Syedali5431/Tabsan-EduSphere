@@ -1462,8 +1462,8 @@ public class CertificateGenerationController : ControllerBase
             var eng = (int)marks.Where(m => m.CourseTitle.Contains("English", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var math = (int)marks.Where(m => m.CourseTitle.Contains("Math", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var sci = (int)marks.Where(m => m.CourseTitle.Contains("Science", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
-            var ss = (int)marks.Where(m => m.CourseTitle.Contains("Social", StringComparison.OrdinalIgnoreCase) || m.CourseTitle.Contains("Urdu", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
-            var urdu = (int)marks.Where(m => m.CourseTitle.Contains("Islamiat", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
+            var ss = (int)marks.Where(m => m.CourseTitle.Contains("Social", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
+            var urdu = (int)marks.Where(m => m.CourseTitle.Contains("Urdu", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var avg = marks.Count > 0 ? marks.Average(m => m.Percentage) : 0m;
             var grade = ResolveGrade(avg);
 
