@@ -251,7 +251,7 @@ with an Overall Percentage of<br>
 <div class=""details"">
 <span>📅 Enrollment: <strong>{{EnrollmentYear}}</strong></span>
 <span>🎓 Completion: <strong>{{CompletionYear}}</strong></span>
-<span>📊 Overall: <strong>{{FinalPercentage}}</strong></span>
+<span>📊 Current Percentage: <strong>{{FinalPercentage}}</strong></span>
 </div>
 <div style=""text-align:center;font-size:14px;color:#555;margin:15px 0"">Has demonstrated consistent academic performance and discipline throughout the school journey.</div>
 <div class=""signatures"">
@@ -311,7 +311,7 @@ with an Overall Percentage of<br>
 <div class=""info-item""><div class=""info-label"">Class / Year</div><div class=""info-value"">{{ClassName}}</div></div>
 </div>
 <div class=""summary-grid"">
-<div class=""summary-card""><div class=""value"">{{FinalPercentage}}</div><div class=""label"">Final Percentage</div></div>
+<div class=""summary-card""><div class=""value"">{{FinalPercentage}}</div><div class=""label"">Current Percentage</div></div>
 <div class=""summary-card""><div class=""value"">{{ClassesCompleted}}</div><div class=""label"">Classes Completed</div></div>
 <div class=""summary-card""><div class=""value"">{{SubjectsPassed}}</div><div class=""label"">Subjects Passed</div></div>
 <div class=""summary-card""><div class=""value"">{{AttendancePercent}}</div><div class=""label"">Attendance</div></div>

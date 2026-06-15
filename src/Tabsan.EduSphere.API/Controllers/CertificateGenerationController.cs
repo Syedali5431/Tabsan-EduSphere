@@ -1520,6 +1520,7 @@ public class CertificateGenerationController : ControllerBase
         // Sort by extracted numeric class number (not alphabetical) to find the true last class
         var lastClassName = semesterNames
             .Select(n => new { Name = n, Num = ExtractClassNumber(n) })
+            .Where(x => x.Num > 0)
             .OrderByDescending(x => x.Num)
             .FirstOrDefault()?.Name;
 
