@@ -30,6 +30,8 @@ public sealed class HtmlCertificateService
         html = html.Replace("{{ClassesCompleted}}", data.ClassesCompleted.ToString());
         html = html.Replace("{{SubjectsPassed}}", data.SubjectsPassed.ToString());
         html = html.Replace("{{AttendancePercent}}", data.AttendancePercent + "%");
+        html = html.Replace("{{Strengths}}", data.Strengths);
+        html = html.Replace("{{Remarks}}", data.Remarks);
         html = html.Replace("{{ACADEMIC_TABLE}}", BuildClasswiseTable(data.ClassRows));
         return html;
     }
@@ -138,6 +140,8 @@ public sealed class HtmlCertificateService
         public int ClassesCompleted { get; set; }
         public int SubjectsPassed { get; set; }
         public string AttendancePercent { get; set; } = "";
+        public string Strengths { get; set; } = "";
+        public string Remarks { get; set; } = "";
         public List<ClasswiseRow> ClassRows { get; set; } = new();
     }
 
@@ -305,8 +309,8 @@ with an Overall Percentage of<br>
 <div style=""overflow-x:auto""><table><thead><tr><th>Class</th><th>English</th><th>Mathematics</th><th>Science</th><th>Social Studies</th><th>Urdu</th><th>Average</th><th>Grade</th><th>Attendance</th><th>Status</th></tr></thead><tbody>{{ACADEMIC_TABLE}}</tbody></table></div>
 <div class=""section-title"">📋 Overall Assessment</div>
 <div style=""padding:20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:15px"">
-<div style=""font-size:13px;line-height:1.8""><strong>🏆 Strengths:</strong><br>• Consistent performance across all classes<br>• Strong work ethic and discipline<br>• All classes completed successfully<br>• Certificate of Completion issued</div>
-<div style=""font-size:13px;line-height:1.8""><strong>📝 Remarks:</strong><br>• Good team player<br>• Active participation in activities<br>• Ready for higher education<br>• Recommended for further studies</div>
+<div style=""font-size:13px;line-height:1.8""><strong>🏆 Strengths:</strong><br>{{Strengths}}</div>
+<div style=""font-size:13px;line-height:1.8""><strong>📝 Remarks:</strong><br>{{Remarks}}</div>
 </div>
 <div style=""display:flex;justify-content:space-between;padding:25px 40px;border-top:1px solid #e8ecf1;margin-top:10px"">
 <div style=""text-align:center""><div style=""border-bottom:2px solid #1a3a5c;width:160px;margin:0 auto 5px""></div><div style=""font-size:13px;font-weight:600"">Dr. Sarah Khan</div><div style=""font-size:11px;color:#888"">Principal</div></div>

@@ -625,6 +625,7 @@ public class CertificateGenerationController : ControllerBase
             certTypeName = "ReportCard";
             var classRows = BuildClasswiseRows(reportRows);
             var attendancePct = await GetAttendancePercentAsync(studentProfileId, ct);
+            var (strengths, remarks) = BuildStrengthsAndRemarks(finalPct);
 
             htmlContent = _html.GenerateReportCard(new HtmlCertificateService.ReportCardData
             {
@@ -637,6 +638,8 @@ public class CertificateGenerationController : ControllerBase
                 ClassesCompleted = classRows.Count,
                 SubjectsPassed = classRows.Count * 5,
                 AttendancePercent = attendancePct,
+                Strengths = strengths,
+                Remarks = remarks,
                 ClassRows = classRows,
                 IssueDate = issueDate,
                 SerialNumber = serialNumber
@@ -1514,6 +1517,40 @@ public class CertificateGenerationController : ControllerBase
             .AsNoTracking()
             .CountAsync(a => a.StudentProfileId == studentProfileId && a.Status == AttendanceStatus.Present, ct);
         return ((int)((double)present / total * 100)).ToString();
+    }
+
+    private static (string strengths, string remarks) BuildStrengthsAndRemarks(string finalPct)
+    {
+        if (!decimal.TryParse(finalPct, out var pct)) pct = 0;
+
+        string strengths, remarks;
+        if (pct >= 90)
+        {
+            strengths = "• Outstanding academic performance across all classes<br>• Excellent grasp of all core subjects<br>• Consistently maintained top-tier results<br>• Certificate of Completion with Distinction";
+            remarks = "• Exceptional student with bright academic future<br>• Strongly recommended for advanced studies<br>• Demonstrates leadership potential<br>• Ready for competitive higher education programs";
+        }
+        else if (pct >= 80)
+        {
+            strengths = "• Very good academic performance throughout<br>• Strong understanding of core subjects<br>• Consistent improvement across classes<br>• All classes completed with good standing";
+            remarks = "• Well-prepared for higher education<br>• Shows dedication and good study habits<br>• Recommended for science/technology streams<br>• Continue building on strong foundation";
+        }
+        else if (pct >= 70)
+        {
+            strengths = "• Satisfactory performance across all classes<br>• Good grasp of fundamental concepts<br>• All classes completed successfully<br>• Steady progress throughout academic journey";
+            remarks = "• Continue focusing on core subjects for improvement<br>• Consider additional tutoring for challenging areas<br>• Good potential with consistent effort<br>• Recommended to strengthen Math and Science skills";
+        }
+        else if (pct >= 60)
+        {
+            strengths = "• All classes completed and passed<br>• Basic understanding of core subjects demonstrated<br>• Consistent attendance and participation<br>• Perseverance through academic challenges";
+            remarks = "• Focus on strengthening fundamental concepts<br>• Extra attention to Math and English recommended<br>• Consider remedial support for improvement<br>• Vocational or skills-based paths may be suitable";
+        }
+        else
+        {
+            strengths = "• All classes attempted with effort<br>• Willingness to learn and improve<br>• Regular attendance maintained<br>• Determination to complete the program";
+            remarks = "• Significant improvement needed in core subjects<br>• Remedial education strongly recommended<br>• Focus on foundational Math and English skills<br>• Consider vocational training pathways";
+        }
+
+        return (strengths, remarks);
     }
 
     private int? GetInstitutionTypeFromClaims()
