@@ -83,7 +83,10 @@ public sealed class HtmlCertificateService
         var sb = new StringBuilder();
         foreach (var row in rows)
         {
-            var gradeClass = row.Average >= 90 ? "grade-A" : row.Average >= 80 ? "grade-B" : "grade-C";
+            var gradeClass = row.Average >= 90 ? "grade-APlus" : row.Average >= 85 ? "grade-A" : row.Average >= 80 ? "grade-AMinus"
+                : row.Average >= 75 ? "grade-BPlus" : row.Average >= 70 ? "grade-B" : row.Average >= 65 ? "grade-BMinus"
+                : row.Average >= 60 ? "grade-CPlus" : row.Average >= 55 ? "grade-C" : row.Average >= 50 ? "grade-CMinus"
+                : row.Average >= 40 ? "grade-D" : "grade-F";
             sb.AppendLine($"<tr><td><strong>{row.ClassName}</strong></td>" +
                 $"<td>{row.English}</td><td>{row.Math}</td><td>{row.Science}</td>" +
                 $"<td>{row.SocialStudies}</td><td>{row.Urdu}</td>" +
@@ -281,9 +284,17 @@ with an Overall Percentage of<br>
   td{padding:10px 12px;font-size:13px;border-bottom:1px solid #e8ecf1}
   tr:nth-child(even){background:#fafbfc}
   tr:hover{background:#eef2f7}
+  .grade-APlus{color:#1b5e20;font-weight:700}
   .grade-A{color:#2e7d32;font-weight:700}
-  .grade-B{color:#1565c0;font-weight:700}
-  .grade-C{color:#e65100;font-weight:700}
+  .grade-AMinus{color:#388e3c;font-weight:700}
+  .grade-BPlus{color:#1565c0;font-weight:700}
+  .grade-B{color:#1976d2;font-weight:700}
+  .grade-BMinus{color:#1e88e5;font-weight:700}
+  .grade-CPlus{color:#e65100;font-weight:700}
+  .grade-C{color:#ef6c00;font-weight:700}
+  .grade-CMinus{color:#f57c00;font-weight:700}
+  .grade-D{color:#c62828;font-weight:700}
+  .grade-F{color:#b71c1c;font-weight:700}
   .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:25px 40px}
   .summary-card{text-align:center;padding:20px;background:#f0f4f8;border-radius:8px;border:1px solid #e0e4ea}
   .summary-card .value{font-size:28px;font-weight:700;color:#1a3a5c;font-family:'Playfair Display',serif}

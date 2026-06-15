@@ -1465,7 +1465,7 @@ public class CertificateGenerationController : ControllerBase
             var ss = (int)marks.Where(m => m.CourseTitle.Contains("Social", StringComparison.OrdinalIgnoreCase) || m.CourseTitle.Contains("Urdu", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var urdu = (int)marks.Where(m => m.CourseTitle.Contains("Islamiat", StringComparison.OrdinalIgnoreCase)).Sum(m => m.MarksObtained);
             var avg = marks.Count > 0 ? marks.Average(m => m.Percentage) : 0m;
-            var grade = avg >= 90 ? "A+" : avg >= 80 ? "A" : avg >= 70 ? "B+" : avg >= 60 ? "B" : "C";
+            var grade = ResolveGrade(avg);
 
             result.Add(new HtmlCertificateService.ClasswiseRow
             {
@@ -1481,6 +1481,24 @@ public class CertificateGenerationController : ControllerBase
             });
         }
         return result;
+    }
+
+    private static string ResolveGrade(decimal percentage)
+    {
+        return percentage switch
+        {
+            >= 90 => "A+",
+            >= 85 => "A",
+            >= 80 => "A-",
+            >= 75 => "B+",
+            >= 70 => "B",
+            >= 65 => "B-",
+            >= 60 => "C+",
+            >= 55 => "C",
+            >= 50 => "C-",
+            >= 40 => "D",
+            _ => "F"
+        };
     }
 
     private static int ExtractClassNumber(string semesterName)
@@ -1499,7 +1517,12 @@ public class CertificateGenerationController : ControllerBase
     private static string ComputeLastClassPercentage(List<TranscriptResultProjection> reportRows,
         List<string> semesterNames, string fallback)
     {
-        var lastClassName = semesterNames.OrderByDescending(n => n).FirstOrDefault();
+        // Sort by extracted numeric class number (not alphabetical) to find the true last class
+        var lastClassName = semesterNames
+            .Select(n => new { Name = n, Num = ExtractClassNumber(n) })
+            .OrderByDescending(x => x.Num)
+            .FirstOrDefault()?.Name;
+
         if (lastClassName == null) return fallback;
         var lastClassRows = reportRows.Where(r => r.SemesterName == lastClassName).ToList();
         if (lastClassRows.Count == 0) return fallback;
