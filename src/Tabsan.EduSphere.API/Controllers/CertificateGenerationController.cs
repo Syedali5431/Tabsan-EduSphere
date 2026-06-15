@@ -311,11 +311,16 @@ public class CertificateGenerationController : ControllerBase
         if (student is null)
             return Forbid();
 
+        // Transcript only available for University students
+        if (student.Department.InstitutionType != InstitutionType.University)
+            return BadRequest(new { message = "Transcript is only available for university students. School/College students should use Report Card." });
+
         // For transcript, include ALL published results (all completed semesters).
         var transcriptContext = await BuildTranscriptContextAsync(student, ct);
         if (transcriptContext.Rows.Count == 0)
             return BadRequest(new { message = "No published results found for this student." });
 
+        var isUniversity = student.Department.InstitutionType == InstitutionType.University;
         var studentName = await ResolveStudentNameAsync(student.UserId, student.RegistrationNumber, ct);
         var request = new TranscriptGenerationRequest(
             StudentId: student.Id,
@@ -799,14 +804,15 @@ public class CertificateGenerationController : ControllerBase
                 result.ResultType,
                 result.MarksObtained,
                 result.MaxMarks,
-                result.GradePoint))
+                result.GradePoint,
+                course.HasSemesters))
             .ToListAsync(ct);
 
         if (publishedRows.Count == 0)
             return new TranscriptBuildContext(new List<TranscriptCourseRow>(), student.Cgpa.ToString("0.00"), "");
 
         var byCourse = publishedRows
-            .GroupBy(x => new { x.CourseOfferingId, x.SemesterId, x.SemesterName, x.CourseCode, x.CourseTitle, x.CreditHours })
+            .GroupBy(x => new { x.CourseOfferingId, x.SemesterId, x.SemesterName, x.CourseCode, x.CourseTitle, x.CreditHours, x.HasSemesters })
             .OrderBy(g => g.Key.SemesterName)
             .ThenBy(g => g.Key.CourseCode)
             .ToList();
@@ -821,15 +827,27 @@ public class CertificateGenerationController : ControllerBase
 
             var obtained = totalRow is null ? g.Sum(x => x.MarksObtained) : totalRow.MarksObtained;
             var max = totalRow is null ? g.Sum(x => x.MaxMarks) : totalRow.MaxMarks;
-            var gradePoint = totalRow?.GradePoint
-                ?? g.Select(x => x.GradePoint).Where(x => x.HasValue).Select(x => x!.Value).DefaultIfEmpty(max > 0 ? (obtained / max) * 4m : 0m).Max();
 
-            if (!semesterBuckets.TryGetValue(g.Key.SemesterId, out var semesterValues))
+            // For semester-based courses: show GPA; for non-semester courses: show Percentage
+            string sgpaOrMarks;
+            if (g.Key.HasSemesters)
             {
-                semesterValues = new List<decimal>();
-                semesterBuckets[g.Key.SemesterId] = semesterValues;
+                var gradePoint = totalRow?.GradePoint
+                    ?? g.Select(x => x.GradePoint).Where(x => x.HasValue).Select(x => x!.Value).DefaultIfEmpty(max > 0 ? (obtained / max) * 4m : 0m).Max();
+                sgpaOrMarks = gradePoint.ToString("0.00");
+
+                if (!semesterBuckets.TryGetValue(g.Key.SemesterId, out var semesterValues))
+                {
+                    semesterValues = new List<decimal>();
+                    semesterBuckets[g.Key.SemesterId] = semesterValues;
+                }
+                semesterValues.Add(gradePoint);
             }
-            semesterValues.Add(gradePoint);
+            else
+            {
+                var percentage = max > 0 ? (obtained / max) * 100m : 0m;
+                sgpaOrMarks = $"{percentage:0.##}%";
+            }
 
             tableRows.Add(new TranscriptCourseRow(
                 SerialNumber: (index + 1).ToString(),
@@ -839,7 +857,7 @@ public class CertificateGenerationController : ControllerBase
                 CreditHours: g.Key.CreditHours,
                 ObtainedMarks: obtained.ToString("0.##"),
                 TotalMarks: max.ToString("0.##"),
-                SgpaOrMarks: gradePoint.ToString("0.00"),
+                SgpaOrMarks: sgpaOrMarks,
                 SemesterName: g.Key.SemesterName));
         }
 
@@ -886,7 +904,8 @@ public class CertificateGenerationController : ControllerBase
                 result.ResultType,
                 result.MarksObtained,
                 result.MaxMarks,
-                result.GradePoint))
+                result.GradePoint,
+                course.HasSemesters))
             .ToListAsync(ct);
     }
 
@@ -1431,7 +1450,8 @@ public class CertificateGenerationController : ControllerBase
         string ResultType,
         decimal MarksObtained,
         decimal MaxMarks,
-        decimal? GradePoint)
+        decimal? GradePoint,
+        bool HasSemesters)
     {
         public decimal Percentage => MaxMarks <= 0 ? 0m : (MarksObtained / MaxMarks) * 100m;
     }
