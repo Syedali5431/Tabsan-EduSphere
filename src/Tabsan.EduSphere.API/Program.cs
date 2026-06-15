@@ -550,6 +550,7 @@ builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IAccreditatio
 builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.ILibraryService, Tabsan.EduSphere.Application.Services.LibraryService>();
 // ── Degree/Transcript Generation: modular add-on services (isolated, add-only) ───
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateExportService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.HtmlCertificateService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.TemplateProcessorService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.QRCodeService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.IPdfConverterAdapter, Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.LibreOfficePdfConverterAdapter>();
