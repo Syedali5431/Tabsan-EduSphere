@@ -1,4 +1,4 @@
-# Database Script Execution Order — Tabsan EduSphere v1.0
+# Database Script Execution Order — Tabsan EduSphere v1.1
 
 Run scripts in this exact order for a fresh deployment.
 
@@ -18,6 +18,7 @@ Run scripts in this exact order for a fresh deployment.
 | Step | Script | Purpose |
 |------|--------|---------|
 | 6 | `06-Create-SuperAdmin-User.sql` | Creates an additional SuperAdmin account (`superadmin2`) |
+| 7 | `student-journey-class1-10.sql` | School student lifecycle: Class 1-10 results, attendance, assignments for col11s6 |
 | 9 | `09-Restructure-Sidebar-Menu.sql` | Configures sidebar navigation with role-based menu visibility |
 
 ## Notes
@@ -25,9 +26,10 @@ Run scripts in this exact order for a fresh deployment.
 - `00-Cleanup-Master-Mistake.sql` and `01-Schema-Current.sql` must run against `master` because they create and switch to the `Tabsan-EduSphere` database.
 - All other scripts run directly against the `Tabsan-EduSphere` database.
 - Default password for all seeded users: **`EduSphere147`**
-- Database version marker: `db.version = 1.0` (stored in `[Tabsan-EduSphere]` metadata table)
+- Database version marker: `db.version = 1.1` (stored in `[Tabsan-EduSphere]` metadata table)
 - The previous domain script packs (`School Scripts/`, `College Scripts/`, `University Scripts/`) have been consolidated into `03-FullDummyData.sql`.
 - Legacy utility scripts (07, 08, 09-old) have been removed; functionality is now part of the core seed scripts.
+- `student-journey-class1-10.sql` demonstrates a full school lifecycle with certificate eligibility (class 1-10 completion + attendance ≥85%).
 
 ## Example Commands (LocalDB)
 

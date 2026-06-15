@@ -1,4 +1,4 @@
-# Tabsan EduSphere — Database Scripts v1.0
+# Tabsan EduSphere — Database Scripts v1.1
 
 ## Execution Order
 
@@ -8,6 +8,9 @@
 | 1 | `01-Schema-Current.sql` | Creates all tables (EF Migrations generated) |
 | 2 | `02-Seed-Core.sql` | Seeds roles, tenants, departments, programs, courses, semesters, core users |
 | 3 | `03-FullDummyData.sql` | Full demo data: 210+ students, attendance, results, assignments, quizzes, FYP |
+| 4 | `04-Maintenance-Indexes-And-Views.sql` | Performance indexes and views |
+| 5 | `05-PostDeployment-Checks.sql` | Validates data integrity after deployment |
+| * | `student-journey-class1-10.sql` | School student lifecycle: Class 1-10 with results, attendance, assignments |
 | 4 | `04-Maintenance-Indexes-And-Views.sql` | Performance indexes and summary views |
 | 5 | `05-PostDeployment-Checks.sql` | Validates data integrity |
 | 6 | `06-Create-SuperAdmin-User.sql` | Creates additional SuperAdmin (superadmin2) |

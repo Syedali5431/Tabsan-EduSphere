@@ -385,7 +385,7 @@ BEGIN
     OPEN ttCur; FETCH NEXT FROM ttCur INTO @ttId;
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        INSERT INTO [timetable_entries] ([Id],[TimetableId],[DayOfWeek],[StartTime],[EndTime],[SubjectName],[RoomNumber],[FacultyName],[CourseOfferingId],[CreatedAt])
+        INSERT INTO [timetable_entries] ([Id],[TimetableId],[DayOfWeek],[StartTime],[EndTime],[SubjectName],[RoomNumber],[FacultyName],[RoomId],[CreatedAt])
         VALUES
         (NEWID(),@ttId,1,N'09:00',N'10:30',N'Introduction to Computing',N'R1',N'Dr. Ahmed Khan',NULL,@Now),
         (NEWID(),@ttId,1,N'11:00',N'12:30',N'Data Structures',N'R2',N'Dr. Sarah Ali',NULL,@Now),
