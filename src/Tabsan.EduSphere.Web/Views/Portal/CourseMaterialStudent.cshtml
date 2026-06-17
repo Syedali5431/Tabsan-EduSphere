@@ -33,50 +33,8 @@ else
             </div>
 
             <form method="get" asp-action="CourseMaterialStudent" class="row g-2 align-items-end filter-toolbar">
-                @if (Model.Tenants.Count > 0)
-                {
-                    <div class="col-md-3">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
-                            @foreach (var t in Model.Tenants)
-                            {
-                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                            <option value="">All Campuses</option>
-                            @foreach (var c in Model.Campuses)
-                            {
-                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
-                            }
-                        </select>
-                    </div>
-                }
-                <div class="col-md-3">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Departments</option>
-                        @foreach (var d in Model.Departments)
-                        {
-                            <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Program</label>
-                    <select name="academicProgramId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Programs</option>
-                        @foreach (var p in Model.Programs)
-                        {
-                            <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-3">
+                @* ── Student: only Class/Semester → Subject (pre-assigned Tenant/Campus/Dept/Program) ── *@
+                <div class="col-md-4">
                     <label class="form-label">@periodLabel</label>
                     <select name="semesterId" class="form-select" onchange="this.form.submit()">
                         <option value="">@periodPlaceholder</option>
@@ -86,7 +44,7 @@ else
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Subject/Course</label>
                     <select name="courseId" class="form-select" onchange="this.form.submit()">
                         <option value="">All Subjects</option>

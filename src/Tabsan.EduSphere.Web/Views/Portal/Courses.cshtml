@@ -33,40 +33,62 @@ else
                     </div>
                 </div>
                 <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
-                    <div class="col-md-4">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
-                            @foreach (var tenant in Model.Tenants)
-                            {
-                                if (Model.SelectedTenantId == tenant.Id)
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-md-4">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var tenant in Model.Tenants)
                                 {
-                                    <option value="@tenant.Id" selected>@tenant.Code - @tenant.Name</option>
+                                    if (Model.SelectedTenantId == tenant.Id)
+                                    {
+                                        <option value="@tenant.Id" selected>@tenant.Code - @tenant.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@tenant.Id">@tenant.Code - @tenant.Name</option>
+                                    }
                                 }
-                                else
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var campus in Model.Campuses)
                                 {
-                                    <option value="@tenant.Id">@tenant.Code - @tenant.Name</option>
+                                    if (Model.SelectedCampusId == campus.Id)
+                                    {
+                                        <option value="@campus.Id" selected>@campus.Code - @campus.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@campus.Id">@campus.Code - @campus.Name</option>
+                                    }
                                 }
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
-                            @foreach (var campus in Model.Campuses)
-                            {
-                                if (Model.SelectedCampusId == campus.Id)
+                            </select>
+                        </div>
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <div class="col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var campus in Model.Campuses)
                                 {
-                                    <option value="@campus.Id" selected>@campus.Code - @campus.Name</option>
+                                    <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id ? "selected" : null)">@campus.Code - @campus.Name</option>
                                 }
-                                else
-                                {
-                                    <option value="@campus.Id">@campus.Code - @campus.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
                     <div class="col-md-4">
                         <label class="form-label">Department</label>
                         <select name="departmentId" class="form-select" onchange="this.form.submit()">

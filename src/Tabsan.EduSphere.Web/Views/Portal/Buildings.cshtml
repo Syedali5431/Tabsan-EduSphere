@@ -21,26 +21,48 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <form asp-action="Buildings" method="get" class="row g-2 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Tenant</label>
-                        <select class="form-select" name="tenantId" onchange="this.form.submit()">
-                            <option value="">All tenants</option>
-                            @foreach (var t in Model.Tenants)
-                            {
-                                <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select class="form-select" name="campusId" onchange="this.form.submit()">
-                            <option value="">All campuses</option>
-                            @foreach (var c in Model.Campuses)
-                            {
-                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
-                            }
-                        </select>
-                    </div>
+                    @if (Model.Identity?.IsSuperAdmin == true)
+                    {
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Tenant</label>
+                            <select class="form-select" name="tenantId" onchange="this.form.submit()">
+                                <option value="">All tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">All campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Campus</label>
+                            <select class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">All campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
                     <div class="col-12 col-md-2">
                         <button type="submit" class="btn btn-primary w-100">Apply</button>
                     </div>
