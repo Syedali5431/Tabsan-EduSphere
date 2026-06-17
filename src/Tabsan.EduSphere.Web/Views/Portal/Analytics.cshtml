@@ -243,6 +243,8 @@ else
         </div>
     </div>
 
+    @if (!isFinanceOnly)
+    {
     <div class="accordion" id="analyticsAccordion">
 
         @* Performance accordion *@
@@ -414,6 +416,7 @@ else
         }
 
     </div>
+    }
 
     @if ((!isFinanceOnly && Model.Performance is null && Model.Attendance is null && Model.Assignments is null)
         || (isFinanceOnly && Model.PaymentStatus is null))
