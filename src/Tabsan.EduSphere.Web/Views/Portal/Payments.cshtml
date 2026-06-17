@@ -80,9 +80,22 @@ else
         <div class="page-section-card card border-0 shadow-sm mb-3">
             <div class="card-body py-2">
                 <form method="get" asp-action="Payments" class="row g-2 align-items-end filter-toolbar">
+                    @if (Model.AvailableInstitutionTypes.Count > 0)
+                    {
+                        <div class="col-md-2">
+                            <label class="form-label mb-1">Institute</label>
+                            <select name="institutionType" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Institutions</option>
+                                @foreach (var institutionOption in Model.AvailableInstitutionTypes)
+                                {
+                                    <option value="@institutionOption.Value" selected="@(Model.SelectedInstitutionType == institutionOption.Value)">@institutionOption.Label</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label mb-1">Tenant</label>
                             <select name="tenantId" class="form-select form-select-sm" onchange="this.form.submit()">
                                 <option value="">All Tenants</option>
@@ -92,26 +105,13 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label mb-1">Campus</label>
                             <select name="campusId" class="form-select form-select-sm" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
-                                }
-                            </select>
-                        </div>
-                    }
-                    @if (Model.AvailableInstitutionTypes.Count > 0)
-                    {
-                        <div class="col-md-3">
-                            <label class="form-label mb-1">Institution</label>
-                            <select name="institutionType" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="">All Institutions</option>
-                                @foreach (var institutionOption in Model.AvailableInstitutionTypes)
-                                {
-                                    <option value="@institutionOption.Value" selected="@(Model.SelectedInstitutionType == institutionOption.Value)">@institutionOption.Label</option>
                                 }
                             </select>
                         </div>
