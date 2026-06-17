@@ -13,6 +13,7 @@
 */
 
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
 GO
 
 USE [Tabsan-EduSphere];

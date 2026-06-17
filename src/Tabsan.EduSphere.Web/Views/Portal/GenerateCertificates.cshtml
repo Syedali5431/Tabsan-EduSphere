@@ -35,7 +35,7 @@
                         <label class="form-label">Institution</label>
                         @if (Model.CanSelectInstitution)
                         {
-                            <select name="institutionType" class="form-select" onchange="this.form.submit()">
+                            <select name="institutionType" class="form-select" onchange="resetFiltersAndSubmit(this.form)">
                                 @foreach (var institution in Model.AvailableInstitutionTypes)
                                 {
                                     <option value="@institution.Value" selected="@(Model.SelectedInstitutionType == institution.Value)">@institution.Label</option>
@@ -66,7 +66,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select">
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
@@ -385,6 +385,22 @@
 </div>
 
 <script>
+    // Reset subordinate filters when Institution changes
+    function resetFiltersAndSubmit(form) {
+        // Clear tenant, campus, department, course, semester selections
+        var tenantSelect = form.querySelector('select[name="tenantId"]');
+        var campusSelect = form.querySelector('select[name="campusId"]');
+        var deptSelect = form.querySelector('select[name="departmentId"]');
+        var courseSelect = form.querySelector('select[name="courseId"]');
+        var semSelect = form.querySelector('select[name="semesterId"]');
+        if (tenantSelect) tenantSelect.value = '';
+        if (campusSelect) campusSelect.value = '';
+        if (deptSelect) deptSelect.value = '';
+        if (courseSelect) courseSelect.value = '';
+        if (semSelect) semSelect.value = '';
+        form.submit();
+    }
+
     (function () {
         const searchInput = document.getElementById('certificateStudentSearch');
         const tableBody = document.getElementById('certificateStudentsTableBody');

@@ -15,9 +15,18 @@ else
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="get" asp-action="StudentLifecycle" class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Institution</label>
+                    <select name="institutionType" class="form-select" onchange="resetStudentFiltersAndSubmit(this.form)">
+                        <option value="">All</option>
+                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">University</option>
+                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">School</option>
+                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">College</option>
+                    </select>
+                </div>
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Tenant</label>
                         <select name="tenantId" class="form-select" onchange="this.form.submit()">
                             <option value="">All Tenants</option>
@@ -27,7 +36,7 @@ else
                             }
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Campus</label>
                         <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
                             <option value="">All Campuses</option>
@@ -38,10 +47,10 @@ else
                         </select>
                     </div>
                 }
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label class="form-label">Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">Select department…</option>
+                        <option value="">Select…</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -170,4 +179,14 @@ else
         </div>
     </div>
 }
+
+<script>
+    function resetStudentFiltersAndSubmit(form) {
+        form.querySelector('select[name="tenantId"]').value = '';
+        form.querySelector('select[name="campusId"]').value = '';
+        form.querySelector('select[name="departmentId"]').value = '';
+        form.querySelector('select[name="semester"]').value = '1';
+        form.submit();
+    }
+</script>
 
