@@ -11,6 +11,7 @@
 else
 {
     var isFinanceOnly = Model.IsFinanceOnly;
+    var isFacultyOnly = User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin");
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
@@ -211,14 +212,17 @@ else
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light fw-bold d-flex align-items-center">
                 <i class="bi bi-graph-up-arrow me-2"></i>
-                @(isFinanceOnly ? "Payment Analytics" : "Advanced Trends")
+                @(isFinanceOnly ? "Payment Analytics" : isFacultyOnly ? "Academic Trends" : "Advanced Trends")
             </div>
             <div class="card-body">
                 <div class="row g-4">
+                    @if (!isFacultyOnly)
+                    {
                     <div class="col-12 col-lg-6">
                         <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
                         <div style="height:300px;max-height:350px;"><canvas id="paymentStatusChart"></canvas></div>
                     </div>
+                    }
                     @if (!isFinanceOnly)
                     {
                         <div class="col-12 col-lg-6">
