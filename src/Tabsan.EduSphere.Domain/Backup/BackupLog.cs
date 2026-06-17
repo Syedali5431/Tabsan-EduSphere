@@ -81,4 +81,13 @@ public class BackupLog : BaseEntity
         CompletedAt = DateTime.UtcNow;
         Touch();
     }
+
+    /// <summary>Marks the backup as verified with a checksum confirmation.</summary>
+    public void Verify(string? checksum = null)
+    {
+        if (!string.IsNullOrWhiteSpace(checksum))
+            Checksum = checksum;
+        Status = "Verified";
+        Touch();
+    }
 }

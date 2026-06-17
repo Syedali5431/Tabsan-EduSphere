@@ -645,6 +645,32 @@ if (useForwardedHeaders)
     });
 }
 
+// ── ISO 27001 & ISO 9001 Compliance Services ─────────────────────────────
+// Phase 3: Login Activity Monitoring
+builder.Services.AddScoped<ILoginActivityService, Tabsan.EduSphere.Infrastructure.Activity.LoginActivityService>();
+builder.Services.AddScoped<ILoginActivityRepository, Tabsan.EduSphere.Infrastructure.Repositories.LoginActivityRepository>();
+// Phase 4: Backup & DR
+builder.Services.AddScoped<IBackupService, Tabsan.EduSphere.Infrastructure.Backup.BackupService>();
+builder.Services.AddScoped<IBackupLogRepository, Tabsan.EduSphere.Infrastructure.Repositories.BackupLogRepository>();
+// Phase 5: Data Protection
+var encryptionMasterKey = builder.Configuration["Security:EncryptionMasterKey"] ?? "TabsanEduSphereDevKey2024!";
+builder.Services.AddScoped<IEncryptionService>(_ => new Tabsan.EduSphere.Infrastructure.Security.EncryptionService(encryptionMasterKey));
+builder.Services.AddScoped<IDataMaskingService, Tabsan.EduSphere.Infrastructure.Security.DataMaskingService>();
+builder.Services.AddScoped<IDataClassificationService, Tabsan.EduSphere.Infrastructure.DataProtection.DataClassificationService>();
+builder.Services.AddScoped<IDataClassificationRepository, Tabsan.EduSphere.Infrastructure.Repositories.DataClassificationRepository>();
+// Phase 6: Incident Management
+builder.Services.AddScoped<IIncidentService, Tabsan.EduSphere.Infrastructure.Incidents.IncidentService>();
+builder.Services.AddScoped<IIncidentRepository, Tabsan.EduSphere.Infrastructure.Repositories.IncidentRepository>();
+// Phase 7: Policy Documents
+builder.Services.AddScoped<IPolicyDocumentService, Tabsan.EduSphere.Infrastructure.Documents.PolicyDocumentService>();
+builder.Services.AddScoped<IPolicyDocumentRepository, Tabsan.EduSphere.Infrastructure.Repositories.PolicyDocumentRepository>();
+// Phase 8: Backup Verification
+builder.Services.AddScoped<IBackupVerificationRepository, Tabsan.EduSphere.Infrastructure.Repositories.BackupVerificationRepository>();
+// Phase 9: Data Integrity
+builder.Services.AddScoped<IDataIntegrityService, Tabsan.EduSphere.Infrastructure.Integrity.DataIntegrityService>();
+// Phase 10: Compliance Dashboard
+builder.Services.AddScoped<IComplianceDashboardService, Tabsan.EduSphere.Infrastructure.Compliance.ComplianceDashboardService>();
+
 // ── Health checks ─────────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks();
 
