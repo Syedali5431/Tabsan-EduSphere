@@ -409,6 +409,24 @@ else
                                 Publish All
                             </button>
                         </form>
+                        <form asp-action="ExportResultSummaryCsv" method="get" class="d-inline">
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                            <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                Export CSV
+                            </button>
+                        </form>
+                        <form asp-action="ExportResultSummaryPdf" method="get" class="d-inline">
+                            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                            <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
+                            <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                Export PDF
+                            </button>
+                        </form>
                     </div>
                     <div class="text-muted small mt-1">
                         Template CSV includes 2 example rows for format guidance; those example rows are skipped during import. Import report links are one-time use and expire after 2 hours.
