@@ -2301,14 +2301,42 @@ public class PortalController : Controller
     // ── Students ──────────────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> Students(Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> Students(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, CancellationToken ct)
     {
         ViewData["Title"] = "Students";
-        var model = new StudentsPageModel { IsConnected = _api.IsConnected(), SelectedDepartmentId = departmentId };
+        var identity = _api.GetSessionIdentity();
+        var model = new StudentsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedDepartmentId = departmentId,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SelectedInstitutionType = institutionType
+        };
+
+        // Populate institution type filter options.
+        try
+        {
+            var matrix = await _api.GetPortalCapabilityMatrixAsync(ct);
+            model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(matrix);
+        }
+        catch { /* non-critical */ }
+
         if (!model.IsConnected) return View(model);
         try
         {
-            model.Departments = await _api.GetDepartmentsAsync(ct);
+            var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
+
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
             model.Students    = await _api.GetStudentsAsync(departmentId, ct);
         }
         catch (Exception ex) when (IsApiConnectivityException(ex))

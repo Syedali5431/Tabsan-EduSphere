@@ -648,6 +648,13 @@ public class StudentsPageModel
 {
     public bool   IsConnected          { get; set; }
     public string? Message             { get; set; }
+    public SessionIdentity? Identity     { get; set; }
+    public List<TenantItem> Tenants                { get; set; } = new();
+    public List<CampusItem> Campuses               { get; set; } = new();
+    public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
+    public int?  SelectedInstitutionType { get; set; }
+    public Guid?  SelectedTenantId     { get; set; }
+    public Guid?  SelectedCampusId     { get; set; }
     public List<StudentItem>  Students    { get; set; } = new();
     public List<LookupItem>   Departments { get; set; } = new();
     public Guid?  SelectedDepartmentId { get; set; }

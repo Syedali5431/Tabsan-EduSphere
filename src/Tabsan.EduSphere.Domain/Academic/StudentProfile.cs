@@ -87,11 +87,42 @@ public class StudentProfile : AuditableEntity
         Touch();
     }
 
-    /// <summary>Advances the student to the next semester number after semester completion.</summary>
-    public void AdvanceSemester()
+    /// <summary>Advances the student to the next semester number after semester completion.
+    /// Returns true if the student reached a terminal level (graduation/completion boundary).</summary>
+    public bool AdvanceSemester()
     {
         CurrentSemesterNumber++;
         Touch();
+
+        // School: Class 10 → Completed (do not advance to Class 11)
+        if (Department?.InstitutionType == InstitutionType.School && CurrentSemesterNumber > 10)
+        {
+            Status = StudentStatus.Graduated; // "Completed" in school context
+            GraduatedDate = DateTime.UtcNow;
+            return true;
+        }
+
+        // College: Class 12 (semester 4) → Completed
+        if (Department?.InstitutionType == InstitutionType.College && CurrentSemesterNumber > 4)
+        {
+            Status = StudentStatus.Graduated; // "Completed" in college context
+            GraduatedDate = DateTime.UtcNow;
+            return true;
+        }
+
+        // University: reached total semesters → Graduated
+        if (Department?.InstitutionType == InstitutionType.University)
+        {
+            var maxSemesters = Program?.TotalSemesters ?? 8;
+            if (CurrentSemesterNumber > maxSemesters)
+            {
+                Status = StudentStatus.Graduated;
+                GraduatedDate = DateTime.UtcNow;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Marks the student as Graduated with the current UTC date.</summary>

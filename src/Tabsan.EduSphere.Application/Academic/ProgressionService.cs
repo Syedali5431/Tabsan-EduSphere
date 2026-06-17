@@ -63,7 +63,7 @@ public class ProgressionService : IProgressionService
 
         var student = await _studentRepo.GetByIdAsync(request.StudentProfileId, ct)!;
         student!.AdvanceSemester();
-        if (request.InstitutionType == InstitutionType.College)
+        if (request.InstitutionType == InstitutionType.College && student.Status != StudentStatus.Graduated)
             student.AdvanceSemester();
         _studentRepo.Update(student);
         await _studentRepo.SaveChangesAsync(ct);

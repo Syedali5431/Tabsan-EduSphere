@@ -35,26 +35,6 @@ else
                     @if (User.IsInRole("SuperAdmin"))
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
-                                @foreach (var t in Model.Tenants)
-                                {
-                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
-                                @foreach (var c in Model.Campuses)
-                                {
-                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label class="form-label">Institute</label>
                             @if (Model.AvailableInstitutionTypes?.Count > 1)
                             {
@@ -73,6 +53,26 @@ else
                                     <option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option>
                                 </select>
                             }
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tenant</label>
+                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Tenants</option>
+                                @foreach (var t in Model.Tenants)
+                                {
+                                    <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                                }
+                            </select>
                         </div>
                     }
                     @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
