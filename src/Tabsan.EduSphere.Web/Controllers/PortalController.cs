@@ -3979,7 +3979,9 @@ public class PortalController : Controller
         try
         {
             var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
-            var effectiveCampusId = identity?.IsSuperAdmin == true ? model.SelectedCampusId : identity?.CampusId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true || identity?.IsAdmin == true
+                ? model.SelectedCampusId ?? identity?.CampusId
+                : identity?.CampusId;
 
             var hasPartialSuperAdminScope = identity?.IsSuperAdmin == true
                 && (model.SelectedTenantId.HasValue ^ model.SelectedCampusId.HasValue);
@@ -3997,6 +3999,11 @@ public class PortalController : Controller
                 model.Tenants = await _api.GetTenantsAsync(ct);
                 if (model.SelectedTenantId.HasValue)
                     model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+            else if (identity?.IsAdmin == true && identity?.TenantId.HasValue == true)
+            {
+                // Admin sees Campus dropdown — populate campuses for their assigned tenant.
+                model.Campuses = await _api.GetCampusesAsync(identity.TenantId.Value, ct);
             }
 
             if (identity?.IsStudent == true)
@@ -7616,7 +7623,7 @@ public class PortalController : Controller
     // ── Student Lifecycle ──────────────────────────────────────────────────
 
     [HttpGet]
-    public async Task<IActionResult> StudentLifecycle(Guid? departmentId, Guid? tenantId, Guid? campusId, int semester = 1, CancellationToken ct = default)
+    public async Task<IActionResult> StudentLifecycle(Guid? departmentId, Guid? tenantId, Guid? campusId, int? institutionType, int semester = 1, CancellationToken ct = default)
     {
         ViewData["Title"] = "Student Lifecycle";
         var identity = _api.GetSessionIdentity();
@@ -7632,6 +7639,7 @@ public class PortalController : Controller
             SelectedTenantId    = tenantId,
             SelectedCampusId    = campusId,
             SelectedDepartmentId = departmentId,
+            SelectedInstitutionType = institutionType,
             SelectedSemester    = semester,
             PeriodLabel         = "Semester",
             Message             = TempData["PortalMessage"]?.ToString()
@@ -7651,44 +7659,49 @@ public class PortalController : Controller
 
             model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
 
+            // Filter departments by selected institution type
+            if (model.SelectedInstitutionType.HasValue)
+            {
+                model.Departments = model.Departments
+                    .Where(d => d.InstitutionType == model.SelectedInstitutionType.Value)
+                    .ToList();
+            }
+
             var selectedDepartmentInstitutionType = model.Departments
                 .FirstOrDefault(d => d.Id == departmentId)?.InstitutionType;
             var effectiveInstitutionType = selectedDepartmentInstitutionType
                 ?? (identity?.InstitutionType.HasValue == true ? identity.InstitutionType.Value : 2);
 
-            if (effectiveInstitutionType is 0 or 1)
+            if (effectiveInstitutionType is 1 or 2) // School or College: use "Class"
                 model.PeriodLabel = "Class";
 
-            if (effectiveInstitutionType == 1)
-            {
-                model.MinAcademicLevel = 11;
-                model.MaxAcademicLevel = 12;
-            }
-            else if (effectiveInstitutionType == 0)
+            if (effectiveInstitutionType == 1) // School: grades 1-10
             {
                 model.MinAcademicLevel = 1;
                 model.MaxAcademicLevel = 10;
             }
-            else
+            else if (effectiveInstitutionType == 2) // College: grades 11-12
             {
-                // University remains flexible (semester/year) and uses configured level metadata.
+                model.MinAcademicLevel = 11;
+                model.MaxAcademicLevel = 12;
+            }
+            else // University: semester-based, use configured levels from DB
+            {
                 var configuredLevels = await _api.GetSemestersAsync(ct);
                 model.PeriodLabel = InferUniversityPeriodLabel(configuredLevels);
                 var numericLevels = configuredLevels
                     .Select(s => ExtractFirstInteger(s.Name))
                     .Where(v => v.HasValue)
                     .Select(v => v!.Value)
+                    .Distinct()
+                    .OrderBy(v => v)
                     .ToList();
 
-                var inferredMax = numericLevels.Count > 0
-                    ? numericLevels.Max()
-                    : configuredLevels.Count;
-
-                model.MinAcademicLevel = 1;
-                model.MaxAcademicLevel = Math.Max(1, inferredMax);
+                model.MinAcademicLevel = numericLevels.Count > 0 ? numericLevels.First() : 1;
+                model.MaxAcademicLevel = numericLevels.Count > 0 ? numericLevels.Last() : 8;
             }
 
-            model.ShowGraduationSection = departmentId.HasValue && effectiveInstitutionType is not (0 or 1);
+            model.ShowGraduationSection = departmentId.HasValue && effectiveInstitutionType == 0; // University only
 
             if (semester < model.MinAcademicLevel || semester > model.MaxAcademicLevel)
             {
@@ -7893,7 +7906,7 @@ public class PortalController : Controller
                 var departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
                 var selectedDepartmentInstitutionType = departments
                     .FirstOrDefault(d => d.Id == departmentId)?.InstitutionType;
-                if (selectedDepartmentInstitutionType == 0 && semester >= 10)
+                if (selectedDepartmentInstitutionType == 1 && semester >= 10) // School: completed class 10
                 {
                     TempData["PortalMessage"] = "Student cleared the school. Create certificate for him.";
                 }
@@ -10621,16 +10634,41 @@ public class PortalController : Controller
                 model.SelectedCampusId ??= identity?.CampusId;
             }
 
-            var departmentDetails = await _api.GetDepartmentDetailsAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            // Pair tenant+campus: send both or neither (API requires them together)
+            var effectiveTenant = model.SelectedTenantId.HasValue && model.SelectedCampusId.HasValue ? model.SelectedTenantId : null;
+            var effectiveCampus = model.SelectedTenantId.HasValue && model.SelectedCampusId.HasValue ? model.SelectedCampusId : null;
+            var departmentDetails = await _api.GetDepartmentDetailsAsync(effectiveTenant, effectiveCampus, ct);
+
+            // Filter departments by selected institution type
+            if (model.SelectedInstitutionType.HasValue)
+            {
+                departmentDetails = departmentDetails
+                    .Where(d => (int?)d.InstitutionType == model.SelectedInstitutionType.Value)
+                    .ToList();
+            }
+
             model.Departments = departmentDetails
                 .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
                 .ToList();
 
             model.PeriodFilterLabel = ResolvePeriodFilterLabel(model.SelectedInstitutionType);
-            model.Semesters = await _api.GetSemestersAsync(ct);
+            var allSemesters = await _api.GetSemestersAsync(ct);
+
+            // Filter semesters by institution type: University=Semester/BSCS/BBA, School/College=Class
+            if (model.SelectedInstitutionType.HasValue)
+            {
+                var isUniversity = IsUniversityInstitutionType(model.SelectedInstitutionType);
+                allSemesters = allSemesters
+                    .Where(s => isUniversity
+                        ? !s.Name.StartsWith("Class ", StringComparison.OrdinalIgnoreCase)
+                        : s.Name.StartsWith("Class ", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+            model.Semesters = allSemesters;
+
             model.AvailableDocumentTypes = BuildCertificateDocumentTypes(model.SelectedInstitutionType);
 
-            model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, model.SelectedTenantId, model.SelectedCampusId, ct);
+            model.Courses = await _api.GetCoursesAsync(model.SelectedDepartmentId, effectiveTenant, effectiveCampus, ct);
 
             model.ShowUniversityCertificates = IsUniversityInstitutionType(model.SelectedInstitutionType) && (matrix?.IncludeUniversity ?? true);
 

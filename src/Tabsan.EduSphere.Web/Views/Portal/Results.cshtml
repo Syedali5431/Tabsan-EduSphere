@@ -154,12 +154,31 @@ else
                 <div>
                     <span class="section-kicker">Result controls</span>
                     <h2 class="h5 mb-1">Filter results by scoped academic context</h2>
-                    <p class="text-muted mb-0">Required filters must be selected before write actions are enabled.</p>
+                    <p class="text-muted mb-0">@(string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) ? "Required filters must be selected before write actions are enabled." : "Select filters to view results.")</p>
                 </div>
             </div>
             <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
+                    @* ── Super Admin: All filters visible ── *@
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
+                        <div class="col-md-2">
+                            <label class="form-label">Institute</label>
+                            @if (Model.AvailableInstitutionTypes?.Count > 1)
+                            {
+                                <select id="institutionType" name="institutionType" class="form-select"
+                                        data-cascade="institution" onchange="resetResultFiltersAndSubmit(this.form)">
+                                    <option value="">All</option>
+                                    @foreach (var it in Model.AvailableInstitutionTypes)
+                                    {
+                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
+                            }
+                        </div>
                         <div class="col-md-2">
                             <label class="form-label">Tenant</label>
                             <select name="tenantId" class="form-select" onchange="this.form.submit()">
@@ -180,23 +199,20 @@ else
                                 }
                             </select>
                         </div>
+                    }
+                    @* ── Admin: Campus, Department, Course, Semester, Subject, Exam Type (no Institute/Tenant) ── *@
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-2">
-                            <label class="form-label">Institute</label>
-                            @if (Model.AvailableInstitutionTypes?.Count > 1)
-                            {
-                                <select id="institutionType" name="institutionType" class="form-select"
-                                        data-cascade="institution" onchange="this.form.submit()">
-                                    <option value="">All</option>
-                                    @foreach (var it in Model.AvailableInstitutionTypes)
-                                    {
-                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
-                                    }
-                                </select>
-                            }
-                            else
-                            {
-                                <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
-                            }
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
+                                }
+                            </select>
                         </div>
                     }
                     else
@@ -205,6 +221,7 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
 
+                    @* ── Non-Student filters: Department, Course ── *@
                     @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-2">
@@ -262,21 +279,11 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Assessment Component <span class="text-danger">*</span></label>
-                            <select name="assessmentComponent" class="form-select" onchange="this.form.submit()">
-                                <option value="">Select component</option>
-                                @foreach (var a in Model.AssessmentComponentOptions)
-                                {
-                                    <option value="@a.Name" selected="@(string.Equals(Model.SelectedAssessmentComponent, a.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@a.Name</option>
-                                }
-                            </select>
-                        </div>
 
                         <input type="hidden" name="offeringId" value="@Model.SelectedSubjectOfferingId" />
 
                         <div class="col-md-3">
-                            <label class="form-label">Student (optional)</label>
+                            <label class="form-label">Student</label>
                             <select name="studentId" class="form-select" onchange="this.form.submit()">
                                 <option value="">All students</option>
                                 @foreach (var r in Model.Roster)
@@ -285,38 +292,10 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Section</label>
-                            <input name="section" value="@Model.SelectedSection" class="form-control" />
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Batch</label>
-                            <input name="batch" value="@Model.SelectedBatch" class="form-control" />
-                        </div>
                     }
                     else
                     {
-                        <div class="col-md-3">
-                            <label class="form-label">Course</label>
-                            <select name="courseId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Courses</option>
-                                @foreach (var c in Model.Courses)
-                                {
-                                    <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Subject</label>
-                            <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Subjects</option>
-                                @foreach (var s in Model.Subjects)
-                                {
-                                    <option value="@s.Id" selected="@(Model.SelectedSubjectOfferingId == s.Id ? "selected" : null)">@s.Name</option>
-                                }
-                            </select>
-                        </div>
-                        <input type="hidden" name="offeringId" value="@Model.SelectedSubjectOfferingId" />
+                        @* ── Student: Class/Semester only ── *@
                     }
 
                     @if (!User.IsInRole("Student"))
@@ -340,7 +319,7 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <h2 class="h5 mb-0">Results <span class="badge bg-secondary ms-1">@Model.Results.Count</span></h2>
-                @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
                     <div class="responsive-action-group">
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">
@@ -441,7 +420,7 @@ else
                 }
             </div>
 
-            @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
             {
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
@@ -531,7 +510,7 @@ else
                                 <th>Marks</th>
                                 <th>Grade</th>
                                 <th>Published</th>
-                                @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                                @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                                 {
                                     <th>Actions</th>
                                 }
@@ -560,7 +539,7 @@ else
                                             @(r.IsPublished ? "Yes" : "Pending")
                                         </span>
                                     </td>
-                                    @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                                    @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                                     {
                                         <td>
                                             @* Only render the Promote button when a valid StudentProfileId is present.
@@ -924,5 +903,15 @@ document.getElementById('requestResultRecheckModal')?.addEventListener('show.bs.
     document.getElementById('recheck_resultType').value = btn.dataset.resulttype || '';
     document.getElementById('recheck_courseName').value = btn.dataset.coursename || '';
 });
+
+function resetResultFiltersAndSubmit(form) {
+    form.querySelector('select[name="tenantId"]').value = '';
+    form.querySelector('select[name="campusId"]').value = '';
+    form.querySelector('select[name="departmentId"]').value = '';
+    form.querySelector('select[name="courseId"]').value = '';
+    form.querySelector('select[name="semesterName"]').value = '';
+    form.querySelector('select[name="subjectOfferingId"]').value = '';
+    form.submit();
+}
 </script>
 }
