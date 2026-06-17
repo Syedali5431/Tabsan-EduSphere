@@ -12,7 +12,7 @@
 }
 else
 {
-    @if (Model.Identity?.IsSuperAdmin == true || Model.Identity?.IsAdmin == true)
+    @if (!User.IsInRole("Student"))
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
@@ -42,12 +42,26 @@ else
                             </select>
                         </div>
                     }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <div class="col-md-3">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
-                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true ? "3" : "6")">
+                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true ? "3" : User.IsInRole("Admin") ? "3" : "6")">
                         <label class="form-label">Department</label>
                         <select name="departmentId" class="form-select" onchange="this.form.submit()" @(Model.SelectedCampusId.HasValue ? null : "disabled")>
                             <option value="">All departments</option>
@@ -57,7 +71,7 @@ else
                             }
                         </select>
                     </div>
-                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true ? "3" : "6")">
+                    <div class="col-md-@(Model.Identity?.IsSuperAdmin == true || User.IsInRole("Admin") ? "3" : "6")">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) onchange="this.form.submit()" />

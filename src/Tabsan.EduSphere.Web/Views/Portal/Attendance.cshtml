@@ -75,7 +75,26 @@ else
                             </select>
                         </div>
                     }
-                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <div class="col-md-2">
+                            <label class="form-label">Campus</label>
+                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Campuses</option>
+                                @foreach (var c in Model.Campuses)
+                                {
+                                    <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else if (!User.IsInRole("Student"))
+                    {
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                    }
+                    @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-2">
                             <label class="form-label">Department</label>
