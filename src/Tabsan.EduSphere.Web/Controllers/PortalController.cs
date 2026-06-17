@@ -8463,6 +8463,14 @@ public class PortalController : Controller
     {
         ViewData["Title"] = "Report Center";
         var identity = _api.GetSessionIdentity();
+
+        // Students do not have access to any reports.
+        if (identity?.IsStudent == true)
+        {
+            TempData["PortalMessage"] = "Reports are not available for student accounts.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         var model = new ReportCenterPageModel
         {
             IsConnected = _api.IsConnected(),
@@ -8482,7 +8490,6 @@ public class PortalController : Controller
             }
 
             // Status check requires Admin/SuperAdmin; default to active for other roles.
-            // The API still enforces deactivation on every report-data endpoint.
             if (identity?.IsAdmin == true || identity?.IsSuperAdmin == true)
             {
                 model.IsReportsActive = await _api.GetReportsScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
@@ -8495,6 +8502,29 @@ public class PortalController : Controller
             }
 
             model.Reports = await _api.GetReportCatalogAsync(ct);
+
+            // Role-based report filtering:
+            // Finance role only sees payment-related reports.
+            // Faculty role does not see payment-related reports.
+            var isFinanceOnly = identity?.IsFinance == true && !identity.IsAdmin && !identity.IsSuperAdmin;
+            var isFacultyOnly = identity?.IsFaculty == true && !identity.IsAdmin && !identity.IsSuperAdmin;
+
+            if (isFinanceOnly)
+            {
+                var paymentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "payment_summary", "payment-summary"
+                };
+                model.Reports = model.Reports.Where(r => paymentKeys.Contains(r.Key)).ToList();
+            }
+            else if (isFacultyOnly)
+            {
+                var paymentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "payment_summary", "payment-summary"
+                };
+                model.Reports = model.Reports.Where(r => !paymentKeys.Contains(r.Key)).ToList();
+            }
 
             // Phase 5: Filter out University-only reports when license excludes University.
             if (identity is not null)
@@ -9268,6 +9298,21 @@ public class PortalController : Controller
             PeriodFilterPlaceholder = institutionFilter.PeriodFilterPlaceholder
         };
         if (!model.IsConnected) return View(model);
+
+        // Students cannot access reports.
+        var reportIdentity = _api.GetSessionIdentity();
+        if (reportIdentity?.IsStudent == true)
+        {
+            TempData["PortalMessage"] = "Reports are not available for student accounts.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // Faculty cannot access payment reports.
+        if (reportIdentity?.IsFaculty == true && !reportIdentity.IsAdmin && !reportIdentity.IsSuperAdmin)
+        {
+            TempData["PortalMessage"] = "Payment reports are available only for Admin, SuperAdmin, or Finance users.";
+            return RedirectToAction(nameof(Dashboard));
+        }
 
         try
         {
