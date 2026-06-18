@@ -31,7 +31,8 @@ else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end">
+            <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     @if (User.IsInRole("SuperAdmin"))
                     {
                         <div class="col-md-2">
@@ -56,7 +57,7 @@ else
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <select name="tenantId" class="form-select" data-cascade="tenant" onchange="this.form.submit()">
                                 <option value="">All Tenants</option>
                                 @foreach (var t in Model.Tenants)
                                 {
@@ -66,7 +67,7 @@ else
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <select name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
                                 @foreach (var c in Model.Campuses)
                                 {
@@ -80,7 +81,7 @@ else
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-2">
                             <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <select name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
                                 <option value="">All Campuses</option>
                                 @foreach (var c in Model.Campuses)
                                 {
@@ -122,7 +123,7 @@ else
                         </div>
                         <div class="col-md-2">
                             <label class="form-label" data-period-label>@periodLabel</label>
-                            <select name="semesterName" class="form-select" onchange="this.form.submit()">
+                            <select name="semesterName" class="form-select" data-cascade="period" onchange="this.form.submit()">
                                 <option value="" data-period-placeholder>All @periodLabel</option>
                                 @foreach (var s in Model.SemesterOptions)
                                 {
@@ -133,7 +134,7 @@ else
                     }
                     <div class="col-md-5">
                         <label class="form-label">Select Course Offering</label>
-                        <select name="offeringId" class="form-select" onchange="this.form.submit()">
+                        <select name="offeringId" class="form-select" data-cascade="subject" onchange="this.form.submit()">
                             <option value="">All / My Attendance</option>
                             @foreach (var o in Model.CourseOfferings)
                             {

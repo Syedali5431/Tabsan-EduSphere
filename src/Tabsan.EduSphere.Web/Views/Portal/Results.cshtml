@@ -157,7 +157,8 @@ else
                     <p class="text-muted mb-0">@(string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) ? "Required filters must be selected before write actions are enabled." : "Select filters to view results.")</p>
                 </div>
             </div>
-            <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar">
+            <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     @* ── Super Admin: All filters visible ── *@
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {

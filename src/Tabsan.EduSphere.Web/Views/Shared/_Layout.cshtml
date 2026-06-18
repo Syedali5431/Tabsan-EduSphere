@@ -442,7 +442,7 @@
         </style>
     }
 </head>
-<body>
+<body data-user-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
     @if (requiresLoginRedirect)
     {
         <script>window.location.replace('/Login?returnUrl=@loginReturnUrl');</script>

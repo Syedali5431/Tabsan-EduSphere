@@ -16,7 +16,8 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <form method="get" asp-action="Assignments" class="row g-2 align-items-end">
+                <form method="get" asp-action="Assignments" class="row g-2 align-items-end"
+                      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
                     <input type="hidden" name="semesterName" value="@Model.SelectedSemesterName" />
                     @if (Model.Identity?.IsSuperAdmin == true)
@@ -87,7 +88,8 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <form method="get" asp-action="Assignments" class="row g-2 align-items-end">
+                <form method="get" asp-action="Assignments" class="row g-2 align-items-end"
+                      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
