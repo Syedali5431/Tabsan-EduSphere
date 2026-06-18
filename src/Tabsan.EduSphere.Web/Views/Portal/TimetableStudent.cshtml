@@ -42,7 +42,23 @@ else
                         </select>
                     </div>
                 }
+                else if (User.IsInRole("Admin"))
+                {
+                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                    <div class="col-md-3">
+                        <label class="form-label">Campus</label>
+                        <select name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
 
+                @if (!User.IsInRole("Student"))
+                {
                 <div class="col-md-3">
                     <label class="form-label">Department</label>
                     <select name="departmentId" class="form-select" onchange="this.form.submit()">
@@ -53,6 +69,7 @@ else
                         }
                     </select>
                 </div>
+                }
 
                 <div class="col-md-3">
                     <label class="form-label">Timetable</label>
