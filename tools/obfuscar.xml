@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Obfuscator>
+  <Var name="InPath" value="." />
+  <Var name="OutPath" value="..\obfuscate-output" />
+
+  <!-- String encryption - all assemblies -->
+  <Var name="HideStrings" value="true" />
+  <!-- Control flow obfuscation - all -->
+  <Var name="ControlFlowObfuscation" value="true" />
+  <!-- Suppress disassembly -->
+  <Var name="SuppressIldasm" value="true" />
+
+  <!-- Domain layer: full rename safe (no DI/routing deps) -->
+  <Module file="$(InPath)\Tabsan.EduSphere.Domain.dll">
+    <Var name="RenameProperties" value="true" />
+    <Var name="RenameEvents" value="true" />
+    <Var name="RenameFields" value="true" />
+    <Var name="KeepPublicApi" value="false" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="UseUnicodeNames" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+  <!-- Application/Infra/API/Web/Jobs: conservative (DI+routing) -->
+  <Module file="$(InPath)\Tabsan.EduSphere.Application.dll">
+    <Var name="RenameFields" value="true" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+  <Module file="$(InPath)\Tabsan.EduSphere.Infrastructure.dll">
+    <Var name="RenameFields" value="true" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+  <Module file="$(InPath)\Tabsan.EduSphere.API.dll">
+    <Var name="RenameFields" value="true" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+  <Module file="$(InPath)\Tabsan.EduSphere.Web.dll">
+    <Var name="RenameFields" value="true" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+  <Module file="$(InPath)\Tabsan.EduSphere.BackgroundJobs.dll">
+    <Var name="RenameFields" value="true" />
+    <Var name="HidePrivateApi" value="true" />
+    <Var name="OptimizeMethods" value="true" />
+  </Module>
+
+</Obfuscator>

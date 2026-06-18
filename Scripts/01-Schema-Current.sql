@@ -630,49 +630,9 @@ BEGIN
 END;
 GO
 
-DECLARE @ScopeNow datetime2 = SYSUTCDATETIME();
-DECLARE @DefaultTenantId uniqueidentifier = 'f1000000-0000-0000-0000-000000000001';
-DECLARE @DefaultCampusId uniqueidentifier = 'f2000000-0000-0000-0000-000000000001';
-
-IF OBJECT_ID(N'[tenants]') IS NOT NULL
-BEGIN
-    INSERT INTO [tenants] ([Id], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT @DefaultTenantId, N'DEFAULT', N'Default Tenant', 1, @ScopeNow, NULL, 0, NULL
-    WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = @DefaultTenantId);
-END;
-
-IF OBJECT_ID(N'[campuses]') IS NOT NULL
-BEGIN
-    INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    SELECT @DefaultCampusId, @DefaultTenantId, N'MAIN', N'Main Campus', 1, @ScopeNow, NULL, 0, NULL
-    WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = @DefaultCampusId);
-END;
-GO
-
-SET QUOTED_IDENTIFIER ON;
-GO
-
-UPDATE [users]
-SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
-    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
-WHERE ([TenantId] IS NULL AND [CampusId] IS NULL)
-  AND [RoleId] <> (SELECT TOP 1 [Id] FROM [roles] WHERE [Name] = N'SuperAdmin');
-GO
-
-UPDATE [users]
-SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
-    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
-WHERE ([TenantId] IS NULL AND [CampusId] IS NOT NULL)
-   OR ([TenantId] IS NOT NULL AND [CampusId] IS NULL);
-GO
-
-UPDATE [departments]
-SET [TenantId] = 'f1000000-0000-0000-0000-000000000001',
-    [CampusId] = 'f2000000-0000-0000-0000-000000000001'
-WHERE ([TenantId] IS NULL AND [CampusId] IS NULL)
-   OR ([TenantId] IS NULL AND [CampusId] IS NOT NULL)
-   OR ([TenantId] IS NOT NULL AND [CampusId] IS NULL);
-GO
+-- Default Tenant and Default Campus removed (v1.0 production release).
+-- Tenants are seeded explicitly in 02-Seed-Core.sql:
+--   TABSAN-UNI (University), TABSAN-COL (College), TABSAN-SCH (School).
 
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_users_tenants_TenantId')
 BEGIN

@@ -1,0 +1,97 @@
+<project outputDir="Obfuscated" baseDir="." xmlns="http://confuser.codeplex.com">
+  <!-- ConfuserEx v1.6.0 configuration for Tabsan EduSphere -->
+  
+  <rule pattern="true" inherit="false">
+    <!-- Anti-debug protection -->
+    <protection id="anti debug" />
+    <!-- Anti-tamper (integrity check) -->
+    <protection id="anti tamper" />
+    <!-- Encrypt string literals -->
+    <protection id="constants" />
+    <!-- Encrypt resource data -->
+    <protection id="resources" />
+    <!-- Control flow obfuscation -->
+    <protection id="ctrl flow" />
+    <!-- Rename types, methods, fields -->
+    <protection id="rename" />
+    <!-- Hide method calls -->
+    <protection id="ref proxy" />
+    <!-- Invalid metadata injection -->
+    <protection id="invalid metadata" />
+  </rule>
+
+  <!-- API assemblies (obfuscate internals, preserve public API surface) -->
+  <module path="API\Tabsan.EduSphere.API.dll">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+    <!-- Preserve ASP.NET Core entry point -->
+    <rule pattern="Tabsan.EduSphere.API.Program" inherit="false">
+      <protection id="rename" action="remove" />
+    </rule>
+    <!-- Preserve Controller names for routing -->
+    <rule pattern="*Controller" inherit="false">
+      <protection id="rename" action="remove" />
+    </rule>
+  </module>
+
+  <!-- Web assemblies -->
+  <module path="Web\Tabsan.EduSphere.Web.dll">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+    <rule pattern="Tabsan.EduSphere.Web.Program" inherit="false">
+      <protection id="rename" action="remove" />
+    </rule>
+    <rule pattern="*Controller" inherit="false">
+      <protection id="rename" action="remove" />
+    </rule>
+  </module>
+
+  <!-- Domain layer (full obfuscation OK) -->
+  <module path="API\Tabsan.EduSphere.Domain.dll">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+  </module>
+
+  <!-- Application layer (full obfuscation) -->
+  <module path="API\Tabsan.EduSphere.Application.dll">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+  </module>
+
+  <!-- Infrastructure layer -->
+  <module path="API\Tabsan.EduSphere.Infrastructure.dll">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+  </module>
+
+  <!-- Background Jobs -->
+  <module path="API\Tabsan.EduSphere.BackgroundJobs.exe">
+    <rule pattern="true" inherit="false">
+      <protection id="rename" />
+      <protection id="ctrl flow" />
+      <protection id="constants" />
+      <protection id="ref proxy" />
+    </rule>
+  </module>
+
+</project>
