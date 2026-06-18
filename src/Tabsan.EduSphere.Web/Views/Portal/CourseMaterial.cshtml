@@ -38,7 +38,8 @@ else
                 }
             </div>
 
-            <form method="get" asp-action="CourseMaterial" class="row g-2 align-items-end filter-toolbar">
+            <form method="get" asp-action="CourseMaterial" class="row g-2 align-items-end filter-toolbar"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 @if (User.IsInRole("SuperAdmin"))
                 {
                     <div class="col-md-3">

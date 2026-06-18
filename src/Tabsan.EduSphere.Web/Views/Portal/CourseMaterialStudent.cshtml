@@ -32,7 +32,8 @@ else
                 </div>
             </div>
 
-            <form method="get" asp-action="CourseMaterialStudent" class="row g-2 align-items-end filter-toolbar">
+            <form method="get" asp-action="CourseMaterialStudent" class="row g-2 align-items-end filter-toolbar"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : "Student")">
                 @* ── Student: only Class/Semester → Subject (pre-assigned Tenant/Campus/Dept/Program) ── *@
                 <div class="col-md-4">
                     <label class="form-label">@periodLabel</label>

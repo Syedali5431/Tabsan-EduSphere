@@ -31,7 +31,8 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <h2 class="h6 mb-3">Scope Selection</h2>
-                <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end">
+                <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end"
+                      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : "Student")">
                     <div class="col-12 col-md-4">
                         <label class="form-label">Tenant</label>
                         <select class="form-select" name="tenantId" onchange="this.form.submit()">
@@ -96,7 +97,8 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <h2 class="h6 mb-3">Scope Selection</h2>
-                <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end">
+                <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end"
+                      data-cascade-filter data-filter-role="Admin">
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <div class="col-12 col-md-6">
                         <label class="form-label">Campus</label>
@@ -153,7 +155,8 @@ else
                 <div class="card-body">
                     <h2 class="h5">Create Timetable</h2>
 
-                    <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end mb-3">
+                    <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end mb-3"
+                          data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : "Admin")">
                         @if (isSuperAdmin)
                         {
                         <div class="col-12 col-md-4">

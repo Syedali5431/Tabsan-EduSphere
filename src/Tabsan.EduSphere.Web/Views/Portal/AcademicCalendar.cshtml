@@ -22,7 +22,8 @@ else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form method="get" asp-action="AcademicCalendar" class="row g-2 align-items-end">
+            <form method="get" asp-action="AcademicCalendar" class="row g-2 align-items-end"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 <div class="col-md-4">
                     <label class="form-label">Filter by Semester</label>
                     <select name="semesterId" class="form-select" onchange="this.form.submit()">

@@ -32,7 +32,8 @@ else
                         <p class="text-muted mb-0">Use scope filters for both viewing and creating courses or offerings.</p>
                     </div>
                 </div>
-                <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
+                <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar"
+                      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-4">
@@ -123,7 +124,8 @@ else
                     <p class="text-muted mb-0">Manage curriculum inventory and @periodLabel.ToLowerInvariant() offerings with institution-aware scoping.</p>
                 </div>
             </div>
-            <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar">
+            <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="col-md-4">

@@ -21,7 +21,8 @@ else
                     <p class="text-muted mb-0">Narrow by department and review student lifecycle status in one view.</p>
                 </div>
             </div>
-            <form method="get" asp-action="Students" class="row g-2 align-items-end filter-toolbar">
+            <form method="get" asp-action="Students" class="row g-2 align-items-end filter-toolbar"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-2">

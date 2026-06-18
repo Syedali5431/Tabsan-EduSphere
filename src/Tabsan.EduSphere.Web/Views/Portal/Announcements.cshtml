@@ -26,7 +26,8 @@
     </div>
 }
 
-<form method="get" asp-action="Announcements" class="row g-2 align-items-end mb-4">
+<form method="get" asp-action="Announcements" class="row g-2 align-items-end mb-4"
+      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
     @if (User.IsInRole("SuperAdmin"))
     {
         <div class="col-md-3">

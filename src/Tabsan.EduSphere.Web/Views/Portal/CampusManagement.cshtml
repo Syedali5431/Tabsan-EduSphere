@@ -19,7 +19,8 @@ else
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <h2 class="h5 mb-3">Campus Filter</h2>
-            <form asp-action="CampusManagement" method="get" class="row g-2 align-items-end">
+            <form asp-action="CampusManagement" method="get" class="row g-2 align-items-end"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : "Admin")">
                 <div class="col-md-9">
                     <label class="form-label">Tenant</label>
                     <select name="tenantId" class="form-select" onchange="this.form.submit()">

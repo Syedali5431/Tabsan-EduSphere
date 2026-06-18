@@ -18,7 +18,8 @@ else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form asp-action="TimetableStudent" method="get" class="row g-2 align-items-end">
+            <form asp-action="TimetableStudent" method="get" class="row g-2 align-items-end"
+                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-md-3">

@@ -20,7 +20,8 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <form asp-action="Departments" method="get" class="row g-2 align-items-end">
+                <form asp-action="Departments" method="get" class="row g-2 align-items-end"
+                      data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-12 col-md-4">
@@ -182,7 +183,8 @@ else
                 }
                 else
                 {
-                    <form asp-action="Departments" method="get" class="row g-2 align-items-end mb-3">
+                    <form asp-action="Departments" method="get" class="row g-2 align-items-end mb-3"
+                          data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-6">
