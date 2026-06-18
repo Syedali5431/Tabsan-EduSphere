@@ -154,6 +154,8 @@ else
                     <h2 class="h5">Create Timetable</h2>
 
                     <form asp-action="TimetableAdmin" method="get" class="row g-2 align-items-end mb-3">
+                        @if (isSuperAdmin)
+                        {
                         <div class="col-12 col-md-4">
                             <label class="form-label">Tenant</label>
                             <select class="form-select" name="tenantId" onchange="this.form.submit()">
@@ -178,6 +180,11 @@ else
                                 }
                             </select>
                         </div>
+                        }
+                        else if (isAdmin)
+                        {
+                            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        }
                         <div class="col-12 col-md-4">
                             <label class="form-label">Campus</label>
                             <select class="form-select" name="campusId" onchange="this.form.submit()">
