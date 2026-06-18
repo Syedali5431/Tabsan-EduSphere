@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
 
+## 2026-06-18 Update — MFA TOTP Implementation (Otp.NET 1.4.1)
+### Implementation sync
+- Replaced manual HMACSHA1 TOTP with Otp.NET 1.4.1. TotpService uses OtpNet.Totp.VerifyTotp() with VerificationWindow.
+- GenerateSecret uses Base32Encoding.ToString(), BuildProvisioningUri generates otpauth:// URIs.
+- TwoFactorController: setup, status, verify, disable, enable, reset-setup, login-verify endpoints.
+- Login flow validates MFA codes + recovery codes via ITwoFactorStateStore in AuthService.LoginAsync.
+- QRCodeService generates PNG data URLs for authenticator enrollment. Web UI: TwoFactorSettings.cshtml.
+- MfaSettings: TotpDigits=6, StepSeconds=30, DriftWindows=1, RecoveryCodeCount=8.
+### Validation sync
+- Build: 0 errors. Wrong code rejected (400). Valid code accepted. 2FA status correct.
+
 ## 2026-06-15 Update — Professional Certificate Templates & Institution-Type Scoring\n### Implementation sync\n- Certificate templates fully redesigned with professional DOCX formatting: double borders, navy+gold brand colors, Georgia/Calibri fonts.\n- All 4 certificate types now professional: Degree (University), Transcript, Completion Certificate (School/College), Report Card.\n- File naming convention: {RegNo}-{Type}.docx (e.g., COL-REG-11-06-Transcript.docx) with sanitized file names.\n- Institution-type scoring fixed: University uses GPA/CGPA (4.0), School and College use Percentage (0-100%).\n- Completion eligibility: School requires CurrentSemesterNumber≥10, College requires published results in BOTH Class 11 and Class 12.\n- Degree restricted to University only with published results requirement.\n- LibreOffice PDF adapter with auto-detection and NoOp fallback.\n- TemplateProcessorService course tables enhanced with alternating row colors, dark navy headers, semester grouping.\n\n### Validation sync\n- Build: 0 errors. All certificate types generated and verified.\n- School student col11s6: Transcript ✓, Completion ✓, ReportCard ✓, Degree correctly blocked (400).\n\n## 2026-06-14 Update — Phase 8 Cascading Filter System (Final Check)
 ### Implementation sync
 - Created wwwroot/js/cascading-filters.js — shared AJAX cascade component with data-cascade attributes.

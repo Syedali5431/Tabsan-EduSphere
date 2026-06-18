@@ -1858,3 +1858,18 @@ None. The schema uses no computed or persisted computed columns.
 ---
 
 *Schema version: 1.0 | Tables: 91 | FKs: 73 | Indexes: 209 | CHECKs: 2 | Generated 2026-06-09*
+
+## MFA / Two-Factor Authentication Columns (2026-06-18)
+
+**User table** (users) — RFC 6238 TOTP via Otp.NET 1.4.1:
+- MfaIsEnabled BIT NOT NULL DEFAULT 0 — Whether MFA is active for this user
+- MfaTotpSecret NVARCHAR(200) NULL — Base32-encoded TOTP secret key
+- MfaRecoveryCodesHashJson NVARCHAR(MAX) NULL — JSON array of SHA-256 hashed recovery codes
+- LastPasswordChangedAt DATETIME2 NULL — Password ageing policy (ISO 27001 A.9.4.3)
+- ConsentToMonitoring BIT NULL — GDPR monitoring consent (ISO 27001 A.18.1.4)
+- DataRetentionDate DATETIME2 NULL — Data lifecycle management
+
+**Supporting entities:**
+- login_activity_logs — Immutable login attempt records (success/failure/risk) — ISO 27001 A.12.4.1
+- udit_logs — Enhanced with CorrelationId, Severity, EventCategory — ISO 27001 A.12.4.1
+

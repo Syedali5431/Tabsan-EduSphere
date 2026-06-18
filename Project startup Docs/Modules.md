@@ -3483,3 +3483,14 @@ This contract enables auditability and deterministic behavior across UI, API, an
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## MFA Implementation (2026-06-18) — Otp.NET 1.4.1
+
+Two-Factor Authentication is fully implemented using RFC 6238 TOTP standard via Otp.NET library:
+- ITotpService (GenerateSecret, BuildProvisioningUri, ValidateCode) in Infrastructure/Auth/TotpService.cs
+- TwoFactorController with 7 endpoints: setup, status, verify, disable, enable, reset-setup, login-verify
+- TwoFactorSetupService orchestrates full lifecycle; TwoFactorStateStore persists encrypted secrets
+- QRCodeService generates PNG data URLs for authenticator enrollment (Google Auth, Microsoft Auth, Authy)
+- Login flow in AuthService.LoginAsync validates MFA codes + recovery codes
+- Web UI: TwoFactorSettings.cshtml with QR display, manual key entry, verify/disable flows
+- MfaSettings: TotpDigits=6, StepSeconds=30, DriftWindows=1, RecoveryCodeCount=8

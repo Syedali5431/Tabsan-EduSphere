@@ -4,6 +4,28 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| ITotpService.GenerateSecret | Generate cryptographically secure Base32 TOTP secret via Otp.NET | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
+| ITotpService.BuildProvisioningUri | Build otpauth://totp/ URI for authenticator enrollment | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
+| ITotpService.ValidateCode | Validate TOTP code using OtpNet.Totp.VerifyTotp with VerificationWindow | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
+| TotpService | Production TOTP implementation using Otp.NET 1.4.1 (RFC 6238) | src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs |
+| TwoFactorController.Setup | GET/POST /api/v1/2fa/setup — begin 2FA enrollment | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.Status | GET /api/v1/2fa/status — current 2FA state | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.Verify | POST /api/v1/2fa/verify — confirm initial TOTP code | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.Disable | POST /api/v1/2fa/disable — soft-disable 2FA | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.Enable | POST /api/v1/2fa/enable — re-enable with existing secret | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.ResetSetup | POST /api/v1/2fa/reset-setup — clear pending setup | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorController.LoginVerify | POST /api/v1/2fa/login-verify — login hand-off verification | src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs |
+| TwoFactorSetupService | Orchestrates 2FA setup, verify, disable, enable, reset, login-verify | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs |
+| TwoFactorService | Wraps ITotpService with deployment-default TOTP parameters | src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorService.cs |
+| QRCodeService | Generates PNG/base64 QR data URLs for authenticator enrollment | src/Tabsan.EduSphere.API/Services/TwoFactor/QRCodeService.cs |
+| ITwoFactorStateStore | 2FA persistence boundary (get, save, enable, disable, hard delete) | src/Tabsan.EduSphere.Application/Interfaces/ITwoFactorStateStore.cs |
+| TwoFactorStateStore | EF-backed 2FA state with Data Protection encryption | src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs |
+| TwoFactorSettingsPageModel | Web model for 2FA setup UI (QR, manual key, verify/disable) | src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs |
+| PortalController.TwoFactorSettings | GET /Portal/TwoFactorSettings — 2FA management page | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.BeginTwoFactorSetup | POST — start 2FA enrollment (generates QR + secret) | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.VerifyTwoFactorSetup | POST — verify initial TOTP code to complete enrollment | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| PortalController.DisableTwoFactor | POST — disable 2FA with valid TOTP code | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| TwoFactorSettings.cshtml | 2FA UI page: QR display, manual key, verify/disable buttons | src/Tabsan.EduSphere.Web/Views/Portal/TwoFactorSettings.cshtml |
 | IEncryptionService.Encrypt | AES-256-CBC encrypt plaintext → Base64 ciphertext | src/Tabsan.EduSphere.Application/Interfaces/IEncryptionService.cs |
 | IEncryptionService.Decrypt | Decrypt Base64 ciphertext → plaintext | src/Tabsan.EduSphere.Application/Interfaces/IEncryptionService.cs |
 | EncryptionService | AES-256-CBC implementation with PBKDF2 key derivation | src/Tabsan.EduSphere.Infrastructure/Security/EncryptionService.cs |

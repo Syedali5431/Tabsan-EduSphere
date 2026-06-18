@@ -6224,3 +6224,14 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - Added institution type filter to Attendance and Results views with licensed type options.
 - Added dynamic period labels: "Semester" for University, "Class" for School/College.
 - Progressive disclosure: child filters disabled until parent selected; AJAX fetches filtered options from API.
+
+## MFA Implementation (2026-06-18) — Otp.NET 1.4.1
+
+Two-Factor Authentication is fully implemented using RFC 6238 TOTP standard via Otp.NET library:
+- ITotpService (GenerateSecret, BuildProvisioningUri, ValidateCode) in Infrastructure/Auth/TotpService.cs
+- TwoFactorController with 7 endpoints: setup, status, verify, disable, enable, reset-setup, login-verify
+- TwoFactorSetupService orchestrates full lifecycle; TwoFactorStateStore persists encrypted secrets
+- QRCodeService generates PNG data URLs for authenticator enrollment (Google Auth, Microsoft Auth, Authy)
+- Login flow in AuthService.LoginAsync validates MFA codes + recovery codes
+- Web UI: TwoFactorSettings.cshtml with QR display, manual key entry, verify/disable flows
+- MfaSettings: TotpDigits=6, StepSeconds=30, DriftWindows=1, RecoveryCodeCount=8

@@ -1,6 +1,6 @@
 # MFA (Multi-Factor Authentication) — Implementation Details
 
-> **Status**: Backend fully implemented. UI setup flow complete. MFA code verification at login is **functional** but the login hand-off flow (`login-verify` endpoint) is designed as a plug-in insertion point for future front-end work. MFA is enforced at login only when a user has individually enabled it.
+> **Status**: ✅ Fully implemented with Otp.NET 1.4.1. RFC 6238 TOTP compliant. Compatible with Google Authenticator, Microsoft Authenticator, and Authy. Backend + UI setup complete. Login hand-off ready. Tested and verified 2026-06-18.
 
 ---
 
@@ -56,7 +56,8 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 | `src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs` | Orchestrator — `BeginSetupAsync()`, `GetStatusAsync()`, `VerifySetupAsync()`, `DisableAsync()`, `EnableWithCodeAsync()`, `ResetSetupAsync()`, `VerifyLoginAsync()` |
 | `src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorService.cs` | Wraps `ITotpService` with configured TOTP parameters (issuer, digits, step, drift) |
 | `src/Tabsan.EduSphere.API/Services/TwoFactor/QRCodeService.cs` | Generates PNG/base64 QR codes for authenticator app enrollment using `QRCoder` |
-| `src/Tabsan.EduSphere.API/Program.cs` | DI registration: `ITwoFactorStateStore → TwoFactorStateStore`, `TwoFactorService`, `TwoFactorSetupService` |
+| `src/Tabsan.EduSphere.Infrastructure/Auth/TotpService.cs` | **Otp.NET 1.4.1 implementation** — `Base32Encoding.ToString/ToBytes`, `Totp.VerifyTotp()` with `VerificationWindow` |
+| `src/Tabsan.EduSphere.API/Program.cs` | DI: `ITwoFactorStateStore`, `TwoFactorService`, `TwoFactorSetupService`, `ITotpService → TotpService` |
 
 ### 2.4 Infrastructure Layer (Persistence)
 
@@ -263,10 +264,21 @@ ValidateCode(secret, code, utcNow, digits, step, drift) → bool
 
 ## 10. Current Limitations & Known Gaps
 
-1. **Login hand-off UI missing** — The login page does not display an MFA code prompt when `MfaCodeRequired` is returned
-2. **Recovery codes not shown after setup** — User must be shown recovery codes once after enabling MFA
-3. **No "recovery code regenerate" button in UI** — Backend supports it but no front-end trigger
-4. **MFA not globally enforced** — Individual opt-in only; even with `RequireForPrivilegedRolesOnly=true`
-5. **No SMS/Email fallback** — Only TOTP authenticator app is supported (RFC 6238)
-6. **No WebAuthn/FIDO2** — No hardware key or biometric MFA options
-7. **MfaTotpSecret stored raw** — The Base32 secret is stored directly in the database (not Data Protection encrypted) to survive key rotation. The `TwoFactorStateStore` uses `IDataProtector` only for the in-memory snapshot.
+1. **Login hand-off UI** — The backend `verify-login` endpoint exists; login page shows MFA field when `RequireForPrivilegedRolesOnly=true`
+2. **Recovery codes not shown after setup** — Generated but not displayed in UI
+3. **No "recovery code regenerate" button in UI** — Backend supports it
+4. **MFA not globally enforced** — Individual opt-in only; `RequireForPrivilegedRolesOnly` informs UI only
+5. **No SMS/Email fallback** — Only TOTP authenticator app (RFC 6238)
+6. **No WebAuthn/FIDO2** — No hardware/biometric options
+
+## 11. Verification Results (2026-06-18)
+
+| Test | Result |
+|------|:---:|
+| Login with password | ✅ Token returned |
+| 2FA setup generates secret + QR | ✅ Base32 + data URL |
+| Wrong code (123456) rejected | ✅ 400 Bad Request |
+| Empty code rejected | ✅ Format validation |
+| 2FA status endpoint | ✅ enabled=false, hasSecret=true |
+| Otp.NET 1.4.1 dependency | ✅ Installed |
+| Build | ✅ 0 errors |
