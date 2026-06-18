@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD060 MD032 MD040 -->
+
 # MFA (Multi-Factor Authentication) — Implementation Details
 
 > **Status**: ✅ Fully implemented with Otp.NET 1.4.1. RFC 6238 TOTP compliant. Compatible with Google Authenticator, Microsoft Authenticator, and Authy. Backend + UI setup complete. Login hand-off ready. Tested and verified 2026-06-18.
@@ -28,7 +30,7 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 ### 2.1 Domain Layer (`User` entity)
 
 | File | Purpose |
-|------|---------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.Domain/Identity/User.cs` | `MfaIsEnabled` (bool), `MfaTotpSecret` (Base32 TOTP key), `MfaRecoveryCodesHashJson` (SHA-256 hashed recovery codes), `SetMfaEnrollment()`, `TryConsumeRecoveryCodeHash()` |
 
 **Key Properties on `User`:**
@@ -39,7 +41,7 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 ### 2.2 Application Layer (Business Logic)
 
 | File | Purpose |
-|------|---------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.Application/Auth/AuthService.cs` | `LoginAsync()` — password-first login with inline MFA TOTP validation + recovery code consumption. `RegenerateRecoveryCodesAsync()`. `BeginMfaSetupAsync()` (legacy path). |
 | `src/Tabsan.EduSphere.Application/Auth/AuthSecurityOptions.cs` | `MfaSettings` class — `Enabled`, `RequireForPasswordLogin`, `RequireForPrivilegedRolesOnly`, `PrivilegedRoles[]`, `TotpIssuer`, `TotpDigits=6`, `TotpStepSeconds=30`, `TotpAllowedDriftWindows=1`, `RecoveryCodeCount=8` |
 | `src/Tabsan.EduSphere.Application/Interfaces/ITwoFactorStateStore.cs` | `TwoFactorStateSnapshot` record + `ITwoFactorStateStore` interface — `GetAsync()`, `SaveSetupAsync()`, `EnableAsync()`, `DisableAsync()`, `HardDeleteAsync()` |
@@ -50,7 +52,7 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 ### 2.3 API Layer (Controllers + Services)
 
 | File | Purpose |
-|------|---------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.API/Controllers/TwoFactorController.cs` | **Dedicated 2FA API** — routes: `GET/POST /api/v1/2fa/setup`, `GET /api/v1/2fa/status`, `POST /api/v1/2fa/verify`, `POST /api/v1/2fa/disable`, `POST /api/v1/2fa/enable`, `POST /api/v1/2fa/reset-setup`, `POST /api/v1/2fa/login-verify` |
 | `src/Tabsan.EduSphere.API/Controllers/AuthController.cs` | Legacy MFA endpoints: `POST /api/v1/auth/mfa/setup`, `POST /api/v1/auth/mfa/verify-mfa`, `POST /api/v1/auth/mfa/recovery-codes/regenerate` |
 | `src/Tabsan.EduSphere.API/Services/TwoFactor/TwoFactorSetupService.cs` | Orchestrator — `BeginSetupAsync()`, `GetStatusAsync()`, `VerifySetupAsync()`, `DisableAsync()`, `EnableWithCodeAsync()`, `ResetSetupAsync()`, `VerifyLoginAsync()` |
@@ -62,13 +64,13 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 ### 2.4 Infrastructure Layer (Persistence)
 
 | File | Purpose |
-|------|---------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.Infrastructure/Repositories/TwoFactorStateStore.cs` | EF-backed implementation of `ITwoFactorStateStore`. Uses `IDataProtector` to protect/unprotect secrets. Stores raw Base32 secret in `MfaTotpSecret` column. |
 
 ### 2.5 Web Layer (Portal UI)
 
 | File | Purpose |
-|------|---------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.Web/Controllers/PortalController.cs` | Actions: `TwoFactorSettings()` (GET), `BeginTwoFactorSetup()` (POST), `VerifyTwoFactorSetup()` (POST), `DisableTwoFactor()` (POST) |
 | `src/Tabsan.EduSphere.Web/Views/Portal/TwoFactorSettings.cshtml` | UI page — QR code display, manual key input, verify/disable buttons |
 | `src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs` | `TwoFactorSettingsPageModel` — `TwoFactorEnabled`, `HasStoredSecret`, `Issuer`, `AccountName`, `ManualKey`, `ProvisioningUri`, `QrCodeDataUrl` |
@@ -78,7 +80,7 @@ The MFA system is built as a **dedicated add-on boundary** (`api/v1/2fa`) separa
 ### 2.6 Configuration
 
 | File | Key Settings |
-|------|-------------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.API/appsettings.json` | `AuthSecurity.Mfa.Enabled` = `false` (disabled by default). Full MFA settings block. |
 | `src/Tabsan.EduSphere.API/appsettings.Development.json` | `TotpIssuer`: `"Tabsan EduSphere (Dev)"` |
 | `src/Tabsan.EduSphere.API/appsettings.Production.json` | `TotpIssuer`: `"Tabsan EduSphere"` |
@@ -102,7 +104,7 @@ The `AuthService.LoginAsync()` method in `AuthService.cs` implements the passwor
 ### Login Failure Reasons (MFA-specific)
 
 | Enum Value | Meaning |
-|-----------|---------|
+| --- | --- | --- |
 | `MfaCodeRequired` | User has MFA enabled but didn't provide a code |
 | `InvalidMfaCode` | Provided TOTP code is invalid and no valid recovery code was used |
 
@@ -111,7 +113,7 @@ The `AuthService.LoginAsync()` method in `AuthService.cs` implements the passwor
 ## 4. Two-Factor Controller API Endpoints
 
 | Method | Route | Auth | Purpose |
-|--------|-------|------|---------|
+| --- | --- | --- | --- | --- | --- |
 | `GET/POST` | `/api/v1/2fa/setup` | `[Authorize]` | Start enrollment — returns QR code, manual key, provisioning URI |
 | `GET` | `/api/v1/2fa/status` | `[Authorize]` | Get current 2FA status (enabled/disabled, has secret) |
 | `POST` | `/api/v1/2fa/verify` | `[Authorize]` | Verify initial TOTP code to complete enrollment |
@@ -233,7 +235,7 @@ ValidateCode(secret, code, utcNow, digits, step, drift) → bool
 ## 8. Database Columns (User table)
 
 | Column | Type | Purpose |
-|--------|------|---------|
+| --- | --- | --- | --- |
 | `MfaIsEnabled` | `bit` | Whether MFA is active for this user |
 | `MfaTotpSecret` | `nvarchar(200)` | Base32-encoded TOTP secret (raw, not encrypted) |
 | `MfaRecoveryCodesHashJson` | `nvarchar(max)` | JSON array of SHA-256 hashed recovery codes |
@@ -274,7 +276,7 @@ ValidateCode(secret, code, utcNow, digits, step, drift) → bool
 ## 11. Verification Results (2026-06-18)
 
 | Test | Result |
-|------|:---:|
+| --- |:---:|
 | Login with password | ✅ Token returned |
 | 2FA setup generates secret + QR | ✅ Base32 + data URL |
 | Wrong code (123456) rejected | ✅ 400 Bad Request |

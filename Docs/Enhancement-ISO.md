@@ -1,11 +1,17 @@
-deepSeekYou are a senior enterprise .NET + MSSQL architect working on an Educational ERP system that must become ISO 9001 and ISO 27001 compliant.
+<!-- markdownlint-disable MD024 MD022 MD032 -->
+
+# ISO Enhancement Roadmap
+
+You are a senior enterprise .NET + MSSQL architect working on an Educational ERP system that must become ISO 9001 and ISO 27001 compliant.
 
 You are given:
+
 1. ISO enhancement roadmap (Enhancement-ISO.md)
 2. Existing full database schema
 3. Existing repository structure with documentation files
 
 Your job:
+
 - Implement ISO enhancements phase-by-phase
 - Maintain full backward compatibility
 - Apply ONLY additive (non-breaking) changes
@@ -17,18 +23,21 @@ Your job:
 STRICT RULES:
 
 1. DO NOT:
+
 - Break existing APIs or routes
 - Modify GPA/CGPA logic
 - Remove or destructively alter schema
 - Break tenant/campus isolation
 
-2. ONLY:
+1. ONLY:
+
 - Add new tables
 - Add new columns
 - Add indexes, constraints
 - Extend logic safely
 
-3. ALWAYS:
+1. ALWAYS:
+
 - Use EF Core migration style
 - Add performance indexes
 - Ensure auditability + traceability
@@ -42,18 +51,21 @@ MANDATORY DOCUMENTATION & REPO RULES (VERY IMPORTANT)
 After COMPLETING EACH PHASE:
 
 1. ✅ UPDATE Enhancement-ISO.md:
+
    - Add:
      ✔ Implementation Summary
      ✔ Validation Summary
    - Then mark phase as:
      ✅ COMPLETED
 
-2. ✅ UPDATE Function_list.md:
+1. ✅ UPDATE Function_list.md:
+
    - Add ALL newly created functions/services/APIs
    - Avoid duplicate functions
    - Keep it clean (NO summaries here)
 
-3. ✅ REMOVE Implementation & Validation summaries FROM:
+1. ✅ REMOVE Implementation & Validation summaries FROM:
+
    - Function_list.md
    - command.md
    - Functionality.md
@@ -64,12 +76,14 @@ After COMPLETING EACH PHASE:
 
    (These files must only contain permanent design info, NOT summaries)
 
-4. ✅ KEEP ALL FILES CONSISTENT:
+1. ✅ KEEP ALL FILES CONSISTENT:
+
    - No duplication
    - No outdated info
    - Sync naming across files
 
-5. ✅ GIT OPERATIONS (MANDATORY):
+1. ✅ GIT OPERATIONS (MANDATORY):
+
    After each phase:
    - Commit all changes
    - Use commit message:
@@ -86,14 +100,17 @@ OUTPUT FORMAT (FOR EVERY PHASE)
 Provide:
 
 1. Schema Changes
+
    - SQL
    - EF Core model updates
    - Indexes and constraints
 
 2. Backend Implementation
+
    - C# services / logic (or clear pseudo-code)
 
 3. API Design
+
    - Endpoints
    - Request/response
 
@@ -102,10 +119,12 @@ Provide:
 5. Validation Checklist
 
 6. Documentation Updates:
+
    - EXACT content to append in Enhancement-ISO.md
    - EXACT Function_list.md updates
 
 7. Git Step Summary:
+
    - Files changed
    - Commit message
 
@@ -116,18 +135,21 @@ PHASE 0 — GAP ANALYSIS (START FIRST)
 Analyze schema vs ISO roadmap.
 
 Current known:
+
 - audit_logs exists but missing ActorRole, UserAgent, DeviceInfo
 - users has MFA + lockout features
 - password_history exists
 - user_sessions exists
 
 Identify:
+
 - Missing ISO features
 - Missing tables
 - Missing audit coverage
 - Security gaps
 
 Output:
+
 ✔ Gap analysis
 ✔ Required new tables
 ✔ Missing fields
@@ -144,7 +166,7 @@ DO NOT IMPLEMENT YET.
 ### 1. Schema Audit — Existing Tables
 
 | Table | Columns | ISO Coverage | Gaps |
-|-------|---------|-------------|------|
+| --- | --- | --- | --- |
 | **audit_logs** | Id (bigint PK), ActorUserId, Action, ActorRole, EntityName, EntityId, OldValuesJson, NewValuesJson, OccurredAt, IpAddress, UserAgent, DeviceInfo | ✅ ActorRole, UserAgent, DeviceInfo already present (NVARCHAR(64), NVARCHAR(1024), NVARCHAR(1024)). ✅ Indexes on: OccurredAt, ActorUserId, ActorRole, (EntityName+OccurredAt). ✅ Immutable enforcement in DbContext. | Missing CorrelationId for distributed tracing. Missing Severity level (Info/Warning/Error/Critical). Missing EventCategory for grouping (Security, Academic, Financial, System). |
 | **users** | Id, Username, Email, PasswordHash, RoleId, IsActive, LastLoginAt, FailedLoginAttempts, IsLockedOut, LockedOutUntil, MfaIsEnabled, MfaTotpSecret, MfaRecoveryCodesHashJson, MustChangePassword, TenantId, CampusId, DepartmentId, FullName, FatherName, PhoneNumber, Address, InstitutionType, ThemeKey | ✅ MFA fields (ISO 27001 A.9.4.2). ✅ Account lockout with configurable threshold (ISO 27001 A.9.4.1). ✅ Account activation/deactivation (ISO 27001 A.9.2.6). ✅ Role-based access control. ✅ Tenant/Campus isolation. | Missing LastPasswordChangedAt for password ageing policy (ISO 27001 A.9.4.3). Missing ConsentToMonitoring flag (GDPR/privacy). Missing DataRetentionDate for data lifecycle management. |
 | **password_history** | Id, UserId, PasswordHash, CreatedAt | ✅ Password history for reuse prevention (ISO 27001 A.9.4.3). | Missing ExpiresAt for automatic history archival. Missing composite index on (UserId, CreatedAt DESC) for fast last-N query. |
@@ -155,7 +177,7 @@ DO NOT IMPLEMENT YET.
 ### 2. ISO 27001 Security Control Gaps
 
 | Control | Requirement | Current State | Gap |
-|---------|------------|---------------|-----|
+| --- | --- | --- | --- |
 | **A.5.1.1** | Information security policy document | No formal policy document repository | ❌ Missing — Phase 7 |
 | **A.8.2.1** | Classification of information | No data classification on entities | ❌ Missing — Phase 5 |
 | **A.8.2.3** | Handling of assets | No data retention/deletion schedules | ❌ Missing — Phase 5 |
@@ -182,7 +204,7 @@ DO NOT IMPLEMENT YET.
 ### 3. ISO 9001 Quality Management Gaps
 
 | Clause | Requirement | Current State | Gap |
-|--------|------------|---------------|-----|
+| --- | --- | --- | --- |
 | **7.5.1** | Documented information (general) | No policy document management system | ❌ Missing — Phase 7 |
 | **7.5.2** | Creating and updating documents | No version control for institutional documents | ❌ Missing — Phase 7 |
 | **7.5.3** | Control of documented information | No access control or approval workflow for documents | ❌ Missing — Phase 7 |
@@ -192,7 +214,7 @@ DO NOT IMPLEMENT YET.
 ### 4. Required New Tables
 
 | Table Name | Purpose | ISO Reference | Phase |
-|-----------|---------|---------------|-------|
+| --- | --- | --- | --- |
 | **login_activity_logs** | Track all login attempts (success/failure), source IP, user agent, device info, geolocation, and risk score | ISO 27001 A.12.4.1 — Event logging | Phase 3 |
 | **backup_logs** | Record all backup operations: type, size, duration, status, verification result, checksum | ISO 27001 A.17.1.2 — Redundancy | Phase 4 |
 | **incident_logs** | Security incidents: severity, category, status, reported by, assigned to, resolution, timeline | ISO 27001 A.16.1.5 — Response | Phase 6 |
@@ -203,7 +225,7 @@ DO NOT IMPLEMENT YET.
 ### 5. New Columns to Add to Existing Tables
 
 | Table | Column to Add | Type | Purpose | Phase |
-|-------|--------------|------|---------|-------|
+| --- | --- | --- | --- | --- |
 | audit_logs | CorrelationId | NVARCHAR(64) NULL | Distributed tracing across services | Phase 1 |
 | audit_logs | Severity | NVARCHAR(20) NULL DEFAULT 'Info' | Event severity classification | Phase 1 |
 | audit_logs | EventCategory | NVARCHAR(50) NULL | Security/Academic/Financial/System | Phase 1 |
@@ -216,7 +238,7 @@ DO NOT IMPLEMENT YET.
 ### 6. New Indexes Required
 
 | Table | Index Name | Columns | Type | Purpose |
-|-------|-----------|---------|------|---------|
+| --- | --- | --- | --- | --- |
 | audit_logs | IX_audit_logs_event_category | EventCategory INCLUDE (OccurredAt) | Non-clustered | Compliance filtering by event type |
 | audit_logs | IX_audit_logs_correlation_id | CorrelationId | Non-clustered | Distributed trace lookup |
 | audit_logs | IX_audit_logs_severity_occurred_at | Severity, OccurredAt | Non-clustered | Severity-based filtering |
@@ -227,7 +249,7 @@ DO NOT IMPLEMENT YET.
 ### 7. Risk Assessment
 
 | Risk | Severity | Impact | Mitigation | Phase |
-|------|----------|--------|------------|-------|
+| --- | --- | --- | --- | --- |
 | No incident tracking capability | **High** | Cannot demonstrate ISO 27001 A.16 compliance | Create incident_logs table + management UI | Phase 6 |
 | No backup/DR logging | **High** | Cannot demonstrate ISO 27001 A.17 compliance | Create backup_logs table + scheduler design | Phase 4 |
 | No formal password policy object | **Medium** | Weak password enforcement | Create PasswordPolicy configuration service | Phase 2 |
@@ -293,7 +315,7 @@ Validation:
 #### 1. Schema Changes (Migration: PhaseISO1AuditLoggingPart2)
 
 | Column Added | Type | Purpose |
-|-------------|------|---------|
+| --- | --- | --- | --- |
 | CorrelationId | NVARCHAR(64) NULL | Distributed tracing across services |
 | Severity | NVARCHAR(20) NOT NULL DEFAULT 'Info' | Event severity classification (Info/Warning/Error/Critical) |
 | EventCategory | NVARCHAR(50) NULL | Event grouping (Security/Academic/Financial/System/Compliance/UserManagement) |
@@ -302,7 +324,7 @@ Validation:
 #### 2. New Indexes Added
 
 | Index Name | Columns | Type | Purpose |
-|-----------|---------|------|---------|
+| --- | --- | --- | --- | --- | --- |
 | IX_audit_logs_correlation_id | CorrelationId | Filtered non-clustered | Distributed trace lookup |
 | IX_audit_logs_event_category | EventCategory | Filtered non-clustered | Compliance filtering by event type |
 | IX_audit_logs_severity_occurred_at | Severity, OccurredAt | Filtered non-clustered | Severity-based time-range filtering |
@@ -330,7 +352,7 @@ Validation:
 #### 5. Files Changed
 
 | File | Change |
-|------|--------|
+| --- | --- | --- |
 | `src/Tabsan.EduSphere.Domain/Auditing/AuditLog.cs` | Added CorrelationId, Severity, EventCategory fields |
 | `src/Tabsan.EduSphere.Domain/Interfaces/IAuditService.cs` | Added Phase 1 filter parameters to SearchAsync |
 | `src/Tabsan.EduSphere.Infrastructure/Persistence/Configurations/AuditLogConfiguration.cs` | Added column configs + 4 indexes |
@@ -370,7 +392,7 @@ Admin:
 #### 1. Schema Changes (Migration: PhaseISO2Security)
 
 | Column Added | Table | Type | Purpose |
-|-------------|-------|------|---------|
+| --- | --- | --- | --- | --- | --- |
 | LastPasswordChangedAt | users | DATETIME2 NULL | Password ageing policy — records last password change timestamp |
 | ExpiresAt | password_history | DATETIME2 NULL | Automatic history archival — entries prunable after expiry |
 | LastActivityAt | user_sessions | DATETIME2 NULL | Idle session timeout — tracks last authenticated request |
@@ -378,7 +400,7 @@ Admin:
 #### 2. New Index
 
 | Index Name | Columns | Type | Purpose |
-|-----------|---------|------|---------|
+| --- | --- | --- | --- | --- | --- |
 | IX_user_sessions_active | UserId INCLUDE (ExpiresAt, RevokedAt) FILTER ([RevokedAt] IS NULL) | Filtered non-clustered | Active session queries for admin screen and idle timeout enforcement |
 
 #### 3. Domain Entity Updates
@@ -407,7 +429,7 @@ Admin:
 #### 7. API Endpoints
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/account-security/sessions | List all active sessions with user details |
 | POST | /api/v1/account-security/sessions/{id}/revoke | Force-revoke a specific session |
 | POST | /api/v1/account-security/users/{id}/revoke-sessions | Revoke all active sessions for a user |
@@ -421,7 +443,7 @@ Admin:
 #### 9. Files Changed
 
 | File | Change |
-|------|--------|
+| --- | --- | --- |
 | `Domain/Identity/User.cs` | Added LastPasswordChangedAt, IsPasswordExpired; updated UpdatePasswordHash |
 | `Domain/Identity/PasswordHistoryEntry.cs` | Added ExpiresAt; updated constructor |
 | `Domain/Identity/UserSession.cs` | Added LastActivityAt, TouchActivity, IsActiveWithinIdleTimeout |
@@ -472,7 +494,7 @@ Dashboard:
 New table `login_activity_logs` with structured columns:
 
 | Column | Type | Purpose |
-|--------|------|---------|
+| --- | --- | --- | --- |
 | Id | UNIQUEIDENTIFIER PK | Primary key |
 | UserId | UNIQUEIDENTIFIER NULL | FK to user (null for unknown usernames) |
 | Username | NVARCHAR(100) NOT NULL | The submitted username |
@@ -488,7 +510,7 @@ New table `login_activity_logs` with structured columns:
 #### 2. Indexes
 
 | Index Name | Columns | Purpose |
-|-----------|---------|---------|
+| --- | --- | --- | --- |
 | IX_login_activity_user_id | UserId | Per-user activity history |
 | IX_login_activity_attempted_at | AttemptedAt | Time-range queries for trends |
 | IX_login_activity_success_attempted | (IsSuccess, AttemptedAt) | Filter by success/failure over time |
@@ -518,14 +540,14 @@ Activity recording is fire-and-forget — failures do not block the login flow.
 #### 5. API Endpoints
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/login-activity | Paged query with filters (userId, isSuccess, riskLevel, failureReason, fromUtc, toUtc, query) |
 | GET | /api/v1/login-activity/summary | Aggregated summary with daily breakdown, top 5 failure reasons, top 10 IPs (default 30-day range) |
 
 #### 6. Files Changed
 
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Domain/Activity/LoginActivityLog.cs` |
 | CREATE | `Domain/Interfaces/ILoginActivityRepository.cs` |
 | CREATE | `Infrastructure/Persistence/Configurations/LoginActivityLogConfiguration.cs` |
@@ -565,7 +587,7 @@ Add:
 #### 1. Schema: `backup_logs` table (Migration: PhaseISO4BackupDR)
 
 | Column | Type | Purpose |
-|--------|------|---------|
+| --- | --- | --- | --- |
 | BackupType | NVARCHAR(20) | Full / Differential / Log |
 | FileName | NVARCHAR(500) | Backup file name |
 | FilePath | NVARCHAR(1000) | Storage path or URL |
@@ -594,7 +616,7 @@ Indexes: `IX_backup_logs_status_started`, `IX_backup_logs_type_started`
 #### 3. Files
 
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Domain/Backup/BackupLog.cs` |
 | CREATE | `Domain/Interfaces/IBackupLogRepository.cs` |
 | CREATE | `Infrastructure/Persistence/Configurations/BackupLogConfiguration.cs` |
@@ -644,7 +666,7 @@ DO NOT break schema
 
 #### 5. API Endpoints (Admin/SuperAdmin)
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/data-protection/classifications | List all classifications |
 | POST | /api/v1/data-protection/classifications | Create classification entry |
 | POST | /api/v1/data-protection/encrypt | Encrypt a value |
@@ -653,7 +675,7 @@ DO NOT break schema
 
 #### 6. Files
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Application/Interfaces/IEncryptionService.cs` |
 | CREATE | `Application/Interfaces/IDataMaskingService.cs` |
 | CREATE | `Application/Interfaces/IDataClassificationService.cs` |
@@ -694,7 +716,7 @@ Add:
 #### 1. Schema: `incident_logs` table
 
 | Column | Type | Purpose |
-|--------|------|---------|
+| --- | --- | --- | --- |
 | Title | NVARCHAR(300) | Incident title |
 | Description | NVARCHAR(4000) | Detailed description |
 | Severity | NVARCHAR(20) | Low / Medium / High / Critical |
@@ -716,7 +738,7 @@ Indexes: IX_incident_logs_status_reported, IX_incident_logs_severity_status, IX_
 
 #### 3. API Endpoints (Admin/SuperAdmin)
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/incidents | List all incidents |
 | GET | /api/v1/incidents/{id} | Get incident detail |
 | POST | /api/v1/incidents | Create new incident |
@@ -725,7 +747,7 @@ Indexes: IX_incident_logs_status_reported, IX_incident_logs_severity_status, IX_
 
 #### 4. Files
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Domain/Incidents/IncidentLog.cs` |
 | CREATE | `Domain/Interfaces/IIncidentRepository.cs` |
 | CREATE | `Infrastructure/Persistence/Configurations/IncidentLogConfiguration.cs` |
@@ -767,7 +789,7 @@ Add:
 
 #### 3. API Endpoints
 | Method | Endpoint | Auth | Purpose |
-|--------|----------|------|---------|
+| --- | --- | --- | --- | --- | --- |
 | GET | /api/v1/policy-documents | All | List all documents |
 | GET | /api/v1/policy-documents/{id} | All | Get document |
 | GET | /api/v1/policy-documents/{id}/versions | All | Version history |
@@ -778,7 +800,7 @@ Add:
 
 #### 4. Files (10 created, 1 updated)
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Domain/Documents/PolicyDocument.cs` |
 | CREATE | `Domain/Documents/PolicyDocumentVersion.cs` |
 | CREATE | `Domain/Interfaces/IPolicyDocumentRepository.cs` |
@@ -810,7 +832,7 @@ Add:
 #### 1. Schema: `backup_verification_logs` table
 
 | Column | Type | Purpose |
-|--------|------|---------|
+| --- | --- | --- | --- |
 | BackupLogId | UNIQUEIDENTIFIER | FK to backup_logs entry being verified |
 | VerificationType | NVARCHAR(20) | IntegrityCheck or RestoreTest |
 | VerifiedAt | DATETIME2 | When verified |
@@ -824,7 +846,7 @@ Indexes: IX_backup_verification_backup_verified, IX_backup_verification_success_
 
 #### 2. API Endpoints (Admin/SuperAdmin)
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/backup-verifications | List all verifications |
 | GET | /api/v1/backup-verifications/by-backup/{id} | Verifications for a backup |
 | POST | /api/v1/backup-verifications | Record verification |
@@ -859,12 +881,12 @@ Ensure:
 
 #### 2. API
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/data-integrity/check | Run full integrity check, return findings |
 
 #### 3. Files
 | Action | File |
-|--------|------|
+| --- | --- | --- |
 | CREATE | `Application/Interfaces/IDataIntegrityService.cs` |
 | CREATE | `Infrastructure/Integrity/DataIntegrityService.cs` |
 | CREATE | `API/Controllers/DataIntegrityController.cs` |
@@ -893,7 +915,7 @@ Create Menu "Audits" in settings to contain following menus with details:
 
 #### 2. API
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| --- | --- | --- | --- |
 | GET | /api/v1/compliance/dashboard | Full compliance posture overview |
 
 #### 3. Files (3 created, no schema changes)
@@ -905,7 +927,7 @@ Create Menu "Audits" in settings to contain following menus with details:
 ### 🎉 ALL 10 PHASES COMPLETE
 
 | Phase | Name | Status |
-|-------|------|--------|
+| --- | --- | --- | --- |
 | 0 | Gap Analysis | ✅ |
 | 1 | Audit Logging | ✅ |
 | 2 | Security | ✅ |

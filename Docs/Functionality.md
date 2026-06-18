@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD032 MD041 MD060 -->
+<!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD026 MD032 MD041 MD060 -->
 
 ## 2026-06-18 Update — MFA TOTP Implementation (Otp.NET 1.4.1)
 ### Implementation sync

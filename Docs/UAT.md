@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 MD058 MD060 -->
+
 # User Acceptance Testing — Tabsan EduSphere
 
 ## MFA (Two-Factor Authentication) — UAT Test Cases (2026-06-18)

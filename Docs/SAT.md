@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 MD058 MD060 -->
+
 # Security Acceptance Testing — Tabsan EduSphere
 
 ## MFA (Two-Factor Authentication) — SAT Test Results (2026-06-18)

@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD060 -->
+
 # Function List — Tabsan EduSphere
 
 > Auto-maintained registry of all implemented functions, services, and API endpoints. Clean index — no summaries.
