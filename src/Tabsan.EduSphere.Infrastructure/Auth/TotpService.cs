@@ -1,17 +1,34 @@
 using System.Security.Cryptography;
-using System.Text;
+using Microsoft.Extensions.Logging;
+using OtpNet;
 using Tabsan.EduSphere.Application.Interfaces;
 
 namespace Tabsan.EduSphere.Infrastructure.Auth;
 
+/// <summary>
+/// Production-ready TOTP service using Otp.NET for RFC 6238 compliance.
+/// Compatible with Google Authenticator, Microsoft Authenticator, and Authy.
+/// </summary>
 public sealed class TotpService : ITotpService
 {
+    private readonly ILogger<TotpService> _logger;
+
+    public TotpService(ILogger<TotpService> logger)
+    {
+        _logger = logger;
+    }
+
+    /// <summary>Generates a cryptographically secure Base32-encoded TOTP secret.</summary>
     public string GenerateSecret()
     {
         var bytes = RandomNumberGenerator.GetBytes(20);
-        return Base32Encode(bytes);
+        return Base32Encoding.ToString(bytes);
     }
 
+    /// <summary>
+    /// Builds an otpauth:// URI for authenticator app enrollment.
+    /// Format: otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer}&digits={digits}&period={stepSeconds}
+    /// </summary>
     public string BuildProvisioningUri(string issuer, string accountName, string secret, int digits, int stepSeconds)
     {
         var encodedIssuer = Uri.EscapeDataString(issuer);
@@ -20,107 +37,47 @@ public sealed class TotpService : ITotpService
         return $"otpauth://totp/{encodedIssuer}:{encodedAccount}?secret={secret}&issuer={encodedIssuer}&digits={digits}&period={stepSeconds}";
     }
 
+    /// <summary>
+    /// Validates a TOTP code using Otp.NET's RFC 6238 implementation.
+    /// Handles clock drift via VerificationWindow (allowedDriftWindows on each side).
+    /// </summary>
     public bool ValidateCode(string secret, string code, DateTime utcNow, int digits, int stepSeconds, int allowedDriftWindows)
     {
-        if (string.IsNullOrWhiteSpace(secret) || string.IsNullOrWhiteSpace(code))
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            _logger.LogWarning("TOTP validation skipped: secret is null or empty.");
             return false;
+        }
 
-        var normalized = code.Trim();
+        var normalized = code?.Trim() ?? string.Empty;
         if (normalized.Length != digits || !normalized.All(char.IsDigit))
+        {
+            _logger.LogDebug("TOTP code rejected: invalid format (length={Length}, expected {Digits})", normalized.Length, digits);
             return false;
-
-        var key = Base32Decode(secret);
-        var nowCounter = (long)Math.Floor((utcNow - DateTime.UnixEpoch).TotalSeconds / stepSeconds);
-
-        for (var offset = -allowedDriftWindows; offset <= allowedDriftWindows; offset++)
-        {
-            var counter = nowCounter + offset;
-            var expected = GenerateCode(key, counter, digits);
-            if (CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(expected), Encoding.ASCII.GetBytes(normalized)))
-                return true;
         }
 
-        return false;
-    }
-
-    private static string GenerateCode(byte[] key, long counter, int digits)
-    {
-        Span<byte> counterBytes = stackalloc byte[8];
-        for (var i = 7; i >= 0; i--)
+        try
         {
-            counterBytes[i] = (byte)(counter & 0xff);
-            counter >>= 8;
+            var secretBytes = Base32Encoding.ToBytes(secret);
+            var totp = new Totp(secretBytes, step: stepSeconds, totpSize: digits);
+
+            // VerifyTotp returns true if the provided code matches
+            // within the verification window (allowedDrift on each side).
+            var isValid = totp.VerifyTotp(
+                normalized,
+                out long timeStepMatched,
+                new VerificationWindow(allowedDriftWindows, allowedDriftWindows));
+
+            _logger.LogDebug(
+                "TOTP validation result: {Result}, timeStepMatched={TimeStep}, drift={Drift}",
+                isValid, timeStepMatched, allowedDriftWindows);
+
+            return isValid;
         }
-
-        using var hmac = new HMACSHA1(key);
-        var hash = hmac.ComputeHash(counterBytes.ToArray());
-        var offset = hash[^1] & 0x0f;
-        var binaryCode = ((hash[offset] & 0x7f) << 24)
-                         | (hash[offset + 1] << 16)
-                         | (hash[offset + 2] << 8)
-                         | hash[offset + 3];
-        var mod = (int)Math.Pow(10, digits);
-        var code = binaryCode % mod;
-        return code.ToString(new string('0', digits));
-    }
-
-    private static string Base32Encode(byte[] data)
-    {
-        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-        var output = new StringBuilder((data.Length * 8 + 4) / 5);
-
-        var bitBuffer = 0;
-        var bitsInBuffer = 0;
-        foreach (var b in data)
+        catch (Exception ex)
         {
-            bitBuffer = (bitBuffer << 8) | b;
-            bitsInBuffer += 8;
-            while (bitsInBuffer >= 5)
-            {
-                var index = (bitBuffer >> (bitsInBuffer - 5)) & 0x1f;
-                output.Append(alphabet[index]);
-                bitsInBuffer -= 5;
-            }
+            _logger.LogWarning(ex, "TOTP validation failed with exception.");
+            return false;
         }
-
-        if (bitsInBuffer > 0)
-        {
-            var index = (bitBuffer << (5 - bitsInBuffer)) & 0x1f;
-            output.Append(alphabet[index]);
-        }
-
-        return output.ToString();
-    }
-
-    private static byte[] Base32Decode(string input)
-    {
-        var clean = input.Trim().TrimEnd('=').ToUpperInvariant();
-        var bytes = new List<byte>(clean.Length * 5 / 8);
-
-        var bitBuffer = 0;
-        var bitsInBuffer = 0;
-        foreach (var ch in clean)
-        {
-            var val = ch switch
-            {
-                >= 'A' and <= 'Z' => ch - 'A',
-                >= '2' and <= '7' => ch - '2' + 26,
-                _ => -1
-            };
-
-            if (val < 0)
-                continue;
-
-            bitBuffer = (bitBuffer << 5) | val;
-            bitsInBuffer += 5;
-
-            if (bitsInBuffer >= 8)
-            {
-                bytes.Add((byte)((bitBuffer >> (bitsInBuffer - 8)) & 0xff));
-                bitsInBuffer -= 8;
-            }
-        }
-
-        return bytes.ToArray();
     }
 }
