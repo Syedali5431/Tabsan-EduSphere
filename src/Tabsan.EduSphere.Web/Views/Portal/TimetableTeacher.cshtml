@@ -45,6 +45,19 @@ else
                         </select>
                     </div>
                 }
+                else if (User.IsInRole("Admin"))
+                {
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Campus</label>
+                        <select class="form-select" name="campusId">
+                            <option value="">All campuses</option>
+                            @foreach (var c in Model.Campuses)
+                            {
+                                <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
+                            }
+                        </select>
+                    </div>
+                }
 
                 @if (canManage)
                 {
