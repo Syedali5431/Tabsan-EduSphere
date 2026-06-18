@@ -58,4 +58,10 @@ public interface ITimetableRepository
     /// Used to detect timetable clashes before enrollment.
     /// </summary>
     Task<IList<TimetableEntry>> GetEntriesByCourseOfferingAsync(Guid courseId, Guid semesterId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns all published timetables for a department at a specific semester number.
+    /// Used to deactivate old timetables when a student is promoted.
+    /// </summary>
+    Task<IList<Timetable>> GetPublishedByDepartmentAndSemesterAsync(Guid departmentId, int semesterNumber, CancellationToken ct = default);
 }

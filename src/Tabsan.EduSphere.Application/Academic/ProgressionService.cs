@@ -22,15 +22,18 @@ public class ProgressionService : IProgressionService
     private readonly IStudentProfileRepository _studentRepo;
     private readonly IInstitutionGradingProfileRepository _gradingRepo;
     private readonly IResultRepository? _resultRepo;
+    private readonly ITimetableRepository? _timetableRepo;
 
     public ProgressionService(
         IStudentProfileRepository studentRepo,
         IInstitutionGradingProfileRepository gradingRepo,
-        IResultRepository? resultRepo = null)
+        IResultRepository? resultRepo = null,
+        ITimetableRepository? timetableRepo = null)
     {
         _studentRepo = studentRepo;
         _gradingRepo = gradingRepo;
         _resultRepo = resultRepo;
+        _timetableRepo = timetableRepo;
     }
 
     public async Task<ProgressionDecision> EvaluateAsync(
@@ -62,11 +65,27 @@ public class ProgressionService : IProgressionService
                 $"Student {request.StudentProfileId} does not meet the progression criteria. {decision.Remarks}");
 
         var student = await _studentRepo.GetByIdAsync(request.StudentProfileId, ct)!;
-        student!.AdvanceSemester();
+        var oldSemesterNumber = student!.CurrentSemesterNumber;
+        var studentDepartmentId = student.DepartmentId;
+
+        student.AdvanceSemester();
         if (request.InstitutionType == InstitutionType.College && student.Status != StudentStatus.Graduated)
             student.AdvanceSemester();
         _studentRepo.Update(student);
         await _studentRepo.SaveChangesAsync(ct);
+
+        // Deactivate the student's old timetable(s) so they are hidden after promotion.
+        if (_timetableRepo is not null)
+        {
+            var oldTimetables = await _timetableRepo.GetPublishedByDepartmentAndSemesterAsync(studentDepartmentId, oldSemesterNumber, ct);
+            foreach (var timetable in oldTimetables)
+            {
+                timetable.Unpublish();
+                _timetableRepo.Update(timetable);
+            }
+            if (oldTimetables.Count > 0)
+                await _timetableRepo.SaveChangesAsync(ct);
+        }
 
         // Return a refreshed decision reflecting the new semester number.
         var profile = await _gradingRepo.GetByTypeAsync(request.InstitutionType, ct);

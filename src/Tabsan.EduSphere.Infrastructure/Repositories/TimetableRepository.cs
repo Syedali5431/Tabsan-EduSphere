@@ -100,6 +100,11 @@ public class TimetableRepository : ITimetableRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IList<Timetable>> GetPublishedByDepartmentAndSemesterAsync(Guid departmentId, int semesterNumber, CancellationToken ct = default)
+        => await _db.Timetables
+              .Where(t => t.DepartmentId == departmentId && t.SemesterNumber == semesterNumber && t.IsPublished)
+              .ToListAsync(ct);
+
     // Final-Touches Phase 15 Stage 15.2 — GetEntriesByCourseOfferingAsync: timetable clash detection
     /// <summary>
     /// Returns published timetable entries whose CourseId matches <paramref name="courseId"/>
