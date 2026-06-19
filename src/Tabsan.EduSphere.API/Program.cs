@@ -832,7 +832,7 @@ app.MapGet("/health/instance", () => Results.Ok(new
 })).AllowAnonymous();
 app.MapGet("/health/observability", (ObservabilityMetrics observabilityMetrics) => Results.Ok(observabilityMetrics.GetSnapshot())).AllowAnonymous();
 app.MapGet("/health/background-jobs", (
-    BackgroundJobHealthTracker backgroundJobHealthTracker,
+    [Microsoft.AspNetCore.Mvc.FromServices] BackgroundJobHealthTracker backgroundJobHealthTracker,
     IOptions<BackgroundJobReliabilityOptions> reliabilityOptions) => Results.Ok(new
 {
     reliability = new

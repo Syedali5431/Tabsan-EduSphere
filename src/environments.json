@@ -9,8 +9,8 @@
       "DatabaseConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
     "Production": {
-      "AppConnectionString": "https://api.example.com",
-      "DatabaseConnectionString": "Server=tcp:cloud-sql.example.com,1433;Database=TabsanEduSphereDb;Encrypt=True;TrustServerCertificate=False;"
+      "AppConnectionString": "http://localhost:5181",
+      "DatabaseConnectionString": "Server=localhost;Database=Tabsan-EduSphere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
     "Cloud": {
       "AppConnectionString": "https://api.example.com",

@@ -10,26 +10,20 @@
   <!-- Suppress disassembly -->
   <Var name="SuppressIldasm" value="true" />
 
-  <!-- Domain layer: full rename safe (no DI/routing deps) -->
+  <!-- Domain layer: NO rename (EF Core entity mapping requires original type/member names) -->
   <Module file="$(InPath)\Tabsan.EduSphere.Domain.dll">
-    <Var name="RenameProperties" value="true" />
-    <Var name="RenameEvents" value="true" />
-    <Var name="RenameFields" value="true" />
-    <Var name="KeepPublicApi" value="false" />
     <Var name="HidePrivateApi" value="true" />
-    <Var name="UseUnicodeNames" value="true" />
     <Var name="OptimizeMethods" value="true" />
   </Module>
 
-  <!-- Application/Infra/API/Web/Jobs: conservative (DI+routing) -->
+  <!-- Application layer: NO rename (services use DI, EF configs are here too) -->
   <Module file="$(InPath)\Tabsan.EduSphere.Application.dll">
-    <Var name="RenameFields" value="true" />
     <Var name="HidePrivateApi" value="true" />
     <Var name="OptimizeMethods" value="true" />
   </Module>
 
+  <!-- Infrastructure: NO rename (EF Core entity configurations + repositories) -->
   <Module file="$(InPath)\Tabsan.EduSphere.Infrastructure.dll">
-    <Var name="RenameFields" value="true" />
     <Var name="HidePrivateApi" value="true" />
     <Var name="OptimizeMethods" value="true" />
   </Module>
