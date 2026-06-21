@@ -275,17 +275,17 @@
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
 
----
+### What's Included at No Extra Cost
 
-## Plan Comparison Snapshot
+The following are provided **free of charge** with every plan:
 
-| Plan | Price (AUD/user/year) | Best For |
-|------|----------------------|----------|
-| Foundation Lite | $1.50 | Schools starting digitization |
-| Growth | $3.00 | Mid-scale institutions |
-| Advanced | $4.00 | Data-driven institutions |
-| **Enterprise** ⬤ | **$5.00** | Multi-campus institutions |
-| Ultimate | $10.00 | Large universities & govt bodies |
+| Service | Details |
+|---------|---------|
+| **System Installation** | Full platform setup and initial configuration |
+| **Upcoming Updates Release** | All new version releases and feature updates |
+| **Upcoming System Updates** | Security patches, performance improvements, and platform enhancements |
+| **Future Features** | Access to all upcoming features as they become available |
+| **Support** | Standard support tier included at no additional cost |
 
 ---
 

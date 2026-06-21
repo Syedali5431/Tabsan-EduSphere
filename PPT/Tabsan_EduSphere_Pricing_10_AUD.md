@@ -278,17 +278,17 @@
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
 
----
+### What's Included at No Extra Cost
 
-## Pricing Comparison (All Tiers)
+The following are provided **free of charge** with every plan:
 
-| Plan | Price (AUD/user/year) | Best For | Key Differentiator |
-|------|----------------------|----------|-------------------|
-| **Foundation Lite** | $1.50 | Schools starting digitization | Core academic essentials |
-| **Growth** | $3.00 | Mid-scale institutions | LMS + collaboration tools |
-| **Advanced** | $4.00 | Data-driven institutions | Analytics + parent engagement |
-| **Enterprise** | $5.00 | Multi-campus institutions | Full platform + governance |
-| **Ultimate** | $10.00 | Large universities & govt bodies | Dedicated infra + AI + white-label |
+| Service | Details |
+|---------|---------|
+| **System Installation** | Full platform setup and initial configuration |
+| **Upcoming Updates Release** | All new version releases and feature updates |
+| **Upcoming System Updates** | Security patches, performance improvements, and platform enhancements |
+| **Future Features** | Access to all upcoming features as they become available |
+| **Support** | Standard support tier included at no additional cost |
 
 ---
 
