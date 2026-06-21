@@ -27,6 +27,8 @@ User accounts with role, tenant, campus, and institution scoping.
 | FullName | nvarchar(200) | Full display name |
 | FatherName | nvarchar(200) | Father's name |
 | Address | nvarchar(500) | Physical address |
+| PhoneNumber | nvarchar(32) | Contact phone number |
+| ProfilePicturePath | nvarchar(500) | Profile picture relative path (e.g., uploads/profile-pictures/{guid}.jpg) |
 | PasswordHash | nvarchar(512) | Argon2id password hash |
 | RoleId | int (FKâ†’roles.Id) | Assigned role |
 | DepartmentId | uniqueidentifier (FKâ†’departments.Id) | Primary department |
@@ -1861,15 +1863,15 @@ None. The schema uses no computed or persisted computed columns.
 
 ## MFA / Two-Factor Authentication Columns (2026-06-18)
 
-**User table** (users) — RFC 6238 TOTP via Otp.NET 1.4.1:
-- MfaIsEnabled BIT NOT NULL DEFAULT 0 — Whether MFA is active for this user
-- MfaTotpSecret NVARCHAR(200) NULL — Base32-encoded TOTP secret key
-- MfaRecoveryCodesHashJson NVARCHAR(MAX) NULL — JSON array of SHA-256 hashed recovery codes
-- LastPasswordChangedAt DATETIME2 NULL — Password ageing policy (ISO 27001 A.9.4.3)
-- ConsentToMonitoring BIT NULL — GDPR monitoring consent (ISO 27001 A.18.1.4)
-- DataRetentionDate DATETIME2 NULL — Data lifecycle management
+**User table** (users) ï¿½ RFC 6238 TOTP via Otp.NET 1.4.1:
+- MfaIsEnabled BIT NOT NULL DEFAULT 0 ï¿½ Whether MFA is active for this user
+- MfaTotpSecret NVARCHAR(200) NULL ï¿½ Base32-encoded TOTP secret key
+- MfaRecoveryCodesHashJson NVARCHAR(MAX) NULL ï¿½ JSON array of SHA-256 hashed recovery codes
+- LastPasswordChangedAt DATETIME2 NULL ï¿½ Password ageing policy (ISO 27001 A.9.4.3)
+- ConsentToMonitoring BIT NULL ï¿½ GDPR monitoring consent (ISO 27001 A.18.1.4)
+- DataRetentionDate DATETIME2 NULL ï¿½ Data lifecycle management
 
 **Supporting entities:**
-- login_activity_logs — Immutable login attempt records (success/failure/risk) — ISO 27001 A.12.4.1
-- udit_logs — Enhanced with CorrelationId, Severity, EventCategory — ISO 27001 A.12.4.1
+- login_activity_logs ï¿½ Immutable login attempt records (success/failure/risk) ï¿½ ISO 27001 A.12.4.1
+- udit_logs ï¿½ Enhanced with CorrelationId, Severity, EventCategory ï¿½ ISO 27001 A.12.4.1
 

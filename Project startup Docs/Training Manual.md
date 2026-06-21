@@ -1,6 +1,19 @@
 
 (Moved to User Guide/Training Manual.md. This file is deprecated.)
 
+Training synchronization update (22 June 2026):
+- Add trainer walkthrough for profile picture upload:
+	- User Settings page has new Profile Picture card with preview.
+	- Accepted formats: JPG, JPEG, PNG (max 2 MB).
+	- Client-side and server-side validation for file type and size.
+	- Uploaded pictures display as circular avatar in navbar header next to username.
+	- Users without a picture see their initial letter in a colored circle as fallback.
+- Add trainer coverage for graduated demo students:
+	- 5 graduated students (bscs.grad, bba.grad, spa.grad, sch.grad, col.grad) with complete marks.
+	- Each has mid+final exam results, quiz scores, and graduation applications.
+	- BSCS and BBA graduates have FYP projects with marks and GPA.
+	- These students are ready for certificate generation demos.
+
 Training synchronization update (15 June 2026):
 - Add trainer coverage for professional certificate generation across all 4 types:
 	- Degree: University-only, double navy border, gold badge, signature blocks.

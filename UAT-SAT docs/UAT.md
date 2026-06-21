@@ -2,6 +2,29 @@
 
 # User Acceptance Testing — Tabsan EduSphere
 
+## Profile Picture Upload — UAT Test Cases (2026-06-22)
+
+### Upload Flow
+| # | Test | Expected Result |
+|---|------|----------------|
+| 1 | Navigate to User Settings page | Page loads with profile picture section |
+| 2 | No file selected + click Upload | Error: No file selected |
+| 3 | Select a .jpg file (under 2 MB) and upload | Profile picture updated, preview shown |
+| 4 | Select a .png file and upload | Profile picture updated |
+| 5 | Select a .gif or .bmp file | Error: Only JPG, JPEG, PNG allowed |
+| 6 | Select a file larger than 2 MB | Error: File size must be 2 MB or less |
+| 7 | Check navbar avatar after upload | Circular profile picture displayed before username |
+| 8 | Log out and log back in, check avatar | Profile picture persists (session-cached) |
+| 9 | Upload for another user (Admin) | Admin can update other user's profile picture |
+
+### Display Flow
+| # | Test | Expected Result |
+|---|------|----------------|
+| 10 | User with no profile picture | Initial letter displayed in colored circle |
+| 11 | User with profile picture | Circular image (30-40px) shown before username |
+| 12 | Broken image path | Falls back to initial letter (onerror handler) |
+| 13 | Click profile menu dropdown | User Settings link appears in menu |
+
 ## MFA (Two-Factor Authentication) — UAT Test Cases (2026-06-18)
 
 ### Setup Flow

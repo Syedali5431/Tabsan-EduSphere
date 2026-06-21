@@ -1,5 +1,19 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-22 Update — Profile Picture Upload & Graduated Demo Students
+### Plan sync
+- Profile picture upload feature: User entity extended with ProfilePicturePath (nvarchar 500), EF migration created.
+- Upload flow: PortalController.UploadProfilePicture validates file type (JPG/JPEG/PNG), size (2MB max), content type, and saves to wwwroot/uploads/profile-pictures with GUID-based names.
+- UI: _Layout.cshtml navbar avatar now displays circular profile image before username; falls back to initial letter via onerror handler. User Settings dropdown link added.
+- UserSettings.cshtml: Profile picture upload card with preview, file picker, client-side JS validation, and upload button.
+- CSS: .auth-avatar-img for object-fit cover circular images; flex-shrink:0 for alignment.
+- Graduated demo students: 5 students (BSCS/BBA/Spanish/School/College) with complete marks for certificate generation demos.
+- DB scripts: 01-Schema-Current.sql, 03-FullDummyData.sql, 05-PostDeployment-Checks.sql updated.
+
+### Validation sync
+- Build: 0 errors. Solution compiles cleanly.
+- Migration created: 20260621232659_AddUserProfilePicture.
+
 ## 2026-06-15 Update — Certificate Generation Professional Templates & Eligibility Fixes
 ### Plan sync
 - Certificate templates fully redesigned: professional DOCX with double borders, navy+gold brand colors, Georgia/Calibri fonts, signature blocks, footer.
@@ -5470,7 +5484,7 @@ A feature is complete only when:
 - Populated institution type in RenderAttendanceAsync/RenderResultsAsync from capability matrix.
 - Build verified: Web 0 errors.
 
-## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
+## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
 
 Two-Factor Authentication is fully implemented using RFC 6238 TOTP standard via Otp.NET library:
 - ITotpService (GenerateSecret, BuildProvisioningUri, ValidateCode) in Infrastructure/Auth/TotpService.cs

@@ -2,6 +2,21 @@
 
 # Security Acceptance Testing — Tabsan EduSphere
 
+## Profile Picture Upload & User Settings — SAT Test Results (2026-06-22)
+
+### Security Verification
+| # | Test | Result |
+|---|------|:---:|
+| 1 | Only JPG/JPEG/PNG files accepted | ✅ |
+| 2 | File size limited to 2 MB (server-side RequestSizeLimit) | ✅ |
+| 3 | Content type validated (image/jpeg, image/png only) | ✅ |
+| 4 | File extension validated against whitelist | ✅ |
+| 5 | Unique GUID-based file names prevent path traversal | ✅ |
+| 6 | Anti-forgery token required on upload | ✅ |
+| 7 | ProfilePicturePath stored as relative path (not absolute) | ✅ |
+| 8 | Uploads directory created on demand with safe path combining | ✅ |
+| 9 | Build: 0 errors | ✅ |
+
 ## MFA (Two-Factor Authentication) — SAT Test Results (2026-06-18)
 
 ### Security Verification

@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-22 Update - Profile Picture Upload (Schema Posture)
+- Implementation: added ProfilePicturePath (nvarchar 500, nullable) to users table. Stores relative path to profile picture (e.g., uploads/profile-pictures/{guid}.jpg).
+- Validation: EF migration 20260621232659_AddUserProfilePicture, additive-only. No breaking changes.
+
 ## 2026-06-04 Update - ISO Phase 10 Compliance Dashboard (Schema Posture)
 - Implementation: service-only — no schema changes. Compliance dashboard aggregates 8 tables across all phases into 7-section read-only response. All 10 ISO phases complete.
 - Validation: no EF migration needed.

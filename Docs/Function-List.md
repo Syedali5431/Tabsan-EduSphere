@@ -43,6 +43,11 @@
 | DataProtectionController | API: encrypt, decrypt, mask, classify endpoints | src/Tabsan.EduSphere.API/Controllers/DataProtectionController.cs |
 | User.ConsentToMonitoring | GDPR monitoring consent flag (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
 | User.DataRetentionDate | Data lifecycle retention date (Phase 5) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.ProfilePicturePath | Relative path to profile picture (nvarchar 500, nullable) | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| User.UpdateProfilePicturePath | Updates the profile picture path on the user entity | src/Tabsan.EduSphere.Domain/Identity/User.cs |
+| PortalController.UploadProfilePicture | POST /Portal/UploadProfilePicture — validates and saves profile picture to wwwroot | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| SessionIdentity.ProfilePicturePath | Cached profile picture path in session identity for navbar display | src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs |
+| UpdateUserSettingsRequest.ProfilePicturePath | DTO field for updating profile picture path via settings API | src/Tabsan.EduSphere.Application/DTOs/Auth/UserSettingsDtos.cs |
 | IComplianceDashboardService.GetDashboardAsync | Aggregates compliance posture across all ISO phases (7 sections) | src/Tabsan.EduSphere.Application/Interfaces/IComplianceDashboardService.cs |
 | ComplianceDashboardService | EF-based aggregation from 8 tables for compliance dashboard | src/Tabsan.EduSphere.Infrastructure/Compliance/ComplianceDashboardService.cs |
 | ComplianceDashboardController.GetDashboard | GET /api/v1/compliance/dashboard — full compliance overview | src/Tabsan.EduSphere.API/Controllers/ComplianceDashboardController.cs |

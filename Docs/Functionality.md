@@ -1,5 +1,22 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD026 MD032 MD041 MD060 -->
 
+## 2026-06-22 Update — Profile Picture Upload & Graduated Demo Students
+### Implementation sync
+- Users can upload a profile picture (JPG, JPEG, PNG, max 2MB) from the User Settings page.
+- ProfilePicturePath (nvarchar 500, nullable) added to users table via EF migration.
+- Files stored in wwwroot/uploads/profile-pictures with unique GUID-based names.
+- Navbar header avatar displays profile picture as circular image (30-40px); falls back to initial letter.
+- User Settings dropdown link added to profile menu in navbar.
+- Five graduated demo students added to 03-FullDummyData.sql (BSCS, BBA, Spanish, School, College) with:
+  - Mid-term and final exam results (ResultType = 'Mid' and 'Final')
+  - Quiz attempts with scores
+  - FYP projects with marks and GPA (BSCS/BBA only)
+  - Graduation applications (Status = Approved)
+- Grading rules: School/College use percentage (90+=A+, 80+=A, 70+=B, 60+=C, 50+=D, <50=F); University semester-based uses GPA.
+- Post-deployment checks updated: graduated student count, graduation applications, ProfilePicturePath column existence.
+### Validation sync
+- Build: 0 errors. All 5 graduated students have complete marks for certificate generation.
+
 ## 2026-06-18 Update — MFA TOTP Implementation (Otp.NET 1.4.1)
 ### Implementation sync
 - Replaced manual HMACSHA1 TOTP with Otp.NET 1.4.1. TotpService uses OtpNet.Totp.VerifyTotp() with VerificationWindow.

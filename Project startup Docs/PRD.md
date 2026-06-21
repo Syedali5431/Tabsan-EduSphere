@@ -1,5 +1,12 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-06-22 — Profile Picture Upload & Graduated Demo Students
+- Profile Picture: Users can upload JPG/JPEG/PNG (max 2MB) from User Settings. Stored in wwwroot/uploads/profile-pictures. Navbar displays circular avatar with fallback to initial letter.
+- User model: ProfilePicturePath column (nvarchar 500, nullable) added to users table.
+- Graduated demo students: 5 students added (BSCS, BBA, Spanish, School, College) with mid+final exam results, quiz scores, FYP marks (BSCS/BBA), and graduation applications for certificate generation testing.
+- Grading: School/College = percentage (A+/A/B/C/D/F); University semester-based = GPA.
+- DB scripts updated: 01-Schema-Current.sql, 03-FullDummyData.sql, 05-PostDeployment-Checks.sql.
+
 ### 2026-06-15 — Certificate Generation Professional Templates & Scoring Fixes
 - Certificate templates: Fully professional DOCX design with navy+gold brand colors, double page borders, Georgia/Calibri typography, signature blocks, and footer.
 - All 4 certificate types: Degree (University), Transcript, Completion Certificate (School/College), Report Card (School/College).
@@ -6225,7 +6232,7 @@ Completes parity and UX alignment across student/faculty/admin portal flows by a
 - Added dynamic period labels: "Semester" for University, "Class" for School/College.
 - Progressive disclosure: child filters disabled until parent selected; AJAX fetches filtered options from API.
 
-## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
+## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
 
 Two-Factor Authentication is fully implemented using RFC 6238 TOTP standard via Otp.NET library:
 - ITotpService (GenerateSecret, BuildProvisioningUri, ValidateCode) in Infrastructure/Auth/TotpService.cs

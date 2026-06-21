@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update — 2026-06-22 (Profile Picture Upload & Graduated Demo Students)
+### Module impact: User Settings, Portal Navigation, Demo Data
+- User Settings: New profile picture upload card with preview, validation, and upload button. Accepts JPG/JPEG/PNG up to 2 MB. Saves to wwwroot/uploads/profile-pictures.
+- Portal Navigation: Navbar header avatar now displays circular profile picture (30-40px) before username. Falls back to initial-letter circle when no picture set. User Settings link added to profile dropdown.
+- User entity: ProfilePicturePath column added to users table (nvarchar 500, nullable).
+- Demo Data: 5 graduated students added with mid+final exam results, quiz scores, FYP marks (BSCS/BBA), and graduation applications.
+- No schema breaking changes. All additive.
+### Validation: build passed; migration created; graduated students have complete marks.
+
 ## Execution Update — 2026-06-15 (Certificate Generation Professional Templates)
 ### Module impact: Certificate Generation, Degree-Transcript Pipeline
 - Certificate Generation: All 4 document types now use professional DOCX templates with navy+gold brand identity, double borders, signature blocks, and student info grids.
@@ -3484,7 +3493,7 @@ This contract enables auditability and deterministic behavior across UI, API, an
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
 
-## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
+## MFA Implementation (2026-06-18) � Otp.NET 1.4.1
 
 Two-Factor Authentication is fully implemented using RFC 6238 TOTP standard via Otp.NET library:
 - ITotpService (GenerateSecret, BuildProvisioningUri, ValidateCode) in Infrastructure/Auth/TotpService.cs

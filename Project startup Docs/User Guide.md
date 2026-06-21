@@ -1,6 +1,11 @@
 
 (Moved to User Guide/User Guide.md. This file is deprecated.)
 
+User guide synchronization update (22 June 2026):
+- Profile picture upload: From User Settings, users can upload a profile photo (JPG/JPEG/PNG, max 2 MB). The photo appears as a circular avatar in the top navigation bar next to the username. If no photo is set, the user's initial is shown in a colored circle.
+- User Settings link: The profile dropdown menu in the navbar now includes a direct link to User Settings for quick access.
+- Graduated demo students: Five pre-configured graduated students are available for certificate generation testing (bscs.grad, bba.grad, spa.grad, sch.grad, col.grad). Each has complete academic records including exam results, quiz scores, and graduation applications.
+
 User guide synchronization update (15 June 2026):
 - Certificate generation now produces professional-looking documents:
 	- Degree: Elegant double-border layout with navy+gold branding.
