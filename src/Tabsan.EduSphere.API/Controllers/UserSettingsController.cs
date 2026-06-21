@@ -223,6 +223,9 @@ public class UserSettingsController : ControllerBase
         if (request.FatherName is not null)
             user.UpdateFatherName(fatherName);
 
+        if (request.ProfilePicturePath is not null)
+            user.UpdateProfilePicturePath(request.ProfilePicturePath);
+
         user.UpdateEmail(email);
         user.UpdatePhoneNumber(phone);
         user.UpdateAddress(address);
@@ -294,6 +297,7 @@ public class UserSettingsController : ControllerBase
             user.FatherName,
             user.PhoneNumber,
             user.Address,
+            user.ProfilePicturePath,
             user.IsActive,
             user.TenantId,
             user.CampusId,

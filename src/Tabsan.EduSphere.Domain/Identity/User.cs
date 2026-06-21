@@ -36,6 +36,9 @@ public class User : AuditableEntity
     /// <summary>Optional postal address for contact and correspondence.</summary>
     public string? Address { get; private set; }
 
+    /// <summary>Optional relative path to the user's profile picture (e.g. uploads/profile-pictures/abc123.jpg).</summary>
+    public string? ProfilePicturePath { get; private set; }
+
     /// <summary>BCrypt / ASP.NET Identity hashed password. Never stored in plain text.</summary>
     public string PasswordHash { get; private set; } = default!;
 
@@ -259,6 +262,13 @@ public class User : AuditableEntity
     public void UpdateAddress(string? address)
     {
         Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
+        Touch();
+    }
+
+    /// <summary>Updates the user's profile picture path. Pass null to clear it.</summary>
+    public void UpdateProfilePicturePath(string? profilePicturePath)
+    {
+        ProfilePicturePath = string.IsNullOrWhiteSpace(profilePicturePath) ? null : profilePicturePath.Trim();
         Touch();
     }
 

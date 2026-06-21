@@ -1119,6 +1119,17 @@ textarea:focus,
   background: linear-gradient(135deg, var(--color-primary-700), var(--color-accent));
   color: var(--color-white);
   font-weight: 800;
+  flex-shrink: 0;
+}
+
+.auth-avatar-img {
+  object-fit: cover;
+  background: none;
+  color: transparent;
+}
+
+.auth-avatar-fallback {
+  /* Shown when the profile image fails to load (onerror fallback) */
 }
 
 .auth-chip-copy {

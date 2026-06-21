@@ -9618,6 +9618,10 @@ public class PortalController : Controller
                 model.Form.FatherName = model.SelectedUser.FatherName;
                 model.Form.PhoneNumber = model.SelectedUser.PhoneNumber;
                 model.Form.Address = model.SelectedUser.Address;
+
+                // Cache profile picture path in session for navbar display
+                if (!string.IsNullOrWhiteSpace(model.SelectedUser.ProfilePicturePath))
+                    HttpContext.Session.SetString("ProfilePicturePath", model.SelectedUser.ProfilePicturePath);
             }
         }
         catch (Exception ex)
@@ -9652,6 +9656,97 @@ public class PortalController : Controller
         catch (Exception ex)
         {
             TempData["PortalMessage"] = $"Error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+    }
+
+    /// <summary>
+    /// Handles profile picture upload from the User Settings page.
+    /// Validates file type (JPG, JPEG, PNG) and size (max 2 MB).
+    /// Saves to wwwroot/uploads/profile-pictures with a unique file name.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(2_097_152)]
+    public async Task<IActionResult> UploadProfilePicture(IFormFile? profilePicture, Guid? selectedUserId, Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? courseId, string? search, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction(nameof(Dashboard));
+
+        if (profilePicture is null || profilePicture.Length == 0)
+        {
+            TempData["PortalMessage"] = "Error: No file selected.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png" };
+        var extension = Path.GetExtension(profilePicture.FileName);
+        if (!allowedExtensions.Contains(extension))
+        {
+            TempData["PortalMessage"] = "Error: Only JPG, JPEG, and PNG files are allowed.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        const long maxSize = 2_097_152;
+        if (profilePicture.Length > maxSize)
+        {
+            TempData["PortalMessage"] = "Error: File size must be 2 MB or less.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        var allowedContentTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg", "image/png"
+        };
+        if (!allowedContentTypes.Contains(profilePicture.ContentType))
+        {
+            TempData["PortalMessage"] = "Error: Invalid file type. Only JPG, JPEG, and PNG images are accepted.";
+            return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });
+        }
+
+        try
+        {
+            var uniqueFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            var uploadsDir = Path.Combine(_environment.WebRootPath, "uploads", "profile-pictures");
+            Directory.CreateDirectory(uploadsDir);
+
+            var filePath = Path.Combine(uploadsDir, uniqueFileName);
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await profilePicture.CopyToAsync(stream, ct);
+            }
+
+            var relativePath = $"uploads/profile-pictures/{uniqueFileName}";
+
+            // Update user's profile picture path via existing settings API
+            var identity = _api.GetSessionIdentity();
+            if (selectedUserId.HasValue && (identity?.IsAdmin == true || identity?.IsSuperAdmin == true))
+            {
+                // Admin updating another user: fetch current settings and merge
+                var existing = await _api.GetUserSettingsByIdAsync(selectedUserId.Value, ct);
+                await _api.UpdateUserSettingsAsync(selectedUserId.Value,
+                    new UpdateUserSettingsRequest(
+                        existing?.Email, existing?.FullName, existing?.FatherName,
+                        existing?.PhoneNumber, existing?.Address, relativePath), ct);
+            }
+            else
+            {
+                // Self-update: fetch current settings and merge
+                var existing = await _api.GetMyUserSettingsAsync(ct);
+                await _api.UpdateMyUserSettingsAsync(
+                    new UpdateUserSettingsRequest(
+                        existing?.Email, null, null,
+                        existing?.PhoneNumber, existing?.Address, relativePath), ct);
+            }
+
+            HttpContext.Session.SetString("ProfilePicturePath", relativePath);
+
+            TempData["PortalMessage"] = "Profile picture updated successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["PortalMessage"] = $"Error uploading profile picture: {ex.Message}";
         }
 
         return RedirectToAction(nameof(UserSettings), new { selectedUserId, tenantId, campusId, departmentId, courseId, search });

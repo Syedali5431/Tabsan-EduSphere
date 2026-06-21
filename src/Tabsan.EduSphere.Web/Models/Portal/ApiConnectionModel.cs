@@ -256,6 +256,7 @@ public class SessionIdentity
     public Guid? TenantId { get; set; }
     public Guid? CampusId { get; set; }
     public bool MustChangePassword { get; set; }
+    public string? ProfilePicturePath { get; set; }
 
     public bool IsAdmin => Roles.Contains("Admin") || Roles.Contains("SuperAdmin");
     public bool IsSuperAdmin => Roles.Contains("SuperAdmin");
@@ -280,6 +281,7 @@ public class UserSettingsUserItem
     public string? FatherName { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Address { get; set; }
+    public string? ProfilePicturePath { get; set; }
     public bool IsActive { get; set; }
     public Guid? TenantId { get; set; }
     public Guid? CampusId { get; set; }

@@ -2613,6 +2613,7 @@ public class EduApiClient : IEduApiClient
         public string? FatherName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Address { get; set; }
+        public string? ProfilePicturePath { get; set; }
         public bool IsActive { get; set; }
         public Guid? TenantId { get; set; }
         public Guid? CampusId { get; set; }
@@ -2647,6 +2648,7 @@ public class EduApiClient : IEduApiClient
         FatherName = item.FatherName,
         PhoneNumber = item.PhoneNumber,
         Address = item.Address,
+        ProfilePicturePath = item.ProfilePicturePath,
         IsActive = item.IsActive,
         TenantId = item.TenantId,
         CampusId = item.CampusId,

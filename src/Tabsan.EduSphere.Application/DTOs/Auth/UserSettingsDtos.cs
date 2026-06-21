@@ -11,6 +11,7 @@ public sealed record UserSettingsUserDto(
     string? FatherName,
     string? PhoneNumber,
     string? Address,
+    string? ProfilePicturePath,
     bool IsActive,
     Guid? TenantId,
     Guid? CampusId,
@@ -35,7 +36,10 @@ public sealed record UpdateUserSettingsRequest(
     string? PhoneNumber,
 
     [property: StringLength(500)]
-    string? Address);
+    string? Address,
+
+    [property: StringLength(500)]
+    string? ProfilePicturePath = null);
 
 public sealed record ChangeUserPasswordRequest(
     [property: Required]

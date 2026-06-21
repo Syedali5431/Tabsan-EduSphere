@@ -369,6 +369,56 @@
                                 </div>
                             </form>
 
+                            @* ── Profile Picture Upload ── *@
+                            <div class="panel-card card mt-4 border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <div class="small text-uppercase text-muted">Photo</div>
+                                            <div class="fw-semibold">Profile Picture</div>
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-auto">
+                                            @if (!string.IsNullOrWhiteSpace(selectedUser.ProfilePicturePath))
+                                            {
+                                                <img src="~/@selectedUser.ProfilePicturePath" alt="Profile picture" class="profile-picture-preview"
+                                                     style="width:80px;height:80px;border-radius:999px;object-fit:cover;border:2px solid var(--accent-soft, rgba(29,78,216,0.15));" />
+                                            }
+                                            else
+                                            {
+                                                <div class="profile-picture-placeholder"
+                                                     style="width:80px;height:80px;border-radius:999px;background:linear-gradient(135deg, #1d4ed8, #0f766e);color:#fff;display:grid;place-items:center;font-size:1.6rem;font-weight:800;">
+                                                    @(selectedUser.Username?[..1].ToUpperInvariant() ?? "?")
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="col">
+                                            <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="selectedUserId" value="@selectedUser.Id" />
+                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                                                <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                                                <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
+                                                <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                                                <div class="mb-2">
+                                                    <input type="file" name="profilePicture" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                           class="form-control form-control-sm" style="max-width:320px;"
+                                                           onchange="validateProfilePicture(this)" />
+                                                    <div class="form-text">JPG, JPEG, or PNG. Max 2 MB.</div>
+                                                    <div id="profilePictureError" class="invalid-feedback" style="display:none;"></div>
+                                                </div>
+                                                <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-upload"></i> Upload Photo
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             @if (!Model.CanManageUsers || Model.CurrentUserId == selectedUser.Id)
                             {
                                 <div class="panel-card card mt-4 border">
@@ -417,3 +467,37 @@
         </div>
     }
 </div>
+
+<script>
+    function validateProfilePicture(input) {
+        var errorEl = document.getElementById('profilePictureError');
+        errorEl.style.display = 'none';
+        input.classList.remove('is-invalid');
+
+        if (!input.files || input.files.length === 0) return;
+
+        var file = input.files[0];
+        var allowedTypes = ['image/jpeg', 'image/png'];
+        var allowedExtensions = ['.jpg', '.jpeg', '.png'];
+        var maxSize = 2 * 1024 * 1024; // 2 MB
+
+        var fileName = file.name.toLowerCase();
+        var ext = '.' + fileName.split('.').pop();
+
+        if (!allowedTypes.includes(file.type) || !allowedExtensions.some(function(e) { return fileName.endsWith(e); })) {
+            errorEl.textContent = 'Only JPG, JPEG, and PNG files are allowed.';
+            errorEl.style.display = 'block';
+            input.classList.add('is-invalid');
+            input.value = '';
+            return;
+        }
+
+        if (file.size > maxSize) {
+            errorEl.textContent = 'File size must be 2 MB or less.';
+            errorEl.style.display = 'block';
+            input.classList.add('is-invalid');
+            input.value = '';
+            return;
+        }
+    }
+</script>

@@ -97,6 +97,10 @@
     var displayName = sessionId?.UserName ?? (aspNetAuth ? principal!.Identity!.Name : null) ?? "Guest";
     var displayInitial = string.IsNullOrWhiteSpace(displayName) ? "G" : displayName[..1].ToUpperInvariant();
 
+    // Resolve profile picture path (session → identity → null)
+    var profilePicturePath = Context.Session.GetString("ProfilePicturePath")
+                          ?? sessionId?.ProfilePicturePath;
+
     const string SidebarCacheKey = "VisibleSidebarMenusCache";
 
     // Resolve visible sidebar menu structure from API (role + status aware).
@@ -858,7 +862,15 @@
                     {
                         <details class="profile-menu">
                             <summary class="auth-chip" aria-label="Open profile menu">
-                                <div class="auth-avatar">@displayInitial</div>
+                                @if (!string.IsNullOrWhiteSpace(profilePicturePath))
+                                {
+                                    <img src="~/@profilePicturePath" alt="@displayName" class="auth-avatar auth-avatar-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+                                    <div class="auth-avatar auth-avatar-fallback" style="display:none;">@displayInitial</div>
+                                }
+                                else
+                                {
+                                    <div class="auth-avatar">@displayInitial</div>
+                                }
                                 <div class="auth-chip-copy">
                                     <span class="auth-name">@displayName</span>
                                     @if (sessionId?.Roles.Count > 0)
@@ -879,6 +891,7 @@
                                     <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">Open Dashboard</a>
                                 }
                                 <a asp-controller="Portal" asp-action="Notifications" class="profile-menu-link">View Notifications</a>
+                                <a asp-controller="Portal" asp-action="UserSettings" class="profile-menu-link">User Settings</a>
                                 <a asp-controller="Portal" asp-action="TwoFactorSettings" class="profile-menu-link">Two-Factor Authentication</a>
                                 @if (isSuperAdmin)
                                 {

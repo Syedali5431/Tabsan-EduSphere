@@ -45,6 +45,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .HasMaxLength(500)
                .IsRequired(false);
 
+        builder.Property(u => u.ProfilePicturePath)
+               .HasMaxLength(500)
+               .IsRequired(false);
+
         builder.Property(u => u.TenantId)
                .IsRequired(false);
 
