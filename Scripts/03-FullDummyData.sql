@@ -389,10 +389,14 @@ BEGIN
 END
 CLOSE curBq; DEALLOCATE curBq;
 
--- FYP for BSCS grad
+-- FYP for BSCS grad (with marks if columns exist, else without)
 SET @fyid=NEWID();
-INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
-VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,88.0,100.0,3.8,@Now);
+IF COL_LENGTH('fyp_projects', 'FypMarks') IS NOT NULL
+    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
+    VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,88.0,100.0,3.8,@Now);
+ELSE
+    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt])
+    VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,@Now);
 INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt])
 VALUES(NEWID(),@fyid,DATEADD(DAY,-90,@Now),N'Room 301',N'Completed',@fUniIT1,@Now);
 
@@ -439,10 +443,14 @@ BEGIN
 END
 CLOSE curBbaQ; DEALLOCATE curBbaQ;
 
--- FYP BBA
+-- FYP BBA (with marks if columns exist, else without)
 SET @fyid=NEWID();
-INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
-VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,85.0,100.0,3.5,@Now);
+IF COL_LENGTH('fyp_projects', 'FypMarks') IS NOT NULL
+    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
+    VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,85.0,100.0,3.5,@Now);
+ELSE
+    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt])
+    VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,@Now);
 INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt])
 VALUES(NEWID(),@fyid,DATEADD(DAY,-90,@Now),N'Room 202',N'Completed',@fUniBUS1,@Now);
 
