@@ -6299,3 +6299,26 @@ GO
 
 COMMIT;
 GO
+
+-- ==============================================================================
+-- Migration: 20260621232659_AddUserProfilePicture
+-- Column:   [users].[ProfilePicturePath] nvarchar(500) NULL
+-- ==============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260621232659_AddUserProfilePicture'
+)
+BEGIN
+    IF COL_LENGTH('users', 'ProfilePicturePath') IS NULL
+    BEGIN
+        ALTER TABLE [users] ADD [ProfilePicturePath] nvarchar(500) NULL;
+    END;
+END;
+GO
+
+COMMIT;
+GO

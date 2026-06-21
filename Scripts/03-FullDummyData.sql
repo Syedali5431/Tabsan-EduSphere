@@ -331,15 +331,244 @@ SET @i=11; WHILE @i<=12 BEGIN SET @ttid=NEWID(); INSERT INTO [timetables]([Id],[
 PRINT 'Timetables done.';
 
 -- ═══════════════════════════════════════════════════════════════════
--- 13. VERSION
+-- 13. GRADUATED STUDENTS (1 per program with complete marks)
+--     Purpose: enable certificate generation for demos.
+--     Grading rules:
+--       School & College: 90+ = A+, 80+ = A, 70+ = B, 60+ = C, 50+ = D, <50 = F
+--       University semester-based (BSCS/BBA): GPA scale (4.0 base)
+--       University non-semester (Spanish): percentage with letter grades
 -- ═══════════════════════════════════════════════════════════════════
-UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.0',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
+PRINT 'Creating graduated students...';
+DECLARE @gid UNIQUEIDENTIFIER, @gpid UNIQUEIDENTIFIER, @gidx INT=0;
+
+-- Helper: percentage → letter grade
+DECLARE @gradeFn TABLE (MinPct INT, Letter NVARCHAR(5));
+INSERT INTO @gradeFn VALUES (90,N'A+'),(80,N'A'),(70,N'B'),(60,N'C'),(50,N'D'),(0,N'F');
+
+-- ===== 13a. BSCS Graduate (completed all 8 semesters) =====
+SET @gid=NEWID(); SET @gpid=NEWID();
+INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+VALUES(@gid,N'bscs.grad',N'bscs.grad@tabsan.edu',N'BSCS Graduate Demo',@DefPwd,@RS,@D_IT,1,0,@Now,@T_Uni,@C_Uni,0);
+INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted])
+VALUES(@gpid,@gid,N'BSCS-GRAD-01',@P_BSCS,@D_IT,'2018-09-01',3.75,3.75,8,3,@Now,0); -- Status 3 = Graduated
+
+-- Enroll BSCS grad in ALL 8 semesters
+INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_BSCS;
+
+-- BSCS grad results: GPA-based (marks between 75-98, giving strong GPA)
+DECLARE @bresOff UNIQUEIDENTIFIER, @bmarks DECIMAL(8,2);
+DECLARE curBg CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_BSCS;
+OPEN curBg; FETCH NEXT FROM curBg INTO @bresOff;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bmarks=75+ABS(CHECKSUM(NEWID()))%24;
+    -- Mid-term (weighted ~30%)
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@bresOff,N'Mid',ROUND(@bmarks*0.30,2),30.0,1,@Now,@fUniIT1,@Now);
+    -- Final exam (weighted ~70%)
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@bresOff,N'Final',ROUND(@bmarks*0.70,2),70.0,1,@Now,@fUniIT1,@Now);
+    FETCH NEXT FROM curBg INTO @bresOff;
+END
+CLOSE curBg; DEALLOCATE curBg;
+
+-- Quiz attempts for BSCS grad
+DECLARE @bquizId UNIQUEIDENTIFIER, @bqScore DECIMAL(10,2);
+DECLARE curBq CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_BSCS;
+OPEN curBq; FETCH NEXT FROM curBq INTO @oid;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bquizId=NEWID();
+    INSERT INTO [quizzes]([Id],[CourseOfferingId],[Title],[Instructions],[MaxAttempts],[IsPublished],[IsActive],[CreatedByUserId],[CreatedAt])
+    VALUES(@bquizId,@oid,N'Course Quiz',N'Complete all questions.',1,1,1,@fUniIT1,@Now);
+    SET @bqScore=7.0+ABS(CHECKSUM(NEWID()))%3;
+    INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    FETCH NEXT FROM curBq INTO @oid;
+END
+CLOSE curBq; DEALLOCATE curBq;
+
+-- FYP for BSCS grad
+SET @fyid=NEWID();
+INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
+VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,88.0,100.0,3.8,@Now);
+INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt])
+VALUES(NEWID(),@fyid,DATEADD(DAY,-90,@Now),N'Room 301',N'Completed',@fUniIT1,@Now);
+
+-- Graduation application for BSCS
+INSERT INTO [graduation_applications]([Id],[StudentProfileId],[Status],[SubmittedAt],[CreatedAt],[IsDeleted])
+VALUES(NEWID(),@gpid,2,DATEADD(DAY,-10,@Now),@Now,0); -- Status 2 = Approved
+SET @gidx+=1;
+
+-- ===== 13b. BBA Graduate =====
+SET @gid=NEWID(); SET @gpid=NEWID();
+INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+VALUES(@gid,N'bba.grad',N'bba.grad@tabsan.edu',N'BBA Graduate Demo',@DefPwd,@RS,@D_BUS,1,0,@Now,@T_Uni,@C_Uni,0);
+INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted])
+VALUES(@gpid,@gid,N'BBA-GRAD-01',@P_BBA,@D_BUS,'2018-09-01',3.60,3.60,8,3,@Now,0);
+
+INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_BBA;
+
+DECLARE curBba CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_BBA;
+OPEN curBba; FETCH NEXT FROM curBba INTO @bresOff;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bmarks=72+ABS(CHECKSUM(NEWID()))%24;
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@bresOff,N'Mid',ROUND(@bmarks*0.30,2),30.0,1,@Now,@fUniBUS1,@Now);
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@bresOff,N'Final',ROUND(@bmarks*0.70,2),70.0,1,@Now,@fUniBUS1,@Now);
+    FETCH NEXT FROM curBba INTO @bresOff;
+END
+CLOSE curBba; DEALLOCATE curBba;
+
+-- Quizzes BBA
+DECLARE curBbaQ CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_BBA;
+OPEN curBbaQ; FETCH NEXT FROM curBbaQ INTO @oid;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bquizId=NEWID();
+    INSERT INTO [quizzes]([Id],[CourseOfferingId],[Title],[Instructions],[MaxAttempts],[IsPublished],[IsActive],[CreatedByUserId],[CreatedAt])
+    VALUES(@bquizId,@oid,N'Course Quiz',N'Complete all questions.',1,1,1,@fUniBUS1,@Now);
+    SET @bqScore=7.0+ABS(CHECKSUM(NEWID()))%3;
+    INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    FETCH NEXT FROM curBbaQ INTO @oid;
+END
+CLOSE curBbaQ; DEALLOCATE curBbaQ;
+
+-- FYP BBA
+SET @fyid=NEWID();
+INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
+VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,85.0,100.0,3.5,@Now);
+INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt])
+VALUES(NEWID(),@fyid,DATEADD(DAY,-90,@Now),N'Room 202',N'Completed',@fUniBUS1,@Now);
+
+INSERT INTO [graduation_applications]([Id],[StudentProfileId],[Status],[SubmittedAt],[CreatedAt],[IsDeleted])
+VALUES(NEWID(),@gpid,2,DATEADD(DAY,-10,@Now),@Now,0);
+SET @gidx+=1;
+
+-- ===== 13c. Spanish Graduate (non-semester, percentage-based grading) =====
+SET @gid=NEWID(); SET @gpid=NEWID();
+INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+VALUES(@gid,N'spa.grad',N'spa.grad@tabsan.edu',N'Spanish Graduate Demo',@DefPwd,@RS,@D_SPA,1,0,@Now,@T_Uni,@C_Uni,0);
+INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted])
+VALUES(@gpid,@gid,N'SPA-GRAD-01',@P_SPANISH,@D_SPA,'2020-09-01',88.0,88.0,1,3,@Now,0);
+
+INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_SPANISH;
+
+-- Spanish: percentage-based (90+ = A+, 80-89 = A, etc.)
+DECLARE @spMarks DECIMAL(8,2)=92.0, @spOff UNIQUEIDENTIFIER, @spFlag INT=0;
+DECLARE curSp CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_SPANISH ORDER BY OffId;
+OPEN curSp; FETCH NEXT FROM curSp INTO @spOff;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    -- Vary marks slightly per course: 92, 88, 95
+    SET @spMarks = CASE @spFlag WHEN 0 THEN 92.0 WHEN 1 THEN 88.0 ELSE 95.0 END;
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@spOff,N'Mid',ROUND(@spMarks*0.30,2),30.0,1,@Now,@fUniSPA1,@Now);
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@spOff,N'Final',ROUND(@spMarks*0.70,2),70.0,1,@Now,@fUniSPA1,@Now);
+    SET @spFlag+=1; FETCH NEXT FROM curSp INTO @spOff;
+END
+CLOSE curSp; DEALLOCATE curSp;
+
+INSERT INTO [graduation_applications]([Id],[StudentProfileId],[Status],[SubmittedAt],[CreatedAt],[IsDeleted])
+VALUES(NEWID(),@gpid,2,DATEADD(DAY,-10,@Now),@Now,0);
+SET @gidx+=1;
+
+-- ===== 13d. School Graduate (Class 10, percentage-based grading) =====
+SET @gid=NEWID(); SET @gpid=NEWID();
+INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+VALUES(@gid,N'sch.grad',N'sch.grad@tabsan.edu',N'School Graduate Demo',@DefPwd,@RS,@D_SCH,1,0,@Now,@T_Sch,@C_Sch,1);
+INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted])
+VALUES(@gpid,@gid,N'SCH-GRAD-01',@P_SCIENCE,@D_SCH,'2014-04-01',92.0,92.0,10,3,@Now,0);
+
+INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_SCIENCE;
+
+-- School: percentage-based with specific letter grades (A+, A, B, C, D, F)
+DECLARE @schMarksList TABLE (Seq INT, Marks DECIMAL(8,2));
+INSERT INTO @schMarksList VALUES (1,94),(2,91),(3,87),(4,83),(5,78),(6,75),(7,72),(8,68);
+DECLARE @schFlag INT=0, @schOff UNIQUEIDENTIFIER;
+DECLARE curSch CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_SCIENCE ORDER BY OffId;
+OPEN curSch; FETCH NEXT FROM curSch INTO @schOff;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bmarks=ISNULL((SELECT Marks FROM @schMarksList WHERE Seq=(@schFlag%8)+1),85.0);
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@schOff,N'Mid',ROUND(@bmarks*0.30,2),30.0,1,@Now,@fSch1,@Now);
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@schOff,N'Final',ROUND(@bmarks*0.70,2),70.0,1,@Now,@fSch1,@Now);
+    SET @schFlag+=1; FETCH NEXT FROM curSch INTO @schOff;
+END
+CLOSE curSch; DEALLOCATE curSch;
+
+-- Quizzes for School grad
+DECLARE curSchQ CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_SCIENCE;
+OPEN curSchQ; FETCH NEXT FROM curSchQ INTO @oid;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bquizId=NEWID();
+    INSERT INTO [quizzes]([Id],[CourseOfferingId],[Title],[Instructions],[MaxAttempts],[IsPublished],[IsActive],[CreatedByUserId],[CreatedAt])
+    VALUES(@bquizId,@oid,N'Class Quiz',N'Answer all questions.',1,1,1,@fSch1,@Now);
+    SET @bqScore=8.0+ABS(CHECKSUM(NEWID()))%3;
+    INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    FETCH NEXT FROM curSchQ INTO @oid;
+END
+CLOSE curSchQ; DEALLOCATE curSchQ;
+
+INSERT INTO [graduation_applications]([Id],[StudentProfileId],[Status],[SubmittedAt],[CreatedAt],[IsDeleted])
+VALUES(NEWID(),@gpid,2,DATEADD(DAY,-10,@Now),@Now,0);
+SET @gidx+=1;
+
+-- ===== 13e. College ICS Graduate (Class 12, percentage-based grading) =====
+SET @gid=NEWID(); SET @gpid=NEWID();
+INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+VALUES(@gid,N'col.grad',N'col.grad@tabsan.edu',N'College ICS Graduate Demo',@DefPwd,@RS,@D_COL,1,0,@Now,@T_Col,@C_Col,2);
+INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted])
+VALUES(@gpid,@gid,N'COL-GRAD-01',@P_ICS,@D_COL,'2015-04-01',88.0,88.0,12,3,@Now,0);
+
+INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
+SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_ICS;
+
+-- College: percentage-based grades
+DECLARE @colFlag INT=0, @colOff UNIQUEIDENTIFIER;
+DECLARE curCol CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_ICS ORDER BY OffId;
+OPEN curCol; FETCH NEXT FROM curCol INTO @colOff;
+WHILE @@FETCH_STATUS=0
+BEGIN
+    SET @bmarks=CASE @colFlag%5 WHEN 0 THEN 93 WHEN 1 THEN 86 WHEN 2 THEN 78 WHEN 3 THEN 82 WHEN 4 THEN 74 END;
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@colOff,N'Mid',ROUND(@bmarks*0.30,2),30.0,1,@Now,@fCol1,@Now);
+    INSERT INTO [results]([Id],[StudentProfileId],[CourseOfferingId],[ResultType],[MarksObtained],[MaxMarks],[IsPublished],[PublishedAt],[PublishedByUserId],[CreatedAt])
+    VALUES(NEWID(),@gpid,@colOff,N'Final',ROUND(@bmarks*0.70,2),70.0,1,@Now,@fCol1,@Now);
+    SET @colFlag+=1; FETCH NEXT FROM curCol INTO @colOff;
+END
+CLOSE curCol; DEALLOCATE curCol;
+
+INSERT INTO [graduation_applications]([Id],[StudentProfileId],[Status],[SubmittedAt],[CreatedAt],[IsDeleted])
+VALUES(NEWID(),@gpid,2,DATEADD(DAY,-10,@Now),@Now,0);
+SET @gidx+=1;
+
+PRINT CONCAT('Graduated students: ', @gidx);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 14. VERSION
+-- ═══════════════════════════════════════════════════════════════════
+UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.1',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
 
 PRINT '';
-PRINT '=== 03-FullDummyData.sql v2.0 complete ===';
+PRINT '=== 03-FullDummyData.sql v2.1 complete ===';
 PRINT 'Uni: IT(80 BSCS) + BUS(80 BBA) + SPA(10) = 170';
 PRINT 'School: SCI (Class 1-10, 100)';
 PRINT 'College: ICS (Class 11-12, 20)';
-PRINT 'Total: 290 students';
+PRINT 'Graduated: BSCS(1) + BBA(1) + Spanish(1) + School(1) + College(1) = 5';
+PRINT 'Total: 295 students';
 PRINT 'Rules: no results for first semester/class; cumulative thereafter';
+PRINT 'Graduated students have: mid+final exams, quizzes, FYP (BSCS/BBA), graduation application';
 GO

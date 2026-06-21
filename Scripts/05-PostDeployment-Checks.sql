@@ -44,7 +44,7 @@ PRINT '';
 PRINT '--- Departments ---';
 SELECT [Name], [Code] FROM [departments] ORDER BY [Code];
 DECLARE @DeptCount INT = (SELECT COUNT(*) FROM [departments]);
-PRINT CONCAT('Total departments: ', @DeptCount, ' (expected: 4)');
+PRINT CONCAT('Total departments: ', @DeptCount, ' (expected: 5)');
 
 -- ═══════ ACADEMIC PROGRAMS ═══════
 PRINT '';
@@ -94,6 +94,36 @@ PRINT '--- Student Profiles ---';
 SELECT p.[Code] AS Program, COUNT(sp.[Id]) AS StudentCount
 FROM [academic_programs] p LEFT JOIN [student_profiles] sp ON sp.[ProgramId]=p.[Id] AND sp.[IsDeleted]=0
 GROUP BY p.[Code], p.[Id] ORDER BY p.[Code];
+
+-- ═══════ GRADUATED STUDENTS (Status=3) ═══════
+PRINT '';
+PRINT '--- Graduated Students ---';
+SELECT u.[Username], u.[FullName], sp.[RegistrationNumber], p.[Code] AS Program,
+       sp.[Cgpa], sp.[Status],
+       CASE sp.[Status] WHEN 0 THEN N'Active' WHEN 1 THEN N'Inactive' WHEN 2 THEN N'Suspended' WHEN 3 THEN N'Graduated' ELSE N'Unknown' END AS StatusName
+FROM [student_profiles] sp
+JOIN [users] u ON u.[Id]=sp.[UserId]
+JOIN [academic_programs] p ON p.[Id]=sp.[ProgramId]
+WHERE sp.[Status]=3 AND sp.[IsDeleted]=0
+ORDER BY p.[Code];
+DECLARE @GradCount INT = (SELECT COUNT(*) FROM [student_profiles] WHERE [Status]=3 AND [IsDeleted]=0);
+PRINT CONCAT('Graduated students: ', @GradCount, ' (expected: 5)');
+IF @GradCount < 5 SET @Errors += 1;
+
+-- ═══════ GRADUATION APPLICATIONS ═══════
+DECLARE @GradAppCount INT = (SELECT COUNT(*) FROM [graduation_applications] WHERE [IsDeleted]=0);
+PRINT CONCAT('Graduation applications: ', @GradAppCount, ' (expected: 5)');
+
+-- ═══════ PROFILE PICTURE COLUMN ═══════
+PRINT '';
+PRINT '--- Profile Picture Column ---';
+IF COL_LENGTH('users', 'ProfilePicturePath') IS NOT NULL
+    PRINT N'✓ ProfilePicturePath column exists on users table.';
+ELSE
+BEGIN
+    PRINT N'✗ ProfilePicturePath column is missing from users table.';
+    SET @Errors += 1;
+END
 
 -- ═══════ ATTENDANCE ═══════
 DECLARE @AttCount INT = (SELECT COUNT(*) FROM [attendance_records]);
@@ -175,9 +205,18 @@ BEGIN
     SET @Errors += 1;
 END
 
--- ═══════ 2026-06-10 VERSION MARKER ═══════
+-- ═══════ 2026-06-22 VERSION MARKER ═══════
 PRINT '';
-PRINT '--- Deployment Sync Marker (2026-06-10) ---';
+PRINT '--- Deployment Sync Marker (2026-06-22) ---';
+PRINT N'✓ Profile picture upload feature (User entity + migration + UI)';
+PRINT N'✓ Graduated demo students: BSCS, BBA, Spanish, School, College';
+PRINT N'✓ Graduated students have: mid+final exams, quizzes, FYP (BSCS/BBA)';
+PRINT N'✓ Graduation applications created for all 5 graduated students';
+PRINT N'✓ Grading: School/College percentage (A+/A/B/C/D/F), Uni GPA-based';
+PRINT '';
+PRINT '--- Previous Deployment Markers ---';
+PRINT '';
+PRINT '--- Previous Deployment Markers ---';
 PRINT '✓ MFA single-step TOTP login (AuthService)';
 PRINT '✓ Base32 raw-secret storage (TwoFactorStateStore)';
 PRINT '✓ Tenant active-only in dropdowns (GetTenantsAsync)';
