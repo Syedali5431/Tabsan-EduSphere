@@ -197,16 +197,88 @@
 
 **Summary:** Entry package for institutions starting digital transformation with essential features and low risk.
 
+### Plan Overview
+
 | Detail | Value |
 |--------|-------|
 | **Plan** | Foundation Lite |
 | **Price** | **AUD 1.50** per user / year |
-| **Includes** | User management, attendance, results, report cards, dashboards, role-based access, ISO compliance |
-| **Support** | Free standard support (business hours) |
-| **Best For** | Schools or institutes starting with core academic digitization |
-| **Add-Ons** | LMS, AI chat, parent portal, advanced analytics exports |
+| **Minimum Users** | 100+ users |
+| **Billing** | Annual commitment |
+
+### Included Features
+
+| Category | Capabilities |
+|----------|-------------|
+| **User Management** | User import, role assignment, admin users, student lifecycle management |
+| **Attendance** | Manual entry, CSV bulk import with validation, attendance analytics, alerts |
+| **Results & Grading** | Enter results, gradebook, GPA calculation, grading configuration, result publication |
+| **Report Cards** | Professional DOCX report cards with institution-aware scoring (GPA or Percentage) |
+| **Certificates** | Completion Certificate and Report Card generation with institution branding |
+| **Dashboards** | Real-time analytics dashboards with role-based views |
+| **Role-Based Access** | SuperAdmin, Admin, Faculty, Student, Finance with granular permissions |
+| **ISO Compliance** | ISO 27001 + ISO 9001 built-in compliance framework |
+| **Audit Logging** | Immutable audit logs with actor, IP, severity, and correlation tracking |
+
+### Support
+
+| Tier | Details |
+|------|---------|
+| **Standard Support** | Email support during business hours (Mon–Fri, 9 AM–5 PM AEST) |
+| **Response Time** | < 24 business hours for standard issues |
+| **Knowledge Base** | Self-service documentation and FAQ portal |
+| **Community Access** | Peer community forum for tips and best practices |
+
+### Available Add-Ons
+
+| Add-On | Description | Price (AUD/user/year) |
+|--------|-------------|----------------------|
+| **LMS** | Course materials, assignments, quizzes, discussions | +$1.50 |
+| **AI Chatbot** | 24/7 AI-powered student support assistant | +$2.00 |
+| **Parent Portal** | Parent access to student progress and announcements | +$1.00 |
+| **Advanced Analytics** | Custom reports, export jobs, KPI dashboards | +$1.50 |
+
+### Target Institution Profile
+
+| Profile | Description |
+|---------|-------------|
+| **Institution Type** | Small to medium schools, tuition centers, single-campus institutions |
+| **User Base** | 100 – 1,000 users (students + staff) |
+| **IT Maturity** | Limited or no dedicated IT staff; needs turnkey solution |
+| **Key Drivers** | Core academic digitization, compliance readiness, low cost |
+| **Decision Makers** | Principal, School Director, Owner-Operator |
+
+### Implementation & Onboarding
+
+| Phase | Duration | Activities |
+|-------|----------|------------|
+| **Setup** | Days 1–3 | Tenant provisioning, admin account creation, basic configuration |
+| **Data Import** | Days 4–7 | Student roster import, faculty accounts, course setup |
+| **Training** | Days 8–10 | 2 remote training sessions for admin and faculty leads |
+| **Go-Live** | Day 14 | Production activation, first-week hypercare monitoring |
+
+### ROI Highlights
+
+| Metric | Expected Impact |
+|--------|----------------|
+| **Administrative Time** | 30–40% reduction in manual record-keeping |
+| **Data Accuracy** | Eliminate duplicate entry across attendance, results, reports |
+| **Compliance Readiness** | ISO framework operational from day one |
+| **Parent Communication** | Standardized report cards replace manual creation |
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
+
+---
+
+## Plan Comparison Snapshot
+
+| Plan | Price (AUD/user/year) | Best For |
+|------|----------------------|----------|
+| **Foundation Lite** ⬤ | **$1.50** | Schools starting digitization |
+| Growth | $3.00 | Mid-scale institutions |
+| Advanced | $4.00 | Data-driven institutions |
+| Enterprise | $5.00 | Multi-campus institutions |
+| Ultimate | $10.00 | Large universities & govt bodies |
 
 ---
 
@@ -221,4 +293,4 @@
 
 ---
 
-*Document version: 3.1 | Updated: 2026-06-15 | Pricing: AUD 1.50/user/year (unchanged)*
+*Document version: 4.0 | Updated: 2026-06-22 | Pricing: AUD 1.50/user/year (unchanged)*

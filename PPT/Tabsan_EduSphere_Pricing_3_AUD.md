@@ -197,16 +197,87 @@
 
 **Summary:** Balanced package for institutions scaling operations beyond basic administration.
 
+### Plan Overview
+
 | Detail | Value |
 |--------|-------|
 | **Plan** | Growth |
 | **Price** | **AUD 3.00** per user / year |
-| **Includes** | Everything in Foundation Lite, plus LMS, discussion, helpdesk, study planner |
-| **Support** | Free priority-email support with faster response window |
-| **Best For** | Institutions with active academic workflows and mixed admin/faculty adoption |
-| **Add-Ons** | Parent portal notifications, advanced analytics exports, custom integrations |
+| **Minimum Users** | 200+ users |
+| **Billing** | Annual commitment |
+
+### Included Features (Everything in Foundation Lite +)
+
+| Category | Capabilities |
+|----------|-------------|
+| **All Foundation Lite** | User management, attendance, results, report cards, dashboards, role-based access, ISO compliance |
+| **LMS** | Course materials, assignments, quizzes, discussions, announcements |
+| **Study Planner** | Student study plan creation, tracking, and progress monitoring |
+| **Helpdesk Ticketing** | Built-in support ticket system with tracking and resolution workflows |
+| **Discussion Forums** | Course-level and institution-level discussion boards |
+| **Announcements** | Institution-wide and targeted announcements with read tracking |
+| **Enhanced Reporting** | Program and Department columns in all summary reports |
+| **Semester Management** | Semester-based course structures with ascending sort |
+
+### Support
+
+| Tier | Details |
+|------|---------|
+| **Priority Email Support** | Dedicated email queue with faster response window |
+| **Response Time** | < 12 business hours for standard issues |
+| **Knowledge Base** | Self-service documentation and FAQ portal |
+| **Onboarding Assistance** | 1 guided onboarding session with implementation specialist |
+
+### Available Add-Ons
+
+| Add-On | Description | Price (AUD/user/year) |
+|--------|-------------|----------------------|
+| **Parent Portal** | Parent access to student progress and announcements | +$1.00 |
+| **Advanced Analytics** | Custom reports, export jobs, KPI dashboards | +$1.50 |
+| **AI Chatbot** | 24/7 AI-powered student support assistant | +$2.00 |
+| **Custom Integrations** | API integration with third-party systems | Quote-based |
+
+### Target Institution Profile
+
+| Profile | Description |
+|---------|-------------|
+| **Institution Type** | Mid-size schools and colleges with active academic workflows |
+| **User Base** | 200 – 2,500 users (students + faculty + staff) |
+| **IT Maturity** | Basic IT capability; values guided onboarding |
+| **Key Drivers** | LMS adoption, collaboration tools, structured communication |
+| **Decision Makers** | Principal, Academic Director, IT Coordinator |
+
+### Implementation & Onboarding
+
+| Phase | Duration | Activities |
+|-------|----------|------------|
+| **Setup** | Days 1–5 | Tenant provisioning, admin configuration, LMS structure setup |
+| **Data Import** | Days 6–12 | Student/faculty import, course material migration, semester setup |
+| **Training** | Days 13–18 | 3 remote training sessions: admin, faculty LMS, helpdesk workflows |
+| **Go-Live** | Day 21 | Production activation, 2-week hypercare monitoring |
+
+### ROI Highlights
+
+| Metric | Expected Impact |
+|--------|----------------|
+| **Faculty Productivity** | 40–50% reduction in material distribution time |
+| **Student Engagement** | 25–35% increase in LMS resource access |
+| **Communication Efficiency** | Replace email chains with targeted announcements |
+| **Support Resolution** | Helpdesk reduces informal support requests by 50%+ |
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
+
+---
+
+## Plan Comparison Snapshot
+
+| Plan | Price (AUD/user/year) | Best For |
+|------|----------------------|----------|
+| Foundation Lite | $1.50 | Schools starting digitization |
+| **Growth** ⬤ | **$3.00** | Mid-scale institutions |
+| Advanced | $4.00 | Data-driven institutions |
+| Enterprise | $5.00 | Multi-campus institutions |
+| Ultimate | $10.00 | Large universities & govt bodies |
 
 ---
 
@@ -221,4 +292,4 @@
 
 ---
 
-*Document version: 3.1 | Updated: 2026-06-15 | Pricing: AUD 3.00/user/year (unchanged)*
+*Document version: 4.0 | Updated: 2026-06-22 | Pricing: AUD 3.00/user/year (unchanged)*

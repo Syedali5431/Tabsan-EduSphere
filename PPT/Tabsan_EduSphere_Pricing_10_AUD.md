@@ -195,103 +195,113 @@
 
 ## Pricing
 
-**Summary:** Advanced package for institutions requiring broader automation, analytics, and parent transparency.
+**Summary:** Ultimate package for large-scale institutions and government education bodies requiring maximum capability, dedicated infrastructure, and strategic partnership.
 
 ### Plan Overview
 
 | Detail | Value |
 |--------|-------|
-| **Plan** | Advanced |
-| **Price** | **AUD 4.00** per user / year |
-| **Minimum Users** | 500+ users |
-| **Billing** | Annual commitment |
+| **Plan** | Ultimate |
+| **Price** | **AUD 10.00** per user / year |
+| **Minimum Users** | 5,000+ users |
+| **Billing** | Annual commitment with quarterly invoicing options |
 
-### Included Features (Everything in Growth +)
+### Included Features (Everything in Enterprise + Exclusive Additions)
 
 | Category | Capabilities |
 |----------|-------------|
-| **All Growth Features** | LMS, study planner, helpdesk, discussions, announcements, enhanced reporting |
-| **Advanced Analytics** | Custom report builder, scheduled export jobs, KPI dashboards, trend analysis |
-| **Parent Portal (Read)** | Parent access to student attendance, results, report cards, and announcements |
-| **Notification Fan-Out** | Automated notifications to parents via email/SMS for key events |
-| **Export Jobs** | Scheduled bulk data exports in CSV, Excel, and PDF formats |
-| **Degree Audit** | Automated graduation eligibility checking with configurable rules |
-| **Advanced Certificate Generation** | Professional Degree and Transcript certificates with DOCX→PDF conversion |
-| **Flexible Reports** | All reports run without mandatory filter selection; Semester ascending sort |
+| **All Enterprise Modules** | Multi-institution governance, advanced analytics/export, parent engagement, communication integrations, high-load readiness |
+| **Dedicated Hosting** | Isolated tenant infrastructure with guaranteed 99.9% uptime SLA |
+| **AI-Powered Suite** | Predictive student performance analytics, intelligent course recommendations, automated early-warning alerts for at-risk students |
+| **AI Chatbot** | 24/7 AI-powered student and parent support chatbot with natural language understanding |
+| **White-Label Branding** | Custom domain, custom branding, institution-specific login portal, branded mobile app shell |
+| **Advanced Integrations** | ERP/SIS integration connectors, REST API access with dedicated rate limits, SSO/SAML 2.0 integration |
+| **Custom Workflow Engine** | Drag-and-drop workflow builder for approval chains, notifications, and automated actions |
+| **Enterprise Data Warehouse** | Dedicated reporting database with custom schema, Power BI / Tableau connector |
+| **Disaster Recovery** | Active-passive geo-redundant deployment with < 15-minute RTO and < 5-minute RPO |
+| **Compliance & Audit** | ISO 27001 certification support package, external audit assistance, compliance evidence export |
 
-### Support
+### Support & Services
 
 | Tier | Details |
 |------|---------|
-| **Accelerated Support** | Priority queue with operational guidance from product specialists |
-| **Response Time** | < 8 business hours for standard issues; < 4 hours for critical |
-| **Dedicated Onboarding** | 2 guided sessions with implementation specialist |
-| **Quarterly Check-In** | 30-minute health check call per quarter |
-
-### Available Add-Ons
-
-| Add-On | Description | Price (AUD/user/year) |
-|--------|-------------|----------------------|
-| **Enterprise SLA** | 99.9% uptime guarantee with credit-backed SLA | +$1.00 |
-| **Custom Reporting Pack** | Bespoke reports tailored to institution requirements | Quote-based |
-| **AI Chatbot** | 24/7 AI-powered student and parent support assistant | +$2.00 |
-| **Integration Acceleration** | Dedicated integration engineering hours | Quote-based |
+| **Dedicated Account Manager** | Single point of contact for strategic planning and issue resolution |
+| **24/7 Premium Support** | Phone, email, and chat with guaranteed < 1-hour response for critical issues |
+| **Quarterly Business Review** | Executive-level review of usage metrics, adoption trends, and optimization roadmap |
+| **On-Site Training** | Up to 5 days of on-site faculty and admin training per year |
+| **Custom Development** | 40 hours/year of custom feature development or integration work |
+| **Migration Services** | Full data migration from legacy systems with validation and reconciliation |
 
 ### Target Institution Profile
 
 | Profile | Description |
 |---------|-------------|
-| **Institution Type** | Established schools and colleges with data-driven management culture |
-| **User Base** | 500 – 5,000 users (students + faculty + parents + staff) |
-| **IT Maturity** | Moderate IT capability; seeks analytics and parent engagement |
-| **Key Drivers** | Data-driven decisions, parent transparency, workflow automation |
-| **Decision Makers** | Director, Academic Dean, IT Manager, Parent Committee |
+| **Institution Type** | Large universities, government education departments, multi-campus groups, education boards |
+| **User Base** | 5,000 – 100,000+ users (students, faculty, staff) |
+| **IT Maturity** | Dedicated IT team with integration and governance requirements |
+| **Key Drivers** | Maximum platform capability, strategic partnership, enterprise-grade reliability, custom branding |
+| **Decision Makers** | Vice-Chancellor, CIO, Director of Education, Board-Level |
 
 ### Implementation & Onboarding
 
 | Phase | Duration | Activities |
 |-------|----------|------------|
-| **Discovery** | Days 1–5 | Analytics requirements gathering, parent portal scope definition |
-| **Setup** | Days 6–12 | Advanced analytics configuration, parent portal activation, notification templates |
-| **Data Import** | Days 13–20 | Historical data migration, analytics baseline, export job setup |
-| **Training** | Days 21–28 | 4 sessions: admin analytics, faculty reports, parent portal orientation, export workflows |
-| **Go-Live** | Day 30 | Production activation, 3-week hypercare with analytics validation |
+| **Discovery & Planning** | Weeks 1–2 | Requirements gathering, infrastructure sizing, integration mapping |
+| **Environment Setup** | Weeks 3–4 | Dedicated hosting provisioning, SSO configuration, branding setup |
+| **Data Migration** | Weeks 5–8 | Legacy data extraction, transformation, validation, parallel run |
+| **Training** | Weeks 6–9 | Administrator training, faculty workshops, train-the-trainer sessions |
+| **Go-Live** | Week 10 | Production cutover, hypercare monitoring, command center |
+| **Optimization** | Weeks 11–14 | Performance tuning, adoption tracking, feedback integration |
 
 ### ROI Highlights
 
 | Metric | Expected Impact |
 |--------|----------------|
-| **Decision Velocity** | Reduce report generation from days to minutes |
-| **Parent Satisfaction** | 30–40% increase in parent engagement and satisfaction scores |
-| **Operational Visibility** | Real-time KPI dashboards replace monthly manual compilations |
-| **Graduation Tracking** | Automated degree audit eliminates manual eligibility checking |
-| **Staff Efficiency** | Scheduled exports eliminate 70%+ of ad-hoc data requests |
+| **Administrative Time Savings** | 60–75% reduction in manual data entry and reconciliation |
+| **Compliance Readiness** | Audit preparation time reduced from weeks to hours |
+| **Student Retention** | 15–25% improvement through early-warning AI alerts |
+| **Parent Satisfaction** | 40%+ increase in parent engagement scores |
+| **IT Consolidation** | Replace 3–7 legacy systems with one platform |
+| **Decision Velocity** | Real-time dashboards replace monthly manual reports |
+
+### Competitive Differentiation
+
+| Aspect | Tabsan EduSphere Ultimate | Typical Alternatives |
+|--------|--------------------------|---------------------|
+| **Deployment** | Dedicated isolated hosting | Shared multi-tenant only |
+| **AI Capabilities** | Built-in predictive analytics + chatbot | Separate paid add-ons or unavailable |
+| **White-Label** | Full custom branding + domain | Generic platform branding |
+| **Support** | 24/7 dedicated + on-site training | Business hours email only |
+| **Custom Development** | 40 hrs/year included | Not available or consulting rates |
+| **Integration** | SSO/SAML + ERP connectors + API | Limited or custom-build required |
+| **Compliance Package** | ISO certification support included | Self-service or external consultant needed |
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
 
 ---
 
-## Plan Comparison Snapshot
+## Pricing Comparison (All Tiers)
 
-| Plan | Price (AUD/user/year) | Best For |
-|------|----------------------|----------|
-| Foundation Lite | $1.50 | Schools starting digitization |
-| Growth | $3.00 | Mid-scale institutions |
-| **Advanced** ⬤ | **$4.00** | Data-driven institutions |
-| Enterprise | $5.00 | Multi-campus institutions |
-| Ultimate | $10.00 | Large universities & govt bodies |
+| Plan | Price (AUD/user/year) | Best For | Key Differentiator |
+|------|----------------------|----------|-------------------|
+| **Foundation Lite** | $1.50 | Schools starting digitization | Core academic essentials |
+| **Growth** | $3.00 | Mid-scale institutions | LMS + collaboration tools |
+| **Advanced** | $4.00 | Data-driven institutions | Analytics + parent engagement |
+| **Enterprise** | $5.00 | Multi-campus institutions | Full platform + governance |
+| **Ultimate** | $10.00 | Large universities & govt bodies | Dedicated infra + AI + white-label |
 
 ---
 
 ## Conclusion / Call to Action
 
-**Summary:** The Advanced plan is ideal for institutions that need deeper visibility and higher workflow automation.
+**Summary:** The Ultimate plan is purpose-built for education institutions that demand strategic partnership, dedicated infrastructure, and maximum digital transformation impact.
 
-- Advanced analytics + parent engagement at predictable cost
-- ISO 27001 + ISO 9001 compliance included from day one
-- Full governance and KPI-driven operational improvement
-- Schedule an executive demo with KPI-based adoption targets today
+- Complete platform with dedicated hosting and 99.9% uptime SLA
+- AI-powered analytics and 24/7 chatbot included
+- White-label branding with custom domain and SSO
+- ISO 27001 + ISO 9001 compliance with certification support package
+- Schedule an executive briefing, infrastructure review, and transformation roadmap today
 
 ---
 
-*Document version: 4.0 | Updated: 2026-06-22 | Pricing: AUD 4.00/user/year (unchanged)*
+*Document version: 1.0 | Created: 2026-06-22 | Pricing: AUD 10.00/user/year*

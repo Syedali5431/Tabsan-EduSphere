@@ -197,16 +197,95 @@
 
 **Summary:** Enterprise package for institutions needing full platform capability, reliability controls, and strategic support.
 
+### Plan Overview
+
 | Detail | Value |
 |--------|-------|
 | **Plan** | Enterprise |
 | **Price** | **AUD 5.00** per user / year |
-| **Includes** | All modules: multi-institution governance, advanced analytics/export, parent engagement, communication integrations, high-load readiness |
-| **Support** | Premium support path with onboarding and optimization assistance |
-| **Best For** | Large or multi-campus institutions with strict reporting, scalability, and governance requirements |
-| **Add-Ons** | Dedicated success planning, custom SLA terms, advanced implementation workshops |
+| **Minimum Users** | 1,000+ users |
+| **Billing** | Annual commitment with semi-annual invoicing options |
+
+### Included Features (Everything in Advanced +)
+
+| Category | Capabilities |
+|----------|-------------|
+| **All Advanced Features** | Advanced analytics, parent portal, notification fan-out, export jobs, degree audit |
+| **Multi-Institution Governance** | Centralized management of multiple tenants, campuses, and departments |
+| **Full Analytics Suite** | Cross-institution analytics, consolidated dashboards, executive KPI views |
+| **Advanced Export** | Multi-format exports with scheduling, distribution lists, and archival |
+| **Parent Engagement** | Full parent portal with two-way communication and notification preferences |
+| **Communication Integrations** | Email, SMS, and in-app notification orchestration with delivery tracking |
+| **High-Load Readiness** | Performance-optimized for concurrent users during peak periods (exams, admissions) |
+| **All Certificate Types** | Degree, Transcript, Completion Certificate, and Report Card — all with DOCX→PDF |
+| **Advanced MFA** | TOTP-based multi-factor authentication with single-step login |
+| **Full Audit & Compliance** | Immutable audit logging, compliance dashboard, incident lifecycle management |
+
+### Support
+
+| Tier | Details |
+|------|---------|
+| **Premium Support** | Dedicated support path with onboarding and optimization assistance |
+| **Response Time** | < 4 business hours for standard; < 1 hour for critical issues |
+| **Named Support Contact** | Assigned support specialist familiar with your institution |
+| **Monthly Health Check** | 45-minute operational review and optimization call |
+| **Training Credits** | 2 on-site or remote training days per year |
+
+### Available Add-Ons
+
+| Add-On | Description | Price (AUD/user/year) |
+|--------|-------------|----------------------|
+| **Dedicated Success Planning** | Strategic roadmap with quarterly executive reviews | Quote-based |
+| **Custom SLA Terms** | Tailored uptime, response, and escalation commitments | Quote-based |
+| **Advanced Implementation** | Custom workshops, change management, adoption acceleration | Quote-based |
+| **AI Chatbot** | 24/7 AI-powered student and parent support assistant | +$2.00 |
+| **White-Label Branding** | Custom domain and institution-specific branding | +$3.00 |
+
+### Target Institution Profile
+
+| Profile | Description |
+|---------|-------------|
+| **Institution Type** | Large schools, colleges, university departments, multi-campus groups |
+| **User Base** | 1,000 – 10,000 users (students + faculty + parents + admin) |
+| **IT Maturity** | Established IT team; strong governance and reporting requirements |
+| **Key Drivers** | Multi-campus consolidation, enterprise governance, peak-load reliability |
+| **Decision Makers** | Board of Governors, Vice-Chancellor, CIO, CFO |
+
+### Implementation & Onboarding
+
+| Phase | Duration | Activities |
+|-------|----------|------------|
+| **Discovery** | Weeks 1–2 | Stakeholder workshops, multi-campus mapping, integration assessment |
+| **Environment Setup** | Weeks 3–4 | Production environment provisioning, SSO configuration, security review |
+| **Data Migration** | Weeks 5–9 | Multi-source data consolidation, validation, parallel run verification |
+| **Training** | Weeks 8–11 | Role-based training: admin (2 days), faculty (2 days), parent orientation (webinar) |
+| **Go-Live** | Week 12 | Phased rollout by campus/department, command center, hypercare |
+| **Optimization** | Weeks 13–16 | Performance tuning, adoption analytics, feedback-driven adjustments |
+
+### ROI Highlights
+
+| Metric | Expected Impact |
+|--------|----------------|
+| **Consolidation Savings** | Replace 3–5 legacy systems; reduce licensing and maintenance costs by 40–55% |
+| **Cross-Campus Visibility** | Unified dashboards replace campus-by-campus manual reporting |
+| **Compliance Efficiency** | Audit preparation time reduced by 60–70% |
+| **Parent Engagement** | 35–50% increase in parent portal adoption within first semester |
+| **Peak Performance** | Zero degradation during exam results publication and admission windows |
+| **Staff Productivity** | 50%+ reduction in cross-system data reconciliation |
 
 **Prices remain unchanged.** All ISO compliance features included at no additional cost.
+
+---
+
+## Plan Comparison Snapshot
+
+| Plan | Price (AUD/user/year) | Best For |
+|------|----------------------|----------|
+| Foundation Lite | $1.50 | Schools starting digitization |
+| Growth | $3.00 | Mid-scale institutions |
+| Advanced | $4.00 | Data-driven institutions |
+| **Enterprise** ⬤ | **$5.00** | Multi-campus institutions |
+| Ultimate | $10.00 | Large universities & govt bodies |
 
 ---
 
@@ -221,4 +300,4 @@
 
 ---
 
-*Document version: 3.1 | Updated: 2026-06-15 | Pricing: AUD 5.00/user/year (unchanged)*
+*Document version: 4.0 | Updated: 2026-06-22 | Pricing: AUD 5.00/user/year (unchanged)*
