@@ -389,11 +389,12 @@ BEGIN
 END
 CLOSE curBq; DEALLOCATE curBq;
 
--- FYP for BSCS grad (with marks if columns exist, else without)
+-- FYP for BSCS grad (dynamic SQL to handle optional columns safely)
 SET @fyid=NEWID();
 IF COL_LENGTH('fyp_projects', 'FypMarks') IS NOT NULL
-    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
-    VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,88.0,100.0,3.8,@Now);
+    EXEC sp_executesql N'INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt]) VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6,88.0,100.0,3.8,@p7)',
+        N'@p0 UNIQUEIDENTIFIER,@p1 UNIQUEIDENTIFIER,@p2 UNIQUEIDENTIFIER,@p3 NVARCHAR(500),@p4 NVARCHAR(MAX),@p5 NVARCHAR(20),@p6 UNIQUEIDENTIFIER,@p7 DATETIME2',
+        @fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,@Now;
 ELSE
     INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt])
     VALUES(@fyid,@gpid,@D_IT,N'AI-Based Academic Performance Prediction',N'Research on ML models for student performance.',N'Completed',@fUniIT1,@Now);
@@ -443,11 +444,12 @@ BEGIN
 END
 CLOSE curBbaQ; DEALLOCATE curBbaQ;
 
--- FYP BBA (with marks if columns exist, else without)
+-- FYP BBA (dynamic SQL to handle optional columns safely)
 SET @fyid=NEWID();
 IF COL_LENGTH('fyp_projects', 'FypMarks') IS NOT NULL
-    INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt])
-    VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,85.0,100.0,3.5,@Now);
+    EXEC sp_executesql N'INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[FypMarks],[FypMaxMarks],[FypGradePoint],[CreatedAt]) VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6,85.0,100.0,3.5,@p7)',
+        N'@p0 UNIQUEIDENTIFIER,@p1 UNIQUEIDENTIFIER,@p2 UNIQUEIDENTIFIER,@p3 NVARCHAR(500),@p4 NVARCHAR(MAX),@p5 NVARCHAR(20),@p6 UNIQUEIDENTIFIER,@p7 DATETIME2',
+        @fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,@Now;
 ELSE
     INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt])
     VALUES(@fyid,@gpid,@D_BUS,N'Strategic Management in Digital Era',N'Research on digital transformation.',N'Completed',@fUniBUS1,@Now);
