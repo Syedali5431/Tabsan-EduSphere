@@ -2055,7 +2055,7 @@ tr th {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0;
   max-width: 600px;
   margin: 0 auto;
   text-align: center;
@@ -2067,13 +2067,19 @@ tr th {
   gap: 0.6rem;
 }
 
+.tns-global-footer-top a {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
 .tns-global-footer-logo {
-  width: 34px;
-  height: 34px;
+  width: 48px !important;
+  height: 48px !important;
   flex-shrink: 0;
   object-fit: contain;
-  opacity: 0.9;
-  transition: opacity 0.25s;
+  opacity: 0.92;
+  transition: opacity 0.25s, transform 0.25s;
 }
 
 .tns-global-footer-logo:hover {
