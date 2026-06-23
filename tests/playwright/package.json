@@ -1,0 +1,28 @@
+{
+  "name": "edusphere-playwright-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end Playwright test suite for Tabsan EduSphere",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:smoke": "npx playwright test --grep @smoke",
+    "test:regression": "npx playwright test --grep @regression",
+    "test:auth": "npx playwright test --grep @auth",
+    "test:student": "npx playwright test --grep @student",
+    "test:attendance": "npx playwright test --grep @attendance",
+    "test:results": "npx playwright test --grep @results",
+    "test:role-based": "npx playwright test --grep @role-based",
+    "test:edge": "npx playwright test --grep @edge",
+    "test:chrome": "npx playwright test --project=chromium",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "report": "npx playwright show-report",
+    "codegen": "npx playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.0"
+  }
+}
