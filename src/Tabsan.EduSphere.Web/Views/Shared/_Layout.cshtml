@@ -985,13 +985,38 @@
             var sidebar = document.querySelector('[data-app-sidebar]');
             var sidebarToggle = document.querySelector('[data-sidebar-toggle]');
             var sidebarClose = document.querySelector('[data-sidebar-close]');
+            var SIDEBAR_STORAGE_KEY = 'edusphere-sidebar-collapsed';
+            var MOBILE_BREAKPOINT = 992;
 
             function setSidebar(open) {
                 document.body.classList.toggle('sidebar-open', open);
             }
 
+            function isMobile() {
+                return window.innerWidth < MOBILE_BREAKPOINT;
+            }
+
+            function toggleSidebar() {
+                if (isMobile()) {
+                    // Mobile: toggle overlay (slide-in from left)
+                    var isOpen = document.body.classList.contains('sidebar-open');
+                    setSidebar(!isOpen);
+                } else {
+                    // Desktop: toggle collapse (sidebar retracts, content expands)
+                    var collapsed = document.body.classList.toggle('sidebar-collapsed');
+                    try { localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? '1' : '0'); } catch(e) {}
+                }
+            }
+
+            // Restore saved sidebar collapse state (desktop only)
+            try {
+                if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1') {
+                    document.body.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+
             if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function () { setSidebar(true); });
+                sidebarToggle.addEventListener('click', toggleSidebar);
             }
 
             if (sidebarClose) {
