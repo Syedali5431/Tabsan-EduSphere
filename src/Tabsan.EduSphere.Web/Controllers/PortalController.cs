@@ -2125,7 +2125,7 @@ public class PortalController : Controller
     public async Task<IActionResult> AuditLogs(
         string? query,
         Guid? actorUserId,
-        string? action,
+        [FromQuery(Name = "action")] string? action,
         string? entityName,
         DateTime? fromUtc,
         DateTime? toUtc,
@@ -2183,7 +2183,7 @@ public class PortalController : Controller
     public async Task<IActionResult> ExportAuditLogsCsv(
         string? query,
         Guid? actorUserId,
-        string? action,
+        [FromQuery(Name = "action")] string? action,
         string? entityName,
         DateTime? fromUtc,
         DateTime? toUtc,
@@ -2207,7 +2207,7 @@ public class PortalController : Controller
     public async Task<IActionResult> ExportAuditLogsExcel(
         string? query,
         Guid? actorUserId,
-        string? action,
+        [FromQuery(Name = "action")] string? action,
         string? entityName,
         DateTime? fromUtc,
         DateTime? toUtc,
@@ -2231,7 +2231,7 @@ public class PortalController : Controller
     public async Task<IActionResult> ExportAuditLogsPdf(
         string? query,
         Guid? actorUserId,
-        string? action,
+        [FromQuery(Name = "action")] string? action,
         string? entityName,
         DateTime? fromUtc,
         DateTime? toUtc,
