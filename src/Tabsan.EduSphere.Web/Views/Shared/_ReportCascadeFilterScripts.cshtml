@@ -1,0 +1,34 @@
+@* Cascade filter script: auto-submits form on institution/department change for server-side cascade *@
+<script>
+    (function () {
+        'use strict';
+        var form = document.querySelector('form[method="get"]');
+        if (!form) return;
+
+        // Institution type dropdown cascades → reload to filter departments
+        var institutionSelect = form.querySelector('select[name="institutionType"]');
+        if (institutionSelect) {
+            institutionSelect.addEventListener('change', function () {
+                // Clear downstream values to prevent stale filters
+                var deptSelect = form.querySelector('select[name="departmentId"]');
+                if (deptSelect) deptSelect.value = '';
+                var offeringSelect = form.querySelector('select[name="offeringId"]');
+                if (offeringSelect) offeringSelect.value = '';
+                var semesterSelect = form.querySelector('select[name="semesterId"]');
+                if (semesterSelect) semesterSelect.value = '';
+                form.submit();
+            });
+        }
+
+        // Department dropdown cascades → reload to filter offerings
+        var departmentSelect = form.querySelector('select[name="departmentId"]');
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', function () {
+                // Clear downstream offering value when department changes
+                var offeringSelect = form.querySelector('select[name="offeringId"]');
+                if (offeringSelect) offeringSelect.value = '';
+                form.submit();
+            });
+        }
+    })();
+</script>

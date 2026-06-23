@@ -21,22 +21,12 @@
     {
         if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-danger">@Model.Message</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@Model.Message</div>
         }
 
         <form method="get" class="card shadow-sm border-0 mb-4">
             <div class="card-body p-3">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">@Model.PeriodFilterLabel</label>
-                        <select name="semesterId" class="form-select form-select-sm">
-                            <option value="">@Model.PeriodFilterPlaceholder</option>
-                            @foreach (var s in Model.Semesters)
-                            {
-                                <option value="@s.Id" selected="@(Model.SemesterId == s.Id)">@s.Name</option>
-                            }
-                        </select>
-                    </div>
                     <div class="col-md-2">
                         <label class="form-label small mb-1">Institute</label>
                         <select name="institutionType" class="form-select form-select-sm">
@@ -61,6 +51,16 @@
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@d.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">@Model.PeriodFilterLabel</label>
+                        <select name="semesterId" class="form-select form-select-sm">
+                            <option value="">@Model.PeriodFilterPlaceholder</option>
+                            @foreach (var s in Model.Semesters)
+                            {
+                                <option value="@s.Id" selected="@(Model.SemesterId == s.Id)">@s.Name</option>
                             }
                         </select>
                     </div>
@@ -145,3 +145,5 @@
         }
     }
 </div>
+
+<partial name="_ReportCascadeFilterScripts" />

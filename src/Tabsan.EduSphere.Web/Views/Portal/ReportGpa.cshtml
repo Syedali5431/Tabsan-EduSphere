@@ -21,7 +21,7 @@
     {
         if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-danger">@Model.Message</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@Model.Message</div>
         }
 
         <form method="get" class="card shadow-sm border-0 mb-4">
@@ -139,5 +139,6 @@
         {
             <div class="alert alert-secondary"><i class="bi bi-info-circle me-2"></i>Select filters above and click Filter to generate the report.</div>
         }
+<partial name="_ReportCascadeFilterScripts" />
     }
 </div>

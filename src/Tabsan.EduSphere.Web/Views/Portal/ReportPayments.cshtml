@@ -22,7 +22,7 @@
     {
         if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-danger">@Model.Message</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@Model.Message</div>
         }
 
         <form method="get" class="card shadow-sm border-0 mb-4">
@@ -192,5 +192,6 @@
         {
             <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No payment receipts matched the selected filters.</div>
         }
+<partial name="_ReportCascadeFilterScripts" />
     }
 </div>
