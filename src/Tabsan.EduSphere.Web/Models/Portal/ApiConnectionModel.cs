@@ -1738,6 +1738,14 @@ public class ReportTranscriptPageModel
     public TranscriptWebModel? Report        { get; set; }
 }
 
+public class ReportDegreeCertificatePageModel
+{
+    public bool             IsConnected      { get; set; }
+    public string?          Message          { get; set; }
+    public List<LookupItem> Students         { get; set; } = new();
+    public Guid?            StudentProfileId { get; set; }
+}
+
 public class LowAttendanceRowItem
 {
     public string  RegistrationNumber   { get; set; } = "";

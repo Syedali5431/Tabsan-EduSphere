@@ -1735,4 +1735,61 @@ public sealed class ReportController : ControllerBase
             Enum.GetName(typeof(InstitutionType), (InstitutionType)effectiveInstitutionType) ?? InstitutionType.University.ToString(),
             sections);
     }
+
+    // ── Degree Certificate ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Generates a formal degree certificate PDF for a graduated student.
+    /// </summary>
+    [HttpGet("degree-certificate/export/pdf")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> ExportDegreeCertificatePdf(
+        [FromQuery] Guid studentProfileId,
+        CancellationToken ct)
+    {
+        var student = await _db.StudentProfiles
+            .Include(s => s.Program)
+            .FirstOrDefaultAsync(s => s.Id == studentProfileId, ct);
+
+        if (student is null)
+            return NotFound(new { message = "Student not found." });
+
+        if (student.Status != StudentStatus.Graduated)
+            return BadRequest(new { message = "Student has not graduated." });
+
+        // Get student's full name from the User table
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == student.UserId, ct);
+        var studentName = user?.FullName ?? student.RegistrationNumber;
+
+        var programName = student.Program?.Name ?? "Degree Program";
+        var programCode = student.Program?.Code ?? programName;
+        var degreeTitle = $"Bachelor of {programName}";
+
+        // Use stored CGPA directly
+        var cgpa = (double)student.Cgpa;
+
+        var startYear = student.AdmissionDate.Year;
+        var endYear = student.GraduatedDate?.Year ?? DateTime.UtcNow.Year;
+        var durationYears = $"{startYear} – {endYear}";
+
+        var certNumber = $"TU-{DateTime.UtcNow.Year}-{programCode}-{student.RegistrationNumber}";
+
+        var data = new Tabsan.EduSphere.Infrastructure.Reporting.DegreeCertificateData(
+            StudentName: studentName,
+            RegistrationNumber: student.RegistrationNumber,
+            ProgramName: programName,
+            ProgramCode: programCode,
+            DegreeTitle: degreeTitle,
+            Cgpa: cgpa,
+            DurationYears: durationYears,
+            FypTitle: null,
+            IssueDate: DateTime.UtcNow,
+            CertificateNumber: certNumber
+        );
+
+        var pdf = Tabsan.EduSphere.Infrastructure.Reporting.DegreeCertificateGenerator.Generate(data);
+
+        var fileName = $"Degree-{studentName.Replace(" ", "-")}-{DateTime.UtcNow:yyyyMMdd}.pdf";
+        return File(pdf, "application/pdf", fileName);
+    }
 }

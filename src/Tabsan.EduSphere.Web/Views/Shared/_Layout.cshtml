@@ -445,6 +445,79 @@
             }
         </style>
     }
+    <style>
+        /* Sidebar collapse — icons-only mode (inline for reliable delivery) */
+        @@media (min-width: 992px) {
+            body.sidebar-collapsed .app-sidebar {
+                width: 72px !important;
+                min-width: 72px !important;
+                padding: 1.5rem 0.5rem 1.25rem !important;
+                overflow-y: auto;
+                overflow-x: hidden;
+                opacity: 1;
+            }
+            body.sidebar-collapsed .app-shell {
+                grid-template-columns: 72px 1fr !important;
+            }
+            body.sidebar-collapsed .brand-meta,
+            body.sidebar-collapsed .menu-link-text {
+                display: none !important;
+            }
+            body.sidebar-collapsed .menu-label {
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                opacity: 0 !important;
+            }
+            body.sidebar-collapsed .menu-link {
+                padding: 0.8rem 0.55rem !important;
+                border-radius: 0.85rem !important;
+                gap: 0 !important;
+                justify-content: center !important;
+            }
+            body.sidebar-collapsed .menu-link:hover {
+                transform: none !important;
+            }
+            body.sidebar-collapsed .brand-link {
+                padding: 0.6rem !important;
+                border-radius: 0.85rem !important;
+                gap: 0 !important;
+                justify-content: center !important;
+                background: transparent !important;
+                border-color: transparent !important;
+            }
+            body.sidebar-collapsed .brand-logo,
+            body.sidebar-collapsed .brand-mark {
+                width: 2.4rem !important;
+                height: 2.4rem !important;
+                border-radius: 0.7rem !important;
+                margin: 0 auto !important;
+            }
+            body.sidebar-collapsed .sidebar-nav {
+                padding-right: 0 !important;
+                gap: 0.2rem !important;
+            }
+            body.sidebar-collapsed .sidebar-toggle span:nth-child(1) {
+                transform: translateY(6px) rotate(45deg) !important;
+            }
+            body.sidebar-collapsed .sidebar-toggle span:nth-child(2) {
+                opacity: 0 !important;
+            }
+            body.sidebar-collapsed .sidebar-toggle span:nth-child(3) {
+                transform: translateY(-6px) rotate(-45deg) !important;
+            }
+            .app-sidebar {
+                transition: width 0.3s cubic-bezier(0.4,0,0.2,1), min-width 0.3s cubic-bezier(0.4,0,0.2,1), padding 0.3s cubic-bezier(0.4,0,0.2,1);
+            }
+            .app-shell {
+                transition: grid-template-columns 0.3s cubic-bezier(0.4,0,0.2,1);
+            }
+            .menu-link {
+                transition: padding 0.3s ease, border-radius 0.3s ease, gap 0.3s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            }
+        }
+    </style>
 </head>
 <body data-user-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
     @if (requiresLoginRedirect)
@@ -998,11 +1071,9 @@
 
             function toggleSidebar() {
                 if (isMobile()) {
-                    // Mobile: toggle overlay (slide-in from left)
                     var isOpen = document.body.classList.contains('sidebar-open');
                     setSidebar(!isOpen);
                 } else {
-                    // Desktop: toggle collapse (sidebar retracts, content expands)
                     var collapsed = document.body.classList.toggle('sidebar-collapsed');
                     try { localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? '1' : '0'); } catch(e) {}
                 }
@@ -1010,10 +1081,26 @@
 
             // Restore saved sidebar collapse state (desktop only)
             try {
-                if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1') {
+                if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1' && !isMobile()) {
                     document.body.classList.add('sidebar-collapsed');
                 }
             } catch(e) {}
+
+            // Enable transitions after initial paint to avoid flash on load
+            requestAnimationFrame(function () {
+                document.body.classList.add('sidebar-transitions-ready');
+            });
+
+            // Handle window resize – collapse sidebar automatically on mobile
+            var resizeTimer;
+            window.addEventListener('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function () {
+                    if (isMobile()) {
+                        document.body.classList.remove('sidebar-open');
+                    }
+                }, 150);
+            });
 
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', toggleSidebar);

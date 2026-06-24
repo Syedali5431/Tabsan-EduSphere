@@ -114,6 +114,7 @@ html {
   --radius-pill: 999px;
 
   --sidebar-width: 300px;
+  --sidebar-collapsed-width: 72px;
   --header-height: 88px;
   --content-max-width: 1600px;
 
@@ -993,29 +994,118 @@ tr th {
   transition: transform 0.22s ease, opacity 0.22s ease;
 }
 
-/* ── Sidebar collapse (desktop only) ── */
+/* ── Sidebar collapse (desktop only) — icons-only mode ── */
 @media (min-width: 992px) {
+  .app-sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .app-shell {
+    transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .menu-label,
+  .brand-meta,
+  .menu-link-text,
+  .brand-link {
+    transition: opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease, height 0.3s ease,
+                border-radius 0.3s ease, gap 0.3s ease, background 0.3s ease,
+                border-color 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+  }
+
+  .menu-link {
+    transition: padding 0.3s ease, border-radius 0.3s ease, gap 0.3s ease,
+                background-color 0.18s ease, color 0.18s ease, transform 0.18s ease,
+                box-shadow 0.18s ease;
+  }
+
+  .menu-link-icon {
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  .menu-link-icon svg {
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  /* ---- Collapsed state (must come after base rules in this media query) ---- */
+
   body.sidebar-collapsed .app-shell {
-    grid-template-columns: 0 1fr;
+    grid-template-columns: var(--sidebar-collapsed-width) 1fr;
   }
 
   body.sidebar-collapsed .app-sidebar {
-    width: 0;
-    min-width: 0;
+    width: var(--sidebar-collapsed-width) !important;
+    min-width: var(--sidebar-collapsed-width) !important;
+    padding: 1.5rem 0.5rem 1.25rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    opacity: 1;
+  }
+
+  body.sidebar-collapsed .brand-link {
+    padding: 0.6rem;
+    border-radius: 0.85rem;
+    gap: 0;
+    justify-content: center;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  body.sidebar-collapsed .brand-logo,
+  body.sidebar-collapsed .brand-mark {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.7rem;
+    margin: 0 auto;
+  }
+
+  body.sidebar-collapsed .brand-meta {
+    display: none;
+  }
+
+  body.sidebar-collapsed .menu-label {
+    height: 0;
+    margin: 0;
     padding: 0;
     overflow: hidden;
     opacity: 0;
   }
 
-  .app-sidebar {
-    transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  body.sidebar-collapsed .menu-link {
+    padding: 0.8rem 0.55rem;
+    border-radius: 0.85rem;
+    gap: 0;
+    justify-content: center;
   }
 
-  .app-shell {
-    transition: grid-template-columns 0.3s ease;
+  body.sidebar-collapsed .menu-link:hover {
+    transform: none;
   }
 
-  /* Hamburger animates into X when collapsed */
+  body.sidebar-collapsed .menu-link-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  body.sidebar-collapsed .menu-link-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  body.sidebar-collapsed .menu-link-text {
+    display: none;
+  }
+
+  body.sidebar-collapsed .sidebar-nav {
+    padding-right: 0;
+    gap: 0.2rem;
+  }
+
+  /* Hamburger → X */
   body.sidebar-collapsed .sidebar-toggle span:nth-child(1) {
     transform: translateY(6px) rotate(45deg);
   }

@@ -220,14 +220,14 @@ else
                     {
                     <div class="col-12 col-lg-6">
                         <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
-                        <div style="height:300px;max-height:350px;"><canvas id="paymentStatusChart"></canvas></div>
+                        <div style="height:380px;"><canvas id="paymentStatusChart"></canvas></div>
                     </div>
                     }
                     @if (!isFinanceOnly)
                     {
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
-                            <div style="height:300px;max-height:350px;"><canvas id="studentDistributionChart"></canvas></div>
+                            <div style="height:380px;"><canvas id="studentDistributionChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
                             <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
@@ -930,23 +930,63 @@ else
                             backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
                             borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
                             borderWidth: 2,
-                            hoverBorderWidth: 3
+                            hoverBorderWidth: 4,
+                            hoverBorderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
+                            hoverBackgroundColor: labels.map(function (_, idx) { return palette(idx, 0.9); })
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        cutout: '55%',
-                        radius: '75%',
+                        cutout: '42%',
+                        radius: '88%',
                         layout: {
-                            padding: 24
+                            padding: 16
                         },
                         plugins: {
-                            legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                align: 'center',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyleWidth: 12,
+                                    font: { size: 13, weight: '500' },
+                                    generateLabels: function(chart) {
+                                        var data = chart.data;
+                                        return data.labels.map(function(label, i) {
+                                            return {
+                                                text: label + '  (' + data.datasets[0].data[i] + ')',
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].borderColor[i],
+                                                lineWidth: 2,
+                                                hidden: false,
+                                                index: i,
+                                                pointStyle: 'circle'
+                                            };
+                                        });
+                                    }
+                                }
+                            },
                             tooltip: {
-                                padding: 12,
-                                cornerRadius: 6
+                                padding: 14,
+                                cornerRadius: 8,
+                                titleFont: { size: 14, weight: '600' },
+                                bodyFont: { size: 13 },
+                                callbacks: {
+                                    label: function(ctx) {
+                                        var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                        var pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                                        return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true,
+                            duration: 800
                         }
                     }
                 });
@@ -998,23 +1038,63 @@ else
                             backgroundColor: labels.map(function (_, idx) { return palette(idx, 0.72); }),
                             borderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
                             borderWidth: 2,
-                            hoverBorderWidth: 3
+                            hoverBorderWidth: 4,
+                            hoverBorderColor: labels.map(function (_, idx) { return palette(idx, 1); }),
+                            hoverBackgroundColor: labels.map(function (_, idx) { return palette(idx, 0.9); })
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        cutout: '55%',
-                        radius: '75%',
+                        cutout: '42%',
+                        radius: '88%',
                         layout: {
-                            padding: 24
+                            padding: 16
                         },
                         plugins: {
-                            legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                align: 'center',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyleWidth: 12,
+                                    font: { size: 13, weight: '500' },
+                                    generateLabels: function(chart) {
+                                        var data = chart.data;
+                                        return data.labels.map(function(label, i) {
+                                            return {
+                                                text: label + '  (' + data.datasets[0].data[i] + ')',
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].borderColor[i],
+                                                lineWidth: 2,
+                                                hidden: false,
+                                                index: i,
+                                                pointStyle: 'circle'
+                                            };
+                                        });
+                                    }
+                                }
+                            },
                             tooltip: {
-                                padding: 12,
-                                cornerRadius: 6
+                                padding: 14,
+                                cornerRadius: 8,
+                                titleFont: { size: 14, weight: '600' },
+                                bodyFont: { size: 13 },
+                                callbacks: {
+                                    label: function(ctx) {
+                                        var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                        var pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                                        return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true,
+                            duration: 800
                         }
                     }
                 });

@@ -61,6 +61,7 @@ public class PortalController : Controller
         [nameof(Enrollments)] = "enrollments",
         [nameof(ReportCenter)] = "report_center",
         [nameof(ReportPayments)] = "report_center",
+        [nameof(ReportDegreeCertificate)] = "report_center",
         [nameof(UserSettings)] = "user_settings",
         [nameof(DashboardSettings)] = "dashboard_settings",
         [nameof(DegreeAudit)] = "degree_audit",
@@ -9200,6 +9201,43 @@ public class PortalController : Controller
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}"; }
         return RedirectToAction(nameof(ReportTranscript), new { studentProfileId });
+    }
+
+    // -- Degree Certificate Report -------------------------------------------
+
+    [HttpGet]
+    public async Task<IActionResult> ReportDegreeCertificate(Guid? studentProfileId, CancellationToken ct)
+    {
+        ViewData["Title"] = "Degree Certificate";
+        var model = new ReportDegreeCertificatePageModel
+        {
+            IsConnected      = _api.IsConnected(),
+            StudentProfileId = studentProfileId
+        };
+        if (!model.IsConnected) return View(model);
+        try
+        {
+            var students = await _api.GetStudentsAsync(null, ct);
+            model.Students = students
+                .Where(s => string.Equals(s.Status, "Graduated", StringComparison.OrdinalIgnoreCase))
+                .Select(s => new LookupItem { Id = s.Id, Name = $"{s.FullName} ({s.RegistrationNumber})" })
+                .ToList();
+        }
+        catch (Exception ex) { model.Message = ex.Message; }
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportDegreeCertificatePdf(Guid studentProfileId, CancellationToken ct)
+    {
+        if (!_api.IsConnected()) return RedirectToAction(nameof(ReportDegreeCertificate));
+        try
+        {
+            var bytes = await _api.ExportDegreeCertificatePdfAsync(studentProfileId, ct);
+            return File(bytes, "application/pdf", $"degree-certificate-{DateTime.UtcNow:yyyyMMdd}.pdf");
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}"; }
+        return RedirectToAction(nameof(ReportDegreeCertificate), new { studentProfileId });
     }
 
     [HttpGet]

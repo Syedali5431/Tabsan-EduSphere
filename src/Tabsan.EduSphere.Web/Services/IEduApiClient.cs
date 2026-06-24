@@ -156,6 +156,7 @@ public interface IEduApiClient
     Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptCsvAsync(Guid studentProfileId, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptPdfAsync(Guid studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportDegreeCertificatePdfAsync(Guid studentProfileId, CancellationToken ct);
     Task<byte[]> ExportLowAttendanceAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportLowAttendanceCsvAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportLowAttendancePdfAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
@@ -5382,6 +5383,9 @@ public class EduApiClient : IEduApiClient
 
     public Task<byte[]> ExportStudentTranscriptPdfAsync(Guid studentProfileId, CancellationToken ct)
         => GetBytesAsync($"api/v1/reports/student-transcript/export/pdf?studentProfileId={studentProfileId}", ct);
+
+    public Task<byte[]> ExportDegreeCertificatePdfAsync(Guid studentProfileId, CancellationToken ct)
+        => GetBytesAsync($"api/v1/reports/degree-certificate/export/pdf?studentProfileId={studentProfileId}", ct);
 
     public Task<byte[]> ExportGpaReportCsvAsync(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
     {
