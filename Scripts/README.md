@@ -53,15 +53,8 @@
 | `admin.uni` | Admin | University |
 | `admin.col` | Admin | College |
 | `admin.sch` | Admin | School |
-| `faculty.uni` | Faculty | University |
-| `faculty.col` | Faculty | College |
-| `faculty.sch` | Faculty | School |
-| `student.uni` | Student | University |
-| `student.col` | Student | College |
-| `student.sch` | Student | School |
-| `finance.uni` | Finance | University |
-| `finance.col` | Finance | College |
-| `finance.sch` | Finance | School |
+
+Faculty, Student, and Finance users are created by `03-FullDummyData.sql` (e.g. `faculty.it1`, `bscs1s1`, etc.).
 
 Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`, `spanish3`).
 

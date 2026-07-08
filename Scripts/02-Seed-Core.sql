@@ -1,15 +1,20 @@
 /*
   Seed Core Data — Tabsan EduSphere v1.0
   
-  Populates minimal required data: roles, tenants, campuses, departments,
-  academic programs, courses, semesters, and baseline users.
+  Populates minimal required data: SuperAdmin + Admin roles, tenants, campuses,
+  departments, academic programs, courses, semesters, and baseline admin users.
+  
+  Faculty, Student, and Finance roles + users are created by 03-FullDummyData.sql.
   
   Default password for ALL users: EduSphere147
   
   INSTITUTES (3):
-    University (2): BSCS 8 sem, BBA 8 sem, MSE 4 sem, Spanish Language 1 yr
-    College (1):     ICS (2 years, class 11-12)
-    School (0):      Science (10 years, class 1-10)
+    University (0): BSCS 8 sem, BBA 8 sem, MSE 4 sem, Spanish Language 1 yr
+    School (1):     Science (10 years, class 1-10)
+    College (2):    ICS (2 years, class 11-12)
+  
+  CAMPUSES (3):
+    University 1, College 1, School 1
 */
 
 SET NOCOUNT ON;
@@ -35,18 +40,34 @@ BEGIN
 END
 
 -- ═══════════════════════════════════════════════════════════════════
--- 2. ROLES (5 — no Parent role)
+-- 2. ROLES (2 core roles only — SuperAdmin + Admin)
+--    Faculty (3), Student (4), Finance (5) are created by 03-FullDummyData.sql
 -- ═══════════════════════════════════════════════════════════════════
 IF NOT EXISTS (SELECT 1 FROM [roles])
 BEGIN
     SET IDENTITY_INSERT [roles] ON;
     INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
     (1, N'SuperAdmin', N'Full platform access — manages license and all settings.', 1),
-    (2, N'Admin',      N'Institution-level administrator.', 1),
-    (3, N'Faculty',    N'Teaching staff with course-level access.', 1),
-    (4, N'Student',    N'Learner with self-service access.', 1),
-    (5, N'Finance',    N'Financial officer with payments and fee access.', 1);
+    (2, N'Admin',      N'Institution-level administrator.', 1);
     SET IDENTITY_INSERT [roles] OFF;
+END
+ELSE
+BEGIN
+    -- Ensure SuperAdmin and Admin exist (idempotent upsert)
+    IF NOT EXISTS (SELECT 1 FROM [roles] WHERE [Id] = 1)
+    BEGIN
+        SET IDENTITY_INSERT [roles] ON;
+        INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+        (1, N'SuperAdmin', N'Full platform access — manages license and all settings.', 1);
+        SET IDENTITY_INSERT [roles] OFF;
+    END
+    IF NOT EXISTS (SELECT 1 FROM [roles] WHERE [Id] = 2)
+    BEGIN
+        SET IDENTITY_INSERT [roles] ON;
+        INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+        (2, N'Admin', N'Institution-level administrator.', 1);
+        SET IDENTITY_INSERT [roles] OFF;
+    END
 END
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -70,21 +91,31 @@ DECLARE @C_Sch UNIQUEIDENTIFIER = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC';
 INSERT INTO [tenants] ([Id], [Code], [Name], [IsDeleted], [CreatedAt])
 SELECT v.Id, v.Code, v.Name, 0, @Now
 FROM (VALUES
-    (@T_Uni, N'TABSAN-UNI', N'Tabsan University'),
-    (@T_Col, N'TABSAN-COL', N'Tabsan College'),
-    (@T_Sch, N'TABSAN-SCH', N'Tabsan School')
+    (@T_Uni, N'TABSAN-UNI', N'University'),
+    (@T_Col, N'TABSAN-COL', N'College'),
+    (@T_Sch, N'TABSAN-SCH', N'School')
 ) v(Id, Code, Name)
 WHERE NOT EXISTS (SELECT 1 FROM [tenants] WHERE [Id] = v.Id);
+
+-- Update existing tenants if names/codes differ
+UPDATE [tenants] SET [Name] = N'University',  [Code] = N'TABSAN-UNI' WHERE [Id] = @T_Uni;
+UPDATE [tenants] SET [Name] = N'College',     [Code] = N'TABSAN-COL' WHERE [Id] = @T_Col;
+UPDATE [tenants] SET [Name] = N'School',      [Code] = N'TABSAN-SCH' WHERE [Id] = @T_Sch;
 
 -- Campuses
 INSERT INTO [campuses] ([Id], [TenantId], [Code], [Name], [IsDeleted], [CreatedAt])
 SELECT v.Id, v.TenantId, v.Code, v.Name, 0, @Now
 FROM (VALUES
-    (@C_Uni, @T_Uni, N'MAIN-UNI', N'University Main Campus'),
-    (@C_Col, @T_Col, N'MAIN-COL', N'College Main Campus'),
-    (@C_Sch, @T_Sch, N'MAIN-SCH', N'School Main Campus')
+    (@C_Uni, @T_Uni, N'UNI-1', N'University 1'),
+    (@C_Col, @T_Col, N'COL-1', N'College 1'),
+    (@C_Sch, @T_Sch, N'SCH-1', N'School 1')
 ) v(Id, TenantId, Code, Name)
 WHERE NOT EXISTS (SELECT 1 FROM [campuses] WHERE [Id] = v.Id);
+
+-- Update existing campuses if names/codes differ
+UPDATE [campuses] SET [Name] = N'University 1', [Code] = N'UNI-1' WHERE [Id] = @C_Uni;
+UPDATE [campuses] SET [Name] = N'College 1',    [Code] = N'COL-1' WHERE [Id] = @C_Col;
+UPDATE [campuses] SET [Name] = N'School 1',     [Code] = N'SCH-1' WHERE [Id] = @C_Sch;
 
 -- ═══════════════════════════════════════════════════════════════════
 -- 5. DEPARTMENTS
@@ -98,8 +129,8 @@ BEGIN
     INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt], [TenantId], [CampusId], [InstitutionType])
     SELECT v.Id, v.Name, v.Code, 1, 0, @Now, v.TenantId, v.CampusId, v.InstitutionType
     FROM (VALUES
-        (@D_IT,  N'Information Technology', N'IT',  @T_Uni, @C_Uni, 2),
-        (@D_BUS, N'Business Administration', N'BUS', @T_Uni, @C_Uni, 2)
+        (@D_IT,  N'Information Technology', N'IT',  @T_Uni, @C_Uni, 0),
+        (@D_BUS, N'Business Administration', N'BUS', @T_Uni, @C_Uni, 0)
     ) v(Id, Name, Code, TenantId, CampusId, InstitutionType)
     WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
 END
@@ -342,9 +373,10 @@ DECLARE @SemSch1  UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Na
 DECLARE @SemSch10 UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [semesters] WHERE [Name] = N'Class 10 (2026)');
 
 -- ═══════════════════════════════════════════════════════════════════
--- 9. CORE USERS (baseline for login)
+-- 9. CORE USERS (baseline for login — SuperAdmin + Admin only)
+--    Faculty / Student / Finance users are created by 03-FullDummyData.sql
 -- ═══════════════════════════════════════════════════════════════════
-DECLARE @R_SuperAdmin INT = 1, @R_Admin INT = 2, @R_Faculty INT = 3, @R_Student INT = 4, @R_Finance INT = 5;
+DECLARE @R_SuperAdmin INT = 1, @R_Admin INT = 2;
 
 DECLARE @CoreUsers TABLE (
     Id UNIQUEIDENTIFIER, Username NVARCHAR(100), Email NVARCHAR(256),
@@ -356,35 +388,17 @@ DECLARE @CoreUsers TABLE (
 INSERT INTO @CoreUsers VALUES
 ('66666666-6666-6666-6666-666666666601', N'superadmin', N'superadmin@tabsan.local', N'Super Admin', @R_SuperAdmin, NULL, NULL, NULL, NULL);
 
--- University Admins
+-- University Admin
 INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666602', N'admin.uni', N'admin.uni@tabsan.local', N'University Admin', @R_Admin, @D_IT, @T_Uni, @C_Uni, 2);
+('66666666-6666-6666-6666-666666666602', N'admin.uni', N'admin.uni@tabsan.local', N'University Admin', @R_Admin, @D_IT, @T_Uni, @C_Uni, 0);
 
 -- College Admin
 INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666603', N'admin.col', N'admin.col@tabsan.local', N'College Admin', @R_Admin, @D_IT, @T_Col, @C_Col, 1);
+('66666666-6666-6666-6666-666666666603', N'admin.col', N'admin.col@tabsan.local', N'College Admin', @R_Admin, @D_IT, @T_Col, @C_Col, 2);
 
 -- School Admin
 INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666604', N'admin.sch', N'admin.sch@tabsan.local', N'School Admin', @R_Admin, @D_IT, @T_Sch, @C_Sch, 0);
-
--- Faculty (one per department)
-INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666605', N'faculty.uni', N'faculty.uni@tabsan.local', N'Dr. Ahmad Khan', @R_Faculty, @D_IT, @T_Uni, @C_Uni, 2),
-('66666666-6666-6666-6666-666666666606', N'faculty.col', N'faculty.col@tabsan.local', N'Prof. Rashid Iqbal', @R_Faculty, @D_IT, @T_Col, @C_Col, 1),
-('66666666-6666-6666-6666-666666666607', N'faculty.sch', N'faculty.sch@tabsan.local', N'Ms. Amna Javed', @R_Faculty, @D_IT, @T_Sch, @C_Sch, 0);
-
--- Students (one per program)
-INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666608', N'student.uni', N'student.uni@tabsan.local', N'Ali Hassan', @R_Student, @D_IT, @T_Uni, @C_Uni, 2),
-('66666666-6666-6666-6666-666666666609', N'student.col', N'student.col@tabsan.local', N'Arslan Mehmood', @R_Student, @D_IT, @T_Col, @C_Col, 1),
-('66666666-6666-6666-6666-666666666610', N'student.sch', N'student.sch@tabsan.local', N'Ahmed Raza', @R_Student, @D_IT, @T_Sch, @C_Sch, 0);
-
--- Finance Officers
-INSERT INTO @CoreUsers VALUES
-('66666666-6666-6666-6666-666666666611', N'finance.uni', N'finance.uni@tabsan.local', N'Finance Officer Uni', @R_Finance, @D_IT, @T_Uni, @C_Uni, 2),
-('66666666-6666-6666-6666-666666666612', N'finance.col', N'finance.col@tabsan.local', N'Finance Officer Col', @R_Finance, @D_IT, @T_Col, @C_Col, 1),
-('66666666-6666-6666-6666-666666666613', N'finance.sch', N'finance.sch@tabsan.local', N'Finance Officer Sch', @R_Finance, @D_IT, @T_Sch, @C_Sch, 0);
+('66666666-6666-6666-6666-666666666604', N'admin.sch', N'admin.sch@tabsan.local', N'School Admin', @R_Admin, @D_IT, @T_Sch, @C_Sch, 1);
 
 -- Insert/update users
 MERGE [users] AS t
@@ -411,8 +425,8 @@ BEGIN
     INSERT INTO [departments] ([Id], [Name], [Code], [IsActive], [IsDeleted], [CreatedAt], [TenantId], [CampusId], [InstitutionType])
     SELECT v.Id, v.Name, v.Code, 1, 0, @Now, v.TenantId, v.CampusId, v.InstitutionType
     FROM (VALUES
-        (@D_IT_Col, N'Information Technology', N'IT-COL', @T_Col, @C_Col, 1),
-        (@D_IT_Sch, N'Science Department',     N'SCI',   @T_Sch, @C_Sch, 0)
+        (@D_IT_Col, N'Information Technology', N'IT-COL', @T_Col, @C_Col, 2),
+        (@D_IT_Sch, N'Science Department',     N'SCI',   @T_Sch, @C_Sch, 1)
     ) v(Id, Name, Code, TenantId, CampusId, InstitutionType)
     WHERE NOT EXISTS (SELECT 1 FROM [departments] WHERE [Id] = v.Id);
 END
@@ -440,8 +454,8 @@ BEGIN
 END
 IF COL_LENGTH('departments', 'InstitutionType') IS NOT NULL
 BEGIN
-    UPDATE [departments] SET [InstitutionType] = 1 WHERE [Id] = @D_IT_Col AND [InstitutionType] IS NULL;
-    UPDATE [departments] SET [InstitutionType] = 0 WHERE [Id] = @D_IT_Sch AND [InstitutionType] IS NULL;
+    UPDATE [departments] SET [InstitutionType] = 2 WHERE [Id] = @D_IT_Col AND ([InstitutionType] IS NULL OR [InstitutionType] != 2);
+    UPDATE [departments] SET [InstitutionType] = 1 WHERE [Id] = @D_IT_Sch AND ([InstitutionType] IS NULL OR [InstitutionType] != 1);
 END
 
 -- Update programs for College & School departments (they were inserted under @D_IT)
@@ -458,60 +472,9 @@ WHERE [Code] LIKE N'ICS%' OR [Code] IN (N'ENG111', N'MTH111', N'PHY111', N'ENG12
 UPDATE [courses] SET [DepartmentId] = @D_IT_Sch
 WHERE [Code] IN (N'ENG001', N'MTH001', N'SCI001', N'SST001', N'CS001', N'URD001', N'ISL001', N'PE001');
 
--- Update faculty/student core users to correct departments
-UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] IN (N'faculty.col', N'student.col');
-UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] IN (N'faculty.sch', N'student.sch');
+-- Update admin core users to correct departments
 UPDATE [users] SET [DepartmentId] = @D_IT_Col WHERE [Username] = N'admin.col';
 UPDATE [users] SET [DepartmentId] = @D_IT_Sch WHERE [Username] = N'admin.sch';
-
--- Additional faculty (5 per department) and finance (2 per tenant) users
-DECLARE @MoreUsers TABLE (
-    Username NVARCHAR(100), Email NVARCHAR(256), FullName NVARCHAR(200),
-    RoleId INT, DeptId UNIQUEIDENTIFIER, TenantId UNIQUEIDENTIFIER,
-    CampusId UNIQUEIDENTIFIER, InstitutionType INT NULL
-);
-
--- 4 more University IT faculty (1 already exists as faculty.uni)
-INSERT INTO @MoreUsers VALUES
-(N'faculty.uni.it2', N'faculty.uni.it2@uni.local', N'Prof. Sana Tariq', 3, @D_IT, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.it3', N'faculty.uni.it3@uni.local', N'Dr. Bilal Haider', 3, @D_IT, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.it4', N'faculty.uni.it4@uni.local', N'Prof. Nadia Sheikh', 3, @D_IT, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.it5', N'faculty.uni.it5@uni.local', N'Dr. Omer Farooq', 3, @D_IT, @T_Uni, @C_Uni, 2);
-
--- 5 University Business faculty (BBA)
-INSERT INTO @MoreUsers VALUES
-(N'faculty.uni.bus1', N'faculty.uni.bus1@uni.local', N'Dr. Hassan Raza', 3, @D_BUS, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.bus2', N'faculty.uni.bus2@uni.local', N'Prof. Ayesha Malik', 3, @D_BUS, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.bus3', N'faculty.uni.bus3@uni.local', N'Dr. Imran Qureshi', 3, @D_BUS, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.bus4', N'faculty.uni.bus4@uni.local', N'Prof. Fatima Noor', 3, @D_BUS, @T_Uni, @C_Uni, 2),
-(N'faculty.uni.bus5', N'faculty.uni.bus5@uni.local', N'Dr. Zain Abbas', 3, @D_BUS, @T_Uni, @C_Uni, 2);
-
--- 4 more College IT faculty (1 already exists as faculty.col)
-INSERT INTO @MoreUsers VALUES
-(N'faculty.col.it2', N'faculty.col.it2@col.local', N'Ms. Rabia Khan', 3, @D_IT_Col, @T_Col, @C_Col, 1),
-(N'faculty.col.it3', N'faculty.col.it3@col.local', N'Mr. Faisal Shah', 3, @D_IT_Col, @T_Col, @C_Col, 1),
-(N'faculty.col.it4', N'faculty.col.it4@col.local', N'Ms. Hira Butt', 3, @D_IT_Col, @T_Col, @C_Col, 1),
-(N'faculty.col.it5', N'faculty.col.it5@col.local', N'Mr. Tariq Mehmood', 3, @D_IT_Col, @T_Col, @C_Col, 1);
-
--- 4 more School Science faculty (1 already exists as faculty.sch)
-INSERT INTO @MoreUsers VALUES
-(N'faculty.sch.sci2', N'faculty.sch.sci2@sch.local', N'Mr. Kamran Shah', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
-(N'faculty.sch.sci3', N'faculty.sch.sci3@sch.local', N'Ms. Nida Hassan', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
-(N'faculty.sch.sci4', N'faculty.sch.sci4@sch.local', N'Mr. Asif Iqbal', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0),
-(N'faculty.sch.sci5', N'faculty.sch.sci5@sch.local', N'Ms. Saba Riaz', 3, @D_IT_Sch, @T_Sch, @C_Sch, 0);
-
--- 1 more finance per tenant (1 already exists each)
-INSERT INTO @MoreUsers VALUES
-(N'finance.uni2', N'finance.uni2@uni.local', N'Ayesha Saddiq', 5, NULL, @T_Uni, @C_Uni, 2),
-(N'finance.col2', N'finance.col2@col.local', N'Yasir Nawaz', 5, NULL, @T_Col, @C_Col, 1),
-(N'finance.sch2', N'finance.sch2@sch.local', N'Hina Pervez', 5, NULL, @T_Sch, @C_Sch, 0);
-
-INSERT INTO [users] ([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[TenantId],[CampusId],[InstitutionType],[IsActive],[CreatedAt],[IsDeleted])
-SELECT NEWID(), s.Username, s.Email, s.FullName, @DefaultPwd,
-    s.RoleId, s.DeptId, s.TenantId, s.CampusId, s.InstitutionType,
-    1, @Now, 0
-FROM @MoreUsers s
-WHERE NOT EXISTS (SELECT 1 FROM [users] WHERE [Username] = s.Username);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- 10. COURSE OFFERINGS (course + semester pairs)

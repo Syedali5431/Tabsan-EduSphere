@@ -82,7 +82,7 @@ IF COL_LENGTH('users', 'InstitutionType') IS NOT NULL
 BEGIN
     PRINT '';
     PRINT '--- Users by Institution Type ---';
-    SELECT CASE [InstitutionType] WHEN 0 THEN N'School' WHEN 1 THEN N'College' WHEN 2 THEN N'University' ELSE N'Global' END AS Institution,
+    SELECT CASE [InstitutionType] WHEN 0 THEN N'University' WHEN 1 THEN N'School' WHEN 2 THEN N'College' ELSE N'Global' END AS Institution,
            COUNT(*) AS UserCount
     FROM [users] WHERE [IsDeleted]=0 AND [IsActive]=1 AND [RoleId]=4
     GROUP BY [InstitutionType] ORDER BY [InstitutionType];
@@ -156,10 +156,7 @@ PRINT '';
 PRINT '--- Core Login Users ---';
 SELECT [Username], [Email], r.[Name] AS Role, [IsActive]
 FROM [users] u JOIN [roles] r ON r.[Id]=u.[RoleId]
-WHERE [Username] IN (N'superadmin',N'admin.uni',N'admin.col',N'admin.sch',
-                      N'faculty.uni',N'faculty.col',N'faculty.sch',
-                      N'student.uni',N'student.col',N'student.sch',
-                      N'finance.uni',N'finance.col',N'finance.sch')
+WHERE [Username] IN (N'superadmin',N'admin.uni',N'admin.col',N'admin.sch')
 ORDER BY u.[Username];
 
 -- ═══════ SEMESTER SORT ORDER CHECK ═══════

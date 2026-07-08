@@ -4,34 +4,40 @@
 -- =============================================================================
 
 -- Step 1: Ensure all 5 roles exist for every active menu item
-INSERT INTO sidebar_menu_role_accesses (SidebarMenuItemId, RoleName, IsAllowed)
-SELECT smi.Id, r.RoleName, 0
+INSERT INTO sidebar_menu_role_accesses (Id, SidebarMenuItemId, RoleName, IsAllowed, CreatedAt)
+SELECT NEWID(), smi.Id, r.RoleName, 0, SYSUTCDATETIME()
 FROM sidebar_menu_items smi
-CROSS JOIN (VALUES ('Admin'),('Faculty'),('Student'),('Finance')) AS r(RoleName)
+CROSS JOIN (VALUES ('SuperAdmin'),('Admin'),('Faculty'),('Student'),('Finance')) AS r(RoleName)
 WHERE smi.IsDeleted = 0
   AND NOT EXISTS (
     SELECT 1 FROM sidebar_menu_role_accesses ra
     WHERE ra.SidebarMenuItemId = smi.Id AND ra.RoleName = r.RoleName
   );
 
--- Step 2: DISABLE everything for Admin/Faculty/Student/Finance first
+-- Step 2: DISABLE everything for all roles first (then selectively enable)
 UPDATE ra
 SET ra.IsAllowed = 0
 FROM sidebar_menu_role_accesses ra
 JOIN sidebar_menu_items smi ON smi.Id = ra.SidebarMenuItemId
-WHERE smi.IsDeleted = 0
-  AND ra.RoleName IN ('Admin','Faculty','Student','Finance');
+WHERE smi.IsDeleted = 0;
 
 -- =============================================================================
 -- Step 3: ENABLE specific menus per role
 -- =============================================================================
+
+-- ── SUPERADMIN (all menus) ──────────────────────────────────────────────────
+UPDATE ra SET ra.IsAllowed = 1
+FROM sidebar_menu_role_accesses ra
+JOIN sidebar_menu_items smi ON smi.Id = ra.SidebarMenuItemId
+WHERE smi.IsDeleted = 0
+  AND ra.RoleName = 'SuperAdmin';
 
 -- ── ALL ROLES (common menus) ─────────────────────────────────────────────────
 UPDATE ra SET ra.IsAllowed = 1
 FROM sidebar_menu_role_accesses ra
 JOIN sidebar_menu_items smi ON smi.Id = ra.SidebarMenuItemId
 WHERE smi.[Key] IN ('notifications','helpdesk','user_settings','theme_settings')
-  AND ra.RoleName IN ('Admin','Faculty','Student','Finance');
+  AND ra.RoleName IN ('SuperAdmin','Admin','Faculty','Student','Finance');
 
 -- ── ADMIN ────────────────────────────────────────────────────────────────────
 UPDATE ra SET ra.IsAllowed = 1
@@ -102,29 +108,36 @@ WHERE smi.[Key] IN (
 -- =============================================================================
 -- Verification queries
 -- =============================================================================
+PRINT '--- SUPERADMIN visible menus ---';
+SELECT smi.[Key], smi.Name
+FROM sidebar_menu_items smi
+JOIN sidebar_menu_role_accesses ra ON ra.SidebarMenuItemId = smi.Id
+WHERE smi.IsDeleted = 0 AND smi.ParentId IS NULL AND ra.RoleName = 'SuperAdmin' AND ra.IsAllowed = 1
+ORDER BY smi.DisplayOrder;
+
 PRINT '--- ADMIN visible menus ---';
-SELECT smi.[Key], smi.Label
+SELECT smi.[Key], smi.Name
 FROM sidebar_menu_items smi
 JOIN sidebar_menu_role_accesses ra ON ra.SidebarMenuItemId = smi.Id
 WHERE smi.IsDeleted = 0 AND smi.ParentId IS NULL AND ra.RoleName = 'Admin' AND ra.IsAllowed = 1
 ORDER BY smi.DisplayOrder;
 
 PRINT '--- FACULTY visible menus ---';
-SELECT smi.[Key], smi.Label
+SELECT smi.[Key], smi.Name
 FROM sidebar_menu_items smi
 JOIN sidebar_menu_role_accesses ra ON ra.SidebarMenuItemId = smi.Id
 WHERE smi.IsDeleted = 0 AND smi.ParentId IS NULL AND ra.RoleName = 'Faculty' AND ra.IsAllowed = 1
 ORDER BY smi.DisplayOrder;
 
 PRINT '--- STUDENT visible menus ---';
-SELECT smi.[Key], smi.Label
+SELECT smi.[Key], smi.Name
 FROM sidebar_menu_items smi
 JOIN sidebar_menu_role_accesses ra ON ra.SidebarMenuItemId = smi.Id
 WHERE smi.IsDeleted = 0 AND smi.ParentId IS NULL AND ra.RoleName = 'Student' AND ra.IsAllowed = 1
 ORDER BY smi.DisplayOrder;
 
 PRINT '--- FINANCE visible menus ---';
-SELECT smi.[Key], smi.Label
+SELECT smi.[Key], smi.Name
 FROM sidebar_menu_items smi
 JOIN sidebar_menu_role_accesses ra ON ra.SidebarMenuItemId = smi.Id
 WHERE smi.IsDeleted = 0 AND smi.ParentId IS NULL AND ra.RoleName = 'Finance' AND ra.IsAllowed = 1

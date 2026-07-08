@@ -4,10 +4,15 @@
   Clean, structured dummy data for all three institutes.
   Idempotent — safe to re-run. Depends on 01-Schema + 02-Seed-Core.
 
+  ROLES: Creates Faculty(3), Student(4), Finance(5).
+         SuperAdmin(1) and Admin(2) are already seeded by 02-Seed-Core.
+
   INSTITUTES:
     University (TABSAN-UNI): IT/BSCS(8 sem) + BUS/BBA(8 sem) + SPA/Spanish(1 yr)
     School     (TABSAN-SCH): SCI (Class 1-10, 10 students/class)
     College    (TABSAN-COL): ICS (Class 11-12, 10 students/class)
+
+  CAMPUSES: University 1, College 1, School 1
 
   RESULTS RULES:
     - No results for Semester 1 / Class 1 / Class 11
@@ -26,7 +31,43 @@ DECLARE @Now    DATETIME2 = SYSUTCDATETIME();
 DECLARE @DefPwd NVARCHAR(512) = N'argon2id:S7KBqFYDtoQ/+936WKnRGrfaizX10wKV9mIYdhbsO7M=:ncFDYnCu/jEm22iNzYCxdtkxnIZWWyRHRe7StVKmpvQ=';
 
 -- ═══════════════════════════════════════════════════════════════════
--- 0. CONSTANTS
+-- 0a. ROLES — Faculty (3), Student (4), Finance (5)
+--     SuperAdmin (1) and Admin (2) are already created by 02-Seed-Core.sql
+-- ═══════════════════════════════════════════════════════════════════
+IF NOT EXISTS (SELECT 1 FROM [roles] WHERE [Id] = 3)
+BEGIN
+    SET IDENTITY_INSERT [roles] ON;
+    INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+    (3, N'Faculty', N'Teaching staff with course-level access.', 1);
+    SET IDENTITY_INSERT [roles] OFF;
+END
+
+IF NOT EXISTS (SELECT 1 FROM [roles] WHERE [Id] = 4)
+BEGIN
+    SET IDENTITY_INSERT [roles] ON;
+    INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+    (4, N'Student', N'Learner with self-service access.', 1);
+    SET IDENTITY_INSERT [roles] OFF;
+END
+
+IF NOT EXISTS (SELECT 1 FROM [roles] WHERE [Id] = 5)
+BEGIN
+    SET IDENTITY_INSERT [roles] ON;
+    INSERT INTO [roles] ([Id], [Name], [Description], [IsSystemRole]) VALUES
+    (5, N'Finance', N'Financial officer with payments and fee access.', 1);
+    SET IDENTITY_INSERT [roles] OFF;
+END
+
+-- Also ensure tenant/campus names are correct (idempotent fix)
+UPDATE [tenants] SET [Name] = N'University' WHERE [Id] = '11111111-1111-1111-1111-111111111111';
+UPDATE [tenants] SET [Name] = N'College'    WHERE [Id] = '22222222-2222-2222-2222-222222222222';
+UPDATE [tenants] SET [Name] = N'School'     WHERE [Id] = '33333333-3333-3333-3333-333333333333';
+UPDATE [campuses] SET [Name] = N'University 1', [Code] = N'UNI-1' WHERE [Id] = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA';
+UPDATE [campuses] SET [Name] = N'College 1',    [Code] = N'COL-1' WHERE [Id] = 'BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB';
+UPDATE [campuses] SET [Name] = N'School 1',     [Code] = N'SCH-1' WHERE [Id] = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC';
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 0b. CONSTANTS
 -- ═══════════════════════════════════════════════════════════════════
 DECLARE @T_Uni UNIQUEIDENTIFIER = '11111111-1111-1111-1111-111111111111';
 DECLARE @T_Col UNIQUEIDENTIFIER = '22222222-2222-2222-2222-222222222222';
