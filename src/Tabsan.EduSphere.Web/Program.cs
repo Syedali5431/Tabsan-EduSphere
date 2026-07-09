@@ -225,6 +225,9 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+// Session must be available before routing / auth so IEduApiClient can read login tokens.
+app.UseSession();
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -276,7 +279,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthorization();
-app.UseSession();
+// UseSession was moved before UseRouting above — session data must be available during auth.
 
 app.MapControllerRoute(
     name: "default",
