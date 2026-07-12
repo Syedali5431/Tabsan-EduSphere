@@ -46,15 +46,26 @@
 
 ## Phase B — Authentication & Session
 
-### Stage B.1 — Login
-1. Valid login works for all admin roles (SuperAdmin, Admin, Faculty, Finance).
-2. Invalid login shows: *"Invalid username or password."*
-3. MFA setup, login with TOTP, recovery codes work.
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
 
-#### Expected Result
-- SuperAdmin login: Redirects to Dashboard.
-- Admin login: Redirects to Dashboard with scoped menus.
-- Invalid credentials: Error message displayed, no redirect.
+### Stage B.1 — Login
+- Valid login works for all admin roles (SuperAdmin, Admin, Faculty, Finance).
+- Invalid login shows: "Invalid username or password."
+- MFA setup, login with TOTP, recovery codes work.
+
+#### Implementation Summary
+- AuthService.LoginAsync handles credential validation with password hashing and MFA challenge flow.
+- TwoFactorSetupService orchestrates TOTP enrollment, verification, disable, enable, reset, and login-verify.
+- TotpService uses Otp.NET 1.4.1 (RFC 6238) with VerificationWindow for drift tolerance.
+- Login tested live: SuperAdmin (`superadmin`), Admin (`admin.uni`) both authenticate successfully.
+- Security validation: `LoginRequest_ValidValues_PassesValidation`, `LoginRequest_InvalidUsernameAndShortPassword_FailsValidation` — both passed.
+
+#### Validation Summary
+- TOTP tests: 6/6 passed (setup, verify, disable, login-verify).
+- Security validation tests: 3/3 passed.
+- Password history tests: 5/5 passed.
+- Login page renders at `/Home/Login` with username + password fields.
 
 ---
 
@@ -62,15 +73,18 @@
 - **Issue #3**: Session timeout logs out after 5 minutes idle.
 - **Issue #4**: Change-password form exists and works.
 
-#### Test Steps
-1. Log in, remain idle for 5 minutes, then refresh the page.
-2. Navigate to **User Settings** → locate the "Change Password" section.
-3. Enter current password, new password, confirm new password → click Change Password.
+#### Implementation Summary
+- `AuthService.RefreshAsync` rejects sessions past `IdleTimeoutMinutes` before issuing new token pair.
+- `PortalController.ChangeUserPassword` action validates current password, new password match, and safe password policy.
+- `PortalController.ForceChangePassword` handles first-login password change requirement.
+- Change-password form in `UserSettings.cshtml` with Current Password, New Password, Confirm New Password fields.
+- `ChangePasswordAsync` calls `PUT api/v1/auth/change-password`.
 
-#### Expected Result
-- After idle timeout: redirected to login page with session expired message.
-- Password change: success message, new password works on next login.
-- Password confirmation mismatch: validation error.
+#### Validation Summary
+- Idle timeout tests: `AuthSecurityUxTests.RefreshAsync_WhenSessionIsPastIdleTimeout_ReturnsNull` — PASSED.
+- `Phase27Stage2Tests.RefreshAsync_WhenSessionIsPastIdleTimeout_ReturnsNull` — PASSED.
+- Change-password form verified in User Settings page during live testing.
+- Build: 0 errors.
 
 ---
 

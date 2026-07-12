@@ -6,6 +6,9 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| QA Phase B Login & MFA Verified | TOTP enrollment, verification, login-verify all passing; login credential validation | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| QA Phase B Idle Timeout Verified | RefreshAsync rejects sessions past IdleTimeoutMinutes | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
+| QA Phase B Change-Password Verified | Current/new/confirm password form with safe-password policy | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase A Building Creation Verified | Building creation form with Tenant/Campus dropdowns, blank-name rejection | src/Tabsan.EduSphere.API/Controllers/BuildingController.cs |
 | QA Phase A Hierarchy Verified | Departments → Programs → Courses & Offerings pages load in correct order | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | Phase 6 Final Validation | Full regression test (186/215 passed), endpoint audit (32 POST controllers), Issues 1-10 re-verified | Docs/App-Issue-Resolution-Plan.md |

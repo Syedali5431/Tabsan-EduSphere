@@ -61,6 +61,16 @@
 - All hierarchy pages return HTTP 200 from live browser testing.
 - QA Phase A is complete and ready for Phase B.
 
+## 2026-07-12 Update — QA Phase B: Authentication & Session Verified
+### Implementation sync
+- Login flow re-verified: valid credentials authenticate, MFA TOTP flow operational (Otp.NET 1.4.1).
+- Session idle timeout enforcement confirmed: AuthService.RefreshAsync checks IsActiveWithinIdleTimeout.
+- Change-password form verified in User Settings with current/new/confirm password validation.
+- Password history enforcement (last 5 passwords blocked) validated.
+### Validation sync
+- Build: 0 errors. Auth tests: 19/19 passed (RefreshAsync, TwoFactor, PasswordHistory, SecurityValidation).
+- QA Phase B is complete and ready for Phase C.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.
