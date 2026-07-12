@@ -791,6 +791,20 @@ public class UserImportPageModel
     public List<CampusItem> Campuses { get; set; } = new();
     public string? GeneratedSampleFileName { get; set; }
     public UserImportResultItem? Result { get; set; }
+    public SingleUserFormModel SingleUserForm { get; set; } = new();
+    public List<DepartmentItem> AvailableDepartments { get; set; } = new();
+}
+
+public class SingleUserFormModel
+{
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Role { get; set; } = "Student";
+    public string? DepartmentId { get; set; }
+    public string? InstitutionType { get; set; }
+    public string? MobileNumber { get; set; }
+    public string? CampusAssignments { get; set; }
 }
 
 // ── Courses ───────────────────────────────────────────────────────────────────

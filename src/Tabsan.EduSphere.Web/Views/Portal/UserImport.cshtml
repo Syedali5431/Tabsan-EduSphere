@@ -98,6 +98,73 @@
                     </form>
                 </div>
             </div>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Create Single User</h2>
+                    <p class="text-muted small mb-3">Manually create one user at a time. Imported accounts use Username as temporary password and must change it at first login.</p>
+
+                    <form asp-action="CreateSingleUser" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                <input class="form-control" name="Username" value="@Model.SingleUserForm.Username" placeholder="e.g. john.doe" required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input class="form-control" type="email" name="Email" value="@Model.SingleUserForm.Email" placeholder="e.g. john@tabsan.local" required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Full Name</label>
+                                <input class="form-control" name="FullName" value="@Model.SingleUserForm.FullName" placeholder="e.g. John Doe" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Role <span class="text-danger">*</span></label>
+                                <select class="form-select" name="Role" required>
+                                    <option value="">— Select Role —</option>
+                                    <option value="Admin" selected="@(Model.SingleUserForm.Role == "Admin")">Admin</option>
+                                    <option value="Faculty" selected="@(Model.SingleUserForm.Role == "Faculty")">Faculty</option>
+                                    <option value="Student" selected="@(Model.SingleUserForm.Role == "Student")">Student</option>
+                                    <option value="Finance" selected="@(Model.SingleUserForm.Role == "Finance")">Finance</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Institution Type</label>
+                                <select class="form-select" name="InstitutionType">
+                                    <option value="">— Optional —</option>
+                                    <option value="University" selected="@(Model.SingleUserForm.InstitutionType == "University")">University</option>
+                                    <option value="School" selected="@(Model.SingleUserForm.InstitutionType == "School")">School</option>
+                                    <option value="College" selected="@(Model.SingleUserForm.InstitutionType == "College")">College</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Mobile Number</label>
+                                <input class="form-control" name="MobileNumber" value="@Model.SingleUserForm.MobileNumber" placeholder="e.g. +61412345678" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Department ID</label>
+                                <input class="form-control" name="DepartmentId" value="@Model.SingleUserForm.DepartmentId" placeholder="GUID from Departments page" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Campus Assignments</label>
+                                <input class="form-control" name="CampusAssignments" value="@Model.SingleUserForm.CampusAssignments" placeholder="Pipe-separated GUIDs: id|id2" />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Create User</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <div class="col-12 col-lg-5">

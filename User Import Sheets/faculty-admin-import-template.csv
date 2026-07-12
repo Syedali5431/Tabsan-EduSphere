@@ -1,3 +1,4 @@
 Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments
-faculty.cs.phase38,faculty.cs.phase38@example.com,Faculty CS Phase38,Faculty,11111111-1111-1111-1111-111111111111,University,+61400000001,22222222-2222-2222-2222-222222222221
-admin.school.phase38,admin.school.phase38@example.com,Admin School Phase38,Admin,13333333-3333-3333-3333-333333333331,School,+61400000002,22222222-2222-2222-2222-222222222231|22222222-2222-2222-2222-222222222232
+faculty.cs.import,faculty.cs@tabsan.local,Dr. Computer Science,Faculty,,University,,22222222-2222-2222-2222-222222222221
+admin.school.import,admin.school@tabsan.local,School Administrator,Admin,,School,,22222222-2222-2222-2222-222222222231
+finance.office.import,finance@tabsan.local,Finance Officer,Finance,,University,,22222222-2222-2222-2222-222222222221

@@ -2445,6 +2445,78 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateSingleUser(SingleUserFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
+        var identity = _api.GetSessionIdentity();
+        var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+        if (!canImport)
+            return Forbid();
+
+        var model = new UserImportPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            Identity = identity,
+            SelectedTenantId = tenantId,
+            SelectedCampusId = campusId,
+            SingleUserForm = form
+        };
+
+        if (!model.IsConnected)
+            return View("UserImport", model);
+
+        if (string.IsNullOrWhiteSpace(form.Username))
+        {
+            model.Message = "Username is required.";
+            return View("UserImport", model);
+        }
+        if (string.IsNullOrWhiteSpace(form.Email))
+        {
+            model.Message = "Email is required.";
+            return View("UserImport", model);
+        }
+
+        var validRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "Admin", "Faculty", "Student", "Finance" };
+        if (!validRoles.Contains(form.Role))
+        {
+            model.Message = "Role must be Admin, Faculty, Student, or Finance.";
+            return View("UserImport", model);
+        }
+
+        // Build a single-row CSV from the form data
+        var csvLines = new[]
+        {
+            "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments",
+            $"{EscapeCsv(form.Username)},{EscapeCsv(form.Email)},{EscapeCsv(form.FullName ?? string.Empty)},{form.Role},{form.DepartmentId ?? string.Empty},{form.InstitutionType ?? string.Empty},{form.MobileNumber ?? string.Empty},{form.CampusAssignments ?? string.Empty}"
+        };
+        var csvContent = string.Join(Environment.NewLine, csvLines);
+
+        try
+        {
+            using var stream = new MemoryStream();
+            using var writer = new StreamWriter(stream, System.Text.Encoding.UTF8);
+            writer.Write(csvContent);
+            writer.Flush();
+            stream.Position = 0;
+
+            model.Result = await _api.ImportUsersCsvAsync(stream, "single-user-import.csv", tenantId, campusId, ct);
+            model.Message = $"User '{form.Username}' created successfully.";
+        }
+        catch (Exception ex)
+        {
+            model.Message = $"Creation failed: {ex.Message}";
+        }
+
+        return View("UserImport", model);
+    }
+
+    private static string EscapeCsv(string value)
+        => value.Contains(',') || value.Contains('"') || value.Contains('\n')
+            ? $"\"{value.Replace("\"", "\"\"")}\""
+            : value;
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult CreateUserImportSampleCsv(Guid? tenantId, Guid? campusId)
     {
         var identity = _api.GetSessionIdentity();
