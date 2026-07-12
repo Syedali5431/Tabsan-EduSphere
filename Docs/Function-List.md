@@ -6,6 +6,9 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| Phase 5 Study Plan Demo Seed | 5 demo study plans with mixed advisor statuses (Draft/Submitted/Approved) and 3-5 courses each | Scripts/03-FullDummyData.sql |
+| Phase 5 Prerequisites Demo Seed | CS101→CS201→CS301→CS401→CS501 prerequisite chain for demo | Scripts/03-FullDummyData.sql |
+| Phase 5 Post-Deploy Checks Expanded | Added study plan, prerequisite, and payment receipt count checks | Scripts/05-PostDeployment-Checks.sql |
 | Phase 4 Demo Payment Receipts Seed | 15 demo payment receipts with mixed statuses across graduated and regular students | Scripts/03-FullDummyData.sql |
 | Phase 4 Sidebar Role Visibility Fix | Aligned Admin, Faculty, Student, Finance role visibility with Sidebar-Menu-Purpose.csv | Scripts/07-Fix-Sidebar-Role-Visibility.sql |
 | Phase 3 ChangePassword Flow | Verified change-password feature under User Settings with current/new/confirm validation | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |

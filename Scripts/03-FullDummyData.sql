@@ -372,7 +372,83 @@ SET @i=11; WHILE @i<=12 BEGIN SET @ttid=NEWID(); INSERT INTO [timetables]([Id],[
 PRINT 'Timetables done.';
 
 -- ═══════════════════════════════════════════════════════════════════
--- 13. GRADUATED STUDENTS (1 per program with complete marks)
+-- 13. STUDY PLANS (demo plans for BSCS/BBA semester students)
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating study plans...';
+DECLARE @spPlanId UNIQUEIDENTIFIER, @spCourseId UNIQUEIDENTIFIER, @spCounter INT = 0;
+-- Get first BSCS S3 student for a demo plan
+DECLARE curSP CURSOR FOR
+SELECT TOP 5 sp.Id, sp.ProgramId
+FROM [student_profiles] sp
+WHERE sp.ProgramId IN (@P_BSCS, @P_BBA) AND sp.CurrentSemesterNumber BETWEEN 3 AND 6 AND sp.IsDeleted = 0
+ORDER BY sp.CreatedAt;
+OPEN curSP; FETCH NEXT FROM curSP INTO @espid, @epid;
+WHILE @@FETCH_STATUS = 0 AND @spCounter < 5
+BEGIN
+    SET @spPlanId = NEWID();
+    INSERT INTO [study_plans] ([Id], [StudentProfileId], [PlannedSemesterName],
+        [Notes], [AdvisorStatus], [CreatedAt], [UpdatedAt], [IsDeleted])
+    VALUES (@spPlanId, @espid,
+        CONCAT(N'Semester ', CAST(@spCounter % 8 + 1 AS NVARCHAR(2)), N' Plan'),
+        CONCAT(N'Demo study plan for program planning and advisor review.'),
+        CASE @spCounter % 3 WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END, -- 0=Draft,1=Submitted,2=Approved
+        @Now, @Now, 0);
+
+    -- Add 3-5 courses from the program to each plan
+    DECLARE curSPC CURSOR FOR
+    SELECT TOP (3 + @spCounter % 3) c.Id FROM [courses] c
+    WHERE c.DepartmentId = (SELECT DepartmentId FROM [student_profiles] WHERE Id = @espid)
+      AND c.IsDeleted = 0 AND c.IsActive = 1
+    ORDER BY c.Code;
+    OPEN curSPC; FETCH NEXT FROM curSPC INTO @spCourseId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        INSERT INTO [study_plan_courses] ([Id], [StudyPlanId], [CourseId], [CreatedAt])
+        VALUES (NEWID(), @spPlanId, @spCourseId, @Now);
+        FETCH NEXT FROM curSPC INTO @spCourseId;
+    END
+    CLOSE curSPC; DEALLOCATE curSPC;
+
+    SET @spCounter += 1;
+    FETCH NEXT FROM curSP INTO @espid, @epid;
+END
+CLOSE curSP; DEALLOCATE curSP;
+PRINT CONCAT('Study plans: ', @spCounter, ' (Draft/Submitted/Approved with courses)');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 14. COURSE PREREQUISITES (demo prerequisite chains for CS courses)
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating course prerequisites...';
+DECLARE @prCounter INT = 0;
+-- CS101 → CS201, CS101 → CS301, CS201 → CS401, CS301 → CS501, CS401 → CS501
+DECLARE @csCourses TABLE (Seq INT, Code NVARCHAR(20), CId UNIQUEIDENTIFIER);
+INSERT INTO @csCourses
+SELECT ROW_NUMBER() OVER (ORDER BY Code), Code, Id
+FROM [courses] WHERE DepartmentId = @D_IT AND IsDeleted = 0 AND IsActive = 1
+  AND Code LIKE 'CS[1-8]%'
+ORDER BY Code;
+
+DECLARE @prCourseId UNIQUEIDENTIFIER, @prPrereqId UNIQUEIDENTIFIER;
+DECLARE curPr CURSOR FOR
+SELECT c1.CId, c2.CId
+FROM @csCourses c1 JOIN @csCourses c2 ON c1.Seq = c2.Seq + 1
+WHERE c1.Seq <= 5;
+OPEN curPr; FETCH NEXT FROM curPr INTO @prCourseId, @prPrereqId;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM [course_prerequisites] WHERE CourseId = @prCourseId AND PrerequisiteCourseId = @prPrereqId)
+    BEGIN
+        INSERT INTO [course_prerequisites] ([Id], [CourseId], [PrerequisiteCourseId], [CreatedAt])
+        VALUES (NEWID(), @prCourseId, @prPrereqId, @Now);
+        SET @prCounter += 1;
+    END
+    FETCH NEXT FROM curPr INTO @prCourseId, @prPrereqId;
+END
+CLOSE curPr; DEALLOCATE curPr;
+PRINT CONCAT('Course prerequisites: ', @prCounter, ' (CS101→CS201→CS301→CS401→CS501 chain)');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 15. GRADUATED STUDENTS (1 per program with complete marks)
 --     Purpose: enable certificate generation for demos.
 --     Grading rules:
 --       School & College: 90+ = A+, 80+ = A, 70+ = B, 60+ = C, 50+ = D, <50 = F
@@ -609,7 +685,7 @@ SET @gidx+=1;
 PRINT CONCAT('Graduated students: ', @gidx);
 
 -- ═══════════════════════════════════════════════════════════════════
--- 14. DEMO PAYMENT RECEIPTS
+-- 16. DEMO PAYMENT RECEIPTS
 -- ═══════════════════════════════════════════════════════════════════
 PRINT 'Creating demo payment receipts...';
 DECLARE @paySpid UNIQUEIDENTIFIER, @payUid UNIQUEIDENTIFIER, @payRegNo NVARCHAR(64),
@@ -651,12 +727,12 @@ CLOSE curPay; DEALLOCATE curPay;
 PRINT CONCAT('Demo payment receipts created: ', @payCounter);
 
 -- ═══════════════════════════════════════════════════════════════════
--- 15. VERSION
+-- 17. VERSION
 -- ═══════════════════════════════════════════════════════════════════
-UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.2',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
+UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.3',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
 
 PRINT '';
-PRINT '=== 03-FullDummyData.sql v2.2 complete ===';
+PRINT '=== 03-FullDummyData.sql v2.3 complete ===';
 PRINT 'Uni: IT(80 BSCS) + BUS(80 BBA) + SPA(10) = 170';
 PRINT 'School: SCI (Class 1-10, 100)';
 PRINT 'College: ICS (Class 11-12, 20)';
@@ -665,4 +741,6 @@ PRINT 'Total: 295 students';
 PRINT 'Rules: no results for first semester/class; cumulative thereafter';
 PRINT 'Graduated students have: mid+final exams, quizzes, FYP (BSCS/BBA), graduation application';
 PRINT 'Demo payment receipts: 15 (mix of Paid/Pending/Overdue across students)';
+PRINT 'Study plans: 5 (Draft/Submitted/Approved with 3-5 courses each)';
+PRINT 'Prerequisites: CS101→CS201→CS301→CS401→CS501 chain';
 GO

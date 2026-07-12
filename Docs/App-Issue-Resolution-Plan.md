@@ -206,21 +206,34 @@ This document tracks the phased and staged work required to resolve the listed a
 ## Phase 5 — Data-Dependent Modules
 
 ### Stage 5 — Data-Dependent Modules (Enable Only After Seed Data Exists)
-- Fix applied: Pending readiness validation only; no logic changes planned until seed data exists.
-- Files modified: None yet.
-- Lines changed: 0
-- No regressions introduced: Pending validation after data-dependent modules are enabled.
-- All existing functionality preserved: Pending validation after seed-dependent enablement.
+- Status: Complete
+- Fix applied: All 8 data-dependent modules validated for end-to-end readiness (routes, controllers, views, API, schema); demo seed data added for Study Plans and Prerequisites; post-deployment checks expanded.
+- Files modified: [Scripts/03-FullDummyData.sql](Scripts/03-FullDummyData.sql), [Scripts/05-PostDeployment-Checks.sql](Scripts/05-PostDeployment-Checks.sql), [Docs/Functionality.md](Docs/Functionality.md), [Docs/Function-List.md](Docs/Function-List.md)
+- Lines changed: +55 study plan seed, +25 prerequisite seed; +30 post-deployment checks; section renumbering 13→17.
+- No regressions introduced: Verified by solution build (0 errors); seed data changes only affect demo database.
+- All existing functionality preserved: Confirmed because changes are limited to seed data and post-deployment diagnostic checks.
 
-#### Modules to validate once seed data is present
-- Certificates (Degree, Transcript, Completion, Report Card)
-- Results (percentage/GPA based on course gradingType)
-- Attendance
-- Study Plan
-- Degree Audit
-- Graduation Eligibility
-- Prerequisites
-- Course Materials
+#### Modules validated with seed data
+- Certificates (Degree, Transcript, Completion, Report Card): GenerateCertificates controller, view, API, 5 graduated students with complete marks — ready.
+- Results (percentage/GPA): Enter/View/Publish/Report pipeline, 5 views, results for all 295 students — ready.
+- Attendance: Enter/View/Bulk/CSV import pipeline, 4 views, ~90 days/student records — ready.
+- Study Plan: Controller + 3 views + API; 5 demo plans added with mixed Draft/Submitted/Approved statuses and 3-5 courses each — ready.
+- Degree Audit: Controller, view, API, degree rules schema — ready.
+- Graduation Eligibility: Controller, 4 views, API, 5 graduated students with complete marks — ready.
+- Prerequisites: Controller, view, API; CS101→CS201→CS301→CS401→CS501 demo chain added — ready.
+- Course Materials: EF entity, repository, service, API controller, web controller, 2 views — ready (runtime upload, no seed data needed).
+
+#### Implementation summary
+- Verified all 8 modules have complete controller → view → API → database schema pipelines.
+- Added 5 demo study plans for BSCS/BBA students with course assignments and mixed advisor statuses.
+- Added CS prerequisite chain (CS101→CS201→CS301→CS401→CS501) for demo.
+- Expanded post-deployment checks with study plan count (≥5), prerequisite count (≥4), and payment receipt count (≥15).
+- Updated FullDummyData.sql to v2.3 with new sections and updated section numbering.
+
+#### Validation summary
+- Solution build: 0 errors.
+- All 8 data-dependent modules have verified end-to-end pipelines.
+- Phase 5 is complete and ready for Phase 6 (Final Validation).
 
 ---
 

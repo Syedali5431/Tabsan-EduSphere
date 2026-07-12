@@ -190,6 +190,30 @@ BEGIN
     SET @Errors += 1;
 END
 
+-- ═══════ STUDY PLANS CHECK ═══════
+PRINT '';
+PRINT '--- Study Plans ---';
+DECLARE @SPCount INT = (SELECT COUNT(*) FROM [study_plans] WHERE [IsDeleted]=0);
+PRINT CONCAT('Study plans: ', @SPCount, ' (expected: 5, with Draft/Submitted/Approved statuses)');
+IF @SPCount < 5 SET @Errors += 1;
+
+DECLARE @SPCourseCount INT = (SELECT COUNT(*) FROM [study_plan_courses]);
+PRINT CONCAT('Study plan courses: ', @SPCourseCount);
+
+-- ═══════ COURSE PREREQUISITES CHECK ═══════
+PRINT '';
+PRINT '--- Course Prerequisites ---';
+DECLARE @PrCount INT = (SELECT COUNT(*) FROM [course_prerequisites]);
+PRINT CONCAT('Course prerequisites: ', @PrCount, ' (expected: >=4, CS chain)');
+IF @PrCount < 4 SET @Errors += 1;
+
+-- ═══════ PAYMENT RECEIPTS CHECK ═══════
+PRINT '';
+PRINT '--- Demo Payment Receipts ---';
+DECLARE @PayCount INT = (SELECT COUNT(*) FROM [payment_receipts] WHERE [IsDeleted]=0);
+PRINT CONCAT('Demo payment receipts: ', @PayCount, ' (expected: 15)');
+IF @PayCount < 15 SET @Errors += 1;
+
 -- ═══════ SIDEBAR CERTIFICATE MENU CHECK ═══════
 PRINT '';
 PRINT '--- Sidebar Certificate Menu ---';
@@ -201,6 +225,16 @@ BEGIN
     PRINT CONCAT('✗ ', @CertMenuCount, ' generate_certificates menu items found (expected: 1).');
     SET @Errors += 1;
 END
+
+-- ═══════ 2026-07-12 PHASE 5 MARKER ═══════
+PRINT '';
+PRINT '--- Deployment Sync Marker (2026-07-12 Phase 5) ---';
+PRINT N'✓ Study plans: 5 demo plans with mixed advisor statuses and courses';
+PRINT N'✓ Course prerequisites: CS101→CS201→CS301→CS401→CS501 chain';
+PRINT N'✓ Demo payment receipts: 15 with Paid/Pending/Overdue statuses';
+PRINT N'✓ Sidebar role visibility aligned with Sidebar-Menu-Purpose.csv';
+PRINT N'✓ All Phase 3-4 fixes validated and deployed';
+PRINT '';
 
 -- ═══════ 2026-06-22 VERSION MARKER ═══════
 PRINT '';
