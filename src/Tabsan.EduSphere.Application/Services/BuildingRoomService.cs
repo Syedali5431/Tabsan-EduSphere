@@ -31,7 +31,16 @@ public class BuildingRoomService : IBuildingRoomService
 
     public async Task<BuildingDto> CreateBuildingAsync(CreateBuildingCommand cmd, Guid? tenantId, Guid? campusId, CancellationToken ct = default)
     {
-        var building = new Building(tenantId, campusId, cmd.Name, cmd.Code);
+        var normalizedName = (cmd.Name ?? string.Empty).Trim();
+        var normalizedCode = (cmd.Code ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            throw new ArgumentException("Building name is required.", nameof(cmd.Name));
+
+        if (string.IsNullOrWhiteSpace(normalizedCode))
+            throw new ArgumentException("Building code is required.", nameof(cmd.Code));
+
+        var building = new Building(tenantId, campusId, normalizedName, normalizedCode);
         await _repo.AddBuildingAsync(building, ct);
         await _repo.SaveChangesAsync(ct);
         return MapBuilding(building);

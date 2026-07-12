@@ -86,7 +86,10 @@ public class BuildingController : ControllerBase
         [FromQuery] Guid? campusId,
         CancellationToken ct)
     {
-        var scope = ResolveEffectiveScope(tenantId, campusId);
+        var effectiveTenantId = tenantId ?? cmd.TenantId;
+        var effectiveCampusId = campusId ?? cmd.CampusId;
+
+        var scope = ResolveEffectiveScope(effectiveTenantId, effectiveCampusId);
         if (scope.Error is not null)
             return scope.Error;
 

@@ -124,10 +124,12 @@ else
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <h2 class="h5">Add Building</h2>
-                    <form asp-action="CreateBuilding" method="post" class="row g-2">
+                    <form asp-action="CreateBuilding" method="post" class="row g-2" data-building-scope-form>
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <input type="hidden" name="TenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="CampusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-7">
                             <label class="form-label">Name</label>
                             <input asp-for="CreateForm.Name" class="form-control" placeholder="e.g. Faculty Block A" required />

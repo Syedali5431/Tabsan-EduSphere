@@ -202,6 +202,8 @@ public class BuildingFormModel
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
+    public Guid? TenantId { get; set; }
+    public Guid? CampusId { get; set; }
 }
 
 public class RoomFormModel

@@ -1593,9 +1593,12 @@ public class PortalController : Controller
     {
         try
         {
-            var created = await _api.CreateBuildingAsync(form, tenantId, campusId, ct);
+            var effectiveTenantId = tenantId ?? form.TenantId ?? _api.GetSessionIdentity()?.TenantId;
+            var effectiveCampusId = campusId ?? form.CampusId ?? _api.GetSessionIdentity()?.CampusId;
+
+            var created = await _api.CreateBuildingAsync(form, effectiveTenantId, effectiveCampusId, ct);
             TempData["PortalMessage"] = $"Building '{created.Name}' created.";
-            return RedirectToAction(nameof(Buildings), new { selectedId = created.Id, tenantId, campusId });
+            return RedirectToAction(nameof(Buildings), new { selectedId = created.Id, tenantId = effectiveTenantId, campusId = effectiveCampusId });
         }
         catch (Exception ex)
         {
