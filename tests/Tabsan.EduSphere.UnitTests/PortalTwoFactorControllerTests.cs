@@ -16,13 +16,13 @@ namespace Tabsan.EduSphere.UnitTests;
 public class PortalTwoFactorControllerTests
 {
     [Fact]
-    public void TwoFactorSettings_ReturnsCurrentUserAndConnectionState()
+    public async Task TwoFactorSettings_ReturnsCurrentUserAndConnectionState()
     {
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000123");
         var (api, _) = CreateApiClient(isConnected: true, userId: userId);
         var sut = CreateSut(api, userId);
 
-        var result = sut.TwoFactorSettings();
+        var result = await sut.TwoFactorSettings();
 
         var view = result.Should().BeOfType<ViewResult>().Subject;
         var model = view.Model.Should().BeOfType<TwoFactorSettingsPageModel>().Subject;

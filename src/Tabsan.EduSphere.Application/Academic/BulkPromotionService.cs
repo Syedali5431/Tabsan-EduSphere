@@ -84,8 +84,12 @@ public class BulkPromotionService : IBulkPromotionService
         // Populate the in-memory _entries list so the domain Submit() check passes.
         // These are transient objects used only to satisfy the domain guard clause;
         // EF ignores the Entries navigation so they won't be persisted.
+        // Skip entries already present (e.g., from in-memory test stubs).
         foreach (var entry in entries)
-            batch.AddEntry(entry.StudentProfileId, entry.Decision);
+        {
+            if (!batch.Entries.Any(e => e.StudentProfileId == entry.StudentProfileId))
+                batch.AddEntry(entry.StudentProfileId, entry.Decision);
+        }
 
         batch.Submit();
         _repo.UpdateBatch(batch);

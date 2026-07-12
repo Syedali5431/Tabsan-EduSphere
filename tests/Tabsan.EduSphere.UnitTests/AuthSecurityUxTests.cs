@@ -58,7 +58,7 @@ public class AuthSecurityUxTests
         var result = await sut.LoginAsync(new LoginRequest("student1", "pass"), "10.0.0.5");
 
         result.IsSuccess.Should().BeFalse();
-        result.FailureReason.Should().Be(LoginFailureReason.MfaRequired);
+        result.FailureReason.Should().Be(LoginFailureReason.MfaCodeRequired);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class AuthSecurityUxTests
         var result = await sut.LoginAsync(new LoginRequest("admin1", "pass"), "10.0.0.5");
 
         result.IsSuccess.Should().BeFalse();
-        result.FailureReason.Should().Be(LoginFailureReason.MfaRequired);
+        result.FailureReason.Should().Be(LoginFailureReason.MfaCodeRequired);
     }
 
     [Fact]
@@ -155,7 +155,8 @@ public class AuthSecurityUxTests
                 SessionRisk = new SessionRiskSettings { Enabled = false }
             },
             user: user,
-            totpService: new StubTotpService(validCodes: ["111111"]));
+            totpService: new StubTotpService(validCodes: ["111111"]),
+            twoFactorState: new StubTwoFactorStateStore(new TwoFactorStateSnapshot(user.Id, user.Username, user.Email, true, true, "KNOWNSECRET")));
 
         var result = await sut.LoginAsync(new LoginRequest("student1", "pass", MfaCode: "111111"), "10.0.0.5");
 
@@ -226,11 +227,13 @@ public class AuthSecurityUxTests
         AuthSecurityOptions options,
         User? user = null,
         IUserSessionRepository? sessionRepo = null,
-        ITotpService? totpService = null)
+        ITotpService? totpService = null,
+        ITwoFactorStateStore? twoFactorState = null)
     {
         user ??= new User("student1", "HASH", roleId: 1);
         sessionRepo ??= new StubSessionRepository();
         totpService ??= new StubTotpService(validCodes: []);
+        twoFactorState ??= new StubTwoFactorStateStore(null);
 
         return new AuthService(
             new StubUserRepository(user),
@@ -241,7 +244,7 @@ public class AuthSecurityUxTests
             new StubPasswordHistoryRepository(),
             new StubLicenseRepository(),
             totpService,
-            new StubTwoFactorStateStore(null),
+            twoFactorState,
             Options.Create(options));
     }
 

@@ -10,7 +10,7 @@ public class ResultsPageModelTests
     {
         var model = new ResultsPageModel
         {
-            SelectedOfferingId = Guid.NewGuid(),
+            SelectedOfferingId = null,
             SelectedDepartmentId = Guid.NewGuid(),
             SelectedCourseId = Guid.NewGuid(),
             SelectedSubjectOfferingId = null,
@@ -20,7 +20,7 @@ public class ResultsPageModelTests
         };
 
         model.CanWriteResults.Should().BeFalse();
-        model.SaveResultDisabledReason.Should().ContainEquivalentOf("Select department, course, subject, semester/class, exam type, and assessment component");
+        model.SaveResultDisabledReason.Should().ContainEquivalentOf("Select department, course, subject, exam type, and assessment component");
     }
 
     [Fact]

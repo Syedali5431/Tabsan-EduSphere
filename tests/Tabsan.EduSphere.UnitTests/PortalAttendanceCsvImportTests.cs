@@ -303,7 +303,7 @@ public class PortalAttendanceCsvImportTests
 
         result.Should().BeOfType<RedirectToActionResult>();
         proxy.BulkCalls.Should().BeEmpty();
-        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("Select department, course, and semester/class");
+        sut.TempData["PortalMessage"]?.ToString().Should().ContainEquivalentOf("Select department and course before performing attendance");
     }
 
     [Fact]
@@ -830,6 +830,7 @@ public class AttendanceCsvEduApiClientProxy : DispatchProxy
             nameof(IEduApiClient.IsConnected) => IsConnectedValue,
             nameof(IEduApiClient.GetSessionIdentity) => Identity,
             nameof(IEduApiClient.GetEnrollmentRosterAsync) => Task.FromResult(Roster),
+            nameof(IEduApiClient.GetMyOfferingsAsync) => Task.FromResult(Offerings.Select(o => new LookupItem { Id = o.Id, Name = o.CourseCode + " - " + o.SemesterName }).ToList()),
             nameof(IEduApiClient.GetCourseOfferingsAsync) => Task.FromResult(Offerings),
             nameof(IEduApiClient.BulkMarkAttendanceAsync) => HandleBulkMarkAttendanceAsync(args),
             nameof(IEduApiClient.CorrectAttendanceAsync) => HandleCorrectAttendanceAsync(args),

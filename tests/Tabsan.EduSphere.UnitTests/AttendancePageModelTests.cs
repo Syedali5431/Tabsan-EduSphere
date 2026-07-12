@@ -10,14 +10,14 @@ public class AttendancePageModelTests
     {
         var model = new AttendancePageModel
         {
-            SelectedOfferingId = Guid.NewGuid(),
+            SelectedOfferingId = null,
             SelectedDepartmentId = null,
             SelectedCourseId = Guid.NewGuid(),
             SelectedSemesterName = "Semester 1"
         };
 
         model.CanSaveAttendance.Should().BeFalse();
-        model.SaveAttendanceDisabledReason.Should().ContainEquivalentOf("Select department, course, subject offering, and semester/class");
+        model.SaveAttendanceDisabledReason.Should().ContainEquivalentOf("Select department, course, and subject offering");
     }
 
     [Fact]
