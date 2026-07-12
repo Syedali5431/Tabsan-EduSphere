@@ -2445,7 +2445,8 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateSingleUser(SingleUserFormModel form, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    [RequestSizeLimit(2_097_152)]
+    public async Task<IActionResult> CreateSingleUser(SingleUserFormModel form, IFormFile? profilePhoto, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
@@ -2483,13 +2484,48 @@ public class PortalController : Controller
             return View("UserImport", model);
         }
 
-        // Build a single-row CSV from the form data
-        var csvLines = new[]
+        // Role-specific validation
+        if (string.Equals(form.Role, "Faculty", StringComparison.OrdinalIgnoreCase)
+            && string.IsNullOrWhiteSpace(form.DepartmentId))
         {
-            "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments",
-            $"{EscapeCsv(form.Username)},{EscapeCsv(form.Email)},{EscapeCsv(form.FullName ?? string.Empty)},{form.Role},{form.DepartmentId ?? string.Empty},{form.InstitutionType ?? string.Empty},{form.MobileNumber ?? string.Empty},{form.CampusAssignments ?? string.Empty}"
-        };
-        var csvContent = string.Join(Environment.NewLine, csvLines);
+            model.Message = "Department ID is required for Faculty.";
+            return View("UserImport", model);
+        }
+        if (string.Equals(form.Role, "Student", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(form.DepartmentId))
+            {
+                model.Message = "Department ID is required for Student.";
+                return View("UserImport", model);
+            }
+            if (string.IsNullOrWhiteSpace(form.CourseId))
+            {
+                model.Message = "Course ID is required for Student.";
+                return View("UserImport", model);
+            }
+        }
+
+        // Handle profile photo upload
+        if (profilePhoto is { Length: > 0 })
+        {
+            var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png" };
+            var extension = Path.GetExtension(profilePhoto.FileName);
+            if (!allowedExtensions.Contains(extension))
+            {
+                model.Message = "Profile photo must be JPG, JPEG, or PNG.";
+                return View("UserImport", model);
+            }
+            if (profilePhoto.Length > 2_097_152)
+            {
+                model.Message = "Profile photo must be 2 MB or less.";
+                return View("UserImport", model);
+            }
+        }
+
+        // Build CSV and import
+        var csvHeader = "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments";
+        var csvRow = $"{EscapeCsv(form.Username)},{EscapeCsv(form.Email)},{EscapeCsv(form.FullName ?? string.Empty)},{form.Role},{form.DepartmentId ?? string.Empty},{form.InstitutionType ?? string.Empty},{form.MobileNumber ?? string.Empty},{form.CampusAssignments ?? string.Empty}";
+        var csvContent = csvHeader + Environment.NewLine + csvRow;
 
         try
         {
@@ -2500,7 +2536,19 @@ public class PortalController : Controller
             stream.Position = 0;
 
             model.Result = await _api.ImportUsersCsvAsync(stream, "single-user-import.csv", tenantId, campusId, ct);
-            model.Message = $"User '{form.Username}' created successfully.";
+
+            if (model.Result.Imported > 0 && profilePhoto is { Length: > 0 })
+            {
+                model.Message = $"User '{form.Username}' created. Photo will be uploaded via User Settings after login.";
+            }
+            else if (model.Result.Imported > 0)
+            {
+                model.Message = $"User '{form.Username}' created successfully.";
+            }
+            else
+            {
+                model.Message = $"User '{form.Username}' was not imported. Check for duplicates or validation errors.";
+            }
         }
         catch (Exception ex)
         {

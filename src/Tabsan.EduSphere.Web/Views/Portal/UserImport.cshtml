@@ -104,7 +104,7 @@
                     <h2 class="h5 mb-3">Create Single User</h2>
                     <p class="text-muted small mb-3">Manually create one user at a time. Imported accounts use Username as temporary password and must change it at first login.</p>
 
-                    <form asp-action="CreateSingleUser" method="post">
+                    <form asp-action="CreateSingleUser" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
@@ -127,7 +127,7 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Role <span class="text-danger">*</span></label>
-                                <select class="form-select" name="Role" required>
+                                <select class="form-select" name="Role" id="singleUserRole" required onchange="toggleRoleFields()">
                                     <option value="">— Select Role —</option>
                                     <option value="Admin" selected="@(Model.SingleUserForm.Role == "Admin")">Admin</option>
                                     <option value="Faculty" selected="@(Model.SingleUserForm.Role == "Faculty")">Faculty</option>
@@ -150,14 +150,40 @@
                             </div>
                         </div>
 
-                        <div class="row g-2 mb-3">
+                        <div class="row g-2 mb-3" id="facultyFields" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label">Department ID</label>
-                                <input class="form-control" name="DepartmentId" value="@Model.SingleUserForm.DepartmentId" placeholder="GUID from Departments page" />
+                                <label class="form-label">Department ID <span class="text-danger">*</span></label>
+                                <input class="form-control" name="DepartmentId" placeholder="GUID from Departments page" />
                             </div>
+                        </div>
+
+                        <div class="row g-2 mb-3" id="studentFields" style="display:none;">
+                            <div class="col-md-6">
+                                <label class="form-label">Department ID <span class="text-danger">*</span></label>
+                                <input class="form-control" name="DepartmentId" placeholder="GUID from Departments page" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Course ID <span class="text-danger">*</span></label>
+                                <input class="form-control" name="CourseId" placeholder="GUID from Courses page" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Campus Assignments</label>
                                 <input class="form-control" name="CampusAssignments" value="@Model.SingleUserForm.CampusAssignments" placeholder="Pipe-separated GUIDs: id|id2" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Address</label>
+                                <input class="form-control" name="Address" value="@Model.SingleUserForm.Address" placeholder="e.g. 123 Main St, City" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Profile Photo</label>
+                                <input class="form-control" type="file" name="ProfilePhoto" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                                <div class="form-text">JPG or PNG, max 2MB</div>
                             </div>
                         </div>
 
@@ -165,18 +191,23 @@
                     </form>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h2 class="h5 mb-3">CSV Header Example</h2>
-                    <pre class="bg-light rounded p-3 mb-0" style="white-space:pre-wrap;">Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments
-admin1,admin1@tabsan.local,Admin One,Admin,,University,+61412345678,
-faculty1,faculty1@tabsan.local,Faculty One,Faculty,{valid-department-guid},University,+61412345679,{campus-guid-1}
-student1,student1@tabsan.local,Student One,Student,{valid-department-guid},School,+61412345680,{campus-guid-1}|{campus-guid-2}</pre>
-                </div>
-            </div>
+            <script>
+                function toggleRoleFields() {
+                    var role = document.getElementById('singleUserRole').value;
+                    document.getElementById('facultyFields').style.display = (role === 'Faculty') ? '' : 'none';
+                    document.getElementById('studentFields').style.display = (role === 'Student') ? '' : 'none';
+                    // Toggle required attributes
+                    var facultyDept = document.querySelector('#facultyFields input[name="DepartmentId"]');
+                    var studentDept = document.querySelector('#studentFields input[name="DepartmentId"]');
+                    var studentCourse = document.querySelector('#studentFields input[name="CourseId"]');
+                    if (role === 'Faculty') { facultyDept.required = true; studentDept.required = false; if(studentCourse) studentCourse.required = false; }
+                    else if (role === 'Student') { facultyDept.required = false; studentDept.required = true; if(studentCourse) studentCourse.required = true; }
+                    else { facultyDept.required = false; studentDept.required = false; if(studentCourse) studentCourse.required = false; }
+                }
+                // Run on load to set initial state
+                toggleRoleFields();
+            </script>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.Message))

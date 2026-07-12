@@ -802,9 +802,11 @@ public class SingleUserFormModel
     public string FullName { get; set; } = string.Empty;
     public string Role { get; set; } = "Student";
     public string? DepartmentId { get; set; }
+    public string? CourseId { get; set; }
     public string? InstitutionType { get; set; }
     public string? MobileNumber { get; set; }
     public string? CampusAssignments { get; set; }
+    public string? Address { get; set; }
 }
 
 // ── Courses ───────────────────────────────────────────────────────────────────
