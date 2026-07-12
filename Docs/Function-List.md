@@ -6,6 +6,7 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| Phase 6 Final Validation | Full regression test (186/215 passed), endpoint audit (32 POST controllers), Issues 1-10 re-verified | Docs/App-Issue-Resolution-Plan.md |
 | Phase 5 Study Plan Demo Seed | 5 demo study plans with mixed advisor statuses (Draft/Submitted/Approved) and 3-5 courses each | Scripts/03-FullDummyData.sql |
 | Phase 5 Prerequisites Demo Seed | CS101→CS201→CS301→CS401→CS501 prerequisite chain for demo | Scripts/03-FullDummyData.sql |
 | Phase 5 Post-Deploy Checks Expanded | Added study plan, prerequisite, and payment receipt count checks | Scripts/05-PostDeployment-Checks.sql |
