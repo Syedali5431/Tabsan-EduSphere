@@ -6,6 +6,8 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| Phase 0 Guardrails Tracking | Documentation-only phase tracker for guardrail enforcement and scope protection | Docs/App-Issue-Resolution-Plan.md |
+|--------------|--------|----------|
 | ITotpService.GenerateSecret | Generate cryptographically secure Base32 TOTP secret via Otp.NET | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
 | ITotpService.BuildProvisioningUri | Build otpauth://totp/ URI for authenticator enrollment | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
 | ITotpService.ValidateCode | Validate TOTP code using OtpNet.Totp.VerifyTotp with VerificationWindow | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |

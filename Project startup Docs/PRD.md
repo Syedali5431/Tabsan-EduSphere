@@ -1,5 +1,11 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-07-12 — Phase 0 Guardrails Established
+- Phase 0 completed as a documentation-only safeguard to protect the existing working app behavior.
+- The creation order, POST endpoint boundaries, and protected modules were formally locked to prevent unrelated changes.
+- No route removals, workflow changes, or runtime module changes were introduced in this phase.
+- Validation: scope review completed and Phase 0 is ready for the next implementation phase.
+
 ### 2026-06-22 — Profile Picture Upload & Graduated Demo Students
 - Profile Picture: Users can upload JPG/JPEG/PNG (max 2MB) from User Settings. Stored in wwwroot/uploads/profile-pictures. Navbar displays circular avatar with fallback to initial letter.
 - User model: ProfilePicturePath column (nvarchar 500, nullable) added to users table.
