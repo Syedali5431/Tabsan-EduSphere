@@ -6,6 +6,8 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| Phase 4 Demo Payment Receipts Seed | 15 demo payment receipts with mixed statuses across graduated and regular students | Scripts/03-FullDummyData.sql |
+| Phase 4 Sidebar Role Visibility Fix | Aligned Admin, Faculty, Student, Finance role visibility with Sidebar-Menu-Purpose.csv | Scripts/07-Fix-Sidebar-Role-Visibility.sql |
 | Phase 3 ChangePassword Flow | Verified change-password feature under User Settings with current/new/confirm validation | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | Phase 3 DegreeRules Rendering Fix | DegreeRules GET returns View instead of redirect; handles non-SuperAdmin and capability-denied gracefully | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | Phase 3 ISO/Backup/Document Module Registry | Added iso_compliance, backup_dr, document_management as SuperAdmin-only modules | src/Tabsan.EduSphere.Application/Modules/ModuleRegistry.cs |

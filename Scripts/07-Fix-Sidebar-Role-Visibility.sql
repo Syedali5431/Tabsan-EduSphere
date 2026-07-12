@@ -48,19 +48,24 @@ WHERE smi.[Key] IN (
     'dashboard',
     -- Setup Flow
     'departments','programs','courses','enrollments','students',
+    -- Timetable
+    'timetable_admin','timetable_teacher','timetable_student',
     -- Faculty Related
-    'timetable_admin','timetable_teacher','assignments','enter_attendance','enter_results',
+    'lookups','assignments','attendance','enter_attendance','enter_results',
     'gradebook','rubric_manage','lms_manage','course_material','discussion','announcements',
     -- Student Related
-    'results','student_lifecycle',
+    'results','quizzes','student_lifecycle',
     -- Academic Related
     'result_calculation','prerequisites','generate_certificates','grading_config','study_plan',
+    'degree_audit','graduation_eligibility','degree_rules','graduation_apply','graduation_applications',
+    -- University
+    'fyp',
     -- Settings Related
-    'user_import','buildings','rooms','analytics','report_center',
+    'user_import','buildings','rooms','analytics','report_center','library_config','accreditation',
     -- Financial
     'payments',
-    -- General
-    'privacy'
+    -- Features
+    'ai_chat'
 ) AND ra.RoleName = 'Admin';
 
 -- ── FACULTY ──────────────────────────────────────────────────────────────────
@@ -68,15 +73,29 @@ UPDATE ra SET ra.IsAllowed = 1
 FROM sidebar_menu_role_accesses ra
 JOIN sidebar_menu_items smi ON smi.Id = ra.SidebarMenuItemId
 WHERE smi.[Key] IN (
+    -- Overview
+    'dashboard',
+    -- Timetable
+    'timetable_admin','timetable_teacher',
     -- Faculty Related
-    'timetable_admin','timetable_teacher','assignments','enter_attendance','enter_results',
+    'students','courses','assignments','attendance','enter_attendance','enter_results',
     'gradebook','rubric_manage','lms_manage','course_material','discussion','announcements',
     -- Student Related
-    'results','student_lifecycle',
+    'results','quizzes','student_lifecycle',
     -- Academic Related
-    'study_plan',
+    'study_plan','prerequisites',
+    -- University
+    'fyp',
     -- Settings Related
-    'analytics','report_center'
+    'analytics','report_center','library_config','accreditation','user_import','programs',
+    -- Financial
+    'payments',
+    -- Enrollments
+    'enrollments',
+    -- Features
+    'ai_chat',
+    -- Degree features
+    'degree_audit','graduation_eligibility','degree_rules'
 ) AND ra.RoleName = 'Faculty';
 
 -- ── STUDENT ──────────────────────────────────────────────────────────────────
@@ -84,14 +103,28 @@ UPDATE ra SET ra.IsAllowed = 1
 FROM sidebar_menu_role_accesses ra
 JOIN sidebar_menu_items smi ON smi.Id = ra.SidebarMenuItemId
 WHERE smi.[Key] IN (
+    -- Overview
+    'dashboard',
+    -- Timetable
+    'timetable_student',
+    -- Faculty Related
+    'assignments','attendance','course_material','discussion','announcements',
     -- Student Related
-    'results','student_lifecycle',
+    'results','quizzes',
     -- Academic Related
-    'study_plan',
+    'study_plan','generate_certificates',
+    -- University
+    'fyp',
     -- Settings Related
-    'analytics','report_center',
+    'analytics','report_center','accreditation',
     -- Financial
-    'payments'
+    'payments',
+    -- Enrollments
+    'enrollments',
+    -- Features
+    'ai_chat','gradebook',
+    -- Degree features
+    'degree_audit'
 ) AND ra.RoleName = 'Student';
 
 -- ── FINANCE ──────────────────────────────────────────────────────────────────

@@ -609,12 +609,54 @@ SET @gidx+=1;
 PRINT CONCAT('Graduated students: ', @gidx);
 
 -- ═══════════════════════════════════════════════════════════════════
--- 14. VERSION
+-- 14. DEMO PAYMENT RECEIPTS
 -- ═══════════════════════════════════════════════════════════════════
-UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.1',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
+PRINT 'Creating demo payment receipts...';
+DECLARE @paySpid UNIQUEIDENTIFIER, @payUid UNIQUEIDENTIFIER, @payRegNo NVARCHAR(64),
+        @payAmt DECIMAL(10,2), @payDesc NVARCHAR(500), @payStatus INT, @payDue DATE,
+        @payRecNo NVARCHAR(64), @payCounter INT = 0;
+
+-- Get an admin user ID for CreatedByUserId
+DECLARE @adminUserId UNIQUEIDENTIFIER;
+SELECT TOP 1 @adminUserId = u.Id FROM [users] u
+JOIN [roles] r ON r.Id = u.RoleId
+WHERE r.Name = 'Admin' AND u.IsDeleted = 0;
+
+-- Create 1 receipt per graduated student (5) + 10 from regular students
+DECLARE curPay CURSOR FOR
+SELECT sp.Id, sp.UserId, sp.RegistrationNumber
+FROM [student_profiles] sp
+WHERE sp.IsDeleted = 0
+ORDER BY sp.CreatedAt;
+
+OPEN curPay; FETCH NEXT FROM curPay INTO @paySpid, @payUid, @payRegNo;
+WHILE @@FETCH_STATUS = 0 AND @payCounter < 15
+BEGIN
+    SET @payAmt  = CAST(500.00 + ABS(CHECKSUM(NEWID())) % 4500 AS DECIMAL(10,2));
+    SET @payDesc = CONCAT(N'Tuition fee — semester ', CAST(@payCounter % 8 + 1 AS NVARCHAR(2)));
+    -- Status: 0=Pending, 1=Paid, 2=Overdue, 3=Cancelled
+    SET @payStatus = CASE @payCounter % 4 WHEN 0 THEN 1 WHEN 1 THEN 0 WHEN 2 THEN 1 ELSE 2 END;
+    SET @payDue   = DATEADD(DAY, -30 + (@payCounter * 7), @Now);
+    SET @payRecNo = CONCAT(N'REC-', @payRegNo, N'-', FORMAT(@payDue, N'yyyyMMdd'));
+
+    INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo],
+        [Status], [Amount], [Description], [DueDate], [CreatedAt], [UpdatedAt], [IsDeleted])
+    VALUES (NEWID(), @paySpid, @adminUserId, @payRecNo,
+        @payStatus, @payAmt, @payDesc, @payDue, @Now, @Now, 0);
+
+    SET @payCounter += 1;
+    FETCH NEXT FROM curPay INTO @paySpid, @payUid, @payRegNo;
+END
+CLOSE curPay; DEALLOCATE curPay;
+PRINT CONCAT('Demo payment receipts created: ', @payCounter);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 15. VERSION
+-- ═══════════════════════════════════════════════════════════════════
+UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.2',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
 
 PRINT '';
-PRINT '=== 03-FullDummyData.sql v2.1 complete ===';
+PRINT '=== 03-FullDummyData.sql v2.2 complete ===';
 PRINT 'Uni: IT(80 BSCS) + BUS(80 BBA) + SPA(10) = 170';
 PRINT 'School: SCI (Class 1-10, 100)';
 PRINT 'College: ICS (Class 11-12, 20)';
@@ -622,4 +664,5 @@ PRINT 'Graduated: BSCS(1) + BBA(1) + Spanish(1) + School(1) + College(1) = 5';
 PRINT 'Total: 295 students';
 PRINT 'Rules: no results for first semester/class; cumulative thereafter';
 PRINT 'Graduated students have: mid+final exams, quizzes, FYP (BSCS/BBA), graduation application';
+PRINT 'Demo payment receipts: 15 (mix of Paid/Pending/Overdue across students)';
 GO

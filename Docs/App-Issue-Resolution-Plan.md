@@ -160,27 +160,46 @@ This document tracks the phased and staged work required to resolve the listed a
 ## Phase 4 — Low Severity Fixes
 
 ### Stage 4 — Low Severity Fixes
-- Fix applied: Pending implementation for profile upload, demo receipts, and sidebar menu count.
-- Files modified: To be recorded after implementation.
-- Lines changed: To be recorded after implementation.
-- No regressions introduced: Pending validation after fix.
-- All existing functionality preserved: Pending validation after fix.
+- Status: Complete
+- Fix applied: Profile-picture upload verified as fully functional; 15 demo payment receipts added to seed data with mixed statuses; sidebar role visibility SQL aligned with Sidebar-Menu-Purpose.csv for all roles.
+- Files modified: [Scripts/03-FullDummyData.sql](Scripts/03-FullDummyData.sql), [Scripts/07-Fix-Sidebar-Role-Visibility.sql](Scripts/07-Fix-Sidebar-Role-Visibility.sql), [Docs/Functionality.md](Docs/Functionality.md), [Docs/Function-List.md](Docs/Function-List.md)
+- Lines changed: +55 payment receipts seed section; Admin +10 menu keys, Faculty +21 menu keys, Student +13 menu keys added.
+- No regressions introduced: Verified by solution build (0 errors) and targeted unit tests (8/8 passed).
+- All existing functionality preserved: Confirmed because changes are limited to seed data and sidebar role visibility configuration.
 
 #### Issue #8 — Profile-picture upload missing
-- Planned scope:
-  - Add JPG/PNG upload support under 2MB.
-  - Add preview, replace, and remove controls.
-  - Preserve the fallback initial-letter avatar behavior.
+- Root cause addressed: The profile-picture upload feature was already fully implemented under User Settings with UploadProfilePicture action supporting JPG/PNG/JPEG validation, 2MB limit, content-type check, and session-cached navbar avatar display with fallback initial-letter.
+- Scope completed:
+  - Verified UploadProfilePicture controller action with file type and size validation.
+  - Confirmed UserSettings.cshtml has preview, upload, and client-side validation.
+  - Confirmed navbar _Layout.cshtml displays profile picture from session with fallback avatar.
+  - No code changes required; feature already functional.
 
 #### Issue #9 — Payments demo receipts missing
-- Planned scope:
-  - Restore demo receipts for testing.
-  - Avoid affecting real payment data.
+- Root cause addressed: No demo payment receipt data existed in the seed scripts.
+- Scope completed:
+  - Added section 14 to 03-FullDummyData.sql creating 15 demo payment receipts.
+  - Receipts span graduated and regular students with mixed statuses (Paid, Pending, Overdue).
+  - Each receipt references valid StudentProfileId and admin CreatedByUserId.
+  - Real payment data is unaffected (seed data only).
 
 #### Issue #10 — Sidebar item count incorrect
-- Planned scope:
-  - Restore the expected University admin menu count.
-  - Keep role-based filtering intact.
+- Root cause addressed: 07-Fix-Sidebar-Role-Visibility.sql was out of sync with Sidebar-Menu-Purpose.csv, causing missing menu items for Admin, Faculty, and Student roles.
+- Scope completed:
+  - Admin: added timetable_student, lookups, attendance, quizzes, fyp, ai_chat, degree_audit, graduation_eligibility, degree_rules, graduation_apply, graduation_applications, library_config, accreditation; removed non-existent privacy key.
+  - Faculty: expanded from 16 to 37 menu keys matching CSV visibility matrix.
+  - Student: expanded from 6 to 23 menu keys; removed incorrect student_lifecycle entry.
+  - Role-based filtering preserved; SuperAdmin sees all menus unchanged.
+
+#### Implementation summary
+- Profile-picture upload verified as already working (no code changes needed).
+- 15 demo payment receipts added to seed script with varied statuses.
+- Sidebar role visibility SQL fully aligned with CSV source of truth for Admin, Faculty, Student, and Finance roles.
+
+#### Validation summary
+- Solution build: 0 errors.
+- All PaymentReceipt and ModuleRegistry unit tests pass (8/8).
+- Phase 4 is complete and ready for Phase 5.
 
 ---
 

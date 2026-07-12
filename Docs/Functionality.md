@@ -9,6 +9,18 @@
 ### Validation sync
 - Build: 0 errors. DegreeRules GET returns View instead of RedirectToAction. All 3 compliance modules visible in ModuleRegistry.All().
 
+## 2026-07-12 Update — Phase 4 Low Severity Fixes
+### Implementation sync
+- Profile-picture upload verified as fully functional: JPG/PNG/JPEG validation, 2MB limit, preview, replace, fallback initial-letter avatar in navbar.
+- 15 demo payment receipts added to seed data with mixed statuses (Paid, Pending, Overdue) across graduated and regular students.
+- Sidebar role visibility SQL script (07-Fix-Sidebar-Role-Visibility.sql) aligned with Sidebar-Menu-Purpose.csv for Admin, Faculty, Student, and Finance roles.
+- Admin menu now includes missing: timetable_student, lookups, attendance, quizzes, fyp, ai_chat, degree_audit, graduation_eligibility, degree_rules, graduation_apply, graduation_applications, library_config, accreditation.
+- Faculty menu expanded to match CSV: added dashboard, students, courses, assignments, attendance, quizzes, fyp, ai_chat, payments, enrollments, prerequisites, degree_audit, graduation_eligibility, degree_rules, library_config, accreditation, user_import, programs.
+- Student menu expanded: added dashboard, timetable_student, assignments, attendance, quizzes, fyp, ai_chat, enrollments, gradebook, degree_audit, announcements, accreditation, generate_certificates, course_material, discussion; removed incorrect student_lifecycle.
+### Validation sync
+- Build: 0 errors. All PaymentReceipt + ModuleRegistry unit tests pass (8/8).
+- Phase 4 is complete and ready for Phase 5.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.
