@@ -137,7 +137,8 @@ public class ModuleRegistryTests
             "authentication", "departments", "courses", "sis",
             "assignments", "attendance", "results", "quizzes",
             "fyp", "notifications", "ai_chat", "reports",
-            "themes", "advanced_audit"
+            "themes", "advanced_audit",
+            "iso_compliance", "backup_dr", "document_management"
         };
 
         foreach (var key in expected)

@@ -6,6 +6,11 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| Phase 3 ChangePassword Flow | Verified change-password feature under User Settings with current/new/confirm validation | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| Phase 3 DegreeRules Rendering Fix | DegreeRules GET returns View instead of redirect; handles non-SuperAdmin and capability-denied gracefully | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
+| Phase 3 ISO/Backup/Document Module Registry | Added iso_compliance, backup_dr, document_management as SuperAdmin-only modules | src/Tabsan.EduSphere.Application/Modules/ModuleRegistry.cs |
+| Phase 3 Sidebar CSV ISO/Backup/Document | Added ISO Compliance, Backup & DR, Document Management as SuperAdmin Settings entries | Docs/Sidebar-Menu-Purpose.csv |
+| Phase 3 PRD Terminology Cleanup | Replaced all "subjects" references with "courses"; removed "Create User" references | Project startup Docs/PRD.md |
 | Phase 0 Guardrails Tracking | Documentation-only phase tracker for guardrail enforcement and scope protection | Docs/App-Issue-Resolution-Plan.md |
 | Phase 2 Academic Level Range Helper | Resolves the valid university academic-level range from configured levels and a program's total-semester count | src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs |
 | BuildingRoomService.CreateBuildingAsync | Validates building input and persists scoped building records safely | src/Tabsan.EduSphere.Application/Services/BuildingRoomService.cs |

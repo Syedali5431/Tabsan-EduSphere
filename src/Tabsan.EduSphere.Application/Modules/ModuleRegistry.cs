@@ -40,6 +40,11 @@ public static class ModuleRegistry
             ["reports"]         = new("reports",         StaffRoles, null, false),
             ["themes"]          = new("themes",          AdminTier,  null, false),
             ["advanced_audit"]  = new("advanced_audit",  SuperOnly,  null, false),
+
+            // ── Compliance & Governance (SuperAdmin only) ───────────────────────
+            ["iso_compliance"]      = new("iso_compliance",      SuperOnly, null, false),
+            ["backup_dr"]           = new("backup_dr",           SuperOnly, null, false),
+            ["document_management"] = new("document_management", SuperOnly, null, false),
         };
 
     /// <summary>Returns the descriptor for <paramref name="key"/>, or null if not registered.</summary>

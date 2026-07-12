@@ -10554,26 +10554,27 @@ public class PortalController : Controller
     // Final-Touches Phase 17 Stage 17.2 � SuperAdmin manages degree rules
     public async Task<IActionResult> DegreeRules(CancellationToken ct)
     {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
-
         if (!User.IsInRole("SuperAdmin"))
         {
             TempData["Message"] = "Only SuperAdmin can manage degree rules.";
-            return RedirectToAction(nameof(Dashboard));
+            return View(new DegreeRulesPageModel());
         }
 
         var access = await CanUseDegreeAuditAsync(ct);
         if (!access.Allowed)
         {
             TempData["Message"] = access.Message;
-            return RedirectToAction(nameof(Dashboard));
+            return View(new DegreeRulesPageModel());
         }
 
         var model = new DegreeRulesPageModel();
         try
         {
-            model.Rules    = await _api.GetAllDegreeRulesAsync(ct);
-            model.Programs = await _api.GetProgramsAsync(null, ct);
+            if (_api.IsConnected())
+            {
+                model.Rules    = await _api.GetAllDegreeRulesAsync(ct);
+                model.Programs = await _api.GetProgramsAsync(null, ct);
+            }
         }
         catch (Exception ex) { TempData["Message"] = "Error: " + ex.Message; }
         return View(model);
@@ -10583,7 +10584,7 @@ public class PortalController : Controller
     [HttpPost]
     public async Task<IActionResult> DegreeRuleCreate(CreateDegreeRuleWebRequest request, CancellationToken ct)
     {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+        if (!_api.IsConnected()) return RedirectToAction(nameof(DegreeRules));
 
         if (!User.IsInRole("SuperAdmin"))
         {
@@ -10611,7 +10612,7 @@ public class PortalController : Controller
     [HttpPost]
     public async Task<IActionResult> DegreeRuleDelete(Guid ruleId, CancellationToken ct)
     {
-        if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
+        if (!_api.IsConnected()) return RedirectToAction(nameof(DegreeRules));
 
         if (!User.IsInRole("SuperAdmin"))
         {

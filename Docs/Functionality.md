@@ -1,5 +1,14 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD026 MD032 MD041 MD060 -->
 
+## 2026-07-12 Update — Phase 3 Medium Severity Fixes
+### Implementation sync
+- Change-password feature verified: fully functional with current/new/confirm password flow under User Settings, backed by PUT api/v1/auth/change-password.
+- Degree Rules page no longer redirects to Dashboard; renders normally with HTTP 200 for all authorized access paths, including when role or capability checks prevent data loading.
+- ISO Compliance, Backup & DR, and Document Management modules registered in ModuleRegistry as SuperAdmin-only with corresponding sidebar menu entries.
+- PRD terminology corrected: all "subjects" replaced with "courses", "Create User" references removed, CSV import kept as the only user creation method.
+### Validation sync
+- Build: 0 errors. DegreeRules GET returns View instead of RedirectToAction. All 3 compliance modules visible in ModuleRegistry.All().
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.

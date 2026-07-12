@@ -5379,7 +5379,7 @@ To deliver a scalable, long‑term university management system that preserves a
 - CSV import for student registration whitelist
 - Role-based sidebar navigation with per-role menus and sub-menus
 - System Settings: License, Theme, Report, Module, Sidebar management
-- Departments administration: degrees, semesters, subjects, timetable (PDF/Excel)
+- Departments administration: programs, semesters, courses, timetable (PDF/Excel)
 - Teacher modification requests with admin approval workflow
 - Account lockout and admin/super-admin password reset
 - OWASP Top 10 security hardening
@@ -5546,15 +5546,15 @@ If license expires or becomes invalid:
 - Access complete student academic history
 - Generate university-wide reports
 - Send notifications
-- Manage departments: create/edit departments, degree programs, semesters, subjects, timetables
+- Manage departments: create/edit departments, programs, semesters, courses, timetables
 - Mark students as Graduated (checkbox list by department)
-- Mark semester as completed or failed per student (with subject-level selection)
+- Mark semester as completed or failed per student (with course-level selection)
 - Auto-promote students to next semester on completion
 - Mark students as Inactive (dropout/leave)
 - Transfer student to another department or change program
 - Update student/faculty profiles on change request
 - Approve or reject teacher attendance/result modification requests
-- Enter or import CSV sheet of newly registered students to whitelist
+- Import CSV sheet of newly registered students to whitelist
 - Create and manage payment receipts for students
 - Confirm payment received (status → Paid)
 - Configure Result Calculation rules: GPA-to-score mappings and assessment component weightages
@@ -5633,9 +5633,9 @@ If license expires or becomes invalid:
 - The configuration is stored in the database and used by all result-entry workflows
 
 #### Automatic GPA, SGPA, and CGPA Processing
-- When faculty enter quiz, midterm, or final marks, the system automatically recalculates the subject total using the saved component weightages
-- The system automatically determines subject GPA using the saved GPA-to-score mapping
-- Once all subjects for a semester are fully marked for a student, the system automatically calculates and stores:
+- When faculty enter quiz, midterm, or final marks, the system automatically recalculates the course total using the saved component weightages
+- The system automatically determines course GPA using the saved GPA-to-score mapping
+- Once all courses for a semester are fully marked for a student, the system automatically calculates and stores:
   - Semester GPA (SGPA)
   - Total cumulative GPA (CGPA)
 - Recalculation must also run whenever an existing mark is edited through an approved modification workflow
@@ -5711,9 +5711,9 @@ If license expires or becomes invalid:
 - Graduated student dashboard becomes permanently read-only: view and download only
 
 ### 16.2 Semester Completion & Promotion
-- Admin marks semester as completed per student; selects passed/failed subjects at subject level
-- Students with all subjects passed: auto-promoted to next semester
-- Students with failed subjects: status = "Completed with Failed Subjects"; failed subject list recorded
+- Admin marks semester as completed per student; selects passed/failed courses at course level
+- Students with all courses passed: auto-promoted to next semester
+- Students with failed courses: status = "Completed with Failed Courses"; failed course list recorded
 - Admin can mark semester as fully Failed: student repeats the semester; added to re-enrollment list
 - Previous semesters always visible to students in read-only form
 

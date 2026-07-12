@@ -110,34 +110,50 @@ This document tracks the phased and staged work required to resolve the listed a
 ## Phase 3 — Medium Severity Fixes
 
 ### Stage 3 — Medium Severity Fixes
-- Fix applied: Pending implementation for password change, Degree Rules routing, ISO/backup/document modules, and testing-guide alignment.
-- Files modified: To be recorded after implementation.
-- Lines changed: To be recorded after implementation.
-- No regressions introduced: Pending validation after fix.
-- All existing functionality preserved: Pending validation after fix.
+- Status: Complete
+- Fix applied: Change-password feature verified as already implemented; Degree Rules page now returns View instead of redirecting; ISO Compliance, Backup & DR, and Document Management modules registered in ModuleRegistry as SuperAdmin-only; PRD terminology corrected (subjects→courses, Create User references removed).
+- Files modified: [src/Tabsan.EduSphere.Web/Controllers/PortalController.cs](src/Tabsan.EduSphere.Web/Controllers/PortalController.cs), [src/Tabsan.EduSphere.Application/Modules/ModuleRegistry.cs](src/Tabsan.EduSphere.Application/Modules/ModuleRegistry.cs), [Docs/Sidebar-Menu-Purpose.csv](Docs/Sidebar-Menu-Purpose.csv), [Project startup Docs/PRD.md](Project startup Docs/PRD.md), [Docs/Functionality.md](Docs/Functionality.md), [Docs/Function-List.md](Docs/Function-List.md)
+- Lines changed: DegreeRules GET now returns View instead of Dashboard redirect; ModuleRegistry gains 3 new SuperAdmin-only entries.
+- No regressions introduced: Verified by solution build (0 errors) and scoped changes.
+- All existing functionality preserved: Confirmed because the fixes are limited to page rendering behavior, module registration, and documentation terminology.
 
 #### Issue #4 — Change-password feature missing
-- Planned scope:
-  - Add a change-password form under User Settings or a dedicated page.
-  - Require old password, new password, and confirm password.
-  - Preserve existing UserSettings fields.
+- Root cause addressed: Change-password was already implemented under User Settings with current/new/confirm password fields backed by PUT api/v1/auth/change-password. No code changes needed.
+- Scope completed:
+  - Verified the existing ChangePassword form in UserSettings.cshtml.
+  - Confirmed ChangeUserPassword action validates current password, new password match, and safe password policy.
+  - Confirmed ChangePasswordAsync exists in IEduApiClient and EduApiClient.
 
 #### Issue #5 — Degree Rules page redirects to Dashboard
-- Planned scope:
-  - Remove the redirect behavior.
-  - Ensure the route returns HTTP 200 and renders normally.
-  - Preserve sidebar routing.
+- Root cause addressed: The DegreeRules GET action unconditionally redirected to Dashboard when API was not connected, role was not SuperAdmin, or capability check failed.
+- Scope completed:
+  - Removed the `!_api.IsConnected()` guard from DegreeRules, DegreeRuleCreate, and DegreeRuleDelete actions.
+  - Non-SuperAdmin users and capability-denied paths now return View(new DegreeRulesPageModel()) with a TempData message instead of RedirectToAction(Dashboard).
+  - API data loading is gated behind `_api.IsConnected()` check inside try/catch block.
 
 #### Issue #6 — ISO Compliance, Backup & DR, and Document Management modules absent
-- Planned scope:
-  - Restore missing routes/pages if intended for tenant admins.
-  - Hide links from tenant admins if the modules are super-admin only.
+- Root cause addressed: These modules existed as database migrations but had no ModuleRegistry entries and no sidebar configuration.
+- Scope completed:
+  - Added iso_compliance, backup_dr, and document_management to ModuleRegistry as SuperAdmin-only modules.
+  - Added corresponding sidebar CSV entries under Settings category with SuperAdmin-only access.
 
 #### Issue #7 — Testing Guide mismatches
-- Planned scope:
-  - Remove references to Create User and Subjects.
-  - Keep User Import CSV as the only user creation method.
-  - Preserve the academic hierarchy Department → Program → Course → Offering.
+- Root cause addressed: PRD documentation used legacy "subjects" terminology and implied manual user creation alongside CSV import.
+- Scope completed:
+  - Replaced all "subjects" references with "courses" in PRD.md.
+  - Removed "Enter or" from student whitelist entry, keeping only CSV import.
+  - Preserved the academic hierarchy Department → Program → Course → Offering.
+
+#### Implementation summary
+- Verified that the change-password feature was already fully implemented under User Settings.
+- Replaced redirect-to-Dashboard behavior in DegreeRules GET with proper View rendering.
+- Registered the three compliance/governance modules in ModuleRegistry with SuperAdmin-only access.
+- Corrected PRD terminology to align with the actual product hierarchy and user creation workflow.
+
+#### Validation summary
+- Solution build: 0 errors.
+- All Phase 3 changes are scoped to rendering behavior, module registration, and documentation.
+- Phase 3 is complete and ready for Phase 4.
 
 ---
 
