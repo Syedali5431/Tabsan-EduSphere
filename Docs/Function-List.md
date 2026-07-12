@@ -6,6 +6,7 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| QA Phase F Student Lifecycle Verified | Semester dropdown constrained to TotalSemesters, student CRUD pages | src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs |
 | QA Phases D+E Verified | Profile upload, sidebar count, Degree Rules no-redirect, ISO/Backup/Doc modules | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase C User Import Verified | CSV templates, single-user creation form, import via api/v1/user-import/csv | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase B Login & MFA Verified | TOTP enrollment, verification, login-verify all passing; login credential validation | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |

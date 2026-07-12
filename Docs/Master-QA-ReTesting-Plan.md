@@ -202,29 +202,34 @@
 
 ## Phase F — Student Lifecycle
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage F.1 — Semester Dropdown Range
 - **Issue #2**: University Semester dropdown shows 1–8, not 82,029 options.
 
-#### Test Steps
-1. Log in as Admin (university scope).
-2. Navigate to **Student Lifecycle**.
-3. Select a university program (e.g., BSCS).
-4. Check the semester dropdown options.
+#### Implementation Summary
+- `AcademicLevelRangeHelper.ResolveUniversityLevelRange` constrains semester range using program's `TotalSemesters` value.
+- Filters out levels exceeding the program's configured semester count.
+- Falls back to configured levels when program semesters are missing.
 
-#### Expected Result
-- Semester dropdown shows only 1–8 (or the program's configured total semesters).
-- Not showing thousands of invalid options.
-- School/College shows Class 1–10 or 11–12 as appropriate.
-
----
+#### Validation Summary
+- `AcademicLevelRangeHelperTests.ResolveUniversityLevelRange_UsesProgramTotalSemesters_WhenAvailable` — PASSED.
+- `AcademicLevelRangeHelperTests.ResolveUniversityLevelRange_FallsBackToConfiguredLevels_WhenProgramSemestersMissing` — PASSED.
+- School: Class 1-10, College: Class 11-12, University: Semester 1-8.
 
 ### Stage F.2 — Student Management
 - Student Add/Edit/Delete works via the Students page.
 
-#### Expected Result
-- Student list loads with correct filters.
-- Student details viewable.
-- Student status changes (Active/Inactive/Graduated) work.
+#### Implementation Summary
+- `PortalController.Students` loads student list with department/tenant/campus/institution filters.
+- `PortalController.StudentLifecycle` handles progression, graduation, status changes.
+- Student profiles managed via `student_profiles` table with CRUD operations.
+
+#### Validation Summary
+- Students page loads at `/Portal/Students` with filter dropdowns.
+- Student Lifecycle page loads at `/Portal/StudentLifecycle` with semester/program selection.
+- Student status transitions (Active/Inactive/Graduated) functional.
 
 ---
 

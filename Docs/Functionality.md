@@ -92,6 +92,14 @@
 - All phase D+E issues (#5, #6, #8, #10) verified with code inspection and live testing.
 - Build: 0 errors. QA Phases D+E complete, ready for Phase F.
 
+## 2026-07-12 Update — QA Phase F: Student Lifecycle Verified
+### Implementation sync
+- Semester dropdown range constrained by AcademicLevelRangeHelper using program TotalSemesters (Issue #2).
+- Student management pages verified: Students list with filters, StudentLifecycle with progression/graduation/status.
+### Validation sync
+- AcademicLevelRangeHelper tests: 2/2 passed.
+- QA Phase F complete, ready for Phase G.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.
