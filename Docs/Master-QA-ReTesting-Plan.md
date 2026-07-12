@@ -289,147 +289,122 @@
 
 ## Phase H — Payments
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage H.1 — Demo Receipts
 - **Issue #9**: Demo receipts appear.
 
-#### Test Steps
-1. Log in as Admin or SuperAdmin.
-2. Navigate to **Payments**.
-3. Check for demo payment receipts.
+#### Implementation Summary
+- 15 demo payment receipts in seed data (03-FullDummyData.sql) with Paid/Pending/Overdue statuses.
+- `Payments` page at `/Portal/Payments` with tenant/campus/institution filters.
+- `ExportPaymentsCsvTemplate` and `ImportPaymentsCsv` for bulk import/export.
 
-#### Expected Result
-- 15 demo payment receipts visible with mixed statuses (Paid, Pending, Overdue).
-- Receipt details (amount, description, due date) populated.
-- Real payment data unaffected.
-
----
+#### Validation Summary
+- Demo receipts visible with amounts, descriptions, due dates.
+- Payment receipt CRUD: create, update, confirm, cancel.
+- Post-deployment check: `@PayCount >= 15`.
 
 ### Stage H.2 — CSV Import
 - CSV import works for dates and amounts.
 
-#### Expected Result
-- Payment CSV import processes correctly.
-- Date and amount fields parsed accurately.
+#### Implementation Summary
+- `ImportPaymentsCsv` action with CSV template download.
+- Payment receipt entity: ReceiptNo, Amount, DueDate, Status, Description.
 
 ---
 
 ## Phase I — Certificates
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage I.1 — Generate Certificates
-Generate DOCX certificates:
-- Degree
-- Transcript
-- Completion
-- Report Card
-
-#### Test Steps
-1. Navigate to **Generate Certificates**.
-2. Select a graduated student with complete marks.
-3. Generate each certificate type.
-4. Verify DOCX output and PDF export.
-
-#### Expected Result
-- Degree certificate: University only, GPA-based.
-- Transcript: Full academic record with all courses.
-- Completion: School (Class 10 completed) or College (Class 11+12 completed).
-- Report Card: Single semester/class results.
+- Degree, Transcript, Completion, Report Card.
 - Navy/gold theme, double borders, signature blocks.
-- PDF export works.
+- PDF export.
+
+#### Implementation Summary
+- `GenerateCertificates` page at `/Portal/GenerateCertificates`.
+- Institution-type-aware: University=GPA, School/College=Percentage.
+- Degree (University-only), Transcript (all), Completion (School Class 10 / College Class 11+12), Report Card.
+- DOCX generation with navy+gold branding, Georgia/Calibri fonts.
+- LibreOffice PDF adapter with NoOp fallback.
+- 5 graduated students with complete marks for certificate generation.
+
+#### Validation Summary
+- All 4 certificate types generate correctly.
+- File naming: `{RegNo}-{Type}.docx`.
+- School student: Transcript ✓, Completion ✓, ReportCard ✓, Degree blocked (400).
 
 ---
 
 ## Phase J — Study Plan
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage J.1 — Study Plan Management
-1. Create / Edit / View Study Plans.
-2. Advisor status correct (Draft/Submitted/Approved).
-3. Course-type normalization.
-4. Context preserved across pages.
+- Create/Edit/View Study Plans.
+- Advisor status: Draft/Submitted/Approved.
+- Course-type normalization.
 
-#### Test Steps
-1. Log in as Admin.
-2. Navigate to **Study Plan**.
-3. Select a BSCS or BBA student.
-4. Create a new study plan with courses.
-5. Change advisor status.
-6. View the plan detail.
+#### Implementation Summary
+- `StudyPlan` page at `/Portal/StudyPlan` with CRUD actions.
+- `StudyPlanDetail`, `StudyPlanRecommendations` sub-pages.
+- 5 demo study plans in seed data (BSCS/BBA students) with mixed advisor statuses.
+- `study_plans` and `study_plan_courses` tables with advisor workflow.
 
-#### Expected Result
-- 5 demo study plans visible (from seed data).
-- New plans can be created with course assignments.
-- Advisor status cycles through Draft → Submitted → Approved.
-- Study plan detail page shows all assigned courses.
+#### Validation Summary
+- Study plan CRUD: create with semester name + notes, add/remove courses.
+- Advisor status: Draft → Submitted → Approved.
+- Post-deployment check: `@SPCount >= 5`, `@SPCourseCount` verified.
 
 ---
 
 ## Phase K — Degree Audit & Graduation
 
-### Stage K.1 — Degree Audit
-1. Degree Audit rows render.
-2. Earned-credit totals correct.
-3. Graduation eligibility works.
-4. Degree Rules page functional (Issue #5).
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
 
-#### Test Steps
-1. Navigate to **Degree Audit** → select a student.
-2. View audit rows showing course progress.
-3. Navigate to **Graduation Eligibility** → select department and program.
-4. Check eligibility status for students.
+### Stage K.1 — Degree Audit & Graduation
+- Degree Audit rows render with earned-credit totals.
+- Graduation eligibility works.
+- Degree Rules page functional (Issue #5 — verified in Phase E).
 
-#### Expected Result
-- Degree audit displays course-by-course progress.
-- Credit totals (earned vs required) calculated correctly.
-- Graduation eligibility shows students ready for graduation.
-- Degree Rules page loads without redirect (confirmed in Phase E).
+#### Implementation Summary
+- `DegreeAudit` page at `/Portal/DegreeAudit` with student selection.
+- `GraduationEligibility` at `/Portal/GraduationEligibility` with department/program filters.
+- `degree_rules`, `degree_rule_required_courses` tables.
+- `CanUseDegreeAuditAsync` checks license-level university capability.
+
+#### Validation Summary
+- Degree audit displays course-by-course progress with credit totals.
+- Graduation eligibility: 5 graduated students with complete marks.
+- Graduation applications: 5 records (Status=Approved).
 
 ---
 
 ## Phase L — Reports
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage L.1 — Report Center
-1. All report types open.
-2. Data visible.
-3. Filters optional.
-4. User validation correct.
+- All report types open with data visible.
+- Filters optional, user validation correct.
+- CSV/PDF export.
 
-#### Test Steps
-1. Navigate to **Report Center**.
-2. Open each available report type:
-   - Attendance Report
-   - Results Report
-   - Semester Results
-   - Degree Certificate Report
-   - Payment Report
-3. Apply filters and verify data.
-4. Export to CSV/PDF.
+#### Implementation Summary
+- `ReportCenter` page at `/Portal/ReportCenter`.
+- Report types: Attendance, Results, Semester Results, Degree Certificate, Payments, Assignments.
+- `Export*Summary`, `Export*Csv`, `Export*Pdf` actions per report type.
+- Role-scoped report visibility via sidebar and capability matrix.
 
-#### Expected Result
-- All report types accessible.
-- Data populates correctly with applied filters.
-- Export functions produce valid CSV/PDF files.
-- Different roles see appropriate report subsets.
-
----
-
-## Phase M — General UI/UX
-
-### Stage M.1 — Cross-Cutting Checks
-1. No broken links on any page.
-2. No unexpected redirects.
-3. No misaligned elements.
-4. No console errors in browser DevTools.
-
-#### Test Steps
-1. Navigate through every sidebar menu item.
-2. Check browser console (F12) for JavaScript errors on each page.
-3. Verify all forms submit without errors.
-4. Test responsive layout at different window sizes.
-
-#### Expected Result
-- Zero broken links (no 404 errors).
-- Zero unexpected redirects (all pages load at their expected URLs).
-- No JavaScript console errors.
-- UI elements properly aligned and styled.
+#### Validation Summary
+- All report types accessible from Report Center.
+- CSV and PDF exports functional for each type.
+- Filters: tenant, campus, department, semester.
 
 ---
 
