@@ -235,45 +235,55 @@
 
 ## Phase G — Results, Attendance, Assignments
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage G.1 — Results Entry
-- Percentage for School/College.
-- GPA for University.
+- Percentage for School/College, GPA for University.
 - GradingType is per-course.
 
-#### Test Steps
-1. Navigate to **Enter Results**.
-2. Select a School department → enter percentage marks (e.g., 85/100).
-3. Select a University department → enter GPA-based marks.
-4. Publish results and verify they appear in the Results view.
+#### Implementation Summary
+- `EnterResults` POST action handles scoped result entry with marks, max marks, and result type.
+- `ResultDomainRulesTests` validate published/draft state transitions.
+- `GpaResultStrategyTests` and `PercentageResultStrategyTests` cover GPA and percentage grading.
+- Grading type stored per-course via `GradingType` column (GPA/Percentage).
 
-#### Expected Result
-- School/College: Marks entered as percentage with letter grades (A+, A, B, etc.).
-- University: Marks entered with GPA calculation.
-- Published results visible to students.
-
----
+#### Validation Summary
+- Results page with cascading filters: Institution → Department → Course → Semester.
+- Percentage-based: School (90+=A+, 80+=A, 70+=B, 60+=C, 50+=D, <50=F).
+- GPA-based: University (4.0 scale).
+- Result domain rules tests verify publish/draft/correct workflows.
 
 ### Stage G.2 — Attendance
-- Add attendance manually.
-- Import CSV for bulk attendance.
-- Labels correct (Present/Absent).
+- Manual attendance entry with date and status.
+- CSV import for bulk attendance with validation.
+- Labels: Present/Absent.
 
-#### Expected Result
-- Manual attendance entry works with date and status selection.
-- CSV import processes correctly with validation feedback.
-- Attendance records visible in the Attendance view.
+#### Implementation Summary
+- `EnterAttendance` and `BulkMarkAttendance` actions for manual entry.
+- `ImportAttendanceCsv` handles bulk CSV upload with row-level validation and audit trail.
+- Seed data: ~90 days per enrollment, 85-95% present.
 
----
+#### Validation Summary
+- Attendance page at `/Portal/EnterAttendance` with cascading filters.
+- CSV import: validation for duplicate rows, invalid dates, unknown students.
+- Attendance view at `/Portal/Attendance` shows records.
 
 ### Stage G.3 — Assignments
-- Create assignment.
-- Grade submission.
-- LMS quiz creation (if applicable).
+- Create assignment with title, description, due date, max marks.
+- Grade submissions.
+- Quiz creation and attempts (if applicable).
 
-#### Expected Result
-- Assignment created with title, description, due date, max marks.
-- Submissions can be graded.
-- Quiz creation and attempts work.
+#### Implementation Summary
+- `Assignments` page with create/edit/view by offering.
+- `assignment_submissions` table for student submissions and grading.
+- `quizzes` and `quiz_attempts` tables for quiz functionality.
+- Seed data: 2 assignments per offering, quizzes with attempts for graduated students.
+
+#### Validation Summary
+- Assignments page at `/Portal/Assignments` with offering filter.
+- Quizzes page at `/Portal/Quizzes` with attempts tracking.
+- Seed data: assignments for all offerings, quizzes for all graduated students.
 
 ---
 

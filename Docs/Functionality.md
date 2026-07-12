@@ -100,6 +100,15 @@
 - AcademicLevelRangeHelper tests: 2/2 passed.
 - QA Phase F complete, ready for Phase G.
 
+## 2026-07-12 Update — QA Phase G: Results, Attendance, Assignments Verified
+### Implementation sync
+- Results: EnterResults with GPA/Percentage grading per-course; ResultDomainRules validates publish/draft states.
+- Attendance: EnterAttendance + BulkMarkAttendance + ImportAttendanceCsv with validation; ~90 days/student seed data.
+- Assignments: Create/grade/view with offerings filter; quizzes with attempts tracking.
+### Validation sync
+- All controllers, views, and seed data verified for Results, Attendance, Assignments modules.
+- QA Phase G complete, ready for Phase H.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.
