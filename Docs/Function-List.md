@@ -7,7 +7,9 @@
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
 | Phase 0 Guardrails Tracking | Documentation-only phase tracker for guardrail enforcement and scope protection | Docs/App-Issue-Resolution-Plan.md |
-|--------------|--------|----------|
+| BuildingRoomService.CreateBuildingAsync | Validates building input and persists scoped building records safely | src/Tabsan.EduSphere.Application/Services/BuildingRoomService.cs |
+| BuildingController.Create | Accepts scoped building create requests and enforces tenant/campus requirements | src/Tabsan.EduSphere.API/Controllers/BuildingController.cs |
+| PortalController.CreateBuilding | Propagates tenant/campus values from the portal form to the API create request | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | ITotpService.GenerateSecret | Generate cryptographically secure Base32 TOTP secret via Otp.NET | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
 | ITotpService.BuildProvisioningUri | Build otpauth://totp/ URI for authenticator enrollment | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |
 | ITotpService.ValidateCode | Validate TOTP code using OtpNet.Totp.VerifyTotp with VerificationWindow | src/Tabsan.EduSphere.Application/Interfaces/ITotpService.cs |

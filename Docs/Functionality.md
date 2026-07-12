@@ -9,6 +9,15 @@
 - Scope review completed successfully.
 - Phase 0 is stable and ready for implementation work in later phases.
 
+## 2026-07-12 Update — Phase 1 Building Creation Flow Hardened
+### Implementation sync
+- Building creation now validates required name/code input before persistence.
+- Tenant and campus scope are propagated from the portal form into the create request and API service layer.
+- The flow now avoids creating invalid orphaned building rows during the first step of the academic lifecycle.
+### Validation sync
+- Focused regression test passed for blank-name rejection.
+- Phase 1 is complete and scoped to the building create issue only.
+
 ## 2026-06-22 Update — Profile Picture Upload & Graduated Demo Students
 ### Implementation sync
 - Users can upload a profile picture (JPG, JPEG, PNG, max 2MB) from the User Settings page.

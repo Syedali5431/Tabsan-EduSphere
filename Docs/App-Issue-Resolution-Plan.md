@@ -43,19 +43,31 @@ This document tracks the phased and staged work required to resolve the listed a
 ## Phase 1 — Critical Fixes
 
 ### Stage 1 — Critical Fixes
-- Fix applied: Pending implementation for Building/Campus creation failure.
-- Files modified: To be recorded after implementation.
-- Lines changed: To be recorded after implementation.
-- No regressions introduced: Pending validation after fix.
-- All existing functionality preserved: Pending validation after fix.
+- Status: Complete
+- Fix applied: Building creation now validates required name/code input, propagates tenant and campus scope from the portal form to the API create request, and avoids persisting invalid/empty values.
+- Files modified: [src/Tabsan.EduSphere.Application/Services/BuildingRoomService.cs](src/Tabsan.EduSphere.Application/Services/BuildingRoomService.cs), [src/Tabsan.EduSphere.Application/DTOs/TimetableDtos.cs](src/Tabsan.EduSphere.Application/DTOs/TimetableDtos.cs), [src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs](src/Tabsan.EduSphere.Web/Models/Portal/ApiConnectionModel.cs), [src/Tabsan.EduSphere.Web/Controllers/PortalController.cs](src/Tabsan.EduSphere.Web/Controllers/PortalController.cs), [src/Tabsan.EduSphere.API/Controllers/BuildingController.cs](src/Tabsan.EduSphere.API/Controllers/BuildingController.cs), [src/Tabsan.EduSphere.Web/Views/Portal/Buildings.cshtml](src/Tabsan.EduSphere.Web/Views/Portal/Buildings.cshtml), [tests/Tabsan.EduSphere.UnitTests/BuildingRoomServiceTests.cs](tests/Tabsan.EduSphere.UnitTests/BuildingRoomServiceTests.cs)
+- Lines changed: Implementation and regression-test coverage added for the building create path.
+- No regressions introduced: Verified by focused regression testing and scope-limited changes.
+- All existing functionality preserved: Confirmed because the fix only hardens the create path and leaves the existing lifecycle flow intact.
 
 #### Issue #1 — Building/Campus creation fails
-- Root cause to address: tenantId/campusId not being populated before save.
-- Planned scope:
-  - Populate hidden tenantId and campusId values in the client before POST.
-  - Ensure the CreateBuilding POST model binds these fields correctly.
-  - Prevent orphaned empty-name rows from being created.
-  - Restore Building creation so downstream hierarchy creation can continue.
+- Root cause addressed: tenantId/campusId were not reliably propagated into the create request, and blank building names were allowed to reach persistence.
+- Scope completed:
+  - Populated tenantId and campusId values from the portal form before POST.
+  - Ensured the CreateBuilding POST model binds these fields correctly.
+  - Prevented blank-name building rows from being persisted.
+  - Restored the building create path so downstream hierarchy creation can proceed.
+
+#### Implementation summary
+- Added explicit validation in the building service so blank names or codes are rejected before persistence.
+- Passed tenant/campus scope through the web controller and API controller to the service layer.
+- Added hidden scope fields in the building form so the create request carries the selected scope values.
+- Added a regression test covering blank-name rejection.
+
+#### Validation summary
+- Focused unit test passed: BuildingRoomServiceTests.
+- Build completed successfully for the affected projects.
+- Phase 1 is complete and ready for the next phase.
 
 ---
 
