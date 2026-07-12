@@ -11,6 +11,11 @@
 - Building creation now validates required input, propagates tenant/campus scope, and prevents invalid orphan building rows from being persisted.
 - Validation: focused regression test passed and the create flow is now protected against the prior failure path.
 
+### 2026-07-12 — Phase 2 Semester Range & Idle-Timeout Fixes
+- Phase 2 completed for the university semester dropdown and session refresh timeout issue.
+- The portal now constrains semester options to the selected program’s configured total-semester range, and refresh handling now rejects idle sessions once the timeout window is exceeded.
+- Validation: targeted regression tests passed for both the semester-range helper and the auth refresh timeout path.
+
 ### 2026-06-22 — Profile Picture Upload & Graduated Demo Students
 - Profile Picture: Users can upload JPG/JPEG/PNG (max 2MB) from User Settings. Stored in wwwroot/uploads/profile-pictures. Navbar displays circular avatar with fallback to initial letter.
 - User model: ProfilePicturePath column (nvarchar 500, nullable) added to users table.

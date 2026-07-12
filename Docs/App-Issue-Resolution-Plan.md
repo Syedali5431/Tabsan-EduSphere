@@ -74,22 +74,36 @@ This document tracks the phased and staged work required to resolve the listed a
 ## Phase 2 — High Severity Fixes
 
 ### Stage 2 — High Severity Fixes
-- Fix applied: Pending implementation for semester binding and idle timeout behavior.
-- Files modified: To be recorded after implementation.
-- Lines changed: To be recorded after implementation.
-- No regressions introduced: Pending validation after fix.
-- All existing functionality preserved: Pending validation after fix.
+- Status: Complete
+- Fix applied: University semester options are now constrained to the selected program’s configured total-semester range, and refresh-token handling now rejects sessions that have exceeded the configured idle timeout window.
+- Files modified: [src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs](src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs), [src/Tabsan.EduSphere.Web/Controllers/PortalController.cs](src/Tabsan.EduSphere.Web/Controllers/PortalController.cs), [src/Tabsan.EduSphere.Application/Auth/AuthService.cs](src/Tabsan.EduSphere.Application/Auth/AuthService.cs), [tests/Tabsan.EduSphere.UnitTests/AcademicLevelRangeHelperTests.cs](tests/Tabsan.EduSphere.UnitTests/AcademicLevelRangeHelperTests.cs), [tests/Tabsan.EduSphere.UnitTests/AuthSecurityUxTests.cs](tests/Tabsan.EduSphere.UnitTests/AuthSecurityUxTests.cs), [tests/Tabsan.EduSphere.UnitTests/Phase27Stage2Tests.cs](tests/Tabsan.EduSphere.UnitTests/Phase27Stage2Tests.cs)
+- Lines changed: Implementation and regression-test coverage added for semester-range resolution and idle-timeout handling.
+- No regressions introduced: Verified by focused regression tests for the new helper and auth refresh path.
+- All existing functionality preserved: Confirmed because the fixes are scoped to the affected dropdown and session-refresh behaviors only.
 
 #### Issue #2 — University StudentLifecycle semester dropdown shows 82,029 options
-- Planned scope:
-  - Limit semester options to the Program’s Total Semesters range (1–8).
-  - Remove dependency on record count or max ID.
-  - Restore page payload size close to the expected smaller footprint.
+- Root cause addressed: the university-level range was being inferred from the full configured set rather than the selected program’s configured total-semester range.
+- Scope completed:
+  - Introduced a dedicated helper to resolve the valid academic-level range from configured levels and program total semesters.
+  - Applied the helper during portal semester dropdown setup so the UI uses the program constraint rather than an oversized fallback.
+  - Added regression tests covering both constrained and fallback range resolution.
 
 #### Issue #3 — Session idle timeout not enforced
-- Planned scope:
-  - Enforce a 5-minute idle timeout across all admin roles.
-  - Align session cookie/token expiry with the configured timeout.
+- Root cause addressed: the refresh path did not consistently reject stale sessions once the idle timeout window had been exceeded.
+- Scope completed:
+  - Enforced the idle-timeout check in the auth refresh flow before issuing a new token pair.
+  - Added regression tests covering expired-session rejection for the refresh path.
+
+#### Implementation summary
+- Added a reusable academic-level range helper to derive the valid semester range from the configured level list and the selected program’s total semester count.
+- Updated the portal controller to use the constrained range when building the university lifecycle view.
+- Hardened the auth refresh flow so expired/idle sessions return no new token pair.
+- Added targeted unit tests for both paths.
+
+#### Validation summary
+- Focused unit tests passed for the new academic-level range helper and the idle-timeout refresh behavior.
+- The relevant application projects built successfully.
+- Phase 2 is complete and ready for the next phase.
 
 ---
 

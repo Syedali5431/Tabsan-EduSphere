@@ -7,6 +7,7 @@
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
 | Phase 0 Guardrails Tracking | Documentation-only phase tracker for guardrail enforcement and scope protection | Docs/App-Issue-Resolution-Plan.md |
+| Phase 2 Academic Level Range Helper | Resolves the valid university academic-level range from configured levels and a program's total-semester count | src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs |
 | BuildingRoomService.CreateBuildingAsync | Validates building input and persists scoped building records safely | src/Tabsan.EduSphere.Application/Services/BuildingRoomService.cs |
 | BuildingController.Create | Accepts scoped building create requests and enforces tenant/campus requirements | src/Tabsan.EduSphere.API/Controllers/BuildingController.cs |
 | PortalController.CreateBuilding | Propagates tenant/campus values from the portal form to the API create request | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |

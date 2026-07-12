@@ -18,6 +18,14 @@
 - Focused regression test passed for blank-name rejection.
 - Phase 1 is complete and scoped to the building create issue only.
 
+## 2026-07-12 Update — Phase 2 Semester Range & Idle-Timeout Fixes
+### Implementation sync
+- The university semester dropdown now uses the selected program’s configured total-semester range instead of an oversized fallback list.
+- Session refresh now rejects sessions that exceed the configured idle-timeout window before issuing a new token pair.
+### Validation sync
+- Targeted regression tests passed for both the academic-level range helper and the refresh-timeout path.
+- Phase 2 is complete and ready for the next implementation phase.
+
 ## 2026-06-22 Update — Profile Picture Upload & Graduated Demo Students
 ### Implementation sync
 - Users can upload a profile picture (JPG, JPEG, PNG, max 2MB) from the User Settings page.

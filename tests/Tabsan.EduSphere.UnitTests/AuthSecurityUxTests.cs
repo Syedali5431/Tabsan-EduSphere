@@ -16,7 +16,7 @@ namespace Tabsan.EduSphere.UnitTests;
 
 // Phase 27.2 — Authentication and Security UX unit tests
 
-public class Phase27Stage2Tests
+public class AuthSecurityUxTests
 {
     [Fact]
     public async Task GetSecurityProfileAsync_ReturnsConfiguredFlags()

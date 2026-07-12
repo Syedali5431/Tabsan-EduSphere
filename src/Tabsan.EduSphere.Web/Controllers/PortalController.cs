@@ -7719,20 +7719,33 @@ public class PortalController : Controller
                 model.MinAcademicLevel = 11;
                 model.MaxAcademicLevel = 12;
             }
-            else // University: semester-based, use configured levels from DB
+            else // University: semester-based, use the selected program's configured range when available
             {
                 var configuredLevels = await _api.GetSemestersAsync(ct);
                 model.PeriodLabel = InferUniversityPeriodLabel(configuredLevels);
-                var numericLevels = configuredLevels
-                    .Select(s => ExtractFirstInteger(s.Name))
-                    .Where(v => v.HasValue)
-                    .Select(v => v!.Value)
-                    .Distinct()
-                    .OrderBy(v => v)
-                    .ToList();
 
-                model.MinAcademicLevel = numericLevels.Count > 0 ? numericLevels.First() : 1;
-                model.MaxAcademicLevel = numericLevels.Count > 0 ? numericLevels.Last() : 8;
+                var totalSemesters = 0;
+                if (departmentId.HasValue)
+                {
+                    var selectedDepartment = model.Departments.FirstOrDefault(d => d.Id == departmentId.Value);
+                    if (selectedDepartment is not null)
+                    {
+                        var departmentPrograms = await _api.GetProgramDetailsAsync(departmentId, effectiveTenantId, effectiveCampusId, ct);
+                        totalSemesters = departmentPrograms
+                            .Where(p => p.IsActive)
+                            .Select(p => p.TotalSemesters)
+                            .Where(value => value > 0)
+                            .DefaultIfEmpty(0)
+                            .Max();
+                    }
+                }
+
+                var range = Tabsan.EduSphere.Web.Helpers.AcademicLevelRangeHelper.ResolveUniversityLevelRange(
+                    configuredLevels.Select(x => x.Name),
+                    totalSemesters);
+
+                model.MinAcademicLevel = range.Min;
+                model.MaxAcademicLevel = range.Max;
             }
 
             model.ShowGraduationSection = departmentId.HasValue && effectiveInstitutionType == 0; // University only
