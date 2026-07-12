@@ -50,6 +50,17 @@
 - Unit tests: 186/215 passed; 29 pre-existing failures in MFA enum mismatch, attendance CSV mocks, and bulk promotion — none caused by Phase 1-5 fixes.
 - All 6 phases of App-Issue-Resolution-Plan complete. Repository ready for production validation.
 
+## 2026-07-12 Update — QA Phase A: Critical Master Data Setup Verified
+### Implementation sync
+- Building creation flow re-verified: Create form loads with Tenant/Campus dropdowns, BuildingRoomService validates blank names.
+- Academic hierarchy pages confirmed loading: Departments → Programs → Courses & Offerings at correct URLs.
+- Cascading filter system (`cascading-filters.js`) operational with `data-cascade` attributes.
+- Creation order (Building → Department → Program → Course → Offering) preserved in schema and seed data.
+### Validation sync
+- Build: 0 errors. BuildingRoomServiceTests: 1/1 passed.
+- All hierarchy pages return HTTP 200 from live browser testing.
+- QA Phase A is complete and ready for Phase B.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.

@@ -6,6 +6,8 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| QA Phase A Building Creation Verified | Building creation form with Tenant/Campus dropdowns, blank-name rejection | src/Tabsan.EduSphere.API/Controllers/BuildingController.cs |
+| QA Phase A Hierarchy Verified | Departments → Programs → Courses & Offerings pages load in correct order | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | Phase 6 Final Validation | Full regression test (186/215 passed), endpoint audit (32 POST controllers), Issues 1-10 re-verified | Docs/App-Issue-Resolution-Plan.md |
 | Phase 5 Study Plan Demo Seed | 5 demo study plans with mixed advisor statuses (Draft/Submitted/Approved) and 3-5 courses each | Scripts/03-FullDummyData.sql |
 | Phase 5 Prerequisites Demo Seed | CS101→CS201→CS301→CS401→CS501 prerequisite chain for demo | Scripts/03-FullDummyData.sql |
