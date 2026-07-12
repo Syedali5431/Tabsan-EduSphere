@@ -6,6 +6,7 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| QA Phases D+E Verified | Profile upload, sidebar count, Degree Rules no-redirect, ISO/Backup/Doc modules | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase C User Import Verified | CSV templates, single-user creation form, import via api/v1/user-import/csv | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase B Login & MFA Verified | TOTP enrollment, verification, login-verify all passing; login credential validation | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
 | QA Phase B Idle Timeout Verified | RefreshAsync rejects sessions past IdleTimeoutMinutes | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |

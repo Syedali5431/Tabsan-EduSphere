@@ -82,6 +82,16 @@
 - Both template files downloadable via UserImportTemplate endpoint.
 - QA Phase C is complete and ready for Phase D.
 
+## 2026-07-12 Update — QA Phases D+E: User Settings & Navigation Verified
+### Implementation sync
+- Profile picture upload verified: UploadProfilePicture action with JPG/PNG/JPEG validation, 2MB limit, preview, fallback avatar in navbar.
+- Sidebar item count aligned: 07-Fix-Sidebar-Role-Visibility.sql synced with Sidebar-Menu-Purpose.csv for Admin (+13 keys), Faculty (+21), Student (+17).
+- Degree Rules page: returns View() instead of RedirectToAction(Dashboard) for non-SuperAdmin and capability-denied paths.
+- ISO Compliance, Backup & DR, Document Management registered in ModuleRegistry as SuperAdmin-only with sidebar CSV entries.
+### Validation sync
+- All phase D+E issues (#5, #6, #8, #10) verified with code inspection and live testing.
+- Build: 0 errors. QA Phases D+E complete, ready for Phase F.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.

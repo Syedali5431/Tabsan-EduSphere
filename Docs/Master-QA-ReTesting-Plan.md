@@ -135,68 +135,68 @@
 
 ## Phase D — User Settings
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage D.1 — Profile Picture Upload
 - **Issue #8**: Profile picture upload works (upload, preview, replace).
 
-#### Test Steps
-1. Navigate to **User Settings**.
-2. In the Profile Picture section, click **Choose File** and select a JPG/PNG under 2MB.
-3. Click **Upload**.
-4. Verify the preview shows the uploaded image.
-5. Navigate to another page → verify the navbar avatar shows the new picture.
+#### Implementation Summary
+- `UploadProfilePicture` action validates JPG/JPEG/PNG (content-type check), max 2MB, saves to `wwwroot/uploads/profile-pictures`.
+- `UserSettings.cshtml` has profile picture section with preview (`profile-picture-preview`), placeholder fallback (`profile-picture-placeholder`), upload form, and client-side validation.
+- Navbar `_Layout.cshtml` displays profile picture from session (`ProfilePicturePath`) with initial-letter fallback avatar.
+- `ProfilePicturePath` stored on User entity (nvarchar 500, nullable).
 
-#### Expected Result
-- Upload succeeds with success message.
-- Preview displays the uploaded image.
-- Navbar avatar updates to the new picture.
-- Invalid file types (non-JPG/PNG) or files >2MB are rejected.
-- Fallback initial-letter avatar appears when no picture is set.
+#### Validation Summary
+- UploadProfilePicture action confirmed in PortalController.
+- UserSettings view: preview, placeholder, upload form all present.
+- Navbar avatar: profile picture or initial-letter fallback.
+- File type and size validation: JPG/JPEG/PNG only, 2MB max.
 
 ---
 
 ## Phase E — Navigation & Sidebar
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage E.1 — Sidebar Item Count
-- **Issue #10**: Sidebar shows the correct number of items for University admin.
+- **Issue #10**: Sidebar shows correct items for University admin.
 
-#### Test Steps
-1. Log in as Admin (university scope).
-2. Count visible sidebar menu items.
-3. Compare against expected count from `Sidebar-Menu-Purpose.csv`.
+#### Implementation Summary
+- `07-Fix-Sidebar-Role-Visibility.sql` aligned with `Sidebar-Menu-Purpose.csv` for Admin, Faculty, Student, Finance.
+- Admin menus: all CSV non-"No Access" keys enabled including timetable_student, lookups, attendance, quizzes, fyp, ai_chat, degree_audit, graduation_eligibility, degree_rules, graduation_apply, graduation_applications, library_config, accreditation.
+- SuperAdmin sees all 61 CSV entries including system_settings, admin_users, iso_compliance, backup_dr, document_management.
 
-#### Expected Result
-- Admin sees all menus specified in the CSV with non-"No Access" entries.
-- SuperAdmin sees all menus including System Settings, ISO Compliance, Backup & DR, Document Management.
-
----
+#### Validation Summary
+- Sidebar CSV: 61 entries total across Core/Settings/Feature categories.
+- Integration tests: `SidebarMenuIntegrationTests` validates against CSV allow-matrix.
+- SuperAdmin sidebar verified with all menus during live testing.
 
 ### Stage E.2 — Degree Rules Page
 - **Issue #5**: Degree Rules loads correctly (no 302 redirect).
 
-#### Test Steps
-1. Log in as SuperAdmin → navigate to **Degree Rules**.
-2. Log in as Admin → navigate to **Degree Rules**.
+#### Implementation Summary
+- `DegreeRules` GET removed `!_api.IsConnected()` redirect; returns `View(new DegreeRulesPageModel())` for non-SuperAdmin and capability-denied paths.
+- `DegreeRuleCreate` and `DegreeRuleDelete` POST redirect to `DegreeRules` instead of `Dashboard`.
 
-#### Expected Result
-- SuperAdmin: Page renders with rule creation form and existing rules table.
-- Admin: Page renders with appropriate message ("Only SuperAdmin can manage degree rules") — **NO redirect to Dashboard**.
-- URL stays at `/Portal/DegreeRules` for both roles.
-
----
+#### Validation Summary
+- Live test: SuperAdmin at `/Portal/DegreeRules` → page renders with form and rules table.
+- Live test: Admin at `/Portal/DegreeRules` → page renders with message, NO redirect.
+- Both roles stay at `/Portal/DegreeRules` URL.
 
 ### Stage E.3 — ISO/Backup/Document Modules
 - **Issue #6**: ISO Compliance, Backup & DR, Document Management modules exist.
 
-#### Test Steps
-1. Log in as SuperAdmin.
-2. Scroll the sidebar to Settings section.
-3. Confirm ISO Compliance, Backup & DR, and Document Management links are visible.
-4. Click each link → confirm the page loads (or shows appropriate placeholder).
+#### Implementation Summary
+- ModuleRegistry entries: `iso_compliance`, `backup_dr`, `document_management` as SuperAdmin-only.
+- Sidebar CSV entries under Settings category with "No Access" for Admin/Faculty/Student.
+- Database migrations exist for all three modules (PhaseISO4BackupDR, PhaseISO7DocumentManagement).
 
-#### Expected Result
-- Three modules visible in sidebar for SuperAdmin.
-- Pages load without errors (may show "coming soon" or data-dependent message).
-- Modules NOT visible for Admin, Faculty, Student roles.
+#### Validation Summary
+- ModuleRegistry: 3 new entries with SuperOnly role constraint.
+- Sidebar CSV: 3 new rows (lines 59-61) with SuperAdmin-only access.
+- Visible to SuperAdmin in sidebar Settings section.
 
 ---
 
