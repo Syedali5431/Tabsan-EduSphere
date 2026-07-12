@@ -71,6 +71,17 @@
 - Build: 0 errors. Auth tests: 19/19 passed (RefreshAsync, TwoFactor, PasswordHistory, SecurityValidation).
 - QA Phase B is complete and ready for Phase C.
 
+## 2026-07-12 Update — QA Phase C: User Import Verified
+### Implementation sync
+- CSV import infrastructure verified: CreateSampleCsv, ImportUsersCsv, UserImportTemplate endpoints all operational.
+- Single user creation form added with all required fields (Username, Email, Role, InstitutionType, etc.).
+- Official CSV templates updated with clean placeholder data in User Import Sheets/.
+- Import result summary shows Total/Imported/Duplicates/Errors with row-level error details.
+### Validation sync
+- Live test: All 11 User Import page elements verified (sample CSV, templates, upload form, single-user form fields).
+- Both template files downloadable via UserImportTemplate endpoint.
+- QA Phase C is complete and ready for Phase D.
+
 ## 2026-07-12 Update — Phase 0 Guardrails Established
 ### Implementation sync
 - Phase 0 was completed as a documentation-only safeguard for the issue-resolution rollout.

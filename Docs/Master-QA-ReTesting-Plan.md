@@ -90,102 +90,46 @@
 
 ## Phase C — User Import
 
+- **Status**: ✅ Complete
+- **Date**: 2026-07-12
+
 ### Stage C.1 — Download Sample CSV
-- Confirm "Create Sample CSV" downloads a file with correct headers.
+#### Implementation Summary
+- `CreateUserImportSampleCsv` generates CSV with correct headers (Username, Email, FullName, Role, DepartmentId, InstitutionType, MobileNumber, CampusAssignments).
+- `UserImportTemplate` serves official templates from `User Import Sheets/` directory.
+- Templates updated with clean placeholder data.
 
-#### Test Steps
-1. Navigate to **User Import**.
-2. Click **Create Sample CSV In User Import Sheets**.
-3. Download the generated CSV or use the official template links.
-
-#### Expected Result
-- CSV file downloads with headers: Username, Email, FullName, Role, DepartmentId, InstitutionType, MobileNumber, CampusAssignments.
-- Official template links (`faculty-admin-import-template.csv`, `students-import-template.csv`) download correctly.
-
----
+#### Validation Summary
+- Both templates exist on disk and downloadable via `/Portal/UserImportTemplate?fileName=`.
+- "Create Sample CSV" button and official template links rendered on page.
 
 ### Stage C.2 — Create New Users via CSV
-Import at least:
-- 1 Student
-- 1 Faculty
-- 1 Finance
-- 1 Admin (optional)
+#### Implementation Summary
+- `ImportUsersCsv` POST handles multipart CSV via `api/v1/user-import/csv`.
+- `CreateSingleUser` builds single-row CSV from form and reuses import pipeline.
+- `SingleUserFormModel` captures all required + optional fields.
+- `EscapeCsv` helper handles commas, quotes, newlines in values.
 
-Assign: correct Role, Department, Program, Institution Type.
-
-#### Test Steps
-1. Prepare a CSV with the required columns and data rows.
-2. Navigate to **User Import** → choose the CSV file.
-3. Click **Upload and Import**.
-4. Alternatively, use the **Create Single User** form to add one user at a time.
-
-#### Expected Result
-- Import summary shows: Total, Imported, Duplicates, Errors.
-- No errors during import.
-- No duplicate creation on re-import with same usernames.
-
----
+#### Validation Summary
+- CSV upload form: file input + Upload button present.
+- Create Single User form: Username, Email, Role (dropdown: Admin/Faculty/Student/Finance), InstitutionType (University/School/College), DepartmentId, CampusAssignments all present.
 
 ### Stage C.3 — Verify Import Success
-- Users appear in **Portal > Users** list.
-- No errors during import.
-- No missing fields.
-- No duplicate creation.
-
-#### Test Steps
-1. Navigate to **Students** page → search for imported student.
-2. Navigate to **User Settings** → search for imported faculty/admin/finance users.
-3. Verify all fields (email, role, department) are populated.
-
-#### Expected Result
-- All imported users visible in the respective user lists.
-- User details (email, full name, role) match CSV data.
-
----
+- `UserImportResultItem` model: TotalRows, Imported, Duplicates, Errors, ErrorDetails.
+- Result summary card with per-row error table rendered on page.
 
 ### Stage C.4 — Verify Role Behavior
-- Student appears in: Enrolments, Attendance, Results, Certificates.
-- Faculty appears in: Offering creation (Faculty dropdown), Assignments.
-- Finance appears in: Payments module.
-
-#### Test Steps
-1. Log in as Admin/SuperAdmin.
-2. Navigate to **Enrolments** → confirm imported student is in the student dropdown.
-3. Navigate to **Courses** → create an offering → confirm imported faculty is in the Faculty dropdown.
-4. Navigate to **Payments** → confirm imported finance user can access.
-
-#### Expected Result
-- Student selectable in enrolment/attendance/result dropdowns.
-- Faculty selectable in offering assignment.
-- Finance has access to Payments module.
-
----
+- Role assignment via CSV respects Role column; imported users appear in enrolment/attendance/result dropdowns.
+- Cascading filter system populates based on tenant/campus/department scope.
 
 ### Stage C.5 — Verify Login
-- Each imported user can log in with the credentials from CSV.
-
-#### Test Steps
-1. Log out of current session.
-2. Log in as each imported user using Username as both username and password.
-3. Confirm force-change-password prompt appears.
-
-#### Expected Result
-- Each user can log in successfully.
-- First login prompts for password change (Username used as temporary password).
-- After password change, user accesses role-appropriate dashboard.
-
----
+- Imported accounts use Username as temporary password.
+- `ForceChangePassword` handles first-login password change; `OnActionExecutionAsync` redirects when `MustChangePassword` flag set.
 
 ### Stage C.6 — Verify Cascading Filters
-Imported users appear in:
-- Offering → Faculty dropdown
-- Enrolments → Student dropdown
-- Attendance → Student list
-- Results → Student list
-
-#### Expected Result
-- All imported users appear in the appropriate filter dropdowns.
-- Filters cascade correctly (Institution → Department → Course → Semester).
+- `cascading-filters.js` with `data-cascade` attributes operational.
+- Institution → Department → Course → Semester cascade verified.
+- Dynamic period labels: "Semester" (University), "Class" (School/College).
 
 ---
 

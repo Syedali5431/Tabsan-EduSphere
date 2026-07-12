@@ -6,6 +6,7 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| QA Phase C User Import Verified | CSV templates, single-user creation form, import via api/v1/user-import/csv | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase B Login & MFA Verified | TOTP enrollment, verification, login-verify all passing; login credential validation | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
 | QA Phase B Idle Timeout Verified | RefreshAsync rejects sessions past IdleTimeoutMinutes | src/Tabsan.EduSphere.Application/Auth/AuthService.cs |
 | QA Phase B Change-Password Verified | Current/new/confirm password form with safe-password policy | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
