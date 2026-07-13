@@ -2384,6 +2384,14 @@ public class PortalController : Controller
                 model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
         }
 
+        // Load departments and courses for the Create Single User dropdowns
+        try
+        {
+            model.AvailableDepartments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
+            model.AvailableCourses = await _api.GetCoursesAsync(null, tenantId, campusId, ct);
+        }
+        catch { /* dropdowns will be empty if API fails */ }
+
         return View(model);
     }
 

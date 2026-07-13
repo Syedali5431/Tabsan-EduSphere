@@ -792,7 +792,8 @@ public class UserImportPageModel
     public string? GeneratedSampleFileName { get; set; }
     public UserImportResultItem? Result { get; set; }
     public SingleUserFormModel SingleUserForm { get; set; } = new();
-    public List<DepartmentItem> AvailableDepartments { get; set; } = new();
+    public List<LookupItem> AvailableDepartments { get; set; } = new();
+    public List<LookupItem> AvailableCourses { get; set; } = new();
 }
 
 public class SingleUserFormModel

@@ -152,19 +152,37 @@
 
                         <div class="row g-2 mb-3" id="facultyFields" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label">Department ID <span class="text-danger">*</span></label>
-                                <input class="form-control" name="DepartmentId" placeholder="GUID from Departments page" />
+                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <select class="form-select" name="DepartmentId">
+                                    <option value="">— Select Department —</option>
+                                    @foreach (var dept in Model.AvailableDepartments)
+                                    {
+                                        <option value="@dept.Id">@dept.Name</option>
+                                    }
+                                </select>
                             </div>
                         </div>
 
                         <div class="row g-2 mb-3" id="studentFields" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label">Department ID <span class="text-danger">*</span></label>
-                                <input class="form-control" name="DepartmentId" placeholder="GUID from Departments page" />
+                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <select class="form-select" name="DepartmentId">
+                                    <option value="">— Select Department —</option>
+                                    @foreach (var dept in Model.AvailableDepartments)
+                                    {
+                                        <option value="@dept.Id">@dept.Name</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Course ID <span class="text-danger">*</span></label>
-                                <input class="form-control" name="CourseId" placeholder="GUID from Courses page" />
+                                <label class="form-label">Course <span class="text-danger">*</span></label>
+                                <select class="form-select" name="CourseId">
+                                    <option value="">— Select Course —</option>
+                                    @foreach (var course in Model.AvailableCourses)
+                                    {
+                                        <option value="@course.Id">@course.Name</option>
+                                    }
+                                </select>
                             </div>
                         </div>
 
