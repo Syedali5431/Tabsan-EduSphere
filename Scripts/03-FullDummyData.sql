@@ -390,7 +390,7 @@ BEGIN
         [Notes], [AdvisorStatus], [CreatedAt], [UpdatedAt], [IsDeleted])
     VALUES (@spPlanId, @espid,
         CONCAT(N'Semester ', CAST(@spCounter % 8 + 1 AS NVARCHAR(2)), N' Plan'),
-        CONCAT(N'Demo study plan for program planning and advisor review.'),
+        N'Demo study plan for program planning and advisor review.',
         CASE @spCounter % 3 WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END, -- 0=Draft,1=Submitted,2=Approved
         @Now, @Now, 0);
 
