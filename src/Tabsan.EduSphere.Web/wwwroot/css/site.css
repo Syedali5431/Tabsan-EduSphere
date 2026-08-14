@@ -2532,3 +2532,62 @@ tr th {
     width: auto;
   }
 }
+
+/* ── Theme-switch transitions & motion polish ──────────────────────────── */
+/* Smooths the visual hand-off when a user picks a new theme in Theme Settings
+   (data-theme swaps its CSS variables instantly otherwise). Scoped to the
+   surfaces that actually carry theme color so it stays cheap. */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .app-sidebar,
+  .app-header,
+  .card,
+  .brand-link,
+  .menu-link,
+  .form-control,
+  .form-select {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-orb,
+  .login-card,
+  .mfa-field-wrap {
+    animation: none !important;
+  }
+}
+
+/* Branded conic-gradient loader ring, in place of a flat single-color arc. */
+.page-loader-spinner {
+  border: none;
+  background: conic-gradient(from 0deg, var(--color-primary-700), var(--color-accent), transparent 78%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+}
+
+/* App-wide scrollbar theming (sidebar already had its own; this covers the rest). */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-400) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-400);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-slate-500);
+}

@@ -17,11 +17,46 @@ GO
 USE [Tabsan-EduSphere];
 GO
 
-DECLARE @StudentProfileId UNIQUEIDENTIFIER = 'F5D93FFE-38F1-49AC-A718-25F415E09DD9';
-DECLARE @FacultyUserId UNIQUEIDENTIFIER = 'B56A573F-A01D-4691-AB15-112CABE163B5'; -- faculty.uni.it1
-DECLARE @DeptId UNIQUEIDENTIFIER = 'D0000003-0000-0000-0000-000000000003';
-DECLARE @TenantId UNIQUEIDENTIFIER = '11111111-1111-1111-1111-111111111111';
+-- These used to be hardcoded GUIDs, but 03-FullDummyData.sql regenerates every student/
+-- faculty/user row with NEWID() on each run, so any fixed GUID goes stale the moment that
+-- script is re-run. Resolve the student dynamically by username instead.
+--
+-- The department used to be College's real "IT-COL" (or School's real "SCI") department.
+-- Both are wrong: 03-FullDummyData.sql's own College course_offerings step picks its
+-- "TOP 5 courses ORDER BY Code" straight from whatever sits under IT-COL with no other
+-- filter, and its School step processes *every* course under SCI. Dropping 50 synthetic
+-- 'XXX-G##' courses into either department gets silently picked up by those loops and
+-- corrupts the real College/School students' course offerings (verified: it did). This
+-- script gets its own isolated department that neither 02 nor 03 ever queries by code
+-- prefix or department id, so it can never cross-contaminate the main seed data.
+DECLARE @StudentProfileId UNIQUEIDENTIFIER = (
+    SELECT sp.Id FROM [student_profiles] sp JOIN [users] u ON u.Id = sp.UserId
+    WHERE u.Username = N'col11s6' AND sp.IsDeleted = 0);
 DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DECLARE @TenantId UNIQUEIDENTIFIER = (SELECT Id FROM [tenants] WHERE Code = N'TABSAN-COL');
+DECLARE @CampusId UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [campuses] WHERE TenantId = @TenantId);
+DECLARE @InstitutionType INT = 2; -- College
+
+IF NOT EXISTS (SELECT 1 FROM [departments] WHERE Code = N'IT-COL-CERTDEMO')
+    INSERT INTO [departments] ([Id],[Name],[Code],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType])
+    VALUES (NEWID(), N'IT (Certificate Demo)', N'IT-COL-CERTDEMO', 1, 0, @Now, @TenantId, @CampusId, @InstitutionType);
+
+DECLARE @DeptId UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM [departments] WHERE Code = N'IT-COL-CERTDEMO');
+DECLARE @FacultyUserId UNIQUEIDENTIFIER = (
+    SELECT TOP 1 fda.FacultyUserId FROM [faculty_department_assignments] fda
+    JOIN [departments] d ON d.Id = fda.DepartmentId
+    WHERE d.Code = N'IT-COL');
+
+IF @StudentProfileId IS NULL
+BEGIN
+    RAISERROR('Student with username=col11s6 not found. Run 02-Seed-Core.sql + 03-FullDummyData.sql first.', 16, 1);
+    RETURN;
+END
+IF @FacultyUserId IS NULL
+BEGIN
+    RAISERROR('No faculty assigned to the real IT-COL department. Run 03-FullDummyData.sql first.', 16, 1);
+    RETURN;
+END
 
 PRINT '=== Student Journey: col11s6 Class 1-10 ===';
 PRINT '';
@@ -33,10 +68,10 @@ DELETE FROM attendance_records WHERE StudentProfileId = @StudentProfileId;
 DELETE FROM results WHERE StudentProfileId = @StudentProfileId;
 DELETE FROM enrollments WHERE StudentProfileId = @StudentProfileId;
 -- Must delete child tables before parents due to FK constraints
-DELETE FROM course_offerings WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'Class [0-9]%');
-DELETE FROM timetable_entries WHERE TimetableId IN (SELECT Id FROM timetables WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'Class [0-9]%'));
-DELETE FROM timetables WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'Class [0-9]%');
-DELETE FROM semesters WHERE Name LIKE 'Class [0-9]%';
+DELETE FROM course_offerings WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'IT-COL Class [0-9]%');
+DELETE FROM timetable_entries WHERE TimetableId IN (SELECT Id FROM timetables WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'IT-COL Class [0-9]%'));
+DELETE FROM timetables WHERE SemesterId IN (SELECT Id FROM semesters WHERE Name LIKE 'IT-COL Class [0-9]%');
+DELETE FROM semesters WHERE Name LIKE 'IT-COL Class [0-9]%';
 DELETE FROM courses WHERE DepartmentId = @DeptId AND (Code LIKE '%-G[0-9]' OR Code LIKE '%-G[0-9][0-9]');
 
 PRINT 'Cleaned previous journey data.';
@@ -113,7 +148,7 @@ INSERT INTO @Courses (CourseId, Code, Title, CreditHours) VALUES
 
 -- Insert courses, then sync @Courses with actual DB IDs
 INSERT INTO [courses] ([Id],[Title],[Code],[CreditHours],[DepartmentId],[IsActive],[CreatedAt],[IsDeleted],[InstitutionType],[TenantId],[CampusId],[GradingType],[HasSemesters])
-SELECT c.CourseId, c.Title, c.Code, c.CreditHours, @DeptId, 1, @Now, 0, 1, @TenantId, NULL, N'Percentage', 0
+SELECT c.CourseId, c.Title, c.Code, c.CreditHours, @DeptId, 1, @Now, 0, @InstitutionType, @TenantId, @CampusId, N'Percentage', 0
 FROM @Courses c
 WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Code] = c.Code);
 
@@ -141,7 +176,7 @@ BEGIN
     INSERT INTO @SemIds (ClassNum, SemId) VALUES (@ClassNum, @SemId);
     
     INSERT INTO [semesters] ([Id],[Name],[StartDate],[EndDate],[IsClosed],[CreatedAt],[IsDeleted])
-    VALUES (@SemId, CONCAT(N'Class ', @ClassNum),
+    VALUES (@SemId, CONCAT(N'IT-COL Class ', @ClassNum),
         DATEFROMPARTS(2015 + @ClassNum, 4, 1),
         DATEFROMPARTS(2016 + @ClassNum, 3, 31),
         1, @Now, 0);
@@ -188,7 +223,7 @@ BEGIN
 
         -- Course offering
         INSERT INTO [course_offerings] ([Id],[CourseId],[SemesterId],[FacultyUserId],[MaxEnrollment],[IsOpen],[CreatedAt],[IsDeleted],[InstitutionType],[TenantId],[CampusId])
-        VALUES (@OffId, @CourseId, @SemCursor, @FacultyUserId, 50, 0, @Now, 0, 1, @TenantId, NULL);
+        VALUES (@OffId, @CourseId, @SemCursor, @FacultyUserId, 50, 0, @Now, 0, @InstitutionType, @TenantId, @CampusId);
 
         INSERT INTO @OfferingIds (ClassNum, OffId, CourseId, Code) VALUES (@ClassCursor, @OffId, @CourseId, @CoCode);
 

@@ -6322,3 +6322,217 @@ GO
 
 COMMIT;
 GO
+
+-- ==============================================================================
+-- Migration: 20260519054518_PlanCPhase1CourseMaterialFoundation
+-- Table:    [course_materials] — was entirely absent from this script even though
+--           the live database (and the Course Material LMS feature) already has it;
+--           a fresh deployment from this script alone would be missing the table.
+-- Appended out of chronological order, matching how the rest of this file is
+-- already organised — every block here is self-gated by its own MigrationId
+-- check and only depends on core tables (courses, departments, etc.) that are
+-- created earlier in this same script, so order relative to other migrations
+-- doesn't matter.
+-- ==============================================================================
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE TABLE [course_materials] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [CampusId] uniqueidentifier NOT NULL,
+        [DepartmentId] uniqueidentifier NOT NULL,
+        [AcademicProgramId] uniqueidentifier NOT NULL,
+        [SemesterId] uniqueidentifier NOT NULL,
+        [CourseId] uniqueidentifier NOT NULL,
+        [Name] nvarchar(300) NOT NULL,
+        [Description] nvarchar(4000) NULL,
+        [LinkUrl] nvarchar(1000) NULL,
+        [FilePath] nvarchar(1000) NULL,
+        [MaterialType] int NOT NULL,
+        [CreatedByUserId] uniqueidentifier NOT NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [IsDeleted] bit NOT NULL,
+        [DeletedAt] datetime2 NULL,
+        CONSTRAINT [PK_course_materials] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_course_materials_academic_programs_AcademicProgramId] FOREIGN KEY ([AcademicProgramId]) REFERENCES [academic_programs] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_campuses_CampusId_TenantId] FOREIGN KEY ([CampusId], [TenantId]) REFERENCES [campuses] ([Id], [TenantId]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_courses_CourseId] FOREIGN KEY ([CourseId]) REFERENCES [courses] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_departments_DepartmentId] FOREIGN KEY ([DepartmentId]) REFERENCES [departments] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_semesters_SemesterId] FOREIGN KEY ([SemesterId]) REFERENCES [semesters] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_tenants_TenantId] FOREIGN KEY ([TenantId]) REFERENCES [tenants] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_course_materials_users_CreatedByUserId] FOREIGN KEY ([CreatedByUserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_AcademicProgramId] ON [course_materials] ([AcademicProgramId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_campus_id] ON [course_materials] ([CampusId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_CampusId_TenantId] ON [course_materials] ([CampusId], [TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_course_semester_active] ON [course_materials] ([CourseId], [SemesterId], [IsActive]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_CreatedByUserId] ON [course_materials] ([CreatedByUserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_DepartmentId] ON [course_materials] ([DepartmentId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_scope_lookup] ON [course_materials] ([TenantId], [CampusId], [DepartmentId], [AcademicProgramId], [SemesterId], [CourseId], [IsActive]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_SemesterId] ON [course_materials] ([SemesterId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_tenant_id] ON [course_materials] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519054518_PlanCPhase1CourseMaterialFoundation'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260519054518_PlanCPhase1CourseMaterialFoundation', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519055118_PlanCPhase2DataSafetyScopeGuard'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [course_materials] ADD CONSTRAINT [CK_course_materials_location_by_type] CHECK (([MaterialType] = 1 AND [FilePath] IS NOT NULL AND LTRIM(RTRIM([FilePath])) <> '''') OR ([MaterialType] = 2 AND [LinkUrl] IS NOT NULL AND LTRIM(RTRIM([LinkUrl])) <> '''') OR ([MaterialType] = 3 AND (([FilePath] IS NOT NULL AND LTRIM(RTRIM([FilePath])) <> '''') OR ([LinkUrl] IS NOT NULL AND LTRIM(RTRIM([LinkUrl])) <> ''''))))');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519055118_PlanCPhase2DataSafetyScopeGuard'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [course_materials] ADD CONSTRAINT [CK_course_materials_material_type] CHECK ([MaterialType] IN (1,2,3))');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519055118_PlanCPhase2DataSafetyScopeGuard'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [course_materials] ADD CONSTRAINT [CK_course_materials_scope_required] CHECK ([TenantId] <> ''00000000-0000-0000-0000-000000000000'' AND [CampusId] <> ''00000000-0000-0000-0000-000000000000'' AND [DepartmentId] <> ''00000000-0000-0000-0000-000000000000'' AND [AcademicProgramId] <> ''00000000-0000-0000-0000-000000000000'' AND [SemesterId] <> ''00000000-0000-0000-0000-000000000000'' AND [CourseId] <> ''00000000-0000-0000-0000-000000000000'' AND [CreatedByUserId] <> ''00000000-0000-0000-0000-000000000000'')');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519055118_PlanCPhase2DataSafetyScopeGuard'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260519055118_PlanCPhase2DataSafetyScopeGuard', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519215715_PlanCPhase6Stage2CourseMaterialIndexTuning'
+)
+BEGIN
+    CREATE INDEX [IX_course_materials_scope_active_sort] ON [course_materials] ([TenantId], [CampusId], [IsActive], [Name], [CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260519215715_PlanCPhase6Stage2CourseMaterialIndexTuning'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260519215715_PlanCPhase6Stage2CourseMaterialIndexTuning', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO

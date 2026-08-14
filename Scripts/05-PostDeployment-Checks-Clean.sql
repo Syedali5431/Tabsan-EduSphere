@@ -16,7 +16,7 @@ IF (SELECT COUNT(*) FROM [departments]) < 4 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [academic_programs]) < 6 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [semesters]) < 15 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [users] WHERE [IsActive]=1 AND [IsDeleted]=0) < 10 SET @Errors += 1;
-IF (SELECT COUNT(*) FROM [student_profiles] WHERE [IsActive]=1) < 50 SET @Errors += 1;
+IF (SELECT COUNT(*) FROM [student_profiles] WHERE [Status]=1) < 50 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [attendance_records]) < 100 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [results]) < 100 SET @Errors += 1;
 IF (SELECT COUNT(*) FROM [timetables]) < 5 SET @Errors += 1;

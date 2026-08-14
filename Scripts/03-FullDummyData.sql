@@ -120,11 +120,16 @@ DELETE FROM [graduation_application_approvals]; DELETE FROM [graduation_applicat
 DELETE FROM [study_plan_courses]; DELETE FROM [study_plans];
 DELETE FROM [timetable_entries]; DELETE FROM [timetables];
 DELETE FROM [bulk_promotion_entries]; DELETE FROM [bulk_promotion_batches];
+DELETE FROM [payment_receipts]; -- References student_profiles; must be cleared before they are (added after this cleanup list was last updated).
 DELETE FROM [student_profiles] WHERE [RegistrationNumber] NOT LIKE 'SUPER%';
 DELETE FROM [users] WHERE [RoleId] IN (@RF, @RS);
 DELETE FROM [faculty_department_assignments]; DELETE FROM [admin_department_assignments];
 DELETE FROM [notification_recipients]; DELETE FROM [notifications]; DELETE FROM [academic_deadlines];
-DELETE FROM [semesters] WHERE [Name] LIKE 'BSCS %' OR [Name] LIKE 'BBA %' OR [Name] LIKE 'Class %' OR [Name] LIKE 'Spanish %' OR [Name] = N'Spanish Language Program';
+-- Unconditional: this script owns the full demo semester set and recreates everything it needs
+-- below. The pattern-matched delete used to leave 02-Seed-Core.sql's baseline semesters
+-- (and the MSE/ICS/School offerings that pointed at them) behind as orphans on every re-run,
+-- since course_offerings/timetables above are already wiped unconditionally regardless.
+DELETE FROM [semesters];
 PRINT 'Clean done.';
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -231,15 +236,15 @@ PRINT 'Faculty done.';
 PRINT 'Creating students...';
 DECLARE @sid2 UNIQUEIDENTIFIER, @sc INT;
 -- BSCS 10/8 = 80
-SET @i=1; WHILE @i<=8 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'bscs',@i,N's',@sc),CONCAT(N'bscs',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'BSCS S',@i,N' Stu ',@sc),@DefPwd,@RS,@D_IT,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'BSCS-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_BSCS,@D_IT,DATEFROMPARTS(2014+@i,9,1),3.0+@i*0.05,3.0+@i*0.05,@i,0,@Now,0); SET @sc+=1; END; SET @i+=1; END
+SET @i=1; WHILE @i<=8 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'bscs',@i,N's',@sc),CONCAT(N'bscs',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'BSCS S',@i,N' Stu ',@sc),@DefPwd,@RS,@D_IT,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'BSCS-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_BSCS,@D_IT,DATEFROMPARTS(2014+@i,9,1),3.0+@i*0.05,3.0+@i*0.05,@i,1,@Now,0); SET @sc+=1; END; SET @i+=1; END
 -- BBA 10/8 = 80
-SET @i=1; WHILE @i<=8 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'bba',@i,N's',@sc),CONCAT(N'bba',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'BBA S',@i,N' Stu ',@sc),@DefPwd,@RS,@D_BUS,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'BBA-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_BBA,@D_BUS,DATEFROMPARTS(2014+@i,9,1),3.0+@i*0.04,3.0+@i*0.04,@i,0,@Now,0); SET @sc+=1; END; SET @i+=1; END
+SET @i=1; WHILE @i<=8 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'bba',@i,N's',@sc),CONCAT(N'bba',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'BBA S',@i,N' Stu ',@sc),@DefPwd,@RS,@D_BUS,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'BBA-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_BBA,@D_BUS,DATEFROMPARTS(2014+@i,9,1),3.0+@i*0.04,3.0+@i*0.04,@i,1,@Now,0); SET @sc+=1; END; SET @i+=1; END
 -- Spanish 10
-SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'spa',@sc),CONCAT(N'spa',@sc,N'@tabsan.edu'),CONCAT(N'Spanish Stu ',@sc),@DefPwd,@RS,@D_SPA,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'SPA-1-',RIGHT(CONCAT(N'0',@sc),2)),@P_SPANISH,@D_SPA,'2020-09-01',0,0,1,0,@Now,0); SET @sc+=1; END
+SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'spa',@sc),CONCAT(N'spa',@sc,N'@tabsan.edu'),CONCAT(N'Spanish Stu ',@sc),@DefPwd,@RS,@D_SPA,1,0,@Now,@T_Uni,@C_Uni,0); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'SPA-1-',RIGHT(CONCAT(N'0',@sc),2)),@P_SPANISH,@D_SPA,'2020-09-01',0,0,1,1,@Now,0); SET @sc+=1; END
 -- School 10/class × 10 = 100
-SET @i=1; WHILE @i<=10 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'sch',@i,N's',@sc),CONCAT(N'sch',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'Class ',@i,N' Stu ',@sc),@DefPwd,@RS,@D_SCH,1,0,@Now,@T_Sch,@C_Sch,1); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'SCH-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_SCIENCE,@D_SCH,DATEFROMPARTS(2013+@i,4,1),80.0-@i*2.0,80.0-@i*2.0,@i,0,@Now,0); SET @sc+=1; END; SET @i+=1; END
+SET @i=1; WHILE @i<=10 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'sch',@i,N's',@sc),CONCAT(N'sch',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'Class ',@i,N' Stu ',@sc),@DefPwd,@RS,@D_SCH,1,0,@Now,@T_Sch,@C_Sch,1); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'SCH-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_SCIENCE,@D_SCH,DATEFROMPARTS(2013+@i,4,1),80.0-@i*2.0,80.0-@i*2.0,@i,1,@Now,0); SET @sc+=1; END; SET @i+=1; END
 -- College 10/class × 2 = 20
-SET @i=11; WHILE @i<=12 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'col',@i,N's',@sc),CONCAT(N'col',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'Class ',@i,N' Stu ',@sc),@DefPwd,@RS,@D_COL,1,0,@Now,@T_Col,@C_Col,2); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'COL-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_ICS,@D_COL,DATEFROMPARTS(2013+@i,4,1),75.0,75.0,@i,0,@Now,0); SET @sc+=1; END; SET @i+=1; END
+SET @i=11; WHILE @i<=12 BEGIN SET @sc=1; WHILE @sc<=10 BEGIN SET @sid2=NEWID(); INSERT INTO [users]([Id],[Username],[Email],[FullName],[PasswordHash],[RoleId],[DepartmentId],[IsActive],[IsDeleted],[CreatedAt],[TenantId],[CampusId],[InstitutionType]) VALUES(@sid2,CONCAT(N'col',@i,N's',@sc),CONCAT(N'col',@i,N's',@sc,N'@tabsan.edu'),CONCAT(N'Class ',@i,N' Stu ',@sc),@DefPwd,@RS,@D_COL,1,0,@Now,@T_Col,@C_Col,2); INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[DepartmentId],[AdmissionDate],[Cgpa],[CurrentSemesterGpa],[CurrentSemesterNumber],[Status],[CreatedAt],[IsDeleted]) VALUES(NEWID(),@sid2,CONCAT(N'COL-',@i,N'-',RIGHT(CONCAT(N'0',@sc),2)),@P_ICS,@D_COL,DATEFROMPARTS(2013+@i,4,1),75.0,75.0,@i,1,@Now,0); SET @sc+=1; END; SET @i+=1; END
 PRINT 'Students: BSCS:80 BBA:80 SPA:10 School:100 College:20 = 290';
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -471,7 +476,7 @@ VALUES(@gpid,@gid,N'BSCS-GRAD-01',@P_BSCS,@D_IT,'2018-09-01',3.75,3.75,8,3,@Now,
 
 -- Enroll BSCS grad in ALL 8 semesters
 INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
-SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_BSCS;
+SELECT NEWID(),@gpid,OffId,@Now,N'Active',@Now FROM @CO WHERE ProgId=@P_BSCS;
 
 -- BSCS grad results: GPA-based (marks between 75-98, giving strong GPA)
 DECLARE @bresOff UNIQUEIDENTIFIER, @bmarks DECIMAL(8,2);
@@ -501,7 +506,7 @@ BEGIN
     VALUES(@bquizId,@oid,N'Course Quiz',N'Complete all questions.',1,1,1,@fUniIT1,@Now);
     SET @bqScore=7.0+ABS(CHECKSUM(NEWID()))%3;
     INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
-    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Submitted',@bqScore,@Now);
     FETCH NEXT FROM curBq INTO @oid;
 END
 CLOSE curBq; DEALLOCATE curBq;
@@ -531,7 +536,7 @@ INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[D
 VALUES(@gpid,@gid,N'BBA-GRAD-01',@P_BBA,@D_BUS,'2018-09-01',3.60,3.60,8,3,@Now,0);
 
 INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
-SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_BBA;
+SELECT NEWID(),@gpid,OffId,@Now,N'Active',@Now FROM @CO WHERE ProgId=@P_BBA;
 
 DECLARE curBba CURSOR FOR SELECT OffId FROM @CO WHERE ProgId=@P_BBA;
 OPEN curBba; FETCH NEXT FROM curBba INTO @bresOff;
@@ -556,7 +561,7 @@ BEGIN
     VALUES(@bquizId,@oid,N'Course Quiz',N'Complete all questions.',1,1,1,@fUniBUS1,@Now);
     SET @bqScore=7.0+ABS(CHECKSUM(NEWID()))%3;
     INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
-    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Submitted',@bqScore,@Now);
     FETCH NEXT FROM curBbaQ INTO @oid;
 END
 CLOSE curBbaQ; DEALLOCATE curBbaQ;
@@ -585,7 +590,7 @@ INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[D
 VALUES(@gpid,@gid,N'SPA-GRAD-01',@P_SPANISH,@D_SPA,'2020-09-01',88.0,88.0,1,3,@Now,0);
 
 INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
-SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_SPANISH;
+SELECT NEWID(),@gpid,OffId,@Now,N'Active',@Now FROM @CO WHERE ProgId=@P_SPANISH;
 
 -- Spanish: percentage-based (90+ = A+, 80-89 = A, etc.)
 DECLARE @spMarks DECIMAL(8,2)=92.0, @spOff UNIQUEIDENTIFIER, @spFlag INT=0;
@@ -615,7 +620,7 @@ INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[D
 VALUES(@gpid,@gid,N'SCH-GRAD-01',@P_SCIENCE,@D_SCH,'2014-04-01',92.0,92.0,10,3,@Now,0);
 
 INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
-SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_SCIENCE;
+SELECT NEWID(),@gpid,OffId,@Now,N'Active',@Now FROM @CO WHERE ProgId=@P_SCIENCE;
 
 -- School: percentage-based with specific letter grades (A+, A, B, C, D, F)
 DECLARE @schMarksList TABLE (Seq INT, Marks DECIMAL(8,2));
@@ -644,7 +649,7 @@ BEGIN
     VALUES(@bquizId,@oid,N'Class Quiz',N'Answer all questions.',1,1,1,@fSch1,@Now);
     SET @bqScore=8.0+ABS(CHECKSUM(NEWID()))%3;
     INSERT INTO [quiz_attempts]([Id],[QuizId],[StudentProfileId],[StartedAt],[FinishedAt],[Status],[TotalScore],[CreatedAt])
-    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Completed',@bqScore,@Now);
+    VALUES(NEWID(),@bquizId,@gpid,DATEADD(DAY,-30,@Now),DATEADD(DAY,-30,@Now),N'Submitted',@bqScore,@Now);
     FETCH NEXT FROM curSchQ INTO @oid;
 END
 CLOSE curSchQ; DEALLOCATE curSchQ;
@@ -661,7 +666,7 @@ INSERT INTO [student_profiles]([Id],[UserId],[RegistrationNumber],[ProgramId],[D
 VALUES(@gpid,@gid,N'COL-GRAD-01',@P_ICS,@D_COL,'2015-04-01',88.0,88.0,12,3,@Now,0);
 
 INSERT INTO [enrollments]([Id],[StudentProfileId],[CourseOfferingId],[EnrolledAt],[Status],[CreatedAt])
-SELECT NEWID(),@gpid,OffId,@Now,N'Completed',@Now FROM @CO WHERE ProgId=@P_ICS;
+SELECT NEWID(),@gpid,OffId,@Now,N'Active',@Now FROM @CO WHERE ProgId=@P_ICS;
 
 -- College: percentage-based grades
 DECLARE @colFlag INT=0, @colOff UNIQUEIDENTIFIER;
@@ -698,7 +703,7 @@ SELECT TOP 1 @adminUserId = u.Id FROM [users] u
 JOIN [roles] r ON r.Id = u.RoleId
 WHERE r.Name = 'Admin' AND u.IsDeleted = 0;
 
--- Create 1 receipt per graduated student (5) + 10 from regular students
+-- One tuition receipt per student, spread across every institute.
 DECLARE curPay CURSOR FOR
 SELECT sp.Id, sp.UserId, sp.RegistrationNumber
 FROM [student_profiles] sp
@@ -706,13 +711,17 @@ WHERE sp.IsDeleted = 0
 ORDER BY sp.CreatedAt;
 
 OPEN curPay; FETCH NEXT FROM curPay INTO @paySpid, @payUid, @payRegNo;
-WHILE @@FETCH_STATUS = 0 AND @payCounter < 15
+WHILE @@FETCH_STATUS = 0
 BEGIN
     SET @payAmt  = CAST(500.00 + ABS(CHECKSUM(NEWID())) % 4500 AS DECIMAL(10,2));
     SET @payDesc = CONCAT(N'Tuition fee — semester ', CAST(@payCounter % 8 + 1 AS NVARCHAR(2)));
-    -- Status: 0=Pending, 1=Paid, 2=Overdue, 3=Cancelled
-    SET @payStatus = CASE @payCounter % 4 WHEN 0 THEN 1 WHEN 1 THEN 0 WHEN 2 THEN 1 ELSE 2 END;
-    SET @payDue   = DATEADD(DAY, -30 + (@payCounter * 7), @Now);
+    -- PaymentReceiptStatus: Pending=1, Submitted=2, Paid=3, Cancelled=4 (int column, no string conversion).
+    -- Weighted so most receipts are Paid, a healthy minority Pending/Submitted, a few Cancelled.
+    SET @payStatus = CASE @payCounter % 10
+        WHEN 0 THEN 1  WHEN 1 THEN 2  WHEN 2 THEN 4
+        ELSE 3 -- Paid for the remaining 7 of every 10
+    END;
+    SET @payDue   = DATEADD(DAY, -90 + (@payCounter % 180), @Now);
     SET @payRecNo = CONCAT(N'REC-', @payRegNo, N'-', FORMAT(@payDue, N'yyyyMMdd'));
 
     INSERT INTO [payment_receipts] ([Id], [StudentProfileId], [CreatedByUserId], [ReceiptNo],
@@ -727,12 +736,217 @@ CLOSE curPay; DEALLOCATE curPay;
 PRINT CONCAT('Demo payment receipts created: ', @payCounter);
 
 -- ═══════════════════════════════════════════════════════════════════
--- 17. VERSION
+-- 17. FIX INVALID ENUM-STRING VALUES FROM EARLIER SECTIONS
+--     EnrollmentStatus has no "Completed" member and AttemptStatus has no
+--     "Completed" member — both are stored as strings by EF, so an
+--     unrecognized value throws when the entity is materialized. Belt-and-
+--     suspenders fix in case an older copy of this script (or a partial
+--     re-run) left either literal behind.
 -- ═══════════════════════════════════════════════════════════════════
-UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.3',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
+UPDATE [enrollments] SET [Status] = N'Active' WHERE [Status] = N'Completed';
+UPDATE [quiz_attempts] SET [Status] = N'Submitted' WHERE [Status] = N'Completed';
+PRINT 'Fixed invalid enum-string values.';
+GO
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 18. QUIZ QUESTIONS + OPTIONS (4 MCQ questions per quiz, 4 options each)
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating quiz questions and options...';
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DELETE FROM [quiz_answers];
+DELETE FROM [quiz_options];
+DELETE FROM [quiz_questions];
+
+DECLARE @qzId UNIQUEIDENTIFIER, @qCount INT = 0, @optCount INT = 0;
+DECLARE curQuiz CURSOR LOCAL FAST_FORWARD FOR SELECT [Id] FROM [quizzes];
+OPEN curQuiz; FETCH NEXT FROM curQuiz INTO @qzId;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    DECLARE @qn INT = 1;
+    WHILE @qn <= 4
+    BEGIN
+        DECLARE @qqId UNIQUEIDENTIFIER = NEWID();
+        DECLARE @correctIdx INT = 1 + (ABS(CHECKSUM(NEWID())) % 4);
+        INSERT INTO [quiz_questions] ([Id],[QuizId],[Text],[Type],[Marks],[OrderIndex],[CreatedAt])
+        VALUES (@qqId, @qzId, CONCAT(N'Question ', @qn, N': Select the best answer.'), N'MultipleChoice', 2.5, @qn, @Now);
+        SET @qCount += 1;
+
+        DECLARE @on INT = 1;
+        WHILE @on <= 4
+        BEGIN
+            INSERT INTO [quiz_options] ([Id],[QuizQuestionId],[Text],[IsCorrect],[OrderIndex],[CreatedAt])
+            VALUES (NEWID(), @qqId, CONCAT(N'Option ', @on), CASE WHEN @on = @correctIdx THEN 1 ELSE 0 END, @on, @Now);
+            SET @optCount += 1;
+            SET @on += 1;
+        END
+
+        SET @qn += 1;
+    END
+    FETCH NEXT FROM curQuiz INTO @qzId;
+END
+CLOSE curQuiz; DEALLOCATE curQuiz;
+PRINT CONCAT('Quiz questions: ', @qCount, ', options: ', @optCount);
+GO
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 19. ASSIGNMENT SUBMISSIONS
+--     ~85% of enrolled students submit; of those ~75% are graded.
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating assignment submissions...';
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DELETE FROM [assignment_submissions];
+
+DECLARE @subCount INT = 0, @gradedCount INT = 0;
+DECLARE @asgId UNIQUEIDENTIFIER, @asgOffId UNIQUEIDENTIFIER, @asgDue DATETIME2, @asgMax DECIMAL(8,2);
+DECLARE curAsg CURSOR LOCAL FAST_FORWARD FOR
+    SELECT [Id],[CourseOfferingId],[DueDate],[MaxMarks] FROM [assignments];
+OPEN curAsg; FETCH NEXT FROM curAsg INTO @asgId, @asgOffId, @asgDue, @asgMax;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    DECLARE @facultyId UNIQUEIDENTIFIER = (SELECT [FacultyUserId] FROM [course_offerings] WHERE [Id] = @asgOffId);
+
+    DECLARE @stuId UNIQUEIDENTIFIER;
+    DECLARE curStu CURSOR LOCAL FAST_FORWARD FOR
+        SELECT [StudentProfileId] FROM [enrollments] WHERE [CourseOfferingId] = @asgOffId;
+    OPEN curStu; FETCH NEXT FROM curStu INTO @stuId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        DECLARE @roll INT = ABS(CHECKSUM(NEWID())) % 100;
+        IF @roll < 85 -- submitted
+        BEGIN
+            DECLARE @subId UNIQUEIDENTIFIER = NEWID();
+            DECLARE @submittedAt DATETIME2 = DATEADD(DAY, -2, @asgDue);
+            DECLARE @isGraded BIT = CASE WHEN @roll < 63 THEN 1 ELSE 0 END; -- ~75% of the 85%
+
+            IF @isGraded = 1
+            BEGIN
+                DECLARE @marks DECIMAL(8,2) = ROUND(@asgMax * (0.60 + (ABS(CHECKSUM(NEWID())) % 36) / 100.0), 2);
+                INSERT INTO [assignment_submissions]
+                    ([Id],[AssignmentId],[StudentProfileId],[FileUrl],[TextContent],[SubmittedAt],
+                     [MarksAwarded],[Feedback],[GradedAt],[GradedByUserId],[Status],[CreatedAt])
+                VALUES
+                    (@subId, @asgId, @stuId, NULL, N'Submitted work for review.', @submittedAt,
+                     @marks, N'Good effort — reviewed and graded.', DATEADD(DAY, 3, @submittedAt), @facultyId, N'Graded', @submittedAt);
+                SET @gradedCount += 1;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO [assignment_submissions]
+                    ([Id],[AssignmentId],[StudentProfileId],[FileUrl],[TextContent],[SubmittedAt],
+                     [MarksAwarded],[Feedback],[GradedAt],[GradedByUserId],[Status],[CreatedAt])
+                VALUES
+                    (@subId, @asgId, @stuId, NULL, N'Submitted work for review.', @submittedAt,
+                     NULL, NULL, NULL, NULL, N'Submitted', @submittedAt);
+            END
+            SET @subCount += 1;
+        END
+        FETCH NEXT FROM curStu INTO @stuId;
+    END
+    CLOSE curStu; DEALLOCATE curStu;
+
+    FETCH NEXT FROM curAsg INTO @asgId, @asgOffId, @asgDue, @asgMax;
+END
+CLOSE curAsg; DEALLOCATE curAsg;
+PRINT CONCAT('Assignment submissions: ', @subCount, ' (graded: ', @gradedCount, ')');
+GO
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 20. RUBRICS (one per offering, attached to its first assignment)
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating rubrics...';
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DELETE FROM [rubric_student_grades];
+DELETE FROM [rubric_levels];
+DELETE FROM [rubric_criteria];
+DELETE FROM [rubrics];
+
+-- Static criteria template — same 3 rows reused for every rubric, so it is
+-- populated exactly once, outside the per-offering loop.
+DECLARE @critTbl TABLE (Name NVARCHAR(300), Points DECIMAL(8,2), OrdIdx INT);
+INSERT INTO @critTbl VALUES (N'Content Quality', 40, 1), (N'Technical Accuracy', 40, 2), (N'Presentation', 20, 3);
+DECLARE @insertedCrit TABLE (Id UNIQUEIDENTIFIER, MaxPoints DECIMAL(8,2));
+
+DECLARE @rubCount INT = 0;
+DECLARE @rubAsgId UNIQUEIDENTIFIER;
+DECLARE curRubAsg CURSOR LOCAL FAST_FORWARD FOR
+    SELECT MIN([Id]) FROM [assignments] GROUP BY [CourseOfferingId];
+OPEN curRubAsg; FETCH NEXT FROM curRubAsg INTO @rubAsgId;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    DECLARE @rubId UNIQUEIDENTIFIER = NEWID();
+    INSERT INTO [rubrics] ([Id],[AssignmentId],[Title],[IsActive],[CreatedAt],[IsDeleted])
+    VALUES (@rubId, @rubAsgId, N'Standard Grading Rubric', 1, @Now, 0);
+
+    INSERT INTO [rubric_criteria] ([Id],[RubricId],[Name],[MaxPoints],[DisplayOrder],[CreatedAt])
+    OUTPUT inserted.[Id], inserted.[MaxPoints] INTO @insertedCrit ([Id],[MaxPoints])
+    SELECT NEWID(), @rubId, Name, Points, OrdIdx, @Now FROM @critTbl;
+
+    INSERT INTO [rubric_levels] ([Id],[CriterionId],[Label],[PointsAwarded],[DisplayOrder],[CreatedAt])
+    SELECT NEWID(), ic.[Id], lvl.Label, ROUND(ic.[MaxPoints] * lvl.Fraction, 2), lvl.OrdIdx, @Now
+    FROM @insertedCrit ic
+    CROSS JOIN (VALUES (N'Excellent', 1.00, 1), (N'Good', 0.75, 2), (N'Needs Improvement', 0.40, 3)) AS lvl(Label, Fraction, OrdIdx);
+
+    DELETE FROM @insertedCrit;
+    SET @rubCount += 1;
+    FETCH NEXT FROM curRubAsg INTO @rubAsgId;
+END
+CLOSE curRubAsg; DEALLOCATE curRubAsg;
+PRINT CONCAT('Rubrics: ', @rubCount, ' (3 criteria x 3 levels each)');
+GO
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 21. NOTIFICATIONS (system + faculty announcements, fanned out to recipients)
+-- ═══════════════════════════════════════════════════════════════════
+PRINT 'Creating notifications...';
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+DELETE FROM [notification_recipients];
+DELETE FROM [notifications];
+
+DECLARE @notifAdminId UNIQUEIDENTIFIER = (SELECT TOP 1 u.[Id] FROM [users] u JOIN [roles] r ON r.[Id] = u.[RoleId] WHERE r.[Name] = N'Admin' AND u.[IsDeleted] = 0);
+
+DECLARE @notifTbl TABLE (Seq INT IDENTITY(1,1), Title NVARCHAR(300), Body NVARCHAR(2000), Type NVARCHAR(50), IsSystem BIT);
+INSERT INTO @notifTbl (Title, Body, Type, IsSystem) VALUES
+    (N'Welcome to the new semester', N'Timetables and course offerings are now published. Check your schedule.', N'General', 1),
+    (N'New assignments posted', N'Faculty have posted new assignments across several courses. Review your course pages for due dates.', N'Assignment', 0),
+    (N'Results published', N'Mid-term and final results have been published for completed semesters.', N'Result', 0),
+    (N'Attendance reminder', N'Please maintain attendance above the minimum threshold to remain eligible for final exams.', N'AttendanceAlert', 1),
+    (N'System maintenance window', N'The portal will undergo scheduled maintenance this weekend between 02:00 and 04:00.', N'System', 1),
+    (N'Campus announcement', N'The library will have extended hours during the exam period.', N'Announcement', 0);
+
+DECLARE @notifTitle NVARCHAR(300), @notifBody NVARCHAR(2000), @notifType NVARCHAR(50), @notifIsSystem BIT;
+DECLARE @notifCount INT = 0, @recipCount INT = 0;
+DECLARE curNotif CURSOR LOCAL FAST_FORWARD FOR SELECT Title, Body, Type, IsSystem FROM @notifTbl ORDER BY Seq;
+OPEN curNotif; FETCH NEXT FROM curNotif INTO @notifTitle, @notifBody, @notifType, @notifIsSystem;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    DECLARE @notifId UNIQUEIDENTIFIER = NEWID();
+    INSERT INTO [notifications] ([Id],[Title],[Body],[Type],[SenderUserId],[IsSystemGenerated],[IsActive],[CreatedAt])
+    VALUES (@notifId, @notifTitle, @notifBody, @notifType, CASE WHEN @notifIsSystem = 1 THEN NULL ELSE @notifAdminId END, @notifIsSystem, 1, @Now);
+    SET @notifCount += 1;
+
+    -- Fan out to a sample of up to 40 active, non-deleted users (mix of roles).
+    INSERT INTO [notification_recipients] ([Id],[NotificationId],[RecipientUserId],[IsRead],[ReadAt],[CreatedAt])
+    SELECT NEWID(), @notifId, u.[Id],
+           CASE WHEN ABS(CHECKSUM(NEWID())) % 100 < 55 THEN 1 ELSE 0 END,
+           CASE WHEN ABS(CHECKSUM(NEWID())) % 100 < 55 THEN DATEADD(HOUR, -1, @Now) ELSE NULL END,
+           @Now
+    FROM (SELECT TOP 40 [Id] FROM [users] WHERE [IsDeleted] = 0 AND [IsActive] = 1 ORDER BY NEWID()) u;
+    SET @recipCount += @@ROWCOUNT;
+
+    FETCH NEXT FROM curNotif INTO @notifTitle, @notifBody, @notifType, @notifIsSystem;
+END
+CLOSE curNotif; DEALLOCATE curNotif;
+PRINT CONCAT('Notifications: ', @notifCount, ', recipients: ', @recipCount);
+GO
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 22. VERSION
+-- ═══════════════════════════════════════════════════════════════════
+DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+UPDATE [Tabsan-EduSphere] SET [DemoValue]=N'2.4',[UpdatedAt]=@Now WHERE [DemoKey]=N'db.version';
 
 PRINT '';
-PRINT '=== 03-FullDummyData.sql v2.3 complete ===';
+PRINT '=== 03-FullDummyData.sql v2.4 complete ===';
 PRINT 'Uni: IT(80 BSCS) + BUS(80 BBA) + SPA(10) = 170';
 PRINT 'School: SCI (Class 1-10, 100)';
 PRINT 'College: ICS (Class 11-12, 20)';
@@ -740,7 +954,11 @@ PRINT 'Graduated: BSCS(1) + BBA(1) + Spanish(1) + School(1) + College(1) = 5';
 PRINT 'Total: 295 students';
 PRINT 'Rules: no results for first semester/class; cumulative thereafter';
 PRINT 'Graduated students have: mid+final exams, quizzes, FYP (BSCS/BBA), graduation application';
-PRINT 'Demo payment receipts: 15 (mix of Paid/Pending/Overdue across students)';
+PRINT 'Demo payment receipts: 1 per student (mostly Paid, some Pending/Submitted/Cancelled)';
 PRINT 'Study plans: 5 (Draft/Submitted/Approved with 3-5 courses each)';
 PRINT 'Prerequisites: CS101→CS201→CS301→CS401→CS501 chain';
+PRINT 'Quiz questions: 4 per quiz (596 total), options: 4 per question (2384 total)';
+PRINT 'Assignment submissions: ~85% of enrolled students, ~75% of those graded';
+PRINT 'Rubrics: 1 per course offering (159 total), 3 criteria x 3 levels each';
+PRINT 'Notifications: 6 seeded, fanned out to up to 40 recipients each';
 GO

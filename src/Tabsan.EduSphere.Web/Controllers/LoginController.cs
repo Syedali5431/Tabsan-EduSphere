@@ -87,18 +87,27 @@ public class LoginController : Controller
 
             if (!response.IsSuccessStatusCode)
             {
+                // Read once and reuse — the account may not have MFA enabled at all,
+                // in which case an invalid password looks the same as an invalid MFA code (401)
+                // and we must not reveal the MFA field for accounts that don't use it.
+                var isInvalidMfaCode = response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                    && await IsInvalidMfaCodeResponseAsync(response);
+                var mfaCodeNeeded = response.StatusCode == System.Net.HttpStatusCode.BadRequest
+                    || response.StatusCode == System.Net.HttpStatusCode.PreconditionRequired
+                    || isInvalidMfaCode;
+
                 ViewData["Error"] = response.StatusCode switch
                 {
                     System.Net.HttpStatusCode.BadRequest
-                        => "MFA code is required. Enter your MFA code and sign in again.",
+                        => "This account requires an authenticator code. Enter it below and sign in again.",
 
                     System.Net.HttpStatusCode.Unauthorized
-                        => await IsInvalidMfaCodeResponseAsync(response)
-                            ? "Invalid MFA code. Please try again."
+                        => isInvalidMfaCode
+                            ? "Invalid authenticator code. Please try again."
                             : "Invalid username or password.",
 
                     System.Net.HttpStatusCode.PreconditionRequired
-                        => "MFA is required. Enter your MFA code and sign in again.",
+                        => "Multi-factor authentication is required. Enter your authenticator code and sign in again.",
 
                     System.Net.HttpStatusCode.Locked
                         => "Login blocked by session risk controls. Retry from a trusted network or contact support.",
@@ -109,6 +118,16 @@ public class LoginController : Controller
                 ViewData["ReturnUrl"] = returnUrl;
                 ViewData["Username"] = username; // Preserve so user doesn't re-type.
                 await PopulateSecurityProfileAsync(apiBase, ct);
+
+                // The API only reveals MFA requirement after verifying credentials, so the
+                // deployment-wide security profile alone can under-report it for accounts that
+                // individually enabled MFA. Force the field to show once the API has told us
+                // this specific sign-in attempt needs a code.
+                if (mfaCodeNeeded)
+                {
+                    ViewData["MfaEnabled"] = true;
+                }
+
                 return View();
             }
 

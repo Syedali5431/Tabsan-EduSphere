@@ -36,15 +36,15 @@ PRINT '--- Tenants & Campuses ---';
 SELECT t.[Code] AS TenantCode, t.[Name] AS TenantName, c.[Code] AS CampusCode, c.[Name] AS CampusName
 FROM [tenants] t LEFT JOIN [campuses] c ON c.[TenantId]=t.[Id] ORDER BY t.[Code];
 DECLARE @TenantCount INT = (SELECT COUNT(*) FROM [tenants]);
-PRINT CONCAT('Total tenants: ', @TenantCount, ' (expected: 3)');
-IF @TenantCount != 3 SET @Errors += 1;
+PRINT CONCAT('Total tenants: ', @TenantCount, ' (expected: 4 — Default + University + College + School)');
+IF @TenantCount != 4 SET @Errors += 1;
 
 -- ═══════ DEPARTMENT COUNTS ═══════
 PRINT '';
 PRINT '--- Departments ---';
 SELECT [Name], [Code] FROM [departments] ORDER BY [Code];
 DECLARE @DeptCount INT = (SELECT COUNT(*) FROM [departments]);
-PRINT CONCAT('Total departments: ', @DeptCount, ' (expected: 5)');
+PRINT CONCAT('Total departments: ', @DeptCount, ' (expected: 5, or 6 if student-journey-class1-10.sql has been run)');
 
 -- ═══════ ACADEMIC PROGRAMS ═══════
 PRINT '';
@@ -66,7 +66,7 @@ PRINT '';
 PRINT '--- Semesters ---';
 SELECT [Name], [StartDate], [EndDate] FROM [semesters] ORDER BY [StartDate];
 DECLARE @SemCount INT = (SELECT COUNT(*) FROM [semesters]);
-PRINT CONCAT('Total semesters: ', @SemCount, ' (expected: 20)');
+PRINT CONCAT('Total semesters: ', @SemCount, ' (expected: 29 — BSCS 8 + BBA 8 + School classes 10 + College classes 2 + Spanish 1)');
 
 -- ═══════ USERS BY ROLE ═══════
 PRINT '';
@@ -100,7 +100,7 @@ PRINT '';
 PRINT '--- Graduated Students ---';
 SELECT u.[Username], u.[FullName], sp.[RegistrationNumber], p.[Code] AS Program,
        sp.[Cgpa], sp.[Status],
-       CASE sp.[Status] WHEN 0 THEN N'Active' WHEN 1 THEN N'Inactive' WHEN 2 THEN N'Suspended' WHEN 3 THEN N'Graduated' ELSE N'Unknown' END AS StatusName
+       CASE sp.[Status] WHEN 1 THEN N'Active' WHEN 2 THEN N'Inactive' WHEN 3 THEN N'Graduated' ELSE N'Unknown' END AS StatusName
 FROM [student_profiles] sp
 JOIN [users] u ON u.[Id]=sp.[UserId]
 JOIN [academic_programs] p ON p.[Id]=sp.[ProgramId]
@@ -211,8 +211,8 @@ IF @PrCount < 4 SET @Errors += 1;
 PRINT '';
 PRINT '--- Demo Payment Receipts ---';
 DECLARE @PayCount INT = (SELECT COUNT(*) FROM [payment_receipts] WHERE [IsDeleted]=0);
-PRINT CONCAT('Demo payment receipts: ', @PayCount, ' (expected: 15)');
-IF @PayCount < 15 SET @Errors += 1;
+PRINT CONCAT('Demo payment receipts: ', @PayCount, ' (expected: 1 per student, mostly Paid/Pending/Submitted/Cancelled)');
+IF @PayCount < 50 SET @Errors += 1;
 
 -- ═══════ SIDEBAR CERTIFICATE MENU CHECK ═══════
 PRINT '';
@@ -231,7 +231,7 @@ PRINT '';
 PRINT '--- Deployment Sync Marker (2026-07-12 Phase 5) ---';
 PRINT N'✓ Study plans: 5 demo plans with mixed advisor statuses and courses';
 PRINT N'✓ Course prerequisites: CS101→CS201→CS301→CS401→CS501 chain';
-PRINT N'✓ Demo payment receipts: 15 with Paid/Pending/Overdue statuses';
+PRINT N'✓ Demo payment receipts: 1 per student with Paid/Pending/Submitted/Cancelled statuses';
 PRINT N'✓ Sidebar role visibility aligned with Sidebar-Menu-Purpose.csv';
 PRINT N'✓ All Phase 3-4 fixes validated and deployed';
 PRINT '';

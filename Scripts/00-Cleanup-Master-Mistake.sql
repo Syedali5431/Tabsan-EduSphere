@@ -9,8 +9,9 @@
   3. 03-FullDummyData.sql            - Comprehensive demo data
   4. 04-Maintenance-Indexes-And-Views.sql - Performance indexes
   5. 05-PostDeployment-Checks.sql    - Data validation
-  6. 06-Create-SuperAdmin-User.sql   - Additional SuperAdmin user
-  7. 09-Restructure-Sidebar-Menu.sql - Sidebar menu setup
+  6. 06-Create-SuperAdmin-User.sql   - Additional SuperAdmin user (optional)
+  7. 07-Fix-Sidebar-Role-Visibility.sql - Sidebar menu role visibility (optional)
+  8. student-journey-class1-10.sql  - Certificate-demo student history (optional)
 */
 
 USE [master];

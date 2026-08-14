@@ -18,18 +18,18 @@ Run scripts in this exact order for a fresh deployment.
 | Step | Script | Purpose |
 |------|--------|---------|
 | 6 | `06-Create-SuperAdmin-User.sql` | Creates an additional SuperAdmin account (`superadmin2`) |
-| 7 | `student-journey-class1-10.sql` | School student lifecycle: Class 1-10 results, attendance, assignments for col11s6 |
-| 9 | `09-Restructure-Sidebar-Menu.sql` | Configures sidebar navigation with role-based menu visibility |
+| 7 | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role from a known-good spec |
+| 8 | `student-journey-class1-10.sql` | Attaches a full Class 1-10 certificate-eligible history to student `col11s6`, under its own isolated demo department so it never contaminates 03's course/offering selection |
 
 ## Notes
 
 - `00-Cleanup-Master-Mistake.sql` and `01-Schema-Current.sql` must run against `master` because they create and switch to the `Tabsan-EduSphere` database.
 - All other scripts run directly against the `Tabsan-EduSphere` database.
 - Default password for all seeded users: **`EduSphere147`**
-- Database version marker: `db.version = 1.1` (stored in `[Tabsan-EduSphere]` metadata table)
+- Database version marker: currently `db.version = 2.4` (stored in `[Tabsan-EduSphere]` metadata table, set at the end of `03-FullDummyData.sql`)
 - The previous domain script packs (`School Scripts/`, `College Scripts/`, `University Scripts/`) have been consolidated into `03-FullDummyData.sql`.
-- Legacy utility scripts (07, 08, 09-old) have been removed; functionality is now part of the core seed scripts.
-- `student-journey-class1-10.sql` demonstrates a full school lifecycle with certificate eligibility (class 1-10 completion + attendance ≥85%).
+- There is no `09-Restructure-Sidebar-Menu.sql` — that step was superseded by `07-Fix-Sidebar-Role-Visibility.sql`, which is what actually ships in this folder.
+- `student-journey-class1-10.sql` demonstrates a full school lifecycle with certificate eligibility (class 1-10 completion + attendance ≥85%). It resolves the target student, faculty, and its own dedicated department dynamically at runtime — it does not depend on any fixed GUIDs, so it stays valid across `03-FullDummyData.sql` re-runs.
 
 ## Example Commands (LocalDB)
 
@@ -48,6 +48,7 @@ sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql
 
 # Optional
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Restructure-Sidebar-Menu.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
 ```
 
