@@ -342,7 +342,7 @@ else
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var r in Model.Attendance.Rows)
+                                        @foreach (var r in Model.Attendance.Rows.Take(100))
                                         {
                                             var pct   = r.AttendancePercentage;
                                             var badge = pct >= 75 ? "text-success" : pct >= 50 ? "text-warning" : "text-danger";
@@ -357,6 +357,13 @@ else
                                     </tbody>
                                 </table>
                             </div>
+                            @if (Model.Attendance.Rows.Count > 100)
+                            {
+                                <p class="text-muted small p-3 mb-0">
+                                    Showing the 100 lowest-attendance rows of @Model.Attendance.Rows.Count total (sorted worst first).
+                                    See <a asp-controller="Portal" asp-action="ReportAttendance">Report Center → Attendance Summary</a> for the complete dataset.
+                                </p>
+                            }
                         }
                     </div>
                 </div>

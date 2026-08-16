@@ -314,9 +314,15 @@ INSERT INTO @CourseData VALUES
 (NEWID(), N'Islamiat',                         N'ISL001', 2, @D_IT),
 (NEWID(), N'Physical Education',               N'PE001',  1, @D_IT);
 
-INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [IsDeleted], [CreatedAt])
-SELECT d.Id, d.Title, d.Code, d.CreditHours, d.DeptId, 1, 0, @Now
+-- Course scope (TenantId/CampusId/InstitutionType) is inherited from the owning department here.
+-- Omitting these previously left every course with InstitutionType defaulting to an out-of-range
+-- value and NULL TenantId/CampusId, which silently fails department/tenant-scoped course queries
+-- (CourseController.ScopeMatches) for every role whose scope gets resolved from claims — Admin,
+-- Faculty, and Student all filter through it, not just explicit department-filtered SuperAdmin views.
+INSERT INTO [courses] ([Id], [Title], [Code], [CreditHours], [DepartmentId], [IsActive], [IsDeleted], [CreatedAt], [TenantId], [CampusId], [InstitutionType])
+SELECT d.Id, d.Title, d.Code, d.CreditHours, d.DeptId, 1, 0, @Now, dept.TenantId, dept.CampusId, dept.InstitutionType
 FROM @CourseData d
+JOIN [departments] dept ON dept.Id = d.DeptId
 WHERE NOT EXISTS (SELECT 1 FROM [courses] WHERE [Code] = d.Code);
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -465,11 +471,14 @@ IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_ICS AND [Department
 IF EXISTS (SELECT 1 FROM [academic_programs] WHERE [Id] = @P_SCIENCE AND [DepartmentId] = @D_IT)
     UPDATE [academic_programs] SET [DepartmentId] = @D_IT_Sch WHERE [Id] = @P_SCIENCE;
 
--- Update courses for College & School departments (they were inserted under @D_IT)
-UPDATE [courses] SET [DepartmentId] = @D_IT_Col
+-- Update courses for College & School departments (they were inserted under @D_IT).
+-- Re-derives TenantId/CampusId/InstitutionType too — they don't follow DepartmentId
+-- automatically, so leaving them at @D_IT's values here would reintroduce the same
+-- scope-mismatch bug the INSERT above now avoids.
+UPDATE [courses] SET [DepartmentId] = @D_IT_Col, [TenantId] = @T_Col, [CampusId] = @C_Col, [InstitutionType] = 2
 WHERE [Code] LIKE N'ICS%' OR [Code] IN (N'ENG111', N'MTH111', N'PHY111', N'ENG121', N'MTH121');
 
-UPDATE [courses] SET [DepartmentId] = @D_IT_Sch
+UPDATE [courses] SET [DepartmentId] = @D_IT_Sch, [TenantId] = @T_Sch, [CampusId] = @C_Sch, [InstitutionType] = 1
 WHERE [Code] IN (N'ENG001', N'MTH001', N'SCI001', N'SST001', N'CS001', N'URD001', N'ISL001', N'PE001');
 
 -- Update admin core users to correct departments

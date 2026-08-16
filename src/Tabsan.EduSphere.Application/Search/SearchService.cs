@@ -5,10 +5,10 @@ using Tabsan.EduSphere.Domain.Interfaces;
 namespace Tabsan.EduSphere.Application.Search;
 
 /// <summary>
-/// Cross-entity search service (Phase 13 � Global Search).
+/// Cross-entity search service (Phase 13 — Global Search).
 /// Delegates all database queries to <see cref="ISearchRepository"/> and applies
 /// role-based scoping logic in the application layer.
-/// No new entity or migration is required � queries existing tables.
+/// No new entity or migration is required — queries existing tables.
 /// </summary>
 public sealed class SearchService : ISearchService
 {
@@ -73,7 +73,7 @@ public sealed class SearchService : ISearchService
         return new SearchResponse(term, trimmed.Count, trimmed);
     }
 
-    // -- SuperAdmin � all data ------------------------------------------------
+    // -- SuperAdmin — all data ------------------------------------------------
 
     private async Task AppendSuperAdminResultsAsync(
         string term, int limit, List<SearchResultItem> results, CancellationToken ct)
@@ -85,7 +85,7 @@ public sealed class SearchService : ISearchService
         results.AddRange(await _search.SearchFacultyAsync(term, null, limit, ct));
     }
 
-    // -- Admin � assigned department(s) --------------------------------------
+    // -- Admin — assigned department(s) --------------------------------------
 
     private async Task AppendAdminResultsAsync(
         Guid adminId, string term, int limit, List<SearchResultItem> results, CancellationToken ct)
@@ -100,7 +100,7 @@ public sealed class SearchService : ISearchService
         results.AddRange(await _search.SearchStudentsAsync(term, deptIds, limit, ct));
     }
 
-    // -- Faculty � own department data + own offerings ------------------------
+    // -- Faculty — own department data + own offerings ------------------------
 
     private async Task AppendFacultyResultsAsync(
         Guid facultyUserId, string term, int limit, List<SearchResultItem> results, CancellationToken ct)
@@ -122,7 +122,7 @@ public sealed class SearchService : ISearchService
         results.AddRange(await _search.SearchOfferingsAsync(term, null, facultyUserId, limit, ct));
     }
 
-    // -- Student � own profile + enrolled offerings ---------------------------
+    // -- Student — own profile + enrolled offerings ---------------------------
 
     private async Task AppendStudentResultsAsync(
         Guid studentUserId, string term, int limit, List<SearchResultItem> results, CancellationToken ct)

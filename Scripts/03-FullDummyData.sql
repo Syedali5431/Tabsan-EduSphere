@@ -100,6 +100,13 @@ DECLARE @D_SPA UNIQUEIDENTIFIER = (SELECT Id FROM [departments] WHERE [Code]='SP
 -- Fix Spanish program department
 UPDATE [academic_programs] SET [DepartmentId] = @D_SPA WHERE [Code] = 'SPANISH';
 
+-- Fix Spanish courses: 02-Seed-Core.sql inserts them under @D_IT (the Spanish department
+-- doesn't exist yet at that point). Left unreassigned, section 4 below finds zero courses
+-- under @D_SPA, so no Spanish course offerings — and therefore no results/attendance/quizzes
+-- for any Spanish student — ever get created.
+UPDATE [courses] SET [DepartmentId] = @D_SPA, [TenantId] = @T_Uni, [CampusId] = @C_Uni, [InstitutionType] = 0
+WHERE [Code] LIKE N'SPN%';
+
 DECLARE @P_BSCS    UNIQUEIDENTIFIER = 'A0000001-0000-0000-0000-000000000001';
 DECLARE @P_BBA     UNIQUEIDENTIFIER = 'A0000002-0000-0000-0000-000000000002';
 DECLARE @P_SPANISH UNIQUEIDENTIFIER = 'A0000004-0000-0000-0000-000000000004';

@@ -908,7 +908,7 @@ public class PortalController : Controller
                 Id = o.Id,
                 Name = string.IsNullOrWhiteSpace(o.CourseCode)
                     ? $"{o.CourseTitle} ({o.SemesterName})"
-                    : $"{o.CourseCode} � {o.CourseTitle} ({o.SemesterName})"
+                    : $"{o.CourseCode} — {o.CourseTitle} ({o.SemesterName})"
             }).ToList();
         }
 
@@ -1002,7 +1002,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Dashboard));
     }
 
-    // -- Phase 24 � Module Composition Panel --------------------------------
+    // -- Phase 24 — Module Composition Panel --------------------------------
 
     [HttpGet]
     public async Task<IActionResult> ModuleComposition(CancellationToken ct)
@@ -1071,7 +1071,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(ModuleComposition));
     }
 
-    // -- Phase 27 � Student Portal Capability Matrix -----------------------
+    // -- Phase 27 — Student Portal Capability Matrix -----------------------
 
     [HttpGet]
     public async Task<IActionResult> PortalCapabilityMatrix(CancellationToken ct)
@@ -2004,7 +2004,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 19 Stage 19.3 � web-side proxy endpoint for Result Calculation course-type filter.
+    // Final-Touches Phase 19 Stage 19.3 — web-side proxy endpoint for Result Calculation course-type filter.
     [HttpGet]
     public async Task<IActionResult> ResultCalculationCourseFilterData([FromQuery] bool? hasSemesters, CancellationToken ct)
     {
@@ -2290,7 +2290,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Notifications));
     }
 
-    // Final-Touches Phase 6 Stage 6.1 � mark individual notification as read
+    // Final-Touches Phase 6 Stage 6.1 — mark individual notification as read
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkNotificationRead(Guid id, CancellationToken ct)
     {
@@ -3265,7 +3265,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Courses), new { tenantId, campusId, departmentId = filterDepartmentId });
     }
 
-    // Final-Touches Phase 19 Stage 19.4 � GradingConfig page (GET)
+    // Final-Touches Phase 19 Stage 19.4 — GradingConfig page (GET)
     public async Task<IActionResult> GradingConfig(
         int? institutionType,
         Guid? tenantId,
@@ -3477,7 +3477,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GradingConfig), new { institutionType = selectedInstitutionType, tenantId, campusId, departmentId, courseId, semesterId, subjectOfferingId });
     }
 
-    // Final-Touches Phase 19 Stage 19.4 � GradingConfig save (POST)
+    // Final-Touches Phase 19 Stage 19.4 — GradingConfig save (POST)
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveGradingConfig(
         Guid courseId,
@@ -4164,7 +4164,7 @@ public class PortalController : Controller
             }
             else if (identity?.IsAdmin == true && identity?.TenantId.HasValue == true)
             {
-                // Admin sees Campus dropdown � populate campuses for their assigned tenant.
+                // Admin sees Campus dropdown — populate campuses for their assigned tenant.
                 model.Campuses = await _api.GetCampusesAsync(identity.TenantId.Value, ct);
             }
 
@@ -4734,7 +4734,7 @@ public class PortalController : Controller
 
                 model.Projects = await _api.GetMyFypProjectsAsync(effectiveTenantId, effectiveCampusId, ct);
             }
-            // Issue-Fix Phase 3 Stage 3.8 � Faculty FYP workflow: load supervised projects + student list for FYP creation.
+            // Issue-Fix Phase 3 Stage 3.8 — Faculty FYP workflow: load supervised projects + student list for FYP creation.
             else if (sessionId?.IsFaculty == true)
             {
                 model.Departments = await _api.GetDepartmentsAsync(effectiveTenantId, effectiveCampusId, ct);
@@ -4783,7 +4783,7 @@ public class PortalController : Controller
 
                 if (submissionFile is { Length: > 0 })
                 {
-                    // Validate before writing to disk � size, extension, and MIME check
+                    // Validate before writing to disk — size, extension, and MIME check
                     const long maxSubmissionBytes = 5 * 1024 * 1024;
                     var allowedSubmissionExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                         { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
@@ -7602,7 +7602,7 @@ public class PortalController : Controller
                 model.SelectedSemesterId = null;
             }
 
-            // Final-Touches Phase 6 Stage 6.2 � fetch typed DTOs instead of raw JSON.
+            // Final-Touches Phase 6 Stage 6.2 — fetch typed DTOs instead of raw JSON.
             // Finance-only users can access payment analytics without academic report permissions.
             if (!model.IsFinanceOnly)
             {
@@ -7620,9 +7620,9 @@ public class PortalController : Controller
                 {
                     Label = "Avg. Marks",
                     Value = $"{model.Performance.AverageMarks:F1}%",
-                    SubText = $"{model.Performance.TotalStudents} students � {model.Performance.DepartmentName}",
+                    SubText = $"{model.Performance.TotalStudents} students · {model.Performance.DepartmentName}",
                     ColorClass = "text-primary",
-                    Icon = "??"
+                    Icon = "📊"
                 });
             }
             if (model.Attendance is not null)
@@ -7633,7 +7633,7 @@ public class PortalController : Controller
                     Value = $"{model.Attendance.OverallAttendancePercentage:F1}%",
                     SubText = model.Attendance.DepartmentName,
                     ColorClass = "text-success",
-                    Icon = "??"
+                    Icon = "📋"
                 });
             }
             if (model.Assignments is not null)
@@ -7644,7 +7644,7 @@ public class PortalController : Controller
                     Value = model.Assignments.Assignments.Count.ToString(),
                     SubText = model.Assignments.DepartmentName,
                     ColorClass = "text-warning",
-                    Icon = "??"
+                    Icon = "📝"
                 });
             }
             if (model.PaymentStatus is not null)
@@ -7654,9 +7654,9 @@ public class PortalController : Controller
                 {
                     Label = "Payment Status",
                     Value = $"{model.PaymentStatus.PaidCount}/{total}",
-                    SubText = $"Paid vs total � {model.PaymentStatus.DepartmentName}",
+                    SubText = $"Paid vs total · {model.PaymentStatus.DepartmentName}",
                     ColorClass = "text-info",
-                    Icon = "??"
+                    Icon = "💳"
                 });
             }
         }
@@ -7700,7 +7700,7 @@ public class PortalController : Controller
             var reply = await _api.SendChatMessageAsync(conversationId, message, ct);
             conversationId = reply?.ConversationId ?? conversationId;
         }
-        catch { /* errors handled gracefully � just reload */ }
+        catch { /* errors handled gracefully — just reload */ }
         return RedirectToAction(nameof(AiChat), new { conversationId });
     }
 
@@ -8096,7 +8096,7 @@ public class PortalController : Controller
     }
 
     // -- Payments -----------------------------------------------------------
-    // Final-Touches Phase 7 � admin all-receipts view + student own receipts
+    // Final-Touches Phase 7 — admin all-receipts view + student own receipts
 
     [HttpGet]
     public async Task<IActionResult> Payments(Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8164,7 +8164,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 7 Stage 7.2 � create receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 — create receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePayment(CreatePaymentForm form, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8251,7 +8251,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 � edit receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 — edit receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePayment(Guid receiptId, decimal amount, string receiptNo, string description, DateTime dueDate, string? notes, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8274,7 +8274,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 � confirm payment (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 — confirm payment (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8297,7 +8297,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.2 � cancel receipt (Admin/Finance)
+    // Final-Touches Phase 7 Stage 7.2 — cancel receipt (Admin/Finance)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CancelPayment(Guid receiptId, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8320,7 +8320,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Payments), new { studentId, tenantId, campusId, institutionType, page });
     }
 
-    // Final-Touches Phase 7 Stage 7.3 � student marks receipt as submitted
+    // Final-Touches Phase 7 Stage 7.3 — student marks receipt as submitted
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitProof(Guid receiptId, string proofNote, Guid? studentId, Guid? tenantId, Guid? campusId, int? institutionType, int page = 1, CancellationToken ct = default)
@@ -8465,8 +8465,8 @@ public class PortalController : Controller
 
     // -- Enrollments --------------------------------------------------------
 
-    // Final-Touches Phase 8 Stage 8.1+8.2 � student sees own courses; admin sees offering roster + students list
-    // Issue-Fix Phase 3 Stage 3.3 � Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
+    // Final-Touches Phase 8 Stage 8.1+8.2 — student sees own courses; admin sees offering roster + students list
+    // Issue-Fix Phase 3 Stage 3.3 — Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
     [HttpGet]
     public async Task<IActionResult> Enrollments(Guid? tenantId, Guid? campusId, Guid? offeringId, CancellationToken ct)
     {
@@ -8501,7 +8501,7 @@ public class PortalController : Controller
                 model.Message ??= "Enrollment is currently deactivated for the selected tenant/campus scope.";
             }
 
-            // Issue-Fix Phase 3 Stage 3.3 � Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
+            // Issue-Fix Phase 3 Stage 3.3 — Use GetCourseOfferingsAsync for all roles; API filters by dept for Faculty.
             model.Offerings = await _api.GetCourseOfferingsAsync(null, model.SelectedTenantId, model.SelectedCampusId, null, ct);
 
             if (!model.IsEnrollmentActive)
@@ -8551,7 +8551,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 � admin enrolls a student
+    // Final-Touches Phase 8 Stage 8.2 — admin enrolls a student
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> EnrollStudent(Guid studentProfileId, Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -8564,7 +8564,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId = courseOfferingId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 � admin drops any enrollment by ID
+    // Final-Touches Phase 8 Stage 8.2 — admin drops any enrollment by ID
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AdminDropEnrollment(Guid enrollmentId, Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -8577,7 +8577,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 � student self-enrolls in a course offering
+    // Final-Touches Phase 8 Stage 8.2 — student self-enrolls in a course offering
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> StudentEnroll(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -8590,7 +8590,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId });
     }
 
-    // Final-Touches Phase 8 Stage 8.2 � student drops their own enrollment
+    // Final-Touches Phase 8 Stage 8.2 — student drops their own enrollment
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> StudentDropEnrollment(Guid courseOfferingId, Guid? tenantId, Guid? campusId, CancellationToken ct)
     {
@@ -8995,7 +8995,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Excel export actions � these act as portal-side proxies:
+    // Excel export actions — these act as portal-side proxies:
     // they call the API export endpoint, receive the .xlsx bytes, and
     // stream the file directly to the browser. On failure they fall back
     // to the report view with a TempData error message.
@@ -10348,9 +10348,9 @@ public class PortalController : Controller
         return RedirectToAction(nameof(HelpdeskDetail), new { id = ticketId });
     }
 
-    // -- Phase 15: Enrollment Rules � Prerequisites ---------------------------------
+    // -- Phase 15: Enrollment Rules — Prerequisites ---------------------------------
 
-    // Final-Touches Phase 15 Stage 15.1 � Prerequisites: Admin/SuperAdmin manage course prerequisites
+    // Final-Touches Phase 15 Stage 15.1 — Prerequisites: Admin/SuperAdmin manage course prerequisites
     [HttpGet]
     public async Task<IActionResult> Prerequisites(Guid? departmentId, CancellationToken ct)
     {
@@ -10412,7 +10412,7 @@ public class PortalController : Controller
 
     // -- Phase 16: Faculty Grading System ------------------------------------------
 
-    // Final-Touches Phase 16 Stage 16.1 � Gradebook grid for faculty
+    // Final-Touches Phase 16 Stage 16.1 — Gradebook grid for faculty
     public async Task<IActionResult> Gradebook(Guid? offeringId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10428,7 +10428,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 16 Stage 16.1 � AJAX endpoint: upsert one result cell inline
+    // Final-Touches Phase 16 Stage 16.1 — AJAX endpoint: upsert one result cell inline
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookUpsertEntry(
         Guid offeringId,
@@ -10447,7 +10447,7 @@ public class PortalController : Controller
         catch (Exception ex) { return Json(new { success = false, error = ex.Message }); }
     }
 
-    // Final-Touches Phase 16 Stage 16.1 � publish all results for an offering
+    // Final-Touches Phase 16 Stage 16.1 — publish all results for an offering
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookPublishAll(Guid offeringId, CancellationToken ct)
     {
@@ -10461,7 +10461,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.3 � download CSV template
+    // Final-Touches Phase 16 Stage 16.3 — download CSV template
     public async Task<IActionResult> GradebookCsvTemplate(Guid offeringId, string component, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10469,7 +10469,7 @@ public class PortalController : Controller
         return File(bytes, "text/csv", $"gradebook-{component}-template.csv");
     }
 
-    // Final-Touches Phase 16 Stage 16.3 � upload CSV preview
+    // Final-Touches Phase 16 Stage 16.3 — upload CSV preview
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookBulkUpload(
         Guid offeringId,
@@ -10495,7 +10495,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.3 � confirm bulk grade
+    // Final-Touches Phase 16 Stage 16.3 — confirm bulk grade
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GradebookBulkConfirm(
         Guid offeringId,
@@ -10521,7 +10521,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Gradebook), new { offeringId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 � rubric management (Faculty/Admin)
+    // Final-Touches Phase 16 Stage 16.2 — rubric management (Faculty/Admin)
     public async Task<IActionResult> RubricManage(Guid? offeringId, Guid? assignmentId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10537,7 +10537,7 @@ public class PortalController : Controller
                 if (assignmentId.HasValue)
                 {
                     try { model.Rubric = await _api.GetRubricByAssignmentAsync(assignmentId.Value, ct); }
-                    catch { /* no rubric yet � model.Rubric stays null */ }
+                    catch { /* no rubric yet — model.Rubric stays null */ }
                 }
             }
         }
@@ -10545,7 +10545,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 16 Stage 16.2 � create rubric POST handler
+    // Final-Touches Phase 16 Stage 16.2 — create rubric POST handler
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> RubricCreate(CreateRubricWebRequest request, Guid? offeringId, CancellationToken ct)
     {
@@ -10559,7 +10559,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(RubricManage), new { offeringId, assignmentId = request.AssignmentId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 � delete (deactivate) rubric
+    // Final-Touches Phase 16 Stage 16.2 — delete (deactivate) rubric
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> RubricDelete(Guid rubricId, Guid? offeringId, Guid? assignmentId, CancellationToken ct)
     {
@@ -10573,7 +10573,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(RubricManage), new { offeringId, assignmentId });
     }
 
-    // Final-Touches Phase 16 Stage 16.2 � student rubric grade view
+    // Final-Touches Phase 16 Stage 16.2 — student rubric grade view
     public async Task<IActionResult> RubricView(Guid rubricId, Guid submissionId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10588,7 +10588,7 @@ public class PortalController : Controller
 
     // -- Phase 17: Degree Audit System -----------------------------------------
 
-    // Final-Touches Phase 17 Stage 17.1 � student views own degree audit
+    // Final-Touches Phase 17 Stage 17.1 — student views own degree audit
     public async Task<IActionResult> DegreeAudit(Guid? studentProfileId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10629,7 +10629,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 17 Stage 17.2 � admin views eligibility list
+    // Final-Touches Phase 17 Stage 17.2 — admin views eligibility list
     public async Task<IActionResult> GraduationEligibility(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
@@ -10679,7 +10679,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationEligibility), new { departmentId, programId });
     }
 
-    // Final-Touches Phase 17 Stage 17.2 � SuperAdmin manages degree rules
+    // Final-Touches Phase 17 Stage 17.2 — SuperAdmin manages degree rules
     public async Task<IActionResult> DegreeRules(CancellationToken ct)
     {
         if (!User.IsInRole("SuperAdmin"))
@@ -10708,7 +10708,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 17 Stage 17.2 � POST create degree rule
+    // Final-Touches Phase 17 Stage 17.2 — POST create degree rule
     [HttpPost]
     public async Task<IActionResult> DegreeRuleCreate(CreateDegreeRuleWebRequest request, CancellationToken ct)
     {
@@ -10736,7 +10736,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DegreeRules));
     }
 
-    // Final-Touches Phase 17 Stage 17.2 � POST delete degree rule
+    // Final-Touches Phase 17 Stage 17.2 — POST delete degree rule
     [HttpPost]
     public async Task<IActionResult> DegreeRuleDelete(Guid ruleId, CancellationToken ct)
     {
@@ -10764,7 +10764,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DegreeRules));
     }
 
-    // Final-Touches Phase 17 Stage 17.3 � AJAX POST to tag course type
+    // Final-Touches Phase 17 Stage 17.3 — AJAX POST to tag course type
     [HttpPost]
     public async Task<IActionResult> CourseSetType(Guid courseId, string courseType, CancellationToken ct)
     {
@@ -10784,7 +10784,7 @@ public class PortalController : Controller
 
     // -- Phase 18: Graduation Workflow -----------------------------------------
 
-    // Final-Touches Phase 18 Stage 18.1 � student views own graduation applications + submit form
+    // Final-Touches Phase 18 Stage 18.1 — student views own graduation applications + submit form
     public async Task<IActionResult> GraduationApply(int page = 1, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -10813,7 +10813,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1 � POST: student submits graduation application
+    // Final-Touches Phase 18 Stage 18.1 — POST: student submits graduation application
     [HttpPost]
     public async Task<IActionResult> GraduationSubmit(string? studentNote, CancellationToken ct)
     {
@@ -10827,7 +10827,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApply));
     }
 
-    // Final-Touches Phase 18 Stage 18.1 � admin/faculty views application list
+    // Final-Touches Phase 18 Stage 18.1 — admin/faculty views application list
     public async Task<IActionResult> GraduationApplications(string? status, Guid? departmentId, int page = 1, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -10852,7 +10852,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1/18.2 � view application detail
+    // Final-Touches Phase 18 Stage 18.1/18.2 — view application detail
     public async Task<IActionResult> GraduationApplicationDetail(Guid id, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -10867,7 +10867,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 18 Stage 18.1 � POST: approve or reject at the right stage
+    // Final-Touches Phase 18 Stage 18.1 — POST: approve or reject at the right stage
     [HttpPost]
     public async Task<IActionResult> GraduationApprove(Guid id, string action, string? note, CancellationToken ct)
     {
@@ -10894,7 +10894,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
     }
 
-    // Final-Touches Phase 18 Stage 18.1 � POST: explicit reject
+    // Final-Touches Phase 18 Stage 18.1 — POST: explicit reject
     [HttpPost]
     public async Task<IActionResult> GraduationReject(Guid id, string? reason, CancellationToken ct)
     {
@@ -10908,7 +10908,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(GraduationApplicationDetail), new { id });
     }
 
-    // Final-Touches Phase 18 Stage 18.2 � download certificate
+    // Final-Touches Phase 18 Stage 18.2 — download certificate
     public async Task<IActionResult> GraduationCertificateDownload(Guid id, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction("Connect", "Home");
@@ -10917,7 +10917,7 @@ public class PortalController : Controller
         return File(bytes, "application/pdf", $"certificate_{id}.pdf");
     }
 
-    // Final-Touches Phase 18 Stage 18.2 � POST: regenerate certificate (admin)
+    // Final-Touches Phase 18 Stage 18.2 — POST: regenerate certificate (admin)
     [HttpPost]
     public async Task<IActionResult> GraduationRegenerateCertificate(Guid id, CancellationToken ct)
     {
@@ -11382,7 +11382,7 @@ public class PortalController : Controller
 
     // -- Phase 20: Learning Management System (LMS) ----------------------------
 
-    // Final-Touches Phase 20 Stage 20.1 � student LMS view
+    // Final-Touches Phase 20 Stage 20.1 — student LMS view
     [HttpGet]
     public async Task<IActionResult> CourseLms(Guid offeringId, CancellationToken ct)
     {
@@ -11411,7 +11411,7 @@ public class PortalController : Controller
         return View(model);
     }
 
-    // Final-Touches Phase 20 Stage 20.1 � faculty LMS management view
+    // Final-Touches Phase 20 Stage 20.1 — faculty LMS management view
     [HttpGet]
     public async Task<IActionResult> LmsManage(Guid offeringId, CancellationToken ct)
     {
@@ -11986,7 +11986,7 @@ public class PortalController : Controller
         }
     }
 
-    // Final-Touches Phase 20 Stage 20.3 � discussion forum
+    // Final-Touches Phase 20 Stage 20.3 — discussion forum
     [HttpGet]
     public async Task<IActionResult> Discussion(Guid? offeringId, CancellationToken ct)
     {
@@ -12185,7 +12185,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(DiscussionThreadDetail), new { threadId, offeringId });
     }
 
-    // Final-Touches Phase 20 Stage 20.4 � announcements
+    // Final-Touches Phase 20 Stage 20.4 — announcements
     [HttpGet]
     public async Task<IActionResult> Announcements(Guid? offeringId, Guid? departmentId, bool includeInactive = false, CancellationToken ct = default)
     {
@@ -12355,7 +12355,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(Announcements), new { offeringId, departmentId, includeInactive });
     }
 
-    // -- Phase 21 Stage 21.1/21.2 � Study Planner -----------------------------
+    // -- Phase 21 Stage 21.1/21.2 — Study Planner -----------------------------
 
     [HttpGet]
     public async Task<IActionResult> StudyPlan(Guid? studentProfileId, Guid? tenantId, Guid? campusId, Guid? departmentId, CancellationToken ct)
@@ -12741,7 +12741,7 @@ public class PortalController : Controller
         return RedirectToAction(nameof(AccreditationTemplates));
     }
 
-    // -- Phase 23 � Institution Policy -----------------------------------------
+    // -- Phase 23 — Institution Policy -----------------------------------------
 
     [HttpGet]
     public async Task<IActionResult> InstitutionPolicy(CancellationToken ct)

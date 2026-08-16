@@ -86,9 +86,7 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		var loader = document.querySelector('[data-page-loader]');
 		if (loader) {
-			window.requestAnimationFrame(function () {
-				loader.classList.add('is-hidden');
-			});
+			loader.classList.add('is-hidden');
 		}
 
 		var toastStack = document.querySelector('[data-toast-stack]');

@@ -87,7 +87,13 @@ WHERE smi.[Key] IN (
     -- University
     'fyp',
     -- Settings Related
-    'analytics','report_center','library_config','accreditation','user_import','programs',
+    -- 'user_import' intentionally excluded: it creates/modifies user accounts in bulk,
+    -- an Admin/SuperAdmin-only capability. The web layer's ImportUsersCsv POST handler
+    -- already hard-blocks non-Admin submissions, and _Layout.cshtml already hides the
+    -- sidebar link for Faculty — granting it here just meant Faculty could still open
+    -- the page directly by URL (GET) and hit a dead-end "Only Admin or SuperAdmin can
+    -- import users" message. Keeping this list consistent with those other two layers.
+    'analytics','report_center','library_config','accreditation','programs',
     -- Financial
     'payments',
     -- Enrollments
@@ -122,7 +128,10 @@ WHERE smi.[Key] IN (
     -- Enrollments
     'enrollments',
     -- Features
-    'ai_chat','gradebook',
+    -- 'gradebook' intentionally excluded: it's the faculty-facing whole-class grade
+    -- entry/review grid (GradebookController's underlying API rejects students with a
+    -- 403 already), not a student-facing view. Students see their own marks via 'results'.
+    'ai_chat',
     -- Degree features
     'degree_audit'
 ) AND ra.RoleName = 'Student';

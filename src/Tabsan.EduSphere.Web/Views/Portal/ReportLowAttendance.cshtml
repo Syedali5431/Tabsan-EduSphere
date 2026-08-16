@@ -55,7 +55,7 @@
                             <option value="">All Departments</option>
                             @foreach (var d in Model.Departments)
                             {
-                                <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@d.Name</option>
+                                <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@DepartmentDisplayHelper.FormatLabel(d.Name, d.InstitutionType)</option>
                             }
                         </select>
                     </div>

@@ -211,7 +211,7 @@ public class ThemeService : IThemeService
 
 /// <summary>
 /// Manages sidebar navigation menu visibility per role.
-/// Super Admin always bypasses these settings � the service exposes data only;
+/// Super Admin always bypasses these settings — the service exposes data only;
 /// Super Admin enforcement is done in the sidebar rendering layer.
 /// </summary>
 public class SidebarMenuService : ISidebarMenuService
