@@ -149,7 +149,8 @@ public record QuizSummaryReportResponse(
 
 // ── GPA Report ─────────────────────────────────────────────────────────────────
 
-public record GpaReportRequest(Guid? DepartmentId, Guid? ProgramId, int? InstitutionType, Guid? TenantId, Guid? CampusId);
+/// <param name="DepartmentIds">When set, rows are restricted to these departments (e.g. a Faculty user's assigned departments).</param>
+public record GpaReportRequest(Guid? DepartmentId, Guid? ProgramId, int? InstitutionType, Guid? TenantId, Guid? CampusId, IReadOnlyCollection<Guid>? DepartmentIds = null);
 
 public record GpaReportRow(
     Guid StudentProfileId,
@@ -169,7 +170,7 @@ public record GpaReportResponse(
 
 // ── Enrollment Summary ─────────────────────────────────────────────────────────
 
-public record EnrollmentSummaryRequest(Guid? SemesterId, Guid? DepartmentId, int? InstitutionType, Guid? TenantId, Guid? CampusId);
+public record EnrollmentSummaryRequest(Guid? SemesterId, Guid? DepartmentId, int? InstitutionType, Guid? TenantId, Guid? CampusId, IReadOnlyCollection<Guid>? DepartmentIds = null);
 
 public record EnrollmentSummaryRow(
     Guid CourseOfferingId,
@@ -187,7 +188,7 @@ public record EnrollmentSummaryReportResponse(
 
 // ── Semester Results ───────────────────────────────────────────────────────────
 
-public record SemesterResultsRequest(Guid SemesterId, Guid? DepartmentId, int? InstitutionType, Guid? TenantId, Guid? CampusId);
+public record SemesterResultsRequest(Guid SemesterId, Guid? DepartmentId, int? InstitutionType, Guid? TenantId, Guid? CampusId, IReadOnlyCollection<Guid>? DepartmentIds = null);
 
 public record SemesterResultsRow(
     Guid StudentProfileId,
@@ -238,7 +239,8 @@ public record LowAttendanceRequest(
     Guid? CourseOfferingId,
     int? InstitutionType,
     Guid? TenantId,
-    Guid? CampusId);
+    Guid? CampusId,
+    IReadOnlyCollection<Guid>? DepartmentIds = null);
 
 public record LowAttendanceRow(
     Guid StudentProfileId,
@@ -260,7 +262,7 @@ public record LowAttendanceReportResponse(
 
 // ── FYP Status Report ──────────────────────────────────────────────────────────
 
-public record FypStatusRequest(Guid? DepartmentId, string? Status, int? InstitutionType, Guid? TenantId, Guid? CampusId, Guid? StudentProfileId = null);
+public record FypStatusRequest(Guid? DepartmentId, string? Status, int? InstitutionType, Guid? TenantId, Guid? CampusId, Guid? StudentProfileId = null, IReadOnlyCollection<Guid>? DepartmentIds = null);
 
 public record FypStatusRow(
     Guid ProjectId,

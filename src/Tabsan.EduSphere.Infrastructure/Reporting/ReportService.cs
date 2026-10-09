@@ -215,11 +215,11 @@ public sealed class ReportService : IReportService
             UniversityInstitutionType,
             request.DepartmentId,
             request.ProgramId,
-            BuildScopeKey(request.TenantId, request.CampusId));
+            BuildScopeKey(request.TenantId, request.CampusId, request.DepartmentIds));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
-            var raw = await _repo.GetGpaDataAsync(request.DepartmentId, request.ProgramId, UniversityInstitutionType, request.TenantId, request.CampusId, ct);
+            var raw = await _repo.GetGpaDataAsync(request.DepartmentId, request.ProgramId, UniversityInstitutionType, request.TenantId, request.CampusId, request.DepartmentIds, ct);
 
             var rows = raw.Select(r => new Tabsan.EduSphere.Application.DTOs.Reports.GpaReportRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
@@ -244,11 +244,11 @@ public sealed class ReportService : IReportService
             request.InstitutionType,
             request.DepartmentId,
             null,
-            BuildScopeKey(request.TenantId, request.CampusId));
+            BuildScopeKey(request.TenantId, request.CampusId, request.DepartmentIds));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
-            var raw = await _repo.GetEnrollmentDataAsync(request.SemesterId, request.DepartmentId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+            var raw = await _repo.GetEnrollmentDataAsync(request.SemesterId, request.DepartmentId, request.InstitutionType, request.TenantId, request.CampusId, request.DepartmentIds, ct);
 
             var rows = raw.Select(r => new EnrollmentSummaryRow(
                 r.CourseOfferingId, r.CourseCode, r.CourseTitle, r.SemesterName,
@@ -272,11 +272,11 @@ public sealed class ReportService : IReportService
             request.InstitutionType,
             request.DepartmentId,
             null,
-            BuildScopeKey(request.TenantId, request.CampusId));
+            BuildScopeKey(request.TenantId, request.CampusId, request.DepartmentIds));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
-            var raw = await _repo.GetSemesterResultDataAsync(request.SemesterId, request.DepartmentId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+            var raw = await _repo.GetSemesterResultDataAsync(request.SemesterId, request.DepartmentId, request.InstitutionType, request.TenantId, request.CampusId, request.DepartmentIds, ct);
 
             var rows = raw.Select(r => new SemesterResultsRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
@@ -339,8 +339,16 @@ public sealed class ReportService : IReportService
             programId?.ToString("N") ?? "none",
             extra ?? "none");
 
-    private static string BuildScopeKey(Guid? tenantId, Guid? campusId)
-        => $"{tenantId?.ToString("N") ?? "none"}:{campusId?.ToString("N") ?? "none"}";
+    private static string BuildScopeKey(Guid? tenantId, Guid? campusId, IReadOnlyCollection<Guid>? departmentIds = null)
+    {
+        var key = $"{tenantId?.ToString("N") ?? "none"}:{campusId?.ToString("N") ?? "none"}";
+        if (departmentIds is null)
+            return key;
+
+        // Department-restricted (e.g. Faculty) requests must never share a cache entry with unrestricted ones.
+        var deps = departmentIds.Select(id => id.ToString("N")).Order(StringComparer.Ordinal);
+        return $"{key}:deps={string.Join(",", deps)}";
+    }
 
     // ── Excel Exports ──────────────────────────────────────────────────────────
 
@@ -905,7 +913,7 @@ public sealed class ReportService : IReportService
         LowAttendanceRequest request, CancellationToken ct = default)
     {
         var raw = await _repo.GetLowAttendanceDataAsync(
-            request.ThresholdPercent, request.DepartmentId, request.CourseOfferingId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+            request.ThresholdPercent, request.DepartmentId, request.CourseOfferingId, request.InstitutionType, request.TenantId, request.CampusId, request.DepartmentIds, ct);
 
         var rows = raw.Select(r => new LowAttendanceRow(
             r.StudentProfileId, r.RegistrationNumber, r.StudentName,
@@ -920,7 +928,7 @@ public sealed class ReportService : IReportService
     public async Task<FypStatusReportResponse> GetFypStatusReportAsync(
         FypStatusRequest request, CancellationToken ct = default)
     {
-        var raw = await _repo.GetFypStatusDataAsync(request.DepartmentId, request.Status, request.InstitutionType, request.TenantId, request.CampusId, request.StudentProfileId, ct);
+        var raw = await _repo.GetFypStatusDataAsync(request.DepartmentId, request.Status, request.InstitutionType, request.TenantId, request.CampusId, request.StudentProfileId, request.DepartmentIds, ct);
 
         var rows = raw.Select(r => new FypStatusRow(
             r.ProjectId, r.Title, r.StudentName, r.RegistrationNumber,

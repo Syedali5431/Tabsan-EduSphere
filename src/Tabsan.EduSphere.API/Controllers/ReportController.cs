@@ -643,10 +643,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var result = await _reports.GetGpaReportAsync(request, ct);
         return Ok(result);
     }
@@ -666,10 +666,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportGpaReportExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "gpa-report.xlsx");
     }
@@ -689,10 +689,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportGpaReportCsvAsync(request, ct);
         return File(bytes, "text/csv", "gpa-report.csv");
     }
@@ -712,10 +712,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new GpaReportRequest(scope.DepartmentId, programId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportGpaReportPdfAsync(request, ct);
         return File(bytes, "application/pdf", "gpa-report.pdf");
     }
@@ -737,10 +737,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var result = await _reports.GetEnrollmentSummaryAsync(request, ct);
         return Ok(result);
     }
@@ -760,10 +760,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportEnrollmentSummaryExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "enrollment-summary.xlsx");
     }
@@ -783,10 +783,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportEnrollmentSummaryCsvAsync(request, ct);
         return File(bytes, "text/csv", "enrollment-summary.csv");
     }
@@ -806,10 +806,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new EnrollmentSummaryRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportEnrollmentSummaryPdfAsync(request, ct);
         return File(bytes, "application/pdf", "enrollment-summary.pdf");
     }
@@ -834,10 +834,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var result = await _reports.GetSemesterResultsAsync(request, ct);
         return Ok(result);
     }
@@ -860,10 +860,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportSemesterResultsExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "semester-results.xlsx");
     }
@@ -886,10 +886,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportSemesterResultsCsvAsync(request, ct);
         return File(bytes, "text/csv", "semester-results.csv");
     }
@@ -912,10 +912,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new SemesterResultsRequest(semesterId, scope.DepartmentId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportSemesterResultsPdfAsync(request, ct);
         return File(bytes, "application/pdf", "semester-results.pdf");
     }
@@ -1003,10 +1003,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var result = await _reports.GetLowAttendanceWarningAsync(request, ct);
         return Ok(result);
     }
@@ -1029,10 +1029,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportLowAttendanceExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "low-attendance.xlsx");
     }
@@ -1055,10 +1055,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportLowAttendanceCsvAsync(request, ct);
         return File(bytes, "text/csv", "low-attendance.csv");
     }
@@ -1081,10 +1081,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, courseOfferingId, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentOrOfferingScopeAsync(departmentId, courseOfferingId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new LowAttendanceRequest(threshold, scope.DepartmentId, courseOfferingId, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportLowAttendancePdfAsync(request, ct);
         return File(bytes, "application/pdf", "low-attendance.pdf");
     }
@@ -1107,10 +1107,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId, DepartmentIds: facultyScope.DepartmentIds);
         var result = await _reports.GetFypStatusReportAsync(request, ct);
         return Ok(result);
     }
@@ -1131,10 +1131,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId, DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportFypStatusExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "fyp-status.xlsx");
     }
@@ -1155,10 +1155,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId, DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportFypStatusCsvAsync(request, ct);
         return File(bytes, "text/csv", "fyp-status.csv");
     }
@@ -1179,10 +1179,10 @@ public sealed class ReportController : ControllerBase
         var scoped = await EnforceAdminDepartmentScopeAsync(departmentId, null, ct);
         if (scoped is not null) return scoped;
 
-        scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
-        if (scoped is not null) return scoped;
+        var facultyScope = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
+        if (facultyScope.Error is not null) return facultyScope.Error;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId, DepartmentIds: facultyScope.DepartmentIds);
         var bytes = await _reports.ExportFypStatusPdfAsync(request, ct);
         return File(bytes, "application/pdf", "fyp-status.pdf");
     }
@@ -1579,76 +1579,87 @@ public sealed class ReportController : ControllerBase
         return null;
     }
 
-    private async Task<IActionResult?> EnforceFacultyDepartmentScopeAsync(Guid? departmentId, CancellationToken ct)
+    /// <summary>
+    /// Faculty-only department scoping for department-filtered reports.
+    /// With an explicit departmentId the faculty must be assigned to it. Without one, the report is
+    /// restricted to the faculty's assigned departments (returned as <c>DepartmentIds</c> for the request).
+    /// Faculty with no department assignments are denied. Non-faculty callers get (null, null).
+    /// </summary>
+    private async Task<(IActionResult? Error, IReadOnlyCollection<Guid>? DepartmentIds)> EnforceFacultyDepartmentScopeAsync(Guid? departmentId, CancellationToken ct)
     {
         if (!User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-            return null;
-
-        if (!departmentId.HasValue)
-            return null; // Allow reports without department filter
+            return (null, null);
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
-            return Forbid();
+            return (Forbid(), null);
 
         var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
         if (allowedDepartmentIds.Count == 0)
-            return null; // Allow faculty without assignments
+            return (Forbid(), null);
+
+        if (!departmentId.HasValue)
+            return (null, allowedDepartmentIds);
 
         if (!allowedDepartmentIds.Contains(departmentId.Value))
-            return Forbid();
+            return (Forbid(), null);
 
         var instituteScope = await EnforceInstitutionTypeDepartmentScopeAsync(departmentId.Value, ct);
         if (instituteScope is not null)
-            return instituteScope;
+            return (instituteScope, null);
 
-        return null;
+        return (null, null);
     }
 
-    private async Task<IActionResult?> EnforceFacultyDepartmentOrOfferingScopeAsync(Guid? departmentId, Guid? courseOfferingId, CancellationToken ct)
+    /// <summary>
+    /// Same as <see cref="EnforceFacultyDepartmentScopeAsync"/>, but a course offering in one of the
+    /// faculty's departments may be used instead of (or together with) a departmentId.
+    /// </summary>
+    private async Task<(IActionResult? Error, IReadOnlyCollection<Guid>? DepartmentIds)> EnforceFacultyDepartmentOrOfferingScopeAsync(Guid? departmentId, Guid? courseOfferingId, CancellationToken ct)
     {
         if (!User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-            return null;
-
-        if (!departmentId.HasValue && !courseOfferingId.HasValue)
-            return null; // Allow reports without filters
+            return (null, null);
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
-            return Forbid();
+            return (Forbid(), null);
 
         var allowedDepartmentIds = await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct);
         if (allowedDepartmentIds.Count == 0)
-            return null; // Allow faculty without assignments
+            return (Forbid(), null);
+
+        var hasOffering = courseOfferingId.HasValue && courseOfferingId.Value != Guid.Empty;
+        if (!departmentId.HasValue && !hasOffering)
+            return (null, allowedDepartmentIds);
 
         if (departmentId.HasValue)
         {
             if (!allowedDepartmentIds.Contains(departmentId.Value))
-                return Forbid();
+                return (Forbid(), null);
 
             var instituteScope = await EnforceInstitutionTypeDepartmentScopeAsync(departmentId.Value, ct);
             if (instituteScope is not null)
-                return instituteScope;
+                return (instituteScope, null);
         }
 
-        if (courseOfferingId.HasValue && courseOfferingId.Value != Guid.Empty)
+        if (hasOffering)
         {
-            var offering = await _courses.GetOfferingByIdAsync(courseOfferingId.Value, ct);
+            var offering = await _courses.GetOfferingByIdAsync(courseOfferingId!.Value, ct);
             if (offering is null)
-                return NotFound("Course offering not found.");
+                return (NotFound("Course offering not found."), null);
 
             if (!allowedDepartmentIds.Contains(offering.Course.DepartmentId))
-                return Forbid();
+                return (Forbid(), null);
 
             if (departmentId.HasValue && departmentId.Value != offering.Course.DepartmentId)
-                return BadRequest("departmentId does not match the selected course offering.");
+                return (BadRequest("departmentId does not match the selected course offering."), null);
 
             var instituteScope = await EnforceInstitutionTypeDepartmentScopeAsync(offering.Course.DepartmentId, ct);
             if (instituteScope is not null)
-                return instituteScope;
+                return (instituteScope, null);
         }
 
-        return null;
+        return (null, null);
     }
 
     private static InstitutionReportSectionsResponse BuildInstitutionSections(

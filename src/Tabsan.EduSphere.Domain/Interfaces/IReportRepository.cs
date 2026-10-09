@@ -73,6 +73,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -84,6 +85,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -95,6 +97,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -114,6 +117,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -126,6 +130,7 @@ public interface IReportRepository
         Guid? tenantId,
         Guid? campusId,
         Guid? studentProfileId = null,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default);
 
     /// <summary>

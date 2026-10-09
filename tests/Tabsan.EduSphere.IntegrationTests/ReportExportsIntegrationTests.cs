@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Attendance;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Infrastructure.Persistence;
@@ -348,21 +349,33 @@ public class ReportExportsIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    [Fact(Skip = "Contract changed in 76f46c5: Faculty may run reports without a department filter. Follow-up: scope unfiltered Faculty reports to their assigned departments.")]
-    public async Task GpaReport_WithFacultyAndNoDepartment_ReturnsBadRequest()
+    [Fact]
+    public async Task GpaReport_WithFacultyAndNoDepartment_ReturnsOnlyAssignedDepartmentRows()
     {
-        var (facultyUserId, institutionType, _, _, _) = await SeedFacultyScopeFixtureAsync();
+        var fixture = await SeedFacultyUnfilteredReportFixtureAsync();
 
-        using var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(
-                role: "Faculty",
-                userId: facultyUserId.ToString(),
-                institutionType: institutionType));
-
+        using var client = CreateFacultyClient(fixture.FacultyUserId, fixture.InstitutionType);
         var response = await client.GetAsync("api/v1/reports/gpa-report");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var registrations = await ReadRowRegistrationNumbersAsync(response);
+        Assert.Contains(fixture.AssignedRegistrationNumber, registrations);
+        Assert.DoesNotContain(fixture.OtherRegistrationNumber, registrations);
+    }
+
+    [Theory]
+    [InlineData("api/v1/reports/gpa-report")]
+    [InlineData("api/v1/reports/low-attendance")]
+    [InlineData("api/v1/reports/enrollment-summary")]
+    [InlineData("api/v1/reports/fyp-status")]
+    public async Task UnfilteredReports_WithFacultyWithoutDepartmentAssignments_ReturnForbidden(string route)
+    {
+        var (facultyUserId, institutionType) = await SeedUnassignedFacultyAsync();
+
+        using var client = CreateFacultyClient(facultyUserId, institutionType);
+        var response = await client.GetAsync(route);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -382,21 +395,18 @@ public class ReportExportsIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    [Fact(Skip = "Contract changed in 76f46c5: Faculty may run reports without a department filter. Follow-up: scope unfiltered Faculty reports to their assigned departments.")]
-    public async Task LowAttendance_WithFacultyAndNoFilters_ReturnsBadRequest()
+    [Fact]
+    public async Task LowAttendance_WithFacultyAndNoFilters_ReturnsOnlyAssignedDepartmentRows()
     {
-        var (facultyUserId, institutionType, _, _, _) = await SeedFacultyScopeFixtureAsync();
+        var fixture = await SeedFacultyUnfilteredReportFixtureAsync();
 
-        using var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(
-                role: "Faculty",
-                userId: facultyUserId.ToString(),
-                institutionType: institutionType));
-
+        using var client = CreateFacultyClient(fixture.FacultyUserId, fixture.InstitutionType);
         var response = await client.GetAsync("api/v1/reports/low-attendance");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var registrations = await ReadRowRegistrationNumbersAsync(response);
+        Assert.Contains(fixture.AssignedRegistrationNumber, registrations);
+        Assert.DoesNotContain(fixture.OtherRegistrationNumber, registrations);
     }
 
     [Fact]
@@ -464,5 +474,108 @@ public class ReportExportsIntegrationTests
         await db.SaveChangesAsync();
 
         return (faculty.Id, (int)allowedDepartment.InstitutionType, allowedDepartment.Id, deniedDepartment.Id, semester.Id);
+    }
+
+    private HttpClient CreateFacultyClient(Guid facultyUserId, int institutionType)
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.GenerateToken(
+                role: "Faculty",
+                userId: facultyUserId.ToString(),
+                institutionType: institutionType));
+        return client;
+    }
+
+    private static async Task<List<string>> ReadRowRegistrationNumbersAsync(HttpResponseMessage response)
+    {
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.GetProperty("rows").EnumerateArray()
+            .Select(r => r.GetProperty("registrationNumber").GetString() ?? string.Empty)
+            .ToList();
+    }
+
+    private async Task<(Guid FacultyUserId, int InstitutionType)> SeedUnassignedFacultyAsync()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var role = db.Roles.First(r => r.Name == "Faculty");
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var faculty = new User(
+            username: $"report_faculty_none_{suffix}",
+            passwordHash: "integration-hash",
+            roleId: role.Id,
+            email: $"report_faculty_none_{suffix}@tabsan.local",
+            departmentId: null,
+            mustChangePassword: false,
+            institutionType: InstitutionType.University);
+
+        db.Users.Add(faculty);
+        await db.SaveChangesAsync();
+
+        return (faculty.Id, (int)InstitutionType.University);
+    }
+
+    /// <summary>
+    /// Two University departments, each with one student who has a GPA row and a 0% attendance record.
+    /// The faculty is assigned to only the first department.
+    /// </summary>
+    private async Task<(Guid FacultyUserId, int InstitutionType, string AssignedRegistrationNumber, string OtherRegistrationNumber)> SeedFacultyUnfilteredReportFixtureAsync()
+    {
+        await EnsureReportsModuleActiveAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var facultyRole = db.Roles.First(r => r.Name == "Faculty");
+        var studentRole = db.Roles.First(r => r.Name == "Student");
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+
+        var faculty = new User(
+            username: $"report_faculty_unf_{suffix}",
+            passwordHash: "integration-hash",
+            roleId: facultyRole.Id,
+            email: $"report_faculty_unf_{suffix}@tabsan.local",
+            departmentId: null,
+            mustChangePassword: false,
+            institutionType: InstitutionType.University);
+        db.Users.Add(faculty);
+
+        var semester = new Semester($"Report Faculty Unf Sem {suffix}", DateTime.UtcNow.Date.AddDays(-10), DateTime.UtcNow.Date.AddDays(30));
+        db.Semesters.Add(semester);
+
+        string SeedDepartmentWithStudent(string tag, out Guid departmentId)
+        {
+            var department = new Department($"Report Faculty Unf {tag} {suffix}", $"RFU{tag}{suffix}", InstitutionType.University);
+            var program = new AcademicProgram($"Report Faculty Unf Program {tag} {suffix}", $"RFUP{tag}{suffix}", department.Id, 8);
+            var course = new Course($"Report Faculty Unf Course {tag} {suffix}", $"RFUC{tag}{suffix}", 3, department.Id);
+            var offering = new CourseOffering(course.Id, semester.Id, 30);
+            var studentUser = new User($"report_unf_student_{tag}_{suffix}", "integration-hash", studentRole.Id, $"report_unf_student_{tag}_{suffix}@tabsan.local");
+            var registration = $"RFU-{tag}-{suffix}";
+            var profile = new StudentProfile(studentUser.Id, registration, program.Id, department.Id, DateTime.UtcNow.Date);
+
+            db.Departments.Add(department);
+            db.AcademicPrograms.Add(program);
+            db.Courses.Add(course);
+            db.CourseOfferings.Add(offering);
+            db.Users.Add(studentUser);
+            db.StudentProfiles.Add(profile);
+            db.AttendanceRecords.Add(new AttendanceRecord(profile.Id, offering.Id, DateTime.UtcNow.Date.AddDays(-1), AttendanceStatus.Absent, faculty.Id));
+
+            departmentId = department.Id;
+            return registration;
+        }
+
+        var assignedRegistration = SeedDepartmentWithStudent("A", out var assignedDepartmentId);
+        var otherRegistration = SeedDepartmentWithStudent("B", out _);
+        await db.SaveChangesAsync();
+
+        db.FacultyDepartmentAssignments.Add(new FacultyDepartmentAssignment(faculty.Id, assignedDepartmentId));
+        await db.SaveChangesAsync();
+
+        return (faculty.Id, (int)InstitutionType.University, assignedRegistration, otherRegistration);
     }
 }

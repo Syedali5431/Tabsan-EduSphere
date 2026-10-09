@@ -217,9 +217,10 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default)
     {
-        var query = BuildResultQuery(semesterId, null, null, departmentId, institutionType, tenantId, campusId);
+        var query = BuildResultQuery(semesterId, null, null, departmentId, institutionType, tenantId, campusId, departmentIds);
         return await query.ToListAsync(ct);
     }
 
@@ -230,7 +231,8 @@ public sealed class ReportRepository : IReportRepository
         Guid? departmentId,
         int? institutionType,
         Guid? tenantId,
-        Guid? campusId)
+        Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null)
     {
         return
             from r   in _db.Results
@@ -246,6 +248,7 @@ public sealed class ReportRepository : IReportRepository
                && (courseOfferingId == null || r.CourseOfferingId  == courseOfferingId)
                && (studentProfileId == null || r.StudentProfileId  == studentProfileId)
                && (departmentId     == null || c.DepartmentId      == departmentId)
+               && (departmentIds    == null || departmentIds.Contains(c.DepartmentId))
                    && (institutionType  == null || (int)dep.InstitutionType == institutionType)
                    && (tenantId         == null || dep.TenantId == tenantId)
                    && (campusId         == null || dep.CampusId == campusId)
@@ -275,6 +278,7 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default)
     {
         return await (
@@ -283,6 +287,7 @@ public sealed class ReportRepository : IReportRepository
             join ap  in _db.AcademicPrograms on sp.ProgramId equals ap.Id
             join dep in _db.Departments      on sp.DepartmentId equals dep.Id
             where (departmentId == null || sp.DepartmentId == departmentId)
+               && (departmentIds == null || departmentIds.Contains(sp.DepartmentId))
                && (programId    == null || sp.ProgramId    == programId)
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
                     && (tenantId        == null || dep.TenantId == tenantId)
@@ -308,6 +313,7 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default)
     {
         return await (
@@ -317,6 +323,7 @@ public sealed class ReportRepository : IReportRepository
             join dep in _db.Departments  on c.DepartmentId equals dep.Id
             where (semesterId   == null || co.SemesterId   == semesterId)
                && (departmentId == null || c.DepartmentId  == departmentId)
+               && (departmentIds == null || departmentIds.Contains(c.DepartmentId))
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
                     && (tenantId        == null || co.TenantId == tenantId)
                     && (campusId        == null || co.CampusId == campusId)
@@ -428,6 +435,7 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default)
     {
         var query =
@@ -440,6 +448,7 @@ public sealed class ReportRepository : IReportRepository
             join dep in _db.Departments      on c.DepartmentId       equals dep.Id
             where (courseOfferingId == null || ar.CourseOfferingId == courseOfferingId)
                && (departmentId     == null || c.DepartmentId      == departmentId)
+               && (departmentIds    == null || departmentIds.Contains(c.DepartmentId))
                     && (institutionType  == null || (int)dep.InstitutionType == institutionType)
                     && (tenantId         == null || dep.TenantId == tenantId)
                     && (campusId         == null || dep.CampusId == campusId)
@@ -490,6 +499,7 @@ public sealed class ReportRepository : IReportRepository
         Guid? tenantId,
         Guid? campusId,
         Guid? studentProfileId = null,
+        IReadOnlyCollection<Guid>? departmentIds = null,
         CancellationToken ct = default)
     {
         FypProjectStatus? statusFilter = string.IsNullOrWhiteSpace(status)
@@ -506,6 +516,7 @@ public sealed class ReportRepository : IReportRepository
             join sup in _db.Users.DefaultIfEmpty() on p.SupervisorUserId equals sup!.Id into supGroup
             from sup in supGroup.DefaultIfEmpty()
             where (departmentId  == null || p.DepartmentId == departmentId)
+                            && (departmentIds == null || departmentIds.Contains(p.DepartmentId))
                             && (studentProfileId == null || p.StudentProfileId == studentProfileId)
                             && (statusFilter    == null || p.Status == statusFilter)
                             && (institutionType == null || (int)dep.InstitutionType == institutionType)
