@@ -123,7 +123,8 @@ public sealed record StudentSelfRegisterRequest(
     string Password,
     string RegistrationNumberOrEmail,
     string? Email = null,
-    string? PhoneNumber = null);
+    string? PhoneNumber = null,
+    string? FullName = null);
 
 // ── Faculty Assignment DTOs ───────────────────────────────────────────────────
 

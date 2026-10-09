@@ -10,13 +10,37 @@ using Xunit;
 namespace Tabsan.EduSphere.IntegrationTests;
 
 [Collection(EduSphereCollection.Name)]
-public class DashboardContextSwitchingIntegrationTests
+public class DashboardContextSwitchingIntegrationTests : IAsyncLifetime
 {
     private readonly EduSphereWebFactory _factory;
+    private (bool School, bool College, bool University)? _originalPolicy;
 
     public DashboardContextSwitchingIntegrationTests(EduSphereWebFactory factory)
     {
         _factory = factory;
+    }
+
+    // These tests switch the shared institution policy; restore it afterwards so later tests in the
+    // collection (e.g. sidebar menu visibility, which hides University-only menus) are unaffected.
+    public async Task InitializeAsync()
+    {
+        using var client = CreateClient("SuperAdmin");
+        var response = await client.GetAsync("api/v1/institution-policy");
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        _originalPolicy = (
+            doc.RootElement.GetProperty("includeSchool").GetBoolean(),
+            doc.RootElement.GetProperty("includeCollege").GetBoolean(),
+            doc.RootElement.GetProperty("includeUniversity").GetBoolean());
+    }
+
+    public async Task DisposeAsync()
+    {
+        if (_originalPolicy is not { } original)
+            return;
+
+        using var client = CreateClient("SuperAdmin");
+        await EnableInstitutionTypesAsync(client, original.University, original.School, original.College);
     }
 
 

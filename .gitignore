@@ -504,3 +504,7 @@ $RECYCLE.BIN/
 # Local transient test artifacts
 test-log.txt
 tests/load/results/
+
+# Tabsan-Lic: issued customer license files and vendor signing keys must never be committed
+tools/Tabsan.Lic/License/
+signing-keys.json

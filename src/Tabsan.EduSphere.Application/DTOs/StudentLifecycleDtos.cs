@@ -30,6 +30,16 @@ public record PromoteStudentsBatchRequest(
     IList<Guid> StudentProfileIds
 );
 
+/// <summary>
+/// Transfers a student to a different institution/department/programme (e.g. School Class 10
+/// completion -> College admission, College Class 12 completion -> University admission).
+/// </summary>
+public record TransferStudentRequest(
+    Guid DepartmentId,
+    Guid ProgramId,
+    int SemesterNumber
+);
+
 /// <summary>Result of a batch promotion operation.</summary>
 public record PromotionBatchResultDto(
     int Promoted,

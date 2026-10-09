@@ -83,8 +83,9 @@ public class StudentController : ControllerBase
     // ── GET /api/v1/student ───────────────────────────────────────────────────
 
     /// <summary>Returns all student profiles. Admin and SuperAdmin only.</summary>
+    // Finance needs the student list to raise and record fee payments.
     [HttpGet]
-    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty,Finance")]
     public async Task<IActionResult> GetAll([FromQuery] Guid? departmentId, CancellationToken ct)
     {
         var callerInstitutionType = GetCurrentInstitutionType();

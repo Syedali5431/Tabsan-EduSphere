@@ -16,12 +16,11 @@ internal static class EmbeddedKeys
     internal const string RsaPublicKeyPem =
         """
         -----BEGIN RSA PUBLIC KEY-----
-        MIIBCgKCAQEAyiJunggNrkgy6G6wz0OplTBBAUimPj5OgX7Nf3fGHca//IkgXiWy
-        yj3GQ/S63ghOI32NvKmNHGEjXOoy/QjHs7X7b2DceIW0Ti4r6Uc1/ajLxu/s06J2
-        WQ7hCBE9MRJz7zda6nPTKyRMHAHoV9p/DNsxOD/NtzgzHd9LUld924C4vGmyfdbl
-        Olb45QZBkVAiIU4x0jh65o5Zz6EQEJnQC8IhpUJd9EPTfWl9KhJRtNTFu2iR5xPG
-        1AJRUn78dnQM/LYG407PRwWj/VwWIvcIRX0afoKzYc4zSs0kubpHfVfj4gi0iGwD
-        wGk9HsZXzSFPViAAU3mkR1TFJe/+AhwAAQIDAQAB
+        MIIBCgKCAQEA3FADQRmkWQRaex3/Ytz9bsjLS7+cehMwwPDMeCN0cCvfpzfoQI+bqQS3qFyeEqYV
+        mqAnoA7P26ZRktMSl+bxzcSpdnO7pIazvjQ+dm7JNRv3QtQm6n1nQkqEaNo4tQOpZZ7o81eHV8vC
+        /uFwCjz5Ezp5+173fEoo8AEdVw9tqq8+ot+pBXHt/EYplP+FmZwo9SDkJTeeofSqVjV6PKkCvmCO
+        zWzWzh7+McmeOYdtrA06iIA9YGjfl4BNZaRhXS1gj5AEknVGDKJCUtVoPvjT6MpuaCvKNbrlRPCA
+        0Pmg+Icflwx7VCTAPNQvSBxa78v3JCZATBlNwmi4lF9VyvMqwQIDAQAB
         -----END RSA PUBLIC KEY-----
         """;
 
@@ -29,5 +28,5 @@ internal static class EmbeddedKeys
     /// AES-256 symmetric key shared with Tabsan-Lic (Base64-encoded, 32 bytes).
     /// Used to decrypt the AES-256-CBC encrypted payload inside a .tablic file.
     /// </summary>
-    internal const string AesKeyBase64 = "NIdsTzpLjAK2PZwGMQkJLn7SVBJm2yWx0hIpv/R6UnE=";
+    internal const string AesKeyBase64 = "K1LFlYZwqwNp3lhFAur7vASzMGyInHpjnVhCXpceXBc=";
 }

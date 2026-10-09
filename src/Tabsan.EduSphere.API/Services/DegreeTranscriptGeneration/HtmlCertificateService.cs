@@ -1,4 +1,5 @@
 using System.Text;
+using Tabsan.EduSphere.Infrastructure.Reporting;
 
 namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 
@@ -8,6 +9,13 @@ namespace Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration;
 /// </summary>
 public sealed class HtmlCertificateService
 {
+    private static readonly Lazy<string> LogoDataUriLazy = new(() =>
+        ReportBranding.LogoBytes is { } bytes
+            ? $"data:image/png;base64,{Convert.ToBase64String(bytes)}"
+            : "");
+
+    private static string LogoDataUri => LogoDataUriLazy.Value;
+
     public string GenerateCompletionCertificate(CompletionData data)
     {
         var html = CompletionTemplate;
@@ -71,7 +79,8 @@ public sealed class HtmlCertificateService
     private static string ReplaceCommon(string html, BaseCertificateData data)
     {
         return html
-            .Replace("{{StudentName}}", data.StudentName)
+            .Replace("{{LogoDataUri}}", LogoDataUri)
+            .Replace("{{StudentName}}", data.StudentName.ToUpperInvariant())
             .Replace("{{RegistrationNumber}}", data.RegistrationNumber)
             .Replace("{{DepartmentName}}", data.DepartmentName)
             .Replace("{{IssueDate}}", data.IssueDate)
@@ -216,13 +225,13 @@ public sealed class HtmlCertificateService
   .certificate{width:900px;max-width:95vw;background:linear-gradient(135deg,#fff 0%,#fafbfc 100%);border:8px double #1a3a5c;padding:50px 60px;position:relative;box-shadow:0 10px 40px rgba(0,0,0,0.15)}
   .certificate::before{content:'';position:absolute;top:12px;left:12px;right:12px;bottom:12px;border:2px solid #c9a84c;pointer-events:none}
   .header{text-align:center;margin-bottom:30px}
-  .logo{font-size:14px;color:#666;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px}
+  .logo-img{height:56px;margin-bottom:8px}
   .school-name{font-size:32px;font-weight:700;color:#1a3a5c;letter-spacing:1px}
   .badge{display:inline-block;background:linear-gradient(135deg,#c9a84c,#e6c85c);color:#fff;padding:8px 30px;border-radius:30px;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin:20px 0}
   .title{font-family:'Great Vibes',cursive;font-size:48px;color:#1a3a5c;text-align:center;margin:15px 0 5px}
   .subtitle{text-align:center;font-size:16px;color:#555;margin-bottom:30px;letter-spacing:1px}
   .body-text{text-align:center;font-size:16px;line-height:2;color:#333;margin-bottom:25px}
-  .student-name{font-family:'Great Vibes',cursive;font-size:42px;color:#1a3a5c;display:block;margin:8px 0}
+  .student-name{font-family:'Playfair Display',serif;font-weight:700;font-size:32px;letter-spacing:1px;color:#1a3a5c;display:block;margin:10px 0}
   .details{text-align:center;margin:20px 0 30px}
   .details span{display:inline-block;margin:0 20px;font-size:14px;color:#555}
   .details strong{color:#1a3a5c}
@@ -231,12 +240,11 @@ public sealed class HtmlCertificateService
   .sig-line{width:180px;margin:0 auto 8px;border-bottom:2px solid #1a3a5c}
   .sig-name{font-size:14px;color:#333;font-weight:600}
   .sig-role{font-size:12px;color:#888}
-  .seal{position:absolute;bottom:25px;right:50px;width:90px;height:90px;border:3px solid #c9a84c;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:#c9a84c;transform:rotate(-15deg);opacity:0.7;line-height:1.3}
   .date{text-align:center;font-size:13px;color:#888;margin-top:15px}
   @media print{body{background:#fff}.certificate{box-shadow:none;border:8px double #1a3a5c}}
 </style></head>
 <body><div class=""certificate"">
-<div class=""header""><div class=""logo"">★ Tabsan EduSphere ★</div><div class=""school-name"">{{DepartmentName}}</div></div>
+<div class=""header""><img class=""logo-img"" src=""{{LogoDataUri}}"" alt=""Tabsan EduSphere""><div class=""school-name"">{{DepartmentName}}</div></div>
 <div style=""text-align:center""><span class=""badge"">Certificate of Completion</span></div>
 <div class=""title"">Completion Certificate</div>
 <div class=""subtitle"">This is proudly presented to</div>
@@ -260,7 +268,6 @@ with an Overall Percentage of<br>
 <div class=""sig-block""><div class=""sig-line""></div><div class=""sig-name"">Mrs. Fatima Noor</div><div class=""sig-role"">Examination Controller</div></div>
 </div>
 <div class=""date"">Issued on: {{IssueDate}} &nbsp;|&nbsp; Certificate No: {{SerialNumber}}</div>
-<div class=""seal"">TABSAN<br>SCHOOL<br>SEAL<br>★</div>
 </div></body></html>";
 
     private const string ReportCardTemplate = @"<!DOCTYPE html>
@@ -272,6 +279,8 @@ with an Overall Percentage of<br>
   body{background:#f5f6fa;display:flex;justify-content:center;min-height:100vh;font-family:'Inter',sans-serif;padding:20px}
   .report-card{width:1000px;max-width:100%;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.1);overflow:hidden}
   .rc-header{background:linear-gradient(135deg,#1a3a5c,#2c5282);color:#fff;padding:30px 40px;display:flex;justify-content:space-between;align-items:center}
+  .rc-header .brand{display:flex;align-items:center;gap:16px}
+  .rc-header .logo-img{height:44px;background:#fff;border-radius:6px;padding:4px}
   .rc-header h1{font-family:'Playfair Display',serif;font-size:26px}
   .rc-header .badge{background:#c9a84c;padding:6px 16px;border-radius:20px;font-size:12px;letter-spacing:2px;text-transform:uppercase}
   .student-info{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:25px 40px;background:#fafbfc;border-bottom:1px solid #e8ecf1}
@@ -303,7 +312,7 @@ with an Overall Percentage of<br>
   @media print{body{background:#fff;padding:0}.report-card{box-shadow:none}th{background:#1a3a5c!important;color:#fff!important;-webkit-print-color-adjust:exact}}
 </style></head>
 <body><div class=""report-card"">
-<div class=""rc-header""><div><h1>{{DepartmentName}}</h1><div style=""font-size:13px;opacity:0.85;margin-top:4px"">Academic Report Card — {{ProgramName}}</div></div><span class=""badge"">Report Card</span></div>
+<div class=""rc-header""><div class=""brand""><img class=""logo-img"" src=""{{LogoDataUri}}"" alt=""Tabsan EduSphere""><div><h1>{{DepartmentName}}</h1><div style=""font-size:13px;opacity:0.85;margin-top:4px"">Academic Report Card — {{ProgramName}}</div></div></div><span class=""badge"">Report Card</span></div>
 <div class=""student-info"">
 <div class=""info-item""><div class=""info-label"">Student Name</div><div class=""info-value"">{{StudentName}}</div></div>
 <div class=""info-item""><div class=""info-label"">Registration No</div><div class=""info-value"">{{RegistrationNumber}}</div></div>
@@ -340,14 +349,15 @@ with an Overall Percentage of<br>
   body{background:#e8ecf1;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Playfair Display',serif}
   .degree{width:950px;max-width:95vw;background:linear-gradient(135deg,#fdfcf8 0%,#f7f3e8 50%,#fdfcf8 100%);border:10px double #8b0000;padding:50px 60px;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.2)}
   .degree::before{content:'';position:absolute;top:16px;left:16px;right:16px;bottom:16px;border:1px solid #c9a84c;pointer-events:none}
-  .crest{text-align:center;margin-bottom:10px;font-size:40px;color:#8b0000}
+  .crest{text-align:center;margin-bottom:10px}
+  .crest .logo-img{height:64px}
   .header{text-align:center;margin-bottom:25px}
   .uni-name{font-size:28px;font-weight:700;color:#8b0000;letter-spacing:2px;text-transform:uppercase}
   .uni-sub{font-size:13px;color:#666;letter-spacing:4px;text-transform:uppercase;margin-top:4px}
   .ornament{text-align:center;color:#c9a84c;font-size:24px;margin:15px 0;letter-spacing:8px}
   .title{font-family:'Great Vibes',cursive;font-size:52px;color:#1a1a1a;text-align:center;margin:10px 0}
   .body-text{text-align:center;font-size:16px;line-height:2.2;color:#333;margin:20px 0}
-  .student-name{font-family:'Great Vibes',cursive;font-size:46px;color:#8b0000;display:block;margin:5px 0}
+  .student-name{font-family:'Playfair Display',serif;font-weight:700;font-size:36px;letter-spacing:1px;color:#8b0000;display:block;margin:8px 0}
   .degree-name{font-size:22px;font-weight:700;color:#1a1a1a;letter-spacing:1px}
   .details-row{display:flex;justify-content:center;gap:30px;margin:20px 0;font-size:14px;color:#555}
   .details-row span{padding:8px 18px;background:#faf7f0;border:1px solid #e0d8c8;border-radius:4px}
@@ -358,12 +368,11 @@ with an Overall Percentage of<br>
   .sig-line{width:180px;margin:0 auto 8px;border-bottom:2px solid #333}
   .sig-name{font-size:14px;color:#333;font-weight:600}
   .sig-role{font-size:11px;color:#888;margin-top:2px}
-  .seal{position:absolute;bottom:30px;right:60px;width:100px;height:100px;border:4px solid #8b0000;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:#8b0000;transform:rotate(-12deg);line-height:1.3;font-weight:700}
   .date{text-align:center;font-size:13px;color:#888;margin-top:20px}
   @media print{body{background:#fff}.degree{box-shadow:none}}
 </style></head>
 <body><div class=""degree"">
-<div class=""crest"">🏛️</div>
+<div class=""crest""><img class=""logo-img"" src=""{{LogoDataUri}}"" alt=""Tabsan EduSphere""></div>
 <div class=""header""><div class=""uni-name"">{{DepartmentName}}</div><div class=""uni-sub"">{{ProgramName}}</div></div>
 <div class=""ornament"">◆ ◇ ◆</div>
 <div class=""title"">Degree of Bachelor</div>
@@ -380,7 +389,6 @@ having completed all prescribed requirements<br>with a Cumulative Grade Point Av
 <div class=""sig-block""><div class=""sig-line""></div><div class=""sig-name"">Mr. Kamran Ali</div><div class=""sig-role"">Controller of Examinations</div></div>
 </div>
 <div class=""date"">Conferred on: {{IssueDate}} &nbsp;|&nbsp; Degree No: {{SerialNumber}}</div>
-<div class=""seal"">TABSAN<br>UNIVERSITY<br>★<br>SEAL</div>
 </div></body></html>";
 
     private const string TranscriptTemplate = @"<!DOCTYPE html>
@@ -392,6 +400,8 @@ having completed all prescribed requirements<br>with a Cumulative Grade Point Av
   body{background:#f5f6fa;display:flex;justify-content:center;min-height:100vh;font-family:'Inter',sans-serif;padding:20px}
   .transcript{width:1050px;max-width:100%;background:#fff;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.1);overflow:hidden}
   .t-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:25px 40px;display:flex;justify-content:space-between;align-items:center}
+  .t-header .brand{display:flex;align-items:center;gap:14px}
+  .t-header .logo-img{height:38px;background:#fff;border-radius:6px;padding:4px}
   .t-header h1{font-family:'Playfair Display',serif;font-size:24px}
   .t-header .badge{background:#c9a84c;padding:5px 14px;border-radius:4px;font-size:11px;letter-spacing:2px}
   .student-info{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:20px 40px;background:#fafbfc;border-bottom:2px solid #c9a84c}
@@ -416,7 +426,7 @@ having completed all prescribed requirements<br>with a Cumulative Grade Point Av
   @media print{body{background:#fff;padding:0}.transcript{box-shadow:none}th{background:#1a1a2e!important;color:#c9a84c!important;-webkit-print-color-adjust:exact}.t-header{-webkit-print-color-adjust:exact}.summary-grid{-webkit-print-color-adjust:exact}}
 </style></head>
 <body><div class=""transcript"">
-<div class=""t-header""><div><h1>{{DepartmentName}}</h1><div style=""font-size:12px;opacity:0.8"">{{ProgramName}}</div></div><div style=""text-align:right""><span class=""badge"">OFFICIAL TRANSCRIPT</span><div style=""font-size:11px;opacity:0.7;margin-top:6px"">{{SerialNumber}}</div></div></div>
+<div class=""t-header""><div class=""brand""><img class=""logo-img"" src=""{{LogoDataUri}}"" alt=""Tabsan EduSphere""><div><h1>{{DepartmentName}}</h1><div style=""font-size:12px;opacity:0.8"">{{ProgramName}}</div></div></div><div style=""text-align:right""><span class=""badge"">OFFICIAL TRANSCRIPT</span><div style=""font-size:11px;opacity:0.7;margin-top:6px"">{{SerialNumber}}</div></div></div>
 <div class=""student-info"">
 <div><div class=""info-label"">Student Name</div><div class=""info-value"">{{StudentName}}</div></div>
 <div><div class=""info-label"">Registration No</div><div class=""info-value"">{{RegistrationNumber}}</div></div>

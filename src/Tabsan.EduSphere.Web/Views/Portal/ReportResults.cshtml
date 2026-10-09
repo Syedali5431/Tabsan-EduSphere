@@ -74,6 +74,16 @@
                             }
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Student</label>
+                        <select name="studentId" class="form-select form-select-sm">
+                            <option value="">All Students</option>
+                            @foreach (var s in Model.Students)
+                            {
+                                <option value="@s.Id" selected="@(Model.StudentId == s.Id)">@s.Name</option>
+                            }
+                        </select>
+                    </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
                     </div>
@@ -115,6 +125,7 @@
                                     <th class="text-center">Marks</th>
                                     <th class="text-center">Max</th>
                                     <th class="text-center">%</th>
+                                    <th class="text-center">GPA</th>
                                     <th>Published</th>
                                 </tr>
                             </thead>
@@ -130,6 +141,7 @@
                                         <td class="text-center">@r.MarksObtained.ToString("F1")</td>
                                         <td class="text-center">@r.MaxMarks.ToString("F1")</td>
                                         <td class="text-center">@r.Percentage.ToString("F1")%</td>
+                                        <td class="text-center">@(r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "—")</td>
                                         <td>@(r.PublishedAt?.ToString("dd MMM yyyy") ?? "—")</td>
                                     </tr>
                                 }

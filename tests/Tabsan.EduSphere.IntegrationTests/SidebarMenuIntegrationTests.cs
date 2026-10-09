@@ -18,6 +18,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 {
     private readonly EduSphereWebFactory _factory;
     private readonly Dictionary<string, bool> _originalModuleStates = new(StringComparer.OrdinalIgnoreCase);
+    private (bool School, bool College, bool University)? _originalPolicy;
     private Dictionary<string, HashSet<string>> _sidebarRoleAllowMatrix = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly string[] SidebarControlledModuleKeys =
@@ -55,6 +56,19 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
             if (!isActive)
                 await SetModuleStatusAsync(superClient, moduleKey, isActive: true);
         }
+
+        // University-only menus (e.g. fyp) are hidden when the shared institution policy excludes
+        // University; other test classes switch it, so pin all types on for this class.
+        var policyResponse = await superClient.GetAsync("api/v1/institution-policy");
+        policyResponse.EnsureSuccessStatusCode();
+        using (var doc = JsonDocument.Parse(await policyResponse.Content.ReadAsStringAsync()))
+        {
+            _originalPolicy = (
+                doc.RootElement.GetProperty("includeSchool").GetBoolean(),
+                doc.RootElement.GetProperty("includeCollege").GetBoolean(),
+                doc.RootElement.GetProperty("includeUniversity").GetBoolean());
+        }
+        await SetInstitutionPolicyAsync(superClient, true, true, true);
     }
 
     public async Task DisposeAsync()
@@ -65,6 +79,20 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         {
             await SetModuleStatusAsync(superClient, kv.Key, kv.Value);
         }
+
+        if (_originalPolicy is { } policy)
+            await SetInstitutionPolicyAsync(superClient, policy.School, policy.College, policy.University);
+    }
+
+    private static async Task SetInstitutionPolicyAsync(HttpClient client, bool school, bool college, bool university)
+    {
+        var response = await client.PutAsJsonAsync("api/v1/institution-policy", new
+        {
+            includeSchool = school,
+            includeCollege = college,
+            includeUniversity = university
+        });
+        response.EnsureSuccessStatusCode();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -364,7 +392,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("dashboard", keys);
         Assert.Contains("timetable_student", keys);
         Assert.Contains("assignments", keys);
-        Assert.Contains("report_center", keys);
+        Assert.DoesNotContain("report_center", keys); // reports are not available to students
         Assert.DoesNotContain("enter_results", keys);
         Assert.DoesNotContain("sidebar_settings", keys);
         Assert.DoesNotContain("report_settings", keys);
@@ -377,7 +405,7 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData("Admin")]
     [InlineData("Faculty")]
-    [InlineData("Student")]
+    [InlineData("Finance")]
     public async Task ReportCenter_VisibleRoles_HaveMenuAndReachableCatalog(string role)
     {
         // Final-Touches Phase 32 Stage 32.4 — keep report-center sidebar visibility and report-link behavior aligned by role.
@@ -388,6 +416,16 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
 
         var catalog = await GetReportCatalogAsync(client);
         Assert.NotEmpty(catalog.Reports);
+    }
+
+    [Fact]
+    public async Task ReportCenter_HiddenForStudent()
+    {
+        // Students have no report access (the portal redirects them), so the menu must not be shown.
+        using var client = CreateClient("Student");
+
+        var sidebarKeys = FlatKeys(await GetVisibleAsync(client));
+        Assert.DoesNotContain("report_center", sidebarKeys);
     }
 
     [Fact]

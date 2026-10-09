@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Attendance;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Fyp;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Domain.Settings;
@@ -49,6 +50,7 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId = null,
         CancellationToken ct = default)
     {
         var query =
@@ -64,6 +66,7 @@ public sealed class ReportRepository : IReportRepository
             where (semesterId        == null || co.SemesterId       == semesterId)
                && (courseOfferingId  == null || ar.CourseOfferingId == courseOfferingId)
                && (studentProfileId  == null || ar.StudentProfileId == studentProfileId)
+                    && (departmentId      == null || c.DepartmentId == departmentId)
                     && (institutionType   == null || (int)dep.InstitutionType == institutionType)
                     && (tenantId          == null || dep.TenantId == tenantId)
                     && (campusId          == null || dep.CampusId == campusId)
@@ -71,7 +74,7 @@ public sealed class ReportRepository : IReportRepository
             {
                 ar.StudentProfileId,
                 sp.RegistrationNumber,
-                StudentName = u.Username,
+                StudentName = u.FullName ?? u.Username,
                 ar.CourseOfferingId,
                 CourseCode  = c.Code,
                 CourseTitle = c.Title,
@@ -113,9 +116,10 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId = null,
         CancellationToken ct = default)
     {
-        return await BuildResultQuery(semesterId, courseOfferingId, studentProfileId, null, institutionType, tenantId, campusId)
+        return await BuildResultQuery(semesterId, courseOfferingId, studentProfileId, departmentId, institutionType, tenantId, campusId)
             .ToListAsync(ct);
     }
 
@@ -148,7 +152,7 @@ public sealed class ReportRepository : IReportRepository
             select new AssignmentReportRow(
                 s.StudentProfileId,
                 sp.RegistrationNumber,
-                u.Username,
+                u.FullName ?? u.Username,
                 dep.Id,
                 c.Code,
                 c.Title,
@@ -192,7 +196,7 @@ public sealed class ReportRepository : IReportRepository
             select new QuizReportRow(
                 a.StudentProfileId,
                 sp.RegistrationNumber,
-                u.Username,
+                u.FullName ?? u.Username,
                 dep.Id,
                 c.Code,
                 c.Title,
@@ -245,11 +249,11 @@ public sealed class ReportRepository : IReportRepository
                    && (institutionType  == null || (int)dep.InstitutionType == institutionType)
                    && (tenantId         == null || dep.TenantId == tenantId)
                    && (campusId         == null || dep.CampusId == campusId)
-            orderby u.Username, c.Code
+            orderby u.FullName ?? u.Username, c.Code
             select new ResultReportRow(
                 r.StudentProfileId,
                 sp.RegistrationNumber,
-                u.Username,
+                u.FullName ?? u.Username,
                 c.Code,
                 c.Title,
                 r.ResultType,
@@ -259,7 +263,8 @@ public sealed class ReportRepository : IReportRepository
                 r.PublishedAt,
                 co.SemesterId,
                 dep.Name,
-                prog != null ? prog.Name : null);
+                prog != null ? prog.Name : null,
+                r.GradePoint);
     }
 
     // ── GPA Data ───────────────────────────────────────────────────────────────
@@ -282,11 +287,11 @@ public sealed class ReportRepository : IReportRepository
                     && (institutionType == null || (int)dep.InstitutionType == institutionType)
                     && (tenantId        == null || dep.TenantId == tenantId)
                     && (campusId        == null || dep.CampusId == campusId)
-            orderby u.Username
+            orderby u.FullName ?? u.Username
             select new GpaReportRow(
                 sp.Id,
                 sp.RegistrationNumber,
-                u.Username,
+                u.FullName ?? u.Username,
                 ap.Name,
                 dep.Name,
                 sp.CurrentSemesterNumber,
@@ -344,7 +349,7 @@ public sealed class ReportRepository : IReportRepository
                 sp.Id,
                 sp.RegistrationNumber,
                 sp.Cgpa,
-                StudentName  = u.Username,
+                StudentName  = u.FullName ?? u.Username,
                 ProgramName  = ap.Name,
                 DepartmentName = dep.Name
             }
@@ -352,12 +357,18 @@ public sealed class ReportRepository : IReportRepository
 
         if (profile is null) return null;
 
+        // Transcripts are a University-only document. A student who has also passed through
+        // School/College (e.g. via promotion) has published results under those institutions too;
+        // without this filter their School/College subjects would appear mixed in alongside their
+        // actual University coursework.
         var rows = await (
             from r   in _db.Results
             join co  in _db.CourseOfferings on r.CourseOfferingId equals co.Id
             join c   in _db.Courses         on co.CourseId        equals c.Id
+            join dept in _db.Departments    on c.DepartmentId     equals dept.Id
             join sem in _db.Semesters       on co.SemesterId      equals sem.Id
             where r.StudentProfileId == studentProfileId && r.IsPublished
+               && dept.InstitutionType == InstitutionType.University
             orderby sem.Name, c.Code
             select new TranscriptResultRow(
                 c.Code,
@@ -436,7 +447,7 @@ public sealed class ReportRepository : IReportRepository
             {
                 ar.StudentProfileId,
                 sp.RegistrationNumber,
-                StudentName    = u.Username,
+                StudentName    = u.FullName ?? u.Username,
                 CourseCode     = c.Code,
                 CourseTitle    = c.Title,
                 SemesterName   = sem.Name,
@@ -478,6 +489,7 @@ public sealed class ReportRepository : IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? studentProfileId = null,
         CancellationToken ct = default)
     {
         FypProjectStatus? statusFilter = string.IsNullOrWhiteSpace(status)
@@ -494,18 +506,19 @@ public sealed class ReportRepository : IReportRepository
             join sup in _db.Users.DefaultIfEmpty() on p.SupervisorUserId equals sup!.Id into supGroup
             from sup in supGroup.DefaultIfEmpty()
             where (departmentId  == null || p.DepartmentId == departmentId)
+                            && (studentProfileId == null || p.StudentProfileId == studentProfileId)
+                            && (statusFilter    == null || p.Status == statusFilter)
                             && (institutionType == null || (int)dep.InstitutionType == institutionType)
                             && (tenantId        == null || dep.TenantId == tenantId)
                             && (campusId        == null || dep.CampusId == campusId)
-                    && (institutionType == null || (int)dep.InstitutionType == institutionType)
             orderby p.CreatedAt descending
             select new FypStatusReportRow(
                 p.Id,
                 p.Title,
-                u.Username,
+                u.FullName ?? u.Username,
                 sp.RegistrationNumber,
                 dep.Name,
-                sup == null ? null : sup.Username,
+                sup == null ? null : (sup.FullName ?? sup.Username),
                 p.Status.ToString(),
                 p.CreatedAt,
                 _db.FypMeetings.Count(m => m.FypProjectId == p.Id))
@@ -543,7 +556,7 @@ public sealed class ReportRepository : IReportRepository
                 pr.Id,
                 pr.StudentProfileId,
                 sp.RegistrationNumber,
-                StudentName = u.Username,
+                StudentName = u.FullName ?? u.Username,
                 pr.Amount,
                 Status = pr.Status.ToString(),
                 pr.DueDate,

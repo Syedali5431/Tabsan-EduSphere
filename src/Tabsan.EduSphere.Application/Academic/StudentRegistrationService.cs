@@ -68,13 +68,17 @@ public class StudentRegistrationService : IStudentRegistrationService
         var passwordHash = _passwordHasher.Hash(request.Password);
 
         var user = new User(request.Username, passwordHash, studentRoleId,
-                            email: request.Email, departmentId: entry.DepartmentId, phoneNumber: request.PhoneNumber);
+                            email: request.Email, departmentId: entry.DepartmentId, phoneNumber: request.PhoneNumber,
+                            fullName: request.FullName);
         await _userRepo.AddAsync(user, ct);
         await _userRepo.SaveChangesAsync(ct);
 
         // Generate registration number from the whitelist identifier when it's a reg number type.
+        // RegistrationWhitelist.IdentifierValue is stored lowercased (for case-insensitive matching),
+        // but every registration number elsewhere in the system uses an uppercase convention
+        // (e.g. "SCH-1-01") - uppercase it here so self-registered students match that convention.
         var regNumber = entry.IdentifierType == WhitelistIdentifierType.RegistrationNumber
-            ? entry.IdentifierValue
+            ? entry.IdentifierValue.ToUpperInvariant()
             : $"AUTO-{user.Id.ToString("N")[..8].ToUpperInvariant()}";
 
         var profile = new StudentProfile(user.Id, regNumber, entry.ProgramId, entry.DepartmentId, DateTime.UtcNow);

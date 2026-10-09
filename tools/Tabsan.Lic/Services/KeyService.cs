@@ -26,7 +26,7 @@ public class KeyService
     /// VerificationKey token string that should be presented to the operator.
     /// </returns>
     public async Task<(IssuedKey Record, string RawToken)> GenerateAsync(
-        ExpiryType expiry, string? label = null)
+        ExpiryType expiry, string? label = null, DateTime? specificExpiryDate = null)
     {
         var rawToken = GenerateRawToken();
         var hash     = HashToken(rawToken);
@@ -40,6 +40,8 @@ public class KeyService
             ExpiryType.TwoYears   => ToInclusiveEndOfDay(issuedAt.AddYears(2)),
             ExpiryType.ThreeYears => ToInclusiveEndOfDay(issuedAt.AddYears(3)),
             ExpiryType.Permanent  => null,
+            ExpiryType.SpecificDate when specificExpiryDate.HasValue && specificExpiryDate.Value.Date > issuedAt
+                                  => ToInclusiveEndOfDay(specificExpiryDate.Value.Date),
             _                     => throw new ArgumentOutOfRangeException(nameof(expiry))
         };
 

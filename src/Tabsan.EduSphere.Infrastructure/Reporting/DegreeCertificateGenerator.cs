@@ -7,7 +7,8 @@ namespace Tabsan.EduSphere.Infrastructure.Reporting;
 /// <summary>
 /// Generates a formal university degree certificate PDF using QuestPDF.
 /// Styling matches the Tabsan University degree template with dark red borders,
-/// gold accents, serif typography, seal, and signature blocks.
+/// gold accents, serif typography, and signature blocks. No seal is rendered -
+/// the institute applies its own physical/official seal after printing.
 /// </summary>
 public static class DegreeCertificateGenerator
 {
@@ -39,9 +40,17 @@ public static class DegreeCertificateGenerator
                 {
                     col.Spacing(0);
 
-                    // ── Crest ──
-                    col.Item().AlignCenter().Text("\U0001F3DB")
-                        .FontSize(28).FontColor(DarkRed);
+                    // ── Logo ──
+                    var logoBytes = ReportBranding.LogoBytes;
+                    if (logoBytes is not null)
+                    {
+                        col.Item().AlignCenter().Height(60).Width(60).Image(logoBytes).FitArea();
+                    }
+                    else
+                    {
+                        col.Item().AlignCenter().Text("\U0001F3DB")
+                            .FontSize(28).FontColor(DarkRed);
+                    }
 
                     // ── University name ──
                     col.Item().AlignCenter().Text("TABSAN UNIVERSITY")
@@ -68,8 +77,8 @@ public static class DegreeCertificateGenerator
 
                     // ── Student name ──
                     col.Item().AlignCenter().PaddingTop(4)
-                        .Text(data.StudentName)
-                        .FontSize(24).FontColor(DarkRed).Italic();
+                        .Text(data.StudentName.ToUpperInvariant())
+                        .FontSize(23).Bold().FontColor(DarkRed).LetterSpacing(0.05f);
 
                     // ── Degree body ──
                     col.Item().AlignCenter().PaddingTop(8)
@@ -153,15 +162,6 @@ public static class DegreeCertificateGenerator
                         .Text($"Conferred on: {data.IssueDate:MMMM dd, yyyy}  |  Degree No: {data.CertificateNumber}")
                         .FontSize(9).FontColor(MutedText);
                 });
-
-                // ── Seal ──
-                page.Foreground().AlignRight().AlignBottom().PaddingRight(40).PaddingBottom(30)
-                    .Width(80).Height(80)
-                    .Border(3).BorderColor(DarkRed)
-                    .AlignCenter().AlignMiddle()
-                    .Text("TABSAN\nUNIVERSITY\n\u2605\nSEAL")
-                    .FontSize(8).Bold().FontColor(DarkRed)
-                    .LineHeight(1.2f);
             });
         }).GeneratePdf();
     }

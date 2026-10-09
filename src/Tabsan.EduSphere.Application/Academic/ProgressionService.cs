@@ -69,8 +69,6 @@ public class ProgressionService : IProgressionService
         var studentDepartmentId = student.DepartmentId;
 
         student.AdvanceSemester();
-        if (request.InstitutionType == InstitutionType.College && student.Status != StudentStatus.Graduated)
-            student.AdvanceSemester();
         _studentRepo.Update(student);
         await _studentRepo.SaveChangesAsync(ct);
 
@@ -133,12 +131,16 @@ public class ProgressionService : IProgressionService
     private static ProgressionDecision BuildCollegeDecision(
         Domain.Academic.StudentProfile student, decimal passThreshold, decimal percentage)
     {
-        var year = (student.CurrentSemesterNumber + 1) / 2; // semesters → years
+        // CurrentSemesterNumber holds the absolute class number (11, 12 - matching the
+        // "Class 11"/"Class 12" naming used by CourseOffering semesters, seed data, and
+        // TransferStudentAsync elsewhere in the app), not a relative 1-4 semester count,
+        // so the label is a direct class number, same pattern as BuildSchoolDecision's
+        // "Grade N" above - not a derived "year" via semesters-per-year math.
         var canProgress = percentage >= passThreshold;
-        var currentLabel = $"Year {year}";
-        var nextLabel    = $"Year {year + 1}";
+        var currentLabel = $"Class {student.CurrentSemesterNumber}";
+        var nextLabel    = $"Class {student.CurrentSemesterNumber + 1}";
         var remarks = canProgress
-            ? $"Percentage {percentage:F2}% ≥ {passThreshold:F2}% — eligible for year promotion."
+            ? $"Percentage {percentage:F2}% ≥ {passThreshold:F2}% — eligible for class promotion."
             : $"Percentage {percentage:F2}% < {passThreshold:F2}% — does not meet the pass requirement.";
 
         return new ProgressionDecision(student.Id, InstitutionType.College,

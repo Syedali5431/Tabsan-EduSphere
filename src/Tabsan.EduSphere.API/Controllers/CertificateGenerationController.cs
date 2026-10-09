@@ -199,8 +199,8 @@ public class CertificateGenerationController : ControllerBase
         var userNames = await _db.Users
             .AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Username })
-            .ToDictionaryAsync(u => u.Id, u => u.Username, ct);
+            .Select(u => new { u.Id, Name = u.FullName ?? u.Username })
+            .ToDictionaryAsync(u => u.Id, u => u.Name, ct);
 
         var additionalByStudent = new Dictionary<Guid, List<object>>();
         if (!isUniversityScope)
@@ -524,7 +524,12 @@ public class CertificateGenerationController : ControllerBase
         if (normalizedType == CompletionDocumentType && !IsCompletionEligible(student))
             return BadRequest(new { message = "Completion certificate can be generated only after completing all classes: Class 10 (School) or Class 11 & 12 (College)." });
 
-        var reportRows = await BuildNonUniversityReportRowsAsync(student.Id, semesterId, ct);
+        // Scope strictly to the student's current institution (School or College). A student who has
+        // progressed through multiple institutions (e.g. School -> College -> University) has published
+        // results under all of them; without this filter the "last class" lookup below picks the
+        // highest-numbered class across ALL institutions combined (e.g. College's "Class 12" outranks
+        // School's "Class 10"), silently mixing School and College data on the certificate.
+        var reportRows = await BuildNonUniversityReportRowsAsync(student.Id, semesterId, student.Department.InstitutionType, ct);
         if (reportRows.Count == 0)
             return BadRequest(new { message = "No published result rows found for the selected student/class." });
 
@@ -540,8 +545,8 @@ public class CertificateGenerationController : ControllerBase
         {
             className = student.Department.InstitutionType switch
             {
-                InstitutionType.School => $"Class {student.CurrentSemesterNumber} (2026)",
-                InstitutionType.College => $"Class {student.CurrentSemesterNumber + 10} (2026)",
+                InstitutionType.School => $"Class {student.CurrentSemesterNumber} ({DateTime.UtcNow.Year})",
+                InstitutionType.College => $"Class {student.CurrentSemesterNumber} ({DateTime.UtcNow.Year})",
                 _ => className
             };
 
@@ -907,16 +912,21 @@ public class CertificateGenerationController : ControllerBase
             string.Join(" | ", summaryLines));
     }
 
-    private async Task<List<TranscriptResultProjection>> BuildNonUniversityReportRowsAsync(Guid studentProfileId, Guid? semesterId, CancellationToken ct)
+    private async Task<List<TranscriptResultProjection>> BuildNonUniversityReportRowsAsync(Guid studentProfileId, Guid? semesterId, InstitutionType institutionType, CancellationToken ct)
     {
-        // For marks sheets / report cards, include ALL published results across all completed classes.
+        // For marks sheets / report cards, include ALL published results across all completed classes
+        // *within the requested institution only* - a student who progressed through School, College,
+        // and University all has published results under each; mixing them here would let, e.g., a
+        // College result outrank a School one when picking the "final class" for a School certificate.
         return await (
             from result in _db.Results.AsNoTracking()
             where result.StudentProfileId == studentProfileId && result.IsPublished
             join offering in _db.CourseOfferings.AsNoTracking() on result.CourseOfferingId equals offering.Id
             join course in _db.Courses.AsNoTracking() on offering.CourseId equals course.Id
+            join dept in _db.Departments.AsNoTracking() on course.DepartmentId equals dept.Id
             join semester in _db.Semesters.AsNoTracking() on offering.SemesterId equals semester.Id
             where !semesterId.HasValue || offering.SemesterId == semesterId.Value
+            where dept.InstitutionType == institutionType
             select new TranscriptResultProjection(
                 offering.Id,
                 offering.SemesterId,

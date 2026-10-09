@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Tenancy;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -8,19 +9,31 @@ namespace Tabsan.EduSphere.API.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "SuperAdmin")]
+[Authorize]
 public sealed class CampusController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
+    private readonly IAccessScopeResolver _accessScope;
 
-    public CampusController(ApplicationDbContext db)
+    public CampusController(ApplicationDbContext db, IAccessScopeResolver accessScope)
     {
         _db = db;
+        _accessScope = accessScope;
     }
 
+    // Admins need the campus list of their own tenant for the scope filters on academic pages.
     [HttpGet]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId = null, [FromQuery] bool activeOnly = true, CancellationToken ct = default)
     {
+        if (!_accessScope.IsSuperAdmin())
+        {
+            var callerTenantId = _accessScope.GetTenantId();
+            if (!callerTenantId.HasValue || (tenantId.HasValue && tenantId.Value != callerTenantId.Value))
+                return Forbid();
+            tenantId = callerTenantId;
+        }
+
         var query = _db.Campuses.AsNoTracking();
         if (tenantId.HasValue)
             query = query.Where(c => c.TenantId == tenantId.Value);
@@ -43,6 +56,7 @@ public sealed class CampusController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Create([FromBody] CreateCampusRequest request, CancellationToken ct)
     {
         if (request.TenantId == Guid.Empty || string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.Name))
@@ -65,6 +79,7 @@ public sealed class CampusController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCampusRequest request, CancellationToken ct)
     {
         var campus = await _db.Campuses.FirstOrDefaultAsync(c => c.Id == id, ct);
@@ -80,6 +95,7 @@ public sealed class CampusController : ControllerBase
     }
 
     [HttpPost("{id:guid}/activate")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Activate(Guid id, CancellationToken ct)
     {
         var campus = await _db.Campuses.FirstOrDefaultAsync(c => c.Id == id, ct);
@@ -93,6 +109,7 @@ public sealed class CampusController : ControllerBase
     }
 
     [HttpPost("{id:guid}/deactivate")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct)
     {
         var campus = await _db.Campuses.FirstOrDefaultAsync(c => c.Id == id, ct);

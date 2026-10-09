@@ -99,6 +99,26 @@ public class Result : BaseEntity
     }
 
     /// <summary>
+    /// Updates the marks on a system-managed aggregate row (the "Total" component) as its
+    /// inputs change. Unlike <see cref="CorrectMarks"/> this is not gated on the row already
+    /// being published - the Total row is recalculated by the system every time any of its
+    /// constituent component results are entered or updated, well before all of them (and
+    /// therefore the Total itself) are published.
+    /// </summary>
+    public void RecalculateAggregate(decimal newMarksObtained, decimal newMaxMarks)
+    {
+        if (newMaxMarks < 0)
+            throw new ArgumentOutOfRangeException(nameof(newMaxMarks), "Max marks cannot be negative.");
+        if (newMarksObtained < 0 || newMarksObtained > newMaxMarks)
+            throw new ArgumentOutOfRangeException(nameof(newMarksObtained),
+                $"Marks ({newMarksObtained}) must be between 0 and {newMaxMarks}.");
+
+        MarksObtained = newMarksObtained;
+        MaxMarks = newMaxMarks;
+        Touch();
+    }
+
+    /// <summary>
     /// Updates the GPA value derived from the configured grading scale.
     /// </summary>
     public void SetGradePoint(decimal? gradePoint)

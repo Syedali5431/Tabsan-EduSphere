@@ -357,6 +357,7 @@ builder.Services.AddScoped<TwoFactorService>();
 builder.Services.AddScoped<QRCodeService>();
 builder.Services.AddScoped<TwoFactorSetupService>();
 builder.Services.AddScoped<LicenseValidationService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.Infrastructure.Licensing.LicenseStatusCache>();
 
 // ── Module entitlement ──────────────────────────────────────────────────────────
 builder.Services.AddMemoryCache();
@@ -814,6 +815,8 @@ app.UseMiddleware<DatabaseSetupGateMiddleware>();
 app.UseMiddleware<LicenseDomainMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<Tabsan.EduSphere.API.Middleware.ModuleLicenseEnforcementMiddleware>();
+// Read-only mode when the license is missing, expired or fails tamper checks.
+app.UseMiddleware<Tabsan.EduSphere.API.Middleware.LicenseReadOnlyMiddleware>();
 app.UseAuthorization();
 // Phase 23 — resolve institution policy snapshot once per request (after auth)
 app.UseMiddleware<Tabsan.EduSphere.API.Middleware.InstitutionContextMiddleware>();

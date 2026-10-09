@@ -208,9 +208,10 @@ public class BulkPromotionServiceTests
     }
 
     [Fact]
-    public async Task ApplyBatch_CollegePromoteEntryWithPassingScore_AdvancesByAcademicYear()
+    public async Task ApplyBatch_CollegePromoteEntryWithPassingScore_AdvancesOneClass()
     {
-        var collegeStudent = TestData.MakeStudent(semester: 1, institutionType: InstitutionType.College);
+        // College uses absolute class numbers (11, 12); one promotion moves the student up one class.
+        var collegeStudent = TestData.MakeStudent(semester: 11, institutionType: InstitutionType.College);
         TestData.Set(collegeStudent, nameof(StudentProfile.CurrentSemesterGpa), 2.4m); // 60%
 
         var studentRepo = new StubStudentProfileRepository([collegeStudent]);
@@ -231,7 +232,7 @@ public class BulkPromotionServiceTests
         var applied = await sut.ApplyAsync(new ApplyBulkPromotionBatchRequest(batch.Id));
         var entry = applied.Entries.Single();
 
-        studentRepo.GetRequired(collegeStudent.Id).CurrentSemesterNumber.Should().Be(3);
+        studentRepo.GetRequired(collegeStudent.Id).CurrentSemesterNumber.Should().Be(12);
         entry.Decision.Should().Be(EntryDecision.Promote);
         entry.IsApplied.Should().BeTrue();
     }

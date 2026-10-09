@@ -200,6 +200,41 @@ public class StudentLifecycleController : ControllerBase
         }
     }
 
+    // ── POST /api/v1/student-lifecycle/{id}/transfer ──────────────────────────
+
+    /// <summary>
+    /// Transfers a student to a different institution/department/programme (e.g. School Class 10
+    /// completion -> College admission, or College Class 12 completion -> University admission).
+    /// This was previously only possible via direct database access - there was no supported way
+    /// to move a student between institutions through the application itself.
+    /// </summary>
+    [HttpPost("{id:guid}/transfer")]
+    public async Task<IActionResult> TransferStudent(
+        Guid id,
+        [FromBody] TransferStudentRequest request,
+        [FromQuery] Guid? tenantId,
+        [FromQuery] Guid? campusId,
+        CancellationToken ct)
+    {
+        try
+        {
+            var scope = await EnforceStudentScopeAsync(id, tenantId, campusId, ct);
+            if (scope is not null)
+                return scope;
+
+            await _service.TransferStudentAsync(id, request.DepartmentId, request.ProgramId, request.SemesterNumber, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(new { message = e.Message });
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+    }
+
     // ── POST /api/v1/student-lifecycle/promote/batch ──────────────────────────
 
     /// <summary>

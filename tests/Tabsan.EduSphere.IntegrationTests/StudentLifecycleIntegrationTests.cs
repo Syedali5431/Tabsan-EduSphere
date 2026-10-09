@@ -83,8 +83,10 @@ public class StudentLifecycleIntegrationTests
     }
 
     [Fact]
-    public async Task AcademicLevelStudents_CollegeYearOne_IncludesSemesterOneAndTwoStudents()
+    public async Task AcademicLevelStudents_College_UsesAbsoluteClassNumber()
     {
+        // College levels are absolute class numbers (11, 12), so a level maps to exactly one
+        // CurrentSemesterNumber; it is no longer a two-semester "year" range.
         var seeded = await SeedLifecycleScopeDataAsync(
             InstitutionType.College,
             InstitutionType.College,
@@ -93,16 +95,19 @@ public class StudentLifecycleIntegrationTests
 
         using var client = CreateAdminClient(seeded.AdminUserId, seeded.AdminInstitutionType);
 
-        var response = await client.GetAsync($"api/v1/student-lifecycle/academic-level-students/{seeded.DepartmentId}/1");
+        var levelOne = await client.GetFromJsonAsync<List<SemesterPromotionSummary>>(
+            $"api/v1/student-lifecycle/academic-level-students/{seeded.DepartmentId}/1");
+        var levelTwo = await client.GetFromJsonAsync<List<SemesterPromotionSummary>>(
+            $"api/v1/student-lifecycle/academic-level-students/{seeded.DepartmentId}/2");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var students = await response.Content.ReadFromJsonAsync<List<SemesterPromotionSummary>>();
-        Assert.NotNull(students);
-        Assert.True(students!.Count >= 2);
+        Assert.NotNull(levelOne);
+        Assert.NotNull(levelTwo);
+        Assert.Single(levelOne!);
+        Assert.Single(levelTwo!);
     }
 
     [Fact]
-    public async Task PromoteStudent_CollegePassingStudent_AdvancesByTwoSemesters()
+    public async Task PromoteStudent_CollegePassingStudent_AdvancesOneClass()
     {
         var seeded = await SeedLifecycleScopeDataAsync(
             InstitutionType.College,
@@ -120,7 +125,8 @@ public class StudentLifecycleIntegrationTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var student = await db.StudentProfiles.FindAsync(seeded.StudentProfileId);
         Assert.NotNull(student);
-        Assert.Equal(3, student!.CurrentSemesterNumber);
+        // One promotion moves a College student up exactly one class (absolute numbering).
+        Assert.Equal(2, student!.CurrentSemesterNumber);
     }
 
     [Fact]

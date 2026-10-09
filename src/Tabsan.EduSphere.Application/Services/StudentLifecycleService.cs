@@ -22,19 +22,25 @@ public class StudentLifecycleService : IStudentLifecycleService
     private readonly IProgressionService _progression;
     private readonly INotificationService _notifications;
     private readonly IUserRepository _users;
+    private readonly IAcademicProgramRepository _programs;
+    private readonly IDepartmentRepository _departments;
 
     public StudentLifecycleService(
         IStudentLifecycleRepository repository,
         IDegreeAuditService degreeAudit,
         IProgressionService progression,
         INotificationService notifications,
-        IUserRepository users)
+        IUserRepository users,
+        IAcademicProgramRepository programs,
+        IDepartmentRepository departments)
     {
         _repository    = repository;
         _degreeAudit   = degreeAudit;
         _progression   = progression;
         _notifications = notifications;
         _users         = users;
+        _programs      = programs;
+        _departments   = departments;
     }
 
     // ── Graduation ────────────────────────────────────────────────────────
@@ -119,21 +125,12 @@ public class StudentLifecycleService : IStudentLifecycleService
         if (levelNumber <= 0)
             return [];
 
-        var activeStudents = await _repository.GetStudentsByStatusAsync(departmentId, StudentStatus.Active, ct);
-        var institutionType = activeStudents.FirstOrDefault()?.Department?.InstitutionType;
-
-        IList<StudentProfile> students;
-
-        if (institutionType == InstitutionType.College)
-        {
-            var startSemester = ((levelNumber - 1) * 2) + 1;
-            var endSemester = startSemester + 1;
-            students = await _repository.GetActiveStudentsBySemesterRangeAsync(departmentId, startSemester, endSemester, ct);
-        }
-        else
-        {
-            students = await _repository.GetActiveStudentsBySemesterAsync(departmentId, levelNumber, ct);
-        }
+        // College's CurrentSemesterNumber holds the same absolute class number convention
+        // as School (11, 12 - matching CourseOffering semester naming, seed data, and
+        // TransferStudentAsync), not a relative 1-4 semester count, so levelNumber maps
+        // directly to CurrentSemesterNumber for both institution types - no range trick
+        // needed.
+        var students = await _repository.GetActiveStudentsBySemesterAsync(departmentId, levelNumber, ct);
 
         return students.Select(s => new SemesterPromotionSummaryDto(
             s.Id,
@@ -180,6 +177,32 @@ public class StudentLifecycleService : IStudentLifecycleService
         await _notifications.SendSystemAsync(
             title:            "Academic Progress Updated",
             body:             "Your academic level has been advanced to the next semester.",
+            type:             NotificationType.System,
+            recipientUserIds: new[] { student.UserId },
+            ct:               ct);
+    }
+
+    public async Task TransferStudentAsync(
+        Guid studentProfileId, Guid departmentId, Guid programId, int semesterNumber, CancellationToken ct = default)
+    {
+        var student = await _repository.GetByIdAsync(studentProfileId, ct)
+            ?? throw new KeyNotFoundException($"Student profile {studentProfileId} not found.");
+
+        var department = await _departments.GetByIdAsync(departmentId, ct)
+            ?? throw new InvalidOperationException("Target department was not found.");
+
+        var program = await _programs.GetByIdAsync(programId, ct: ct)
+            ?? throw new InvalidOperationException("Target academic program was not found.");
+
+        if (program.DepartmentId != departmentId)
+            throw new InvalidOperationException("Program and department must belong to the same academic scope.");
+
+        student.TransferInstitution(departmentId, programId, semesterNumber);
+        await _repository.UpdateAsync(student, ct);
+
+        await _notifications.SendSystemAsync(
+            title:            "Academic Institution Updated",
+            body:             $"You have been admitted to {department.Name}.",
             type:             NotificationType.System,
             recipientUserIds: new[] { student.UserId },
             ct:               ct);

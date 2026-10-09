@@ -231,10 +231,30 @@ SELECT @fUniSPA1=UId FROM @createFac WHERE Uname='faculty.spa1';
 SELECT @fSch1=UId FROM @createFac WHERE Uname='faculty.sch1'; SELECT @fSch2=UId FROM @createFac WHERE Uname='faculty.sch2';
 SELECT @fCol1=UId FROM @createFac WHERE Uname='faculty.col1'; SELECT @fCol2=UId FROM @createFac WHERE Uname='faculty.col2';
 
+-- Admin department assignments (cleared above): every Admin manages all departments of their own
+-- institution type in their tenant. Without these rows Admins see no students, courses or offerings.
+INSERT INTO [admin_department_assignments]([Id],[AdminUserId],[DepartmentId],[AssignedAt],[CreatedAt])
+SELECT NEWID(), u.[Id], d.[Id], @Now, @Now
+FROM [users] u
+JOIN [roles] r ON r.[Id] = u.[RoleId] AND r.[Name] = N'Admin'
+JOIN [departments] d ON d.[InstitutionType] = u.[InstitutionType]
+                    AND (u.[TenantId] IS NULL OR d.[TenantId] IS NULL OR d.[TenantId] = u.[TenantId])
+WHERE u.[IsDeleted] = 0
+  AND NOT EXISTS (SELECT 1 FROM [admin_department_assignments] a
+                  WHERE a.[AdminUserId] = u.[Id] AND a.[DepartmentId] = d.[Id] AND a.[RemovedAt] IS NULL);
+
 UPDATE [course_offerings] SET [FacultyUserId]=@fUniIT1 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_IT AND Code LIKE 'CS[1357]%');
 UPDATE [course_offerings] SET [FacultyUserId]=@fUniIT2 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_IT AND Code LIKE 'CS[2468]%');
 UPDATE [course_offerings] SET [FacultyUserId]=@fUniBUS1 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_BUS);
 UPDATE [course_offerings] SET [FacultyUserId]=@fUniSPA1 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_SPA);
+-- @fSch1/@fSch2/@fCol1/@fCol2 were resolved above but never assigned to any offering, leaving
+-- every School and College course_offering with FacultyUserId=NULL (confirmed: 80/80 School +
+-- 10/10 College offerings). That breaks Gradebook/EnterAttendance/EnterResults for School and
+-- College faculty entirely, since those views filter by the faculty's assigned offerings.
+UPDATE [course_offerings] SET [FacultyUserId]=@fSch1 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_SCH AND Code IN('CS001','ENG001','ISL001','MTH001'));
+UPDATE [course_offerings] SET [FacultyUserId]=@fSch2 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_SCH AND Code IN('PE001','SCI001','SST001','URD001'));
+UPDATE [course_offerings] SET [FacultyUserId]=@fCol1 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_COL AND Code IN('ENG111','ENG121'));
+UPDATE [course_offerings] SET [FacultyUserId]=@fCol2 WHERE [CourseId] IN(SELECT Id FROM [courses] WHERE DepartmentId=@D_COL AND Code IN('ICS111','ICS112','ICS121'));
 PRINT 'Faculty done.';
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -362,7 +382,11 @@ PRINT 'Creating FYP...';
 DECLARE @fc INT=0;
 DECLARE curF CURSOR FOR SELECT sp.Id,sp.DepartmentId FROM [student_profiles] sp WHERE sp.ProgramId IN(@P_BSCS,@P_BBA) AND sp.CurrentSemesterNumber=8;
 OPEN curF; FETCH NEXT FROM curF INTO @espid,@edid;
-WHILE @@FETCH_STATUS=0 BEGIN DECLARE @fyid UNIQUEIDENTIFIER=NEWID(); INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt]) VALUES(@fyid,@espid,@edid,CONCAT(N'Research - ',LEFT(CONVERT(NVARCHAR(36),NEWID()),8)),N'FYP',N'Active',CASE WHEN @edid=@D_IT THEN @fUniIT1 ELSE @fUniBUS1 END,@Now); INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt]) VALUES(NEWID(),@fyid,DATEADD(DAY,30,@Now),N'Room 101',N'Scheduled',CASE WHEN @edid=@D_IT THEN @fUniIT1 ELSE @fUniBUS1 END,@Now); SET @fc+=1; FETCH NEXT FROM curF INTO @espid,@edid; END
+-- Status must be a valid FypProjectStatus enum string (Proposed/Approved/InProgress/Completed/Rejected).
+-- 'Active' is not a member of that enum; EF chokes loading any fyp_projects row with an unmapped
+-- string, which previously broke the FYP Status report (and any other page listing FYP projects)
+-- for every Semester-8 BSCS/BBA student in the seed.
+WHILE @@FETCH_STATUS=0 BEGIN DECLARE @fyid UNIQUEIDENTIFIER=NEWID(); INSERT INTO [fyp_projects]([Id],[StudentProfileId],[DepartmentId],[Title],[Description],[Status],[SupervisorUserId],[CreatedAt]) VALUES(@fyid,@espid,@edid,CONCAT(N'Research - ',LEFT(CONVERT(NVARCHAR(36),NEWID()),8)),N'FYP',N'InProgress',CASE WHEN @edid=@D_IT THEN @fUniIT1 ELSE @fUniBUS1 END,@Now); INSERT INTO [fyp_meetings]([Id],[FypProjectId],[ScheduledAt],[Venue],[Status],[OrganiserUserId],[CreatedAt]) VALUES(NEWID(),@fyid,DATEADD(DAY,30,@Now),N'Room 101',N'Scheduled',CASE WHEN @edid=@D_IT THEN @fUniIT1 ELSE @fUniBUS1 END,@Now); SET @fc+=1; FETCH NEXT FROM curF INTO @espid,@edid; END
 CLOSE curF; DEALLOCATE curF;
 PRINT CONCAT('FYP: ',@fc);
 
@@ -968,4 +992,18 @@ PRINT 'Quiz questions: 4 per quiz (596 total), options: 4 per question (2384 tot
 PRINT 'Assignment submissions: ~85% of enrolled students, ~75% of those graded';
 PRINT 'Rubrics: 1 per course offering (159 total), 3 criteria x 3 levels each';
 PRINT 'Notifications: 6 seeded, fanned out to up to 40 recipients each';
+GO
+
+-- Degree rules for every University program. Degree Audit / Graduation Eligibility report
+-- "No degree rule has been configured" for any program without one.
+INSERT INTO [degree_rules]([Id],[AcademicProgramId],[MinTotalCredits],[MinCoreCredits],[MinElectiveCredits],[MinGpa],[CreatedAt],[IsDeleted])
+SELECT NEWID(), v.ProgramId, v.TotalCr, v.CoreCr, v.ElectiveCr, v.MinGpa, SYSUTCDATETIME(), 0
+FROM (VALUES
+    (CAST('A0000001-0000-0000-0000-000000000001' AS UNIQUEIDENTIFIER), 90, 60, 10, CAST(2.00 AS DECIMAL(4,2))), -- BSCS
+    (CAST('A0000002-0000-0000-0000-000000000002' AS UNIQUEIDENTIFIER), 90, 60, 10, CAST(2.00 AS DECIMAL(4,2))), -- BBA
+    (CAST('A0000003-0000-0000-0000-000000000003' AS UNIQUEIDENTIFIER), 30, 24,  6, CAST(2.50 AS DECIMAL(4,2))), -- Masters in Computer Engineering
+    (CAST('A0000004-0000-0000-0000-000000000004' AS UNIQUEIDENTIFIER), 12, 12,  0, CAST(2.00 AS DECIMAL(4,2)))  -- Spanish Language Course
+) v(ProgramId, TotalCr, CoreCr, ElectiveCr, MinGpa)
+WHERE EXISTS (SELECT 1 FROM [academic_programs] p WHERE p.[Id] = v.ProgramId)
+  AND NOT EXISTS (SELECT 1 FROM [degree_rules] r WHERE r.[AcademicProgramId] = v.ProgramId AND r.[IsDeleted] = 0);
 GO

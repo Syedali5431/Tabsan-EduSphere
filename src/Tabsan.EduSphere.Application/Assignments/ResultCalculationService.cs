@@ -32,7 +32,7 @@ public class ResultCalculationService : IResultCalculationService
 
     public async Task SaveSettingsAsync(SaveResultCalculationSettingsRequest request, CancellationToken ct = default)
     {
-        if (request.GpaScaleRules.Count == 0)
+        if (request.GpaScaleRules.Count == 0 && request.InstitutionType == InstitutionType.University)
             throw new ArgumentException("At least one GPA mapping row is required.");
         if (request.ComponentRules.Count == 0)
             throw new ArgumentException("At least one assessment component row is required.");

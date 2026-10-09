@@ -148,6 +148,12 @@ public class ResultService : IResultService
         _repo.Update(result);
         await _repo.SaveChangesAsync(ct);
 
+        // A component just transitioned to published - recompute the Total aggregate and,
+        // if every configured component is now published, publish Total too. Without this the
+        // Total row (and therefore prerequisite checks / progression, which only recognise a
+        // published Total) would never reflect a fully-graded course.
+        await RecalculateOfferingStandingAsync(studentProfileId, courseOfferingId, ct, publishedByUserId);
+
         await _audit.LogAsync(new AuditLog("PublishResult", "Result", result.Id.ToString(),
             actorUserId: publishedByUserId), ct);
 
@@ -187,6 +193,9 @@ public class ResultService : IResultService
                 .Select(r => r.StudentProfileId)
                 .Distinct()
                 .ToList();
+
+            foreach (var studentId in affectedStudentIds)
+                await RecalculateOfferingStandingAsync(studentId, courseOfferingId, ct, publishedByUserId);
 
             await NotifyParentsForPublishedResultsAsync(
                 affectedStudentIds,
@@ -229,7 +238,7 @@ public class ResultService : IResultService
         _repo.Update(result);
         await _repo.SaveChangesAsync(ct);
 
-        await RecalculateOfferingStandingAsync(studentProfileId, courseOfferingId, ct);
+        await RecalculateOfferingStandingAsync(studentProfileId, courseOfferingId, ct, correctedByUserId);
 
         await _audit.LogAsync(new AuditLog("CorrectResult", "Result", result.Id.ToString(),
             actorUserId: correctedByUserId,
@@ -315,7 +324,8 @@ public class ResultService : IResultService
         return resultType;
     }
 
-    private async Task RecalculateOfferingStandingAsync(Guid studentProfileId, Guid courseOfferingId, CancellationToken ct)
+    private async Task RecalculateOfferingStandingAsync(
+        Guid studentProfileId, Guid courseOfferingId, CancellationToken ct, Guid? publishedByUserId = null)
     {
         var institutionType = await _repo.GetInstitutionTypeForOfferingAsync(courseOfferingId, ct);
         var componentRules = (await _repo.GetActiveComponentRulesAsync(institutionType, ct))
@@ -373,9 +383,24 @@ public class ResultService : IResultService
         }
         else
         {
-            totalRow.CorrectMarks(currentMarks, currentMax);
+            // Total is a system-managed aggregate, recalculated every time any component
+            // changes - it is not itself published until every configured component is
+            // (see below), so it cannot go through the admin-facing CorrectMarks guard.
+            totalRow.RecalculateAggregate(currentMarks, currentMax);
             totalRow.SetGradePoint(totalGradePoint);
             _repo.Update(totalRow);
+        }
+
+        // Once every configured component for this offering has been published, the Total
+        // aggregate should be published too - prerequisite checks and progression logic only
+        // recognise a course as "passed" via a published Total row (see HasPassedCourseAsync).
+        if (publishedByUserId.HasValue
+            && !totalRow.IsPublished
+            && componentRules.Count > 0
+            && componentRules.All(rule => enteredComponents.Any(c =>
+                   string.Equals(c.ResultType, rule.Name, StringComparison.OrdinalIgnoreCase) && c.IsPublished)))
+        {
+            totalRow.Publish(publishedByUserId.Value);
         }
 
         await _repo.SaveChangesAsync(ct);

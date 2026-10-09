@@ -1098,6 +1098,7 @@ public sealed class ReportController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] string? status,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? studentProfileId,
         CancellationToken ct)
     {
         var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
@@ -1109,7 +1110,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
         var result = await _reports.GetFypStatusReportAsync(request, ct);
         return Ok(result);
     }
@@ -1121,6 +1122,7 @@ public sealed class ReportController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] string? status,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? studentProfileId,
         CancellationToken ct)
     {
         var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
@@ -1132,7 +1134,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
         var bytes = await _reports.ExportFypStatusExcelAsync(request, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "fyp-status.xlsx");
     }
@@ -1144,6 +1146,7 @@ public sealed class ReportController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] string? status,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? studentProfileId,
         CancellationToken ct)
     {
         var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
@@ -1155,7 +1158,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
         var bytes = await _reports.ExportFypStatusCsvAsync(request, ct);
         return File(bytes, "text/csv", "fyp-status.csv");
     }
@@ -1167,6 +1170,7 @@ public sealed class ReportController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] string? status,
         [FromQuery] int? institutionType,
+        [FromQuery] Guid? studentProfileId,
         CancellationToken ct)
     {
         var scope = await ResolveEffectiveReportScopeAsync(institutionType, departmentId, null, ct);
@@ -1178,7 +1182,7 @@ public sealed class ReportController : ControllerBase
         scoped = await EnforceFacultyDepartmentScopeAsync(departmentId, ct);
         if (scoped is not null) return scoped;
 
-        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId());
+        var request = new FypStatusRequest(scope.DepartmentId, status, scope.InstitutionType, GetCurrentTenantId(), GetCurrentCampusId(), studentProfileId);
         var bytes = await _reports.ExportFypStatusPdfAsync(request, ct);
         return File(bytes, "application/pdf", "fyp-status.pdf");
     }
@@ -1317,6 +1321,9 @@ public sealed class ReportController : ControllerBase
 
     private Guid? GetCurrentTenantId()
     {
+        if (User.IsInRole("SuperAdmin"))
+            return null;
+
         var raw = User.FindFirstValue("tenant_id")
                   ?? User.FindFirstValue("tenantId")
                   ?? User.FindFirstValue("tid");
@@ -1325,6 +1332,9 @@ public sealed class ReportController : ControllerBase
 
     private Guid? GetCurrentCampusId()
     {
+        if (User.IsInRole("SuperAdmin"))
+            return null;
+
         var raw = User.FindFirstValue("campus_id")
                   ?? User.FindFirstValue("campusId")
                   ?? User.FindFirstValue("cid");
@@ -1763,14 +1773,20 @@ public sealed class ReportController : ControllerBase
 
         var programName = student.Program?.Name ?? "Degree Program";
         var programCode = student.Program?.Code ?? programName;
-        var degreeTitle = $"Bachelor of {programName}";
+        // Program names already spell out their own degree level (e.g. "Bachelors of Science in
+        // Computer Sciences", "Masters in Computer Engineering") - prefixing "Bachelor of" unconditionally
+        // produced redundant titles like "Bachelor of Bachelors of Science in Computer Sciences".
+        var degreeTitle = programName.StartsWith("Bachelor", StringComparison.OrdinalIgnoreCase)
+            || programName.StartsWith("Master", StringComparison.OrdinalIgnoreCase)
+            || programName.StartsWith("Intermediate", StringComparison.OrdinalIgnoreCase)
+            ? programName
+            : $"Bachelor of {programName}";
 
         // Use stored CGPA directly
         var cgpa = (double)student.Cgpa;
 
-        var startYear = student.AdmissionDate.Year;
-        var endYear = student.GraduatedDate?.Year ?? DateTime.UtcNow.Year;
-        var durationYears = $"{startYear} – {endYear}";
+        var completionYear = student.GraduatedDate?.Year ?? DateTime.UtcNow.Year;
+        var durationYears = $"{completionYear}";
 
         var certNumber = $"TU-{DateTime.UtcNow.Year}-{programCode}-{student.RegistrationNumber}";
 

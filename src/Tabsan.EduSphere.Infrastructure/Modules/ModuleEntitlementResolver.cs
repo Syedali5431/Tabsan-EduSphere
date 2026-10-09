@@ -105,14 +105,18 @@ public static class KnownModuleKeys
     public const string Fyp            = "fyp";
     public const string AiChat         = "ai_chat";
     public const string Reports        = "reports";
-    public const string Themes         = "themes";
-    public const string AdvancedAudit  = "advanced_audit";
+    public const string Themes             = "themes";
+    public const string AdvancedAudit      = "advanced_audit";
+    public const string IsoCompliance      = "iso_compliance";
+    public const string BackupDr           = "backup_dr";
+    public const string DocumentManagement = "document_management";
 
     /// <summary>All known keys — used for bulk cache invalidation.</summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
         Authentication, Departments, Sis, Courses, Assignments,
         Quizzes, Attendance, Results, Notifications, Fyp,
-        AiChat, Reports, Themes, AdvancedAudit
+        AiChat, Reports, Themes, AdvancedAudit,
+        IsoCompliance, BackupDr, DocumentManagement
     };
 }

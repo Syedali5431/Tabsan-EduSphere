@@ -34,6 +34,19 @@ public class LicenseStateConfiguration : IEntityTypeConfiguration<LicenseState>
         builder.Property(l => l.ActivatedDomain)
                .HasMaxLength(253) // max valid DNS name length
                .IsRequired(false);
+
+        // Tamper protection: the signed .tablic file, an HMAC seal over the row, and the
+        // clock-rollback high-water mark.
+        builder.Property(l => l.LicenseBlob)
+               .HasColumnType("varbinary(max)")
+               .IsRequired(false);
+
+        builder.Property(l => l.IntegritySeal)
+               .HasMaxLength(64)
+               .IsRequired(false);
+
+        builder.Property(l => l.LastValidatedAt)
+               .IsRequired(false);
     }
 
        private static LicenseType ParseLicenseType(string? raw)

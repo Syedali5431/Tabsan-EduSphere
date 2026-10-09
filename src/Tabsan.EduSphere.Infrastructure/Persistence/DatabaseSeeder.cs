@@ -267,6 +267,9 @@ public static class DatabaseSeeder
             (KnownModuleKeys.Reports,        "Reports",                  false),
             (KnownModuleKeys.Themes,         "UI Themes",                false),
             (KnownModuleKeys.AdvancedAudit,  "Advanced Audit Logging",   false),
+            (KnownModuleKeys.IsoCompliance,      "ISO Compliance",            false),
+            (KnownModuleKeys.BackupDr,           "Backup & Disaster Recovery", false),
+            (KnownModuleKeys.DocumentManagement, "Document Management",       false),
         };
 
         foreach (var (key, name, mandatory) in definitions)
@@ -685,10 +688,11 @@ public static class DatabaseSeeder
         EnsureRoleAccess(enrollments.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(enrollments.Id, "Student", isAllowed: false);
 
-        // Report Center: Admin + Faculty + Student
+        // Report Center: Admin + Faculty + Finance. Students have no report access (PortalController.ReportCenter
+        // redirects them), so showing the menu item only led to an "access denied" bounce.
         EnsureRoleAccess(reportCenter.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(reportCenter.Id, "Faculty", isAllowed: true);
-        EnsureRoleAccess(reportCenter.Id, "Student", isAllowed: true);
+        EnsureRoleAccess(reportCenter.Id, "Student", isAllowed: false);
         EnsureRoleAccess(reportCenter.Id, "Finance", isAllowed: true);
 
         // Generate Certificates: Admin + Faculty (view), no student/finance access by default.

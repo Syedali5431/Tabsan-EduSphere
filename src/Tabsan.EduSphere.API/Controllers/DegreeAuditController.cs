@@ -24,6 +24,7 @@ public class DegreeAuditController : ControllerBase
     private readonly IDepartmentRepository _departmentRepo;
     private readonly IAcademicProgramRepository _programRepo;
     private readonly IInstitutionPolicyService _institutionPolicy;
+    private readonly IFacultyAssignmentRepository _facultyAssignments;
 
     public DegreeAuditController(
         IDegreeAuditService       degreeAudit,
@@ -31,8 +32,10 @@ public class DegreeAuditController : ControllerBase
         IAccessScopeResolver accessScope,
         IDepartmentRepository departmentRepo,
         IAcademicProgramRepository programRepo,
-        IInstitutionPolicyService institutionPolicy)
+        IInstitutionPolicyService institutionPolicy,
+        IFacultyAssignmentRepository facultyAssignments)
     {
+        _facultyAssignments = facultyAssignments;
         _degreeAudit = degreeAudit;
         _studentRepo = studentRepo;
         _accessScope = accessScope;
@@ -128,7 +131,7 @@ public class DegreeAuditController : ControllerBase
     // Final-Touches Phase 17 Stage 17.2 — eligibility list for admin
     /// <summary>Returns a graduation eligibility summary for all students (Admin/SuperAdmin).</summary>
     [HttpGet("eligible")]
-    [Authorize(Roles = "Admin,SuperAdmin")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
     public async Task<IActionResult> GetEligibilityList(
         [FromQuery] Guid? departmentId,
         [FromQuery] Guid? programId,
@@ -145,6 +148,31 @@ public class DegreeAuditController : ControllerBase
         var scope = ResolveEffectiveScope(tenantId, campusId);
         if (scope.Error is not null)
             return scope.Error;
+
+        // Faculty see eligibility only for the departments they are assigned to.
+        if (User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+        {
+            var userIdRaw = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var allowed = Guid.TryParse(userIdRaw, out var userId)
+                ? await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct)
+                : Array.Empty<Guid>();
+
+            if (departmentId.HasValue && !allowed.Contains(departmentId.Value))
+                return Forbid();
+
+            if (!departmentId.HasValue)
+            {
+                var lists = new List<EligibilityListItem>();
+                foreach (var allowedDepartmentId in allowed)
+                {
+                    var dept = await _departmentRepo.GetByIdAsync(allowedDepartmentId, ct);
+                    if (dept?.InstitutionType != InstitutionType.University)
+                        continue;
+                    lists.AddRange(await _degreeAudit.GetEligibilityListAsync(allowedDepartmentId, programId, ct, scope.TenantId, scope.CampusId));
+                }
+                return Ok(lists);
+            }
+        }
 
         if (departmentId.HasValue)
         {

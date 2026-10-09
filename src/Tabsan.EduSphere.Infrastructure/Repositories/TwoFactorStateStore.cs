@@ -76,6 +76,10 @@ public sealed class TwoFactorStateStore : ITwoFactorStateStore
         if (user is null)
             return false;
 
+        // Turning 2FA off discards the old secret and recovery codes; re-enabling always goes
+        // through a fresh setup, so a previously leaked secret can never be reused.
+        _db.Entry(user).Property(nameof(User.MfaTotpSecret)).CurrentValue = null;
+        _db.Entry(user).Property(nameof(User.MfaRecoveryCodesHashJson)).CurrentValue = null;
         _db.Entry(user).Property(nameof(User.MfaIsEnabled)).CurrentValue = false;
         user.Touch();
 

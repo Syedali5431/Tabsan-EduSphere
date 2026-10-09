@@ -62,6 +62,17 @@ public class PortalController : Controller
         [nameof(ReportCenter)] = "report_center",
         [nameof(ReportPayments)] = "report_center",
         [nameof(ReportDegreeCertificate)] = "report_center",
+        [nameof(ReportAttendance)] = "report_center",
+        [nameof(ReportResults)] = "report_center",
+        [nameof(ReportAssignments)] = "report_center",
+        [nameof(ReportQuizzes)] = "report_center",
+        [nameof(ReportGpa)] = "report_center",
+        [nameof(ReportEnrollment)] = "report_center",
+        [nameof(ReportSemesterResults)] = "report_center",
+        [nameof(ReportTranscript)] = "report_center",
+        [nameof(ReportLowAttendance)] = "report_center",
+        [nameof(ReportFypStatus)] = "report_center",
+        [nameof(AnalyticsSnapshot)] = "analytics",
         [nameof(UserSettings)] = "user_settings",
         [nameof(DashboardSettings)] = "dashboard_settings",
         [nameof(DegreeAudit)] = "degree_audit",
@@ -79,6 +90,22 @@ public class PortalController : Controller
         [nameof(LibraryConfig)] = "library_config",
         [nameof(InstitutionPolicy)] = "institution_policy",
         [nameof(AuditLogs)] = "advanced_audit"
+    };
+
+    // Academic reports inside the Report Center; Finance users only get the payment report.
+    private static readonly HashSet<string> AcademicReportActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(ReportAttendance),
+        nameof(ReportResults),
+        nameof(ReportAssignments),
+        nameof(ReportQuizzes),
+        nameof(ReportGpa),
+        nameof(ReportEnrollment),
+        nameof(ReportSemesterResults),
+        nameof(ReportTranscript),
+        nameof(ReportLowAttendance),
+        nameof(ReportFypStatus),
+        nameof(ReportDegreeCertificate)
     };
 
     private static readonly HashSet<string> FinanceBlockedAcademicMenuKeys = new(StringComparer.OrdinalIgnoreCase)
@@ -202,6 +229,14 @@ public class PortalController : Controller
         _logger = logger;
     }
 
+    // The portal signs users in through the API session rather than an ASP.NET authentication scheme, so
+    // Forbid() has no handler and throws a 500. Send the user back with an explanation instead.
+    private IActionResult AccessDenied(string message = "Access denied for this section based on your current role.")
+    {
+        TempData["PortalMessage"] = message;
+        return RedirectToAction(nameof(Dashboard));
+    }
+
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var action = context.RouteData.Values["action"]?.ToString();
@@ -217,6 +252,14 @@ public class PortalController : Controller
         {
             TempData["PortalMessage"] = "Finance access is limited to finance modules. Academic sections are blocked.";
             context.Result = RedirectToAction(nameof(Payments));
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(action) && AcademicReportActions.Contains(action)
+            && _api.GetSessionIdentity() is { IsFinance: true, IsAdmin: false, IsSuperAdmin: false })
+        {
+            TempData["PortalMessage"] = "Finance users can access the payment report only.";
+            context.Result = RedirectToAction(nameof(ReportCenter));
             return;
         }
 
@@ -960,7 +1003,10 @@ public class PortalController : Controller
         Guid? profileDepartmentId = null;
         try
         {
-            var profile = await _api.GetMyStudentProfileAsync(ct);
+            // Only students have a student profile; skip the call (an API 403) for staff viewing this page.
+            var profile = _api.GetSessionIdentity()?.IsStudent == true
+                ? await _api.GetMyStudentProfileAsync(ct)
+                : null;
             if (profile is not null && profile.DepartmentId != Guid.Empty)
                 profileDepartmentId = profile.DepartmentId;
         }
@@ -984,7 +1030,12 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
         {
-            TempData["PortalMessage"] = "Dashboard is available only for SuperAdmin users.";
+            // Every access-denied path in OnActionExecutionAsync (sidebar guard, Faculty/
+            // Admin-only sections, Finance-only sections) redirects here first and sets
+            // TempData["PortalMessage"] with the real reason - then, for any non-SuperAdmin
+            // caller, this action immediately redirects AGAIN to Helpdesk, so only set the
+            // generic fallback message when nothing more specific was already queued up.
+            TempData["PortalMessage"] ??= "Dashboard is available only for SuperAdmin users.";
             return RedirectToAction(nameof(Helpdesk));
         }
 
@@ -1907,7 +1958,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return AccessDenied();
 
         var model = new ModuleSettingsPageModel { IsConnected = _api.IsConnected() };
         if (model.IsConnected)
@@ -1924,7 +1975,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return AccessDenied();
 
         if (_api.IsConnected())
         {
@@ -1941,7 +1992,7 @@ public class PortalController : Controller
     {
         var identity = _api.GetSessionIdentity();
         if (identity?.IsSuperAdmin != true)
-            return Forbid();
+            return AccessDenied();
 
         if (_api.IsConnected())
         {
@@ -2459,7 +2510,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return AccessDenied();
 
         var model = new UserImportPageModel
         {
@@ -2578,7 +2629,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return AccessDenied();
 
         if (tenantId.HasValue != campusId.HasValue)
         {
@@ -2612,7 +2663,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return AccessDenied();
 
         if (string.IsNullOrWhiteSpace(fileName))
             return NotFound();
@@ -2643,7 +2694,7 @@ public class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         var canImport = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
         if (!canImport)
-            return Forbid();
+            return AccessDenied();
 
         if (string.IsNullOrWhiteSpace(fileName) ||
             !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ||
@@ -4140,10 +4191,14 @@ public class PortalController : Controller
 
         try
         {
+            // SuperAdmin scope comes only from the filters (tenant + campus together, or neither);
+            // falling back to the SuperAdmin's own campus without a tenant made every lookup fail with 400.
             var effectiveTenantId = identity?.IsSuperAdmin == true ? model.SelectedTenantId : identity?.TenantId;
-            var effectiveCampusId = identity?.IsSuperAdmin == true || identity?.IsAdmin == true
-                ? model.SelectedCampusId ?? identity?.CampusId
-                : identity?.CampusId;
+            var effectiveCampusId = identity?.IsSuperAdmin == true
+                ? model.SelectedCampusId
+                : identity?.IsAdmin == true
+                    ? model.SelectedCampusId ?? identity?.CampusId
+                    : identity?.CampusId;
 
             var hasPartialSuperAdminScope = identity?.IsSuperAdmin == true
                 && (model.SelectedTenantId.HasValue ^ model.SelectedCampusId.HasValue);
@@ -4153,7 +4208,7 @@ public class PortalController : Controller
                 // API scope contracts require tenant/campus to be provided together.
                 effectiveTenantId = null;
                 effectiveCampusId = null;
-                model.Message = "Select both tenant and campus to apply scoped quiz filters.";
+                model.Message = "Select both tenant and campus to apply scoped result filters.";
             }
 
             if (identity?.IsSuperAdmin == true)
@@ -4910,7 +4965,7 @@ public class PortalController : Controller
 
         var identity = _api.GetSessionIdentity();
         if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
-            return Forbid();
+            return AccessDenied();
 
         var effectiveTenantId = identity.IsSuperAdmin ? tenantId : identity.TenantId;
         var effectiveCampusId = identity.IsSuperAdmin ? campusId : identity.CampusId;
@@ -5053,7 +5108,7 @@ public class PortalController : Controller
         if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
         {
             WriteAttendanceImportAudit("blocked-forbidden", identity);
-            return Forbid();
+            return AccessDenied();
         }
 
         if (!offeringId.HasValue)
@@ -7790,7 +7845,7 @@ public class PortalController : Controller
         ViewData["Title"] = "Student Lifecycle";
         var identity = _api.GetSessionIdentity();
         if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
-            return Forbid();
+            return AccessDenied();
 
         var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
         var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
@@ -8038,7 +8093,7 @@ public class PortalController : Controller
             {
                 var identity = _api.GetSessionIdentity();
                 if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
-                    return Forbid();
+                    return AccessDenied();
 
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
@@ -8072,7 +8127,7 @@ public class PortalController : Controller
             {
                 var identity = _api.GetSessionIdentity();
                 if (identity is null || !(identity.IsFaculty || identity.IsAdmin || identity.IsSuperAdmin))
-                    return Forbid();
+                    return AccessDenied();
 
                 var effectiveTenantId = identity?.IsSuperAdmin == true ? tenantId : identity?.TenantId;
                 var effectiveCampusId = identity?.IsSuperAdmin == true ? campusId : identity?.CampusId;
@@ -8793,6 +8848,11 @@ public class PortalController : Controller
             model.Departments = await _api.GetDepartmentsAsync(ct);
             model.Offerings   = await _api.GetCourseOfferingsAsync(null, null, null, null, ct);
             model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
+            var resultStudents = await _api.GetStudentsAsync(departmentId, ct);
+            model.Students = resultStudents
+                .Select(s => new LookupItem { Id = s.Id, Name = $"{s.FullName} ({s.RegistrationNumber})" })
+                .OrderBy(s => s.Name)
+                .ToList();
             if (isFacultyOnly && !offeringId.HasValue && (semesterId.HasValue || departmentId.HasValue || studentId.HasValue))
             {
                 model.Message = "Faculty must select a course offering before generating report data.";
@@ -8897,30 +8957,32 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> ReportGpa(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    public async Task<IActionResult> ReportGpa(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
-        var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
-        var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
+        // GPA/CGPA only applies to the University grading model (School/College use
+        // percentage-based results) - this report is always University-scoped, with no
+        // institute selector, matching the same hard enforcement on the API side.
+        const int universityInstitutionType = 0;
         ViewData["Title"] = "GPA & CGPA Report";
         var model = new ReportGpaPageModel
         {
             IsConnected  = _api.IsConnected(),
             DepartmentId = departmentId,
             ProgramId    = programId,
-            InstitutionType = selectedInstitutionType,
-            AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes
+            InstitutionType = universityInstitutionType,
+            AvailableInstitutionTypes = new()
         };
         if (!model.IsConnected) return View(model);
         try
         {
             var isAdminOnly = _api.GetSessionIdentity() is { } id && id.IsAdmin && !id.IsSuperAdmin;
             model.Departments = await _api.GetDepartmentsAsync(ct);
-            model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
+            model.Departments = FilterDepartmentsByInstitution(model.Departments, universityInstitutionType);
             model.Programs    = await _api.GetProgramsAsync(null, ct);
             if (isAdminOnly && !departmentId.HasValue)
                 model.Message = "Admin must select a department before generating report data.";
             else if (departmentId.HasValue || programId.HasValue)
-                model.Report = await _api.GetGpaReportAsync(departmentId, programId, selectedInstitutionType, ct);
+                model.Report = await _api.GetGpaReportAsync(departmentId, programId, universityInstitutionType, ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
@@ -9169,42 +9231,42 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportGpaReport(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    public async Task<IActionResult> ExportGpaReport(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportGpa));
         try
         {
-            var bytes = await _api.ExportGpaReportAsync(departmentId, programId, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportGpaReportAsync(departmentId, programId, 0, ct);
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "gpa-report.xlsx");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId });
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportGpaReportCsv(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    public async Task<IActionResult> ExportGpaReportCsv(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportGpa));
         try
         {
-            var bytes = await _api.ExportGpaReportCsvAsync(departmentId, programId, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportGpaReportCsvAsync(departmentId, programId, 0, ct);
             return File(bytes, "text/csv", "gpa-report.csv");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export CSV failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId });
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportGpaReportPdf(Guid? departmentId, Guid? programId, int? institutionType, CancellationToken ct)
+    public async Task<IActionResult> ExportGpaReportPdf(Guid? departmentId, Guid? programId, CancellationToken ct)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportGpa));
         try
         {
-            var bytes = await _api.ExportGpaReportPdfAsync(departmentId, programId, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportGpaReportPdfAsync(departmentId, programId, 0, ct);
             return File(bytes, "application/pdf", "gpa-report.pdf");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportGpa), new { departmentId, programId });
     }
 
     [HttpGet]
@@ -9425,7 +9487,7 @@ public class PortalController : Controller
 
     [HttpGet]
     public async Task<IActionResult> ReportFypStatus(
-        Guid? departmentId = null, string? status = null, int? institutionType = null, CancellationToken ct = default)
+        Guid? departmentId = null, string? status = null, int? institutionType = null, Guid? studentId = null, CancellationToken ct = default)
     {
         var institutionFilter = await BuildReportInstitutionFilterAsync(ResolveReportInstitutionType(institutionType), ct);
         var selectedInstitutionType = institutionFilter.SelectedInstitutionType;
@@ -9434,6 +9496,7 @@ public class PortalController : Controller
         {
             IsConnected    = _api.IsConnected(),
             DepartmentId   = departmentId,
+            StudentId      = studentId,
             SelectedStatus = status,
             InstitutionType = selectedInstitutionType,
             AvailableInstitutionTypes = institutionFilter.AvailableInstitutionTypes
@@ -9444,10 +9507,15 @@ public class PortalController : Controller
             var isAdminOnly = _api.GetSessionIdentity() is { } id && id.IsAdmin && !id.IsSuperAdmin;
             model.Departments = await _api.GetDepartmentsAsync(ct);
             model.Departments = FilterDepartmentsByInstitution(model.Departments, selectedInstitutionType);
+            var fypStudents = await _api.GetStudentsAsync(departmentId, ct);
+            model.Students = fypStudents
+                .Select(s => new LookupItem { Id = s.Id, Name = $"{s.FullName} ({s.RegistrationNumber})" })
+                .OrderBy(s => s.Name)
+                .ToList();
             if (isAdminOnly && !departmentId.HasValue)
                 model.Message = "Admin must select a department before generating report data.";
             else
-                model.Report = await _api.GetFypStatusReportAsync(departmentId, status, selectedInstitutionType, ct);
+                model.Report = await _api.GetFypStatusReportAsync(departmentId, status, selectedInstitutionType, studentId, ct);
         }
         catch (Exception ex) { model.Message = ex.Message; }
         return View(model);
@@ -9566,42 +9634,42 @@ public class PortalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportFypStatus(Guid? departmentId = null, string? status = null, int? institutionType = null, CancellationToken ct = default)
+    public async Task<IActionResult> ExportFypStatus(Guid? departmentId = null, string? status = null, int? institutionType = null, Guid? studentId = null, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportFypStatus));
         try
         {
-            var bytes = await _api.ExportFypStatusAsync(departmentId, status, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportFypStatusAsync(departmentId, status, ResolveReportInstitutionType(institutionType), studentId, ct);
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "fyp-status.xlsx");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType), studentId });
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportFypStatusCsv(Guid? departmentId = null, string? status = null, int? institutionType = null, CancellationToken ct = default)
+    public async Task<IActionResult> ExportFypStatusCsv(Guid? departmentId = null, string? status = null, int? institutionType = null, Guid? studentId = null, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportFypStatus));
         try
         {
-            var bytes = await _api.ExportFypStatusCsvAsync(departmentId, status, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportFypStatusCsvAsync(departmentId, status, ResolveReportInstitutionType(institutionType), studentId, ct);
             return File(bytes, "text/csv", "fyp-status.csv");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export CSV failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType), studentId });
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportFypStatusPdf(Guid? departmentId = null, string? status = null, int? institutionType = null, CancellationToken ct = default)
+    public async Task<IActionResult> ExportFypStatusPdf(Guid? departmentId = null, string? status = null, int? institutionType = null, Guid? studentId = null, CancellationToken ct = default)
     {
         if (!_api.IsConnected()) return RedirectToAction(nameof(ReportFypStatus));
         try
         {
-            var bytes = await _api.ExportFypStatusPdfAsync(departmentId, status, ResolveReportInstitutionType(institutionType), ct);
+            var bytes = await _api.ExportFypStatusPdfAsync(departmentId, status, ResolveReportInstitutionType(institutionType), studentId, ct);
             return File(bytes, "application/pdf", "fyp-status.pdf");
         }
         catch (Exception ex) { TempData["PortalMessage"] = $"Export PDF failed: {ex.Message}"; }
-        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType) });
+        return RedirectToAction(nameof(ReportFypStatus), new { departmentId, status, institutionType = ResolveReportInstitutionType(institutionType), studentId });
     }
 
     [HttpGet]
@@ -9989,7 +10057,7 @@ public class PortalController : Controller
 
         var identity = _api.GetSessionIdentity();
         if (identity?.IsAdmin != true && identity?.IsSuperAdmin != true)
-            return Forbid();
+            return AccessDenied();
 
         try
         {
@@ -10076,7 +10144,7 @@ public class PortalController : Controller
         if (!_api.IsConnected()) return RedirectToAction(nameof(Dashboard));
         var identity = _api.GetSessionIdentity();
         if (identity is null || (!identity.IsAdmin && !identity.IsSuperAdmin))
-            return Forbid();
+            return AccessDenied();
 
         var model = new AcademicDeadlinesPageModel
         {
@@ -12232,12 +12300,14 @@ public class PortalController : Controller
                 })
                 .ToList();
 
-            if (model.OfferingId == Guid.Empty)
-            {
-                var first = model.Offerings.FirstOrDefault();
-                if (first is not null)
-                    model.OfferingId = first.Id;
-            }
+            // Leave OfferingId at Guid.Empty when the caller didn't pick one - that's the
+            // view's real "All Offerings in Selected Department" state (see the offering
+            // <select> and the "posted to all offerings" copy in Announcements.cshtml), and
+            // the query below already handles it correctly. Silently substituting the
+            // alphabetically-first offering here used to hide that state entirely: every
+            // fresh visit to this page landed scoped to one arbitrary course, and "No
+            // announcements for the selected scope" looked like "there are no announcements
+            // anywhere" when it actually meant "none for that one random course".
 
             if (model.OfferingId != Guid.Empty && !model.Offerings.Any(o => o.Id == model.OfferingId))
             {

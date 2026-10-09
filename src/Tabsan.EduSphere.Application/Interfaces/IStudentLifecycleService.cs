@@ -37,6 +37,14 @@ public interface IStudentLifecycleService
     Task PromoteStudentAsync(Guid studentProfileId, CancellationToken ct = default);
 
     /// <summary>
+    /// Transfers a student to a different institution/department/programme (e.g. School Class 10
+    /// completion -> College admission, or College Class 12 completion -> University admission).
+    /// Resets the student's semester counter to <paramref name="semesterNumber"/> and reactivates
+    /// them if the prior institution's completion had marked them Graduated.
+    /// </summary>
+    Task TransferStudentAsync(Guid studentProfileId, Guid departmentId, Guid programId, int semesterNumber, CancellationToken ct = default);
+
+    /// <summary>
     /// Advances multiple students to the next semester in one operation.
     /// Returns a result with promoted count and any errors (e.g., student not found).
     /// </summary>

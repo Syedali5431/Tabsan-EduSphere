@@ -12,6 +12,8 @@ namespace Tabsan.EduSphere.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
+// The portal client calls the plural form; keep both so neither path 404s.
+[Route("api/v1/modules")]
 [Authorize(Roles = "SuperAdmin")]
 public class ModuleController : ControllerBase
 {

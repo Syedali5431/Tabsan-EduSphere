@@ -79,7 +79,8 @@ public record ResultSummaryRow(
     decimal MarksObtained,
     decimal MaxMarks,
     decimal Percentage,
-    DateTime? PublishedAt);
+    DateTime? PublishedAt,
+    decimal? GradePoint = null);
 
 public record ResultSummaryReportResponse(
     IReadOnlyList<ResultSummaryRow> Rows,
@@ -259,7 +260,7 @@ public record LowAttendanceReportResponse(
 
 // ── FYP Status Report ──────────────────────────────────────────────────────────
 
-public record FypStatusRequest(Guid? DepartmentId, string? Status, int? InstitutionType, Guid? TenantId, Guid? CampusId);
+public record FypStatusRequest(Guid? DepartmentId, string? Status, int? InstitutionType, Guid? TenantId, Guid? CampusId, Guid? StudentProfileId = null);
 
 public record FypStatusRow(
     Guid ProjectId,

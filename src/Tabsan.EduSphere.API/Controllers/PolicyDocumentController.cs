@@ -20,11 +20,11 @@ public class PolicyDocumentController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<IActionResult> GetAll(CancellationToken ct) => Ok(await _service.GetAllAsync(ct));
 
     [HttpGet("{id:guid}")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var r = await _service.GetByIdAsync(id, ct);
@@ -32,7 +32,7 @@ public class PolicyDocumentController : ControllerBase
     }
 
     [HttpGet("{id:guid}/versions")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<IActionResult> GetVersions(Guid id, CancellationToken ct) => Ok(await _service.GetVersionsAsync(id, ct));
 
     [HttpPost]

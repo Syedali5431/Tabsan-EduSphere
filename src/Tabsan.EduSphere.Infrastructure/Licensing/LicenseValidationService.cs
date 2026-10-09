@@ -37,6 +37,7 @@ public class LicenseValidationService
     private readonly ModuleEntitlementResolver _moduleEntitlementResolver;
     private readonly IInstitutionPolicyService _institutionPolicy;
     private readonly ILogger<LicenseValidationService> _logger;
+    private readonly LicenseStatusCache _statusCache;
 
     private static readonly byte[] _magic = "TABLIC\x01"u8.ToArray();
     private const int SignatureOffset  = 7;
@@ -51,13 +52,15 @@ public class LicenseValidationService
         IModuleRepository moduleRepo,
         ModuleEntitlementResolver moduleEntitlementResolver,
         IInstitutionPolicyService institutionPolicy,
-        ILogger<LicenseValidationService> logger)
+        ILogger<LicenseValidationService> logger,
+        LicenseStatusCache statusCache)
     {
         _licenseRepo      = licenseRepo;
         _moduleRepo       = moduleRepo;
         _moduleEntitlementResolver = moduleEntitlementResolver;
         _institutionPolicy = institutionPolicy;
         _logger           = logger;
+        _statusCache      = statusCache;
     }
 
     /// <summary>
@@ -100,61 +103,9 @@ public class LicenseValidationService
         try
         {
             // Final-Touches Phase 28 Stage 28.3 — allow provider-backed upload flows to avoid temp-path coupling.
-
-            // 1. Magic header
-            if (fileBytes.Length < MinFileLength || !fileBytes[..7].SequenceEqual(_magic))
-            {
-                _logger.LogWarning("License file has invalid magic header or is too short.");
+            var payload = TryReadSignedPayload(fileBytes);
+            if (payload is null)
                 return false;
-            }
-
-            // 2. Extract components
-            var signature  = fileBytes[SignatureOffset..IvOffset];
-            var iv         = fileBytes[IvOffset..CiphertextOffset];
-            var ciphertext = fileBytes[CiphertextOffset..];
-
-            // 3. Verify RSA signature over SHA-256(IV + ciphertext)
-            var signedData = new byte[iv.Length + ciphertext.Length];
-            iv.CopyTo(signedData, 0);
-            ciphertext.CopyTo(signedData, iv.Length);
-
-            if (!VerifyRsaSignature(signedData, signature))
-            {
-                _logger.LogWarning("License file RSA signature verification failed. File may be tampered.");
-                return false;
-            }
-
-            // 4. Decrypt payload
-            byte[] plaintext;
-            try { plaintext = DecryptAes(ciphertext, iv); }
-            catch (CryptographicException)
-            {
-                _logger.LogWarning("License file AES decryption failed.");
-                return false;
-            }
-
-            var json    = Encoding.UTF8.GetString(plaintext);
-            var payload = JsonSerializer.Deserialize<TablicPayload>(json, _jsonOptions);
-
-            if (payload is null || string.IsNullOrWhiteSpace(payload.LicenseType) ||
-                string.IsNullOrWhiteSpace(payload.VerificationKeyHash))
-            {
-                _logger.LogWarning("License payload is missing required fields.");
-                return false;
-            }
-
-            // Optional verification-key fingerprint binding (Medyx-style hardening):
-            // if the field exists in payload, it must match the app's embedded public key fingerprint.
-            if (!string.IsNullOrWhiteSpace(payload.VerificationKey))
-            {
-                var expectedVerificationKey = ComputeVerificationKeyFromPublicKey();
-                if (!string.Equals(payload.VerificationKey, expectedVerificationKey, StringComparison.Ordinal))
-                {
-                    _logger.LogWarning("License VerificationKey mismatch. Expected={Expected}, Received={Received}",
-                        expectedVerificationKey, payload.VerificationKey);
-                    return false;
-                }
-            }
 
             // ── P2-S3-03: License-embedded domain restriction ──────────────────
             // If the license issuer locked the license to a specific domain, enforce it.
@@ -168,8 +119,16 @@ public class LicenseValidationService
                 return false;
             }
 
-            // 5. VerificationKey replay guard
-            if (await _licenseRepo.IsVerificationKeyConsumedAsync(payload.VerificationKeyHash, ct))
+            var fileHash = ComputeFileHash(fileBytes);
+            var existing = await _licenseRepo.GetCurrentAsync(ct);
+
+            // 5. VerificationKey replay guard.
+            // Re-uploading the exact file that is already active is allowed so an installation can
+            // re-bind its stored signed copy (e.g. after upgrading from a build that did not keep it).
+            var isSameActiveFile = existing is not null &&
+                                   string.Equals(existing.LicenseHash, fileHash, StringComparison.OrdinalIgnoreCase);
+            if (!isSameActiveFile &&
+                await _licenseRepo.IsVerificationKeyConsumedAsync(payload.VerificationKeyHash, ct))
             {
                 _logger.LogWarning(
                     "VerificationKey '{Hash}' already consumed. Activation rejected.",
@@ -178,31 +137,40 @@ public class LicenseValidationService
             }
 
             // 6. Apply license state
-            var fileHash    = ComputeFileHash(fileBytes);
             var licenseType = Enum.Parse<LicenseType>(payload.LicenseType, ignoreCase: true);
 
             // ── P2-S3-02: Capture activation domain ────────────────────────────
             // Use the request domain if available, fall back to the payload-embedded domain.
             var activatedDomain = requestDomain ?? payload.AllowedDomain;
 
-            var existing = await _licenseRepo.GetCurrentAsync(ct);
+            // The expiry is a fixed date carried inside the signed payload — it never depends on
+            // when or where the file is activated, so the same file yields the same expiry everywhere.
             var effectiveExpiry = ResolveEffectiveExpiry(payload);
+            LicenseState state;
             if (existing is null)
             {
-                await _licenseRepo.AddAsync(
-                    new LicenseState(fileHash, licenseType, effectiveExpiry,
-                                     payload.MaxUsers, activatedDomain), ct);
+                state = new LicenseState(fileHash, licenseType, effectiveExpiry,
+                                         payload.MaxUsers, activatedDomain, fileBytes);
+                await _licenseRepo.AddAsync(state, ct);
             }
             else
             {
-                existing.Replace(fileHash, licenseType, effectiveExpiry,
-                                 payload.MaxUsers, activatedDomain);
-                _licenseRepo.Update(existing);
+                state = existing;
+                state.Replace(fileHash, licenseType, effectiveExpiry,
+                              payload.MaxUsers, activatedDomain, fileBytes);
+                _licenseRepo.Update(state);
             }
 
-            await _licenseRepo.AddConsumedKeyAsync(
-                new ConsumedVerificationKey(payload.VerificationKeyHash), ct);
+            state.RefreshStatus(state.LastValidatedAt ?? DateTime.UtcNow);
+            state.ApplySeal(ComputeSeal(state));
+
+            if (!isSameActiveFile)
+            {
+                await _licenseRepo.AddConsumedKeyAsync(
+                    new ConsumedVerificationKey(payload.VerificationKeyHash), ct);
+            }
             await _licenseRepo.SaveChangesAsync(ct);
+            _statusCache.Set(state.Status, state.ExpiresAt);
 
             await _institutionPolicy.SavePolicyAsync(new SaveInstitutionPolicyCommand(
                 payload.IncludeSchool,
@@ -231,6 +199,12 @@ public class LicenseValidationService
     /// <summary>
     /// Checks the stored <see cref="LicenseState"/> and refreshes its status.
     /// Called on startup, Super Admin login, and daily by the background job.
+    /// <para>
+    /// The stored signed license file is re-verified every time and the expiry, type and user
+    /// limit are re-derived from it, so editing those columns directly in the database is undone.
+    /// The integrity seal detects edits to the remaining columns, and the observed-time
+    /// high-water mark prevents reviving an expired license by moving the system clock back.
+    /// </para>
     /// </summary>
     public async Task<LicenseStatus> ValidateCurrentAsync(CancellationToken ct = default)
     {
@@ -239,12 +213,66 @@ public class LicenseValidationService
         if (state is null)
         {
             _logger.LogWarning("No license found. Portal will operate in read-only mode.");
+            _statusCache.Set(LicenseStatus.Invalid, null);
             return LicenseStatus.Invalid;
         }
 
-        state.RefreshStatus();
+        var tampered = false;
+        var payload = state.LicenseBlob is { Length: > 0 } blob ? TryReadSignedPayload(blob) : null;
+
+        if (payload is null)
+        {
+            _logger.LogWarning(state.LicenseBlob is null
+                ? "Stored license has no signed license file attached. Re-upload the .tablic file to re-activate."
+                : "Stored signed license file failed verification. License marked invalid.");
+            tampered = true;
+        }
+        else if (!string.Equals(ComputeFileHash(state.LicenseBlob!), state.LicenseHash, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Stored license hash does not match the stored signed license file. License marked invalid.");
+            tampered = true;
+        }
+        else if (state.IntegritySeal is null || !SealMatches(state.IntegritySeal, ComputeSeal(state)))
+        {
+            // Edits limited to the values that come from the signed file (expiry, type, user limit) are
+            // simply reverted below. Any other edit (domain, activation / validation timestamps, or a
+            // removed seal) cannot be reconciled and invalidates the license.
+            var sealWithSignedValues = ComputeSealFor(state.Id, state.LicenseHash,
+                Enum.Parse<LicenseType>(payload.LicenseType, ignoreCase: true), ResolveEffectiveExpiry(payload),
+                payload.MaxUsers, state.ActivatedDomain, state.ActivatedAt, state.LastValidatedAt);
+
+            tampered = state.IntegritySeal is null || !SealMatches(state.IntegritySeal, sealWithSignedValues);
+            _logger.LogWarning(tampered
+                ? "License record integrity seal mismatch — the license row was modified outside the application. License marked invalid."
+                : "License record values were modified outside the application. Restoring values from the signed license file.");
+        }
+
+        if (tampered)
+        {
+            state.MarkInvalid();
+        }
+        else
+        {
+            var now = DateTime.UtcNow;
+            var signedExpiry = ResolveEffectiveExpiry(payload!);
+            var signedType   = Enum.Parse<LicenseType>(payload!.LicenseType, ignoreCase: true);
+            state.RestoreFromSignedPayload(signedType, signedExpiry, payload.MaxUsers);
+
+            // Clock-rollback guard: evaluate against the latest time this installation has ever seen.
+            if (state.LastValidatedAt.HasValue && now < state.LastValidatedAt.Value - ClockRollbackTolerance)
+            {
+                _logger.LogWarning(
+                    "System clock ({Now:O}) is behind the last validated time ({Last:O}). Evaluating expiry against the last validated time.",
+                    now, state.LastValidatedAt.Value);
+            }
+            state.RecordValidatedAt(now);
+            state.RefreshStatus(state.LastValidatedAt ?? now);
+        }
+
+        state.ApplySeal(ComputeSeal(state));
         _licenseRepo.Update(state);
         await _licenseRepo.SaveChangesAsync(ct);
+        _statusCache.Set(state.Status, state.ExpiresAt);
 
         if (state.Status == LicenseStatus.Active)
         {
@@ -255,6 +283,105 @@ public class LicenseValidationService
         _logger.LogInformation("License validation complete. Status={Status}", state.Status);
         return state.Status;
     }
+
+    private static readonly TimeSpan ClockRollbackTolerance = TimeSpan.FromHours(24);
+
+    /// <summary>
+    /// Verifies the magic header, RSA signature, AES decryption and vendor key fingerprint of a
+    /// .tablic file and returns its payload, or null when any check fails.
+    /// </summary>
+    private TablicPayload? TryReadSignedPayload(byte[] fileBytes)
+    {
+        // 1. Magic header
+        if (fileBytes.Length < MinFileLength || !fileBytes[..7].SequenceEqual(_magic))
+        {
+            _logger.LogWarning("License file has invalid magic header or is too short.");
+            return null;
+        }
+
+        // 2. Extract components
+        var signature  = fileBytes[SignatureOffset..IvOffset];
+        var iv         = fileBytes[IvOffset..CiphertextOffset];
+        var ciphertext = fileBytes[CiphertextOffset..];
+
+        // 3. Verify RSA signature over SHA-256(IV + ciphertext)
+        var signedData = new byte[iv.Length + ciphertext.Length];
+        iv.CopyTo(signedData, 0);
+        ciphertext.CopyTo(signedData, iv.Length);
+
+        if (!VerifyRsaSignature(signedData, signature))
+        {
+            _logger.LogWarning("License file RSA signature verification failed. File may be tampered.");
+            return null;
+        }
+
+        // 4. Decrypt payload
+        byte[] plaintext;
+        try { plaintext = DecryptAes(ciphertext, iv); }
+        catch (CryptographicException)
+        {
+            _logger.LogWarning("License file AES decryption failed.");
+            return null;
+        }
+
+        TablicPayload? payload;
+        try { payload = JsonSerializer.Deserialize<TablicPayload>(Encoding.UTF8.GetString(plaintext), _jsonOptions); }
+        catch (JsonException)
+        {
+            _logger.LogWarning("License payload is not valid JSON.");
+            return null;
+        }
+
+        if (payload is null || string.IsNullOrWhiteSpace(payload.LicenseType) ||
+            string.IsNullOrWhiteSpace(payload.VerificationKeyHash) ||
+            !Enum.TryParse<LicenseType>(payload.LicenseType, ignoreCase: true, out _))
+        {
+            _logger.LogWarning("License payload is missing required fields.");
+            return null;
+        }
+
+        // Optional verification-key fingerprint binding (Medyx-style hardening):
+        // if the field exists in payload, it must match the app's embedded public key fingerprint.
+        if (!string.IsNullOrWhiteSpace(payload.VerificationKey))
+        {
+            var expectedVerificationKey = ComputeVerificationKeyFromPublicKey();
+            if (!string.Equals(payload.VerificationKey, expectedVerificationKey, StringComparison.Ordinal))
+            {
+                _logger.LogWarning("License VerificationKey mismatch. Expected={Expected}, Received={Received}",
+                    expectedVerificationKey, payload.VerificationKey);
+                return null;
+            }
+        }
+
+        return payload;
+    }
+
+    private static bool SealMatches(string stored, string expected)
+        => CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(stored), Encoding.ASCII.GetBytes(expected));
+
+    private static string ComputeSeal(LicenseState s)
+        => ComputeSealFor(s.Id, s.LicenseHash, s.LicenseType, s.ExpiresAt, s.MaxUsers,
+                          s.ActivatedDomain, s.ActivatedAt, s.LastValidatedAt);
+
+    private static string ComputeSealFor(Guid id, string licenseHash, LicenseType type, DateTime? expiresAt,
+                                         int maxUsers, string? domain, DateTime activatedAt, DateTime? lastValidatedAt)
+    {
+        var material = string.Join('|',
+            id.ToString("N"),
+            licenseHash.ToLowerInvariant(),
+            type.ToString(),
+            expiresAt?.Ticks.ToString() ?? "-",
+            maxUsers.ToString(),
+            domain?.ToLowerInvariant() ?? "-",
+            activatedAt.Ticks.ToString(),
+            lastValidatedAt?.Ticks.ToString() ?? "-");
+
+        return Convert.ToHexString(HMACSHA256.HashData(_sealKey.Value, Encoding.UTF8.GetBytes(material)))
+                      .ToLowerInvariant();
+    }
+
+    private static readonly Lazy<byte[]> _sealKey = new(() =>
+        SHA256.HashData(Encoding.UTF8.GetBytes("tabsan-license-state-seal:" + EmbeddedKeys.AesKeyBase64)));
 
     private async Task SyncModuleStatusesForPolicyAsync(InstitutionPolicySnapshot policy, CancellationToken ct)
     {
@@ -443,6 +570,7 @@ public class LicenseValidationService
         OneYear = 2,
         TwoYears = 3,
         ThreeYears = 4,
-        Permanent = 5
+        Permanent = 5,
+        SpecificDate = 6
     }
 }

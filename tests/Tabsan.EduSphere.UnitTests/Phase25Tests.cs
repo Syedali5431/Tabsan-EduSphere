@@ -365,9 +365,10 @@ public class ProgressionServiceTests
     }
 
     [Fact]
-    public async Task College_Promote_WhenEligible_AdvancesByAcademicYear()
+    public async Task College_Promote_WhenEligible_AdvancesOneClass()
     {
-        var student = MakeStudent(cgpa: 0m, semGpa: 65m, semesterNum: 1);
+        // College uses absolute class numbers (11, 12); one promotion moves the student up one class.
+        var student = MakeStudent(cgpa: 0m, semGpa: 65m, semesterNum: 11);
         var gradingProfile = new InstitutionGradingProfile(InstitutionType.College, 40m, null);
         var svc = new ProgressionService(
             new StubStudentProfileRepository(student),
@@ -376,7 +377,7 @@ public class ProgressionServiceTests
         var decision = await svc.PromoteAsync(
             new ProgressionEvaluationRequest(student.Id, InstitutionType.College));
 
-        decision.CurrentPeriodLabel.Should().Be("Year 2");
+        decision.CurrentPeriodLabel.Should().Be("Class 12");
     }
 
     [Fact]

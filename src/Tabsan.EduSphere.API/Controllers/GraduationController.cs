@@ -25,13 +25,16 @@ public class GraduationController : ControllerBase
     private readonly IStudentProfileRepository  _studentRepo;
     private readonly IMediaStorageService _mediaStorage;
     private readonly MediaStorageOptions _mediaStorageOptions;
+    private readonly IFacultyAssignmentRepository _facultyAssignments;
 
     public GraduationController(
         IGraduationService         graduation,
         IStudentProfileRepository  studentRepo,
         IMediaStorageService mediaStorage,
-        IOptions<MediaStorageOptions> mediaStorageOptions)
+        IOptions<MediaStorageOptions> mediaStorageOptions,
+        IFacultyAssignmentRepository facultyAssignments)
     {
+        _facultyAssignments = facultyAssignments;
         _graduation  = graduation;
         _studentRepo = studentRepo;
         _mediaStorage = mediaStorage;
@@ -74,8 +77,9 @@ public class GraduationController : ControllerBase
 
     // Final-Touches Phase 18 Stage 18.1 — admin/superadmin list applications
     /// <summary>Returns all graduation applications, optionally filtered by department and status.</summary>
+    // Faculty approve the first stage, so they need to see the applications of their own departments.
     [HttpGet]
-    [Authorize(Roles = "Admin,SuperAdmin")]
+    [Authorize(Roles = "Faculty,Admin,SuperAdmin")]
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? departmentId,
         [FromQuery] string? status,
@@ -83,6 +87,21 @@ public class GraduationController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
+        if (User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+        {
+            var userIdRaw = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var allowed = Guid.TryParse(userIdRaw, out var userId)
+                ? await _facultyAssignments.GetDepartmentIdsForFacultyAsync(userId, ct)
+                : Array.Empty<Guid>();
+
+            if (departmentId.HasValue && !allowed.Contains(departmentId.Value))
+                return Forbid();
+
+            departmentId ??= allowed.FirstOrDefault();
+            if (departmentId is null || departmentId == Guid.Empty)
+                return Ok(new GraduationApplicationPageDto([], page, pageSize, 0));
+        }
+
         var apps = await _graduation.GetApplicationsAsync(departmentId, status, page, pageSize, ct);
         return Ok(apps);
     }

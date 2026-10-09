@@ -232,7 +232,8 @@ public class EnrollmentController : ControllerBase
     }
 
     [HttpGet("status")]
-    [Authorize(Roles = "SuperAdmin,Admin")]
+    // Read-only flag; Faculty and Students use it to show whether enrollment is open.
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty,Student")]
     public async Task<IActionResult> GetEnrollmentStatus([FromQuery] Guid? tenantId, [FromQuery] Guid? campusId, CancellationToken ct)
     {
         var scope = ResolveRequestedScope(tenantId, campusId);

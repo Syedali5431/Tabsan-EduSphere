@@ -151,7 +151,7 @@ public interface IEduApiClient
     // Stage 4.2: Additional Reports
     Task<TranscriptWebModel?> GetStudentTranscriptReportAsync(Guid studentProfileId, CancellationToken ct);
     Task<LowAttendanceWebModel?> GetLowAttendanceReportAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
-    Task<FypStatusWebModel?> GetFypStatusReportAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
+    Task<FypStatusWebModel?> GetFypStatusReportAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct);
     Task<PaymentSummaryWebModel?> GetPaymentSummaryReportAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptAsync(Guid studentProfileId, CancellationToken ct);
     Task<byte[]> ExportStudentTranscriptCsvAsync(Guid studentProfileId, CancellationToken ct);
@@ -160,9 +160,9 @@ public interface IEduApiClient
     Task<byte[]> ExportLowAttendanceAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportLowAttendanceCsvAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportLowAttendancePdfAsync(decimal threshold, Guid? departmentId, Guid? courseOfferingId, int? institutionType, CancellationToken ct);
-    Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
-    Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
-    Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct);
+    Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct);
+    Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryCsvAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
     Task<byte[]> ExportPaymentSummaryPdfAsync(int? year, int? month, Guid? semesterId, Guid? departmentId, Guid? courseId, int? levelNumber, int? institutionType, CancellationToken ct);
@@ -4904,6 +4904,7 @@ public class EduApiClient : IEduApiClient
                 MarksObtained      = r.MarksObtained,
                 MaxMarks           = r.MaxMarks,
                 Percentage         = r.Percentage,
+                GradePoint         = r.GradePoint,
                 PublishedAt        = r.PublishedAt
             }).ToList() ?? new()
         };
@@ -5307,12 +5308,13 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<FypStatusWebModel?> GetFypStatusReportAsync(
-        Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+        Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
         if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
         if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        if (studentProfileId.HasValue)     parts.Add($"studentProfileId={studentProfileId.Value}");
         var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
         var raw = await GetAsync<FypStatusApiDto>($"api/v1/reports/fyp-status{qs}", ct);
         if (raw is null) return null;
@@ -5488,32 +5490,35 @@ public class EduApiClient : IEduApiClient
         return GetBytesAsync($"api/v1/reports/low-attendance/export/pdf?{string.Join("&", parts)}", ct);
     }
 
-    public Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    public Task<byte[]> ExportFypStatusAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
         if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
         if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        if (studentProfileId.HasValue)     parts.Add($"studentProfileId={studentProfileId.Value}");
         var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
         return GetBytesAsync($"api/v1/reports/fyp-status/export{qs}", ct);
     }
 
-    public Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    public Task<byte[]> ExportFypStatusCsvAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
         if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
         if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        if (studentProfileId.HasValue)     parts.Add($"studentProfileId={studentProfileId.Value}");
         var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
         return GetBytesAsync($"api/v1/reports/fyp-status/export/csv{qs}", ct);
     }
 
-    public Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, CancellationToken ct)
+    public Task<byte[]> ExportFypStatusPdfAsync(Guid? departmentId, string? status, int? institutionType, Guid? studentProfileId, CancellationToken ct)
     {
         var parts = new List<string>();
         if (departmentId.HasValue)         parts.Add($"departmentId={departmentId.Value}");
         if (!string.IsNullOrEmpty(status)) parts.Add($"status={Uri.EscapeDataString(status)}");
         if (institutionType.HasValue)      parts.Add($"institutionType={institutionType.Value}");
+        if (studentProfileId.HasValue)     parts.Add($"studentProfileId={studentProfileId.Value}");
         var qs = parts.Any() ? "?" + string.Join("&", parts) : "";
         return GetBytesAsync($"api/v1/reports/fyp-status/export/pdf{qs}", ct);
     }
@@ -5617,6 +5622,7 @@ public class EduApiClient : IEduApiClient
         public decimal   MarksObtained      { get; set; }
         public decimal   MaxMarks           { get; set; }
         public decimal   Percentage         { get; set; }
+        public decimal?  GradePoint         { get; set; }
         public DateTime? PublishedAt        { get; set; }
     }
     private sealed class AssignmentSummaryApiDto

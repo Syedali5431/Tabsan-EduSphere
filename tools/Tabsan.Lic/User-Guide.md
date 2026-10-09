@@ -48,6 +48,7 @@ When the wizard starts, provide the following:
    - `3` = 2 years
    - `4` = 3 years
    - `5` = permanent
+   - `6` = specific expiry date — you are then asked for the date (`yyyy-MM-dd`, e.g. `2027-03-03`); the license is valid through the end of that day on every system it is activated on
 
 2. **Customer/Tenant label (optional)**
    - Example: `Demo-University-May-2026`
@@ -148,7 +149,7 @@ Check the following:
 
 - Ensure generator keys and EduSphere validator keys are matching pair.
 - Check:
-  - `tools/Tabsan.Lic/Crypto/EmbeddedKeys.cs`
+  - the vendor key file `%APPDATA%Tabsansigning-keys.json` (or the path in `TABSAN_LIC_KEYS`)
   - `src/Tabsan.EduSphere.Infrastructure/Licensing/EmbeddedKeys.cs`
 
 ### Error: domain mismatch

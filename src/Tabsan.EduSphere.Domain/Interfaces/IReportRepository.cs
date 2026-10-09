@@ -24,10 +24,11 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId = null,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Returns raw published result rows, optionally filtered by semester, offering, or student.
+    /// Returns raw published result rows, optionally filtered by semester, offering, student, or department.
     /// </summary>
     Task<IList<ResultReportRow>> GetResultDataAsync(
         Guid? semesterId,
@@ -36,6 +37,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? departmentId = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -123,6 +125,7 @@ public interface IReportRepository
         int? institutionType,
         Guid? tenantId,
         Guid? campusId,
+        Guid? studentProfileId = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -170,7 +173,8 @@ public sealed record ResultReportRow(
     DateTime? PublishedAt,
     Guid SemesterId,
     string DepartmentName,
-    string? ProgramName);
+    string? ProgramName,
+    decimal? GradePoint = null);
 
 public sealed record AssignmentReportRow(
     Guid StudentProfileId,

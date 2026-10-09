@@ -102,8 +102,12 @@ public class StudentProfile : AuditableEntity
             return true;
         }
 
-        // College: Class 12 (semester 4) → Completed
-        if (Department?.InstitutionType == InstitutionType.College && CurrentSemesterNumber > 4)
+        // College: Class 12 → Completed. CurrentSemesterNumber uses the same absolute
+        // class-number convention as School (e.g. Class 11/Class 12, not a relative 1/2
+        // program-semester count), consistent with seed data and CourseOffering semester
+        // naming - so the completion boundary must be an absolute "> 12", mirroring School's
+        // "> 10" above, not the College program's (relative) TotalSemesters.
+        if (Department?.InstitutionType == InstitutionType.College && CurrentSemesterNumber > 12)
         {
             Status = StudentStatus.Graduated; // "Completed" in college context
             GraduatedDate = DateTime.UtcNow;
@@ -123,6 +127,30 @@ public class StudentProfile : AuditableEntity
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Moves the student to a different institution/department/programme, resetting the
+    /// per-institution academic counters (semester number, semester GPA). Used when a
+    /// student who completed School (Class 10) is admitted into College, or a student who
+    /// completed College (Class 12) is admitted into University - there was previously no
+    /// supported way to do this through the application itself (only direct database access),
+    /// even though completion messaging elsewhere in the app ("Student cleared the school.
+    /// Create certificate for him.") assumes this transition happens.
+    /// Does not touch Cgpa, RegistrationNumber, or AdmissionDate - those carry over.
+    /// </summary>
+    public void TransferInstitution(Guid departmentId, Guid programId, int semesterNumber)
+    {
+        if (semesterNumber < 1)
+            throw new ArgumentOutOfRangeException(nameof(semesterNumber), "Semester number must be at least 1.");
+
+        DepartmentId = departmentId;
+        ProgramId = programId;
+        CurrentSemesterNumber = semesterNumber;
+        CurrentSemesterGpa = 0;
+        Status = StudentStatus.Active;
+        GraduatedDate = null;
+        Touch();
     }
 
     /// <summary>Marks the student as Graduated with the current UTC date.</summary>

@@ -13,6 +13,18 @@
     </div>
 }
 
+@* Access-denied redirects (sidebar guard, Faculty/Admin-only and Finance-only section
+   checks in PortalController.OnActionExecutionAsync, and the Dashboard SuperAdmin-only
+   check) all land here for non-SuperAdmin users and explain why via "PortalMessage" -
+   without this block that explanation was silently dropped, since it's the only key this
+   view checked previously. *@
+@if (TempData["PortalMessage"] is string portalMessage && !string.IsNullOrWhiteSpace(portalMessage))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @portalMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>

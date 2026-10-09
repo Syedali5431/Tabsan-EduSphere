@@ -1512,6 +1512,7 @@ public class ResultSummaryRowItem
     public decimal  MarksObtained      { get; set; }
     public decimal  MaxMarks           { get; set; }
     public decimal  Percentage         { get; set; }
+    public decimal? GradePoint         { get; set; }
     public DateTime? PublishedAt       { get; set; }
 }
 
@@ -1537,6 +1538,7 @@ public class ReportResultsPageModel
     public List<LookupItem>         Semesters   { get; set; } = new();
     public List<LookupItem>         Departments { get; set; } = new();
     public List<CourseOfferingItem> Offerings   { get; set; } = new();
+    public List<LookupItem>         Students    { get; set; } = new();
     public ResultSummaryWebModel?   Report      { get; set; }
 }
 
@@ -1869,8 +1871,10 @@ public class ReportFypStatusPageModel
     public bool             IsConnected    { get; set; }
     public string?          Message        { get; set; }
     public List<LookupItem> Departments    { get; set; } = new();
+    public List<LookupItem> Students       { get; set; } = new();
     public string?          SelectedStatus { get; set; }
     public Guid?            DepartmentId   { get; set; }
+    public Guid?            StudentId      { get; set; }
     public int?             InstitutionType { get; set; }
     public List<CertificateInstitutionOption> AvailableInstitutionTypes { get; set; } = new();
     public FypStatusWebModel? Report       { get; set; }

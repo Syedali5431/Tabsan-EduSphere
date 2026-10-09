@@ -60,7 +60,7 @@ dotnet run
 
 Wizard prompts include:
 
-1. Expiry type (1 month, 1/2/3 years, permanent)
+1. Expiry type (1 month, 1/2/3 years, permanent, or a specific date such as 2027-03-03)
 2. Customer/tenant label (optional)
 3. Max users (0 = unlimited)
 4. Host target mode:
@@ -124,12 +124,38 @@ Evidence (2026-05-19 verification):
 - `UAT-SAT docs/UAT-Test.md` includes acceptance cases for `.tablic` generation and successful upload/activation in EduSphere.
 - `UAT-SAT docs/Phase36-Stage36.5-Approval-Pack.md` records final UAT and SAT conclusions as PASS for release readiness.
 
+## Signing Keys (vendor-only, not in source control)
+
+The RSA private key and the AES key are **not** in the repository. Tabsan-Lic loads them at runtime from:
+
+1. the file named by the `TABSAN_LIC_KEYS` environment variable, or
+2. `%APPDATA%Tabsansigning-keys.json` (default, next to `tabsan_lic.db`).
+
+```json
+{ "rsaPrivateKeyPem": "-----BEGIN RSA PRIVATE KEY-----
+...", "aesKeyBase64": "..." }
+```
+
+- Keep an offline backup of this file. Without it no new licenses can be issued for deployed EduSphere builds.
+- Anyone holding it can forge licenses — never commit it, email it, or copy it to customer machines.
+- The matching RSA **public** key and the AES key are compiled into EduSphere (`src/Tabsan.EduSphere.Infrastructure/Licensing/EmbeddedKeys.cs`).
+- To rotate keys: run `tools/KeyGen`, write the new private key + AES key into `signing-keys.json`, put the new public key + AES key into EduSphere's `EmbeddedKeys.cs`, rebuild, and reissue all licenses.
+
+## License Security Model
+
+- The `.tablic` file is AES-256 encrypted (not human readable) and RSA-2048 signed (any edit is rejected).
+- The expiry is a **fixed calendar date** inside the signed payload (for example `2027-03-03`). Activating the same file on another server, at any later date, gives the same expiry — it is never recalculated from the activation date.
+- EduSphere stores the signed file with the activated license and re-verifies it on every check (startup, the daily background check, the license page, and every 5 minutes on the request path). Editing `license_state.ExpiresAt` (or type / user limit) directly in the database is reverted to the signed values; editing other license columns marks the license **Invalid**.
+- Expiry is evaluated against the latest time the installation has ever observed, so moving the server clock back does not revive an expired license.
+- When the license is missing, expired or invalid the API is **read-only**: viewing works, every create/update/delete returns 403 until a Super Admin uploads a valid license (Settings → License Update). Set `Licensing:EnforceReadOnlyWhenUnlicensed=false` only for test environments.
+- Upgrading from a build before this change: the existing activation has no stored signed file and becomes Invalid on the first check. Re-upload the license file — re-uploading the exact file that is already active is allowed even though its key was consumed.
+
 ## Interaction with EduSphere
 
 **Tabsan-Lic generates `.tablic` files** → **Super Admin uploads to EduSphere** → **EduSphere validates & applies license**
 
-- EduSphere imports only the RSA public key + AES key (embedded in `Infrastructure/Licensing/EmbeddedKeys.cs`)
-- Tabsan-Lic keeps the RSA private key (never shared)
+- EduSphere embeds only the RSA public key + AES key (`Infrastructure/Licensing/EmbeddedKeys.cs`)
+- Tabsan-Lic loads the RSA private key from the vendor key file (see Signing Keys) — never shared
 - One-way flow: Tabsan-Lic → `.tablic` file → EduSphere
 
 ## Troubleshooting
@@ -143,7 +169,7 @@ Possible causes:
 	- Regenerate and upload the new file without modifying it.
 
 2. **Key mismatch between tool and app**
-	- Tabsan-Lic signs using the private key in `tools/Tabsan.Lic/Crypto/EmbeddedKeys.cs`.
+	- Tabsan-Lic signs using the private key in the vendor key file (`%APPDATA%Tabsansigning-keys.json` or `TABSAN_LIC_KEYS`).
 	- EduSphere verifies with the public key in `src/Tabsan.EduSphere.Infrastructure/Licensing/EmbeddedKeys.cs`.
 	- These key pairs must match.
 

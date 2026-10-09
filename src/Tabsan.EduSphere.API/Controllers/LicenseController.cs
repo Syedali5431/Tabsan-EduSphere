@@ -106,6 +106,9 @@ public class LicenseController : ControllerBase
     [HttpGet("details")]
     public async Task<IActionResult> Details(CancellationToken ct)
     {
+        // Re-verify first so the figures shown always come from the signed license file,
+        // never from values edited directly in the database.
+        await _licenseService.ValidateCurrentAsync(ct);
         var state = await _licenseService.GetCurrentStateAsync(ct);
         if (state is null)
             return Ok(new { status = "None", licenseType = (string?)null, activatedAt = (DateTime?)null, expiresAt = (DateTime?)null, remainingDays = (int?)null, updatedAt = (DateTime?)null });

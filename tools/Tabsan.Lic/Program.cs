@@ -69,7 +69,8 @@ using (var scope = sp.CreateScope())
     await conn.CloseAsync();
 }
 
-Console.Clear();
+if (!Console.IsOutputRedirected)
+    Console.Clear();
 Console.ForegroundColor = ConsoleColor.Cyan;
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
 Console.WriteLine("║      Tabsan EduSphere Vendor Licensing Tool         ║");
@@ -79,6 +80,17 @@ Console.WriteLine();
 Console.WriteLine("Private signing keys must remain only on vendor-controlled systems.");
 Console.WriteLine("This wizard creates a signed .tablic license file for EduSphere import.");
 Console.WriteLine();
+
+// Fail fast before any key record is written if the vendor signing keys are not available.
+try
+{
+    _ = Tabsan.Lic.Crypto.EmbeddedKeys.RsaPrivateKeyPem;
+}
+catch (Exception ex)
+{
+    WriteError(ex.Message);
+    return;
+}
 
 using (var runScope = sp.CreateScope())
 {
@@ -104,6 +116,20 @@ static async Task HandleGenerateLicenseFile(KeyService keySvc, LicenseBuilder bu
         return;
     }
 
+    DateTime? specificExpiryDate = null;
+    if (expiry == ExpiryType.SpecificDate)
+    {
+        Console.Write("  Expiry date (yyyy-MM-dd, valid through the end of that day): ");
+        var rawDate = Console.ReadLine()?.Trim();
+        if (!DateTime.TryParseExact(rawDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var parsedDate) || parsedDate.Date <= DateTime.Today)
+        {
+            WriteError("Invalid expiry date. Use yyyy-MM-dd and a date after today.");
+            return;
+        }
+        specificExpiryDate = parsedDate.Date;
+    }
+
     Console.Write("  Customer/Tenant label (optional): ");
     var label = Console.ReadLine()?.Trim();
     if (string.IsNullOrWhiteSpace(label))
@@ -125,7 +151,7 @@ static async Task HandleGenerateLicenseFile(KeyService keySvc, LicenseBuilder bu
     if (scope is null)
         return;
 
-    var (record, _) = await keySvc.GenerateAsync(expiry.Value, label);
+    var (record, _) = await keySvc.GenerateAsync(expiry.Value, label, specificExpiryDate);
     record.MaxUsers = maxUsers;
     record.AllowedDomain = allowedDomain;
     record.IncludeSchool = scope.Value.IncludeSchool;
@@ -190,6 +216,7 @@ static ExpiryType? PromptExpiry()
     Console.WriteLine("    [3] 2 years");
     Console.WriteLine("    [4] 3 years");
     Console.WriteLine("    [5] Permanent");
+    Console.WriteLine("    [6] Specific expiry date");
     Console.Write("  Choice: ");
     return Console.ReadLine()?.Trim() switch
     {
@@ -198,6 +225,7 @@ static ExpiryType? PromptExpiry()
         "3" => ExpiryType.TwoYears,
         "4" => ExpiryType.ThreeYears,
         "5" => ExpiryType.Permanent,
+        "6" => ExpiryType.SpecificDate,
         _   => null
     };
 }
@@ -269,6 +297,7 @@ static string FormatExpiry(ExpiryType expiryType, DateTime? expiresAt)
         ExpiryType.TwoYears   => expiresAt?.ToString("yyyy-MM-dd") is { } date ? $"2 years ({date})" : "2 years",
         ExpiryType.ThreeYears => expiresAt?.ToString("yyyy-MM-dd") is { } date ? $"3 years ({date})" : "3 years",
         ExpiryType.Permanent  => "Permanent",
+        ExpiryType.SpecificDate => expiresAt?.ToString("yyyy-MM-dd") ?? "Specific date",
         _                     => expiresAt?.ToString("yyyy-MM-dd") ?? expiryType.ToString()
     };
 

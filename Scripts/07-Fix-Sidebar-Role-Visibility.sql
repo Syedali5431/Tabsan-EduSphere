@@ -122,7 +122,7 @@ WHERE smi.[Key] IN (
     -- University
     'fyp',
     -- Settings Related
-    'analytics','report_center','accreditation',
+    'analytics','accreditation',  -- report_center excluded: reports are not available to students
     -- Financial
     'payments',
     -- Enrollments

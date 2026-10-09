@@ -71,14 +71,14 @@ public sealed class ReportService : IReportService
             request.CourseOfferingId,
             request.StudentProfileId,
             request.InstitutionType,
-            null,
+            request.DepartmentId,
             null,
             BuildScopeKey(request.TenantId, request.CampusId));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
             var raw = await _repo.GetAttendanceDataAsync(
-                request.SemesterId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+                request.SemesterId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType, request.TenantId, request.CampusId, request.DepartmentId, ct);
 
             var rows = raw.Select(r => new AttendanceSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
@@ -104,20 +104,21 @@ public sealed class ReportService : IReportService
             request.CourseOfferingId,
             request.StudentProfileId,
             request.InstitutionType,
-            null,
+            request.DepartmentId,
             null,
             BuildScopeKey(request.TenantId, request.CampusId));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
             var raw = await _repo.GetResultDataAsync(
-                request.SemesterId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+                request.SemesterId, request.CourseOfferingId, request.StudentProfileId, request.InstitutionType, request.TenantId, request.CampusId, request.DepartmentId, ct);
 
             var rows = raw.Select(r => new ResultSummaryRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
                 r.ProgramName, r.DepartmentName,
                 r.CourseCode, r.CourseTitle, r.ResultType,
-                r.MarksObtained, r.MaxMarks, r.Percentage, r.PublishedAt)).ToList();
+                r.MarksObtained, r.MaxMarks, r.Percentage, r.PublishedAt,
+                r.GradePoint)).ToList();
 
             return new ResultSummaryReportResponse(rows, rows.Count, DateTime.UtcNow);
         }, ct);
@@ -197,6 +198,12 @@ public sealed class ReportService : IReportService
 
     // ── GPA Report ─────────────────────────────────────────────────────────────
 
+    // GPA/CGPA only has meaning for the University grading model (School/College use
+    // percentage-based results, not grade points) - hard-enforced here regardless of what
+    // institutionType the caller requests, so a stray "All Institutes"/School/College
+    // selection can never pull non-University students into this report.
+    private const int UniversityInstitutionType = 0;
+
     public async Task<GpaReportResponse> GetGpaReportAsync(
         GpaReportRequest request, CancellationToken ct = default)
     {
@@ -205,14 +212,14 @@ public sealed class ReportService : IReportService
             null,
             null,
             null,
-            request.InstitutionType,
+            UniversityInstitutionType,
             request.DepartmentId,
             request.ProgramId,
             BuildScopeKey(request.TenantId, request.CampusId));
 
         return await GetOrSetCachedSummaryAsync(cacheKey, async () =>
         {
-            var raw = await _repo.GetGpaDataAsync(request.DepartmentId, request.ProgramId, request.InstitutionType, request.TenantId, request.CampusId, ct);
+            var raw = await _repo.GetGpaDataAsync(request.DepartmentId, request.ProgramId, UniversityInstitutionType, request.TenantId, request.CampusId, ct);
 
             var rows = raw.Select(r => new Tabsan.EduSphere.Application.DTOs.Reports.GpaReportRow(
                 r.StudentProfileId, r.RegistrationNumber, r.StudentName,
@@ -390,11 +397,12 @@ public sealed class ReportService : IReportService
         ResultSummaryRequest request, CancellationToken ct = default)
     {
         var report = await GetResultSummaryAsync(request, ct);
-        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "Percentage", "Published" };
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "Percentage", "GPA", "Published" };
         var rows = report.Rows.Select(r => new object[]
         {
             r.RegistrationNumber, r.StudentName, r.CourseCode, r.CourseTitle, r.ResultType,
             r.MarksObtained, r.MaxMarks, r.Percentage,
+            r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
             r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
         }).ToList();
         return BuildExcelBytes("Result Summary", headers, rows);
@@ -404,7 +412,7 @@ public sealed class ReportService : IReportService
         ResultSummaryRequest request, CancellationToken ct = default)
     {
         var report = await GetResultSummaryAsync(request, ct);
-        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "Percentage", "Published" };
+        var headers = new[] { "Reg No", "Student", "Course Code", "Course Title", "Component", "Marks", "Max Marks", "Percentage", "GPA", "Published" };
         var rows = report.Rows.Select(r => new[]
         {
             r.RegistrationNumber,
@@ -415,6 +423,7 @@ public sealed class ReportService : IReportService
             r.MarksObtained.ToString("F2"),
             r.MaxMarks.ToString("F2"),
             r.Percentage.ToString("F2"),
+            r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
             r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
         });
         return BuildCsvBytes(headers, rows);
@@ -424,7 +433,7 @@ public sealed class ReportService : IReportService
         ResultSummaryRequest request, CancellationToken ct = default)
     {
         var report = await GetResultSummaryAsync(request, ct);
-        var headers = new[] { "Reg No", "Student", "Course", "Title", "Type", "Marks", "Max", "%", "Published" };
+        var headers = new[] { "Reg No", "Student", "Course", "Title", "Type", "Marks", "Max", "%", "GPA", "Published" };
         var rows = report.Rows.Select(r => new[]
         {
             r.RegistrationNumber,
@@ -435,6 +444,7 @@ public sealed class ReportService : IReportService
             r.MarksObtained.ToString("F2"),
             r.MaxMarks.ToString("F2"),
             r.Percentage.ToString("F2"),
+            r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
             r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
         }).ToList();
         return BuildPdfBytes("Result Summary", headers, rows);
@@ -801,7 +811,10 @@ public sealed class ReportService : IReportService
             r.GradePoint.HasValue ? r.GradePoint.Value.ToString("F2") : "-",
             r.PublishedAt.HasValue ? r.PublishedAt.Value.ToString("yyyy-MM-dd") : "-"
         }).ToList();
-        return BuildPdfBytes($"Transcript - {report.RegistrationNumber}", headers, rows);
+        return BuildPdfBytes(
+            $"Transcript - {report.StudentName.ToUpperInvariant()} ({report.RegistrationNumber}) - CGPA {report.Cgpa:F2}",
+            headers, rows,
+            footerSummary: ("Final GPA", report.Cgpa.ToString("F2")));
     }
 
     // ── Low Attendance Warning Exports ───────────────────────────────────────
@@ -907,7 +920,7 @@ public sealed class ReportService : IReportService
     public async Task<FypStatusReportResponse> GetFypStatusReportAsync(
         FypStatusRequest request, CancellationToken ct = default)
     {
-        var raw = await _repo.GetFypStatusDataAsync(request.DepartmentId, request.Status, request.InstitutionType, request.TenantId, request.CampusId, ct);
+        var raw = await _repo.GetFypStatusDataAsync(request.DepartmentId, request.Status, request.InstitutionType, request.TenantId, request.CampusId, request.StudentProfileId, ct);
 
         var rows = raw.Select(r => new FypStatusRow(
             r.ProjectId, r.Title, r.StudentName, r.RegistrationNumber,
@@ -1024,22 +1037,55 @@ public sealed class ReportService : IReportService
         return cell;
     }
 
-    private static byte[] BuildPdfBytes(string title, string[] headers, IList<string[]> rows)
+    private static byte[] BuildPdfBytes(string title, string[] headers, IList<string[]> rows, (string Label, string Value)? footerSummary = null)
     {
+        var primaryDark = Color.FromHex(ReportBranding.PrimaryDarkHex);
+        var primary = Color.FromHex(ReportBranding.PrimaryHex);
+        var accent = Color.FromHex(ReportBranding.AccentHex);
+        var textColor = Color.FromHex(ReportBranding.TextHex);
+        var muted = Color.FromHex(ReportBranding.MutedHex);
+        var rowAlt = Color.FromHex(ReportBranding.RowAltHex);
+        var border = Color.FromHex(ReportBranding.BorderHex);
+        var logoBytes = ReportBranding.LogoBytes;
+        var generatedAt = DateTime.UtcNow;
+
         var doc = Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Size(PageSizes.A4.Landscape());
-                page.Margin(20);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.Margin(24);
+                page.DefaultTextStyle(x => x.FontSize(9).FontColor(textColor).FontFamily("Georgia"));
 
-                page.Header()
-                    .Text($"{title} - Generated {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC")
-                    .SemiBold()
-                    .FontSize(12);
+                var studentColumnIndex = Array.FindIndex(headers, h => string.Equals(h, "Student", StringComparison.OrdinalIgnoreCase));
 
-                page.Content().Table(table =>
+                page.Header().Column(header =>
+                {
+                    header.Item().Row(row =>
+                    {
+                        if (logoBytes is not null)
+                        {
+                            row.ConstantItem(42).Height(42).Image(logoBytes).FitArea();
+                            row.ConstantItem(10);
+                        }
+
+                        row.RelativeItem().Column(titleCol =>
+                        {
+                            titleCol.Item().Text("Tabsan EduSphere").FontSize(15).Bold().FontColor(primaryDark);
+                            titleCol.Item().Text(title).FontSize(11).SemiBold().FontColor(primary);
+                        });
+
+                        row.ConstantItem(160).AlignRight().Column(metaCol =>
+                        {
+                            metaCol.Item().AlignRight().Text($"Generated {generatedAt:dd MMM yyyy}").FontSize(8).FontColor(muted);
+                            metaCol.Item().AlignRight().Text($"{generatedAt:HH:mm} UTC").FontSize(8).FontColor(muted);
+                        });
+                    });
+
+                    header.Item().PaddingTop(6).PaddingBottom(8).LineHorizontal(1.5f).LineColor(accent);
+                });
+
+                page.Content().PaddingTop(10).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
                     {
@@ -1047,20 +1093,53 @@ public sealed class ReportService : IReportService
                             columns.RelativeColumn();
                     });
 
-                    foreach (var header in headers)
+                    foreach (var headerText in headers)
                     {
-                        table.Cell().Background(Colors.Grey.Lighten2).Padding(4)
-                            .Text(header).SemiBold();
+                        table.Cell().Background(primaryDark).Padding(5)
+                            .Text(headerText).SemiBold().FontColor(Colors.White).FontSize(9);
                     }
 
-                    foreach (var row in rows)
+                    for (var r = 0; r < rows.Count; r++)
                     {
-                        foreach (var cell in row)
+                        var background = r % 2 == 1 ? rowAlt : Colors.White;
+                        var row = rows[r];
+                        for (var c = 0; c < row.Length; c++)
                         {
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3)
-                                .Padding(3).Text(cell ?? "-");
+                            var cell = row[c];
+                            var isStudentCell = c == studentColumnIndex;
+                            var text = isStudentCell && !string.IsNullOrWhiteSpace(cell)
+                                ? cell.ToUpperInvariant()
+                                : (cell ?? "-");
+
+                            var cellContainer = table.Cell().Background(background).BorderBottom(0.75f).BorderColor(border).Padding(4);
+                            if (isStudentCell)
+                                cellContainer.Text(text).FontSize(8.5f).SemiBold().FontColor(primaryDark).LetterSpacing(0.02f);
+                            else
+                                cellContainer.Text(text).FontSize(8.5f);
                         }
                     }
+
+                    if (footerSummary is { } summary)
+                    {
+                        table.Cell().ColumnSpan((uint)Math.Max(1, headers.Length - 1))
+                            .Background(Color.FromHex("#E4F3F8")).BorderTop(1.5f).BorderColor(accent)
+                            .Padding(5).AlignRight().Text(summary.Label).Bold().FontColor(primaryDark).FontSize(9.5f);
+
+                        table.Cell()
+                            .Background(Color.FromHex("#E4F3F8")).BorderTop(1.5f).BorderColor(accent)
+                            .Padding(5).Text(summary.Value).Bold().FontColor(primaryDark).FontSize(9.5f);
+                    }
+                });
+
+                page.Footer().PaddingTop(8).Row(row =>
+                {
+                    row.RelativeItem().Text("Tabsan EduSphere — Confidential").FontSize(7.5f).FontColor(muted);
+                    row.RelativeItem().AlignRight().Text(text =>
+                    {
+                        text.CurrentPageNumber().FontSize(7.5f).FontColor(muted);
+                        text.Span(" / ").FontSize(7.5f).FontColor(muted);
+                        text.TotalPages().FontSize(7.5f).FontColor(muted);
+                    });
                 });
             });
         });

@@ -19,5 +19,8 @@ public enum ExpiryType
     ThreeYears = 4,
 
     /// <summary>License never expires.</summary>
-    Permanent = 5
+    Permanent = 5,
+
+    /// <summary>License expires at the end of an operator-chosen calendar date (e.g. 2027-03-03).</summary>
+    SpecificDate = 6
 }
