@@ -762,6 +762,7 @@ public class EduApiClient : IEduApiClient
         return new StudentProfileSummaryItem
         {
             Id = raw.Id,
+            RegistrationNumber = raw.RegistrationNumber ?? "",
             DepartmentId = raw.DepartmentId,
             DepartmentName = raw.DeptName ?? "",
             CurrentSemesterNumber = raw.CurrentSemesterNumber,
@@ -3477,6 +3478,7 @@ public class EduApiClient : IEduApiClient
     private sealed class StudentProfileApiDto
     {
         public Guid Id { get; set; }
+        public string? RegistrationNumber { get; set; }
         public Guid DepartmentId { get; set; }
         public string? DeptName { get; set; }
         public int CurrentSemesterNumber { get; set; }
@@ -3727,17 +3729,38 @@ public class EduApiClient : IEduApiClient
 
     public async Task<List<AttendanceSummaryItem>> GetMyAttendanceSummaryAsync(CancellationToken ct)
     {
-        var raw = await GetAsync<List<MyAttendanceApiDto>>("api/v1/attendance/my-attendance", ct) ?? new();
-        return raw.Select(s => new AttendanceSummaryItem
-        {
-            StudentId            = s.StudentId,
-            StudentName          = s.StudentName ?? "",
-            RegistrationNumber   = s.RegistrationNumber ?? "",
-            CourseName           = s.CourseName ?? "",
-            TotalClasses         = s.TotalClasses,
-            PresentCount         = s.PresentCount,
-            AttendancePercentage = s.AttendancePercentage
-        }).ToList();
+        // my-attendance returns one record per class date; the page shows one summary row per course.
+        var records = await GetAsync<List<AttendanceRecordApiDto>>("api/v1/attendance/my-attendance", ct) ?? new();
+        if (records.Count == 0)
+            return new();
+
+        var courses = (await GetMyEnrollmentsAsync(ct))
+            .GroupBy(c => c.CourseOfferingId)
+            .ToDictionary(g => g.Key, g => g.First());
+        var profile = await GetMyStudentProfileAsync(ct);
+        var studentName = GetSessionIdentity()?.UserName ?? string.Empty;
+
+        return records
+            .GroupBy(r => r.CourseOfferingId)
+            .Select(g =>
+            {
+                var total = g.Count();
+                var present = g.Count(r => string.Equals(r.Status, "Present", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(r.Status, "Late", StringComparison.OrdinalIgnoreCase));
+                courses.TryGetValue(g.Key, out var course);
+                return new AttendanceSummaryItem
+                {
+                    StudentId            = profile?.Id ?? g.First().StudentProfileId,
+                    StudentName          = studentName,
+                    RegistrationNumber   = profile?.RegistrationNumber ?? string.Empty,
+                    CourseName           = course is null ? "Course" : $"{course.CourseCode} - {course.CourseTitle}",
+                    TotalClasses         = total,
+                    PresentCount         = present,
+                    AttendancePercentage = total > 0 ? Math.Round((double)present / total * 100, 2) : 0.0
+                };
+            })
+            .OrderBy(s => s.CourseName)
+            .ToList();
     }
 
     public async Task<List<AttendanceRecordItem>> GetAttendanceByOfferingAsync(Guid offeringId, Guid? tenantId, Guid? campusId, CancellationToken ct)
@@ -3759,21 +3782,11 @@ public class EduApiClient : IEduApiClient
         }).ToList();
     }
 
-    private sealed class MyAttendanceApiDto
-    {
-        public Guid   StudentId            { get; set; }
-        public string? StudentName         { get; set; }
-        public string? RegistrationNumber  { get; set; }
-        public string? CourseName          { get; set; }
-        public int    TotalClasses         { get; set; }
-        public int    PresentCount         { get; set; }
-        public double AttendancePercentage { get; set; }
-    }
-
     private sealed class AttendanceRecordApiDto
     {
         public Guid     Id                 { get; set; }
         public Guid     StudentProfileId   { get; set; }
+        public Guid     CourseOfferingId   { get; set; }
         public string?  StudentName        { get; set; }
         public string?  RegistrationNumber { get; set; }
         public DateTime Date               { get; set; }

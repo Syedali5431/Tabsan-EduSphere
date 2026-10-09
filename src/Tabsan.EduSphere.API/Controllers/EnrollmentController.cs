@@ -124,7 +124,8 @@ public class EnrollmentController : ControllerBase
             CourseTitle = e.CourseOffering.Course.Title,
             CourseCode  = e.CourseOffering.Course.Code,
             Semester    = e.CourseOffering.Semester.Name,
-            e.Status,
+            // The portal compares against names ("Active"); a numeric enum broke every student course list.
+            Status      = e.Status.ToString(),
             e.EnrolledAt,
             e.DroppedAt
         }));

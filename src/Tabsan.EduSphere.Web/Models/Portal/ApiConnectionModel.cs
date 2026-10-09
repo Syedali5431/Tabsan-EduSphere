@@ -399,6 +399,7 @@ public class InstitutionPolicyPageModel
 public class StudentProfileSummaryItem
 {
     public Guid Id { get; set; }
+    public string RegistrationNumber { get; set; } = "";
     public Guid DepartmentId { get; set; }
     public string DepartmentName { get; set; } = "";
     public int CurrentSemesterNumber { get; set; }

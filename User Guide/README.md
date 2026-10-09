@@ -5,6 +5,13 @@ This folder contains role-based manuals for day-to-day use of the platform.
 Version: 1.9 — updated 15 June 2026  
 Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
 
+## Complete Illustrated User Manual (2026-10-10)
+
+- **[Tabsan-EduSphere-User-Manual.pdf](Tabsan-EduSphere-User-Manual.pdf)** and the editable **[Tabsan-EduSphere-User-Manual.docx](Tabsan-EduSphere-User-Manual.docx)** — 82 pages covering every portal screen for SuperAdmin, Admin, Faculty, Student and Finance users.
+- Step-by-step procedures with 76 screenshots captured from the running application, a contents page, a menu-access-by-role appendix, a glossary and an index.
+- Uses the `testadmin` testing account (Admin, every right except SuperAdmin) created by `Scripts/08-Create-Test-Admin-User.sql`.
+- To regenerate after UI changes, see `tools/user-manual/README.md`.
+
 ## 2026-06-15 Certificate Enhancements
 
 - **Professional Certificates** — All 4 certificate types (Degree, Transcript, Completion, Report Card) use professional DOCX templates with navy+gold branding.
