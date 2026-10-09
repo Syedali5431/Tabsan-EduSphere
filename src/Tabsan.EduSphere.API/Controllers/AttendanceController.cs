@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Application.DTOs.Attendance;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Infrastructure.Persistence;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
@@ -17,7 +19,13 @@ namespace Tabsan.EduSphere.API.Controllers;
 public class AttendanceController : ControllerBase
 {
     private readonly IAttendanceService _service;
-    public AttendanceController(IAttendanceService service) => _service = service;
+    private readonly ApplicationDbContext _db;
+
+    public AttendanceController(IAttendanceService service, ApplicationDbContext db)
+    {
+        _service = service;
+        _db = db;
+    }
 
     // ── Marking ───────────────────────────────────────────────────────────────
 
@@ -74,7 +82,7 @@ public class AttendanceController : ControllerBase
         CancellationToken ct)
     {
         var records = await _service.GetByOfferingAsync(courseOfferingId, from, to, tenantId ?? GetCurrentTenantId(), campusId ?? GetCurrentCampusId(), ct);
-        return Ok(records);
+        return Ok(await WithStudentDetailsAsync(records, ct));
     }
 
     /// <summary>
@@ -91,7 +99,7 @@ public class AttendanceController : ControllerBase
         CancellationToken ct)
     {
         var records = await _service.GetByStudentAsync(studentProfileId, courseOfferingId, tenantId ?? GetCurrentTenantId(), campusId ?? GetCurrentCampusId(), ct);
-        return Ok(records);
+        return Ok(await WithStudentDetailsAsync(records, ct));
     }
 
     /// <summary>Returns the current student's own attendance records (Student).</summary>
@@ -155,5 +163,28 @@ public class AttendanceController : ControllerBase
     {
         var claim = User.FindFirst("campus_id")?.Value ?? User.FindFirst("campusId")?.Value;
         return Guid.TryParse(claim, out var id) ? id : null;
+    }
+
+    // Staff screens list attendance per student, so include each student's name and registration
+    // number (the record itself only carries the profile id, which left those columns blank).
+    private async Task<IEnumerable<object>> WithStudentDetailsAsync(IReadOnlyList<AttendanceResponse> records, CancellationToken ct)
+    {
+        var ids = records.Select(r => r.StudentProfileId).Distinct().ToList();
+        var students = await _db.StudentProfiles.AsNoTracking()
+            .Where(sp => ids.Contains(sp.Id))
+            .Join(_db.Users.AsNoTracking(), sp => sp.UserId, u => u.Id,
+                (sp, u) => new { sp.Id, sp.RegistrationNumber, Name = u.FullName ?? u.Username })
+            .ToDictionaryAsync(x => x.Id, ct);
+
+        return records.Select(r =>
+        {
+            students.TryGetValue(r.StudentProfileId, out var st);
+            return (object)new
+            {
+                Id = r.RecordId, r.RecordId, r.StudentProfileId, r.CourseOfferingId, r.Date, r.Status, r.Remarks, r.MarkedAt,
+                StudentName = st?.Name ?? string.Empty,
+                RegistrationNumber = st?.RegistrationNumber ?? string.Empty
+            };
+        });
     }
 }

@@ -563,6 +563,12 @@
 
                     foreach (var top in visibleMenus.OrderBy(m => m.DisplayOrder))
                     {
+                        // The Dashboard page is SuperAdmin-only (others are redirected), matching the static menu and profile menu.
+                        if (!isSuperAdmin && top.Key.Equals("dashboard", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
                         var subMenus = top.SubMenus.OrderBy(s => s.DisplayOrder).ToList();
 
                         if (subMenus.Count > 0)

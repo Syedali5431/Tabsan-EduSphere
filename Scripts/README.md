@@ -13,6 +13,7 @@
 | 6 *(optional)* | `06-Create-SuperAdmin-User.sql` | Creates additional SuperAdmin (`superadmin2`) |
 | 7 *(optional)* | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role |
 | 8 *(optional)* | `student-journey-class1-10.sql` | Certificate-demo student lifecycle: Class 1-10 with results, attendance, assignments for `col11s6`, under its own isolated department |
+| 9 *(optional)* | `08-Create-Test-Admin-User.sql` | Creates testing account `testadmin` (Admin in University tenant, all its departments, no SuperAdmin rights) |
 
 There is no `09-Restructure-Sidebar-Menu.sql` or `Seed-Core-Clean.sql` in this folder — earlier revisions of this README referenced scripts that were since renamed or removed; `07-Fix-Sidebar-Role-Visibility.sql` is the script that actually ships.
 
@@ -91,6 +92,7 @@ Optional utilities:
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
 ```
 
 

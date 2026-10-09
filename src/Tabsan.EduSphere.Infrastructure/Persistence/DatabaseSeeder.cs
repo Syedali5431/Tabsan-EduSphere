@@ -582,8 +582,8 @@ public static class DatabaseSeeder
         EnsureRoleAccess(degreeRules.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(degreeRules.Id, "Student", isAllowed: false);
 
-        EnsureRoleAccess(graduationApply.Id, "Admin",   isAllowed: true);
-        EnsureRoleAccess(graduationApply.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(graduationApply.Id, "Admin",   isAllowed: false); // staff use Graduation Applications; this entry only redirects there
+        EnsureRoleAccess(graduationApply.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(graduationApply.Id, "Student", isAllowed: true);
 
         EnsureRoleAccess(graduationApplications.Id, "Admin",   isAllowed: true);
@@ -612,7 +612,7 @@ public static class DatabaseSeeder
 
         EnsureRoleAccess(studyPlan.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(studyPlan.Id, "Faculty", isAllowed: true);
-        EnsureRoleAccess(studyPlan.Id, "Student", isAllowed: true);
+        EnsureRoleAccess(studyPlan.Id, "Student", isAllowed: false); // Study Plan is Faculty/Admin only (commit 12ecfa8)
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
@@ -677,10 +677,10 @@ public static class DatabaseSeeder
         EnsureRoleAccess(helpdesk.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(helpdesk.Id, "Student", isAllowed: true);
 
-        // Payments: Admin + Student
+        // Payments: Admin + Finance. Students are blocked from the Payments page (commit 91e8147), so the menu is hidden too.
         EnsureRoleAccess(payments.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(payments.Id, "Faculty", isAllowed: false);
-        EnsureRoleAccess(payments.Id, "Student", isAllowed: true);
+        EnsureRoleAccess(payments.Id, "Student", isAllowed: false);
         EnsureRoleAccess(payments.Id, "Finance", isAllowed: true);
 
         // Enrollments: Admin + Faculty

@@ -393,6 +393,8 @@ public class SidebarMenuIntegrationTests : IAsyncLifetime
         Assert.Contains("timetable_student", keys);
         Assert.Contains("assignments", keys);
         Assert.DoesNotContain("report_center", keys); // reports are not available to students
+        Assert.DoesNotContain("payments", keys);   // receipts are managed by Admin/Finance only
+        Assert.DoesNotContain("study_plan", keys); // study plans are Faculty/Admin only
         Assert.DoesNotContain("enter_results", keys);
         Assert.DoesNotContain("sidebar_settings", keys);
         Assert.DoesNotContain("report_settings", keys);

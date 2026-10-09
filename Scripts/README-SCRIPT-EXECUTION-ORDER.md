@@ -20,6 +20,7 @@ Run scripts in this exact order for a fresh deployment.
 | 6 | `06-Create-SuperAdmin-User.sql` | Creates an additional SuperAdmin account (`superadmin2`) |
 | 7 | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role from a known-good spec |
 | 8 | `student-journey-class1-10.sql` | Attaches a full Class 1-10 certificate-eligible history to student `col11s6`, under its own isolated demo department so it never contaminates 03's course/offering selection |
+| 9 | `08-Create-Test-Admin-User.sql` | Creates the `testadmin` testing account: Admin role (every right except SuperAdmin) in the University tenant, assigned to all of its departments. Password `EduSphere147` |
 
 ## Notes
 
@@ -50,5 +51,6 @@ sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
 ```
 

@@ -57,7 +57,7 @@ WHERE smi.[Key] IN (
     'results','quizzes','student_lifecycle',
     -- Academic Related
     'result_calculation','prerequisites','generate_certificates','grading_config','study_plan',
-    'degree_audit','graduation_eligibility','degree_rules','graduation_apply','graduation_applications',
+    'degree_audit','graduation_eligibility','degree_rules','graduation_applications',  -- graduation_apply is student-only
     -- University
     'fyp',
     -- Settings Related
@@ -118,13 +118,13 @@ WHERE smi.[Key] IN (
     -- Student Related
     'results','quizzes',
     -- Academic Related
-    'study_plan','generate_certificates',
+    'generate_certificates',  -- study_plan excluded: Faculty/Admin only
     -- University
     'fyp',
     -- Settings Related
     'analytics','accreditation',  -- report_center excluded: reports are not available to students
     -- Financial
-    'payments',
+    -- payments excluded: managed by Admin/Finance only
     -- Enrollments
     'enrollments',
     -- Features
