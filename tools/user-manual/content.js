@@ -133,7 +133,7 @@ module.exports = [
           'To change a department later, click **Edit**. To retire it without deleting history, click **Deactivate**.',
         ],
         figs: [['flow:department-add/1', 'Departments list'], ['flow:department-add/3', 'Add Department form completed']],
-        notes: [['note', 'SuperAdmin also sees tenant and campus filters and the Admin Department Assignments panel, which controls which Admin users manage each department.']],
+        notes: [['note', 'A department created by an Admin is assigned to that Admin automatically. SuperAdmin also sees tenant and campus filters and the Admin Department Assignments panel, which controls which Admin users manage each department.']],
       },
       {
         title: 'Programs', roles: 'SuperAdmin, Admin, Faculty (view)', index: ['Programs'],
@@ -302,6 +302,7 @@ module.exports = [
         intro: ['Announcements publish notices to a department or a single course offering.'],
         steps: ['Open **Announcements**.', 'Choose a **Department** and, optionally, a **Course Offering**, then click **Apply** to view announcements in that scope.', 'Staff: under **Post Announcement**, enter the title and message and click **Post**.', 'Tick **Show inactive** to see expired announcements.'],
         figs: [['flow:announcement/1', 'Announcements for a department']],
+        notes: [['note', 'An announcement posted to a whole department reaches every course offering in it. It is listed once with an "N offerings" label, and Deactivate or Delete applies to all of those offerings together.']],
       },
     ],
   },
@@ -449,10 +450,11 @@ module.exports = [
         steps: [
           'Open **User Import**.',
           'Bulk: download **faculty-admin-import-template.csv** or **students-import-template.csv**, fill it in (Username, Email and Role are required), choose it in **CSV File** and click **Upload and Import**. Review the import report.',
-          'Single user: in **Create Single User**, enter the **Username**, **Email**, **Full Name**, **Role**, **Institution Type**, **Department** and **Course**, optionally a mobile number, address and profile photo.',
-          'Click **Create User**. New users must change their password at first sign-in.',
+          'Single user: in **Create Single User**, enter the **Username**, **Email**, **Full Name** and **Role**. For a Faculty member choose the **Department**; for a Student choose the **Department** and **Program** and, optionally, a **Registration No.** (it defaults to the username). Mobile number, address and profile photo are optional.',
+          'Click **Create User**. The temporary password is the username, and new users must change it at first sign-in. For students the academic profile is created at the same time, so they can use the student portal immediately.',
         ],
-        figs: [['flow:user-create/1', 'User Import'], ['flow:user-create/2', 'Create Single User form']],
+        figs: [['flow:user-create/1', 'User Import'], ['flow:user-create/2', 'Create Single User form for a student, with Department and Program']],
+        notes: [['tip', 'In the students CSV template, fill DepartmentId and ProgramId (and optionally RegistrationNumber) to create each student profile during a bulk import.']],
       },
       {
         title: 'User Settings', roles: ALL, index: ['User Settings', 'Password'],

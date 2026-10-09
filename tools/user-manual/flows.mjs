@@ -45,6 +45,7 @@ const s = {
   },
   scrollTo: (text) => async p => { await p.getByText(text, { exact: false }).first().scrollIntoViewIfNeeded(); await p.waitForTimeout(300); },
   fillCss: (css, value) => async p => { await p.locator(css).first().fill(value, { timeout: 8000 }); },
+  fn: (f) => async p => { await f(p); await p.waitForTimeout(500); },
   wait: (ms) => async p => { await p.waitForTimeout(ms); },
 };
 
@@ -85,7 +86,7 @@ const flows = [
   ]),
   flow('user-create', 'testadmin', [
     { do: [s.go('/Portal/UserImport')], shot: 'page', caption: 'User Import supports CSV bulk import and single-user creation.' },
-    { do: [s.scrollTo('Create Single User'), s.fill('Username *', 'jane.doe'), s.fill('Email *', 'jane.doe@tabsan.local'), s.fill('Full Name', 'Jane Doe')], shot: 'single', caption: 'To create one account, complete the Create Single User form and click Create User.', full: true },
+    { do: [s.scrollTo('Create Single User'), s.fill('Username *', 'jane.doe'), s.fill('Email *', 'jane.doe@tabsan.local'), s.fill('Full Name', 'Jane Doe'), s.fn(async p => { await p.selectOption('#singleUserRole', 'Student'); await p.selectOption('#studentFields [name="DepartmentId"]', { index: 1 }); await p.selectOption('#studentFields [name="ProgramId"]', { index: 1 }); await p.locator('#studentFields').scrollIntoViewIfNeeded(); })], shot: 'single', caption: 'Create Single User for a student: choose the Department and Program (the registration number defaults to the username), then click Create User.' },
   ]),
   flow('lifecycle', 'testadmin', [
     { do: [s.go('/Portal/StudentLifecycle'), s.sel('Department', 'Information Technology')], shot: 'dept', caption: 'Choose a department.' },

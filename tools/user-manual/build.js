@@ -6,6 +6,7 @@ const d = require('docx');
 const content = require('./content.js');
 
 const OUT = process.argv[2] || 'manual.docx';
+const LOGO_DIR = path.join(__dirname, '../../src/Tabsan.EduSphere.Web/wwwroot/images');
 const NAVY = '0F2A4A', TEAL = '1590A8', TEAL_DARK = '146C8A', INK = '1F2937', MUTED = '64748B', LINE = 'CBD5E1', SOFT = 'EEF6F9';
 const FONT = 'Segoe UI', FONT_HEAD = 'Segoe UI Semibold';
 const PAGE_W = 11906, MARGIN = 1247; // A4, 2.2 cm margins
@@ -190,29 +191,45 @@ const glossary = [
 // ── document ─────────────────────────────────────────────────────────────────
 (async () => {
   const { children: body } = await buildChapters();
-  const logo = fs.readFileSync(require('path').join(__dirname, '../../src/Tabsan.EduSphere.API/wwwroot/branding/tabsan-logo.png'));
-  const logoMeta = await sharp(logo).metadata();
+  // Logos (from the Web app): full logo has silver lettering, so it sits on a navy band.
+  const logoFull = fs.readFileSync(LOGO_DIR + '/tabsan-logo.png');
+  const logoFullMeta = await sharp(logoFull).metadata();
+  const logoMark = await sharp(fs.readFileSync(LOGO_DIR + '/tabsan-mark.png')).resize({ width: 96 }).png().toBuffer();
   const hero = await loadImage(resolveImage('testadmin:Departments'));
-  const today = '9 October 2026';
+  const today = '10 October 2026';
+  const VERSION = '1.1';
+
+  const band = (children, padTop, padBottom) => new d.Table({
+    width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [BODY_W],
+    rows: [new d.TableRow({ children: [new d.TableCell({
+      width: { size: BODY_W, type: d.WidthType.DXA },
+      shading: { type: d.ShadingType.CLEAR, color: 'auto', fill: NAVY },
+      margins: { top: padTop, bottom: padBottom, left: 400, right: 400 },
+      borders: { top: { style: d.BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: d.BorderStyle.SINGLE, size: 24, color: TEAL }, left: { style: d.BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: d.BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
+      children,
+    })] })],
+  });
 
   const cover = [
-    new d.Paragraph({ spacing: { before: 600, after: 300 }, children: [new d.ImageRun({ type: 'png', data: logo, transformation: { width: 150, height: Math.round(150 * logoMeta.height / logoMeta.width) }, altText: { title: 'Tabsan logo', description: 'Tabsan logo', name: 'logo' } })] }),
-    new d.Paragraph({ spacing: { after: 60 }, children: [new d.TextRun({ text: 'TABSAN EDUSPHERE', font: FONT_HEAD, size: 26, color: TEAL, characterSpacing: 60 })] }),
+    band([
+      new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { after: 0 }, children: [new d.ImageRun({ type: 'png', data: logoFull, transformation: { width: 430, height: Math.round(430 * logoFullMeta.height / logoFullMeta.width) }, altText: { title: 'Tabsan logo', description: 'Tabsan — Building Next Era of Software', name: 'logo' } })] }),
+    ], 520, 520),
+    new d.Paragraph({ spacing: { before: 560, after: 60 }, children: [new d.TextRun({ text: 'TABSAN EDUSPHERE', font: FONT_HEAD, size: 26, color: TEAL, characterSpacing: 60 })] }),
     new d.Paragraph({ spacing: { after: 120 }, children: [new d.TextRun({ text: 'User Manual', font: FONT_HEAD, size: 80, color: NAVY })] }),
-    new d.Paragraph({ spacing: { after: 480 }, border: { bottom: { style: d.BorderStyle.SINGLE, size: 18, color: TEAL, space: 12 } },
+    new d.Paragraph({ spacing: { after: 400 }, border: { bottom: { style: d.BorderStyle.SINGLE, size: 18, color: TEAL, space: 12 } },
       children: [new d.TextRun({ text: 'Campus Portal for Universities, Colleges and Schools', size: 30, color: MUTED })] }),
-    new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { after: 480 }, children: [new d.ImageRun({ type: 'jpg', data: hero.buf, transformation: { width: 560, height: Math.round(560 * hero.h / hero.w) }, altText: { title: 'Portal screenshot', description: 'The Departments page of the portal', name: 'hero' } })] }),
-    new d.Paragraph({ spacing: { after: 60 }, children: [new d.TextRun({ text: 'Version 1.0', bold: true, color: NAVY, size: 22 }), new d.TextRun({ text: `   ·   ${today}`, color: MUTED, size: 22 })] }),
+    new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { after: 400 }, children: [new d.ImageRun({ type: 'jpg', data: hero.buf, transformation: { width: 520, height: Math.round(520 * hero.h / hero.w) }, altText: { title: 'Portal screenshot', description: 'The Departments page of the portal', name: 'hero' } })] }),
+    new d.Paragraph({ spacing: { after: 60 }, children: [new d.TextRun({ text: `Version ${VERSION}`, bold: true, color: NAVY, size: 22 }), new d.TextRun({ text: `   ·   ${today}`, color: MUTED, size: 22 })] }),
     new d.Paragraph({ children: [new d.TextRun({ text: 'Tabsan Nexora — Building the Next Era of Software', color: MUTED, size: 20 })] }),
   ];
 
   const docInfo = [
     new d.Paragraph({ heading: d.HeadingLevel.HEADING_1, pageBreakBefore: true, children: [new d.TextRun('About This Manual')] }),
-    para('This manual describes Tabsan EduSphere as installed from the main branch on 9 October 2026. Screenshots were captured from the live application using the demonstration data set.'),
+    para('This manual describes Tabsan EduSphere as installed from the main branch on 10 October 2026. Screenshots were captured from the live application using the demonstration data set.'),
     dataTable(['Item', 'Detail'], [
       ['Product', 'Tabsan EduSphere Campus Portal'],
       ['Document', 'User Manual'],
-      ['Version', '1.0'],
+      ['Version', VERSION],
       ['Date', today],
       ['Audience', 'SuperAdmin, Admin, Faculty, Student and Finance users'],
       ['Publisher', 'Tabsan Nexora'],
@@ -236,7 +253,8 @@ const glossary = [
   const header = new d.Header({ children: [new d.Paragraph({
     border: { bottom: { style: d.BorderStyle.SINGLE, size: 4, color: LINE, space: 4 } },
     tabStops: [{ type: d.TabStopType.RIGHT, position: BODY_W }],
-    children: [new d.TextRun({ text: 'Tabsan EduSphere', bold: true, color: NAVY, size: 16 }), new d.TextRun({ text: '\tUser Manual · Version 1.0', color: MUTED, size: 16 })] })] });
+    children: [new d.ImageRun({ type: 'png', data: logoMark, transformation: { width: 18, height: 18 }, altText: { title: 'Tabsan emblem', description: 'Tabsan emblem', name: 'header-mark' } }),
+      new d.TextRun({ text: '  Tabsan EduSphere', bold: true, color: NAVY, size: 16 }), new d.TextRun({ text: `\tUser Manual · Version ${VERSION}`, color: MUTED, size: 16 })] })] });
   const footer = new d.Footer({ children: [new d.Paragraph({
     border: { top: { style: d.BorderStyle.SINGLE, size: 4, color: LINE, space: 4 } },
     tabStops: [{ type: d.TabStopType.RIGHT, position: BODY_W }],
@@ -277,6 +295,13 @@ const glossary = [
   let m = 0;
   xml = xml.replace(/<pic:cNvPr id="[0-9]+"/g, () => `<pic:cNvPr id="${1000 + ++m}"`);
   zip.file('word/document.xml', xml);
+  // Header/footer drawings need ids distinct from the body's too.
+  for (const part of Object.keys(zip.files).filter(f => /^word\/(header|footer)\d*\.xml$/.test(f))) {
+    let px = await zip.file(part).async('string');
+    px = px.replace(/<wp:docPr id="[0-9]+"/g, () => `<wp:docPr id="${++n}"`)
+           .replace(/<pic:cNvPr id="[0-9]+"/g, () => `<pic:cNvPr id="${1000 + ++m}"`);
+    zip.file(part, px);
+  }
   const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   fs.writeFileSync(OUT, buf);
   indexTerms.push({ heading: 'Appendix A   Menu Access by Role', terms: ['Access matrix'] });
