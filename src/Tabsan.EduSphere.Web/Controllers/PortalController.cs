@@ -2435,15 +2435,24 @@ public class PortalController : Controller
                 model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
         }
 
-        // Load departments and courses for the Create Single User dropdowns
+        await LoadSingleUserLookupsAsync(model, tenantId, campusId, ct);
+
+        return View(model);
+    }
+
+    // Department and program lists for the Create Single User form (also reloaded after a POST so the
+    // form is still usable when it is shown again with a message).
+    private async Task LoadSingleUserLookupsAsync(UserImportPageModel model, Guid? tenantId, Guid? campusId, CancellationToken ct)
+    {
         try
         {
             model.AvailableDepartments = await _api.GetDepartmentsAsync(tenantId, campusId, ct);
-            model.AvailableCourses = await _api.GetCoursesAsync(null, tenantId, campusId, ct);
+            model.AvailablePrograms = (await _api.GetProgramDetailsAsync(null, tenantId, campusId, ct))
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.DepartmentName).ThenBy(p => p.Name)
+                .ToList();
         }
         catch { /* dropdowns will be empty if API fails */ }
-
-        return View(model);
     }
 
     [HttpPost]
@@ -2524,6 +2533,8 @@ public class PortalController : Controller
         if (!model.IsConnected)
             return View("UserImport", model);
 
+        await LoadSingleUserLookupsAsync(model, tenantId, campusId, ct);
+
         if (string.IsNullOrWhiteSpace(form.Username))
         {
             model.Message = "Username is required.";
@@ -2557,9 +2568,9 @@ public class PortalController : Controller
                 model.Message = "Department ID is required for Student.";
                 return View("UserImport", model);
             }
-            if (string.IsNullOrWhiteSpace(form.CourseId))
+            if (string.IsNullOrWhiteSpace(form.ProgramId))
             {
-                model.Message = "Course ID is required for Student.";
+                model.Message = "Program is required for Student.";
                 return View("UserImport", model);
             }
         }
@@ -2582,8 +2593,9 @@ public class PortalController : Controller
         }
 
         // Build CSV and import
-        var csvHeader = "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments";
-        var csvRow = $"{EscapeCsv(form.Username)},{EscapeCsv(form.Email)},{EscapeCsv(form.FullName ?? string.Empty)},{form.Role},{form.DepartmentId ?? string.Empty},{form.InstitutionType ?? string.Empty},{form.MobileNumber ?? string.Empty},{form.CampusAssignments ?? string.Empty}";
+        var isStudent = string.Equals(form.Role, "Student", StringComparison.OrdinalIgnoreCase);
+        var csvHeader = "Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments,ProgramId,RegistrationNumber";
+        var csvRow = $"{EscapeCsv(form.Username)},{EscapeCsv(form.Email)},{EscapeCsv(form.FullName ?? string.Empty)},{form.Role},{form.DepartmentId ?? string.Empty},{form.InstitutionType ?? string.Empty},{form.MobileNumber ?? string.Empty},{form.CampusAssignments ?? string.Empty},{(isStudent ? form.ProgramId : null) ?? string.Empty},{(isStudent ? EscapeCsv(form.RegistrationNumber?.Trim() ?? string.Empty) : string.Empty)}";
         var csvContent = csvHeader + Environment.NewLine + csvRow;
 
         try
@@ -12340,11 +12352,17 @@ public class PortalController : Controller
                 .OrderByDescending(x => x.PostedAt)
                 .ToList();
 
-            model.Announcements = items.Select(a => new AnnouncementItem
-            {
-                Id = a.Id, OfferingId = a.OfferingId, Title = a.Title,
-                Body = a.Body, AuthorName = a.AuthorName, IsActive = a.IsActive, PostedAt = a.PostedAt
-            }).ToList();
+            // A department-wide post is stored as one copy per offering. Show it once, and let
+            // activate/deactivate/delete act on every copy together.
+            model.Announcements = items
+                .GroupBy(a => new { a.Title, a.Body, a.AuthorName, Posted = a.PostedAt.ToString("yyyyMMddHHmm") })
+                .Select(g => new AnnouncementItem
+                {
+                    Id = g.First().Id, OfferingId = g.First().OfferingId, Title = g.Key.Title,
+                    Body = g.Key.Body, AuthorName = g.Key.AuthorName, IsActive = g.Any(a => a.IsActive), PostedAt = g.First().PostedAt,
+                    Ids = g.Select(a => a.Id).ToList()
+                })
+                .ToList();
         }
         catch (Exception ex) { model.ErrorMessage = ex.Message; }
         return View(model);
@@ -12394,14 +12412,15 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, Guid? offeringId, Guid? departmentId, bool isActive, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> SetAnnouncementActive(Guid announcementId, List<Guid>? announcementIds, Guid? offeringId, Guid? departmentId, bool isActive, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
                 var session = _api.GetSessionIdentity();
-                await _api.SetAnnouncementActiveAsync(announcementId, isActive, session?.TenantId, session?.CampusId, ct);
+                foreach (var id in AnnouncementTargets(announcementId, announcementIds))
+                    await _api.SetAnnouncementActiveAsync(id, isActive, session?.TenantId, session?.CampusId, ct);
                 TempData["SuccessMessage"] = isActive ? "Announcement activated." : "Announcement deactivated.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
@@ -12410,20 +12429,24 @@ public class PortalController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, Guid? offeringId, Guid? departmentId, bool includeInactive, CancellationToken ct)
+    public async Task<IActionResult> DeleteAnnouncement(Guid announcementId, List<Guid>? announcementIds, Guid? offeringId, Guid? departmentId, bool includeInactive, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
                 var session = _api.GetSessionIdentity();
-                await _api.DeleteAnnouncementAsync(announcementId, session?.TenantId, session?.CampusId, ct);
+                foreach (var id in AnnouncementTargets(announcementId, announcementIds))
+                    await _api.DeleteAnnouncementAsync(id, session?.TenantId, session?.CampusId, ct);
                 TempData["SuccessMessage"] = "Announcement deleted.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }
         }
         return RedirectToAction(nameof(Announcements), new { offeringId, departmentId, includeInactive });
     }
+
+    private static IEnumerable<Guid> AnnouncementTargets(Guid announcementId, List<Guid>? announcementIds)
+        => announcementIds is { Count: > 0 } ? announcementIds.Distinct() : new[] { announcementId };
 
     // -- Phase 21 Stage 21.1/21.2 — Study Planner -----------------------------
 

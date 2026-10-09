@@ -54,8 +54,8 @@ Note: CSV format itself cannot store in-cell dropdown validation metadata. Dropd
 | InstitutionType | Yes | `School`, `College`, or `University` (must be license-enabled). |
 | MobileNumber | Optional | Mobile number for SMS/notification readiness. Accepts digits and common separators. |
 | CampusAssignments | Optional | Pipe-separated campus GUID list (for assignment workflow prep), e.g. `guid1|guid2`. |
-| ProgramId | Recommended | Program GUID for downstream student profile setup. |
-| RegistrationNumber | Recommended | Student registration number for profile/whitelist workflows. |
+| ProgramId | Recommended | Program GUID. With DepartmentId set, the import creates the student profile so the student can use the portal straight away. |
+| RegistrationNumber | Optional | Student registration number; defaults to the username in capitals when ProgramId is given. |
 | CurrentSemesterNumber | Recommended | Numeric level/semester value for initial academic state. |
 | SemesterName | Yes | Semester/grade-year label used for allocation workflow. |
 | CourseCode | Yes | Course code for enrollment mapping workflow. |

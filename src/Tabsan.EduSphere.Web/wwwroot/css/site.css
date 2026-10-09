@@ -2162,8 +2162,9 @@ tr th {
 }
 
 .tns-global-footer-logo {
-  width: 48px !important;
-  height: 48px !important;
+  width: auto !important;
+  height: 56px !important;
+  max-width: 220px;
   flex-shrink: 0;
   object-fit: contain;
   opacity: 0.92;
@@ -2206,8 +2207,8 @@ tr th {
   }
 
   .tns-global-footer-logo {
-    width: 32px;
-    height: 32px;
+    width: auto !important;
+    height: 40px !important;
   }
 
   .tns-global-footer-brand {

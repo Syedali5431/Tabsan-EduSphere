@@ -795,6 +795,7 @@ public class UserImportPageModel
     public SingleUserFormModel SingleUserForm { get; set; } = new();
     public List<LookupItem> AvailableDepartments { get; set; } = new();
     public List<LookupItem> AvailableCourses { get; set; } = new();
+    public List<ProgramItem> AvailablePrograms { get; set; } = new();
 }
 
 public class SingleUserFormModel
@@ -805,6 +806,10 @@ public class SingleUserFormModel
     public string Role { get; set; } = "Student";
     public string? DepartmentId { get; set; }
     public string? CourseId { get; set; }
+    /// <summary>Student only: the program the student is admitted to (creates the student profile).</summary>
+    public string? ProgramId { get; set; }
+    /// <summary>Student only: optional; defaults to the username in capitals.</summary>
+    public string? RegistrationNumber { get; set; }
     public string? InstitutionType { get; set; }
     public string? MobileNumber { get; set; }
     public string? CampusAssignments { get; set; }
@@ -2694,6 +2699,8 @@ public class AnnouncementItem
     public string   AuthorName { get; set; } = string.Empty;
     public bool     IsActive   { get; set; }
     public DateTime PostedAt   { get; set; }
+    /// <summary>All stored copies (one per offering for a department-wide post).</summary>
+    public List<Guid> Ids      { get; set; } = new();
 }
 
 public class AnnouncementsPageModel

@@ -168,7 +168,7 @@ else
                 @foreach (var a in Model.Announcements)
                 {
                     <tr>
-                        <td class="fw-semibold">@a.Title</td>
+                        <td class="fw-semibold">@a.Title@if (a.Ids.Count > 1) { <span class="badge bg-info-subtle text-info-emphasis ms-1" title="Department-wide announcement">@a.Ids.Count offerings</span> }</td>
                         <td>@a.Body</td>
                         <td>@a.AuthorName</td>
                         <td class="text-muted">@a.PostedAt.ToString("MMM dd, yyyy HH:mm")</td>
@@ -181,6 +181,7 @@ else
                                 <form asp-action="SetAnnouncementActive" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
+                                    @foreach (var copyId in a.Ids) { <input type="hidden" name="announcementIds" value="@copyId" /> }
                                     <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
@@ -192,6 +193,7 @@ else
                                 <form asp-action="DeleteAnnouncement" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?')">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
+                                    @foreach (var copyId in a.Ids) { <input type="hidden" name="announcementIds" value="@copyId" /> }
                                     <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />

@@ -127,6 +127,19 @@ public class DepartmentController : ControllerBase
         dept.SetTenantCampus(scope.TenantId, scope.CampusId);
         await _deptRepo.AddAsync(dept, ct);
         await _deptRepo.SaveChangesAsync(ct);
+
+        // Admins only see departments assigned to them, so a department an Admin creates is
+        // assigned to that Admin straight away; otherwise it vanishes from their own lists.
+        if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+        {
+            var adminUserId = GetUserId();
+            if (adminUserId != Guid.Empty)
+            {
+                await _adminAssignments.AddAsync(new AdminDepartmentAssignment(adminUserId, dept.Id), ct);
+                await _adminAssignments.SaveChangesAsync(ct);
+            }
+        }
+
         return CreatedAtAction(nameof(GetById), new { id = dept.Id }, new { dept.Id });
     }
 

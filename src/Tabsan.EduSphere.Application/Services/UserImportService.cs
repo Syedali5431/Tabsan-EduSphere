@@ -1,5 +1,6 @@
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Domain.Academic;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Interfaces;
@@ -21,6 +22,8 @@ public class UserImportService : IUserImportService
     private readonly IUserRepository _userRepo;
     private readonly IPasswordHasher _hasher;
     private readonly IInstitutionPolicyService _institutionPolicyService;
+    private readonly IStudentProfileRepository? _studentProfiles;
+    private readonly IAcademicProgramRepository? _programs;
 
     /// <summary>
     /// Allowed role names for CSV import. SuperAdmin cannot be created via CSV
@@ -32,11 +35,15 @@ public class UserImportService : IUserImportService
     public UserImportService(
         IUserRepository userRepo,
         IPasswordHasher hasher,
-        IInstitutionPolicyService institutionPolicyService)
+        IInstitutionPolicyService institutionPolicyService,
+        IStudentProfileRepository? studentProfiles = null,
+        IAcademicProgramRepository? programs = null)
     {
         _userRepo = userRepo;
         _hasher = hasher;
         _institutionPolicyService = institutionPolicyService;
+        _studentProfiles = studentProfiles;
+        _programs = programs;
     }
 
     public async Task<UserImportResult> ImportFromCsvAsync(
@@ -75,6 +82,13 @@ public class UserImportService : IUserImportService
         var institutionTypeIndex = headerMap.TryGetValue("institutiontype", out var instIdx) ? instIdx : -1;
         var phoneNumberIndex = ResolvePhoneNumberIndex(headerMap);
         var campusAssignmentsIndex = ResolveCampusAssignmentsIndex(headerMap);
+        var fullNameIndex = headerMap.TryGetValue("fullname", out var fnIdx) ? fnIdx : -1;
+        // Student rows may carry ProgramId (+ optional RegistrationNumber) so the academic profile is
+        // created with the account; without a profile a student cannot use the student portal.
+        var programIdIndex = headerMap.TryGetValue("programid", out var progIdx) ? progIdx : -1;
+        var registrationNumberIndex = headerMap.TryGetValue("registrationnumber", out var regIdx) ? regIdx : -1;
+        var studentProfilesToCreate = new List<(User User, string RegistrationNumber, Guid ProgramId, Guid DepartmentId)>();
+        var batchRegistrationNumbers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var policy = await _institutionPolicyService.GetPolicyAsync(ct);
 
@@ -213,6 +227,46 @@ public class UserImportService : IUserImportService
                 roleId = role.Id;
             }
 
+            // ── Student academic profile (optional ProgramId column) ──────────
+            Guid? programId = null;
+            string? registrationNumber = null;
+            var programIdStr = programIdIndex >= 0 ? GetValue(parts, programIdIndex) : string.Empty;
+            if (string.Equals(roleName, "Student", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(programIdStr))
+            {
+                if (!Guid.TryParse(programIdStr, out var parsedProgram))
+                {
+                    errors.Add($"Line {lineNumber}: ProgramId '{programIdStr}' is not a valid GUID.");
+                    continue;
+                }
+                if (!departmentId.HasValue)
+                {
+                    errors.Add($"Line {lineNumber}: DepartmentId is required when ProgramId is given.");
+                    continue;
+                }
+                if (_programs is not null)
+                {
+                    var program = await _programs.GetByIdAsync(parsedProgram, tenantId, campusId, ct);
+                    if (program is null || program.DepartmentId != departmentId.Value)
+                    {
+                        errors.Add($"Line {lineNumber}: Program '{programIdStr}' was not found in the selected department.");
+                        continue;
+                    }
+                }
+
+                registrationNumber = registrationNumberIndex >= 0 ? GetValue(parts, registrationNumberIndex) : string.Empty;
+                if (string.IsNullOrWhiteSpace(registrationNumber))
+                    registrationNumber = username.ToUpperInvariant();
+                if (!batchRegistrationNumbers.Add(registrationNumber) ||
+                    (_studentProfiles is not null && await _studentProfiles.RegistrationNumberExistsAsync(registrationNumber, ct)))
+                {
+                    errors.Add($"Line {lineNumber}: Registration number '{registrationNumber}' is already in use.");
+                    continue;
+                }
+                programId = parsedProgram;
+            }
+
+            var fullName = fullNameIndex >= 0 ? GetValue(parts, fullNameIndex) : string.Empty;
+
             // ── Build user — initial password = username (P4-S2-01) ───────────
             var passwordHash = _hasher.Hash(username);
             var user = new User(
@@ -223,6 +277,7 @@ public class UserImportService : IUserImportService
                 departmentId: departmentId,
                 mustChangePassword: true,   // P4-S2-02: force change on first login
                 institutionType: institutionType,
+                fullName: string.IsNullOrWhiteSpace(fullName) ? null : fullName,
                 phoneNumber: phoneNumber,
                 tenantId: tenantId,
                 campusId: campusId
@@ -230,6 +285,8 @@ public class UserImportService : IUserImportService
 
             batchUsernames.Add(username);
             toImport.Add(user);
+            if (programId.HasValue && registrationNumber is not null)
+                studentProfilesToCreate.Add((user, registrationNumber, programId.Value, departmentId!.Value));
         }
 
         var shouldRollback = strictMode && (errors.Count > 0 || duplicates > 0);
@@ -238,6 +295,13 @@ public class UserImportService : IUserImportService
         {
             await _userRepo.AddRangeAsync(toImport, ct);
             await _userRepo.SaveChangesAsync(ct);
+
+            if (_studentProfiles is not null && studentProfilesToCreate.Count > 0)
+            {
+                foreach (var (user, regNo, program, department) in studentProfilesToCreate)
+                    await _studentProfiles.AddAsync(new StudentProfile(user.Id, regNo, program, department, DateTime.UtcNow.Date), ct);
+                await _studentProfiles.SaveChangesAsync(ct);
+            }
         }
 
         if (shouldRollback)

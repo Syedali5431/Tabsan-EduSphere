@@ -76,7 +76,7 @@
                         </div>
                         <ul class="mb-0 ps-3">
                             <li>Required columns: <strong>Username, Email, Role</strong></li>
-                            <li>Optional columns: <strong>FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments</strong></li>
+                            <li>Optional columns: <strong>FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments</strong>; for students also <strong>ProgramId</strong> (with DepartmentId) and <strong>RegistrationNumber</strong> to create the student profile</li>
                             <li>Accepted file type: <strong>.csv</strong> only</li>
                             <li>Role values: <strong>Admin</strong>, <strong>Faculty</strong>, <strong>Student</strong>, <strong>Finance</strong></li>
                             <li>If you provide <strong>DepartmentId</strong>, use valid IDs from your current database.</li>
@@ -175,14 +175,24 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Course <span class="text-danger">*</span></label>
-                                <select class="form-select" name="CourseId">
-                                    <option value="">— Select Course —</option>
-                                    @foreach (var course in Model.AvailableCourses)
+                                <label class="form-label">Program <span class="text-danger">*</span></label>
+                                <select class="form-select" name="ProgramId">
+                                    <option value="">— Select Program —</option>
+                                    @foreach (var deptGroup in Model.AvailablePrograms.GroupBy(p => p.DepartmentName))
                                     {
-                                        <option value="@course.Id">@course.Name</option>
+                                        <optgroup label="@deptGroup.Key">
+                                            @foreach (var program in deptGroup)
+                                            {
+                                                <option value="@program.Id" selected="@(Model.SingleUserForm.ProgramId == program.Id.ToString())">@program.Name</option>
+                                            }
+                                        </optgroup>
                                     }
                                 </select>
+                                <div class="form-text">Creates the student's academic profile; choose a program of the selected department.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Registration No.</label>
+                                <input class="form-control" name="RegistrationNumber" maxlength="50" value="@Model.SingleUserForm.RegistrationNumber" placeholder="Defaults to the username" />
                             </div>
                         </div>
 
@@ -215,13 +225,17 @@
                     var role = document.getElementById('singleUserRole').value;
                     document.getElementById('facultyFields').style.display = (role === 'Faculty') ? '' : 'none';
                     document.getElementById('studentFields').style.display = (role === 'Student') ? '' : 'none';
-                    // Toggle required attributes
-                    var facultyDept = document.querySelector('#facultyFields input[name="DepartmentId"]');
-                    var studentDept = document.querySelector('#studentFields input[name="DepartmentId"]');
-                    var studentCourse = document.querySelector('#studentFields input[name="CourseId"]');
-                    if (role === 'Faculty') { facultyDept.required = true; studentDept.required = false; if(studentCourse) studentCourse.required = false; }
-                    else if (role === 'Student') { facultyDept.required = false; studentDept.required = true; if(studentCourse) studentCourse.required = true; }
-                    else { facultyDept.required = false; studentDept.required = false; if(studentCourse) studentCourse.required = false; }
+                    // Department/course are dropdowns. Require only the visible group, and disable the hidden
+                    // group so its empty DepartmentId does not get posted alongside the chosen one.
+                    var groups = { Faculty: document.getElementById('facultyFields'), Student: document.getElementById('studentFields') };
+                    Object.keys(groups).forEach(function (key) {
+                        var active = role === key;
+                        if (!groups[key]) return;
+                        groups[key].querySelectorAll('[name="DepartmentId"], [name="ProgramId"], [name="RegistrationNumber"]').forEach(function (el) {
+                            el.required = active && el.name !== 'RegistrationNumber';
+                            el.disabled = !active;
+                        });
+                    });
                 }
                 // Run on load to set initial state
                 toggleRoleFields();

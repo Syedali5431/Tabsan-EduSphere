@@ -3,41 +3,23 @@
     ViewData["Title"] = "Audit Logs";
     var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
     if (totalPages < 1) totalPages = 1;
+
+    // Built by hand: "action" is a reserved route value, so asp-route-action silently dropped the Action filter from exports.
+    var exportQuery = string.Join("&", new (string Key, string? Value)[]
+    {
+        ("query", Model.Query), ("actorUserId", Model.ActorUserId?.ToString()), ("action", Model.Action),
+        ("entityName", Model.EntityName), ("fromUtc", Model.FromUtc?.ToString("o")), ("toUtc", Model.ToUtc?.ToString("o"))
+    }.Where(p => !string.IsNullOrWhiteSpace(p.Value)).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value!)}"));
+    string ExportUrl(string actionName) => Url.Action(actionName, "Portal") + (exportQuery.Length > 0 ? "?" + exportQuery : string.Empty);
+    string PageUrl(int page) => Url.Action("AuditLogs", "Portal") + $"?page={page}&pageSize={Model.PageSize}" + (exportQuery.Length > 0 ? "&" + exportQuery : string.Empty);
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Audit Logs</h4>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm"
-           asp-action="ExportAuditLogsCsv"
-           asp-route-query="@Model.Query"
-           asp-route-actorUserId="@Model.ActorUserId"
-           asp-route-action="@Model.Action"
-           asp-route-entityName="@Model.EntityName"
-           asp-route-fromUtc="@Model.FromUtc"
-           asp-route-toUtc="@Model.ToUtc">
-            Export CSV
-        </a>
-        <a class="btn btn-outline-secondary btn-sm"
-           asp-action="ExportAuditLogsExcel"
-           asp-route-query="@Model.Query"
-           asp-route-actorUserId="@Model.ActorUserId"
-           asp-route-action="@Model.Action"
-           asp-route-entityName="@Model.EntityName"
-           asp-route-fromUtc="@Model.FromUtc"
-           asp-route-toUtc="@Model.ToUtc">
-            Export Excel
-        </a>
-        <a class="btn btn-outline-secondary btn-sm"
-           asp-action="ExportAuditLogsPdf"
-           asp-route-query="@Model.Query"
-           asp-route-actorUserId="@Model.ActorUserId"
-           asp-route-action="@Model.Action"
-           asp-route-entityName="@Model.EntityName"
-           asp-route-fromUtc="@Model.FromUtc"
-           asp-route-toUtc="@Model.ToUtc">
-            Export PDF
-        </a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsCsv")">Export CSV</a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsExcel")">Export Excel</a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsPdf")">Export PDF</a>
     </div>
 </div>
 
@@ -142,29 +124,11 @@ else
     <nav aria-label="Audit pagination" class="mt-2">
         <ul class="pagination pagination-sm mb-0">
             <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="AuditLogs"
-                   asp-route-page="@(Model.Page - 1)"
-                   asp-route-pageSize="@Model.PageSize"
-                   asp-route-query="@Model.Query"
-                   asp-route-actorUserId="@Model.ActorUserId"
-                   asp-route-action="@Model.Action"
-                   asp-route-entityName="@Model.EntityName"
-                   asp-route-fromUtc="@Model.FromUtc"
-                   asp-route-toUtc="@Model.ToUtc">Previous</a>
+                <a class="page-link" href="@PageUrl(Model.Page - 1)">Previous</a>
             </li>
             <li class="page-item disabled"><span class="page-link">Page @Model.Page of @totalPages</span></li>
             <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="AuditLogs"
-                   asp-route-page="@(Model.Page + 1)"
-                   asp-route-pageSize="@Model.PageSize"
-                   asp-route-query="@Model.Query"
-                   asp-route-actorUserId="@Model.ActorUserId"
-                   asp-route-action="@Model.Action"
-                   asp-route-entityName="@Model.EntityName"
-                   asp-route-fromUtc="@Model.FromUtc"
-                   asp-route-toUtc="@Model.ToUtc">Next</a>
+                <a class="page-link" href="@PageUrl(Model.Page + 1)">Next</a>
             </li>
         </ul>
     </nav>
