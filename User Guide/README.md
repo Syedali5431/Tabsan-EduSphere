@@ -5,12 +5,13 @@ This folder contains role-based manuals for day-to-day use of the platform.
 Version: 1.9 — updated 15 June 2026  
 Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1-10) + 2026-06-15 Certificate Enhancements
 
-## Complete Illustrated User Manual (v1.1, 2026-10-10)
+## Complete Illustrated User Manual (v1.2, 2026-10-10)
 
-- **[Tabsan-EduSphere-User-Manual.pdf](Tabsan-EduSphere-User-Manual.pdf)** and the editable **[Tabsan-EduSphere-User-Manual.docx](Tabsan-EduSphere-User-Manual.docx)** — 82 pages covering every portal screen for SuperAdmin, Admin, Faculty, Student and Finance users.
+- **[Tabsan-EduSphere-User-Manual.pdf](Tabsan-EduSphere-User-Manual.pdf)** and the editable **[Tabsan-EduSphere-User-Manual.docx](Tabsan-EduSphere-User-Manual.docx)** — 101 pages covering every portal screen for SuperAdmin, Admin, Faculty, Student and Finance users.
 - Step-by-step procedures with 76 screenshots captured from the running application, a contents page, a menu-access-by-role appendix, a glossary and an index.
 - Uses the `testadmin` testing account (Admin, every right except SuperAdmin) created by `Scripts/08-Create-Test-Admin-User.sql`.
 - v1.1: new Tabsan logo on the cover and page headers, refreshed screenshots showing the new app branding, and updated User Import, Departments and Announcements sections.
+- v1.2: expanded text throughout — new Key Concepts and Quick Start by Role chapters, "Before you start", step-by-step procedures, field-by-field explanations, status tables and "What happens next" notes for every module, and a larger Troubleshooting and FAQ.
 - To regenerate after UI changes, see `tools/user-manual/README.md`.
 
 ## 2026-06-15 Certificate Enhancements

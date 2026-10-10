@@ -6,7 +6,7 @@ const d = require('docx');
 const content = require('./content.js');
 
 const OUT = process.argv[2] || 'manual.docx';
-const LOGO_DIR = path.join(__dirname, '../../src/Tabsan.EduSphere.Web/wwwroot/images');
+const LOGO_DIR = process.env.TABSAN_LOGO_DIR || path.join(__dirname, '../../src/Tabsan.EduSphere.Web/wwwroot/images');
 const NAVY = '0F2A4A', TEAL = '1590A8', TEAL_DARK = '146C8A', INK = '1F2937', MUTED = '64748B', LINE = 'CBD5E1', SOFT = 'EEF6F9';
 const FONT = 'Segoe UI', FONT_HEAD = 'Segoe UI Semibold';
 const PAGE_W = 11906, MARGIN = 1247; // A4, 2.2 cm margins
@@ -141,16 +141,23 @@ async function buildChapters() {
         children: [new d.TextRun(`${ch}.${sec}   ${s.title}`)] }));
       if (s.index) indexTerms.push({ heading: `${ch}.${sec}   ${s.title}`, terms: s.index });
       if (s.roles) children.push(rolesLine(s.roles));
+      const h3 = (t) => children.push(new d.Paragraph({ heading: d.HeadingLevel.HEADING_3, keepNext: true, children: [new d.TextRun(t)] }));
+      const bulletList = (items) => { for (const b of items) children.push(new d.Paragraph({ bullet: { level: 0 }, spacing: { after: 80, line: 290 }, children: runs(b) })); };
       for (const t of s.intro || []) children.push(para(t));
       if (s.bullets) for (const b of s.bullets) children.push(new d.Paragraph({ bullet: { level: 0 }, spacing: { after: 80, line: 290 }, children: runs(b) }));
       if (s.table) { children.push(dataTable(s.table.head, s.table.rows, s.table.widths)); children.push(new d.Paragraph({ spacing: { after: 160 }, children: [] })); }
+      if (s.before) { h3('Before you start'); bulletList(s.before); }
       if (s.steps) {
         children.push(new d.Paragraph({ heading: d.HeadingLevel.HEADING_3, keepNext: true, children: [new d.TextRun('Procedure')] }));
         const ref = newNumbering();
         for (const st of s.steps) children.push(new d.Paragraph({ numbering: { reference: ref, level: 0 }, spacing: { after: 90, line: 290 }, children: runs(st) }));
         children.push(new d.Paragraph({ spacing: { after: 100 }, children: [] }));
       }
+      if (s.fields) { h3('Fields and options'); children.push(dataTable(['Field', 'What to enter or choose'], s.fields, [2700, 6600])); children.push(new d.Paragraph({ spacing: { after: 160 }, children: [] })); }
       for (const [ref, cap] of s.figs || []) { fig++; children.push(...await figure(ref, cap, `Figure ${ch}.${fig}`)); }
+      if (s.outcome) { h3('What happens next'); for (const t of s.outcome) children.push(para(t)); }
+      for (const t of s.tables || []) { h3(t.title); children.push(dataTable(t.head, t.rows, t.widths)); children.push(new d.Paragraph({ spacing: { after: 160 }, children: [] })); }
+      if (s.tips) { h3('Good to know'); bulletList(s.tips); }
       for (const [kind, text] of s.notes || []) { children.push(callout(kind, text)); children.push(new d.Paragraph({ spacing: { after: 160 }, children: [] })); }
     }
   }
@@ -197,7 +204,7 @@ const glossary = [
   const logoMark = await sharp(fs.readFileSync(LOGO_DIR + '/tabsan-mark.png')).resize({ width: 96 }).png().toBuffer();
   const hero = await loadImage(resolveImage('testadmin:Departments'));
   const today = '10 October 2026';
-  const VERSION = '1.1';
+  const VERSION = '1.2';
 
   const band = (children, padTop, padBottom) => new d.Table({
     width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [BODY_W],
