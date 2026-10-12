@@ -15,7 +15,10 @@ node capture.mjs student    bscs8s1    EduSphere147
 node capture.mjs finance    finance1   EduSphere147
 # 2. Step-by-step workflow screenshots (written to flows/); nothing is submitted
 node flows.mjs all
-# 3. Build the Word document (manual text lives in content.js)
+# 2b. Enrollment workspace screenshots (written to flows/enrollment-bulk/, signs in as admin.sch; nothing is submitted).
+#     Needs Scripts/09-Institution-Dummy-Data.sql for the Commerce/Arts Class 9 data.
+node enrollment-shots.mjs
+# 3. Build the Word document (manual text lives in content-part1.js … content-part4.js; content.js combines them)
 node build.js manual.docx
 ```
 

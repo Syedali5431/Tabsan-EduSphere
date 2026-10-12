@@ -61,6 +61,8 @@ module.exports = [
             ['faculty.it1', 'Faculty', 'A teacher in the Information Technology department.'],
             ['bscs8s1', 'Student', 'A Computer Science student in semester 8.'],
             ['finance1', 'Finance', 'A finance officer.'],
+            ['admin.sch / admin.col / admin.uni', 'Admin', 'The School, College and University administrators. Each sees only its own institute’s departments, so no Institute filter is shown to them.'],
+            ['faculty.sch3 / faculty.col3 / faculty.eco1', 'Faculty', 'Teachers in the School Arts & Humanities, College Pre-Medical and University Economics departments.'],
           ],
         },
         notes: [['note', 'Every account other than SuperAdmin belongs to one tenant (for example University, College or School). Only SuperAdmin can see data across tenants.']],
@@ -114,12 +116,12 @@ module.exports = [
           'Each department belongs to one institution type, and the type changes how progression and results work.',
         ],
         table: {
-          head: ['Type', 'Levels', 'Results'],
-          widths: [1800, 3500, 4000],
+          head: ['Type', 'Levels', 'Results', 'Demo departments'],
+          widths: [1500, 2600, 1900, 3300],
           rows: [
-            ['University', 'Semesters 1 to 8 (depending on the program); final year project in the last semester', 'Grades and GPA / CGPA'],
-            ['College', 'Class 11 and Class 12', 'Percentage based'],
-            ['School', 'Class 1 to Class 10', 'Percentage based'],
+            ['University', 'Semesters 1 to 8 (depending on the program); final year project in the last semester', 'Grades and GPA / CGPA', 'Information Technology, Business Administration, Economics, Spanish Language'],
+            ['College', 'Class 11 and Class 12', 'Percentage based', 'Information Technology, Pre-Medical, Pre-Engineering, Commerce (College)'],
+            ['School', 'Class 1 to Class 10', 'Percentage based', 'Science Department, Arts & Humanities, Commerce (Class 9-10)'],
           ],
         },
         notes: [['note', 'Degree audit, degree rules, graduation applications, FYP and the GPA & CGPA report apply to University departments only.']],
@@ -190,10 +192,15 @@ module.exports = [
       },
       {
         title: 'Using filters and lists',
-        index: ['Filters'],
+        index: ['Filters', 'Institute filter'],
         intro: [
-          'Most pages start with a row of filters, such as Campus, Department, Course and Offering. Choose them from left to right; each choice refreshes the next list and the data below.',
+          'Most pages start with a row of filters, such as Institute, Campus, Department, Course and Offering. Choose them from left to right; each choice refreshes the next list and the data below.',
+          'The **Institute** filter (University, School or College) appears for users who can see more than one type of institution, such as SuperAdmin. Choosing an institute limits every list and drop-down on the page to it: only that institute\'s departments, programs, courses, classes or semesters and students are offered. Switching institute clears the department, course and other choices made for the previous one. Users who belong to a single institute do not see this filter; they only ever see their own institute\'s data.',
           'Tables can be long. Use the browser\'s find feature (Ctrl+F, or Cmd+F on a Mac) to locate a name quickly, or narrow the filters.',
+        ],
+        figs: [
+          ['flow:institute-filter/1', 'Programs with the Institute filter set to College'],
+          ['flow:institute-filter/2', 'Courses with the Institute filter set to School'],
         ],
         tips: [
           'Your last choices are kept in the address bar, so you can bookmark a filtered page or send the link to a colleague with the same access.',

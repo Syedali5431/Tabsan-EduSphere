@@ -120,6 +120,14 @@ const flows = [
   flow('theme', 'bscs8s1', [
     { do: [s.go('/Portal/ThemeSettings'), s.click('Ocean Blue')], shot: 'preview', caption: 'Click a theme to preview it, then save.' },
   ]),
+  flow('institute-filter', 'superadmin', [
+    { do: [s.go('/Portal/Programs'), s.fn(async p => { await Promise.all([p.waitForNavigation(), p.selectOption('select[data-institution-filter]', '2')]); })], shot: 'programs-college', caption: 'Institute set to College: only College programs are listed.' },
+    { do: [s.go('/Portal/Courses'), s.fn(async p => { await Promise.all([p.waitForNavigation(), p.selectOption('select[data-institution-filter]', '1')]); })], shot: 'courses-school', caption: 'Institute set to School: the Courses page shows only School departments, classes and courses.' },
+  ]),
+  flow('theme-dark', 'testadmin', [
+    { do: [s.go('/Portal/ThemeSettings'), s.click('Midnight Dark')], shot: 'preview', caption: 'Midnight Dark preview.' },
+    { do: [s.go('/Portal/Departments'), s.fn(async p => { await p.addStyleTag({ content: '*{transition:none!important}' }); await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'midnight_dark')); })], shot: 'departments', caption: 'Departments in the Midnight Dark theme.' },
+  ]),
 ];
 
 for (const f of flows) {

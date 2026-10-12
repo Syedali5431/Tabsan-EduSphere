@@ -102,8 +102,15 @@ module.exports = [
       },
       {
         title: 'Theme Settings', roles: ALL, index: ['Theme'],
-        intro: ['Theme Settings changes the colours of the portal for your own account, for example a dark theme for evening use. Click a theme to preview it on the page, then save it. You can return to **Default** at any time.'],
-        figs: [['flow:theme/1', 'Theme Settings with a theme previewed']],
+        intro: [
+          'Theme Settings changes the colours of the portal for your own account, for example a dark theme for evening use. Click a theme to preview it on the page, then click **Save Theme**. **Reset Preview** returns to your saved theme, and you can go back to **Default** at any time.',
+          'Every theme keeps text readable. The dark themes (Midnight Dark, Deep Navy, Graphite Pro and Slate Grey) switch pages, tables, forms, menus and pop-ups to dark backgrounds with light text, and the coloured themes keep dark text on light backgrounds.',
+        ],
+        figs: [
+          ['flow:theme/1', 'Theme Settings with the Ocean Blue theme previewed'],
+          ['flow:theme-dark/1', 'Theme Settings with the Midnight Dark theme previewed'],
+          ['flow:theme-dark/2', 'The Departments page in the Midnight Dark theme'],
+        ],
       },
     ],
   },
