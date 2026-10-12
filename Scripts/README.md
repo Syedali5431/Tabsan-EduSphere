@@ -14,13 +14,13 @@
 | 7 *(optional)* | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role |
 | 8 *(optional)* | `student-journey-class1-10.sql` | Certificate-demo student lifecycle: Class 1-10 with results, attendance, assignments for `col11s6`, under its own isolated department |
 | 9 *(optional)* | `08-Create-Test-Admin-User.sql` | Creates testing account `testadmin` (Admin in University tenant, all its departments, no SuperAdmin rights) |
-| 10 *(recommended)* | `09-Institution-Dummy-Data.sql` | Balanced School / College / University demo data (new departments, programs, courses, offerings, teachers, 120 students with enrollments, results, attendance and fee receipts) plus institution consistency fixes. Re-runnable |
+| 10 *(recommended)* | `09-Institution-Dummy-Data.sql` | Balanced School / College / University demo data (new departments, programs, courses, offerings, teachers, 120 students with enrollments, results, attendance and fee receipts, plus 30 newly admitted students not yet enrolled for trying bulk enrollment) plus institution consistency fixes and re-opening of the demo terms so enrollment works. Re-runnable |
 
 There is no `09-Restructure-Sidebar-Menu.sql` (the only 09 script is `09-Institution-Dummy-Data.sql`) or `Seed-Core-Clean.sql` in this folder — earlier revisions of this README referenced scripts that were since renamed or removed; `07-Fix-Sidebar-Role-Visibility.sql` is the script that actually ships.
 
 ## Database Summary
 
-Counts below are for the core pipeline (02 → 03 → 04 → 05); running the optional `student-journey-class1-10.sql` adds one extra department and 50 extra courses on top of these, and `09-Institution-Dummy-Data.sql` adds 6 departments, 6 programs, 48 courses and offerings, 6 teachers and 120 students (see the table below).
+Counts below are for the core pipeline (02 → 03 → 04 → 05); running the optional `student-journey-class1-10.sql` adds one extra department and 50 extra courses on top of these, and `09-Institution-Dummy-Data.sql` adds 6 departments, 6 programs, 48 courses and offerings, 6 teachers, 120 enrolled students and 30 new admissions (see the table below).
 
 | Item | Count |
 |------|-------|
@@ -70,7 +70,7 @@ Faculty, Student, and Finance users are created by `03-FullDummyData.sql` (e.g. 
 
 Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`, `spanish3`).
 
-`09-Institution-Dummy-Data.sql` adds one teacher per new department (`faculty.sch3`, `faculty.sch4`, `faculty.col3`, `faculty.col4`, `faculty.col5`, `faculty.eco1`) and 10 students per level, named `<program><level>s<n>`: `arts9s1`, `comm10s4`, `fscpm11s2`, `fscpe12s7`, `icom11s5`, `bseco1s3` …
+`09-Institution-Dummy-Data.sql` adds one teacher per new department (`faculty.sch3`, `faculty.sch4`, `faculty.col3`, `faculty.col4`, `faculty.col5`, `faculty.eco1`) and 10 students per level, named `<program><level>s<n>`: `arts9s1`, `comm10s4`, `fscpm11s2`, `fscpe12s7`, `icom11s5`, `bseco1s3` …, plus 5 not-yet-enrolled new admissions per department (`arts9new1` … `bseco1new5`, registration numbers like `ARTS-9-N01`).
 
 ## Departments
 

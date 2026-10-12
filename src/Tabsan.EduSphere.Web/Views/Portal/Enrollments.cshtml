@@ -139,26 +139,53 @@ else if (Model.IsStudent)
 }
 else
 {
-    @* ── ADMIN / FACULTY VIEW ─────────────────────────────────────── *@
+    @* ── ADMIN / FACULTY VIEW: department → class/semester → courses + students ── *@
+    var ws = Model.Workspace;
+    var semesterOfferings = Model.SemesterOfferings;
+    var studentsById = ws?.Students.ToDictionary(s => s.Id) ?? new Dictionary<Guid, Tabsan.EduSphere.Web.Models.Portal.EnrollmentWorkspaceStudent>();
+    var levelLabel = ws?.InstitutionType == 0 ? "Semester" : "Class";
+    var selectedLevel = Model.SelectedLevel;
+    var activeStudents = ws?.Students.Where(s => s.Status == "Active" && s.AccountActive).ToList() ?? new();
+    var listedStudents = (!Model.ShowAllLevels && selectedLevel.HasValue)
+        ? activeStudents.Where(s => s.Level == selectedLevel.Value).ToList()
+        : activeStudents;
+    var semesterOfferingIds = semesterOfferings.Select(o => o.Id).ToHashSet();
+    var enrollmentsByStudent = ws?.Enrollments.Where(e => semesterOfferingIds.Contains(e.CourseOfferingId))
+        .GroupBy(e => e.StudentProfileId).ToDictionary(g => g.Key, g => g.ToList())
+        ?? new Dictionary<Guid, List<Tabsan.EduSphere.Web.Models.Portal.EnrollmentWorkspaceEnrollment>>();
+    var codeByOffering = semesterOfferings.ToDictionary(o => o.Id, o => o.CourseCode);
+    var selectedOffering = semesterOfferings.FirstOrDefault(o => o.Id == Model.SelectedOfferingId);
+    var institutionTypeValue = Context.Request.Query["institutionType"].ToString();
 
-    @* Offering filter + Enroll Student button *@
     <div class="page-section-card card border-0 shadow-sm mb-3">
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
                     <span class="section-kicker">Enrollment administration</span>
-                    <h2 class="h5 mb-1">Offering roster management</h2>
-                    <p class="text-muted mb-0">Select an offering to review roster details and manage enrollments.</p>
+                    <h2 class="h5 mb-1">Enroll students by department and @levelLabel.ToLowerInvariant()</h2>
+                    <p class="text-muted mb-0">Choose a department and @levelLabel.ToLowerInvariant(), tick the courses and the students, then enroll them all at once.</p>
                 </div>
+                @if (Model.IsAdminUser)
+                {
+                    <form method="post" asp-action="SetEnrollmentActive" class="ms-auto">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+                        <input type="hidden" name="isActive" value="@(!Model.IsEnrollmentActive)" />
+                        <button type="submit" class="btn @(Model.IsEnrollmentActive ? "btn-outline-danger" : "btn-outline-success") btn-sm">
+                            @(Model.IsEnrollmentActive ? "Deactivate Enrollment" : "Activate Enrollment")
+                        </button>
+                    </form>
+                }
             </div>
-            <form method="get" asp-action="Enrollments" class="row g-2 align-items-end filter-toolbar"
-                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+            <form method="get" asp-action="Enrollments" class="row g-2 align-items-end filter-toolbar">
                 <partial name="_InstitutionFilter" />
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
+                        <select name="tenantId" class="form-select" onchange="tabsanInstitutionChanged(this)">
                             <option value="">All Tenants</option>
                             @foreach (var t in Model.Tenants)
                             {
@@ -166,9 +193,9 @@ else
                             }
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
+                        <select name="campusId" class="form-select" onchange="this.form.departmentId.value='';this.form.semesterId.value='';this.form.submit()">
                             <option value="">All Campuses</option>
                             @foreach (var c in Model.Campuses)
                             {
@@ -177,149 +204,408 @@ else
                         </select>
                     </div>
                 }
-                <div class="col-md-6">
-                    <label class="form-label">Select Course Offering</label>
-                    <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                        <option value="">Select an offering…</option>
-                        @foreach (var o in Model.Offerings)
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select name="departmentId" class="form-select" onchange="this.form.semesterId.value='';this.form.submit()">
+                        <option value="">Select department…</option>
+                        @foreach (var d in Model.Departments)
                         {
-                            <option value="@o.Id" selected="@(Model.SelectedOfferingId == o.Id ? "selected" : null)">@o.CourseCode — @o.CourseTitle (@o.SemesterName)</option>
+                            <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
                         }
                     </select>
                 </div>
-                @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+                <div class="col-md-3">
+                    <label class="form-label">@levelLabel</label>
+                    <select name="semesterId" class="form-select" onchange="this.form.submit()" @(ws is null ? "disabled" : null)>
+                        <option value="">Select @levelLabel.ToLowerInvariant()…</option>
+                        @foreach (var s in Model.WorkspaceSemesters)
+                        {
+                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name (@s.Courses course@(s.Courses == 1 ? "" : "s"))</option>
+                        }
+                    </select>
+                </div>
+                @if (Model.ShowAllLevels)
                 {
-                    <div class="col-md-auto">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#enrollStudentModal" @(Model.IsEnrollmentActive ? null : "disabled")>
-                            Enroll Student
-                        </button>
-                    </div>
+                    <input type="hidden" name="showAll" value="true" />
                 }
             </form>
-
-            @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-            {
-                <form method="post" asp-action="SetEnrollmentActive" class="mt-3 d-flex justify-content-end">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                    <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
-                    <input type="hidden" name="isActive" value="@(!Model.IsEnrollmentActive)" />
-                    <button type="submit" class="btn @(Model.IsEnrollmentActive ? "btn-outline-danger" : "btn-outline-success") btn-sm">
-                        @(Model.IsEnrollmentActive ? "Deactivate Enrollment" : "Activate Enrollment")
-                    </button>
-                </form>
-            }
         </div>
     </div>
 
-    @* Roster Table *@
-    <div class="page-section-card card border-0 shadow-sm">
-        <div class="card-body">
-            <h2 class="h5 mb-3">Enrollment Roster
-                <span class="badge bg-secondary ms-1">@Model.Roster.Count</span>
-            </h2>
-
-            @if (!Model.SelectedOfferingId.HasValue)
-            {
-                <div class="empty-state-card">
-                    <h3>Select an offering</h3>
-                    <p class="text-muted mb-0">Choose a course offering above to view and manage its enrollment roster.</p>
-                </div>
-            }
-            else if (Model.Roster.Count == 0)
-            {
-                <div class="empty-state-card">
-                    <h3>No active enrollments</h3>
-                    <p class="text-muted mb-0">No active enrollments are currently associated with this offering.</p>
-                </div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Reg. No.</th>
-                                <th>Program</th>
-                                <th>Level</th>
-                                @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-                                {
-                                    <th></th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{ int idx2 = 1; }
-                            @foreach (var e in Model.Roster)
-                            {
-                                <tr>
-                                    <td class="text-muted small">@(idx2++)</td>
-                                    <td><code>@e.RegistrationNumber</code></td>
-                                    <td>@e.ProgramName</td>
-                                    <td>@e.SemesterNumber</td>
-                                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-                                    {
-                                        <td>
-                                            <form method="post" asp-action="AdminDropEnrollment" style="display:inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="enrollmentId" value="@e.Id" />
-                                                <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
-                                                <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                                                <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Drop this enrollment?')" @(Model.IsEnrollmentActive ? null : "disabled")>Drop</button>
-                                            </form>
-                                        </td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-    </div>
-
-    @* ── Enroll Student Modal (Admin/SuperAdmin only) ─────────────── *@
-    @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+    @if (Model.LastBulkResult is { } bulk)
     {
-        <div class="modal fade" id="enrollStudentModal" tabindex="-1">
-            <div class="modal-dialog">
-                <form method="post" asp-action="EnrollStudent">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="courseOfferingId" value="@Model.SelectedOfferingId" />
-                    <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
-                    <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Enroll Student</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            @if (!Model.IsEnrollmentActive)
-                            {
-                                <div class="alert alert-warning">Enrollment is deactivated for the selected tenant/campus scope.</div>
-                            }
-                            <div class="mb-3">
-                                <label class="form-label">Student</label>
-                                <select name="studentProfileId" class="form-select" required @(Model.IsEnrollmentActive ? null : "disabled")>
-                                    <option value="">Select student…</option>
-                                    @foreach (var s in Model.Students)
+        <div class="page-section-card card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6 mb-2">Last enrollment run</h2>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-success">@bulk.Enrolled enrolled</span>
+                    @if (bulk.Waitlisted > 0) { <span class="badge bg-warning text-dark">@bulk.Waitlisted waitlisted</span> }
+                    @if (bulk.AlreadyEnrolled > 0) { <span class="badge bg-secondary">@bulk.AlreadyEnrolled already enrolled</span> }
+                    @if (bulk.Skipped > 0) { <span class="badge bg-danger">@bulk.Skipped not enrolled</span> }
+                </div>
+                @if (bulk.Results.Count > 0)
+                {
+                    <details @(bulk.Skipped > 0 ? "open" : null)>
+                        <summary class="small">Show students that were waitlisted or not enrolled, and why</summary>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Outcome</th><th>Reason</th></tr></thead>
+                                <tbody>
+                                    @foreach (var r in bulk.Results)
                                     {
-                                        <option value="@s.Id">@s.FullName (@s.RegistrationNumber)</option>
+                                        <tr>
+                                            <td><code>@r.RegistrationNumber</code></td>
+                                            <td>@r.StudentName</td>
+                                            <td class="small">@r.Course</td>
+                                            <td><span class="badge @(r.Outcome == "Waitlisted" ? "bg-warning text-dark" : "bg-danger")">@(r.Outcome == "Skipped" ? "Not enrolled" : r.Outcome)</span></td>
+                                            <td class="small">@r.Message</td>
+                                        </tr>
                                     }
-                                </select>
-                            </div>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" @(Model.IsEnrollmentActive ? null : "disabled")>Enroll</button>
-                        </div>
-                    </div>
-                </form>
+                    </details>
+                }
             </div>
         </div>
     }
+
+    @if (!Model.SelectedDepartmentId.HasValue)
+    {
+        <div class="empty-state-card">
+            <h3>Select a department</h3>
+            <p class="text-muted mb-0">Start by choosing the department whose students you want to enroll.</p>
+        </div>
+    }
+    else if (ws is not null && ws.Offerings.Count == 0)
+    {
+        <div class="empty-state-card">
+            <h3>No courses to enroll in</h3>
+            <p class="text-muted mb-0">@(User.IsInRole("Faculty") && !Model.IsAdminUser ? "You are not teaching any course in this department." : "This department has no course offerings yet. Create them on the Courses page.")</p>
+        </div>
+    }
+    else if (!Model.SelectedSemesterId.HasValue)
+    {
+        <div class="empty-state-card">
+            <h3>Select a @levelLabel.ToLowerInvariant()</h3>
+            <p class="text-muted mb-0">Choose the @levelLabel.ToLowerInvariant() to see its courses and students.</p>
+        </div>
+    }
+    else
+    {
+        <form method="post" asp-action="BulkEnroll" id="bulkEnrollForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+            <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+            <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+            <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+            <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
+            <input type="hidden" name="institutionType" value="@institutionTypeValue" />
+            <input type="hidden" name="showAll" value="@(Model.ShowAllLevels ? "true" : "false")" />
+
+            @* ── Step 1: courses ── *@
+            <div class="page-section-card card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0">1. Courses in @Model.SelectedSemesterName</h2>
+                        <span class="text-muted small">Tick the courses to enroll the selected students in.</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanEnrollToggleAll('offeringIds', true)">Select all open</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('offeringIds', false)">Clear</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th style="width:2.5rem"></th><th>Code</th><th>Course</th><th>Teacher</th><th>Seats</th><th>Status</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in semesterOfferings)
+                                {
+                                    var preselect = o.CanEnroll && (Model.SelectedOfferingId is null || Model.SelectedOfferingId == o.Id);
+                                    var full = o.EnrolledCount >= o.MaxEnrollment;
+                                    <tr>
+                                        <td><input class="form-check-input" type="checkbox" name="offeringIds" value="@o.Id" data-code="@o.CourseCode"
+                                                   @(preselect ? "checked" : null) @(o.CanEnroll && Model.CanManage ? null : "disabled") aria-label="Select @o.CourseCode" /></td>
+                                        <td><code>@o.CourseCode</code></td>
+                                        <td>@o.CourseTitle</td>
+                                        <td class="small">@(string.IsNullOrWhiteSpace(o.FacultyName) ? "—" : o.FacultyName)</td>
+                                        <td class="small text-nowrap">@o.EnrolledCount / @o.MaxEnrollment@(o.WaitlistCount > 0 ? $" (+{o.WaitlistCount} waiting)" : "")</td>
+                                        <td>
+                                            <span class="badge @(o.SemesterClosed || !o.IsOpen ? "bg-secondary" : full ? "bg-warning text-dark" : "bg-success")">@o.StateLabel</span>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="Enrollments"
+                                               asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
+                                               asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId"
+                                               asp-route-offeringId="@o.Id" asp-route-showAll="@(Model.ShowAllLevels ? "true" : null)" asp-fragment="roster">Roster</a>
+                                            @if (Model.IsAdminUser && !o.IsOpen && !o.SemesterClosed)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-success" formaction="@Url.Action("OpenOfferingForEnrollment")"
+                                                        name="targetOfferingId" value="@o.Id" formnovalidate>Open</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (semesterOfferings.Any(o => !o.CanEnroll))
+                    {
+                        <p class="small text-muted mt-2 mb-0">Courses that are closed, or whose @levelLabel.ToLowerInvariant() is closed, cannot take new enrollments.@(Model.IsAdminUser ? " Use Open to re-open a closed course." : "")</p>
+                    }
+                </div>
+            </div>
+
+            @* ── Step 2: students ── *@
+            <div class="page-section-card card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0">2. Students</h2>
+                        <span class="text-muted small">
+                            @if (!Model.ShowAllLevels && selectedLevel.HasValue)
+                            {
+                                @:Showing @ws!.DepartmentName students currently in @levelLabel.ToLowerInvariant() @selectedLevel (@listedStudents.Count).
+                                <a asp-action="Enrollments" asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
+                                   asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId" asp-route-showAll="true">Show all @activeStudents.Count department students</a>
+                            }
+                            else
+                            {
+                                @:Showing all active @ws!.DepartmentName students (@listedStudents.Count).
+                                @if (selectedLevel.HasValue)
+                                {
+                                    <a asp-action="Enrollments" asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
+                                       asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId">Only @levelLabel.ToLowerInvariant() @selectedLevel</a>
+                                }
+                            }
+                        </span>
+                    </div>
+                    <div class="row g-2 align-items-end mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label" for="studentSearch">Search</label>
+                            <input id="studentSearch" type="search" class="form-control" placeholder="Roll number or name" oninput="tabsanEnrollFilter()" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="studentProgram">Program</label>
+                            <select id="studentProgram" class="form-select" onchange="tabsanEnrollFilter()">
+                                <option value="">All programs</option>
+                                @foreach (var p in listedStudents.Select(s => s.ProgramName).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().OrderBy(n => n))
+                                {
+                                    <option value="@p">@p</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3 form-check ms-2 mb-2">
+                            <input class="form-check-input" type="checkbox" id="hideEnrolled" onchange="tabsanEnrollFilter()" checked />
+                            <label class="form-check-label" for="hideEnrolled">Hide students already in every ticked course</label>
+                        </div>
+                        <div class="col-md-auto ms-auto d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', true)">Select all shown</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', false)">Clear</button>
+                        </div>
+                    </div>
+
+                    @if (listedStudents.Count == 0)
+                    {
+                        <div class="empty-state-card">
+                            <h3>No students found</h3>
+                            <p class="text-muted mb-0">No active students match this department and @levelLabel.ToLowerInvariant().</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 32rem; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0" id="enrollStudentTable">
+                                <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                                    <tr><th style="width:2.5rem"></th><th>Roll No.</th><th>Name</th><th>Program</th><th>@levelLabel</th><th>Already in</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var s in listedStudents)
+                                    {
+                                        enrollmentsByStudent.TryGetValue(s.Id, out var mine);
+                                        mine ??= new();
+                                        <tr data-search="@($"{s.RegistrationNumber} {s.FullName}".ToLowerInvariant())" data-program="@s.ProgramName"
+                                            data-enrolled="@string.Join(",", mine.Select(e => e.CourseOfferingId))">
+                                            <td><input class="form-check-input" type="checkbox" name="studentProfileIds" value="@s.Id" @(Model.CanManage ? null : "disabled") aria-label="Select @s.RegistrationNumber" /></td>
+                                            <td><code>@s.RegistrationNumber</code></td>
+                                            <td>@s.FullName</td>
+                                            <td class="small">@s.ProgramName</td>
+                                            <td>@s.Level</td>
+                                            <td>
+                                                @foreach (var e in mine)
+                                                {
+                                                    <span class="badge @(e.Status == "Active" ? "bg-success" : "bg-warning text-dark") me-1" title="@e.Status">@codeByOffering[e.CourseOfferingId]</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <p id="enrollNoneShown" class="text-muted small p-3 mb-0" style="display:none">Every student in this list is already enrolled in the ticked courses (or does not match the search). Untick <em>Hide students already in every ticked course</em> to see them.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* ── Step 3: enroll ── *@
+            <div class="page-section-card card border-0 shadow-sm mb-3" style="position: sticky; bottom: 0.5rem; z-index: 2;">
+                <div class="card-body d-flex flex-wrap align-items-center gap-3 py-2">
+                    <strong id="enrollSummary">0 students × 0 courses selected</strong>
+                    @if (Model.IsAdminUser)
+                    {
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="overrideClash" value="true" id="overrideClash" />
+                            <label class="form-check-label small" for="overrideClash">Allow timetable clashes</label>
+                        </div>
+                        <input type="text" name="overrideReason" class="form-control form-control-sm" style="max-width: 16rem" placeholder="Reason for allowing clashes" />
+                    }
+                    <button type="submit" id="enrollSubmit" class="btn btn-primary ms-auto" disabled>Enroll selected students</button>
+                </div>
+                @if (!Model.CanManage)
+                {
+                    <div class="px-3 pb-2 small text-muted">@(Model.IsEnrollmentActive ? "You can view enrollments but not change them." : "Enrollment is deactivated for this scope.")</div>
+                }
+            </div>
+        </form>
+
+        @* ── Roster for one course ── *@
+        @if (selectedOffering is not null)
+        {
+            var roster = Model.RosterFor(selectedOffering.Id);
+            <div class="page-section-card card border-0 shadow-sm" id="roster">
+                <div class="card-body">
+                    <form method="post" asp-action="BulkDropEnrollments" id="rosterForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="offeringId" value="@selectedOffering.Id" />
+                        <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
+                        <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
+                        <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
+                        <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
+                        <input type="hidden" name="institutionType" value="@institutionTypeValue" />
+                        <input type="hidden" name="showAll" value="@(Model.ShowAllLevels ? "true" : "false")" />
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <h2 class="h6 mb-0">Roster — <code>@selectedOffering.CourseCode</code> @selectedOffering.CourseTitle</h2>
+                            <span class="badge bg-secondary">@roster.Count(r => r.Status == "Active") enrolled</span>
+                            @if (roster.Any(r => r.Status == "Waitlisted"))
+                            {
+                                <span class="badge bg-warning text-dark">@roster.Count(r => r.Status == "Waitlisted") waitlisted</span>
+                            }
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanRosterCsv('@selectedOffering.CourseCode')" @(roster.Count == 0 ? "disabled" : null)>Download CSV</button>
+                            @if (Model.CanManage)
+                            {
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return tabsanConfirmDrop()" @(roster.Count == 0 ? "disabled" : null)>Drop selected</button>
+                            }
+                        </div>
+                        @if (roster.Count == 0)
+                        {
+                            <div class="empty-state-card">
+                                <h3>No students enrolled</h3>
+                                <p class="text-muted mb-0">Nobody is enrolled in this course yet.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="rosterTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width:2.5rem">@if (Model.CanManage) { <input class="form-check-input" type="checkbox" aria-label="Select all" onchange="document.querySelectorAll('#rosterTable input[name=studentProfileIds]').forEach(c => c.checked = this.checked)" /> }</th>
+                                            <th>#</th><th>Roll No.</th><th>Name</th><th>Program</th><th>@levelLabel</th><th>Status</th><th>Enrolled on</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ var n = 1; }
+                                        @foreach (var e in roster)
+                                        {
+                                            studentsById.TryGetValue(e.StudentProfileId, out var st);
+                                            <tr>
+                                                <td>@if (Model.CanManage) { <input class="form-check-input" type="checkbox" name="studentProfileIds" value="@e.StudentProfileId" aria-label="Select @st?.RegistrationNumber" /> }</td>
+                                                <td class="text-muted small">@(n++)</td>
+                                                <td><code>@(st?.RegistrationNumber ?? "—")</code></td>
+                                                <td>@(st?.FullName ?? "(student from another department)")</td>
+                                                <td class="small">@st?.ProgramName</td>
+                                                <td>@st?.Level</td>
+                                                <td><span class="badge @(e.Status == "Active" ? "bg-success" : "bg-warning text-dark")">@e.Status</span></td>
+                                                <td class="small text-muted">@e.EnrolledAt.ToString("dd MMM yyyy")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+        }
+    }
+
+    <script>
+        function tabsanEnrollChecked(name) {
+            return Array.from(document.querySelectorAll('#bulkEnrollForm input[name="' + name + '"]:checked'));
+        }
+        function tabsanEnrollUpdate() {
+            var students = tabsanEnrollChecked('studentProfileIds').length;
+            var courses = tabsanEnrollChecked('offeringIds').length;
+            var summary = document.getElementById('enrollSummary');
+            var submit = document.getElementById('enrollSubmit');
+            if (summary) summary.textContent = students + ' student' + (students === 1 ? '' : 's') + ' × ' + courses + ' course' + (courses === 1 ? '' : 's') + ' selected';
+            if (submit) {
+                submit.disabled = students === 0 || courses === 0 || !!submit.dataset.locked;
+                submit.textContent = students > 0 && courses > 0
+                    ? 'Enroll ' + students + ' student' + (students === 1 ? '' : 's') + ' in ' + courses + ' course' + (courses === 1 ? '' : 's')
+                    : 'Enroll selected students';
+            }
+        }
+        function tabsanEnrollFilter() {
+            var text = (document.getElementById('studentSearch')?.value || '').trim().toLowerCase();
+            var program = document.getElementById('studentProgram')?.value || '';
+            var hideEnrolled = document.getElementById('hideEnrolled')?.checked;
+            var ticked = tabsanEnrollChecked('offeringIds').map(function (c) { return c.value; });
+            document.querySelectorAll('#enrollStudentTable tbody tr').forEach(function (row) {
+                var enrolled = (row.dataset.enrolled || '').split(',').filter(Boolean);
+                var inAll = ticked.length > 0 && ticked.every(function (id) { return enrolled.indexOf(id) >= 0; });
+                var show = (!text || row.dataset.search.indexOf(text) >= 0)
+                    && (!program || row.dataset.program === program)
+                    && !(hideEnrolled && inAll);
+                row.style.display = show ? '' : 'none';
+                if (!show) { var box = row.querySelector('input[type=checkbox]'); if (box) box.checked = false; }
+            });
+            var none = document.getElementById('enrollNoneShown');
+            if (none) none.style.display = document.querySelectorAll('#enrollStudentTable tbody tr:not([style*="none"])').length === 0 ? '' : 'none';
+            tabsanEnrollUpdate();
+        }
+        function tabsanEnrollToggleAll(name, on) {
+            document.querySelectorAll('#bulkEnrollForm input[name="' + name + '"]').forEach(function (box) {
+                var row = box.closest('tr');
+                if (box.disabled || (on && row && row.style.display === 'none')) return;
+                box.checked = on;
+            });
+            if (name === 'offeringIds') tabsanEnrollFilter(); else tabsanEnrollUpdate();
+        }
+        function tabsanConfirmDrop() {
+            var count = document.querySelectorAll('#rosterTable input[name=studentProfileIds]:checked').length;
+            if (count === 0) { alert('Tick the students to drop first.'); return false; }
+            return confirm('Drop ' + count + ' student' + (count === 1 ? '' : 's') + ' from this course?');
+        }
+        function tabsanRosterCsv(code) {
+            var rows = [['Roll No', 'Name', 'Program', 'Level', 'Status', 'Enrolled on']];
+            document.querySelectorAll('#rosterTable tbody tr').forEach(function (tr) {
+                var c = tr.querySelectorAll('td');
+                rows.push([c[2].innerText, c[3].innerText, c[4].innerText, c[5].innerText, c[6].innerText, c[7].innerText]);
+            });
+            var csv = rows.map(function (r) { return r.map(function (v) { return '"' + String(v).trim().replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            link.download = 'roster-' + code + '.csv';
+            link.click();
+        }
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('#bulkEnrollForm input[name="offeringIds"]')) tabsanEnrollFilter();
+            else if (e.target.matches('#bulkEnrollForm input[name="studentProfileIds"]')) tabsanEnrollUpdate();
+        });
+        document.getElementById('bulkEnrollForm')?.addEventListener('submit', function (e) {
+            if (e.submitter && e.submitter.name === 'targetOfferingId') return;
+            var btn = document.getElementById('enrollSubmit');
+            if (btn) { btn.dataset.locked = '1'; btn.disabled = true; btn.textContent = 'Enrolling…'; }
+        });
+        tabsanEnrollFilter();
+    </script>
 }

@@ -203,8 +203,8 @@ const glossary = [
   const logoFullMeta = await sharp(logoFull).metadata();
   const logoMark = await sharp(fs.readFileSync(LOGO_DIR + '/tabsan-mark.png')).resize({ width: 96 }).png().toBuffer();
   const hero = await loadImage(resolveImage('testadmin:Departments'));
-  const today = '10 October 2026';
-  const VERSION = '1.2';
+  const today = '12 October 2026';
+  const VERSION = '1.3';
 
   const band = (children, padTop, padBottom) => new d.Table({
     width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [BODY_W],

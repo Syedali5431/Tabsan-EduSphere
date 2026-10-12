@@ -76,27 +76,52 @@ module.exports = [
         tips: ['Mark a course as core or elective where the option is shown; degree audits count core and elective credits separately.'],
       },
       {
-        title: 'Enrollments', roles: 'SuperAdmin, Admin, Faculty (view)', index: ['Enrollments'],
+        title: 'Enrollments', roles: 'SuperAdmin, Admin, Faculty (own courses)', index: ['Enrollments', 'Bulk enrollment', 'Roster'],
         intro: [
-          'Enrollments connect students to the offerings they are taking. A student must be enrolled in an offering to appear in its attendance sheet, mark sheet and gradebook.',
+          'Enrollments connect students to the course offerings they are taking. A student must be enrolled in an offering to appear in its attendance sheet, mark sheet and gradebook.',
+          'Staff enroll students in bulk: choose a department and a class or semester, tick the courses, tick the students, and enroll them all with one click. Each student is shown with their roll number and name, so you always know who you are selecting. Admins can manage every course in their departments; teachers can manage the courses they teach.',
         ],
-        before: ['The offering exists and the student has a student profile (created in User Import).'],
+        before: [
+          'The course offerings exist for the class or semester (see Courses) and are open for enrollment.',
+          'The students have student profiles (created in User Import) in the department.',
+        ],
         steps: [
-          'Open **Enrollments**.',
-          'Choose an offering in **Select Course Offering**. The Enrollment Roster lists the students already enrolled.',
-          'Click **Enroll Student**, choose the student and click **Enroll**.',
-          'To remove a student from the offering, click **Drop** and confirm.',
-          'Admins can open or close enrolment for the whole tenant/campus with **Deactivate Enrollment** (and re-open it the same way).',
+          'Open **Enrollments**. SuperAdmin users can first choose an **Institute**.',
+          'Choose the **Department** and then the **Class** (School and College) or **Semester** (University). The list shows how many courses each class or semester has.',
+          'Under **1. Courses**, tick the courses to enroll the students in. All open courses are ticked to start with. Each row shows the teacher, the seats used (for example 20 / 40), any waitlist, and whether the course is Open, Closed or Full.',
+          'Under **2. Students**, the students of that department who are currently in that class or semester are listed with their **Roll No.**, **Name**, **Program** and level. Use **Search** (roll number or name) and **Program** to narrow the list, or **Show all department students** to include other levels. Students already in every ticked course are hidden.',
+          'Tick the students, or click **Select all shown**. The bar at the bottom counts your selection, for example “5 students × 4 courses selected”.',
+          'Click **Enroll N students in M courses**. A summary shows how many were enrolled, waitlisted, already enrolled or not enrolled, with the reason for each student who could not be enrolled.',
+          'To see who is in a course, click **Roster** next to it. Tick students and click **Drop selected** to remove them, or **Download CSV** to save the list.',
         ],
-        figs: [['testadmin:Enrollments', 'Enrollments page']],
-        tables: [{
-          title: 'Enrollment statuses', head: ['Status', 'Meaning'], widths: [2200, 7100], rows: [
-            ['Active', 'The student is taking the offering.'],
-            ['Waitlisted', 'The offering was full; the student moves in automatically when a place becomes free.'],
-            ['Dropped', 'The student left the offering. History is kept.'],
-            ['Cancelled', 'The enrolment was cancelled by the institution.'],
-          ],
-        }],
+        figs: [['flow:enrollment-bulk/2', 'Students of Commerce, Class 9 selected for enrollment in 4 courses'], ['flow:enrollment-bulk/3', 'Course roster with roll numbers, names and Drop selected']],
+        outcome: [
+          'Enrolled students immediately appear in the course’s attendance sheet, mark sheet and gradebook, and in their own My Enrolled Courses list. When a course is full, extra students are placed on its waitlist and move in automatically when a seat frees up.',
+        ],
+        tables: [
+          {
+            title: 'Why a student may not be enrolled', head: ['Reason shown', 'What to do'], widths: [3000, 6300], rows: [
+              ['Unmet prerequisites', 'The student has not passed the course listed in brackets. Enroll them in that course first (see Prerequisites).'],
+              ['Timetable clash detected', 'The course meets at the same time as another of the student’s courses. Admins can tick **Allow timetable clashes** and give a reason.'],
+              ['Enrollment is closed for this offering', 'The course is closed. Admins can click **Open** next to it.'],
+              ['Semester is closed', 'The class or semester has been closed and cannot take new students.'],
+              ['Student belongs to a different institute', 'School, College and University students can only join their own institute’s courses.'],
+              ['Already enrolled in this offering', 'Nothing to do: the student is already in the course.'],
+            ],
+          },
+          {
+            title: 'Enrollment statuses', head: ['Status', 'Meaning'], widths: [2200, 7100], rows: [
+              ['Active', 'The student is taking the offering.'],
+              ['Waitlisted', 'The offering was full; the student moves in automatically when a place becomes free.'],
+              ['Dropped', 'The student left the offering. History is kept.'],
+              ['Cancelled', 'The enrollment (or waitlist place) was cancelled by the institution.'],
+            ],
+          },
+        ],
+        tips: [
+          'Admins can stop all enrollment changes for a campus with **Deactivate Enrollment**, and turn it back on the same way.',
+          'Students can also enroll themselves in open courses from their own Enrollments page.',
+        ],
         notes: [['note', 'Courses with prerequisites can only be enrolled in once the student has passed the prerequisite course (see Prerequisites).']],
       },
       {

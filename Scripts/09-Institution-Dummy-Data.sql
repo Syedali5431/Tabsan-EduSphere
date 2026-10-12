@@ -12,13 +12,16 @@
 --       School while studying in a University department).
 --   A2  Every course offering gets a teacher from its own department (or, failing that,
 --       its own institution type) so Gradebook / Enter Attendance / Enter Results work.
+--   A3  The demo institutes' classes / semesters and offerings are opened for enrollment
+--       (03 seeds them closed, so every enrollment attempt was rejected).
 --
 -- Part B  New demo data (default password for every new account: EduSphere147)
 --   School   (TABSAN-SCH)  Arts & Humanities, Commerce        Class 9-10
 --   College  (TABSAN-COL)  Pre-Medical, Pre-Engineering, Commerce  Class 11-12
 --   University (TABSAN-UNI) Economics                         Semester 1-2
 --   For each: department, program, courses per level, offerings, a teacher, 10 students
---   per level, enrollments, published results, attendance and fee receipts.
+--   per level, enrollments, published results, attendance and fee receipts, plus 5 newly
+--   admitted students per department who are not enrolled yet (to try bulk enrollment).
 -- =====================================================================================
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -288,6 +291,52 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM payment_receipts r WHERE r.ReceiptNo = CONCAT(N'REC-', s.RegNo, N'-2026'));
     PRINT CONCAT('B11 fee receipts added: ', @@ROWCOUNT);
 END
+
+-- B12 new admissions: 5 students per new department at its first level, NOT yet enrolled,
+--     so bulk enrollment (Enrollments page) has real candidates to work with.
+DECLARE @Admit TABLE (Username NVARCHAR(100) PRIMARY KEY, RegNo NVARCHAR(50), FullName NVARCHAR(200), DeptCode NVARCHAR(50), Lvl INT, Seq INT);
+INSERT INTO @Admit
+SELECT CONCAT(d.StudentPrefix, d.FirstLevel, N'new', s.n),
+       CONCAT(d.RegPrefix, N'-', d.FirstLevel, N'-N', RIGHT(CONCAT(N'0', s.n), 2)),
+       CONCAT(f.Name, N' ', l.Name),
+       d.Code, d.FirstLevel, s.n
+FROM @Dept d
+CROSS JOIN (VALUES (1),(2),(3),(4),(5)) s(n)
+JOIN @First f ON f.n = 11 - s.n
+JOIN @Last l ON l.n = (s.n * 3 + LEN(d.Code)) % 8;
+
+INSERT INTO users (Id, Username, Email, FullName, PasswordHash, RoleId, DepartmentId, IsActive, IsDeleted, CreatedAt, TenantId, CampusId, InstitutionType, MustChangePassword)
+SELECT NEWID(), a.Username, CONCAT(a.Username, N'@tabsan.edu'), a.FullName, @DefPwd, @RoleStudent, x.Id, 1, 0, @Now, x.TenantId, x.CampusId, x.InstitutionType, 0
+FROM @Admit a JOIN departments x ON x.Code = a.DeptCode
+WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.Username = a.Username);
+
+INSERT INTO student_profiles (Id, UserId, RegistrationNumber, ProgramId, DepartmentId, AdmissionDate, Cgpa, CurrentSemesterGpa, CurrentSemesterNumber, Status, CreatedAt, IsDeleted)
+SELECT NEWID(), u.Id, a.RegNo, p.Id, x.Id, CAST('2026-09-01' AS DATE), 0, 0, a.Lvl, 1, @Now, 0
+FROM @Admit a
+JOIN @Dept d ON d.Code = a.DeptCode
+JOIN departments x ON x.Code = a.DeptCode
+JOIN academic_programs p ON p.Code = d.ProgCode
+JOIN users u ON u.Username = a.Username
+WHERE NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.UserId = u.Id)
+  AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.RegistrationNumber = a.RegNo);
+PRINT CONCAT('B12 new admissions (not yet enrolled) added: ', @@ROWCOUNT);
+
+-- =====================================================================================
+-- Part A3: demo terms are open for enrollment
+--   Every class / semester in the demo data has a cohort currently studying in it, but 03 seeds
+--   them closed, which makes every enrollment attempt fail ("Semester is closed" / "Enrollment is
+--   closed for this offering"). Re-open the demo institutes' terms and offerings.
+-- =====================================================================================
+UPDATE s SET s.IsClosed = 0, s.ClosedAt = NULL, s.UpdatedAt = @Now
+FROM semesters s
+WHERE s.IsDeleted = 0 AND s.IsClosed = 1
+  AND EXISTS (SELECT 1 FROM course_offerings o JOIN @Tenants t ON t.TenantId = o.TenantId WHERE o.SemesterId = s.Id AND o.IsDeleted = 0);
+PRINT CONCAT('A3 demo semesters/classes re-opened: ', @@ROWCOUNT);
+
+UPDATE o SET o.IsOpen = 1, o.UpdatedAt = @Now
+FROM course_offerings o JOIN @Tenants t ON t.TenantId = o.TenantId
+WHERE o.IsDeleted = 0 AND o.IsOpen = 0;
+PRINT CONCAT('A3 demo course offerings opened for enrollment: ', @@ROWCOUNT);
 
 -- =====================================================================================
 -- Part A2: every offering has a teacher of its own department / institution type

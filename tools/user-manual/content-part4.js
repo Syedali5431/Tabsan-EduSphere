@@ -204,7 +204,7 @@ module.exports = [
             ['I was returned to the Helpdesk with a message.', 'The page is not available to your role. The message explains why. Ask your administrator if you need access.'],
             ['A list is empty.', 'Check the filters at the top of the page. Most pages need a department, course or offering selected first.'],
             ['Save buttons return "read-only mode".', 'The license is missing or expired. A SuperAdmin must upload a valid license in License Update.'],
-            ['A student cannot enrol in a course.', 'The course may have a prerequisite the student has not passed, the offering may be full (the student is waitlisted), or enrolment may be closed for the campus.'],
+            ['A student cannot enrol in a course.', 'The enrollment summary on the Enrollments page gives the reason for each student: an unmet prerequisite, a timetable clash, a closed course or semester, or a student from another institute. A full course puts the student on the waitlist instead.'],
             ['Results are not visible to students.', 'Results appear only after the teacher clicks Publish All in Enter Results.'],
             ['A student cannot apply for graduation.', 'Only active University students in their final semester with a completed FYP can apply. Check Degree Audit for unmet requirements.'],
             ['Degree Audit says no degree rule is configured.', 'A SuperAdmin must create a degree rule for the student\'s program in Degree Rules.'],

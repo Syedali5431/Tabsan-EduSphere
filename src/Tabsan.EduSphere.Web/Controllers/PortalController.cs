@@ -163,6 +163,9 @@ public class PortalController : Controller
         nameof(SetEnrollmentActive),
         nameof(EnrollStudent),
         nameof(AdminDropEnrollment),
+        nameof(BulkEnroll),
+        nameof(BulkDropEnrollments),
+        nameof(OpenOfferingForEnrollment),
         nameof(StudentEnroll),
         nameof(StudentDropEnrollment),
         nameof(ResultCalculation),
@@ -8535,21 +8538,31 @@ public class PortalController : Controller
     // Final-Touches Phase 8 Stage 8.1+8.2 — student sees own courses; admin sees offering roster + students list
     // Issue-Fix Phase 3 Stage 3.3 — Faculty: load offerings via GetMyOfferings (dept-scoped) + show roster when offering selected.
     [HttpGet]
-    public async Task<IActionResult> Enrollments(Guid? tenantId, Guid? campusId, Guid? offeringId, CancellationToken ct)
+    public async Task<IActionResult> Enrollments(Guid? tenantId, Guid? campusId, Guid? offeringId, Guid? departmentId, Guid? semesterId, bool showAll, CancellationToken ct)
     {
         ViewData["Title"] = "Enrollments";
         var isStudent = User.IsInRole("Student");
         var identity = _api.GetSessionIdentity();
         var model = new EnrollmentsPageModel
         {
-            IsConnected        = _api.IsConnected(),
-            SelectedOfferingId = offeringId,
-            SelectedTenantId   = tenantId,
-            SelectedCampusId   = campusId,
-            IsStudent          = isStudent,
-            Identity           = identity,
-            Message            = TempData["PortalMessage"]?.ToString()
+            IsConnected          = _api.IsConnected(),
+            SelectedOfferingId   = offeringId,
+            SelectedTenantId     = tenantId,
+            SelectedCampusId     = campusId,
+            SelectedDepartmentId = departmentId,
+            SelectedSemesterId   = semesterId,
+            ShowAllLevels        = showAll,
+            IsStudent            = isStudent,
+            Identity             = identity,
+            Message              = TempData["PortalMessage"]?.ToString()
         };
+        if (TempData["EnrollmentBulkResult"] is string bulkJson)
+        {
+            try { model.LastBulkResult = System.Text.Json.JsonSerializer.Deserialize<BulkEnrollmentResult>(bulkJson); }
+            catch { /* ignore a stale or truncated result */ }
+        }
+        if (!isStudent && model.IsConnected)
+            return await RenderStaffEnrollmentsAsync(model, ct);
         if (!model.IsConnected) return View(model);
         try
         {
@@ -8616,6 +8629,126 @@ public class PortalController : Controller
         }
 
         return RedirectToAction(nameof(Enrollments), new { tenantId, campusId, offeringId });
+    }
+
+    // Staff enrollment workspace: pick a department and class/semester, tick courses and students,
+    // enroll or drop them in bulk. Faculty manage the courses they teach; Admins their departments.
+    private async Task<IActionResult> RenderStaffEnrollmentsAsync(EnrollmentsPageModel model, CancellationToken ct)
+    {
+        var identity = model.Identity;
+        model.IsAdminUser = identity?.IsAdmin == true || identity?.IsSuperAdmin == true;
+        try
+        {
+            if (identity?.IsSuperAdmin == true)
+            {
+                model.Tenants = await _api.GetTenantsAsync(ct);
+                if (model.SelectedTenantId.HasValue)
+                    model.Campuses = await _api.GetCampusesAsync(model.SelectedTenantId, ct);
+            }
+
+            model.IsEnrollmentActive = await _api.GetEnrollmentScopeActiveAsync(model.SelectedTenantId, model.SelectedCampusId, ct);
+            if (!model.IsEnrollmentActive)
+                model.Message ??= "Enrollment is currently deactivated for the selected tenant/campus scope.";
+
+            model.Departments = (await _api.GetDepartmentsAsync(model.SelectedTenantId, model.SelectedCampusId, ct))
+                .OrderBy(d => d.Name).ToList();
+            if (model.SelectedDepartmentId.HasValue && model.Departments.All(d => d.Id != model.SelectedDepartmentId))
+                model.SelectedDepartmentId = null;
+            if (!model.SelectedDepartmentId.HasValue && model.Departments.Count == 1)
+                model.SelectedDepartmentId = model.Departments[0].Id;
+
+            if (model.SelectedDepartmentId is Guid deptId)
+            {
+                model.Workspace = await _api.GetEnrollmentWorkspaceAsync(deptId, ct);
+                var semesters = model.WorkspaceSemesters;
+
+                if (!model.SelectedSemesterId.HasValue && model.SelectedOfferingId.HasValue)
+                    model.SelectedSemesterId = model.Workspace.Offerings.FirstOrDefault(o => o.Id == model.SelectedOfferingId)?.SemesterId;
+                if (model.SelectedSemesterId.HasValue && semesters.All(s => s.Id != model.SelectedSemesterId))
+                    model.SelectedSemesterId = null;
+                if (!model.SelectedSemesterId.HasValue && semesters.Count == 1)
+                    model.SelectedSemesterId = semesters[0].Id;
+                if (model.SelectedOfferingId.HasValue && model.SemesterOfferings.All(o => o.Id != model.SelectedOfferingId))
+                    model.SelectedOfferingId = null;
+            }
+
+            model.CanManage = model.IsEnrollmentActive && (model.IsAdminUser || User.IsInRole("Faculty"));
+        }
+        catch (Exception ex) when (IsApiConnectivityException(ex))
+        {
+            model.Message = "Unable to load enrollments right now because the API service is temporarily unavailable. Please try again shortly.";
+        }
+        catch (Exception ex) { model.Message = ex.Message; }
+        return View("Enrollments", model);
+    }
+
+    private object EnrollmentRouteValues(Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? semesterId, Guid? offeringId, int? institutionType, bool showAll)
+        => new { institutionType, tenantId, campusId, departmentId, semesterId, offeringId, showAll = showAll ? true : (bool?)null };
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkEnroll(List<Guid> offeringIds, List<Guid> studentProfileIds, bool overrideClash, string? overrideReason,
+        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? semesterId, Guid? offeringId, int? institutionType, bool showAll, CancellationToken ct)
+    {
+        if (offeringIds.Count == 0 || studentProfileIds.Count == 0)
+        {
+            TempData["PortalMessage"] = "Select at least one course and one student to enroll.";
+        }
+        else
+        {
+            try
+            {
+                var result = await _api.BulkEnrollAsync(offeringIds, studentProfileIds, overrideClash,
+                    overrideClash ? (string.IsNullOrWhiteSpace(overrideReason) ? "Enrollment staff override" : overrideReason.Trim()) : null, ct);
+
+                // Keep the per-student detail small enough for TempData: successes are summarised by the counts.
+                var trimmed = new BulkEnrollmentResult
+                {
+                    Enrolled = result.Enrolled, Waitlisted = result.Waitlisted,
+                    AlreadyEnrolled = result.AlreadyEnrolled, Skipped = result.Skipped,
+                    Results = result.Results.Where(r => r.Outcome is "Skipped" or "Waitlisted").Take(60).ToList()
+                };
+                TempData["EnrollmentBulkResult"] = System.Text.Json.JsonSerializer.Serialize(trimmed);
+                TempData["PortalMessage"] = result.Enrolled + result.Waitlisted > 0
+                    ? $"Enrollment complete: {result.Enrolled} enrolled successfully" + (result.Waitlisted > 0 ? $", {result.Waitlisted} waitlisted" : "") + "."
+                    : "No new enrollments were made.";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
+        }
+        return RedirectToAction(nameof(Enrollments), EnrollmentRouteValues(tenantId, campusId, departmentId, semesterId, offeringId, institutionType, showAll));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkDropEnrollments(Guid offeringId, List<Guid> studentProfileIds,
+        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? semesterId, int? institutionType, bool showAll, CancellationToken ct)
+    {
+        if (studentProfileIds.Count == 0)
+        {
+            TempData["PortalMessage"] = "Select at least one student to drop.";
+        }
+        else
+        {
+            try
+            {
+                var result = await _api.BulkDropAsync(offeringId, studentProfileIds, ct);
+                TempData["PortalMessage"] = $"{result.Dropped} enrollment(s) dropped" +
+                    (result.RemovedFromWaitlist > 0 ? $", {result.RemovedFromWaitlist} removed from the waitlist" : "") + ".";
+            }
+            catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
+        }
+        return RedirectToAction(nameof(Enrollments), EnrollmentRouteValues(tenantId, campusId, departmentId, semesterId, offeringId, institutionType, showAll));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> OpenOfferingForEnrollment(Guid targetOfferingId,
+        Guid? tenantId, Guid? campusId, Guid? departmentId, Guid? semesterId, Guid? offeringId, int? institutionType, bool showAll, CancellationToken ct)
+    {
+        try
+        {
+            await _api.ReopenOfferingAsync(targetOfferingId, ct);
+            TempData["PortalMessage"] = "Course opened for enrollment successfully.";
+        }
+        catch (Exception ex) { TempData["PortalMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Enrollments), EnrollmentRouteValues(tenantId, campusId, departmentId, semesterId, offeringId, institutionType, showAll));
     }
 
     // Final-Touches Phase 8 Stage 8.2 — admin enrolls a student

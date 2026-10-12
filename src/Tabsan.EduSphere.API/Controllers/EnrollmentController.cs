@@ -145,11 +145,12 @@ public class EnrollmentController : ControllerBase
         if (activeCheck is not null) return activeCheck;
 
         var roster = await _enrollmentService.GetForOfferingAsync(offeringId, ct);
+        var names = await StudentLabelsAsync(roster.Select(e => e.StudentProfileId).Distinct().ToList(), ct);
         return Ok(roster.Select(e => new
         {
             Id                 = e.Id,
             StudentProfileId   = e.StudentProfileId,
-            StudentName        = e.StudentProfile.RegistrationNumber,
+            StudentName        = names.TryGetValue(e.StudentProfileId, out var st) ? st.FullName : e.StudentProfile.RegistrationNumber,
             RegistrationNumber = e.StudentProfile.RegistrationNumber,
             ProgramName        = e.StudentProfile.Program?.Name ?? "",
             SemesterNumber     = e.StudentProfile.CurrentSemesterNumber
@@ -264,6 +265,255 @@ public class EnrollmentController : ControllerBase
 
         await SetEnrollmentScopeActiveAsync(scope.TenantId, scope.CampusId, false, ct);
         return NoContent();
+    }
+
+    // ── GET /api/v1/enrollment/workspace ──────────────────────────────────────
+
+    /// <summary>
+    /// Everything the staff enrollment screen needs for one department and (optionally) one class /
+    /// semester: the course offerings (with seats, open state and teacher) and the department's students
+    /// (roll number, name, program, level) with the offerings each is already enrolled or waitlisted in.
+    /// Faculty only see the offerings they teach.
+    /// </summary>
+    [HttpGet("workspace")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> GetWorkspace([FromQuery] Guid departmentId, [FromQuery] Guid? semesterId, CancellationToken ct)
+    {
+        var department = await _db.Departments.AsNoTracking().FirstOrDefaultAsync(d => d.Id == departmentId, ct);
+        if (department is null) return NotFound("Department not found.");
+        if (!await CanAccessDepartmentAsync(department.Id, department.TenantId, ct)) return Forbid();
+
+        var userId = GetUserId();
+        var offeringsQuery = _db.CourseOfferings.AsNoTracking().Where(o => o.Course.DepartmentId == departmentId);
+        if (semesterId.HasValue) offeringsQuery = offeringsQuery.Where(o => o.SemesterId == semesterId.Value);
+        if (IsFacultyOnly()) offeringsQuery = offeringsQuery.Where(o => o.FacultyUserId == userId);
+
+        var offerings = await offeringsQuery
+            .Select(o => new
+            {
+                o.Id,
+                CourseCode = o.Course.Code,
+                CourseTitle = o.Course.Title,
+                o.SemesterId,
+                SemesterName = o.Semester.Name,
+                SemesterClosed = o.Semester.IsClosed,
+                o.IsOpen,
+                o.MaxEnrollment,
+                o.FacultyUserId
+            })
+            .ToListAsync(ct);
+        var offeringIds = offerings.Select(o => o.Id).ToList();
+
+        var memberships = await _db.Enrollments.AsNoTracking()
+            .Where(e => offeringIds.Contains(e.CourseOfferingId)
+                        && (e.Status == Domain.Academic.EnrollmentStatus.Active || e.Status == Domain.Academic.EnrollmentStatus.Waitlisted))
+            .Select(e => new { e.Id, e.StudentProfileId, e.CourseOfferingId, e.Status, e.EnrolledAt })
+            .ToListAsync(ct);
+
+        var facultyIds = offerings.Where(o => o.FacultyUserId.HasValue).Select(o => o.FacultyUserId!.Value).Distinct().ToList();
+        var facultyNames = await _db.Users.AsNoTracking()
+            .Where(u => facultyIds.Contains(u.Id))
+            .Select(u => new { u.Id, Name = u.FullName ?? u.Username })
+            .ToDictionaryAsync(u => u.Id, u => u.Name, ct);
+
+        var students = await _db.StudentProfiles.AsNoTracking()
+            .Where(s => s.DepartmentId == departmentId)
+            .Join(_db.Users.AsNoTracking(), s => s.UserId, u => u.Id, (s, u) => new
+            {
+                s.Id,
+                s.RegistrationNumber,
+                FullName = u.FullName ?? u.Username,
+                s.ProgramId,
+                ProgramName = s.Program.Name,
+                Level = s.CurrentSemesterNumber,
+                s.Status,
+                AccountActive = u.IsActive
+            })
+            .OrderBy(s => s.RegistrationNumber)
+            .ToListAsync(ct);
+
+        return Ok(new
+        {
+            DepartmentId = department.Id,
+            DepartmentName = department.Name,
+            InstitutionType = (int)department.InstitutionType,
+            Offerings = offerings
+                .OrderBy(o => o.SemesterName).ThenBy(o => o.CourseCode)
+                .Select(o => new
+                {
+                    o.Id, o.CourseCode, o.CourseTitle, o.SemesterId, o.SemesterName, o.SemesterClosed, o.IsOpen, o.MaxEnrollment,
+                    FacultyName = o.FacultyUserId.HasValue && facultyNames.TryGetValue(o.FacultyUserId.Value, out var fn) ? fn : "",
+                    EnrolledCount = memberships.Count(m => m.CourseOfferingId == o.Id && m.Status == Domain.Academic.EnrollmentStatus.Active),
+                    WaitlistCount = memberships.Count(m => m.CourseOfferingId == o.Id && m.Status == Domain.Academic.EnrollmentStatus.Waitlisted)
+                }),
+            Students = students.Select(s => new
+            {
+                s.Id, s.RegistrationNumber, s.FullName, s.ProgramId, s.ProgramName, s.Level,
+                Status = s.Status.ToString(), s.AccountActive
+            }),
+            Enrollments = memberships.Select(m => new
+            {
+                m.Id, m.StudentProfileId, m.CourseOfferingId, Status = m.Status.ToString(), m.EnrolledAt
+            })
+        });
+    }
+
+    // ── POST /api/v1/enrollment/bulk ───────────────────────────────────────────
+
+    /// <summary>
+    /// Enrolls several students into one or more offerings in one go. Every student/offering pair is
+    /// checked with the normal rules (open offering and semester, duplicates, prerequisites, timetable
+    /// clashes, seats → waitlist) and reported back individually.
+    /// </summary>
+    [HttpPost("bulk")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> BulkEnroll([FromBody] BulkEnrollRequest request, CancellationToken ct)
+    {
+        var offeringIds = (request.CourseOfferingIds ?? Array.Empty<Guid>()).Distinct().ToList();
+        var studentIds = (request.StudentProfileIds ?? Array.Empty<Guid>()).Distinct().ToList();
+        if (offeringIds.Count == 0 || studentIds.Count == 0)
+            return BadRequest(new { message = "Select at least one course and one student." });
+        if (offeringIds.Count * studentIds.Count > 2000)
+            return BadRequest(new { message = "Too many enrollments in one request (maximum 2000 student/course pairs)." });
+
+        // Only administrators may override timetable clashes (same rule as the single-student admin endpoint).
+        var overrideClash = request.OverrideClash && !IsFacultyOnly();
+        var students = await StudentLabelsAsync(studentIds, ct);
+        var results = new List<BulkEnrollmentOutcome>();
+
+        foreach (var offeringId in offeringIds)
+        {
+            var offering = await _courses.GetOfferingByIdAsync(offeringId, ct);
+            var courseLabel = offering is null ? offeringId.ToString() : $"{offering.Course.Code} — {offering.Course.Title}";
+            var denied = offering is null ? "Course offering not found." : await CannotManageOfferingAsync(offering, ct);
+            if (denied is null)
+            {
+                var activeCheck = await EnsureEnrollmentScopeIsActiveAsync(offering!.TenantId, offering.CampusId, ct);
+                if (activeCheck is not null) denied = "Enrollment is deactivated for this campus.";
+            }
+
+            foreach (var studentId in studentIds)
+            {
+                students.TryGetValue(studentId, out var st);
+                var outcome = new BulkEnrollmentOutcome(studentId, st?.RegistrationNumber ?? "", st?.FullName ?? "", offeringId, courseLabel, "Skipped", denied ?? "");
+                if (denied is not null) { results.Add(outcome); continue; }
+                if (st is null) { results.Add(outcome with { Message = "Student not found." }); continue; }
+                if (st.InstitutionType != (int)offering!.InstitutionType)
+                {
+                    results.Add(outcome with { Message = "Student belongs to a different institute." });
+                    continue;
+                }
+
+                var attempt = await _enrollmentService.TryEnrollAsync(studentId, offeringId, overrideClash, overrideClash ? request.OverrideReason : null, ct);
+                if (attempt.IsSuccess)
+                {
+                    var waitlisted = string.Equals(attempt.Enrollment?.Status, "Waitlisted", StringComparison.OrdinalIgnoreCase);
+                    results.Add(outcome with
+                    {
+                        Outcome = waitlisted ? "Waitlisted" : "Enrolled",
+                        Message = waitlisted ? "Course is full — added to the waitlist." : ""
+                    });
+                }
+                else
+                {
+                    var detail = attempt.UnmetPrerequisites?.Count > 0 ? $" ({string.Join(", ", attempt.UnmetPrerequisites)})"
+                               : attempt.ClashDetails?.Count > 0 ? $" ({string.Join("; ", attempt.ClashDetails)})" : "";
+                    var alreadyIn = attempt.RejectionReason?.StartsWith("Already enrolled", StringComparison.OrdinalIgnoreCase) == true;
+                    results.Add(outcome with { Outcome = alreadyIn ? "AlreadyEnrolled" : "Skipped", Message = (attempt.RejectionReason ?? "Not enrolled.") + detail });
+                }
+            }
+        }
+
+        return Ok(new
+        {
+            Enrolled = results.Count(r => r.Outcome == "Enrolled"),
+            Waitlisted = results.Count(r => r.Outcome == "Waitlisted"),
+            AlreadyEnrolled = results.Count(r => r.Outcome == "AlreadyEnrolled"),
+            Skipped = results.Count(r => r.Outcome == "Skipped"),
+            Results = results
+        });
+    }
+
+    // ── POST /api/v1/enrollment/bulk-drop ──────────────────────────────────────
+
+    /// <summary>Drops (or removes from the waitlist) several students from one offering.</summary>
+    [HttpPost("bulk-drop")]
+    [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
+    public async Task<IActionResult> BulkDrop([FromBody] BulkDropRequest request, CancellationToken ct)
+    {
+        var studentIds = (request.StudentProfileIds ?? Array.Empty<Guid>()).Distinct().ToList();
+        if (studentIds.Count == 0) return BadRequest(new { message = "Select at least one student." });
+
+        var offering = await _courses.GetOfferingByIdAsync(request.CourseOfferingId, ct);
+        if (offering is null) return NotFound(new { message = "Course offering not found." });
+        var denied = await CannotManageOfferingAsync(offering, ct);
+        if (denied is not null) return StatusCode(StatusCodes.Status403Forbidden, new { message = denied });
+        var activeCheck = await EnsureEnrollmentScopeIsActiveAsync(offering.TenantId, offering.CampusId, ct);
+        if (activeCheck is not null) return activeCheck;
+
+        var enrollments = await _db.Enrollments
+            .Where(e => e.CourseOfferingId == offering.Id && studentIds.Contains(e.StudentProfileId)
+                        && (e.Status == Domain.Academic.EnrollmentStatus.Active || e.Status == Domain.Academic.EnrollmentStatus.Waitlisted))
+            .ToListAsync(ct);
+
+        int dropped = 0, removedFromWaitlist = 0;
+        foreach (var e in enrollments.Where(e => e.Status == Domain.Academic.EnrollmentStatus.Waitlisted))
+        {
+            e.Cancel();
+            removedFromWaitlist++;
+        }
+        if (removedFromWaitlist > 0) await _db.SaveChangesAsync(ct);
+
+        // Dropping an active seat promotes the next waitlisted student, so go through the service.
+        foreach (var e in enrollments.Where(e => e.Status == Domain.Academic.EnrollmentStatus.Active).ToList())
+        {
+            if (await _enrollmentService.AdminDropByIdAsync(e.Id, ct)) dropped++;
+        }
+
+        return Ok(new { Dropped = dropped, RemovedFromWaitlist = removedFromWaitlist, NotEnrolled = studentIds.Count - dropped - removedFromWaitlist });
+    }
+
+    public sealed record BulkEnrollRequest(IReadOnlyList<Guid>? CourseOfferingIds, IReadOnlyList<Guid>? StudentProfileIds, bool OverrideClash = false, string? OverrideReason = null);
+    public sealed record BulkDropRequest(Guid CourseOfferingId, IReadOnlyList<Guid>? StudentProfileIds);
+    public sealed record BulkEnrollmentOutcome(Guid StudentProfileId, string RegistrationNumber, string StudentName, Guid CourseOfferingId, string Course, string Outcome, string Message);
+    private sealed record StudentLabel(string RegistrationNumber, string FullName, int InstitutionType);
+
+    private async Task<Dictionary<Guid, StudentLabel>> StudentLabelsAsync(IReadOnlyCollection<Guid> studentIds, CancellationToken ct)
+        => await _db.StudentProfiles.AsNoTracking()
+            .Where(s => studentIds.Contains(s.Id))
+            .Join(_db.Users.AsNoTracking(), s => s.UserId, u => u.Id,
+                (s, u) => new { s.Id, s.RegistrationNumber, FullName = u.FullName ?? u.Username, InstitutionType = (int)s.Department.InstitutionType })
+            .ToDictionaryAsync(x => x.Id, x => new StudentLabel(x.RegistrationNumber, x.FullName, x.InstitutionType), ct);
+
+    private bool IsFacultyOnly() => User.IsInRole("Faculty") && !User.IsInRole("Admin") && !User.IsInRole("SuperAdmin");
+
+    private async Task<bool> CanAccessDepartmentAsync(Guid departmentId, Guid? departmentTenantId, CancellationToken ct)
+    {
+        if (_accessScope.IsSuperAdmin()) return true;
+        var callerTenantId = _accessScope.GetTenantId();
+        if (callerTenantId.HasValue && departmentTenantId != callerTenantId) return false;
+
+        var userId = GetUserId();
+        if (User.IsInRole("Admin"))
+            return await _db.AdminDepartmentAssignments.AnyAsync(a => a.AdminUserId == userId && a.DepartmentId == departmentId && a.RemovedAt == null, ct);
+
+        return await _db.FacultyDepartmentAssignments.AnyAsync(a => a.FacultyUserId == userId && a.DepartmentId == departmentId && a.RemovedAt == null, ct)
+            || await _db.CourseOfferings.AnyAsync(o => o.FacultyUserId == userId && o.Course.DepartmentId == departmentId, ct);
+    }
+
+    /// <summary>Null when the caller may enroll/drop students in the offering, otherwise the reason.</summary>
+    private async Task<string?> CannotManageOfferingAsync(Domain.Academic.CourseOffering offering, CancellationToken ct)
+    {
+        if (_accessScope.IsSuperAdmin()) return null;
+        var callerTenantId = _accessScope.GetTenantId();
+        if (callerTenantId.HasValue && offering.TenantId != callerTenantId) return "This course belongs to another institute.";
+
+        var userId = GetUserId();
+        if (User.IsInRole("Admin"))
+            return await _db.AdminDepartmentAssignments.AnyAsync(a => a.AdminUserId == userId && a.DepartmentId == offering.Course.DepartmentId && a.RemovedAt == null, ct)
+                ? null : "You do not manage this course's department.";
+
+        return offering.FacultyUserId == userId ? null : "Only the course's teacher can enroll students in it.";
     }
 
     // ── Helper ─────────────────────────────────────────────────────────────────

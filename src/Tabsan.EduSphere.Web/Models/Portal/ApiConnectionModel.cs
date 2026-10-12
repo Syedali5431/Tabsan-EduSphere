@@ -1444,6 +1444,119 @@ public class EnrollmentsPageModel
     public List<CampusItem> Campuses { get; set; } = new();
     public List<StudentItem>          Students       { get; set; } = new();
     public List<MyEnrollmentItem>     MyCourses      { get; set; } = new();
+
+    // Staff enrollment workspace: department → class/semester → courses + students.
+    public List<LookupItem> Departments { get; set; } = new();
+    public Guid?   SelectedDepartmentId { get; set; }
+    public Guid?   SelectedSemesterId   { get; set; }
+    public bool    ShowAllLevels        { get; set; }
+    public bool    CanManage            { get; set; }
+    public bool    IsAdminUser          { get; set; }
+    public EnrollmentWorkspace? Workspace { get; set; }
+    public BulkEnrollmentResult? LastBulkResult { get; set; }
+
+    /// <summary>Distinct classes / semesters that have offerings in the selected department.</summary>
+    public List<(Guid Id, string Name, int Courses)> WorkspaceSemesters =>
+        Workspace?.Offerings.GroupBy(o => (o.SemesterId, o.SemesterName))
+            .Select(g => (g.Key.SemesterId, g.Key.SemesterName, g.Count()))
+            .OrderBy(s => LevelOf(s.SemesterName) ?? int.MaxValue).ThenBy(s => s.SemesterName)
+            .ToList() ?? new();
+
+    public List<EnrollmentWorkspaceOffering> SemesterOfferings =>
+        Workspace?.Offerings.Where(o => o.SemesterId == SelectedSemesterId).OrderBy(o => o.CourseCode).ToList() ?? new();
+
+    public string? SelectedSemesterName => Workspace?.Offerings.FirstOrDefault(o => o.SemesterId == SelectedSemesterId)?.SemesterName;
+
+    /// <summary>Level a class/semester represents ("Class 9" → 9, "BSCS Semester 3" → 3).</summary>
+    public int? SelectedLevel => LevelOf(SelectedSemesterName);
+
+    public static int? LevelOf(string? semesterName)
+    {
+        if (string.IsNullOrWhiteSpace(semesterName)) return null;
+        var m = System.Text.RegularExpressions.Regex.Match(semesterName, @"(\d+)\s*$");
+        return m.Success && int.TryParse(m.Groups[1].Value, out var n) ? n : null;
+    }
+
+    public List<EnrollmentWorkspaceEnrollment> RosterFor(Guid offeringId) =>
+        Workspace?.Enrollments.Where(e => e.CourseOfferingId == offeringId)
+            .OrderBy(e => e.Status == "Active" ? 0 : 1)
+            .ThenBy(e => Workspace.Students.FirstOrDefault(s => s.Id == e.StudentProfileId)?.RegistrationNumber)
+            .ToList() ?? new();
+}
+
+public class EnrollmentWorkspace
+{
+    public Guid   DepartmentId   { get; set; }
+    public string DepartmentName { get; set; } = "";
+    public int    InstitutionType { get; set; }
+    public List<EnrollmentWorkspaceOffering>   Offerings   { get; set; } = new();
+    public List<EnrollmentWorkspaceStudent>    Students    { get; set; } = new();
+    public List<EnrollmentWorkspaceEnrollment> Enrollments { get; set; } = new();
+}
+
+public class EnrollmentWorkspaceOffering
+{
+    public Guid   Id             { get; set; }
+    public string CourseCode     { get; set; } = "";
+    public string CourseTitle    { get; set; } = "";
+    public Guid   SemesterId     { get; set; }
+    public string SemesterName   { get; set; } = "";
+    public bool   SemesterClosed { get; set; }
+    public bool   IsOpen         { get; set; }
+    public int    MaxEnrollment  { get; set; }
+    public string FacultyName    { get; set; } = "";
+    public int    EnrolledCount  { get; set; }
+    public int    WaitlistCount  { get; set; }
+    public bool   CanEnroll => IsOpen && !SemesterClosed;
+    public string StateLabel => SemesterClosed ? "Semester closed" : !IsOpen ? "Closed" : EnrolledCount >= MaxEnrollment ? "Full (waitlist)" : "Open";
+}
+
+public class EnrollmentWorkspaceStudent
+{
+    public Guid   Id                 { get; set; }
+    public string RegistrationNumber { get; set; } = "";
+    public string FullName           { get; set; } = "";
+    public Guid   ProgramId          { get; set; }
+    public string ProgramName        { get; set; } = "";
+    public int    Level              { get; set; }
+    public string Status             { get; set; } = "Active";
+    public bool   AccountActive      { get; set; } = true;
+}
+
+public class EnrollmentWorkspaceEnrollment
+{
+    public Guid     Id               { get; set; }
+    public Guid     StudentProfileId { get; set; }
+    public Guid     CourseOfferingId { get; set; }
+    public string   Status           { get; set; } = "";
+    public DateTime EnrolledAt       { get; set; }
+}
+
+public class BulkEnrollmentResult
+{
+    public int Enrolled        { get; set; }
+    public int Waitlisted      { get; set; }
+    public int AlreadyEnrolled { get; set; }
+    public int Skipped         { get; set; }
+    public List<BulkEnrollmentOutcomeItem> Results { get; set; } = new();
+}
+
+public class BulkEnrollmentOutcomeItem
+{
+    public Guid   StudentProfileId   { get; set; }
+    public string RegistrationNumber { get; set; } = "";
+    public string StudentName        { get; set; } = "";
+    public Guid   CourseOfferingId   { get; set; }
+    public string Course             { get; set; } = "";
+    public string Outcome            { get; set; } = "";
+    public string Message            { get; set; } = "";
+}
+
+public class BulkDropResult
+{
+    public int Dropped             { get; set; }
+    public int RemovedFromWaitlist { get; set; }
+    public int NotEnrolled         { get; set; }
 }
 
 // ── Phase 12: Reports ─────────────────────────────────────────────────────────

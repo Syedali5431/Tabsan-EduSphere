@@ -235,7 +235,7 @@ module.exports = [
           'Add any new **Courses**, then create an **offering** for each course you will teach this term and choose the teacher (Chapter 5).',
           'Create **Buildings** and **Rooms** if they are new, then build the class **timetables** in Timetable Admin (Chapter 6).',
           'Create accounts for new students and staff in **User Import** (Chapter 12).',
-          'Enrol students in their offerings in **Enrollments** (Chapter 5).',
+          'Enrol students in **Enrollments** (Chapter 5): choose the department and class or semester, tick the courses and students, and enroll them all at once.',
           'Check **Result Calculation** and **Grading Config** so marks become grades correctly (Chapter 8).',
           'At the end of the term, publish results, then promote students in **Student Lifecycle** (Chapter 8).',
         ],

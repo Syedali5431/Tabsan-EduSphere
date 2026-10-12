@@ -421,6 +421,10 @@ public interface IEduApiClient
     // Final-Touches Phase 8 Stage 8.1+8.2 — student my-courses, admin enroll/drop, student enroll/drop
     Task<List<MyEnrollmentItem>> GetMyEnrollmentsAsync(CancellationToken ct);
     Task AdminEnrollStudentAsync(Guid studentProfileId, Guid courseOfferingId, CancellationToken ct);
+    Task<EnrollmentWorkspace> GetEnrollmentWorkspaceAsync(Guid departmentId, CancellationToken ct);
+    Task<BulkEnrollmentResult> BulkEnrollAsync(IReadOnlyList<Guid> courseOfferingIds, IReadOnlyList<Guid> studentProfileIds, bool overrideClash, string? overrideReason, CancellationToken ct);
+    Task<BulkDropResult> BulkDropAsync(Guid courseOfferingId, IReadOnlyList<Guid> studentProfileIds, CancellationToken ct);
+    Task ReopenOfferingAsync(Guid offeringId, CancellationToken ct);
     Task AdminDropEnrollmentAsync(Guid enrollmentId, CancellationToken ct);
     Task StudentEnrollAsync(Guid courseOfferingId, CancellationToken ct);
     Task StudentDropEnrollmentAsync(Guid courseOfferingId, CancellationToken ct);
@@ -4853,6 +4857,22 @@ public class EduApiClient : IEduApiClient
 
     public async Task AdminDropEnrollmentAsync(Guid enrollmentId, CancellationToken ct)
         => await DeleteAsync($"api/v1/enrollment/admin/{enrollmentId}", ct);
+
+    public async Task<EnrollmentWorkspace> GetEnrollmentWorkspaceAsync(Guid departmentId, CancellationToken ct)
+        => await GetAsync<EnrollmentWorkspace>($"api/v1/enrollment/workspace?departmentId={departmentId}", ct) ?? new EnrollmentWorkspace();
+
+    public async Task<BulkEnrollmentResult> BulkEnrollAsync(IReadOnlyList<Guid> courseOfferingIds, IReadOnlyList<Guid> studentProfileIds, bool overrideClash, string? overrideReason, CancellationToken ct)
+        => await PostAsync<object, BulkEnrollmentResult>("api/v1/enrollment/bulk",
+               new { CourseOfferingIds = courseOfferingIds, StudentProfileIds = studentProfileIds, OverrideClash = overrideClash, OverrideReason = overrideReason }, ct)
+           ?? new BulkEnrollmentResult();
+
+    public async Task<BulkDropResult> BulkDropAsync(Guid courseOfferingId, IReadOnlyList<Guid> studentProfileIds, CancellationToken ct)
+        => await PostAsync<object, BulkDropResult>("api/v1/enrollment/bulk-drop",
+               new { CourseOfferingId = courseOfferingId, StudentProfileIds = studentProfileIds }, ct)
+           ?? new BulkDropResult();
+
+    public Task ReopenOfferingAsync(Guid offeringId, CancellationToken ct)
+        => PutAsync<object, object>($"api/v1/course/offerings/{offeringId}/reopen", new { }, ct);
 
     public async Task StudentEnrollAsync(Guid courseOfferingId, CancellationToken ct)
         => await PostAsync<object, object>("api/v1/enrollment",
