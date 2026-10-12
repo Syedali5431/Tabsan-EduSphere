@@ -14,6 +14,7 @@ else
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="get" asp-action="RubricManage" class="row g-2 align-items-end">
+                <partial name="_InstitutionFilter" />
                 <div class="col-md-4">
                     <label class="form-label">Course Offering</label>
                     <select name="offeringId" class="form-select" onchange="this.form.submit()">

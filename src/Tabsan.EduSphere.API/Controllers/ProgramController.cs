@@ -35,6 +35,7 @@ public class ProgramController : ControllerBase
         [FromQuery] Guid? departmentId,
         [FromQuery] Guid? tenantId,
         [FromQuery] Guid? campusId,
+        [FromQuery] int? institutionType,
         CancellationToken ct)
     {
         var scope = ResolveEffectiveScope(tenantId, campusId);
@@ -48,7 +49,10 @@ public class ProgramController : ControllerBase
                 return scopeResult;
         }
 
-        var programs = await _repo.GetAllAsync(departmentId, scope.TenantId, scope.CampusId, ct);
+        var programs = (await _repo.GetAllAsync(departmentId, scope.TenantId, scope.CampusId, ct)).AsEnumerable();
+        if (institutionType.HasValue)
+            programs = programs.Where(p => p.Department is not null && (int)p.Department.InstitutionType == institutionType.Value);
+
         return Ok(programs.Select(p => new
         {
             p.Id,

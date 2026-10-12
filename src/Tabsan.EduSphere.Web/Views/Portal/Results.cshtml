@@ -159,27 +159,10 @@ else
             </div>
             <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar"
                   data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+                    <partial name="_InstitutionFilter" />
                     @* ── Super Admin: All filters visible ── *@
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
-                        <div class="col-md-2">
-                            <label class="form-label">Institute</label>
-                            @if (Model.AvailableInstitutionTypes?.Count > 1)
-                            {
-                                <select id="institutionType" name="institutionType" class="form-select"
-                                        data-cascade="institution" onchange="resetResultFiltersAndSubmit(this.form)">
-                                    <option value="">All</option>
-                                    @foreach (var it in Model.AvailableInstitutionTypes)
-                                    {
-                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
-                                    }
-                                </select>
-                            }
-                            else
-                            {
-                                <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
-                            }
-                        </div>
                         <div class="col-md-2">
                             <label class="form-label">Tenant</label>
                             <select name="tenantId" class="form-select" onchange="this.form.submit()">

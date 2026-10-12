@@ -1,0 +1,35 @@
+@* Institute filter (School / College / University) for a GET filter form.
+   Shown only when the signed-in user can see departments of more than one institution type.
+   The choice travels as ?institutionType= and EduApiClient limits every department, program,
+   course, offering and student lookup on the page to it. *@
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
+@{
+    const string cacheKey = "Tabsan.AvailableInstitutionTypes";
+    var available = Context.Items[cacheKey] as List<int>;
+    if (available is null)
+    {
+        try { available = await EduApi.GetAvailableInstitutionTypesAsync(CancellationToken.None); }
+        catch { available = new List<int>(); }
+        Context.Items[cacheKey] = available;
+    }
+    var selected = EduApi.PageInstitutionType;
+    var labels = new Dictionary<int, string> { [0] = "University", [1] = "School", [2] = "College" };
+    var columnClass = ViewData["InstitutionFilterColumnClass"] as string ?? "col-md-2";
+}
+@if (available.Count > 1)
+{
+    <div class="@columnClass">
+        <label class="form-label">Institute</label>
+        <select name="institutionType" class="form-select" data-institution-filter onchange="tabsanInstitutionChanged(this)">
+            <option value="">All institutes</option>
+            @foreach (var type in available.Where(labels.ContainsKey))
+            {
+                <option value="@type" selected="@(selected == type)">@labels[type]</option>
+            }
+        </select>
+    </div>
+}
+else if (selected.HasValue)
+{
+    <input type="hidden" name="institutionType" value="@selected" />
+}

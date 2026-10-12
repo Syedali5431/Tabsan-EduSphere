@@ -14,12 +14,13 @@
 | 7 *(optional)* | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role |
 | 8 *(optional)* | `student-journey-class1-10.sql` | Certificate-demo student lifecycle: Class 1-10 with results, attendance, assignments for `col11s6`, under its own isolated department |
 | 9 *(optional)* | `08-Create-Test-Admin-User.sql` | Creates testing account `testadmin` (Admin in University tenant, all its departments, no SuperAdmin rights) |
+| 10 *(recommended)* | `09-Institution-Dummy-Data.sql` | Balanced School / College / University demo data (new departments, programs, courses, offerings, teachers, 120 students with enrollments, results, attendance and fee receipts) plus institution consistency fixes. Re-runnable |
 
-There is no `09-Restructure-Sidebar-Menu.sql` or `Seed-Core-Clean.sql` in this folder — earlier revisions of this README referenced scripts that were since renamed or removed; `07-Fix-Sidebar-Role-Visibility.sql` is the script that actually ships.
+There is no `09-Restructure-Sidebar-Menu.sql` (the only 09 script is `09-Institution-Dummy-Data.sql`) or `Seed-Core-Clean.sql` in this folder — earlier revisions of this README referenced scripts that were since renamed or removed; `07-Fix-Sidebar-Role-Visibility.sql` is the script that actually ships.
 
 ## Database Summary
 
-Counts below are for the core pipeline (02 → 03 → 04 → 05); running the optional `student-journey-class1-10.sql` adds one extra department and 50 extra courses on top of these.
+Counts below are for the core pipeline (02 → 03 → 04 → 05); running the optional `student-journey-class1-10.sql` adds one extra department and 50 extra courses on top of these, and `09-Institution-Dummy-Data.sql` adds 6 departments, 6 programs, 48 courses and offerings, 6 teachers and 120 students (see the table below).
 
 | Item | Count |
 |------|-------|
@@ -44,6 +45,12 @@ Counts below are for the core pipeline (02 → 03 → 04 → 05); running the op
 | University | Spanish Language | 1 Year | 10 |
 | College | ICS | 2 Years | 20 |
 | School | Science | 10 Years (Class 1-10) | 100 |
+| University | BS Economics (BSECO) — *09 script* | 8 Semesters (Semester 1-2 seeded) | 20 |
+| College | FSc Pre-Medical (FSC-PM) — *09 script* | 2 Years (Class 11-12) | 20 |
+| College | FSc Pre-Engineering (FSC-PE) — *09 script* | 2 Years (Class 11-12) | 20 |
+| College | Intermediate in Commerce (ICOM) — *09 script* | 2 Years (Class 11-12) | 20 |
+| School | Arts (ARTS) — *09 script* | Class 9-10 stream | 20 |
+| School | Commerce (COMMERCE) — *09 script* | Class 9-10 stream | 20 |
 
 Plus 5 graduated demo students (one per program except MSE) and 5 core login-only users (SuperAdmin + 3 Admins), for 295 total student profiles.
 
@@ -63,6 +70,8 @@ Faculty, Student, and Finance users are created by `03-FullDummyData.sql` (e.g. 
 
 Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`, `spanish3`).
 
+`09-Institution-Dummy-Data.sql` adds one teacher per new department (`faculty.sch3`, `faculty.sch4`, `faculty.col3`, `faculty.col4`, `faculty.col5`, `faculty.eco1`) and 10 students per level, named `<program><level>s<n>`: `arts9s1`, `comm10s4`, `fscpm11s2`, `fscpe12s7`, `icom11s5`, `bseco1s3` …
+
 ## Departments
 
 | Institute | Department | Code |
@@ -72,6 +81,12 @@ Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`
 | University | Spanish Language | SPA |
 | College | Information Technology | IT-COL |
 | School | Science Department | SCI |
+| University | Economics *(09)* | ECO |
+| College | Pre-Medical *(09)* | PMED-COL |
+| College | Pre-Engineering *(09)* | PENG-COL |
+| College | Commerce (College) *(09)* | ICOM-COL |
+| School | Arts & Humanities *(09)* | ARTS-SCH |
+| School | Commerce *(09)* | COM-SCH |
 
 ## Example Commands
 
@@ -93,6 +108,7 @@ sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sq
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
 ```
 
 

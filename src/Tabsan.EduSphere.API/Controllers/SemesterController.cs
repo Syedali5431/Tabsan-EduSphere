@@ -17,16 +17,33 @@ namespace Tabsan.EduSphere.API.Controllers;
 public class SemesterController : ControllerBase
 {
     private readonly ISemesterRepository _repo;
+    private readonly ICourseRepository _courses;
 
-    public SemesterController(ISemesterRepository repo) => _repo = repo;
+    public SemesterController(ISemesterRepository repo, ICourseRepository courses)
+    {
+        _repo = repo;
+        _courses = courses;
+    }
 
     // ── GET /api/v1/semester ───────────────────────────────────────────────────
 
-    /// <summary>Returns all semesters ordered by start date descending.</summary>
+    /// <summary>
+    /// Returns all semesters ordered by start date descending. With <paramref name="institutionType"/>,
+    /// only the semesters / classes used by that institution type's offerings are returned, plus any
+    /// semester no offering uses yet (so a new term can still be chosen).
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] int? institutionType, CancellationToken ct)
     {
-        var semesters = await _repo.GetAllAsync(ct);
+        IEnumerable<Semester> semesters = await _repo.GetAllAsync(ct);
+        if (institutionType.HasValue)
+        {
+            var offerings = await _courses.GetAllOfferingsAsync(ct);
+            var usedByThis = offerings.Where(o => (int)o.InstitutionType == institutionType.Value).Select(o => o.SemesterId).ToHashSet();
+            var usedByAny = offerings.Select(o => o.SemesterId).ToHashSet();
+            semesters = semesters.Where(s => usedByThis.Contains(s.Id) || !usedByAny.Contains(s.Id));
+        }
+
         return Ok(semesters.Select(s => new
         {
             s.Id, s.Name, s.StartDate, s.EndDate, s.IsClosed, s.ClosedAt

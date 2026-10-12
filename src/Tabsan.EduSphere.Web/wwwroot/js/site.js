@@ -495,3 +495,18 @@
 		renderMessages();
 	});
 })();
+
+// Institute filter: switching School / College / University clears the dependent selections
+// (department, program, course, offering, student ...) so nothing from another institute is kept.
+function tabsanInstitutionChanged(select) {
+	var form = select.form;
+	if (!form) return;
+	var keep = { institutionType: 1 };
+	form.querySelectorAll('select, input[type="hidden"]').forEach(function (el) {
+		if (el === select || !el.name || keep[el.name] === 1) return;
+		// Hidden inputs are only cleared when they carry a selection (…Id), not page settings.
+		if (el.tagName === 'INPUT' && !/Id$/.test(el.name)) return;
+		el.value = '';
+	});
+	form.submit();
+}

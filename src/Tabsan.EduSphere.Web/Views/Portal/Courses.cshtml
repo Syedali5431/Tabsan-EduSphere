@@ -34,6 +34,7 @@ else
                 </div>
                 <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar"
                       data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+                    <partial name="_InstitutionFilter" />
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-4">

@@ -41,6 +41,7 @@ else
         <div class="card-body">
             <form method="get" asp-action="Programs" class="row g-2 align-items-end"
                   data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+                <partial name="_InstitutionFilter" />
                 @if (isSuperAdmin)
                 {
                     <div class="col-md-4">
@@ -177,7 +178,7 @@ else
                                     <td><code>@p.Code</code></td>
                                     <td>@p.Name</td>
                                     <td>@p.DepartmentName</td>
-                                    <td class="text-center">@p.TotalSemesters @rowLevelUnit@(p.TotalSemesters == 1 ? "" : "s")</td>
+                                    <td class="text-center">@p.TotalSemesters @(p.TotalSemesters == 1 ? rowLevelUnit : rowLevelUnit.EndsWith("s") ? rowLevelUnit + "es" : rowLevelUnit + "s")</td>
                                     <td>
                                         <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? "Active" : "Inactive")</span>
                                     </td>

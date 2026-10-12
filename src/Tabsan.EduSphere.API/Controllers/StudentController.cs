@@ -86,7 +86,7 @@ public class StudentController : ControllerBase
     // Finance needs the student list to raise and record fee payments.
     [HttpGet]
     [Authorize(Roles = "SuperAdmin,Admin,Faculty,Finance")]
-    public async Task<IActionResult> GetAll([FromQuery] Guid? departmentId, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] Guid? departmentId, [FromQuery] int? institutionType, CancellationToken ct)
     {
         var callerInstitutionType = GetCurrentInstitutionType();
 
@@ -127,6 +127,14 @@ public class StudentController : ControllerBase
         {
             students = students
                 .Where(sp => sp.Department is not null && (int)sp.Department.InstitutionType == callerInstitutionType.Value)
+                .ToList();
+        }
+
+        // Institute filter (School / College / University) chosen in the portal.
+        if (institutionType.HasValue)
+        {
+            students = students
+                .Where(sp => sp.Department is not null && (int)sp.Department.InstitutionType == institutionType.Value)
                 .ToList();
         }
 

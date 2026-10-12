@@ -175,6 +175,8 @@ public interface IEduApiClient
 
     // Students
     Task<List<StudentItem>> GetStudentsAsync(Guid? departmentId, CancellationToken ct);
+    int? PageInstitutionType { get; }
+    Task<List<int>> GetAvailableInstitutionTypesAsync(CancellationToken ct);
 
     // Departments
     Task<List<DepartmentItem>> GetDepartmentDetailsAsync(Guid? tenantId, Guid? campusId, CancellationToken ct);
@@ -588,6 +590,32 @@ public class EduApiClient : IEduApiClient
         _protector = dataProtectionProvider.CreateProtector("Tabsan.EduSphere.Web.EduApiClientCookies.v1");
     }
 
+    // Institute filter (0 University, 1 School, 2 College) chosen on the current page via ?institutionType=.
+    // Department, program, course, offering and student lookups made while rendering that page are limited
+    // to it, so every dropdown and list on the page shows a single institution type.
+    public int? PageInstitutionType
+    {
+        get
+        {
+            var raw = _httpContextAccessor.HttpContext?.Request.Query["institutionType"].ToString();
+            return int.TryParse(raw, out var value) && value is >= 0 and <= 2 ? value : null;
+        }
+    }
+
+    private void AddInstitutionScope(List<string> query)
+    {
+        var institutionType = PageInstitutionType;
+        if (institutionType.HasValue && !query.Any(q => q.StartsWith("institutionType=", StringComparison.Ordinal)))
+            query.Add($"institutionType={institutionType.Value}");
+    }
+
+    public async Task<List<int>> GetAvailableInstitutionTypesAsync(CancellationToken ct)
+    {
+        // Deliberately unscoped: lists every institution type the signed-in user has departments in.
+        var raw = await GetAsync<List<DeptDetailDto>>("api/v1/department", ct) ?? new();
+        return raw.Select(d => d.InstitutionType).Distinct().OrderBy(t => t).ToList();
+    }
+
     // â”€â”€ Connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public bool IsConnected()
@@ -831,6 +859,7 @@ public class EduApiClient : IEduApiClient
         var query = new List<string>();
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        AddInstitutionScope(query);
 
         var path = query.Count == 0
             ? "api/v1/department"
@@ -848,6 +877,7 @@ public class EduApiClient : IEduApiClient
         if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        AddInstitutionScope(query);
 
         var path = query.Count == 0 ? "api/v1/program" : $"api/v1/program?{string.Join("&", query)}";
         return await GetAsync<List<LookupItem>>(path, ct) ?? new();
@@ -862,6 +892,7 @@ public class EduApiClient : IEduApiClient
         if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        AddInstitutionScope(query);
 
         var path = query.Count == 0 ? "api/v1/program" : $"api/v1/program?{string.Join("&", query)}";
         var raw = await GetAsync<List<ProgramDetailDto>>(path, ct) ?? new();
@@ -879,7 +910,23 @@ public class EduApiClient : IEduApiClient
     }
 
     public async Task<List<LookupItem>> GetSemestersAsync(CancellationToken ct)
-        => await GetAsync<List<LookupItem>>("api/v1/semester", ct) ?? new();
+    {
+        // Semesters / classes are limited to the page's Institute filter or, without one, to the
+        // institution type of a user whose departments are all of one type.
+        var institutionType = PageInstitutionType;
+        if (!institutionType.HasValue && GetSessionIdentity()?.IsSuperAdmin != true)
+        {
+            try
+            {
+                var ownTypes = await GetAvailableInstitutionTypesAsync(ct);
+                if (ownTypes.Count == 1) institutionType = ownTypes[0];
+            }
+            catch { /* fall back to the full list */ }
+        }
+
+        var path = institutionType.HasValue ? $"api/v1/semester?institutionType={institutionType.Value}" : "api/v1/semester";
+        return await GetAsync<List<LookupItem>>(path, ct) ?? new();
+    }
 
     public async Task<List<LookupItem>> GetCoursesAsync(Guid? departmentId, CancellationToken ct)
         => await GetCoursesAsync(departmentId, null, null, ct);
@@ -890,6 +937,7 @@ public class EduApiClient : IEduApiClient
         if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
+        AddInstitutionScope(query);
 
         var path = query.Count == 0
             ? "api/v1/course"
@@ -2435,9 +2483,10 @@ public class EduApiClient : IEduApiClient
 
     public async Task<List<StudentItem>> GetStudentsAsync(Guid? departmentId, CancellationToken ct)
     {
-        var path = departmentId.HasValue
-            ? $"api/v1/student?departmentId={departmentId.Value}"
-            : "api/v1/student";
+        var query = new List<string>();
+        if (departmentId.HasValue) query.Add($"departmentId={departmentId.Value}");
+        AddInstitutionScope(query);
+        var path = query.Count == 0 ? "api/v1/student" : $"api/v1/student?{string.Join("&", query)}";
         var raw = await GetAsync<List<StudentApiDto>>(path, ct) ?? new();
         return raw.Select(MapStudent).ToList();
     }
@@ -2484,6 +2533,7 @@ public class EduApiClient : IEduApiClient
         if (campusId.HasValue)
             queryParts.Add($"campusId={campusId.Value}");
 
+        AddInstitutionScope(queryParts);
         var path = "api/v1/department";
         if (queryParts.Count > 0)
             path += "?" + string.Join("&", queryParts);
@@ -2927,6 +2977,7 @@ public class EduApiClient : IEduApiClient
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
         if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        AddInstitutionScope(query);
         var path = query.Count == 0 ? "api/v1/course" : $"api/v1/course?{string.Join("&", query)}";
         var raw = await GetAsync<List<CourseDetailDto>>(path, ct) ?? new();
         return raw.Select(MapCourseItem).ToList();
@@ -2935,7 +2986,9 @@ public class EduApiClient : IEduApiClient
     // Final-Touches Phase 19 Stage 19.3 — get courses filtered by HasSemesters
     public async Task<List<CourseItem>> GetCourseDetailsByTypeAsync(bool hasSemesters, CancellationToken ct)
     {
-        var raw = await GetAsync<List<CourseDetailDto>>($"api/v1/course?hasSemesters={hasSemesters}", ct) ?? new();
+        var query = new List<string> { $"hasSemesters={hasSemesters}" };
+        AddInstitutionScope(query);
+        var raw = await GetAsync<List<CourseDetailDto>>($"api/v1/course?{string.Join("&", query)}", ct) ?? new();
         return raw.Select(MapCourseItem).ToList();
     }
 
@@ -2946,6 +2999,7 @@ public class EduApiClient : IEduApiClient
         if (tenantId.HasValue) query.Add($"tenantId={tenantId.Value}");
         if (campusId.HasValue) query.Add($"campusId={campusId.Value}");
         if (institutionType.HasValue) query.Add($"institutionType={institutionType.Value}");
+        AddInstitutionScope(query);
         var path = query.Count == 0 ? "api/v1/course/offerings" : $"api/v1/course/offerings?{string.Join("&", query)}";
         var raw = await GetAsync<List<OfferingApiDto>>(path, ct) ?? new();
         return raw.Select(o => new CourseOfferingItem
@@ -2968,6 +3022,16 @@ public class EduApiClient : IEduApiClient
     public async Task<List<LookupItem>> GetMyOfferingsAsync(CancellationToken ct)
     {
         var raw = await GetAsync<List<MyOfferingApiDto>>("api/v1/course/offerings/my", ct) ?? new();
+        if (PageInstitutionType is int institutionType && raw.Count > 0)
+        {
+            try
+            {
+                var inScope = (await GetAsync<List<OfferingApiDto>>($"api/v1/course/offerings?institutionType={institutionType}", ct) ?? new())
+                    .Select(o => o.Id).ToHashSet();
+                raw = raw.Where(o => inScope.Contains(o.Id)).ToList();
+            }
+            catch { /* keep the unscoped list if the scoped lookup is unavailable */ }
+        }
         return raw.Select(o => new LookupItem
         {
             Id = o.Id,

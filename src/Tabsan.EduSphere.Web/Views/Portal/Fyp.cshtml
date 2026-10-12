@@ -17,6 +17,7 @@ else
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <form method="get" asp-action="Fyp" class="row g-2 align-items-end">
+                    <partial name="_InstitutionFilter" />
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-3">

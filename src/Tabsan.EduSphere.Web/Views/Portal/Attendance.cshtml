@@ -33,28 +33,9 @@ else
         <div class="card-body">
             <form method="get" asp-action="@attendanceAction" class="row g-2 align-items-end"
                   data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+                    <partial name="_InstitutionFilter" />
                     @if (User.IsInRole("SuperAdmin"))
                     {
-                        <div class="col-md-2">
-                            <label class="form-label">Institute</label>
-                            @if (Model.AvailableInstitutionTypes?.Count > 1)
-                            {
-                                <select id="institutionType" name="institutionType" class="form-select"
-                                        data-cascade="institution" onchange="this.form.submit()">
-                                    <option value="">All</option>
-                                    @foreach (var it in Model.AvailableInstitutionTypes)
-                                    {
-                                        <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
-                                    }
-                                </select>
-                            }
-                            else
-                            {
-                                <select class="form-select" disabled>
-                                    <option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option>
-                                </select>
-                            }
-                        </div>
                         <div class="col-md-2">
                             <label class="form-label">Tenant</label>
                             <select name="tenantId" class="form-select" data-cascade="tenant" onchange="this.form.submit()">

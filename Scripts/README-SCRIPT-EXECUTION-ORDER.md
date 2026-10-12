@@ -21,6 +21,7 @@ Run scripts in this exact order for a fresh deployment.
 | 7 | `07-Fix-Sidebar-Role-Visibility.sql` | Resets sidebar menu visibility per role from a known-good spec |
 | 8 | `student-journey-class1-10.sql` | Attaches a full Class 1-10 certificate-eligible history to student `col11s6`, under its own isolated demo department so it never contaminates 03's course/offering selection |
 | 9 | `08-Create-Test-Admin-User.sql` | Creates the `testadmin` testing account: Admin role (every right except SuperAdmin) in the University tenant, assigned to all of its departments. Password `EduSphere147` |
+| 10 | `09-Institution-Dummy-Data.sql` | Balanced demo data for all three institution types: adds School (Arts & Humanities, Commerce — Class 9-10), College (Pre-Medical, Pre-Engineering, Commerce — Class 11-12) and University (Economics — BSECO Semester 1-2) departments, programs, courses, offerings, a teacher per department, 10 students per level, enrollments, published results, attendance and fee receipts. Also aligns student accounts with their profile's institution and gives every offering a teacher of its own institution type. Re-runnable (skips anything already present). Run after 03 and the optional scripts above |
 
 ## Notes
 
@@ -52,5 +53,6 @@ sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sq
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
 sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
+sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
 ```
 
