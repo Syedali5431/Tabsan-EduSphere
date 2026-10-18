@@ -195,6 +195,14 @@ public class ApplicationDbContext : DbContext
     /// <summary>Per-question answers submitted by students within an attempt.</summary>
     public DbSet<QuizAnswer> QuizAnswers => Set<QuizAnswer>();
 
+    // ── Plan M2: Quiz engine upgrade ───────────────────────────────────────
+    public DbSet<QuizAnswerSelection> QuizAnswerSelections => Set<QuizAnswerSelection>();
+    public DbSet<QuizAttemptItem> QuizAttemptItems => Set<QuizAttemptItem>();
+    public DbSet<QuestionBank> QuestionBanks => Set<QuestionBank>();
+    public DbSet<QuizQuestionGroup> QuizQuestionGroups => Set<QuizQuestionGroup>();
+    public DbSet<QuizAccommodation> QuizAccommodations => Set<QuizAccommodation>();
+    public DbSet<QuizAvailabilityOverride> QuizAvailabilityOverrides => Set<QuizAvailabilityOverride>();
+
     // ── Phase 5: FYP ──────────────────────────────────────────────────────────
     /// <summary>Final Year Projects proposed and managed by students.</summary>
     public DbSet<FypProject> FypProjects => Set<FypProject>();

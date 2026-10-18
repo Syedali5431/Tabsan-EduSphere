@@ -109,6 +109,7 @@ else
                     </h2>
                     @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                     {
+                        <a class="btn btn-sm btn-outline-secondary me-1" asp-action="QuestionBanks" asp-route-offeringId="@Model.SelectedOfferingId">Question banks</a>
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createQuizModal">
                             + Create Quiz
                         </button>
@@ -153,6 +154,10 @@ else
                                     @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                     {
                                         <div class="mt-2 d-flex gap-1 flex-wrap">
+                                            @* Plan M2: questions, settings, grading and item analysis *@
+                                            <a class="btn btn-sm btn-primary" asp-action="QuizBuilder" asp-route-quizId="@q.Id" data-quiz-builder-link>Questions &amp; settings</a>
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="QuizGrading" asp-route-quizId="@q.Id">Attempts &amp; grading</a>
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@q.Id">Statistics</a>
                                             @if (!q.IsPublished)
                                             {
                                                 <button type="button" class="btn btn-xs btn-outline-secondary btn-sm"

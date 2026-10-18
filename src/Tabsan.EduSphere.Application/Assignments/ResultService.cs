@@ -248,6 +248,62 @@ public class ResultService : IResultService
         return true;
     }
 
+    // ── System sync (Plan M2) ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Ownership rule: a sync only ever writes rows it created itself (<see cref="ResultSource"/> other
+    /// than Manual) while they are still drafts. A row a teacher entered or edited by hand stays theirs;
+    /// a published row is locked and needs an admin correction (which also makes it Manual).
+    /// </summary>
+    public async Task<SystemResultSyncOutcome> SyncSystemComponentAsync(Guid studentProfileId, Guid courseOfferingId, string resultType,
+        decimal marksObtained, decimal maxMarks, ResultSource source, CancellationToken ct = default)
+    {
+        var normalizedType = NormalizeResultType(resultType);
+        if (IsAggregateType(normalizedType))
+            throw new ArgumentException("Total is system-calculated and cannot be synced.", nameof(resultType));
+
+        var institutionType = await _repo.GetInstitutionTypeForOfferingAsync(courseOfferingId, ct);
+        var rule = (await _repo.GetActiveComponentRulesAsync(institutionType, ct))
+            .FirstOrDefault(x => string.Equals(x.Name, normalizedType, StringComparison.OrdinalIgnoreCase));
+        if (rule is null) return SystemResultSyncOutcome.SkippedNotConfigured;
+        normalizedType = rule.Name; // store the configured spelling so the gradebook column matches
+
+        var gradePoint = await ResolveGradePointForInstitutionAsync(institutionType, marksObtained, maxMarks, ct);
+        var existing = await _repo.GetAsync(studentProfileId, courseOfferingId, normalizedType, ct);
+        SystemResultSyncOutcome outcome;
+
+        if (existing is null)
+        {
+            var created = Result.CreateSystemManaged(studentProfileId, courseOfferingId, normalizedType, marksObtained, maxMarks, source);
+            created.SetGradePoint(gradePoint);
+            await _repo.AddAsync(created, ct);
+            outcome = SystemResultSyncOutcome.Created;
+        }
+        else if (existing.Source == ResultSource.Manual)
+        {
+            return SystemResultSyncOutcome.SkippedManual;
+        }
+        else if (existing.IsPublished)
+        {
+            return SystemResultSyncOutcome.SkippedPublished;
+        }
+        else if (existing.MarksObtained == marksObtained && existing.MaxMarks == maxMarks)
+        {
+            return SystemResultSyncOutcome.Unchanged;
+        }
+        else
+        {
+            existing.ApplySystemSync(marksObtained, maxMarks);
+            existing.SetGradePoint(gradePoint);
+            _repo.Update(existing);
+            outcome = SystemResultSyncOutcome.Updated;
+        }
+
+        await _repo.SaveChangesAsync(ct);
+        await RecalculateOfferingStandingAsync(studentProfileId, courseOfferingId, ct);
+        return outcome;
+    }
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns all results for a student (draft + published) for faculty/admin views.</summary>

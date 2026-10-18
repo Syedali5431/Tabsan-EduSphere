@@ -3,6 +3,19 @@ using Tabsan.EduSphere.Domain.Common;
 namespace Tabsan.EduSphere.Domain.Assignments;
 
 /// <summary>
+/// Plan M2 (gradebook sync): who owns the marks on a <see cref="Result"/> row.
+/// Stored as an int; rows created before the sync existed are <see cref="Manual"/>.
+/// </summary>
+public enum ResultSource
+{
+    /// <summary>Entered or corrected by a teacher/admin. System syncs never overwrite it.</summary>
+    Manual = 0,
+
+    /// <summary>Calculated from finished quiz attempts; kept up to date until published or edited by hand.</summary>
+    QuizSync = 1
+}
+
+/// <summary>
 /// An officially published mark for a student in a <see cref="CourseOffering"/>.
 /// Once published, a result is immutable — corrections require an Admin-initiated override
 /// and must be audited. There is at most one result row per (StudentProfile, CourseOffering, ResultType) tuple.
@@ -42,6 +55,9 @@ public class Result : BaseEntity
     /// <summary>FK to the faculty/admin user who published this result.</summary>
     public Guid? PublishedByUserId { get; private set; }
 
+    /// <summary>Plan M2: whether the marks were entered by hand or calculated by a system sync.</summary>
+    public ResultSource Source { get; private set; } = ResultSource.Manual;
+
     private Result() { }
 
     /// <summary>
@@ -62,6 +78,55 @@ public class Result : BaseEntity
         ResultType = resultType.Trim();
         MarksObtained = marksObtained;
         MaxMarks = maxMarks;
+    }
+
+    /// <summary>Plan M2: creates a draft row whose marks are owned by a system sync (e.g. quiz scores).</summary>
+    public static Result CreateSystemManaged(Guid studentProfileId, Guid courseOfferingId, string resultType,
+                                             decimal marksObtained, decimal maxMarks, ResultSource source)
+    {
+        if (source == ResultSource.Manual)
+            throw new ArgumentException("Use the public constructor for manually entered results.", nameof(source));
+
+        return new Result(studentProfileId, courseOfferingId, resultType, marksObtained, maxMarks) { Source = source };
+    }
+
+    /// <summary>
+    /// Plan M2: refreshes a system-managed draft row from its source. Manual rows (teachers own
+    /// them) and published rows (locked) are never changed this way.
+    /// </summary>
+    public void ApplySystemSync(decimal newMarksObtained, decimal newMaxMarks)
+    {
+        if (Source == ResultSource.Manual)
+            throw new InvalidOperationException("Manually entered results are not changed by a sync.");
+        if (IsPublished)
+            throw new InvalidOperationException("Published results are not changed by a sync.");
+        if (newMaxMarks <= 0)
+            throw new ArgumentOutOfRangeException(nameof(newMaxMarks), "Max marks must be positive.");
+        if (newMarksObtained < 0 || newMarksObtained > newMaxMarks)
+            throw new ArgumentOutOfRangeException(nameof(newMarksObtained),
+                $"Marks ({newMarksObtained}) must be between 0 and {newMaxMarks}.");
+
+        MarksObtained = newMarksObtained;
+        MaxMarks = newMaxMarks;
+        Touch();
+    }
+
+    /// <summary>
+    /// Plan M2: changes the marks on a draft row by hand (gradebook cell edit). The row becomes
+    /// <see cref="ResultSource.Manual"/>, so later system syncs leave it alone.
+    /// </summary>
+    public void ReviseDraft(decimal newMarksObtained, decimal newMaxMarks)
+    {
+        if (IsPublished)
+            throw new InvalidOperationException("Published results can only be corrected.");
+        if (newMarksObtained < 0 || newMarksObtained > newMaxMarks)
+            throw new ArgumentOutOfRangeException(nameof(newMarksObtained),
+                $"Marks ({newMarksObtained}) must be between 0 and {newMaxMarks}.");
+
+        MarksObtained = newMarksObtained;
+        MaxMarks = newMaxMarks;
+        Source = ResultSource.Manual;
+        Touch();
     }
 
     /// <summary>
@@ -95,6 +160,7 @@ public class Result : BaseEntity
 
         MarksObtained = newMarksObtained;
         MaxMarks = newMaxMarks;
+        Source = ResultSource.Manual; // a hand correction takes the row over from any sync
         Touch();
     }
 

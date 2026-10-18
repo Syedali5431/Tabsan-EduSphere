@@ -45,6 +45,8 @@ public sealed class GradebookCellDto
     public decimal? MarksObtained  { get; init; }
     public decimal? MaxMarks       { get; init; }
     public bool     IsPublished    { get; init; }
+    /// <summary>Plan M2: "Manual" or "QuizSync" (calculated from finished quiz attempts). Null when empty.</summary>
+    public string?  Source         { get; init; }
 }
 
 // ── Stage 16.1: Upsert single entry ──────────────────────────────────────────

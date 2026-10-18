@@ -1965,6 +1965,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("StudentProfileId")
                         .HasColumnType("uniqueidentifier");
 
@@ -4267,11 +4270,75 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("role_resource_permissions", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuestionBank", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CourseOfferingId");
+
+                    b.HasIndex("TenantId", "DepartmentId");
+
+                    b.ToTable("question_banks", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.Quiz", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccessCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AllowedIpRanges")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("AvailableFrom")
                         .HasColumnType("datetime2");
@@ -4298,13 +4365,33 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("LockAnsweredQuestions")
+                        .HasColumnType("bit");
+
                     b.Property<int>("MaxAttempts")
                         .HasColumnType("int");
+
+                    b.Property<bool>("OneQuestionAtATime")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReviewAfterCloseOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReviewVisibility")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<bool>("ShuffleOptions")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShuffleQuestions")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("TimeLimitMinutes")
                         .HasColumnType("int");
@@ -4326,6 +4413,57 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("quizzes", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAccommodation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExtraAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExtraTimeMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("QuizId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("TimeMultiplier")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(4,2)")
+                        .HasDefaultValue(1m);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId");
+
+                    b.HasIndex("CourseOfferingId", "QuizId", "StudentProfileId")
+                        .IsUnique();
+
+                    b.ToTable("quiz_accommodations", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAnswer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4334,6 +4472,16 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GradedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("MarksAwarded")
                         .HasColumnType("decimal(8,2)");
@@ -4344,17 +4492,22 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<Guid>("QuizQuestionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ResponseJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<DateTime?>("SavedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("SelectedOptionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TextResponse")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -4369,6 +4522,21 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("quiz_answers", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAnswerSelection", b =>
+                {
+                    b.Property<Guid>("QuizAnswerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("QuizOptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("QuizAnswerId", "QuizOptionId");
+
+                    b.HasIndex("QuizOptionId");
+
+                    b.ToTable("quiz_answer_selections", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAttempt", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4376,6 +4544,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeadlineAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("FinishedAt")
@@ -4391,6 +4562,10 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("StartedFromIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -4422,6 +4597,96 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.HasIndex("QuizId", "StudentProfileId", "Status");
 
                     b.ToTable("quiz_attempts", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAttemptItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GeneratedValuesJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<decimal>("Marks")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PresentationJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("QuizAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("QuizQuestionGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("QuizQuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizQuestionId");
+
+                    b.HasIndex("QuizAttemptId", "QuizQuestionId")
+                        .IsUnique();
+
+                    b.ToTable("quiz_attempt_items", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAvailabilityOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AvailableFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("AvailableUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizId", "StudentProfileId")
+                        .IsUnique();
+
+                    b.ToTable("quiz_availability_overrides", (string)null);
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizOption", b =>
@@ -4468,8 +4733,17 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ConfigJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("Difficulty")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("Marks")
                         .HasColumnType("decimal(8,2)");
@@ -4477,13 +4751,20 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("QuizId")
+                    b.Property<Guid?>("QuestionBankId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("QuizId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -4500,9 +4781,64 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("QuestionBankId", "IsArchived");
+
                     b.HasIndex("QuizId", "OrderIndex");
 
-                    b.ToTable("quiz_questions", (string)null);
+                    b.ToTable("quiz_questions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_quiz_questions_owner", "([QuizId] IS NOT NULL AND [QuestionBankId] IS NULL) OR ([QuizId] IS NULL AND [QuestionBankId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizQuestionGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MarksPerQuestion")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PickCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("QuestionBankId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TagFilter")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionBankId");
+
+                    b.HasIndex("QuizId");
+
+                    b.ToTable("quiz_question_groups", (string)null);
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Settings.AccreditationTemplate", b =>
@@ -5821,6 +6157,21 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Navigation("Question");
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAnswerSelection", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuizAnswer", null)
+                        .WithMany("Selections")
+                        .HasForeignKey("QuizAnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuizOption", null)
+                        .WithMany()
+                        .HasForeignKey("QuizOptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAttempt", b =>
                 {
                     b.HasOne("Tabsan.EduSphere.Domain.Quizzes.Quiz", "Quiz")
@@ -5830,6 +6181,34 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAttemptItem", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuizAttempt", "Attempt")
+                        .WithMany("Items")
+                        .HasForeignKey("QuizAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuizQuestion", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuizQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Attempt");
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAvailabilityOverride", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.Quiz", null)
+                        .WithMany()
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizOption", b =>
@@ -5845,11 +6224,36 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizQuestion", b =>
                 {
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuestionBank", "QuestionBank")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuestionBankId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Tabsan.EduSphere.Domain.Quizzes.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("QuestionBank");
+
+                    b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizQuestionGroup", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.QuestionBank", "QuestionBank")
+                        .WithMany()
+                        .HasForeignKey("QuestionBankId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Quizzes.Quiz", "Quiz")
+                        .WithMany("QuestionGroups")
+                        .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("QuestionBank");
 
                     b.Navigation("Quiz");
                 });
@@ -6058,14 +6462,28 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Navigation("Replies");
                 });
 
-            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.Quiz", b =>
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuestionBank", b =>
                 {
                     b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.Quiz", b =>
+                {
+                    b.Navigation("QuestionGroups");
+
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAnswer", b =>
+                {
+                    b.Navigation("Selections");
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizAttempt", b =>
                 {
                     b.Navigation("Answers");
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Quizzes.QuizQuestion", b =>

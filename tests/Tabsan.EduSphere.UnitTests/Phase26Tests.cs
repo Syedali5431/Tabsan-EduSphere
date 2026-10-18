@@ -820,6 +820,10 @@ file sealed class StubResultService : IResultService
     public Task<bool> CorrectAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, CorrectResultRequest request, Guid correctedByUserId, CancellationToken ct = default)
         => throw new NotSupportedException();
 
+    public Task<SystemResultSyncOutcome> SyncSystemComponentAsync(Guid studentProfileId, Guid courseOfferingId, string resultType,
+        decimal marksObtained, decimal maxMarks, Tabsan.EduSphere.Domain.Assignments.ResultSource source, CancellationToken ct = default)
+        => throw new NotSupportedException();
+
     public Task<IReadOnlyList<ResultResponse>> GetByStudentAsync(Guid studentProfileId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<ResultResponse>>(_results.Where(r => r.StudentProfileId == studentProfileId).ToList());
 

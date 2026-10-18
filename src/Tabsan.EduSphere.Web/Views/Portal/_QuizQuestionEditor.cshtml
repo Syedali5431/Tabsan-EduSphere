@@ -1,0 +1,150 @@
+@model Tabsan.EduSphere.Web.Models.Portal.QuestionEditorModel
+@using System.Text.Json
+@{
+    var q = Model.Existing;
+    var web = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var existingOptions = q is null ? "[]" : JsonSerializer.Serialize(q.Options.Select(o => new { text = o.Text, isCorrect = o.IsCorrect == true }), web);
+    var id = Model.FormId;
+}
+@* Plan M2 — shared question editor (quiz builder + question banks). quiz-editor.js shapes the fields per type. *@
+<form method="post" action="@Model.FormAction" id="@id" data-quiz-editor
+      data-existing-config="@(q?.ConfigJson ?? "{}")" data-existing-options="@existingOptions">
+    @Html.AntiForgeryToken()
+    @foreach (var h in Model.Hidden)
+    {
+        <input type="hidden" name="@h.Key" value="@h.Value" />
+    }
+    <input type="hidden" name="OptionsJson" value="" />
+    <input type="hidden" name="ConfigJson" value="" />
+
+    <div class="row g-2">
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold" for="@id-type">Question type</label>
+            @if (q is null)
+            {
+                <select id="@id-type" name="Type" class="form-select form-select-sm" data-field="type">
+                    @foreach (var (value, label) in Tabsan.EduSphere.Web.Models.Portal.QuizBuilderPageModel.QuestionTypes)
+                    {
+                        <option value="@value">@label</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="hidden" name="Type" value="@q.Type" />
+                <select id="@id-type" class="form-select form-select-sm" data-field="type" disabled>
+                    <option value="@q.Type" selected>@Tabsan.EduSphere.Web.Models.Portal.QuizBuilderPageModel.TypeLabel(q.Type)</option>
+                </select>
+            }
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small fw-semibold" for="@id-marks">Marks</label>
+            <input id="@id-marks" name="Marks" type="number" step="0.25" min="0" max="1000" class="form-control form-control-sm" value="@((q?.Marks ?? 1).ToString(System.Globalization.CultureInfo.InvariantCulture))" required />
+        </div>
+        <div class="col-6 col-md-4">
+            <label class="form-label small fw-semibold" for="@id-order">Position</label>
+            <input id="@id-order" name="OrderIndex" type="number" min="1" class="form-control form-control-sm" value="@(q?.OrderIndex ?? Model.NextOrderIndex)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label small fw-semibold" for="@id-text">Question</label>
+            <textarea id="@id-text" name="Text" rows="3" maxlength="2000" class="form-control form-control-sm" data-field="text" required>@q?.Text</textarea>
+            <div class="form-text" data-type-help></div>
+        </div>
+        @if (Model.ShowBankMetadata)
+        {
+            <div class="col-md-8">
+                <label class="form-label small fw-semibold" for="@id-tags">Tags</label>
+                <input id="@id-tags" name="Tags" class="form-control form-control-sm" maxlength="500" value="@q?.Tags" placeholder="e.g. algebra, chapter-2" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold" for="@id-diff">Difficulty (1–5)</label>
+                <input id="@id-diff" name="Difficulty" type="number" min="1" max="5" class="form-control form-control-sm" value="@q?.Difficulty" />
+            </div>
+        }
+    </div>
+
+    <div class="mt-3">
+        <div data-section="options" hidden>
+            <div class="small fw-semibold mb-1">Answer options <span class="text-muted fw-normal">(select the correct one)</span></div>
+            <div data-options></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-add-option>+ Option</button>
+        </div>
+
+        <div data-section="matching" hidden>
+            <div class="small fw-semibold mb-1">Pairs</div>
+            <div data-pairs></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mb-2" data-add-pair>+ Pair</button>
+            <label class="form-label small fw-semibold d-block" for="@id-distractors">Extra wrong answers (one per line)</label>
+            <textarea id="@id-distractors" rows="2" class="form-control form-control-sm" data-field="distractors"></textarea>
+        </div>
+
+        <div data-section="ordering" hidden>
+            <div class="small fw-semibold mb-1">Items in the correct order</div>
+            <div data-order-items></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-add-order-item>+ Item</button>
+        </div>
+
+        <div data-section="blanks" hidden>
+            <div data-blanks></div>
+        </div>
+
+        <div data-section="numeric" hidden>
+            <div class="d-flex gap-3 small mb-2">
+                <label><input type="radio" name="@id-nummode" value="exact" data-field="numMode" checked /> Exact answer</label>
+                <label><input type="radio" name="@id-nummode" value="range" data-field="numMode" /> Range</label>
+            </div>
+            <div class="row g-2">
+                <div class="col-6 col-md-3"><input type="number" step="any" class="form-control form-control-sm" data-field="numAnswer" placeholder="Answer" aria-label="Answer" /></div>
+                <div class="col-6 col-md-3"><input type="number" step="any" min="0" class="form-control form-control-sm" data-field="numTolerance" placeholder="± tolerance" aria-label="Tolerance" /></div>
+                <div class="col-6 col-md-3"><input type="number" step="any" class="form-control form-control-sm" data-field="numMin" placeholder="Range min" aria-label="Range minimum" /></div>
+                <div class="col-6 col-md-3"><input type="number" step="any" class="form-control form-control-sm" data-field="numMax" placeholder="Range max" aria-label="Range maximum" /></div>
+            </div>
+        </div>
+
+        <div data-section="formula" hidden>
+            <label class="form-label small fw-semibold" for="@id-expr">Formula</label>
+            <input id="@id-expr" class="form-control form-control-sm mb-2" data-field="expression" placeholder="e.g. a * b + sqrt(c)" maxlength="500" />
+            <div class="small fw-semibold mb-1">Variables <span class="text-muted fw-normal">(name · min · max · decimals)</span></div>
+            <div data-variables></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-add-variable>+ Variable</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-detect-variables>Find [variables] in the question</button>
+            <div class="row g-2 mt-1">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small" for="@id-fdec">Answer decimals</label>
+                    <input id="@id-fdec" type="number" min="0" max="10" class="form-control form-control-sm" data-field="formulaDecimals" value="2" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small" for="@id-ftol">± tolerance</label>
+                    <input id="@id-ftol" type="number" step="any" min="0" class="form-control form-control-sm" data-field="formulaTolerance" value="0" />
+                </div>
+            </div>
+        </div>
+
+        <div data-section="file" hidden>
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <label class="form-label small fw-semibold" for="@id-ext">Allowed file types</label>
+                    <input id="@id-ext" class="form-control form-control-sm" data-field="extensions" placeholder=".pdf, .docx (blank = any)" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="@id-mb">Max size (MB)</label>
+                    <input id="@id-mb" type="number" min="1" max="50" class="form-control form-control-sm" data-field="maxSizeMb" value="10" />
+                </div>
+            </div>
+        </div>
+
+        <div data-section="essay" hidden>
+            <label class="form-label small fw-semibold" for="@id-words">Word limit (optional)</label>
+            <input id="@id-words" type="number" min="1" class="form-control form-control-sm" style="max-width: 10rem" data-field="wordLimit" />
+        </div>
+
+        <div class="form-check mt-2" data-partial-credit hidden>
+            <input class="form-check-input" type="checkbox" id="@id-partial" data-field="partialCredit" checked />
+            <label class="form-check-label small" for="@id-partial">Give partial credit</label>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-sm btn-primary">@Model.SubmitLabel</button>
+    </div>
+</form>

@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +10,7 @@ using Tabsan.EduSphere.Web.Models.Portal;
 
 namespace Tabsan.EduSphere.Web.Services;
 
-public interface IEduApiClient
+public partial interface IEduApiClient
 {
     bool IsConnected();
     bool IsForcePasswordChangeRequired();
@@ -578,7 +578,7 @@ public interface IEduApiClient
     Task<PortalCapabilityMatrixApiModel?> GetPortalCapabilityMatrixAsync(CancellationToken ct);
 }
 
-public class EduApiClient : IEduApiClient
+public partial class EduApiClient : IEduApiClient
 {
     private const string ConnectionItemKey = "Tabsan.EduSphere.CurrentConnection";
     private const string ApiUrlKey    = "Tabsan.EduSphere.ApiBaseUrl";

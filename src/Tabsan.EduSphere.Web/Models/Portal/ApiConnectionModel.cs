@@ -1154,6 +1154,10 @@ public class StudentQuizViewItem
     public decimal?  Marks        { get; set; }
     public int       MaxScore     { get; set; }
     public bool      CanSubmit    { get; set; }
+    // Plan M2: quizzes with questions are taken on the TakeQuiz page.
+    public int       QuestionCount   { get; set; }
+    public Guid?     LatestAttemptId { get; set; }
+    public bool      InProgress      { get; set; }
 }
 
 public class ViewQuizzesPageModel

@@ -40,6 +40,16 @@ public interface IResultService
     /// </summary>
     Task<bool> CorrectAsync(Guid studentProfileId, Guid courseOfferingId, string resultType, CorrectResultRequest request, Guid correctedByUserId, CancellationToken ct = default);
 
+    // ── System sync (Plan M2) ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Creates or refreshes a system-managed draft component row (e.g. the quiz component) and
+    /// recalculates the Total. Rows entered or edited by hand (<c>Source = Manual</c>) and published
+    /// rows are left untouched; the outcome says which case applied.
+    /// </summary>
+    Task<SystemResultSyncOutcome> SyncSystemComponentAsync(Guid studentProfileId, Guid courseOfferingId, string resultType,
+        decimal marksObtained, decimal maxMarks, Tabsan.EduSphere.Domain.Assignments.ResultSource source, CancellationToken ct = default);
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns all results for a student (published + draft) — faculty/admin view.</summary>
@@ -62,4 +72,18 @@ public interface IResultService
 
     /// <summary>Returns the export history for a student.</summary>
     Task<IReadOnlyList<TranscriptExportLogResponse>> GetExportHistoryAsync(Guid studentProfileId, CancellationToken ct = default);
+}
+
+/// <summary>Plan M2: what <see cref="IResultService.SyncSystemComponentAsync"/> did.</summary>
+public enum SystemResultSyncOutcome
+{
+    Created,
+    Updated,
+    Unchanged,
+    /// <summary>A teacher entered or edited this cell by hand; the sync never overwrites it.</summary>
+    SkippedManual,
+    /// <summary>The row is published (locked); later changes need an admin correction.</summary>
+    SkippedPublished,
+    /// <summary>The component is not configured for the offering's institution type.</summary>
+    SkippedNotConfigured
 }

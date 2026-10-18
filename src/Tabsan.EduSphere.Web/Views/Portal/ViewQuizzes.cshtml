@@ -53,7 +53,17 @@ else
                                 <td>
                                     <div class="d-flex flex-column gap-2">
                                         <span class="badge @statusClass">@quiz.Status</span>
-                                        @if (quiz.CanSubmit)
+                                        @if (quiz.QuestionCount > 0)
+                                        {
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <a class="btn btn-sm btn-primary" asp-action="TakeQuiz" asp-route-quizId="@quiz.QuizId">@(quiz.InProgress ? "Resume" : quiz.LatestAttemptId is null ? "Start" : "Open")</a>
+                                                @if (quiz.LatestAttemptId is { } attemptId && !quiz.InProgress)
+                                                {
+                                                    <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@attemptId">Review</a>
+                                                }
+                                            </div>
+                                        }
+                                        else if (quiz.CanSubmit)
                                         {
                                             <form asp-action="SubmitStudentQuiz" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-2">
                                                 @Html.AntiForgeryToken()

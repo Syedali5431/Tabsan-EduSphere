@@ -1,0 +1,173 @@
+@model Tabsan.EduSphere.Web.Models.Portal.QuizReviewPageModel
+@using Tabsan.EduSphere.Application.DTOs.Quizzes
+@using Tabsan.EduSphere.Application.Quizzes.Grading
+@{
+    var r = Model.Review;
+    ViewData["Title"] = Model.QuizTitle is null ? "Quiz review" : $"Review — {Model.QuizTitle}";
+    var manualTypes = new[] { "ShortAnswer", "Essay", "FileUpload" };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@Model.Message</div>
+}
+
+@if (r is null)
+{
+    <a asp-action="@(Model.IsFacultyView ? "QuizGrading" : "ViewQuizzes")" asp-route-quizId="@Model.QuizId">← Back</a>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap gap-3 align-items-center">
+            <div class="flex-grow-1">
+                @if (Model.IsFacultyView)
+                {
+                    <a asp-action="QuizGrading" asp-route-quizId="@r.QuizId" class="small">← Attempts &amp; grading</a>
+                }
+                else
+                {
+                    <a asp-action="TakeQuiz" asp-route-quizId="@r.QuizId" class="small">← Back to the quiz</a>
+                }
+                <h2 class="h4 mb-1 mt-1">@(Model.QuizTitle ?? "Quiz")</h2>
+                <div class="small text-muted">
+                    Started @r.StartedAt.ToLocalTime().ToString("g")
+                    @if (r.FinishedAt.HasValue) { <span> · finished @r.FinishedAt.Value.ToLocalTime().ToString("g")</span> }
+                    · <span class="badge @(r.Status == "TimedOut" ? "bg-warning text-dark" : "bg-secondary")">@(r.Status == "TimedOut" ? "Submitted when time ran out" : r.Status)</span>
+                </div>
+            </div>
+            @if (r.TotalScore.HasValue || r.MaxScore > 0)
+            {
+                <div class="text-end">
+                    <div class="small text-muted">Score</div>
+                    <div class="fs-3 fw-semibold">@(r.TotalScore?.ToString("0.##") ?? "—")<span class="fs-6 text-muted"> / @r.MaxScore.ToString("0.##")</span></div>
+                    @if (r.Items?.Any(i => i.PendingManualGrading) == true)
+                    {
+                        <div class="small text-warning">Some answers are still being marked.</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (r.Items is null)
+    {
+        <div class="p-3 rounded border bg-light mb-3">
+            @(r.ReviewVisibility == "None" ? "Your quiz has been submitted." : "Your answers are not shown for this quiz" + (r.ReviewVisibility == "ScoreOnly" ? "." : " yet."))
+        </div>
+    }
+    else
+    {
+        foreach (var item in r.Items.OrderBy(i => i.Order))
+        {
+            var q = item.Question;
+            var saved = q.Saved;
+            var answer = r.Answers.FirstOrDefault(a => a.QuizQuestionId == q.QuestionId);
+            var full = item.MarksAwarded.HasValue && item.MarksAwarded.Value >= item.Marks && item.Marks > 0;
+            var none = item.MarksAwarded.HasValue && item.MarksAwarded.Value == 0;
+            var border = item.PendingManualGrading ? "border-warning" : full ? "border-success" : none ? "border-danger" : "border-secondary";
+            <section class="card shadow-sm mb-3 border-start border-4 @border">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>Question @item.Order</span>
+                        <span>
+                            @if (item.PendingManualGrading) { <span class="badge bg-warning text-dark">Awaiting marking</span> }
+                            else { <span>@(item.MarksAwarded?.ToString("0.##") ?? "0") / @item.Marks.ToString("0.##")</span> }
+                        </span>
+                    </div>
+                    <div class="fw-semibold mb-2" style="white-space: pre-wrap;">@q.Text</div>
+
+                    <div class="small text-muted">Answer</div>
+                    @switch (q.Type)
+                    {
+                        case "MultipleChoice":
+                        case "TrueFalse":
+                        case "MultipleAnswers":
+                            <ul class="list-unstyled mb-2">
+                                @foreach (var o in q.Options ?? [])
+                                {
+                                    var picked = saved?.SelectedOptionIds?.Any(s => s.ToString() == o.Id) == true;
+                                    <li class="@(picked ? "fw-semibold" : "text-muted")">@(picked ? "☑" : "☐") @o.Text</li>
+                                }
+                            </ul>
+                            break;
+                        case "Matching":
+                            var matches = QuizJson.Read<MatchingResponse>(saved?.ResponseJson)?.Matches;
+                            <ul class="mb-2">
+                                @foreach (var p in q.MatchingPrompts ?? [])
+                                {
+                                    <li>@p.Text → <strong>@(matches is not null && matches.TryGetValue(p.Id, out var mv) && !string.IsNullOrEmpty(mv) ? mv : "(no answer)")</strong></li>
+                                }
+                            </ul>
+                            break;
+                        case "Ordering":
+                            var order = QuizJson.Read<OrderingResponse>(saved?.ResponseJson)?.Order;
+                            var byId = (q.OrderingItems ?? []).ToDictionary(i => i.Id, i => i.Text);
+                            if (order is { Count: > 0 })
+                            {
+                                <ol class="mb-2">@foreach (var id in order) { <li>@(byId.TryGetValue(id, out var t) ? t : id)</li> }</ol>
+                            }
+                            else { <p class="mb-2">(no answer)</p> }
+                            break;
+                        case "FillInBlank":
+                            var blanks = QuizJson.Read<FillInBlankResponse>(saved?.ResponseJson)?.Blanks;
+                            <ul class="mb-2">
+                                @foreach (var b in q.BlankIds ?? [])
+                                {
+                                    <li>[[@b]] <strong>@(blanks is not null && blanks.TryGetValue(b, out var bv) && !string.IsNullOrWhiteSpace(bv) ? bv : "(blank)")</strong></li>
+                                }
+                            </ul>
+                            break;
+                        case "Numeric":
+                        case "Formula":
+                            <p class="mb-2"><strong>@(QuizJson.Read<NumericResponse>(saved?.ResponseJson)?.Value is { Length: > 0 } nv ? nv : "(no answer)")</strong></p>
+                            break;
+                        case "FileUpload":
+                            if (saved?.FileName is { } fn)
+                            {
+                                <p class="mb-2">
+                                    @if (Model.IsFacultyView && answer is not null)
+                                    {
+                                        <a asp-action="DownloadQuizAnswerFile" asp-route-answerId="@answer.AnswerId">@fn</a>
+                                    }
+                                    else { @fn }
+                                </p>
+                            }
+                            else { <p class="mb-2">(no file)</p> }
+                            break;
+                        default:
+                            <div class="p-2 bg-light rounded mb-2" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(saved?.TextResponse) ? "(no answer)" : saved!.TextResponse)</div>
+                            break;
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(item.CorrectAnswer))
+                    {
+                        <div class="small"><span class="text-success fw-semibold">Correct answer:</span> @item.CorrectAnswer</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.Feedback))
+                    {
+                        <div class="small mt-1"><span class="fw-semibold">Feedback:</span> <span style="white-space: pre-wrap;">@item.Feedback</span></div>
+                    }
+
+                    @if (Model.IsFacultyView && answer is not null && manualTypes.Contains(q.Type))
+                    {
+                        <form asp-action="GradeQuizAnswer" method="post" class="row g-2 align-items-end mt-2 pt-2 border-top">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="quizId" value="@r.QuizId" />
+                            <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                            <div class="col-4 col-md-2">
+                                <label class="form-label small" for="m-@answer.AnswerId">Marks</label>
+                                <input id="m-@answer.AnswerId" name="marksAwarded" type="number" step="0.25" min="0" max="@item.Marks" value="@item.MarksAwarded" class="form-control form-control-sm" required />
+                            </div>
+                            <div class="col-8 col-md-8">
+                                <label class="form-label small" for="fb-@answer.AnswerId">Feedback</label>
+                                <input id="fb-@answer.AnswerId" name="feedback" maxlength="2000" value="@item.Feedback" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Save</button></div>
+                        </form>
+                    }
+                </div>
+            </section>
+        }
+    }
+}

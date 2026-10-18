@@ -5,17 +5,58 @@ namespace Tabsan.EduSphere.Domain.Quizzes;
 /// <summary>
 /// Defines how quiz questions are structured.
 /// Stored as a string in the database for readability.
+/// Type-specific settings (pairs, blanks, tolerances, formulas …) live in <see cref="QuizQuestion.ConfigJson"/>.
 /// </summary>
 public enum QuestionType
 {
-    /// <summary>Multiple-choice with one or more selectable options.</summary>
+    /// <summary>Multiple choice with exactly one correct option (radio buttons).</summary>
     MultipleChoice = 1,
 
     /// <summary>True/False question with exactly two options.</summary>
     TrueFalse = 2,
 
-    /// <summary>Free-text response graded manually by faculty.</summary>
-    ShortAnswer = 3
+    /// <summary>Short free-text response graded manually by faculty.</summary>
+    ShortAnswer = 3,
+
+    /// <summary>Plan M2: several correct options (checkboxes); partial credit optional.</summary>
+    MultipleAnswers = 4,
+
+    /// <summary>Plan M2: match each prompt to an answer (with optional distractors).</summary>
+    Matching = 5,
+
+    /// <summary>Plan M2: put items in the correct order.</summary>
+    Ordering = 6,
+
+    /// <summary>Plan M2: one or more blanks in the text, each with accepted answers.</summary>
+    FillInBlank = 7,
+
+    /// <summary>Plan M2: numeric answer, exact with tolerance or within a range.</summary>
+    Numeric = 8,
+
+    /// <summary>Plan M2: numeric answer computed from a formula with per-attempt generated variables.</summary>
+    Formula = 9,
+
+    /// <summary>Plan M2: long rich-text answer graded manually.</summary>
+    Essay = 10,
+
+    /// <summary>Plan M2: the student uploads a file; graded manually.</summary>
+    FileUpload = 11
+}
+
+/// <summary>Plan M2.6: what a student may see after submitting an attempt.</summary>
+public enum QuizReviewVisibility
+{
+    /// <summary>Nothing beyond "submitted".</summary>
+    None = 0,
+
+    /// <summary>Only the total score.</summary>
+    ScoreOnly = 1,
+
+    /// <summary>Score plus the student's own responses and per-question marks.</summary>
+    ResponsesAndScore = 2,
+
+    /// <summary>Everything, including the correct answers.</summary>
+    CorrectAnswers = 3
 }
 
 /// <summary>
@@ -63,8 +104,37 @@ public class Quiz : BaseEntity
     /// <summary>FK to the faculty user who created this quiz.</summary>
     public Guid CreatedByUserId { get; private set; }
 
+    // ── Plan M2.4 / M2.6 settings ───────────────────────────────────────────────
+
+    /// <summary>Present questions in a different random order to each attempt.</summary>
+    public bool ShuffleQuestions { get; private set; }
+
+    /// <summary>Present answer options (and matching / ordering items) in random order.</summary>
+    public bool ShuffleOptions { get; private set; }
+
+    /// <summary>Optional code students must enter to start an attempt (e.g. given out in the exam room).</summary>
+    public string? AccessCode { get; private set; }
+
+    /// <summary>Optional allow-list of client addresses: comma-separated IPs or CIDR ranges.</summary>
+    public string? AllowedIpRanges { get; private set; }
+
+    /// <summary>Show one question at a time.</summary>
+    public bool OneQuestionAtATime { get; private set; }
+
+    /// <summary>Once a question's answer is saved it can no longer be changed.</summary>
+    public bool LockAnsweredQuestions { get; private set; }
+
+    /// <summary>What students may see after submitting.</summary>
+    public QuizReviewVisibility ReviewVisibility { get; private set; } = QuizReviewVisibility.ScoreOnly;
+
+    /// <summary>When true, the review (beyond score) is only shown after <see cref="AvailableUntil"/> has passed.</summary>
+    public bool ReviewAfterCloseOnly { get; private set; }
+
     /// <summary>Navigation collection of questions belonging to this quiz.</summary>
     public IReadOnlyCollection<QuizQuestion> Questions { get; private set; } = new List<QuizQuestion>();
+
+    /// <summary>Plan M2.2: "pick N random questions from bank X" groups.</summary>
+    public IReadOnlyCollection<QuizQuestionGroup> QuestionGroups { get; private set; } = new List<QuizQuestionGroup>();
 
     // ── EF constructor ─────────────────────────────────────────────────────────
     private Quiz() { }
@@ -165,21 +235,51 @@ public class Quiz : BaseEntity
         AvailableUntil   = availableUntil;
         Touch();
     }
+
+    /// <summary>Plan M2: updates presentation, security and review settings.</summary>
+    public void ConfigureDelivery(
+        bool shuffleQuestions,
+        bool shuffleOptions,
+        bool oneQuestionAtATime,
+        bool lockAnsweredQuestions,
+        string? accessCode,
+        string? allowedIpRanges,
+        QuizReviewVisibility reviewVisibility,
+        bool reviewAfterCloseOnly)
+    {
+        ShuffleQuestions      = shuffleQuestions;
+        ShuffleOptions        = shuffleOptions;
+        OneQuestionAtATime    = oneQuestionAtATime;
+        LockAnsweredQuestions = lockAnsweredQuestions;
+        AccessCode            = string.IsNullOrWhiteSpace(accessCode) ? null : accessCode.Trim();
+        AllowedIpRanges       = string.IsNullOrWhiteSpace(allowedIpRanges) ? null : allowedIpRanges.Trim();
+        ReviewVisibility      = reviewVisibility;
+        ReviewAfterCloseOnly  = reviewAfterCloseOnly;
+        Touch();
+    }
 }
 
 /// <summary>
-/// A single question within a <see cref="Quiz"/>.
-/// Questions are ordered and carry a marks value used for auto-scoring MCQ/TrueFalse types.
+/// A question. It belongs either to a <see cref="Quiz"/> (<see cref="QuizId"/>) or to a
+/// <see cref="QuestionBank"/> (<see cref="QuestionBankId"/>) — exactly one of the two.
+/// Bank questions are drawn into attempts by <see cref="QuizQuestionGroup"/>s and answered like
+/// quiz questions, so options, graders, answers and statistics share one model.
 /// </summary>
 public class QuizQuestion : BaseEntity
 {
-    /// <summary>FK to the parent quiz.</summary>
-    public Guid QuizId { get; private set; }
+    /// <summary>FK to the parent quiz. Null for bank questions.</summary>
+    public Guid? QuizId { get; private set; }
 
-    /// <summary>Navigation property to the parent quiz.</summary>
-    public Quiz Quiz { get; private set; } = default!;
+    /// <summary>Navigation property to the parent quiz (null for bank questions).</summary>
+    public Quiz? Quiz { get; private set; }
 
-    /// <summary>The question text shown to the student.</summary>
+    /// <summary>Plan M2.2: FK to the owning question bank. Null for quiz questions.</summary>
+    public Guid? QuestionBankId { get; private set; }
+
+    /// <summary>Navigation to the owning bank (null for quiz questions).</summary>
+    public QuestionBank? QuestionBank { get; private set; }
+
+    /// <summary>The question text shown to the student (FillInBlank uses [[id]] placeholders, Formula uses [name]).</summary>
     public string Text { get; private set; } = default!;
 
     /// <summary>Type of question — controls how options and answers are handled.</summary>
@@ -188,10 +288,24 @@ public class QuizQuestion : BaseEntity
     /// <summary>Marks awarded for a fully correct answer.</summary>
     public decimal Marks { get; private set; }
 
-    /// <summary>Display position within the quiz (1-based).</summary>
+    /// <summary>Display position within the quiz or bank (1-based).</summary>
     public int OrderIndex { get; private set; }
 
-    /// <summary>Navigation collection of answer options (populated for MCQ and TrueFalse).</summary>
+    /// <summary>Plan M2.3: type-specific settings as JSON (see the question graders for each schema).</summary>
+    public string? ConfigJson { get; private set; }
+
+    /// <summary>Plan M2.2: comma-separated tags (bank questions; used by draw filters and reports).</summary>
+    public string? Tags { get; private set; }
+
+    /// <summary>Plan M2.2: optional difficulty 1 (easy) – 5 (hard).</summary>
+    public int? Difficulty { get; private set; }
+
+    /// <summary>
+    /// Plan M2.2: an archived bank question is no longer drawn but is kept because attempts reference it.
+    /// </summary>
+    public bool IsArchived { get; private set; }
+
+    /// <summary>Navigation collection of answer options (MultipleChoice, MultipleAnswers, TrueFalse).</summary>
     public IReadOnlyCollection<QuizOption> Options { get; private set; } = new List<QuizOption>();
 
     // ── EF constructor ─────────────────────────────────────────────────────────
@@ -202,17 +316,38 @@ public class QuizQuestion : BaseEntity
     /// </summary>
     /// <param name="quizId">FK to the parent quiz.</param>
     /// <param name="text">Question prompt text.</param>
-    /// <param name="type">Question type (MCQ, TrueFalse, ShortAnswer).</param>
+    /// <param name="type">Question type.</param>
     /// <param name="marks">Full marks value for this question.</param>
     /// <param name="orderIndex">Display position within the quiz.</param>
-    public QuizQuestion(Guid quizId, string text, QuestionType type, decimal marks, int orderIndex)
+    /// <param name="configJson">Type-specific settings (Plan M2.3).</param>
+    public QuizQuestion(Guid quizId, string text, QuestionType type, decimal marks, int orderIndex, string? configJson = null)
     {
         QuizId     = quizId;
         Text       = text;
         Type       = type;
         Marks      = marks;
         OrderIndex = orderIndex;
+        ConfigJson = configJson;
     }
+
+    /// <summary>Plan M2.2: creates a question owned by a question bank.</summary>
+    public static QuizQuestion ForBank(
+        Guid questionBankId, string text, QuestionType type, decimal marks, int orderIndex,
+        string? configJson = null, string? tags = null, int? difficulty = null)
+        => new()
+        {
+            QuestionBankId = questionBankId,
+            Text = text,
+            Type = type,
+            Marks = marks,
+            OrderIndex = orderIndex,
+            ConfigJson = configJson,
+            Tags = NormalizeTags(tags),
+            Difficulty = ClampDifficulty(difficulty)
+        };
+
+    /// <summary>True when the question belongs to a bank rather than a quiz.</summary>
+    public bool IsBankQuestion => QuestionBankId.HasValue;
 
     /// <summary>
     /// Updates the question text, marks, and ordering.
@@ -227,12 +362,54 @@ public class QuizQuestion : BaseEntity
         OrderIndex = orderIndex;
         Touch();
     }
+
+    /// <summary>Plan M2.3: replaces the type-specific settings.</summary>
+    public void SetConfig(string? configJson)
+    {
+        ConfigJson = string.IsNullOrWhiteSpace(configJson) ? null : configJson;
+        Touch();
+    }
+
+    /// <summary>Plan M2.2: updates bank metadata.</summary>
+    public void SetBankMetadata(string? tags, int? difficulty)
+    {
+        Tags = NormalizeTags(tags);
+        Difficulty = ClampDifficulty(difficulty);
+        Touch();
+    }
+
+    /// <summary>Plan M2.2: stop drawing this bank question while keeping attempt history intact.</summary>
+    public void Archive()
+    {
+        IsArchived = true;
+        Touch();
+    }
+
+    /// <summary>Plan M2.2: copies this question (bank → quiz). Options are copied by the caller.</summary>
+    public QuizQuestion CloneToQuiz(Guid quizId, int orderIndex, decimal? marks = null)
+        => new(quizId, Text, Type, marks ?? Marks, orderIndex, ConfigJson);
+
+    /// <summary>Returns the tags as a list.</summary>
+    public IReadOnlyList<string> GetTags()
+        => string.IsNullOrWhiteSpace(Tags) ? [] : Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string? NormalizeTags(string? tags)
+    {
+        if (string.IsNullOrWhiteSpace(tags)) return null;
+        var list = tags.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(t => t.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        return list.Count == 0 ? null : string.Join(',', list);
+    }
+
+    private static int? ClampDifficulty(int? difficulty)
+        => difficulty is null ? null : Math.Clamp(difficulty.Value, 1, 5);
 }
 
 /// <summary>
-/// An answer option for a <see cref="QuizQuestion"/> of type MCQ or TrueFalse.
-/// Exactly one option per question should have <see cref="IsCorrect"/> = true for auto-grading.
-/// Multiple correct options are allowed for multi-select MCQ variants.
+/// An answer option for a <see cref="QuizQuestion"/> of type MultipleChoice, MultipleAnswers or TrueFalse.
+/// MultipleChoice / TrueFalse have exactly one correct option; MultipleAnswers may have several.
 /// </summary>
 public class QuizOption : BaseEntity
 {
@@ -267,5 +444,14 @@ public class QuizOption : BaseEntity
         Text           = text;
         IsCorrect      = isCorrect;
         OrderIndex     = orderIndex;
+    }
+
+    /// <summary>Plan M2: edits the option in place (used when answers already reference it).</summary>
+    public void Update(string text, bool isCorrect, int orderIndex)
+    {
+        Text       = text;
+        IsCorrect  = isCorrect;
+        OrderIndex = orderIndex;
+        Touch();
     }
 }

@@ -45,7 +45,7 @@ Positioning target after Plan M:
 | Phase | Name | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
 | M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | ✅ M1.1–M1.6 (live IdP sign-in pending) |
-| M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ⬜ |
+| M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ✅ M2.1–M2.7 + quiz → gradebook sync |
 | M3 | SpeedGrader-style Grading Workspace | P1 | 5 dw | — | ⬜ |
 | M4 | Progressive Web App (installable + push) | P1 | 1–2 dw | — | ⬜ |
 | M5 | LTI 1.3 / LTI Advantage Platform | P1 | 6–8 dw | M1 (key mgmt pattern) | ⬜ |
@@ -194,45 +194,98 @@ Acceptance:
 Reason to do second:
 - Highest-frequency teacher-facing gap; current answer model cannot store multi-select answers.
 
-### Stage M2.1 - Answer model fix (prerequisite)
-- [ ] New child table `QuizAnswerSelection` (QuizAnswerId, QuizOptionId) to support multi-select; keep `SelectedOptionId` for backward compatibility and migrate existing data into the new table.
-- [ ] Add `ResponseJson` (nullable) to `QuizAnswer` for structured answers (matching pairs, ordering, numeric, fill-blanks).
-- [ ] Migration + data backfill script; regression tests on existing quiz flows.
+### Stage M2.1 - Answer model fix (prerequisite) ✅ (2026-10-19)
+- [x] New child table `quiz_answer_selections` (QuizAnswerId, QuizOptionId) for multi-select; `SelectedOptionId` kept for backward compatibility (set when exactly one option is chosen) and existing answers backfilled into the new table by the migration.
+- [x] `ResponseJson` (nullable, nvarchar(max)) on `QuizAnswer` for structured answers (matching, ordering, blanks, numeric/formula, file metadata); `TextResponse` widened to nvarchar(max) for essays.
+- [x] Migration `20261018132603_PlanMPhase2QuizEngine` + backfill; regression tests on the existing quiz flows.
 
-### Stage M2.2 - Question banks
-- [ ] Entities `QuestionBank` (Owner: course / department / tenant, Title, IsShared) and `BankQuestion` (same shape as QuizQuestion + options + `Tags`, `Difficulty`).
-- [ ] `QuizQuestionGroup` (QuizId, BankId, PickCount, MarksPerQuestion) — "pick N random from bank X".
-- [ ] Import/export banks (Excel via ClosedXML; QTI 2.1 import as stretch goal).
-- [ ] UI: bank manager page, add-from-bank in quiz builder.
+#### ✅ Implementation Summary (M2.1)
+- Domain `QuizAnswer` owns its selections through a backing field (`_selections`, EF field access) with `SetResponse(selectedIds, text, json, singleSelection)` and `Grade(marks, feedback, grader)`; `QuizAnswerSelection` entity.
+- Fixed while here: students received `IsCorrect` through `GET /quiz/{id}`; submit / attempt-detail had no ownership checks; question and attempt endpoints had no course scope checks. Students now only get quiz information from `GET /quiz/{id}` and questions come with an attempt.
 
-### Stage M2.3 - New question types + grader strategy
-- [ ] Extend `QuestionType`: MultipleAnswers, Matching, Ordering, FillInBlank (multiple blanks), Numeric (exact / range / tolerance), Formula (variables + generated values), Essay (rich text), FileUpload.
-- [ ] `IQuestionGrader` interface + one implementation per type, resolved by type (strategy pattern). Partial credit supported where sensible.
-- [ ] Builder UI per question type; student renderers per type.
+#### ✅ Validation Summary (M2.1)
+- Migration applied to LocalDB; backfill verified (133/133 answers with a selected option have a matching selection row); `dotnet ef migrations has-pending-model-changes` → none.
 
-### Stage M2.4 - Randomisation & attempt snapshot
-- [ ] Per-quiz flags: ShuffleQuestions, ShuffleOptions.
-- [ ] Store the presented order and drawn bank questions on the attempt (`QuizAttemptItem`: AttemptId, QuestionId, Order, OptionOrderJson, GeneratedValuesJson) so review/regrade shows exactly what the student saw.
+### Stage M2.2 - Question banks ✅ (2026-10-19)
+- [x] `QuestionBank` (course offering / department / tenant owner, Title, Description, IsShared). Bank questions are `quiz_questions` rows with `QuestionBankId` (QuizId null, enforced by a check constraint) plus `Tags`, `Difficulty`, `IsArchived` — one question model, one grader path.
+- [x] `QuizQuestionGroup` (QuizId, BankId, PickCount, MarksPerQuestion, optional TagFilter) — "pick N at random from bank X"; copy-from-bank also available.
+- [x] Import/export banks as Excel (ClosedXML; the export includes a Help sheet describing every column and type). QTI 2.1 import — **deferred** (stretch goal).
+- [x] UI: **Question banks** page (create/delete, edit questions, import/export) and bank tools in the quiz builder (draw-random groups, copy selected questions).
 
-### Stage M2.5 - Accommodations & availability overrides
-- [ ] `QuizAccommodation` (QuizId nullable = all quizzes in offering, StudentProfileId, ExtraTimeMinutes / TimeMultiplier, ExtraAttempts).
-- [ ] `QuizAvailabilityOverride` (per student or section: AvailableFrom/Until).
-- [ ] Timer honours accommodations server-side (auto-submit on expiry server-enforced, not only client JS).
+#### ✅ Implementation Summary (M2.2)
+- `Application/Quizzes/QuestionBankService.cs`, `Infrastructure/Reporting/QuestionBankSpreadsheet.cs`, `API/Controllers/QuestionBankController.cs` (`api/v1/quiz/banks…`). Bank questions with answers are archived rather than deleted; a bank used by a quiz group cannot be deleted.
 
-### Stage M2.6 - Quiz security & review options
-- [ ] Access code, IP range allow-list, one-question-at-a-time, lock questions after answering.
-- [ ] Review options: show score only / show correct answers / show after due date.
-- [ ] Manual grading queue for Essay / FileUpload; regrade a question for all attempts.
+#### ✅ Validation Summary (M2.2)
+- Integration test (`QuestionBank_DrawGroup_Copy_ExcelRoundTrip`): a pick-N group is drawn into the paper with the group's marks and graded; a bank used by a quiz cannot be deleted; copy-from-bank works; Excel export → import into a new bank reproduces every question with no errors.
 
-### Stage M2.7 - Statistics, tests & docs
-- [ ] Item analysis: difficulty index, discrimination, option distribution (Report Center).
-- [ ] Unit tests per grader; integration tests for attempt lifecycle; Playwright for builder + take-quiz.
+### Stage M2.3 - New question types + grader strategy ✅ (2026-10-19)
+- [x] `QuestionType` 1–11: MultipleChoice, TrueFalse, ShortAnswer, Essay, MultipleAnswers, Matching, Ordering, FillInBlank (several blanks, alternative answers, optional case-sensitivity), Numeric (exact ± tolerance or range), Formula (variables with ranges/decimals, values generated per attempt), FileUpload (allowed types, size limit). Essay is plain text with an optional word limit (rich text **deferred**).
+- [x] `IQuestionGrader` strategy, one grader per type; partial credit for MultipleAnswers (right minus wrong), Matching, Ordering (items in place) and FillInBlank. Short answer / essay / file upload are queued for manual marking. Config validated and normalised server-side (`QuestionAuthoring`).
+- [x] Builder UI per type (`_QuizQuestionEditor` + `quiz-editor.js`) and student renderers per type (`TakeQuizAttempt` + `take-quiz.js`).
+
+#### ✅ Implementation Summary (M2.3)
+- `Application/Quizzes/Grading/` — `QuestionConfigs.cs` (JSON schemas), `QuestionGraders.cs`, `QuestionAuthoring.cs`, `FormulaEvaluator.cs` (safe recursive-descent evaluator, no `eval`).
+- Portal: `QuizBuilder` page — questions (edit in place / delete / regrade), add question, settings, bank tools, accommodations and overrides. The list page now shows a real question count.
+
+#### ✅ Validation Summary (M2.3)
+- Unit tests per grader and per config validator (including formula parsing and tolerance edges); web-integration test checks the editor JSON is turned into the API request (blank options dropped).
+
+### Stage M2.4 - Randomisation & attempt snapshot ✅ (2026-10-19)
+- [x] Per-quiz `ShuffleQuestions`, `ShuffleOptions`.
+- [x] `quiz_attempt_items` (AttemptId, QuestionId, Order, Marks, PresentationJson = presented option/prompt order, GeneratedValuesJson = formula values). Drawn bank questions are stored too, so the paper, review and regrade use exactly what the student saw.
+
+#### ✅ Validation Summary (M2.4)
+- Unit tests: options shuffle (True/False keeps its order), matching choices include distractors, ordering is scrambled, formula values stay in range and are substituted, the student view never carries correctness. Integration: the paper and the review are built from the stored items (drawn bank questions included). Paper order across reloads is stable by construction (read from the snapshot) but has no dedicated test.
+
+### Stage M2.5 - Accommodations & availability overrides ✅ (2026-10-19)
+- [x] `QuizAccommodation` (QuizId null = every quiz in the offering, StudentProfileId, TimeMultiplier then ExtraTimeMinutes, ExtraAttempts, Note).
+- [x] `QuizAvailabilityOverride` per student (AvailableFrom/Until). Section-level overrides — **deferred** (no section entity yet; apply per student).
+- [x] Deadline enforced server-side: `DeadlineAt` stored on the attempt (time limit × accommodation, capped by the close date), 30-second grace for in-flight saves; expired attempts are finalised on the next request (lazy timeout). The page's countdown is anchored to the server clock and auto-submits, but the server is the authority.
+
+#### ✅ Validation Summary (M2.5)
+- Unit: multiplier-then-minutes, open-until-deadline-plus-grace. Integration (`Accommodations_Overrides_AndServerSideTimeLimit`): a closed quiz is refused, an override re-opens it for one student, 1.5× + 5 min gives the expected deadline, starting again resumes the same attempt, a save after the deadline is refused (`TIME_EXPIRED`) and the attempt is closed as TimedOut and graded from its saved answers, and the extra attempt is honoured before `NO_ATTEMPTS_LEFT`.
+
+### Stage M2.6 - Quiz security & review options ✅ (2026-10-19)
+- [x] Access code (fixed-time compare), IP allow-list (single addresses and CIDR via `System.Net.IPNetwork`, validated on save), one question at a time, lock answers after moving on (enforced by the API, not only the page).
+- [x] Review visibility: None / ScoreOnly / ResponsesAndScore / CorrectAnswers, plus "only after the quiz closes".
+- [x] Manual grading queue for short answer / essay / file upload (marks + feedback, file download); regrade one question across every finished attempt (Recalculate with the current key, or FullCredit).
+
+#### ✅ Implementation Summary (M2.6)
+- Portal: `TakeQuiz` (info, access code, start/resume, my attempts), `TakeQuizAttempt` (all renderers, autosave every change via JSON + antiforgery header, 30-second safety save, server-anchored timer, paging/locking, file upload), `QuizReview` (respects visibility; staff can mark manual answers in place), `QuizGrading` (queue + all attempts). `ViewQuizzes` sends quizzes with questions to Start / Resume / Review; the old file-only submit stays for quizzes without questions.
+- Fixed during the browser check: a closed attempt (409 from the API) now goes to the review instead of back to the quiz list.
+
+#### ✅ Validation Summary (M2.6)
+- Integration: access code required/invalid, IP allow-list refusal and invalid-range validation, locked answers skipped on re-save, review "None" hides score and items while faculty still see them, default review shows the score, another student gets 404 for the paper/submit/detail, grading queue → over-max marks refused → essay graded with feedback, regrade Recalculate and FullCredit. Not separately tested: ResponsesAndScore and the after-close rule. Web-integration: paper renders every type with saved answers; autosave rejected without the antiforgery token; closed attempt → review; the builder is not shown to students.
+
+### Stage M2.7 - Statistics, tests & docs ✅ (2026-10-19)
+- [x] Item analysis per quiz: mean/median/high/low/standard deviation, difficulty index, discrimination (top vs bottom 27%), option distribution — on the quiz's **Statistics** page (with regrade buttons). Not added to Report Center (the per-quiz page is where teachers act on it).
+- [x] Unit tests per grader (`QuizEngineTests`, 54), integration tests for the attempt lifecycle (`QuizEngineIntegrationTests`), web-integration tests for builder / paper / review (`QuizEngineWebIntegrationTests`, 7). Playwright specs for builder + take-quiz — **not written**; the pages were checked in the browser against a local fake API instead.
+
+#### ✅ Validation Summary (Phase M2)
+- Unit 355/355; integration 326/326 (+1 pre-existing skip); web 28/28; contract 1/1 (all Release).
+- Browser check (Release portal + local fake API): builder shows every type and each editor reloads and re-serialises its config unchanged; banks, grading and statistics pages render; the paper restores saved answers for every type, ordering/word count/timer/paging work, and autosave reaches the API.
+
+### Quiz → gradebook sync ✅ (2026-10-19)
+- [x] Finished quiz scores feed one aggregated **Quiz** result component per student per offering (`QuizGradebookSync` + `QuizGradebookCalculator`, through `IResultService.SyncSystemComponentAsync`, which also recalculates the Total / GPA standing).
+- [x] Which component: the active result component named `Quiz` (else `Quizzes`, any case) for the offering's institution type. If neither is configured, nothing is synced — set it up under Result Calculation.
+- [x] Score: only finished attempts with a score count; **best attempt per quiz** (highest %); quizzes combined by points (sum of best scores ÷ sum of their max marks); quizzes the student has not finished, or that are worth 0 marks, are left out (not zero); scaled to the component's weightage (MaxMarks = weightage, 2 dp).
+- [x] Recalculated after submit, server time-out (start / paper / save / review paths), manual grading of an answer, and regrade (every affected student). An attempt with essays / file uploads still waiting for marks has no score, so it never posts a partial result; an earlier graded attempt keeps counting meanwhile.
+- [x] **Ownership rule** (new `results.Source` column, migration `PlanMPhase2QuizGradebookSync`; existing rows are `Manual`):
+  - The sync only writes rows it created itself (`Source = QuizSync`) while they are **drafts**.
+  - A cell a teacher entered by hand (result entry, bulk entry, gradebook cell, CSV import) is `Manual` and is **never overwritten**.
+  - A teacher who edits a synced cell (gradebook cell edit, or admin correction after publication) takes it over: it becomes `Manual` and later quiz activity leaves it alone.
+  - Once a synced row is **published** it is locked; later quiz changes are not applied (logged) and need an admin correction.
+  - The gradebook grid shows each cell's `Source`.
+- [x] Fixed on the way: editing an existing **draft** cell in the gradebook threw ("only published results can be corrected"); drafts are now revised in place.
+- [x] Tests: `QuizGradebookSyncTests` (15 unit: calculator, ownership rule, ResultService outcomes, gradebook takeover, sync wiring/failure handling) and `QuizGradebookIntegrationTests` (real API + DB: pending essay posts nothing → grade → 10/20 → regrade → 16.67 → second attempt → 20/20, Total follows; hand-entered cell untouched; teacher edit takes a synced cell over).
+- [x] Full suites after the sync (Release): unit 370/370; integration 327/327 (+1 pre-existing skip); web 28/28; contract 1/1.
+- Not done: a synced row is not removed if every attempt later loses its score (not reachable with today's grading paths); a quiz-based column per quiz (Canvas style) is not offered — one aggregated component only.
 
 Deliverables:
-- Banks, 11 question types, randomisation, accommodations, security options, item analysis.
+- Banks, 11 question types, randomisation, accommodations, security options, item analysis, quiz scores in the gradebook. ✅
 
 Acceptance:
-- A quiz drawing 10 random questions from a 50-question bank, with shuffled options and a student with 1.5× time, is taken, auto-graded, manually graded for essays and appears in gradebook.
+- A quiz drawing 10 random questions from a 50-question bank, with shuffled options and a student with 1.5× time, is taken, auto-graded, manually graded for essays and appears in gradebook. — **Verified in automation** (taken, auto-graded, manually graded in `QuizEngineIntegrationTests`; a submitted and graded quiz shows in the gradebook for that student in `QuizGradebookIntegrationTests`). Needs a "Quiz" result component configured for the institution type. Not yet run on the live test site with real users.
 
 ---
 
@@ -533,3 +586,5 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-18 | Stage M1.4 completed (EnforceSsoOnly, auth method in login activity, linked-account API + audit) | — |
 | 2026-10-18 | Stage M1.5 completed (SSO admin page + API, linked accounts card, sidebar entry) | — |
 | 2026-10-19 | Stage M1.6 completed (real-protocol pipeline tests, Playwright SSO spec, SSO Setup Guide) — Phase M1 done pending a live IdP sign-in | — |
+| 2026-10-19 | Phase M2 completed (M2.1–M2.7): answer model, question banks + Excel, 11 question types with graders, attempt snapshot, accommodations/overrides with server deadline, security & review options, grading queue, regrade, item analysis, portal builder/take-quiz/review/grading/statistics pages. Open: quiz scores into gradebook; deferred: QTI import, section overrides, rich-text essays, Playwright specs | — |
+| 2026-10-19 | Phase M2 acceptance closed: quiz → gradebook sync (aggregated "Quiz" component, best attempt per quiz, scaled to weightage, pending essays post nothing; recalculated on submit / time-out / grade / regrade). Ownership rule via new `results.Source` (migration `PlanMPhase2QuizGradebookSync`): hand-entered cells never overwritten, teacher edits take a synced cell over, published rows locked. Gradebook draft-cell edit fix | — |

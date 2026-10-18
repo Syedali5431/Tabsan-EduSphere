@@ -1,0 +1,366 @@
+@model Tabsan.EduSphere.Web.Models.Portal.QuizBuilderPageModel
+@using Tabsan.EduSphere.Application.DTOs.Quizzes
+@using Tabsan.EduSphere.Application.Quizzes.Grading
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var quiz = Model.Quiz;
+    ViewData["Title"] = quiz is null ? "Quiz builder" : $"Quiz builder — {quiz.Title}";
+    var settings = quiz?.Settings;
+    var nextOrder = quiz is null ? 1 : quiz.Questions.Select(q => q.OrderIndex).Concat((quiz.Groups ?? []).Select(g => g.OrderIndex)).DefaultIfEmpty(0).Max() + 1;
+
+    string Summary(QuestionResponse q)
+    {
+        switch (q.Type)
+        {
+            case "MultipleChoice": case "TrueFalse": case "MultipleAnswers":
+                return "Correct: " + string.Join(" · ", q.Options.Where(o => o.IsCorrect == true).Select(o => o.Text));
+            case "Matching":
+                return QuizJson.Read<MatchingConfig>(q.ConfigJson) is { } m ? string.Join(" · ", m.Pairs.Select(p => $"{p.Prompt} → {p.Answer}")) : "";
+            case "Ordering":
+                return QuizJson.Read<OrderingConfig>(q.ConfigJson) is { } o ? "Order: " + string.Join(" → ", o.Items.Select(i => i.Text)) : "";
+            case "FillInBlank":
+                return QuizJson.Read<FillInBlankConfig>(q.ConfigJson) is { } f ? string.Join(" · ", f.Blanks.Select(b => $"[[{b.Id}]] {string.Join(" / ", b.Answers)}")) : "";
+            case "Numeric":
+                return QuizJson.Read<NumericConfig>(q.ConfigJson) is { } n
+                    ? n.Answer.HasValue ? $"Answer {n.Answer}{(n.Tolerance > 0 ? $" ± {n.Tolerance}" : "")}" : $"Between {n.Min} and {n.Max}"
+                    : "";
+            case "Formula":
+                return QuizJson.Read<FormulaConfig>(q.ConfigJson) is { } fx ? $"= {fx.Expression} ({string.Join(", ", fx.Variables.Select(v => $"{v.Name} {v.Min}–{v.Max}"))})" : "";
+            case "FileUpload":
+                return QuizJson.Read<FileUploadConfig>(q.ConfigJson) is { } u ? $"Files: {(u.AllowedExtensions is { Count: > 0 } ? string.Join(", ", u.AllowedExtensions) : "any type")}, max {u.MaxSizeMb} MB" : "";
+            default:
+                return "Marked by hand";
+        }
+    }
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!Model.IsConnected || quiz is null)
+{
+    <div class="alert alert-warning">The quiz could not be loaded. <a asp-action="Quizzes">Back to quizzes</a></div>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap gap-3 align-items-start">
+            <div class="flex-grow-1">
+                <a asp-action="Quizzes" asp-route-offeringId="@quiz.CourseOfferingId" class="small">← All quizzes</a>
+                <h2 class="h4 mb-1 mt-1">@quiz.Title</h2>
+                <div class="small text-muted">
+                    <span class="badge @(quiz.IsPublished ? "bg-success" : "bg-warning text-dark")">@(quiz.IsPublished ? "Published" : "Draft")</span>
+                    <span class="ms-2">Total @quiz.TotalMarks.ToString("0.##") marks</span>
+                    <span class="ms-2">@(quiz.TimeLimitMinutes.HasValue ? $"{quiz.TimeLimitMinutes} min" : "No time limit")</span>
+                    <span class="ms-2">@(quiz.MaxAttempts == 0 ? "Unlimited attempts" : $"{quiz.MaxAttempts} attempt(s)")</span>
+                </div>
+                @if (quiz.IsPublished)
+                {
+                    <div class="small mt-2">Changes apply to attempts started after you save. To rescore finished attempts, use <strong>Regrade</strong> on a question.</div>
+                }
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-primary" asp-action="QuizGrading" asp-route-quizId="@quiz.QuizId">Attempts &amp; grading</a>
+                <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@quiz.QuizId">Statistics</a>
+                <a class="btn btn-sm btn-outline-secondary" asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">Question banks</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            @* ── Questions ───────────────────────────────────────────────── *@
+            <div class="card border-0 shadow-sm mb-3" id="questions">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Questions</h3>
+                    @{
+                        var entries = quiz.Questions.Select(q => (Order: q.OrderIndex, Question: (QuestionResponse?)q, Group: (QuestionGroupResponse?)null))
+                            .Concat((quiz.Groups ?? []).Select(g => (Order: g.OrderIndex, Question: (QuestionResponse?)null, Group: (QuestionGroupResponse?)g)))
+                            .OrderBy(e => e.Order).ToList();
+                    }
+                    @if (entries.Count == 0)
+                    {
+                        <p class="text-muted mb-0">No questions yet. Add one below, or draw questions from a question bank.</p>
+                    }
+                    @foreach (var e in entries)
+                    {
+                        if (e.Group is { } g)
+                        {
+                            <div class="border rounded p-3 mb-2" data-quiz-group>
+                                <div class="d-flex flex-wrap gap-2 align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="small text-muted">#@g.OrderIndex · Random questions from a bank</div>
+                                        <div class="fw-semibold">@g.Title</div>
+                                        <div class="small">Pick @g.PickCount from <em>@g.BankTitle</em>@(g.TagFilter is null ? "" : $" (tag: {g.TagFilter})") · @g.MarksPerQuestion.ToString("0.##") marks each</div>
+                                        @if (g.AvailableQuestions < g.PickCount)
+                                        {
+                                            <div class="small text-danger">Only @g.AvailableQuestions question(s) available — students will get fewer.</div>
+                                        }
+                                    </div>
+                                    <form asp-action="DeleteQuizGroup" method="post" onsubmit="return confirm('Remove this question group?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                        <input type="hidden" name="groupId" value="@g.GroupId" />
+                                        <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                            continue;
+                        }
+
+                        var q = e.Question!;
+                        var editId = $"edit-{q.QuestionId:N}";
+                        <div class="border rounded p-3 mb-2" id="q-@q.QuestionId" data-quiz-question="@q.Type">
+                            <div class="d-flex flex-wrap gap-2 align-items-start">
+                                <div class="flex-grow-1" style="min-width: 14rem;">
+                                    <div class="small text-muted">#@q.OrderIndex · @QuizBuilderPageModel.TypeLabel(q.Type) · @q.Marks.ToString("0.##") marks</div>
+                                    <div class="fw-semibold" style="white-space: pre-wrap;">@q.Text</div>
+                                    <div class="small text-muted mt-1">@Summary(q)</div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">Edit</button>
+                                    <form asp-action="DeleteQuizQuestion" method="post" onsubmit="return confirm('Delete this question?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                        <input type="hidden" name="questionId" value="@q.QuestionId" />
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="collapse mt-3" id="@editId">
+                                <partial name="_QuizQuestionEditor" model="@(new QuestionEditorModel { FormAction = Url.Action("SaveQuizQuestion")!, FormId = $"f{q.QuestionId:N}", Existing = q, SubmitLabel = "Save question", Hidden = new() { ["quizId"] = quiz.QuizId.ToString(), ["questionId"] = q.QuestionId.ToString() } })" />
+                                <form asp-action="RegradeQuizQuestion" method="post" class="d-flex flex-wrap gap-2 align-items-center mt-3 pt-3 border-top">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                    <input type="hidden" name="questionId" value="@q.QuestionId" />
+                                    <span class="small">Regrade finished attempts:</span>
+                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="Recalculate">Recalculate with current answers</button>
+                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="FullCredit" onclick="return confirm('Give every attempt full marks for this question?');">Give everyone full credit</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* ── Add question ────────────────────────────────────────────── *@
+            <div class="card border-0 shadow-sm mb-3" id="add-question">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Add a question</h3>
+                    <partial name="_QuizQuestionEditor" model="@(new QuestionEditorModel { FormAction = Url.Action("AddQuizQuestion")!, FormId = "new-question", NextOrderIndex = nextOrder, Hidden = new() { ["quizId"] = quiz.QuizId.ToString() } })" />
+                </div>
+            </div>
+
+            @* ── Question banks ──────────────────────────────────────────── *@
+            <div class="card border-0 shadow-sm mb-3" id="banks">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Use a question bank</h3>
+                    @if (Model.Banks.Count == 0)
+                    {
+                        <p class="text-muted">No question banks yet. <a asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">Create one</a>.</p>
+                    }
+                    else
+                    {
+                        <h4 class="h6">Draw random questions</h4>
+                        <form asp-action="AddQuizGroup" method="post" class="row g-2 align-items-end mb-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                            <div class="col-md-4">
+                                <label class="form-label small" for="grp-bank">Bank</label>
+                                <select id="grp-bank" name="questionBankId" class="form-select form-select-sm" required>
+                                    @foreach (var b in Model.Banks)
+                                    {
+                                        <option value="@b.BankId">@b.Title (@b.QuestionCount)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small" for="grp-title">Label</label>
+                                <input id="grp-title" name="title" class="form-control form-control-sm" value="Random questions" maxlength="200" />
+                            </div>
+                            <div class="col-4 col-md-1">
+                                <label class="form-label small" for="grp-pick">Pick</label>
+                                <input id="grp-pick" name="pickCount" type="number" min="1" value="5" class="form-control form-control-sm" required />
+                            </div>
+                            <div class="col-4 col-md-2">
+                                <label class="form-label small" for="grp-marks">Marks each</label>
+                                <input id="grp-marks" name="marksPerQuestion" type="number" step="0.25" min="0" value="1" class="form-control form-control-sm" required />
+                            </div>
+                            <div class="col-4 col-md-2">
+                                <label class="form-label small" for="grp-tag">Tag (optional)</label>
+                                <input id="grp-tag" name="tagFilter" class="form-control form-control-sm" maxlength="100" />
+                            </div>
+                            <input type="hidden" name="orderIndex" value="@nextOrder" />
+                            <div class="col-12"><button class="btn btn-sm btn-primary">Add question group</button></div>
+                        </form>
+
+                        <h4 class="h6">Copy questions from a bank</h4>
+                        <form method="get" asp-action="QuizBuilder" asp-fragment="banks" class="d-flex gap-2 mb-2">
+                            <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                            <label class="visually-hidden" for="copy-bank">Bank</label>
+                            <select id="copy-bank" name="copyBankId" class="form-select form-select-sm" style="max-width: 20rem;">
+                                @foreach (var b in Model.Banks)
+                                {
+                                    <option value="@b.BankId" selected="@(Model.CopyBank?.BankId == b.BankId)">@b.Title</option>
+                                }
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary">Show questions</button>
+                        </form>
+                        @if (Model.CopyBank is { } bank)
+                        {
+                            <form asp-action="CopyBankQuestions" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                <input type="hidden" name="bankId" value="@bank.BankId" />
+                                @if (bank.Questions.Count == 0)
+                                {
+                                    <p class="small text-muted">This bank has no questions.</p>
+                                }
+                                @foreach (var bq in bank.Questions)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="questionIds" value="@bq.QuestionId" id="cp-@bq.QuestionId" />
+                                        <label class="form-check-label small" for="cp-@bq.QuestionId">
+                                            <span class="text-muted">@QuizBuilderPageModel.TypeLabel(bq.Type) · @bq.Marks.ToString("0.##")</span> — @bq.Text
+                                        </label>
+                                    </div>
+                                }
+                                <button class="btn btn-sm btn-primary mt-2" @(bank.Questions.Count == 0 ? "disabled" : "")>Copy selected into this quiz</button>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            @* ── Settings ────────────────────────────────────────────────── *@
+            <div class="card border-0 shadow-sm mb-3" id="settings">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Delivery &amp; security</h3>
+                    <form asp-action="SaveQuizSettings" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                        @{
+                            void Switch(string name, string label, bool on)
+                            {
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="set-@name" name="@name" value="true" @(on ? "checked" : "") />
+                                    <label class="form-check-label small" for="set-@name">@label</label>
+                                </div>
+                            }
+                        }
+                        @{ Switch("shuffleQuestions", "Shuffle question order", settings?.ShuffleQuestions == true); }
+                        @{ Switch("shuffleOptions", "Shuffle answer options", settings?.ShuffleOptions == true); }
+                        @{ Switch("oneQuestionAtATime", "Show one question at a time", settings?.OneQuestionAtATime == true); }
+                        @{ Switch("lockAnsweredQuestions", "Lock answers once saved (no going back)", settings?.LockAnsweredQuestions == true); }
+                        <label class="form-label small fw-semibold mt-2" for="set-code">Access code</label>
+                        <input id="set-code" name="accessCode" class="form-control form-control-sm" maxlength="100" value="@settings?.AccessCode" placeholder="Optional" autocomplete="off" />
+                        <label class="form-label small fw-semibold mt-2" for="set-ip">Allowed networks</label>
+                        <input id="set-ip" name="allowedIpRanges" class="form-control form-control-sm" maxlength="1000" value="@settings?.AllowedIpRanges" placeholder="e.g. 10.0.0.0/8, 192.168.1.20" />
+                        <div class="form-text">Blank = any network. Students outside these addresses cannot start the quiz.</div>
+                        <label class="form-label small fw-semibold mt-2" for="set-review">After submitting, students see</label>
+                        <select id="set-review" name="reviewVisibility" class="form-select form-select-sm">
+                            @foreach (var (value, label) in new[] { ("None", "Nothing (just “submitted”)"), ("ScoreOnly", "Their score"), ("ResponsesAndScore", "Score and their answers"), ("CorrectAnswers", "Score, answers and correct answers") })
+                            {
+                                <option value="@value" selected="@((settings?.ReviewVisibility ?? "ScoreOnly") == value)">@label</option>
+                            }
+                        </select>
+                        @{ Switch("reviewAfterCloseOnly", "Only show answers after the quiz closes", settings?.ReviewAfterCloseOnly == true); }
+                        <button class="btn btn-sm btn-primary mt-3">Save settings</button>
+                    </form>
+                </div>
+            </div>
+
+            @* ── Accommodations & overrides ──────────────────────────────── *@
+            <div class="card border-0 shadow-sm mb-3" id="accommodations">
+                <div class="card-body">
+                    <h3 class="h5 mb-2">Extra time &amp; attempts</h3>
+                    @foreach (var a in Model.Accommodations.Where(a => a.QuizId is null || a.QuizId == quiz.QuizId))
+                    {
+                        <div class="d-flex gap-2 align-items-start small border-bottom py-1">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">@(a.StudentName ?? a.StudentProfileId.ToString())</div>
+                                <div>×@a.TimeMultiplier.ToString("0.##") time @(a.ExtraTimeMinutes > 0 ? $"+ {a.ExtraTimeMinutes} min" : "")@(a.ExtraAttempts > 0 ? $", +{a.ExtraAttempts} attempt(s)" : "") · @(a.QuizId is null ? "all quizzes in this course" : "this quiz")</div>
+                            </div>
+                            <form asp-action="DeleteQuizAccommodation" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button class="btn btn-sm btn-link text-danger p-0">Remove</button>
+                            </form>
+                        </div>
+                    }
+                    <form asp-action="SaveQuizAccommodation" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                        <input type="hidden" name="courseOfferingId" value="@quiz.CourseOfferingId" />
+                        <label class="form-label small" for="acc-student">Student</label>
+                        <select id="acc-student" name="studentProfileId" class="form-select form-select-sm" required>
+                            <option value="">Choose…</option>
+                            @foreach (var s in Model.Roster)
+                            {
+                                <option value="@s.StudentProfileId">@s.StudentName (@s.RegistrationNumber)</option>
+                            }
+                        </select>
+                        <div class="row g-2 mt-1">
+                            <div class="col-4"><label class="form-label small" for="acc-mult">Time ×</label><input id="acc-mult" name="timeMultiplier" type="number" step="0.25" min="1" max="5" value="1.5" class="form-control form-control-sm" /></div>
+                            <div class="col-4"><label class="form-label small" for="acc-min">+ minutes</label><input id="acc-min" name="extraTimeMinutes" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
+                            <div class="col-4"><label class="form-label small" for="acc-att">+ attempts</label><input id="acc-att" name="extraAttempts" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="acc-all" name="allQuizzes" value="true" checked />
+                            <label class="form-check-label small" for="acc-all">Apply to every quiz in this course</label>
+                        </div>
+                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="Note (e.g. learning support plan)" aria-label="Note" />
+                        <button class="btn btn-sm btn-outline-primary mt-2">Save accommodation</button>
+                    </form>
+
+                    <h3 class="h6 mt-4 mb-2">Different dates for one student</h3>
+                    @foreach (var o in Model.Overrides)
+                    {
+                        <div class="d-flex gap-2 align-items-start small border-bottom py-1">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">@(o.StudentName ?? o.StudentProfileId.ToString())</div>
+                                <div>@(o.AvailableFrom?.ToLocalTime().ToString("g") ?? "open") – @(o.AvailableUntil?.ToLocalTime().ToString("g") ?? "no end")</div>
+                            </div>
+                            <form asp-action="DeleteQuizOverride" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                <input type="hidden" name="id" value="@o.Id" />
+                                <button class="btn btn-sm btn-link text-danger p-0">Remove</button>
+                            </form>
+                        </div>
+                    }
+                    <form asp-action="SaveQuizOverride" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                        <label class="form-label small" for="ovr-student">Student</label>
+                        <select id="ovr-student" name="studentProfileId" class="form-select form-select-sm" required>
+                            <option value="">Choose…</option>
+                            @foreach (var s in Model.Roster)
+                            {
+                                <option value="@s.StudentProfileId">@s.StudentName (@s.RegistrationNumber)</option>
+                            }
+                        </select>
+                        <div class="row g-2 mt-1">
+                            <div class="col-6"><label class="form-label small" for="ovr-from">Opens</label><input id="ovr-from" name="availableFrom" type="datetime-local" class="form-control form-control-sm" /></div>
+                            <div class="col-6"><label class="form-label small" for="ovr-until">Closes</label><input id="ovr-until" name="availableUntil" type="datetime-local" class="form-control form-control-sm" /></div>
+                        </div>
+                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="Note (e.g. make-up sitting)" aria-label="Note" />
+                        <button class="btn btn-sm btn-outline-primary mt-2">Save dates</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/quiz-editor.js" asp-append-version="true" defer></script>
+}

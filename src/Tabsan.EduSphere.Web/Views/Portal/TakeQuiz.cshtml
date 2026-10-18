@@ -1,0 +1,106 @@
+@model Tabsan.EduSphere.Web.Models.Portal.TakeQuizPageModel
+@{
+    var info = Model.Info;
+    ViewData["Title"] = info?.Title ?? "Quiz";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@Model.Message</div>
+}
+
+@if (!Model.IsConnected || info is null)
+{
+    <div class="alert alert-warning">This quiz is not available. <a asp-action="ViewQuizzes">Back to my quizzes</a></div>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <a asp-action="ViewQuizzes" class="small">← My quizzes</a>
+                    <h2 class="h4 mt-1">@info.Title</h2>
+                    <ul class="list-unstyled small mb-3">
+                        <li><strong>Questions:</strong> @info.QuestionCount</li>
+                        <li><strong>Time limit:</strong> @(info.TimeLimitMinutes.HasValue ? $"{info.TimeLimitMinutes} minutes" : "None")</li>
+                        <li><strong>Attempts allowed:</strong> @(info.MaxAttempts == 0 ? "Unlimited" : info.MaxAttempts.ToString()) · used @Model.Attempts.Count</li>
+                        @if (info.AvailableFrom.HasValue) { <li><strong>Opens:</strong> @info.AvailableFrom.Value.ToLocalTime().ToString("g")</li> }
+                        @if (info.AvailableUntil.HasValue) { <li><strong>Closes:</strong> @info.AvailableUntil.Value.ToLocalTime().ToString("g")</li> }
+                    </ul>
+                    @if (!string.IsNullOrWhiteSpace(info.Instructions))
+                    {
+                        <div class="p-3 bg-light rounded mb-3" style="white-space: pre-wrap;">@info.Instructions</div>
+                    }
+
+                    @if (Model.InProgress is { } current)
+                    {
+                        <a class="btn btn-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@current.Id">Resume attempt</a>
+                    }
+                    else if (Model.AttemptsLeft)
+                    {
+                        <form asp-action="StartQuiz" method="post" class="d-flex flex-wrap gap-2 align-items-end">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="quizId" value="@info.QuizId" />
+                            @if (info.RequiresAccessCode)
+                            {
+                                <div>
+                                    <label class="form-label small" for="access-code">Access code</label>
+                                    <input id="access-code" name="accessCode" class="form-control" autocomplete="off" required />
+                                </div>
+                            }
+                            <button class="btn btn-primary">@(Model.Attempts.Count == 0 ? "Start quiz" : "Start a new attempt")</button>
+                        </form>
+                        @if (info.TimeLimitMinutes.HasValue)
+                        {
+                            <p class="small text-muted mt-2 mb-0">The timer starts when you press start and keeps running if you leave the page. Your answers are submitted automatically when time runs out.</p>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded border bg-light mb-0">You have used all your attempts.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h6">My attempts</h3>
+                    @if (Model.Attempts.Count == 0)
+                    {
+                        <p class="text-muted small mb-0">None yet.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Started</th><th>Status</th><th>Score</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var a in Model.Attempts.OrderByDescending(a => a.StartedAt))
+                                {
+                                    var inProgress = string.Equals(a.Status, "InProgress", StringComparison.OrdinalIgnoreCase);
+                                    <tr>
+                                        <td class="small">@a.StartedAt.ToLocalTime().ToString("g")</td>
+                                        <td><span class="badge @(inProgress ? "bg-warning text-dark" : "bg-secondary")">@a.Status</span></td>
+                                        <td>@(a.TotalScore.HasValue ? a.TotalScore.Value.ToString("0.##") + (a.MaxScore > 0 ? $"/{a.MaxScore}" : "") : "—")</td>
+                                        <td class="text-end">
+                                            @if (inProgress)
+                                            {
+                                                <a class="btn btn-sm btn-outline-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@a.Id">Resume</a>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@a.Id">Review</a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

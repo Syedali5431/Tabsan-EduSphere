@@ -85,7 +85,8 @@ public class GradebookService : IGradebookService
                     ComponentName = comp.Name,
                     MarksObtained = result?.MarksObtained,
                     MaxMarks      = result?.MaxMarks,
-                    IsPublished   = result?.IsPublished ?? false
+                    IsPublished   = result?.IsPublished ?? false,
+                    Source        = result?.Source.ToString()
                 };
             }).ToList();
 
@@ -158,7 +159,12 @@ public class GradebookService : IGradebookService
                 request.StudentProfileId, request.CourseOfferingId, request.ComponentName, ct);
             if (existing is null) return;
 
-            existing.CorrectMarks(request.MarksObtained, request.MaxMarks);
+            // Plan M2: a hand edit takes the cell over from the quiz sync (Source becomes Manual).
+            // Drafts are revised in place; CorrectMarks only accepts published rows.
+            if (existing.IsPublished)
+                existing.CorrectMarks(request.MarksObtained, request.MaxMarks);
+            else
+                existing.ReviseDraft(request.MarksObtained, request.MaxMarks);
             _resultRepo.Update(existing);
         }
         else

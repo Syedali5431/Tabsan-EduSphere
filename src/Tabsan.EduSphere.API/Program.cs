@@ -455,6 +455,11 @@ else
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IFypRepository, FypRepository>();
 builder.Services.AddScoped<IQuizService, QuizService>();
+// Plan M2 — finished quiz scores feed the "Quiz" result component in the gradebook.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IQuizGradebookSync, Tabsan.EduSphere.Application.Quizzes.QuizGradebookSync>();
+// Plan M2.2 — question banks + Excel import/export.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Quizzes.IQuestionBankService, Tabsan.EduSphere.Application.Quizzes.QuestionBankService>();
+builder.Services.AddSingleton<Tabsan.EduSphere.Application.Quizzes.IQuestionBankSpreadsheet, Tabsan.EduSphere.Infrastructure.Reporting.QuestionBankSpreadsheet>();
 builder.Services.AddScoped<IFypService, FypService>();
 
 // ── Phase 6: AI Chat and Analytics ───────────────────────────────────

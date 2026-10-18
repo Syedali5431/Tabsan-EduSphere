@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
@@ -11,7 +11,7 @@ using Tabsan.EduSphere.Web.Services;
 
 namespace Tabsan.EduSphere.Web.Controllers;
 
-public class PortalController : Controller
+public partial class PortalController : Controller
 {
     private readonly IEduApiClient _api;
     private readonly IWebHostEnvironment _environment;
@@ -50,6 +50,14 @@ public class PortalController : Controller
         [nameof(EnterResults)] = "enter_results",
         [nameof(Quizzes)] = "quizzes",
         [nameof(ViewQuizzes)] = "quizzes",
+        // Plan M2 quiz engine pages
+        [nameof(QuizBuilder)] = "quizzes",
+        [nameof(QuestionBanks)] = "quizzes",
+        [nameof(QuizGrading)] = "quizzes",
+        [nameof(QuizStatistics)] = "quizzes",
+        [nameof(TakeQuiz)] = "quizzes",
+        [nameof(TakeQuizAttempt)] = "quizzes",
+        [nameof(QuizReview)] = "quizzes",
         [nameof(Fyp)] = "fyp",
         [nameof(Helpdesk)] = "helpdesk",
         [nameof(Prerequisites)] = "prerequisites",
@@ -4754,7 +4762,10 @@ public class PortalController : Controller
                     Status = status,
                     Marks = latestAttempt?.TotalScore,
                     MaxScore = latestAttempt?.MaxScore ?? 0,
-                    CanSubmit = status.Equals("Pending", StringComparison.OrdinalIgnoreCase)
+                    CanSubmit = status.Equals("Pending", StringComparison.OrdinalIgnoreCase),
+                    QuestionCount = quiz.QuestionCount,
+                    LatestAttemptId = latestAttempt?.Id,
+                    InProgress = string.Equals(latestAttempt?.Status, "InProgress", StringComparison.OrdinalIgnoreCase)
                 });
             }
 

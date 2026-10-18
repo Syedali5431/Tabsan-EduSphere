@@ -1,0 +1,181 @@
+@model Tabsan.EduSphere.Web.Models.Portal.QuizPaperPageModel
+@using System.Text.RegularExpressions
+@using Tabsan.EduSphere.Application.Quizzes.Grading
+@{
+    var p = Model.Paper;
+    ViewData["Title"] = p.QuizTitle;
+    var blankPattern = new Regex(@"\[\[([A-Za-z0-9_-]{1,20})\]\]");
+    string Iso(DateTime d) => DateTime.SpecifyKind(d, DateTimeKind.Utc).ToString("o");
+}
+
+<div id="quiz-paper" class="quiz-paper"
+     data-attempt-id="@p.AttemptId"
+     data-save-url="@Url.Action("SaveQuizAnswers", new { attemptId = p.AttemptId })"
+     data-upload-url="@Url.Action("UploadQuizAnswerFile", new { attemptId = p.AttemptId })"
+     data-review-url="@Url.Action("QuizReview", new { attemptId = p.AttemptId })"
+     data-deadline="@(p.DeadlineAt.HasValue ? Iso(p.DeadlineAt.Value) : "")"
+     data-server-now="@Iso(p.ServerNow)"
+     data-one-at-a-time="@(p.OneQuestionAtATime ? "true" : "false")"
+     data-lock-answered="@(p.LockAnsweredQuestions ? "true" : "false")">
+    @Html.AntiForgeryToken()
+
+    <div class="card border-0 shadow-sm mb-3 sticky-top" style="top: .5rem; z-index: 5;">
+        <div class="card-body py-2 d-flex flex-wrap gap-3 align-items-center">
+            <div class="flex-grow-1">
+                <h2 class="h5 mb-0">@p.QuizTitle</h2>
+                <div class="small text-muted">@p.Questions.Count question(s) · @p.TotalMarks.ToString("0.##") marks</div>
+            </div>
+            <div class="small text-muted" data-save-status aria-live="polite">All answers saved</div>
+            @if (p.DeadlineAt.HasValue)
+            {
+                <div class="fs-5 fw-semibold font-monospace px-2 rounded" data-timer role="timer" aria-live="off" title="Time remaining">--:--</div>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(p.Instructions))
+    {
+        <div class="p-3 mb-3 rounded border bg-white" style="white-space: pre-wrap;">@p.Instructions</div>
+    }
+    @if (p.LockAnsweredQuestions)
+    {
+        <div class="p-2 mb-3 rounded border border-warning small">Once you move to the next question your answer is final and cannot be changed.</div>
+    }
+
+    @foreach (var q in p.Questions)
+    {
+        var saved = q.Saved;
+        var name = $"q-{q.QuestionId:N}";
+        <section class="card border-0 shadow-sm mb-3" data-question data-qid="@q.QuestionId" data-type="@q.Type" data-locked="@(q.Locked ? "true" : "false")" aria-labelledby="@name-title">
+            <div class="card-body">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <span id="@name-title">Question @q.Order</span>
+                    <span>@q.Marks.ToString("0.##") mark(s)@(q.Locked ? " · locked" : "")</span>
+                </div>
+
+                @if (q.Type == "FillInBlank")
+                {
+                    var saveBlanks = QuizJson.Read<FillInBlankResponse>(saved?.ResponseJson)?.Blanks;
+                    var segments = new List<(string Text, string? BlankId)>();
+                    var pos = 0;
+                    foreach (Match m in blankPattern.Matches(q.Text))
+                    {
+                        segments.Add((q.Text.Substring(pos, m.Index - pos), null));
+                        segments.Add((string.Empty, m.Groups[1].Value));
+                        pos = m.Index + m.Length;
+                    }
+                    segments.Add((q.Text.Substring(pos), null));
+                    <p class="mb-0" style="white-space: pre-wrap; line-height: 2.2;">@foreach (var seg in segments){if (seg.BlankId is null){@seg.Text}else{<input type="text" class="form-control form-control-sm d-inline-block mx-1" style="width: 10rem;" data-blank-id="@seg.BlankId" aria-label="Blank @seg.BlankId" value="@(saveBlanks is not null && saveBlanks.TryGetValue(seg.BlankId, out var bv) ? bv : "")" disabled="@(q.Locked)" />}}</p>
+                }
+                else
+                {
+                    <div class="fw-semibold mb-3" style="white-space: pre-wrap;">@q.Text</div>
+                }
+
+                @switch (q.Type)
+                {
+                    case "MultipleChoice":
+                    case "TrueFalse":
+                    case "MultipleAnswers":
+                        var multi = q.Type == "MultipleAnswers";
+                        if (multi) { <div class="small text-muted mb-1">Select all that apply.</div> }
+                        foreach (var o in q.Options ?? [])
+                        {
+                            var oid = $"{name}-{o.Id}";
+                            var isChecked = saved?.SelectedOptionIds?.Any(s => s.ToString() == o.Id) == true;
+                            <div class="form-check">
+                                <input class="form-check-input" type="@(multi ? "checkbox" : "radio")" name="@name" id="@oid" value="@o.Id" data-option checked="@isChecked" disabled="@(q.Locked)" />
+                                <label class="form-check-label" for="@oid">@o.Text</label>
+                            </div>
+                        }
+                        break;
+
+                    case "Matching":
+                        var matches = QuizJson.Read<MatchingResponse>(saved?.ResponseJson)?.Matches;
+                        <div class="d-grid gap-2" style="max-width: 40rem;">
+                            @foreach (var prompt in q.MatchingPrompts ?? [])
+                            {
+                                var current = matches is not null && matches.TryGetValue(prompt.Id, out var mv) ? mv : null;
+                                <div class="row g-2 align-items-center">
+                                    <label class="col-sm-6 col-form-label col-form-label-sm" for="@name-@prompt.Id">@prompt.Text</label>
+                                    <div class="col-sm-6">
+                                        <select class="form-select form-select-sm" id="@name-@prompt.Id" data-match-id="@prompt.Id" disabled="@(q.Locked)">
+                                            <option value="">Choose…</option>
+                                            @foreach (var choice in q.MatchingChoices ?? [])
+                                            {
+                                                <option value="@choice" selected="@(choice == current)">@choice</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    case "Ordering":
+                        var savedOrder = QuizJson.Read<OrderingResponse>(saved?.ResponseJson)?.Order;
+                        var items = (q.OrderingItems ?? []).ToList();
+                        if (savedOrder is { Count: > 0 })
+                        {
+                            items = items.OrderBy(i => { var ix = savedOrder.ToList().IndexOf(i.Id); return ix < 0 ? int.MaxValue : ix; }).ToList();
+                        }
+                        <div class="small text-muted mb-1">Use the arrows to put the items in the right order.</div>
+                        <ol class="list-group list-group-numbered" data-order-list style="max-width: 40rem;">
+                            @foreach (var item in items)
+                            {
+                                <li class="list-group-item d-flex align-items-center gap-2" data-item-id="@item.Id">
+                                    <span class="flex-grow-1">@item.Text</span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="-1" aria-label="Move up" disabled="@(q.Locked)">↑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="1" aria-label="Move down" disabled="@(q.Locked)">↓</button>
+                                </li>
+                            }
+                        </ol>
+                        break;
+
+                    case "Numeric":
+                    case "Formula":
+                        var num = QuizJson.Read<NumericResponse>(saved?.ResponseJson)?.Value;
+                        <input type="text" inputmode="decimal" class="form-control" style="max-width: 14rem;" data-numeric value="@num" aria-label="Your answer" disabled="@(q.Locked)" />
+                        break;
+
+                    case "ShortAnswer":
+                        <input type="text" class="form-control" maxlength="1000" data-text value="@saved?.TextResponse" aria-label="Your answer" disabled="@(q.Locked)" />
+                        break;
+
+                    case "Essay":
+                        <textarea class="form-control" rows="10" data-text data-word-limit="@q.WordLimit" aria-label="Your answer" disabled="@(q.Locked)">@saved?.TextResponse</textarea>
+                        <div class="form-text" data-word-count></div>
+                        break;
+
+                    case "FileUpload":
+                        var accept = q.AllowedExtensions is { Count: > 0 } ? string.Join(",", q.AllowedExtensions) : null;
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input type="file" class="form-control form-control-sm" style="max-width: 22rem;" data-file accept="@accept" aria-label="Your file" disabled="@(q.Locked)" />
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-upload disabled="@(q.Locked)">Upload</button>
+                        </div>
+                        <div class="form-text">
+                            @(q.AllowedExtensions is { Count: > 0 } ? $"Allowed: {string.Join(", ", q.AllowedExtensions)}. " : "")Max @(q.MaxFileSizeMb ?? 10) MB.
+                            <span data-file-name>@(saved?.FileName is { } fn ? $"Uploaded: {fn}" : "")</span>
+                        </div>
+                        break;
+                }
+            </div>
+        </section>
+    }
+
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-4" data-pager hidden>
+        <button type="button" class="btn btn-outline-secondary" data-prev>← Previous</button>
+        <span class="small text-muted" data-page-label></span>
+        <button type="button" class="btn btn-outline-primary" data-next>Next →</button>
+    </div>
+
+    <form asp-action="SubmitQuiz" asp-route-attemptId="@p.AttemptId" method="post" data-submit-form class="mb-5">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="answersJson" value="" />
+        <button type="submit" class="btn btn-success">Submit quiz</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/take-quiz.js" asp-append-version="true" defer></script>
+}

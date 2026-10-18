@@ -7,6 +7,62 @@ namespace Tabsan.EduSphere.Domain.Interfaces;
 /// </summary>
 public interface IQuizRepository
 {
+    // ── Plan M2 ───────────────────────────────────────────────────────────────
+
+    /// <summary>Quiz with questions, options, groups (and their banks).</summary>
+    Task<Quiz?> GetForAuthoringAsync(Guid quizId, CancellationToken ct = default);
+
+    /// <summary>True when any answer references the question (it then cannot be deleted / its options re-created).</summary>
+    Task<bool> QuestionHasAnswersAsync(Guid questionId, CancellationToken ct = default);
+
+    Task<QuestionBank?> GetBankAsync(Guid bankId, bool includeQuestions, CancellationToken ct = default);
+    Task<IReadOnlyList<QuestionBank>> GetBanksAsync(Guid? tenantId, Guid? courseOfferingId, Guid? departmentId, Guid? userId, CancellationToken ct = default);
+    Task AddBankAsync(QuestionBank bank, CancellationToken ct = default);
+    /// <summary>True when any quiz draws from the bank.</summary>
+    Task<bool> IsBankUsedAsync(Guid bankId, CancellationToken ct = default);
+    Task<int> CountDrawableAsync(Guid bankId, string? tagFilter, CancellationToken ct = default);
+    Task<IReadOnlyList<QuizQuestion>> GetDrawableQuestionsAsync(Guid bankId, string? tagFilter, CancellationToken ct = default);
+    Task<IReadOnlyList<QuizQuestion>> GetQuestionsWithOptionsAsync(IReadOnlyCollection<Guid> questionIds, CancellationToken ct = default);
+
+    Task<QuizQuestionGroup?> GetGroupAsync(Guid groupId, CancellationToken ct = default);
+    Task AddGroupAsync(QuizQuestionGroup group, CancellationToken ct = default);
+    void RemoveGroup(QuizQuestionGroup group);
+
+    /// <summary>Attempt with quiz, items (+question+options) and answers (+selections).</summary>
+    Task<QuizAttempt?> GetAttemptForDeliveryAsync(Guid attemptId, CancellationToken ct = default);
+    Task AddAttemptItemsAsync(IEnumerable<QuizAttemptItem> items, CancellationToken ct = default);
+
+    /// <summary>Answer with its question (+options) and attempt (+items, answers).</summary>
+    Task<QuizAnswer?> GetAnswerForGradingAsync(Guid answerId, CancellationToken ct = default);
+
+    /// <summary>Finished attempts on a quiz, with items and answers (+selections).</summary>
+    Task<IReadOnlyList<QuizAttempt>> GetFinishedAttemptsAsync(Guid quizId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Plan M2 gradebook sync: the student's finished attempts on every active quiz of the offering,
+    /// with items and the quiz's questions (to size legacy attempts that have no item snapshot).
+    /// </summary>
+    Task<IReadOnlyList<QuizAttempt>> GetFinishedAttemptsForGradebookAsync(Guid courseOfferingId, Guid studentProfileId, CancellationToken ct = default);
+
+    /// <summary>Answers on finished attempts whose question type is graded manually and that have no marks yet.</summary>
+    Task<IReadOnlyList<QuizAnswer>> GetManualGradingQueueAsync(Guid quizId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<QuizAccommodation>> GetAccommodationsAsync(Guid courseOfferingId, CancellationToken ct = default);
+    Task<QuizAccommodation?> GetAccommodationAsync(Guid id, CancellationToken ct = default);
+    /// <summary>Quiz-specific accommodation for the student, else the offering-wide one.</summary>
+    Task<QuizAccommodation?> GetEffectiveAccommodationAsync(Guid courseOfferingId, Guid quizId, Guid studentProfileId, CancellationToken ct = default);
+    Task AddAccommodationAsync(QuizAccommodation accommodation, CancellationToken ct = default);
+    void RemoveAccommodation(QuizAccommodation accommodation);
+
+    Task<IReadOnlyList<QuizAvailabilityOverride>> GetOverridesAsync(Guid quizId, CancellationToken ct = default);
+    Task<QuizAvailabilityOverride?> GetOverrideAsync(Guid id, CancellationToken ct = default);
+    Task<QuizAvailabilityOverride?> GetOverrideForStudentAsync(Guid quizId, Guid studentProfileId, CancellationToken ct = default);
+    Task AddOverrideAsync(QuizAvailabilityOverride availabilityOverride, CancellationToken ct = default);
+    void RemoveOverride(QuizAvailabilityOverride availabilityOverride);
+
+    /// <summary>Display names for student profiles (best effort).</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetStudentNamesAsync(IReadOnlyCollection<Guid> studentProfileIds, CancellationToken ct = default);
+
     // ── Quiz ──────────────────────────────────────────────────────────────────
 
     /// <summary>Returns a quiz by its ID (active only), or null if not found.</summary>
