@@ -25,6 +25,8 @@ namespace Tabsan.EduSphere.Application.Auth;
 public sealed class SsoSignInService : ISsoSignInService
 {
     internal const string CallbackPath = "/Login/SsoCallback";
+    internal const string SamlAcsPath = "/Login/SamlAcs";
+    internal const string SamlMetadataPath = "/Login/SamlMetadata";
     private const string StateKeyPrefix = "sso:state:";
     private const string MfaKeyPrefix = "sso:mfa:";
     private static readonly TimeSpan StateTtl = TimeSpan.FromMinutes(10);
@@ -33,6 +35,7 @@ public sealed class SsoSignInService : ISsoSignInService
 
     private readonly ISsoRepository _repo;
     private readonly IOidcClient _oidc;
+    private readonly ISamlClient _saml;
     private readonly IEncryptionService _encryption;
     private readonly IUserRepository _users;
     private readonly IAuthService _auth;
@@ -43,6 +46,7 @@ public sealed class SsoSignInService : ISsoSignInService
     public SsoSignInService(
         ISsoRepository repo,
         IOidcClient oidc,
+        ISamlClient saml,
         IEncryptionService encryption,
         IUserRepository users,
         IAuthService auth,
@@ -52,6 +56,7 @@ public sealed class SsoSignInService : ISsoSignInService
     {
         _repo = repo;
         _oidc = oidc;
+        _saml = saml;
         _encryption = encryption;
         _users = users;
         _auth = auth;
@@ -70,7 +75,7 @@ public sealed class SsoSignInService : ISsoSignInService
 
         var settings = await _repo.GetEnabledSettingsAsync(tenantId, ct);
         return settings
-            .Where(s => s.IsOidc && s.IsComplete) // SAML arrives in Stage M1.3
+            .Where(s => s.IsComplete)
             .OrderBy(s => s.Provider)
             .Select(s => new SsoProviderSummary(s.Provider.ToString(), s.DisplayName))
             .ToList();
@@ -80,13 +85,21 @@ public sealed class SsoSignInService : ISsoSignInService
 
     public async Task<(SsoStartResponse? Response, SsoFailureReason? Failure)> StartAsync(SsoStartRequest request, CancellationToken ct = default)
     {
-        if (!IsAllowedRedirectUri(request.RedirectUri))
+        var isSaml = string.Equals(request.Provider?.Trim(), nameof(SsoProvider.Saml), StringComparison.OrdinalIgnoreCase);
+        if (!IsAllowedRedirectUri(request.RedirectUri, isSaml ? SamlAcsPath : CallbackPath))
             return (null, SsoFailureReason.InvalidRedirectUri);
 
-        var setting = await LoadUsableSettingAsync(request.TenantCode, request.Provider, ct);
+        var setting = await LoadUsableSettingAsync(request.TenantCode, request.Provider ?? string.Empty, ct);
         if (setting is null)
             return (null, SsoFailureReason.ProviderUnavailable);
 
+        return setting.IsOidc
+            ? await StartOidcAsync(setting, request.RedirectUri, ct)
+            : await StartSamlAsync(setting, request.RedirectUri, request.TenantCode, ct);
+    }
+
+    private async Task<(SsoStartResponse?, SsoFailureReason?)> StartOidcAsync(SsoProviderSetting setting, string redirectUri, CancellationToken ct)
+    {
         var config = TryBuildConfig(setting);
         if (config is null)
             return (null, SsoFailureReason.ProviderUnavailable);
@@ -99,18 +112,35 @@ public sealed class SsoSignInService : ISsoSignInService
         string url;
         try
         {
-            url = await _oidc.BuildAuthorizationUrlAsync(config, request.RedirectUri, state, nonce, challenge, ct);
+            url = await _oidc.BuildAuthorizationUrlAsync(config, redirectUri, state, nonce, challenge, ct);
         }
-        catch (OidcException)
+        catch (SsoProtocolException)
         {
             return (null, SsoFailureReason.ProviderUnavailable);
         }
 
-        var pending = new PendingState(setting.TenantId, setting.Provider, request.RedirectUri, nonce, verifier);
-        await _cache.SetStringAsync(StateKeyPrefix + state, JsonSerializer.Serialize(pending),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = StateTtl }, ct);
-
+        await SaveStateAsync(state, new PendingState(setting.TenantId, setting.Provider, redirectUri, nonce, verifier), ct);
         return (new SsoStartResponse(url, state), null);
+    }
+
+    private async Task<(SsoStartResponse?, SsoFailureReason?)> StartSamlAsync(SsoProviderSetting setting, string acsUrl, string? tenantCode, CancellationToken ct)
+    {
+        var sp = BuildServiceProvider(acsUrl, tenantCode);
+        var state = NewRandomToken(); // sent as RelayState
+
+        SamlAuthnRequest authn;
+        try
+        {
+            authn = await _saml.BuildAuthnRequestAsync(setting.MetadataUrl!, sp, state, ct);
+        }
+        catch (SsoProtocolException)
+        {
+            return (null, SsoFailureReason.ProviderUnavailable);
+        }
+
+        // Nonce carries the AuthnRequest ID that the assertion must answer (InResponseTo).
+        await SaveStateAsync(state, new PendingState(setting.TenantId, setting.Provider, acsUrl, authn.RequestId, string.Empty, sp.EntityId), ct);
+        return (new SsoStartResponse(authn.RedirectUrl, state), null);
     }
 
     // ── Complete ─────────────────────────────────────────────────────────────
@@ -119,7 +149,7 @@ public sealed class SsoSignInService : ISsoSignInService
     {
         // State is single-use: remove before doing anything else.
         var pending = await TakeAsync<PendingState>(StateKeyPrefix + request.State, ct);
-        if (pending is null)
+        if (pending is null || pending.Provider == SsoProvider.Saml)
             return await FailAsync(SsoFailureReason.InvalidState, null, null, ipAddress, ct);
 
         var setting = await _repo.GetSettingAsync(pending.TenantId, pending.Provider, ct);
@@ -127,25 +157,65 @@ public sealed class SsoSignInService : ISsoSignInService
         if (setting is null || config is null)
             return await FailAsync(SsoFailureReason.ProviderUnavailable, pending.Provider, null, ipAddress, ct);
 
-        OidcIdentity identity;
+        ExternalIdentity identity;
         try
         {
             identity = await _oidc.RedeemCodeAsync(config, request.Code, pending.RedirectUri, pending.CodeVerifier, pending.Nonce, ct);
         }
-        catch (OidcException ex)
+        catch (SsoProtocolException ex)
         {
             return await FailAsync(SsoFailureReason.TokenValidationFailed, pending.Provider, ex.Message, ipAddress, ct);
         }
 
+        return await FinishSignInAsync(setting, identity, request.DeviceInfo, ipAddress, ct);
+    }
+
+    public async Task<SsoResult> CompleteSamlAsync(SsoSamlCompleteRequest request, string? ipAddress, CancellationToken ct = default)
+    {
+        var pending = await TakeAsync<PendingState>(StateKeyPrefix + request.RelayState, ct);
+        if (pending is null || pending.Provider != SsoProvider.Saml || string.IsNullOrEmpty(pending.SpEntityId))
+            return await FailAsync(SsoFailureReason.InvalidState, SsoProvider.Saml, null, ipAddress, ct);
+
+        var setting = await _repo.GetSettingAsync(pending.TenantId, SsoProvider.Saml, ct);
+        if (setting is not { IsEnabled: true, IsComplete: true })
+            return await FailAsync(SsoFailureReason.ProviderUnavailable, SsoProvider.Saml, null, ipAddress, ct);
+
+        ExternalIdentity identity;
+        try
+        {
+            identity = await _saml.ValidateResponseAsync(setting.MetadataUrl!,
+                new SamlServiceProvider(pending.SpEntityId, pending.RedirectUri), request.SamlResponse, pending.Nonce, ct);
+        }
+        catch (SsoProtocolException ex)
+        {
+            return await FailAsync(SsoFailureReason.TokenValidationFailed, SsoProvider.Saml, ex.Message, ipAddress, ct);
+        }
+
+        return await FinishSignInAsync(setting, identity, request.DeviceInfo, ipAddress, ct);
+    }
+
+    public async Task<string?> GetSamlMetadataAsync(string acsUrl, string? tenantCode, CancellationToken ct = default)
+    {
+        if (!IsAllowedRedirectUri(acsUrl, SamlAcsPath))
+            return null;
+
+        var (tenantOk, _) = await ResolveTenantAsync(tenantCode, ct);
+        return tenantOk ? _saml.BuildServiceProviderMetadata(BuildServiceProvider(acsUrl, tenantCode)) : null;
+    }
+
+    /// <summary>Shared tail for OIDC and SAML: domain policy, account linking, then the standard login gates.</summary>
+    private async Task<SsoResult> FinishSignInAsync(
+        SsoProviderSetting setting, ExternalIdentity identity, string? deviceInfo, string? ipAddress, CancellationToken ct)
+    {
         if (!setting.IsEmailDomainAllowed(identity.Email))
-            return await FailAsync(SsoFailureReason.EmailDomainNotAllowed, pending.Provider, identity.Email, ipAddress, ct);
+            return await FailAsync(SsoFailureReason.EmailDomainNotAllowed, setting.Provider, identity.Email, ipAddress, ct);
 
         var link = await _repo.FindLinkAsync(setting.TenantId, setting.Provider, identity.Subject, ct);
         if (link is null)
         {
             link = await TryAutoLinkAsync(setting, identity, ipAddress, ct);
             if (link is null)
-                return await FailAsync(SsoFailureReason.AccountNotLinked, pending.Provider, identity.Email, ipAddress, ct);
+                return await FailAsync(SsoFailureReason.AccountNotLinked, setting.Provider, identity.Email, ipAddress, ct);
         }
         else
         {
@@ -155,7 +225,7 @@ public sealed class SsoSignInService : ISsoSignInService
 
         var mfaSatisfied = setting.TrustIdpMfa && identity.MfaAsserted;
         var login = await _auth.ExternalLoginAsync(link.UserId, setting.Provider.ToString(), mfaCode: null,
-            mfaSatisfied, ipAddress, request.DeviceInfo, ct);
+            mfaSatisfied, ipAddress, deviceInfo, ct);
 
         if (login.IsSuccess)
             return SsoResult.Ok(login.Response!);
@@ -169,7 +239,6 @@ public sealed class SsoSignInService : ISsoSignInService
 
         return SsoResult.Rejected(login.FailureReason ?? LoginFailureReason.InvalidCredentials);
     }
-
     public async Task<SsoResult> CompleteMfaAsync(SsoMfaRequest request, string? ipAddress, CancellationToken ct = default)
     {
         var pending = await TakeAsync<PendingMfa>(MfaKeyPrefix + request.Ticket, ct);
@@ -199,7 +268,7 @@ public sealed class SsoSignInService : ISsoSignInService
 
     // ── Linking ──────────────────────────────────────────────────────────────
 
-    private async Task<ExternalLogin?> TryAutoLinkAsync(SsoProviderSetting setting, OidcIdentity identity, string? ipAddress, CancellationToken ct)
+    private async Task<ExternalLogin?> TryAutoLinkAsync(SsoProviderSetting setting, ExternalIdentity identity, string? ipAddress, CancellationToken ct)
     {
         if (!setting.AutoLinkByEmail || string.IsNullOrWhiteSpace(identity.Email))
             return null;
@@ -246,7 +315,7 @@ public sealed class SsoSignInService : ISsoSignInService
             return null;
 
         var setting = await _repo.GetSettingAsync(tenantId, provider, ct);
-        return setting is { IsEnabled: true, IsOidc: true, IsComplete: true } ? setting : null;
+        return setting is { IsEnabled: true, IsComplete: true } ? setting : null;
     }
 
     private async Task<(bool Ok, Guid? TenantId)> ResolveTenantAsync(string? tenantCode, CancellationToken ct)
@@ -273,19 +342,41 @@ public sealed class SsoSignInService : ISsoSignInService
         }
     }
 
-    internal bool IsAllowedRedirectUri(string? redirectUri)
+    /// <summary>
+    /// The portal endpoint the IdP returns to: <see cref="CallbackPath"/> for OIDC, <see cref="SamlAcsPath"/> for SAML.
+    /// With AllowedRedirectUris configured the URL must be listed exactly; otherwise https (or loopback http) is required.
+    /// </summary>
+    internal bool IsAllowedRedirectUri(string? redirectUri, string expectedPath)
     {
         if (string.IsNullOrWhiteSpace(redirectUri)
             || !Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri)
-            || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+            || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)
+            || !uri.AbsolutePath.TrimEnd('/').EndsWith(expectedPath, StringComparison.OrdinalIgnoreCase))
             return false;
 
         if (_settings.AllowedRedirectUris.Length > 0)
             return _settings.AllowedRedirectUris.Any(a => string.Equals(a.TrimEnd('/'), redirectUri.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
 
         var schemeOk = uri.Scheme == Uri.UriSchemeHttps || (uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback);
-        return schemeOk && string.Equals(uri.AbsolutePath.TrimEnd('/'), CallbackPath, StringComparison.OrdinalIgnoreCase);
+        return schemeOk && string.Equals(uri.AbsolutePath.TrimEnd('/'), expectedPath, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// SP entity ID = the portal's metadata URL (plus ?tenant=CODE on multi-tenant portals),
+    /// derived from the validated ACS URL so a caller can never choose our audience.
+    /// </summary>
+    private static SamlServiceProvider BuildServiceProvider(string acsUrl, string? tenantCode)
+    {
+        var acs = acsUrl.TrimEnd('/');
+        var portalBase = acs[..^SamlAcsPath.Length];
+        var entityId = portalBase + SamlMetadataPath
+                       + (string.IsNullOrWhiteSpace(tenantCode) ? string.Empty : "?tenant=" + Uri.EscapeDataString(tenantCode.Trim().ToUpperInvariant()));
+        return new SamlServiceProvider(entityId, acs);
+    }
+
+    private Task SaveStateAsync(string state, PendingState pending, CancellationToken ct)
+        => _cache.SetStringAsync(StateKeyPrefix + state, JsonSerializer.Serialize(pending),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = StateTtl }, ct);
 
     private async Task<SsoResult> FailAsync(SsoFailureReason reason, SsoProvider? provider, string? detail, string? ipAddress, CancellationToken ct)
     {
@@ -325,7 +416,8 @@ public sealed class SsoSignInService : ISsoSignInService
     private static string Base64Url(byte[] bytes)
         => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
-    private sealed record PendingState(Guid? TenantId, SsoProvider Provider, string RedirectUri, string Nonce, string CodeVerifier);
+    /// <summary>OIDC: Nonce + PKCE verifier. SAML: Nonce = AuthnRequest ID, RedirectUri = ACS, SpEntityId set.</summary>
+    private sealed record PendingState(Guid? TenantId, SsoProvider Provider, string RedirectUri, string Nonce, string CodeVerifier, string? SpEntityId = null);
 
     private sealed record PendingMfa(Guid UserId, SsoProvider Provider, int Attempts);
 }

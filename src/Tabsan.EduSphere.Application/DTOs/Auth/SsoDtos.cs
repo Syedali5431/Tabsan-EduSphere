@@ -22,6 +22,12 @@ public sealed record SsoCompleteRequest(
     [property: Required, StringLength(4096)] string Code,
     [property: StringLength(512)] string? DeviceInfo = null);
 
+/// <summary>Body for POST /api/v1/sso/saml/complete (the SAMLResponse posted to the portal ACS).</summary>
+public sealed record SsoSamlCompleteRequest(
+    [property: Required, StringLength(256000)] string SamlResponse,
+    [property: Required, StringLength(200)] string RelayState,
+    [property: StringLength(512)] string? DeviceInfo = null);
+
 /// <summary>Body for POST /api/v1/sso/complete-mfa (second step when the user has TOTP enabled).</summary>
 public sealed record SsoMfaRequest(
     [property: Required, StringLength(200)] string Ticket,

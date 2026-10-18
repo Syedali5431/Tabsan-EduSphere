@@ -129,6 +129,63 @@ public class SsoLoginWebIntegrationTests : IClassFixture<WebApplicationFactory<W
         Assert.Equal("123456", api.LastMfaCode);
     }
 
+    // ── SAML 2.0 (Stage M1.3) ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task SamlFlow_UsesAcsAndCrossSiteCookie_ThenAcsPostSignsIn()
+    {
+        var api = new FakeApi();
+        using var client = CreateClient(api);
+
+        var start = await client.GetAsync("/Login/Sso/saml?returnUrl=%2FPortal%2FCourses");
+        Assert.Equal(HttpStatusCode.Redirect, start.StatusCode);
+        Assert.Equal("https://localhost/Login/SamlAcs", api.LastStartRedirectUri);
+        var setCookie = start.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith(".Tabsan.EduSphere.Sso="));
+        Assert.Contains("samesite=none", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("secure", setCookie, StringComparison.OrdinalIgnoreCase);
+
+        // The IdP posts back cross-site: no antiforgery token, just SAMLResponse + RelayState.
+        var acs = await client.PostAsync("/Login/SamlAcs", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["SAMLResponse"] = "PHNhbWxwOlJlc3BvbnNlLz4=",
+            ["RelayState"] = FakeApi.State
+        }));
+
+        Assert.Equal(HttpStatusCode.Redirect, acs.StatusCode);
+        Assert.Equal("/Portal/Courses", acs.Headers.Location!.ToString());
+        Assert.Equal("PHNhbWxwOlJlc3BvbnNlLz4=", api.LastSamlResponse);
+    }
+
+    [Fact]
+    public async Task SamlAcs_WithForeignRelayState_IsRejected()
+    {
+        var api = new FakeApi();
+        using var client = CreateClient(api);
+        await client.GetAsync("/Login/Sso/saml");
+
+        var acs = await client.PostAsync("/Login/SamlAcs", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["SAMLResponse"] = "PHNhbWxwOlJlc3BvbnNlLz4=",
+            ["RelayState"] = "attacker-state"
+        }));
+
+        Assert.Contains("expired or is invalid", await acs.Content.ReadAsStringAsync());
+        Assert.Null(api.LastSamlResponse);
+    }
+
+    [Fact]
+    public async Task SamlMetadata_ProxiesSpDescriptorForThisPortal()
+    {
+        var api = new FakeApi();
+        using var client = CreateClient(api);
+
+        var response = await client.GetAsync("/Login/SamlMetadata");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/samlmetadata+xml", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("https://localhost/Login/SamlAcs", api.LastMetadataAcs);
+    }
+
     // ── harness ──────────────────────────────────────────────────────────────
 
     private HttpClient CreateClient(FakeApi api)
@@ -158,7 +215,7 @@ public class SsoLoginWebIntegrationTests : IClassFixture<WebApplicationFactory<W
         public HttpStatusCode ProvidersStatus { get; init; } = HttpStatusCode.OK;
         public HttpStatusCode CompleteStatus { get; init; } = HttpStatusCode.OK;
         public string? CompleteBody { get; init; }
-        public string? LastStartRedirectUri, LastCompleteCode, LastMfaCode;
+        public string? LastStartRedirectUri, LastCompleteCode, LastMfaCode, LastSamlResponse, LastMetadataAcs;
 
         private static readonly string LoginJson = JsonSerializer.Serialize(new
         {
@@ -196,6 +253,14 @@ public class SsoLoginWebIntegrationTests : IClassFixture<WebApplicationFactory<W
                     return CompleteStatus == HttpStatusCode.OK
                         ? Json(LoginJson)
                         : Json(CompleteBody ?? "{}", CompleteStatus);
+
+                case "/api/v1/sso/saml/complete":
+                    LastSamlResponse = JsonDocument.Parse(body!).RootElement.GetProperty("samlResponse").GetString();
+                    return Json(LoginJson);
+
+                case "/api/v1/sso/saml/metadata":
+                    LastMetadataAcs = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(request.RequestUri.Query)["acs"].ToString();
+                    return Json("<EntityDescriptor/>");
 
                 case "/api/v1/sso/complete-mfa":
                     LastMfaCode = JsonDocument.Parse(body!).RootElement.GetProperty("mfaCode").GetString();

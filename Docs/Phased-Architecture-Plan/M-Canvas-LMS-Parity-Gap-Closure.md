@@ -44,7 +44,7 @@ Positioning target after Plan M:
 
 | Phase | Name | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1 ✅ M1.2 ✅ |
+| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1 ✅ M1.2 ✅ M1.3 ✅ |
 | M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ⬜ |
 | M3 | SpeedGrader-style Grading Workspace | P1 | 5 dw | — | ⬜ |
 | M4 | Progressive Web App (installable + push) | P1 | 1–2 dw | — | ⬜ |
@@ -113,10 +113,25 @@ Design change from the original bullets: instead of the ASP.NET OpenIdConnect ha
 - Web integration (portal against fake API): `SsoLoginWebIntegrationTests` (7) — buttons, no buttons when module off, IdP redirect + HttpOnly state cookie, callback sign-in + returnUrl, missing cookie / state mismatch never relayed, friendly not-linked error, TOTP step. Suite 13/13.
 - Not yet verified against a real Microsoft/Google tenant (needs app registrations — do during M1.6), and providers can only be configured in the DB until the admin page (M1.5).
 
-### Stage M1.3 - SAML 2.0
-- [ ] Add `Sustainsys.Saml2.AspNetCore2` (or ITfoxtec.Identity.Saml2).
-- [ ] SP metadata endpoint per tenant; IdP metadata import; signed assertions required.
-- [ ] Attribute mapping (email, name, role hint, student/staff ID).
+### Stage M1.3 - SAML 2.0 ✅ (2026-10-18)
+- [x] Library: **ITfoxtec.Identity.Saml2 4.21.0** (BSD-3, no auth middleware — fits the API-side design; Sustainsys is a handler-based alternative and was not used). It requires Microsoft.IdentityModel ≥ 8.22, so **Microsoft.IdentityModel.\* and System.IdentityModel.Tokens.Jwt were aligned from 7.1.2 to 8.22.0** across the solution (all JWT/auth suites re-run green; every IdentityModel assembly resolves to 8.22.0).
+- [x] Flow mirrors OIDC: Web `GET /Login/Sso/saml` → API `POST /api/v1/sso/start` (HTTP-Redirect AuthnRequest; state = RelayState, stores AuthnRequest ID + ACS + SP entity ID) → IdP → **cross-site POST** to Web `POST /Login/SamlAcs` (RelayState must match the browser cookie, which for SAML is `SameSite=None; Secure` because Lax cookies are not sent on cross-site POSTs) → API `POST /api/v1/sso/saml/complete` → same linking / MFA / login gates as OIDC (shared `FinishSignInAsync`).
+- [x] SP metadata per portal origin + tenant: Web `GET /Login/SamlMetadata[?tenant=CODE]` (proxies API `GET /api/v1/sso/saml/metadata`). **SP entity ID = that metadata URL**, always derived from the validated ACS URL (never caller-supplied) — prevents audience confusion. Metadata advertises HTTP-POST ACS and `WantAssertionsSigned="true"`.
+- [x] IdP trust from the admin-configured metadata URL (https only): signing certificates + entity ID, cached 1 h, refreshed once on signature failure (certificate rollover).
+- [x] Response validation: signature required (unsigned/tampered/foreign-cert rejected), issuer = metadata entity ID, audience = our entity ID, validity window, success status, Response `Destination` = ACS, and a signed **bearer SubjectConfirmation with Recipient = ACS and InResponseTo = our request ID** (so IdP-initiated / unsolicited responses are rejected). State is single-use and cannot cross protocols (OIDC state ≠ SAML RelayState).
+- [x] Attribute mapping: subject = Entra `objectidentifier` → else NameID (non-transient) → else eduPersonTargetedID / eduPersonPrincipalName; email from standard email attributes (Entra/ADFS claim URI, `urn:oid:0.9.2342.19200300.100.1.3`, `mail`, `email`) or an emailAddress NameID; display name from standard attributes; MFA from AuthnContextClassRef (REFEDS MFA, `multipleauthn`, two/multi-factor classes) or Entra `authnmethodsreferences`. SAML emails are treated as verified (institution-owned IdP) — the domain allow-list still applies.
+- [ ] *Deferred:* role-hint and student/staff-ID attribute mapping — only useful with user provisioning, which is out of scope until whitelist provisioning is designed. Signed AuthnRequests (needs an SP certificate) and encrypted assertions — add if an institution's IdP requires them.
+
+#### ✅ Implementation Summary (M1.3)
+- New: `Infrastructure/Auth/SamlClient.cs`; tests `UnitTests/SsoSamlClientTests.cs`, `IntegrationTests/Infrastructure/SwitchableSamlClient.cs`.
+- Changed: `ISsoInterfaces.cs` (`ISamlClient`, `SamlServiceProvider`, `SamlAuthnRequest`; `OidcIdentity` → `ExternalIdentity`, `OidcException` → `SsoProtocolException`), `SsoDtos.cs` (`SsoSamlCompleteRequest`), `SsoSignInService` (SAML start/complete/metadata, shared finish, ACS-vs-callback redirect rules), `SsoController` (`saml/complete`, `saml/metadata`), API `Program.cs` (DI), Infrastructure csproj (ITfoxtec 4.21.0; IdentityModel 8.22.0), Web `LoginController` (`SamlAcs`, `SamlMetadata`, SAML cookie policy).
+- No schema change (`has-pending-model-changes` = none).
+
+#### ✅ Validation Summary (M1.3)
+- Unit: `SsoSamlClientTests` (14) — real SamlClient against an in-memory IdP serving metadata and minting genuinely signed responses: AuthnRequest contents, valid response → identity (+ MFA, Entra object id preferred), and rejection of wrong InResponseTo, foreign audience, wrong Recipient, wrong Destination, tampered, unsigned, foreign-certificate, expired, transient-NameID, IdP error status, non-https metadata (each rejection confirmed to fail for its intended reason); SP metadata contents. `SsoSignInTests` +7 SAML service cases. Suite 290/290.
+- Integration (API pipeline, stubbed IdP): SP metadata for allowed ACS only; SAML round trip (provider listed, entity ID derived, request ID bound, link + tokens, RelayState replay refused). Suite 312/312 (+1 pre-existing skip).
+- Web integration: SAML start uses ACS + `SameSite=None; Secure` cookie, ACS POST without antiforgery signs in, foreign RelayState rejected, metadata route. Suite 16/16.
+- Not yet tried against a real IdP (Entra ID SAML / ADFS / Shibboleth) — do in M1.6 together with OIDC.
 
 ### Stage M1.4 - Policy & 2FA interplay
 - [ ] `EnforceSsoOnly` blocks password login for non-SuperAdmin users of that tenant (break-glass SuperAdmin keeps password + 2FA).
@@ -479,3 +494,4 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-18 | Plan M created from Canvas LMS gap analysis | — |
 | 2026-10-18 | Stage M1.1 completed (SSO data model, migration, module registration) | — |
 | 2026-10-18 | Stage M1.2 completed (OIDC sign-in: Microsoft / Google / generic, portal flow, MFA step) | — |
+| 2026-10-18 | Stage M1.3 completed (SAML 2.0 SP via ITfoxtec 4.21.0; IdentityModel aligned to 8.22.0) | — |

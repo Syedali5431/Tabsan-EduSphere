@@ -25,6 +25,7 @@ public class LoginController : Controller
     // Plan M1: binds an in-flight SSO sign-in to this browser (login-CSRF protection).
     private const string SsoCookieName = ".Tabsan.EduSphere.Sso";
     private const string SsoCallbackPath = "/Login/SsoCallback";
+    private const string SamlAcsPath = "/Login/SamlAcs";
 
     public LoginController(IEduApiClient api, IConfiguration config, IHttpClientFactory http, IDataProtectionProvider dataProtection)
     {
@@ -201,7 +202,9 @@ public class LoginController : Controller
         if (_api.IsConnected())
             return RedirectToAction(nameof(Index));
 
-        var redirectUri = BuildSsoCallbackUrl();
+        // SAML returns via an HTTP-POST to the ACS; OIDC via a GET to the callback.
+        var isSaml = string.Equals(provider, "saml", StringComparison.OrdinalIgnoreCase);
+        var redirectUri = BuildPublicUrl(isSaml ? SamlAcsPath : SsoCallbackPath);
         try
         {
             var client = _http.CreateClient();
@@ -223,8 +226,10 @@ public class LoginController : Controller
             Response.Cookies.Append(SsoCookieName, _ssoProtector.Protect(JsonSerializer.Serialize(cookie)), new CookieOptions
             {
                 HttpOnly = true,
-                Secure = Request.IsHttps,
-                SameSite = SameSiteMode.Lax, // must survive the top-level redirect back from the IdP
+                // OIDC returns with a top-level GET (Lax is enough); SAML returns with a cross-site
+                // POST from the IdP, which browsers only send SameSite=None (Secure) cookies with.
+                Secure = isSaml || Request.IsHttps,
+                SameSite = isSaml ? SameSiteMode.None : SameSiteMode.Lax,
                 IsEssential = true,
                 Path = "/",
                 MaxAge = TimeSpan.FromMinutes(10)
@@ -256,6 +261,46 @@ public class LoginController : Controller
         return await PostSsoAsync("complete", payload, returnUrl, cookie.Tenant, ct);
     }
 
+    // POST /Login/SamlAcs — SAML assertion consumer service (the IdP posts SAMLResponse + RelayState here)
+    [HttpPost("SamlAcs")]
+    [IgnoreAntiforgeryToken] // cross-site POST from the IdP; protected by the signed assertion + browser-bound RelayState
+    [RequestSizeLimit(512_000)]
+    public async Task<IActionResult> SamlAcs(string? samlResponse, string? relayState, CancellationToken ct = default)
+    {
+        var cookie = ReadSsoCookie();
+        Response.Cookies.Delete(SsoCookieName, new CookieOptions { Path = "/", Secure = true, SameSite = SameSiteMode.None });
+        var returnUrl = cookie?.ReturnUrl;
+
+        if (cookie is null || string.IsNullOrEmpty(relayState) || !FixedTimeEquals(cookie.State, relayState))
+            return await RenderLoginErrorAsync("Your single sign-on session expired or is invalid. Please try again.", returnUrl, ct);
+
+        if (string.IsNullOrWhiteSpace(samlResponse))
+            return await RenderLoginErrorAsync("Sign-in was cancelled or failed at the identity provider.", returnUrl, ct);
+
+        var payload = new { samlResponse, relayState, deviceInfo = Request.Headers.UserAgent.ToString() };
+        return await PostSsoAsync("saml/complete", payload, returnUrl, cookie.Tenant, ct);
+    }
+
+    // GET /Login/SamlMetadata?tenant=CODE — service-provider metadata (also the SP entity ID) for the IdP administrator
+    [HttpGet("SamlMetadata")]
+    public async Task<IActionResult> SamlMetadata(string? tenant = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = _http.CreateClient();
+            var url = $"{_configuredApiBaseUrl}/api/v1/sso/saml/metadata?acs={Uri.EscapeDataString(BuildPublicUrl(SamlAcsPath))}"
+                      + (string.IsNullOrWhiteSpace(tenant) ? string.Empty : "&tenant=" + Uri.EscapeDataString(tenant.Trim()));
+            using var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+                return NotFound();
+
+            return Content(await response.Content.ReadAsStringAsync(ct), "application/samlmetadata+xml");
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway);
+        }
+    }
     // POST /Login/SsoMfa — authenticator code for SSO users with TOTP enabled
     [HttpPost("SsoMfa")]
     [ValidateAntiForgeryToken]
@@ -335,7 +380,7 @@ public class LoginController : Controller
         return View(nameof(Index));
     }
 
-    private string BuildSsoCallbackUrl()
+    private string BuildPublicUrl(string path)
     {
         // Behind a tunnel/reverse proxy without forwarded headers, set Sso:PublicBaseUrl
         // (e.g. https://portal.uni.edu) so the redirect URI matches the one registered at the IdP.
@@ -343,7 +388,7 @@ public class LoginController : Controller
         var baseUrl = !string.IsNullOrWhiteSpace(configured)
             ? configured.TrimEnd('/')
             : $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
-        return baseUrl + SsoCallbackPath;
+        return baseUrl + path;
     }
 
     private SsoCookie? ReadSsoCookie()

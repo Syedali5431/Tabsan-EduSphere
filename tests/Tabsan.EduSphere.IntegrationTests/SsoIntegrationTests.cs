@@ -60,7 +60,7 @@ public class SsoIntegrationTests
     {
         await EnsureGoogleProviderAsync();
         var (userId, email) = await SeedUserAsync();
-        var stub = new StubOidc { Identity = new OidcIdentity("google-sub-" + userId.ToString("N"), email, true, "SSO User", false) };
+        var stub = new StubOidc { Identity = new ExternalIdentity("google-sub-" + userId.ToString("N"), email, true, "SSO User", false) };
         using var client = ClientWithIdp(stub);
 
         var providers = await client.GetFromJsonAsync<JsonElement>("api/v1/sso/providers");
@@ -103,7 +103,7 @@ public class SsoIntegrationTests
     public async Task Complete_UnlinkedUnverifiedIdentity_IsForbidden()
     {
         await EnsureGoogleProviderAsync();
-        var stub = new StubOidc { Identity = new OidcIdentity("stranger-" + Guid.NewGuid().ToString("N"), "nobody@tabsan.local", false, null, false) };
+        var stub = new StubOidc { Identity = new ExternalIdentity("stranger-" + Guid.NewGuid().ToString("N"), "nobody@tabsan.local", false, null, false) };
         using var client = ClientWithIdp(stub);
 
         var start = await client.PostAsJsonAsync("api/v1/sso/start", new { provider = "Google", redirectUri = Callback });
@@ -112,6 +112,93 @@ public class SsoIntegrationTests
 
         Assert.Equal(HttpStatusCode.Forbidden, complete.StatusCode);
         Assert.Contains("AccountNotLinked", await complete.Content.ReadAsStringAsync());
+    }
+
+    // ── SAML 2.0 (Stage M1.3) ────────────────────────────────────────────────
+
+    private const string Acs = "https://portal.test/Login/SamlAcs";
+
+    [Fact]
+    public async Task SamlMetadata_ServesSpDescriptorForAllowedAcsOnly()
+    {
+        using var client = _factory.CreateClient();
+
+        var ok = await client.GetAsync("api/v1/sso/saml/metadata?acs=" + Uri.EscapeDataString(Acs));
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        Assert.Equal("application/samlmetadata+xml", ok.Content.Headers.ContentType?.MediaType);
+        var xml = await ok.Content.ReadAsStringAsync();
+        Assert.Contains("entityID=\"https://portal.test/Login/SamlMetadata\"", xml);
+        Assert.Contains($"Location=\"{Acs}\"", xml);
+
+        var bad = await client.GetAsync("api/v1/sso/saml/metadata?acs=" + Uri.EscapeDataString("https://evil.example.com/collect"));
+        Assert.Equal(HttpStatusCode.NotFound, bad.StatusCode);
+    }
+
+    [Fact]
+    public async Task SamlRoundTrip_LinksAndIssuesTokens()
+    {
+        await EnsureSamlProviderAsync();
+        var (userId, email) = await SeedUserAsync();
+        var stub = new StubSaml { Identity = new ExternalIdentity("saml-" + userId.ToString("N"), email, true, "SAML User", false) };
+        _factory.Services.GetRequiredService<SwitchableSamlClient>().Inner = stub;
+        using var client = _factory.CreateClient();
+
+        var providers = await client.GetFromJsonAsync<JsonElement>("api/v1/sso/providers");
+        Assert.Contains(providers.EnumerateArray(), p => p.GetProperty("provider").GetString() == "Saml");
+
+        var start = await client.PostAsJsonAsync("api/v1/sso/start", new { provider = "saml", redirectUri = Acs });
+        Assert.Equal(HttpStatusCode.OK, start.StatusCode);
+        var relayState = (await start.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("state").GetString()!;
+        Assert.Equal("https://portal.test/Login/SamlMetadata", stub.LastSp!.EntityId);
+
+        var complete = await client.PostAsJsonAsync("api/v1/sso/saml/complete", new { samlResponse = "PHNhbWw+", relayState });
+        Assert.Equal(HttpStatusCode.OK, complete.StatusCode);
+        Assert.Equal(userId, (await complete.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("userId").GetGuid());
+        Assert.Equal(StubSaml.RequestId, stub.LastExpectedRequestId);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.True(await db.ExternalLogins.AnyAsync(l => l.UserId == userId && l.Provider == SsoProvider.Saml));
+
+        var replay = await client.PostAsJsonAsync("api/v1/sso/saml/complete", new { samlResponse = "PHNhbWw+", relayState });
+        Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
+    }
+
+    private async Task EnsureSamlProviderAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        if (await db.SsoProviderSettings.AnyAsync(s => s.TenantId == null && s.Provider == SsoProvider.Saml))
+            return;
+
+        var setting = new SsoProviderSetting(null, SsoProvider.Saml, "University login");
+        setting.ConfigureSaml("https://idp.test/metadata");
+        setting.SetPolicy(autoLinkByEmail: true, enforceSsoOnly: false, trustIdpMfa: false, ["tabsan.local"]);
+        setting.Enable();
+        db.SsoProviderSettings.Add(setting);
+        await db.SaveChangesAsync();
+    }
+
+    private sealed class StubSaml : ISamlClient
+    {
+        public const string RequestId = "_integration-request";
+        public ExternalIdentity? Identity { get; init; }
+        public SamlServiceProvider? LastSp { get; private set; }
+        public string? LastExpectedRequestId { get; private set; }
+
+        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default)
+        {
+            LastSp = sp;
+            return Task.FromResult(new SamlAuthnRequest($"https://idp.test/sso?SAMLRequest=x&RelayState={relayState}", RequestId));
+        }
+
+        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId, CancellationToken ct = default)
+        {
+            LastExpectedRequestId = expectedRequestId;
+            return Identity is null ? throw new SsoProtocolException("no identity") : Task.FromResult(Identity);
+        }
+
+        public string BuildServiceProviderMetadata(SamlServiceProvider sp) => "<md/>";
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -168,7 +255,7 @@ public class SsoIntegrationTests
 
     private sealed class StubOidc : IOidcClient
     {
-        public OidcIdentity? Identity { get; init; }
+        public ExternalIdentity? Identity { get; init; }
 
         public Task<string> BuildAuthorizationUrlAsync(OidcProviderConfig provider, string redirectUri, string state, string nonce, string codeChallenge, CancellationToken ct = default)
         {
@@ -176,7 +263,7 @@ public class SsoIntegrationTests
             return Task.FromResult($"https://idp.stub/authorize?state={state}&code_challenge={codeChallenge}");
         }
 
-        public Task<OidcIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
-            => Identity is null ? throw new OidcException("no identity") : Task.FromResult(Identity);
+        public Task<ExternalIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
+            => Identity is null ? throw new SsoProtocolException("no identity") : Task.FromResult(Identity);
     }
 }

@@ -45,6 +45,22 @@ public sealed class SsoController : ControllerBase
     public async Task<IActionResult> CompleteMfa([FromBody] SsoMfaRequest request, CancellationToken ct)
         => ToActionResult(await _sso.CompleteMfaAsync(request, ClientIp(), ct));
 
+    /// <summary>POST /api/v1/sso/saml/complete — validates the SAMLResponse relayed from the portal ACS (Stage M1.3).</summary>
+    [HttpPost("saml/complete")]
+    [RequestSizeLimit(512_000)]
+    public async Task<IActionResult> CompleteSaml([FromBody] SsoSamlCompleteRequest request, CancellationToken ct)
+        => ToActionResult(await _sso.CompleteSamlAsync(request, ClientIp(), ct));
+
+    /// <summary>GET /api/v1/sso/saml/metadata?acs=URL&amp;tenant=CODE — SP metadata XML for the IdP administrator.</summary>
+    [HttpGet("saml/metadata")]
+    public async Task<IActionResult> SamlMetadata([FromQuery] string acs, [FromQuery] string? tenant, CancellationToken ct)
+    {
+        var xml = await _sso.GetSamlMetadataAsync(acs, tenant, ct);
+        return xml is null
+            ? NotFound()
+            : Content(xml, "application/samlmetadata+xml");
+    }
+
     private string? ClientIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
 
     private IActionResult ToActionResult(SsoResult result)

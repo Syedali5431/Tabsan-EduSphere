@@ -86,7 +86,7 @@ public class SsoSignInTests
 
         var act = () => client.RedeemCodeAsync(idp.Config, "c", Callback, "v", "expected");
 
-        await act.Should().ThrowAsync<OidcException>().WithMessage("*nonce*");
+        await act.Should().ThrowAsync<SsoProtocolException>().WithMessage("*nonce*");
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class SsoSignInTests
 
         var act = () => client.RedeemCodeAsync(idp.Config, "c", Callback, "v", "n");
 
-        await act.Should().ThrowAsync<OidcException>();
+        await act.Should().ThrowAsync<SsoProtocolException>();
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class SsoSignInTests
 
         var act = () => client.RedeemCodeAsync(idp.Config, "c", Callback, "v", "n");
 
-        await act.Should().ThrowAsync<OidcException>();
+        await act.Should().ThrowAsync<SsoProtocolException>();
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class SsoSignInTests
 
         var act = () => client.RedeemCodeAsync(idp.Config, "c", Callback, "v", "n");
 
-        await act.Should().ThrowAsync<OidcException>();
+        await act.Should().ThrowAsync<SsoProtocolException>();
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class SsoSignInTests
 
         var act = () => client.RedeemCodeAsync(idp.Config, "c", Callback, "v", "n");
 
-        await act.Should().ThrowAsync<OidcException>().WithMessage("*HTTP 400*");
+        await act.Should().ThrowAsync<SsoProtocolException>().WithMessage("*HTTP 400*");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -187,7 +187,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.Google, enabled: false);
 
         (await h.Service.StartAsync(new SsoStartRequest("Google", Callback))).Failure.Should().Be(SsoFailureReason.ProviderUnavailable);
-        (await h.Service.StartAsync(new SsoStartRequest("Saml", Callback))).Failure.Should().Be(SsoFailureReason.ProviderUnavailable);
+        (await h.Service.StartAsync(new SsoStartRequest("Saml", Acs))).Failure.Should().Be(SsoFailureReason.ProviderUnavailable);
         (await h.Service.StartAsync(new SsoStartRequest("Nope", Callback))).Failure.Should().Be(SsoFailureReason.ProviderUnavailable);
         (await h.Service.StartAsync(new SsoStartRequest("99", Callback))).Failure.Should().Be(SsoFailureReason.ProviderUnavailable);
     }
@@ -216,7 +216,7 @@ public class SsoSignInTests
         var user = h.AddUser("ali@uni.edu");
         h.Link(SsoProvider.Microsoft, "sub-1", user);
 
-        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", "ali@uni.edu", true, "Ali", false));
+        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", "ali@uni.edu", true, "Ali", false));
 
         result.IsSuccess.Should().BeTrue();
         h.Auth.Calls.Should().ContainSingle().Which.UserId.Should().Be(user.Id);
@@ -229,7 +229,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.Microsoft, enabled: true);
         var user = h.AddUser("ali@uni.edu");
         h.Link(SsoProvider.Microsoft, "sub-1", user);
-        h.Oidc.Identity = new OidcIdentity("sub-1", null, false, null, false);
+        h.Oidc.Identity = new ExternalIdentity("sub-1", null, false, null, false);
 
         var (start, _) = await h.Service.StartAsync(new SsoStartRequest("Microsoft", Callback));
         (await h.Service.CompleteAsync(new SsoCompleteRequest(start!.State, "c"), null)).IsSuccess.Should().BeTrue();
@@ -269,7 +269,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.Google, enabled: true);
         h.AddUser("ali@uni.edu");
 
-        var result = await h.RoundTripAsync(SsoProvider.Google, new OidcIdentity("g-1", "ali@uni.edu", true, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Google, new ExternalIdentity("g-1", "ali@uni.edu", true, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.AccountNotLinked);
         h.Repo.Links.Should().BeEmpty();
@@ -282,7 +282,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.Google, enabled: true, autoLink: true);
         var user = h.AddUser("ali@uni.edu");
 
-        var result = await h.RoundTripAsync(SsoProvider.Google, new OidcIdentity("g-1", "ali@uni.edu", true, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Google, new ExternalIdentity("g-1", "ali@uni.edu", true, null, false));
 
         result.IsSuccess.Should().BeTrue();
         h.Repo.Links.Should().ContainSingle(l => l.UserId == user.Id && l.ExternalSubjectId == "g-1");
@@ -296,7 +296,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.GenericOidc, enabled: true, autoLink: true);
         h.AddUser("ali@uni.edu");
 
-        var result = await h.RoundTripAsync(SsoProvider.GenericOidc, new OidcIdentity("x-1", "ali@uni.edu", false, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.GenericOidc, new ExternalIdentity("x-1", "ali@uni.edu", false, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.AccountNotLinked);
     }
@@ -308,7 +308,7 @@ public class SsoSignInTests
         h.AddSetting(SsoProvider.Google, enabled: true, autoLink: true);
         h.AddUser("ali@uni.edu", tenantId: Guid.NewGuid());
 
-        var result = await h.RoundTripAsync(SsoProvider.Google, new OidcIdentity("g-1", "ali@uni.edu", true, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Google, new ExternalIdentity("g-1", "ali@uni.edu", true, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.AccountNotLinked);
     }
@@ -321,7 +321,7 @@ public class SsoSignInTests
         var user = h.AddUser("ali@uni.edu");
         h.Link(SsoProvider.Google, "original-subject", user);
 
-        var result = await h.RoundTripAsync(SsoProvider.Google, new OidcIdentity("attacker-subject", "ali@uni.edu", true, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Google, new ExternalIdentity("attacker-subject", "ali@uni.edu", true, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.AccountNotLinked);
         h.Repo.Links.Should().ContainSingle();
@@ -336,7 +336,7 @@ public class SsoSignInTests
         var user = h.AddUser("ali@gmail.com");
         h.Link(SsoProvider.Google, "g-1", user);
 
-        var result = await h.RoundTripAsync(SsoProvider.Google, new OidcIdentity("g-1", "ali@gmail.com", true, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Google, new ExternalIdentity("g-1", "ali@gmail.com", true, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.EmailDomainNotAllowed);
         h.Auth.Calls.Should().BeEmpty();
@@ -350,11 +350,11 @@ public class SsoSignInTests
         var user = h.AddUser("ali@uni.edu");
         h.Link(SsoProvider.Microsoft, "sub-1", user);
 
-        await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", null, false, null, MfaAsserted: true));
+        await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", null, false, null, MfaAsserted: true));
         h.Auth.Calls.Last().MfaSatisfied.Should().BeFalse("TrustIdpMfa is off");
 
         setting.SetPolicy(false, false, trustIdpMfa: true, null);
-        await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", null, false, null, MfaAsserted: true));
+        await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", null, false, null, MfaAsserted: true));
         h.Auth.Calls.Last().MfaSatisfied.Should().BeTrue();
     }
 
@@ -367,7 +367,7 @@ public class SsoSignInTests
         h.Link(SsoProvider.Microsoft, "sub-1", user);
         h.Auth.RequireTotp = "123456";
 
-        var first = await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", null, false, null, false));
+        var first = await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", null, false, null, false));
         first.FailureReason.Should().Be(SsoFailureReason.MfaCodeRequired);
         first.MfaTicket.Should().NotBeNullOrWhiteSpace();
 
@@ -391,7 +391,7 @@ public class SsoSignInTests
         h.Link(SsoProvider.Microsoft, "sub-1", user);
         h.Auth.RequireTotp = "123456";
 
-        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", null, false, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", null, false, null, false));
         for (var i = 0; i < 10 && result.MfaTicket is not null; i++)
             result = await h.Service.CompleteMfaAsync(new SsoMfaRequest(result.MfaTicket, "000000"), null);
 
@@ -408,7 +408,7 @@ public class SsoSignInTests
         h.Link(SsoProvider.Microsoft, "sub-1", user);
         h.Auth.FailWith = LoginFailureReason.ConcurrencyLimitReached;
 
-        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new OidcIdentity("sub-1", null, false, null, false));
+        var result = await h.RoundTripAsync(SsoProvider.Microsoft, new ExternalIdentity("sub-1", null, false, null, false));
 
         result.FailureReason.Should().Be(SsoFailureReason.LoginRejected);
         result.LoginFailure.Should().Be(LoginFailureReason.ConcurrencyLimitReached);
@@ -424,6 +424,102 @@ public class SsoSignInTests
 
         setting.ConfigureOidc("c", "https://login.microsoftonline.com/11111111-2222-3333-4444-555555555555/v2.0");
         setting.Authority.Should().Contain("11111111");
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // SsoSignInService — SAML 2.0 (Stage M1.3)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private const string Acs = "https://portal.uni.edu/Login/SamlAcs";
+
+    [Fact]
+    public async Task Saml_ProvidersIncludeCompleteSamlSetting()
+    {
+        var h = new Harness();
+        h.AddSetting(SsoProvider.Saml, enabled: true);
+
+        (await h.Service.GetProvidersAsync(null)).Select(p => p.Provider).Should().Equal("Saml");
+    }
+
+    [Fact]
+    public async Task Saml_StartRequiresAcsPath_AndOidcRejectsAcsPath()
+    {
+        var h = new Harness();
+        h.AddSetting(SsoProvider.Saml, enabled: true);
+        h.AddSetting(SsoProvider.Google, enabled: true);
+
+        (await h.Service.StartAsync(new SsoStartRequest("Saml", Callback))).Failure.Should().Be(SsoFailureReason.InvalidRedirectUri);
+        (await h.Service.StartAsync(new SsoStartRequest("Google", Acs))).Failure.Should().Be(SsoFailureReason.InvalidRedirectUri);
+        (await h.Service.StartAsync(new SsoStartRequest("saml", Acs))).Response.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Saml_EntityIdIsDerivedFromAcsAndTenant()
+    {
+        var h = new Harness(tenantId: Guid.NewGuid());
+        h.AddSetting(SsoProvider.Saml, enabled: true);
+
+        var (start, _) = await h.Service.StartAsync(new SsoStartRequest("Saml", Acs, "UNI"));
+
+        start.Should().NotBeNull();
+        start!.AuthorizationUrl.Should().StartWith("https://idp.uni.edu/sso");
+        h.Saml.LastSp.Should().Be(new SamlServiceProvider("https://portal.uni.edu/Login/SamlMetadata?tenant=UNI", Acs));
+        h.Saml.LastRelayState.Should().Be(start.State);
+    }
+
+    [Fact]
+    public async Task Saml_RoundTrip_ValidatesAgainstStoredRequest_AndAutoLinks()
+    {
+        var h = new Harness();
+        h.AddSetting(SsoProvider.Saml, enabled: true, autoLink: true);
+        var user = h.AddUser("ali@uni.edu");
+        h.Saml.Identity = new ExternalIdentity("nameid-1", "ali@uni.edu", true, "Ali", false);
+
+        var (start, _) = await h.Service.StartAsync(new SsoStartRequest("Saml", Acs));
+        var result = await h.Service.CompleteSamlAsync(new SsoSamlCompleteRequest("PHNhbWw+", start!.State), "10.0.0.1");
+
+        result.IsSuccess.Should().BeTrue();
+        h.Saml.LastExpectedRequestId.Should().Be(FakeSaml.RequestId);
+        h.Saml.LastValidatedSp!.AcsUrl.Should().Be(Acs);
+        h.Repo.Links.Should().ContainSingle(l => l.UserId == user.Id && l.Provider == SsoProvider.Saml && l.ExternalSubjectId == "nameid-1");
+    }
+
+    [Fact]
+    public async Task Saml_InvalidAssertion_Fails()
+    {
+        var h = new Harness();
+        h.AddSetting(SsoProvider.Saml, enabled: true);
+
+        var (start, _) = await h.Service.StartAsync(new SsoStartRequest("Saml", Acs));
+        var result = await h.Service.CompleteSamlAsync(new SsoSamlCompleteRequest("PHNhbWw+", start!.State), null);
+
+        result.FailureReason.Should().Be(SsoFailureReason.TokenValidationFailed);
+    }
+
+    [Fact]
+    public async Task StateCannotCrossProtocols()
+    {
+        var h = new Harness();
+        h.AddSetting(SsoProvider.Saml, enabled: true);
+        h.AddSetting(SsoProvider.Google, enabled: true);
+
+        var (oidc, _) = await h.Service.StartAsync(new SsoStartRequest("Google", Callback));
+        (await h.Service.CompleteSamlAsync(new SsoSamlCompleteRequest("x", oidc!.State), null))
+            .FailureReason.Should().Be(SsoFailureReason.InvalidState);
+
+        var (saml, _) = await h.Service.StartAsync(new SsoStartRequest("Saml", Acs));
+        (await h.Service.CompleteAsync(new SsoCompleteRequest(saml!.State, "code"), null))
+            .FailureReason.Should().Be(SsoFailureReason.InvalidState);
+    }
+
+    [Fact]
+    public async Task SamlMetadata_OnlyForAllowedAcs()
+    {
+        var h = new Harness();
+
+        (await h.Service.GetSamlMetadataAsync("https://evil.example.com/steal", null)).Should().BeNull();
+        (await h.Service.GetSamlMetadataAsync(Callback, null)).Should().BeNull();
+        (await h.Service.GetSamlMetadataAsync(Acs, null)).Should().Be("<md for https://portal.uni.edu/Login/SamlMetadata>");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -510,6 +606,7 @@ public class SsoSignInTests
         public readonly Guid? TenantId;
         public readonly FakeSsoRepo Repo = new();
         public readonly FakeOidc Oidc = new();
+        public readonly FakeSaml Saml = new();
         public readonly FakeAuth Auth = new();
         public readonly FakeAudit Audit = new();
         private readonly List<User> _users = new();
@@ -523,7 +620,7 @@ public class SsoSignInTests
             {
                 ["GetByEmailAsync"] = a => Task.FromResult(_users.FirstOrDefault(u => string.Equals(u.Email, (string)a[0]!, StringComparison.OrdinalIgnoreCase)))
             });
-            Service = new SsoSignInService(Repo, Oidc, new PlainEncryption(), users, Auth, Audit.Service,
+            Service = new SsoSignInService(Repo, Oidc, Saml, new PlainEncryption(), users, Auth, Audit.Service,
                 new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions())),
                 Options.Create(new AuthSecurityOptions()));
         }
@@ -531,10 +628,17 @@ public class SsoSignInTests
         public SsoProviderSetting AddSetting(SsoProvider provider, bool enabled, bool autoLink = false)
         {
             var s = new SsoProviderSetting(TenantId, provider, provider + " login");
-            s.ConfigureOidc("client", provider == SsoProvider.Microsoft
-                ? "https://login.microsoftonline.com/contoso.edu/v2.0"
-                : "https://idp.uni.edu");
-            s.SetEncryptedClientSecret("enc:secret");
+            if (provider == SsoProvider.Saml)
+            {
+                s.ConfigureSaml("https://idp.uni.edu/metadata.xml");
+            }
+            else
+            {
+                s.ConfigureOidc("client", provider == SsoProvider.Microsoft
+                    ? "https://login.microsoftonline.com/contoso.edu/v2.0"
+                    : "https://idp.uni.edu");
+                s.SetEncryptedClientSecret("enc:secret");
+            }
             s.SetPolicy(autoLink, false, false, null);
             if (enabled) s.Enable();
             Repo.Settings.Add(s);
@@ -553,7 +657,7 @@ public class SsoSignInTests
         public void Link(SsoProvider provider, string subject, User user)
             => Repo.Links.Add(new ExternalLogin(TenantId, user.Id, provider, subject, user.Email));
 
-        public async Task<SsoResult> RoundTripAsync(SsoProvider provider, OidcIdentity? identity)
+        public async Task<SsoResult> RoundTripAsync(SsoProvider provider, ExternalIdentity? identity)
         {
             Oidc.Identity = identity;
             var (start, failure) = await Service.StartAsync(new SsoStartRequest(provider.ToString(), Callback, TenantId is null ? null : "UNI"));
@@ -564,7 +668,7 @@ public class SsoSignInTests
 
     private sealed class FakeOidc : IOidcClient
     {
-        public OidcIdentity? Identity { get; set; }
+        public ExternalIdentity? Identity { get; set; }
         public bool Throw { get; set; }
         public string? LastChallenge, LastNonce, LastVerifier, LastExpectedNonce;
 
@@ -576,16 +680,39 @@ public class SsoSignInTests
             return Task.FromResult("https://idp.test/authorize?state=" + state);
         }
 
-        public Task<OidcIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
+        public Task<ExternalIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
         {
             LastVerifier = codeVerifier;
             LastExpectedNonce = expectedNonce;
             redirectUri.Should().Be(Callback);
-            if (Throw || Identity is null) throw new OidcException("bad token");
+            if (Throw || Identity is null) throw new SsoProtocolException("bad token");
             return Task.FromResult(Identity);
         }
     }
 
+    private sealed class FakeSaml : ISamlClient
+    {
+        public const string RequestId = "_req-1";
+        public ExternalIdentity? Identity { get; set; }
+        public SamlServiceProvider? LastSp, LastValidatedSp;
+        public string? LastRelayState, LastExpectedRequestId;
+
+        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default)
+        {
+            LastSp = sp;
+            LastRelayState = relayState;
+            return Task.FromResult(new SamlAuthnRequest("https://idp.uni.edu/sso?SAMLRequest=x&RelayState=" + relayState, RequestId));
+        }
+
+        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId, CancellationToken ct = default)
+        {
+            LastValidatedSp = sp;
+            LastExpectedRequestId = expectedRequestId;
+            return Identity is null ? throw new SsoProtocolException("bad assertion") : Task.FromResult(Identity);
+        }
+
+        public string BuildServiceProviderMetadata(SamlServiceProvider sp) => $"<md for {sp.EntityId}>";
+    }
     private sealed class FakeSsoRepo : ISsoRepository
     {
         public readonly List<SsoProviderSetting> Settings = new();

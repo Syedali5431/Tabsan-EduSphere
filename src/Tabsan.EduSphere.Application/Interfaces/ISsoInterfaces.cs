@@ -4,23 +4,26 @@ using Tabsan.EduSphere.Domain.Identity;
 
 namespace Tabsan.EduSphere.Application.Interfaces;
 
-// Plan M1 Stage M1.2 — SSO contracts.
+// Plan M1 Stages M1.2 (OIDC) and M1.3 (SAML 2.0) — SSO contracts.
 
 /// <summary>Connection details for one OpenID Connect provider (client secret already decrypted).</summary>
 public sealed record OidcProviderConfig(string Authority, string ClientId, string ClientSecret);
 
-/// <summary>Identity asserted by a validated id_token.</summary>
-public sealed record OidcIdentity(
+/// <summary>
+/// Identity asserted by a validated id_token (OIDC) or signed assertion (SAML).
+/// <see cref="Subject"/> is the provider's stable identifier for the person.
+/// </summary>
+public sealed record ExternalIdentity(
     string Subject,
     string? Email,
     bool EmailVerified,
     string? Name,
     bool MfaAsserted);
 
-/// <summary>Raised when an OIDC exchange or id_token validation fails. The message is safe to log, not to show.</summary>
-public sealed class OidcException : Exception
+/// <summary>Raised when an SSO protocol exchange or token/assertion validation fails. The message is safe to log, not to show.</summary>
+public sealed class SsoProtocolException : Exception
 {
-    public OidcException(string message, Exception? inner = null) : base(message, inner) { }
+    public SsoProtocolException(string message, Exception? inner = null) : base(message, inner) { }
 }
 
 /// <summary>
@@ -36,11 +39,41 @@ public interface IOidcClient
 
     /// <summary>
     /// Redeems the authorization code and validates the returned id_token
-    /// (signature, issuer, audience, lifetime, nonce). Throws <see cref="OidcException"/> on failure.
+    /// (signature, issuer, audience, lifetime, nonce). Throws <see cref="SsoProtocolException"/> on failure.
     /// </summary>
-    Task<OidcIdentity> RedeemCodeAsync(
+    Task<ExternalIdentity> RedeemCodeAsync(
         OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce,
         CancellationToken ct = default);
+}
+
+/// <summary>
+/// SAML 2.0 service-provider endpoints for one portal origin (and tenant).
+/// The entity ID is always derived from the ACS URL — never taken from a caller —
+/// so an assertion issued to a different service provider can never match our audience.
+/// </summary>
+public sealed record SamlServiceProvider(string EntityId, string AcsUrl);
+
+/// <summary>A SAML AuthnRequest ready to send: browser redirect URL plus the request ID to expect in InResponseTo.</summary>
+public sealed record SamlAuthnRequest(string RedirectUrl, string RequestId);
+
+/// <summary>SAML 2.0 service-provider protocol operations (HTTP-Redirect requests, HTTP-POST responses).</summary>
+public interface ISamlClient
+{
+    /// <summary>Builds an AuthnRequest for the IdP described by <paramref name="idpMetadataUrl"/>.</summary>
+    Task<SamlAuthnRequest> BuildAuthnRequestAsync(
+        string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default);
+
+    /// <summary>
+    /// Validates a base64 SAMLResponse: IdP signature (certificates from metadata), issuer,
+    /// audience, validity window, destination/recipient, success status and InResponseTo.
+    /// Throws <see cref="SsoProtocolException"/> on any failure.
+    /// </summary>
+    Task<ExternalIdentity> ValidateResponseAsync(
+        string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
+        CancellationToken ct = default);
+
+    /// <summary>Service-provider metadata XML to register at the IdP.</summary>
+    string BuildServiceProviderMetadata(SamlServiceProvider sp);
 }
 
 /// <summary>Persistence for SSO provider settings and external login links.</summary>
@@ -69,4 +102,10 @@ public interface ISsoSignInService
 
     /// <summary>Second step for users with TOTP enabled.</summary>
     Task<SsoResult> CompleteMfaAsync(SsoMfaRequest request, string? ipAddress, CancellationToken ct = default);
+
+    /// <summary>Completes a SAML sign-in from the SAMLResponse the IdP posted to the portal's ACS.</summary>
+    Task<SsoResult> CompleteSamlAsync(SsoSamlCompleteRequest request, string? ipAddress, CancellationToken ct = default);
+
+    /// <summary>Service-provider metadata for the given ACS URL / tenant, or null when the ACS URL or tenant is not allowed.</summary>
+    Task<string?> GetSamlMetadataAsync(string acsUrl, string? tenantCode, CancellationToken ct = default);
 }

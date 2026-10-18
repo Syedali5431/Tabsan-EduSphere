@@ -168,6 +168,8 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
             // Plan M1: SSO tests swap in a stub identity provider through this switch.
             services.AddSingleton<SwitchableOidcClient>();
             services.Replace(ServiceDescriptor.Transient<IOidcClient>(sp => sp.GetRequiredService<SwitchableOidcClient>()));
+            services.AddSingleton<SwitchableSamlClient>();
+            services.Replace(ServiceDescriptor.Transient<ISamlClient>(sp => sp.GetRequiredService<SwitchableSamlClient>()));
         });
     }
 

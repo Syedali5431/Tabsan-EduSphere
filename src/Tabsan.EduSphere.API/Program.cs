@@ -355,6 +355,8 @@ builder.Services.AddDataProtection().SetApplicationName("Tabsan.EduSphere.API");
 builder.Services.AddScoped<ITwoFactorStateStore, TwoFactorStateStore>();
 // Plan M1 Stage M1.2 — OpenID Connect single sign-on.
 builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.IOidcClient, Tabsan.EduSphere.Infrastructure.Auth.OidcClient>(client => client.Timeout = TimeSpan.FromSeconds(15));
+// Plan M1 Stage M1.3 — SAML 2.0 (IdP metadata fetched over this client).
+builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.ISamlClient, Tabsan.EduSphere.Infrastructure.Auth.SamlClient>(client => client.Timeout = TimeSpan.FromSeconds(15));
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoRepository, Tabsan.EduSphere.Infrastructure.Repositories.SsoRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoSignInService, Tabsan.EduSphere.Application.Auth.SsoSignInService>();
 builder.Services.AddScoped<TwoFactorService>();

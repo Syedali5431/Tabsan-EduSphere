@@ -29,7 +29,7 @@ public sealed class OidcClient : IOidcClient
     {
         var discovery = await GetDiscoveryAsync(provider.Authority, ct);
         if (string.IsNullOrWhiteSpace(discovery.AuthorizationEndpoint))
-            throw new OidcException("Discovery document has no authorization_endpoint.");
+            throw new SsoProtocolException("Discovery document has no authorization_endpoint.");
 
         return QueryHelpers.AddQueryString(discovery.AuthorizationEndpoint, new Dictionary<string, string?>
         {
@@ -46,13 +46,13 @@ public sealed class OidcClient : IOidcClient
         });
     }
 
-    public async Task<OidcIdentity> RedeemCodeAsync(
+    public async Task<ExternalIdentity> RedeemCodeAsync(
         OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce,
         CancellationToken ct = default)
     {
         var discovery = await GetDiscoveryAsync(provider.Authority, ct);
         if (string.IsNullOrWhiteSpace(discovery.TokenEndpoint))
-            throw new OidcException("Discovery document has no token_endpoint.");
+            throw new SsoProtocolException("Discovery document has no token_endpoint.");
 
         using var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -70,33 +70,33 @@ public sealed class OidcClient : IOidcClient
             using var response = await _http.PostAsync(discovery.TokenEndpoint, form, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
-                throw new OidcException($"Token endpoint returned HTTP {(int)response.StatusCode}: {Truncate(body)}");
+                throw new SsoProtocolException($"Token endpoint returned HTTP {(int)response.StatusCode}: {Truncate(body)}");
 
             using var json = JsonDocument.Parse(body);
             idToken = json.RootElement.TryGetProperty("id_token", out var t) && t.ValueKind == JsonValueKind.String
                 ? t.GetString()!
-                : throw new OidcException("Token response has no id_token.");
+                : throw new SsoProtocolException("Token response has no id_token.");
         }
         catch (HttpRequestException ex)
         {
-            throw new OidcException("Token endpoint unreachable.", ex);
+            throw new SsoProtocolException("Token endpoint unreachable.", ex);
         }
         catch (JsonException ex)
         {
-            throw new OidcException("Token response is not valid JSON.", ex);
+            throw new SsoProtocolException("Token response is not valid JSON.", ex);
         }
 
         var claims = await ValidateIdTokenAsync(provider, discovery, idToken, ct);
 
         var nonce = claims.TryGetValue("nonce", out var n) ? n as string : null;
         if (!string.Equals(nonce, expectedNonce, StringComparison.Ordinal))
-            throw new OidcException("id_token nonce mismatch.");
+            throw new SsoProtocolException("id_token nonce mismatch.");
 
         // Entra ID: 'oid' is the immutable per-directory object id; 'sub' is pairwise per app. Prefer oid.
         var subject = (claims.TryGetValue("oid", out var oid) ? oid as string : null)
                       ?? (claims.TryGetValue("sub", out var sub) ? sub as string : null);
         if (string.IsNullOrWhiteSpace(subject))
-            throw new OidcException("id_token has no subject.");
+            throw new SsoProtocolException("id_token has no subject.");
 
         var email = claims.TryGetValue("email", out var e) ? e as string : null;
         if (string.IsNullOrWhiteSpace(email) && IsMicrosoftIssuer(discovery.Issuer))
@@ -107,7 +107,7 @@ public sealed class OidcClient : IOidcClient
             email = preferred is not null && preferred.Contains('@') ? preferred : null;
         }
 
-        return new OidcIdentity(
+        return new ExternalIdentity(
             Subject: subject,
             Email: string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
             EmailVerified: IsTrue(claims, "email_verified"),
@@ -145,7 +145,7 @@ public sealed class OidcClient : IOidcClient
         }
 
         if (!result.IsValid)
-            throw new OidcException("id_token validation failed: " + (result.Exception?.Message ?? "unknown"), result.Exception);
+            throw new SsoProtocolException("id_token validation failed: " + (result.Exception?.Message ?? "unknown"), result.Exception);
 
         return result.Claims;
     }
@@ -167,7 +167,7 @@ public sealed class OidcClient : IOidcClient
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            throw new OidcException($"Could not load OpenID configuration for {authority}.", ex);
+            throw new SsoProtocolException($"Could not load OpenID configuration for {authority}.", ex);
         }
     }
 

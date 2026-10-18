@@ -10,11 +10,11 @@ public sealed class SwitchableOidcClient : IOidcClient
 {
     public IOidcClient? Inner { get; set; }
 
-    private IOidcClient Current => Inner ?? throw new OidcException("No identity provider stub installed for this test.");
+    private IOidcClient Current => Inner ?? throw new SsoProtocolException("No identity provider stub installed for this test.");
 
     public Task<string> BuildAuthorizationUrlAsync(OidcProviderConfig provider, string redirectUri, string state, string nonce, string codeChallenge, CancellationToken ct = default)
         => Current.BuildAuthorizationUrlAsync(provider, redirectUri, state, nonce, codeChallenge, ct);
 
-    public Task<OidcIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
+    public Task<ExternalIdentity> RedeemCodeAsync(OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce, CancellationToken ct = default)
         => Current.RedeemCodeAsync(provider, code, redirectUri, codeVerifier, expectedNonce, ct);
 }
