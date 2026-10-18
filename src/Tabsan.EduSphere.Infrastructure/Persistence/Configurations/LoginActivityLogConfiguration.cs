@@ -22,6 +22,7 @@ public class LoginActivityLogConfiguration : IEntityTypeConfiguration<LoginActiv
         builder.Property(x => x.IsSuccess).IsRequired();
         builder.Property(x => x.FailureReason).HasMaxLength(50);
         builder.Property(x => x.RiskLevel).HasMaxLength(20);
+        builder.Property(x => x.AuthMethod).HasMaxLength(32); // Plan M1
 
         // Filter by user for per-user activity history.
         builder.HasIndex(x => x.UserId)

@@ -106,7 +106,10 @@ public enum LoginFailureReason
     MfaCodeRequired,
 
     /// <summary>User has MFA enabled and provided a code, but the TOTP validation failed.</summary>
-    InvalidMfaCode
+    InvalidMfaCode,
+
+    /// <summary>Plan M1.4: password was correct but the institution requires single sign-on for this user.</summary>
+    SsoRequired
 }
 
 /// <summary>

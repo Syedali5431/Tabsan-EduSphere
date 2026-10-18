@@ -105,8 +105,13 @@ public class LoginController : Controller
                 var mfaCodeNeeded = response.StatusCode == System.Net.HttpStatusCode.BadRequest
                     || response.StatusCode == System.Net.HttpStatusCode.PreconditionRequired
                     || isInvalidMfaCode;
+                // Plan M1.4: correct password, but the institution requires single sign-on for this account.
+                var ssoRequired = response.StatusCode == System.Net.HttpStatusCode.Forbidden
+                    && (await response.Content.ReadAsStringAsync(ct)).Contains("SSO_REQUIRED", StringComparison.Ordinal);
 
-                ViewData["Error"] = response.StatusCode switch
+                ViewData["Error"] = ssoRequired
+                    ? "Your institution requires single sign-on. Use your organization's sign-in button below."
+                    : response.StatusCode switch
                 {
                     System.Net.HttpStatusCode.BadRequest
                         => "This account requires an authenticator code. Enter it below and sign in again.",

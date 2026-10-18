@@ -28,6 +28,7 @@ public sealed class LoginActivityItemDto
     public string? FailureReason { get; set; }
     public string? RiskLevel { get; set; }
     public bool UserIsLockedOut { get; set; }
+    public string? AuthMethod { get; set; }
 }
 
 /// <summary>Phase 3: Paged result wrapper for login activity queries.</summary>

@@ -63,7 +63,8 @@ public class LoginActivityService : ILoginActivityService
                 IsSuccess = x.IsSuccess,
                 FailureReason = x.FailureReason,
                 RiskLevel = x.RiskLevel,
-                UserIsLockedOut = x.UserIsLockedOut
+                UserIsLockedOut = x.UserIsLockedOut,
+                AuthMethod = x.AuthMethod
             })
             .ToListAsync(ct);
 

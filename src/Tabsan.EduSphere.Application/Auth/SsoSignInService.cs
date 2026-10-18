@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Tabsan.EduSphere.Application.DTOs.Auth;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Domain.Activity;
 using Tabsan.EduSphere.Domain.Auditing;
 using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Identity;
@@ -42,6 +43,7 @@ public sealed class SsoSignInService : ISsoSignInService
     private readonly IAuditService _audit;
     private readonly IDistributedCache _cache;
     private readonly SsoSettings _settings;
+    private readonly ILoginActivityRepository? _loginActivity;
 
     public SsoSignInService(
         ISsoRepository repo,
@@ -52,7 +54,8 @@ public sealed class SsoSignInService : ISsoSignInService
         IAuthService auth,
         IAuditService audit,
         IDistributedCache cache,
-        IOptions<AuthSecurityOptions> security)
+        IOptions<AuthSecurityOptions> security,
+        ILoginActivityRepository? loginActivity = null)
     {
         _repo = repo;
         _oidc = oidc;
@@ -63,6 +66,7 @@ public sealed class SsoSignInService : ISsoSignInService
         _audit = audit;
         _cache = cache;
         _settings = security.Value.Sso;
+        _loginActivity = loginActivity;
     }
 
     // ── Providers ────────────────────────────────────────────────────────────
@@ -384,6 +388,26 @@ public sealed class SsoSignInService : ISsoSignInService
             "SsoLoginFailed", "User", entityId: null,
             newValuesJson: JsonSerializer.Serialize(new { reason = reason.ToString(), provider = provider?.ToString(), detail }),
             ipAddress: ipAddress), ct);
+
+        // Plan M1.4: SSO failures appear in login activity next to password failures (security monitoring).
+        if (_loginActivity is not null)
+        {
+            try
+            {
+                var method = "sso:" + (provider?.ToString() ?? "unknown");
+                var username = detail is not null && detail.Contains('@') && detail.Length <= 100 ? detail : method;
+                await _loginActivity.AddAsync(new LoginActivityLog(
+                    null, username, DateTime.UtcNow, ipAddress, null, null,
+                    isSuccess: false, failureReason: "Sso" + reason, riskLevel: null, userIsLockedOut: false,
+                    authMethod: method), ct);
+                await _loginActivity.SaveChangesAsync(ct);
+            }
+            catch
+            {
+                // Non-fatal — like AuthService, activity recording must never break sign-in handling.
+            }
+        }
+
         return SsoResult.Fail(reason);
     }
 

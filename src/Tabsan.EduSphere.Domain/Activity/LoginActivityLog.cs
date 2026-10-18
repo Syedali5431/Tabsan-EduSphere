@@ -44,6 +44,9 @@ public class LoginActivityLog : BaseEntity
     /// <summary>True when the user account was in a locked-out state at the time of this attempt.</summary>
     public bool UserIsLockedOut { get; private set; }
 
+    /// <summary>Plan M1: how the user authenticated — "password" or "sso:<Provider>". Null for rows recorded before Plan M1.</summary>
+    public string? AuthMethod { get; private set; }
+
     private LoginActivityLog() { }
 
     /// <summary>Records a login attempt with all available context.</summary>
@@ -57,7 +60,8 @@ public class LoginActivityLog : BaseEntity
         bool isSuccess,
         string? failureReason,
         string? riskLevel,
-        bool userIsLockedOut)
+        bool userIsLockedOut,
+        string? authMethod = null)
     {
         UserId = userId;
         Username = username;
@@ -69,5 +73,6 @@ public class LoginActivityLog : BaseEntity
         FailureReason = failureReason;
         RiskLevel = riskLevel;
         UserIsLockedOut = userIsLockedOut;
+        AuthMethod = authMethod;
     }
 }

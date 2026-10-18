@@ -85,7 +85,44 @@ public interface ISsoRepository
     Task<ExternalLogin?> FindLinkAsync(Guid? tenantId, SsoProvider provider, string externalSubjectId, CancellationToken ct = default);
     Task<bool> UserHasLinkAsync(Guid userId, SsoProvider provider, CancellationToken ct = default);
     Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default);
+
+    /// <summary>Plan M1.4: enabled settings with EnforceSsoOnly that apply to a user of <paramref name="tenantId"/> (its own + installation-wide).</summary>
+    Task<IReadOnlyList<SsoProviderSetting>> GetEnforcingSettingsAsync(Guid? tenantId, CancellationToken ct = default);
+
+    /// <summary>Plan M1.4: all external links of one user.</summary>
+    Task<IReadOnlyList<ExternalLogin>> GetLinksForUserAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Plan M1.4: removes a link (the audit log keeps the history).</summary>
+    void RemoveLink(ExternalLogin link);
     Task<int> SaveChangesAsync(CancellationToken ct = default);
+}
+
+/// <summary>Plan M1.4: decides whether a user must sign in through SSO instead of a password.</summary>
+public interface ISsoLoginPolicy
+{
+    /// <summary>
+    /// True when an enabled, complete provider covering the user's tenant (or the whole installation)
+    /// has EnforceSsoOnly set, the "sso" module is active, and the user is not a SuperAdmin (break-glass).
+    /// </summary>
+    Task<bool> IsPasswordLoginBlockedAsync(User user, CancellationToken ct = default);
+}
+
+/// <summary>A user's linked external account, as shown in user settings / admin screens.</summary>
+public sealed record SsoLinkSummary(string Provider, string? Email, DateTime LinkedAt, DateTime? LastLoginAt);
+
+/// <summary>Why an unlink request was refused.</summary>
+public enum SsoUnlinkResult { Unlinked, NotFound, WouldLockOut }
+
+/// <summary>Plan M1.4: viewing and removing a user's external account links (with audit).</summary>
+public interface ISsoAccountService
+{
+    Task<IReadOnlyList<SsoLinkSummary>> GetLinksAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Removes the user's link to <paramref name="provider"/>. A self-service unlink is refused when it would
+    /// leave the user with no way to sign in (password login blocked by SSO-only and no other link).
+    /// </summary>
+    Task<SsoUnlinkResult> UnlinkAsync(Guid userId, string provider, Guid actorUserId, bool isSelfService, string? ipAddress, CancellationToken ct = default);
 }
 
 /// <summary>Orchestrates the browser SSO round trip on behalf of the web portal.</summary>

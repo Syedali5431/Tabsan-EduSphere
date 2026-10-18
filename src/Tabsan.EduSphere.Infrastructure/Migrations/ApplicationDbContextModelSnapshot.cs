@@ -1498,6 +1498,10 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<DateTime>("AttemptedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("AuthMethod")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 

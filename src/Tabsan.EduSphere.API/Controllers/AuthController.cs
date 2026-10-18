@@ -50,6 +50,10 @@ public class AuthController : ControllerBase
                 LoginFailureReason.MfaRequired
                     => StatusCode(StatusCodes.Status428PreconditionRequired, new { message = "Multi-factor authentication is required for this deployment. Provide a valid MFA code and retry." }),
 
+                // Plan M1.4: the institution requires single sign-on for this account.
+                LoginFailureReason.SsoRequired
+                    => StatusCode(StatusCodes.Status403Forbidden, new { error = "SSO_REQUIRED", message = "Your institution requires single sign-on. Sign in with your organization account." }),
+
                 LoginFailureReason.SessionRiskBlocked
                     => StatusCode(StatusCodes.Status423Locked, new { message = "This sign-in was blocked by session risk controls. Please retry from a trusted network or contact an administrator." }),
 

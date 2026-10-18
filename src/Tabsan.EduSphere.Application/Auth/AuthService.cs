@@ -29,6 +29,8 @@ public class AuthService : IAuthService
     private readonly AuthSecurityOptions _security;
     // Phase 3 - Login Activity Monitoring
     private readonly ILoginActivityRepository _loginActivity;
+    // Plan M1.4 - optional so existing constructions (tests, tools) keep working without SSO.
+    private readonly ISsoLoginPolicy? _ssoPolicy;
 
     public AuthService(
         IUserRepository userRepo,
@@ -41,7 +43,8 @@ public class AuthService : IAuthService
         ITotpService totp,
         ITwoFactorStateStore twoFactorState,
         IOptions<AuthSecurityOptions> security,
-        ILoginActivityRepository? loginActivity = null)
+        ILoginActivityRepository? loginActivity = null,
+        ISsoLoginPolicy? ssoPolicy = null)
     {
         _userRepo        = userRepo;
         _sessionRepo     = sessionRepo;
@@ -54,6 +57,7 @@ public class AuthService : IAuthService
         _twoFactorState  = twoFactorState;
         _security        = security.Value;
         _loginActivity   = loginActivity!;
+        _ssoPolicy       = ssoPolicy;
     }
 
     public Task<AuthSecurityProfileResponse> GetSecurityProfileAsync(CancellationToken ct = default)
@@ -93,7 +97,7 @@ public class AuthService : IAuthService
                 newValuesJson: "{\"reason\":\"inactive_or_not_found\",\"username\":\"" + request.Username + "\"}",
                 ipAddress: ipAddress), ct);
             await RecordLoginActivityAsync(null, request.Username, ipAddress, null, request.DeviceInfo,
-                false, nameof(LoginFailureReason.InvalidCredentials), null, false, ct);
+                false, nameof(LoginFailureReason.InvalidCredentials), null, false, ct, authMethod: "password");
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -108,7 +112,7 @@ public class AuthService : IAuthService
                 newValuesJson: "{\"reason\":\"locked_out\"}",
                 ipAddress: ipAddress), ct);
             await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
-                false, nameof(LoginFailureReason.InvalidCredentials), null, true, ct);
+                false, nameof(LoginFailureReason.InvalidCredentials), null, true, ct, authMethod: "password");
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -128,8 +132,22 @@ public class AuthService : IAuthService
                 ipAddress: ipAddress), ct);
 
             await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
-                false, nameof(LoginFailureReason.InvalidCredentials), null, user.IsCurrentlyLockedOut(), ct);
+                false, nameof(LoginFailureReason.InvalidCredentials), null, user.IsCurrentlyLockedOut(), ct, authMethod: "password");
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
+        }
+
+        // Plan M1.4: checked only after the password is verified, so the policy is not revealed to guessers.
+        if (_ssoPolicy is not null && await _ssoPolicy.IsPasswordLoginBlockedAsync(user, ct))
+        {
+            await _audit.LogAsync(new AuditLog(
+                "LoginBlockedSsoOnly",
+                "User",
+                entityId: user.Id.ToString(),
+                actorUserId: user.Id,
+                ipAddress: ipAddress), ct);
+            await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                false, nameof(LoginFailureReason.SsoRequired), null, false, ct, authMethod: "password");
+            return LoginResult.Fail(LoginFailureReason.SsoRequired);
         }
 
         return await CompleteLoginAsync(user, request.Username, request.MfaCode, mfaSatisfiedExternally: false,
@@ -159,7 +177,7 @@ public class AuthService : IAuthService
                 newValuesJson: "{\"reason\":\"sso_user_inactive_or_locked\",\"provider\":\"" + provider + "\"}",
                 ipAddress: ipAddress), ct);
             await RecordLoginActivityAsync(user?.Id, user?.Username ?? "sso:" + provider, ipAddress, null, deviceInfo,
-                false, nameof(LoginFailureReason.InvalidCredentials), null, user?.IsCurrentlyLockedOut() ?? false, ct);
+                false, nameof(LoginFailureReason.InvalidCredentials), null, user?.IsCurrentlyLockedOut() ?? false, ct, authMethod: "sso:" + provider);
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
@@ -197,7 +215,7 @@ public class AuthService : IAuthService
                     actorUserId: user.Id,
                     ipAddress: ipAddress), ct);
                 await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
-                    false, nameof(LoginFailureReason.MfaCodeRequired), null, false, ct);
+                    false, nameof(LoginFailureReason.MfaCodeRequired), null, false, ct, authMethod: loginMethod ?? "password");
                 return LoginResult.Fail(LoginFailureReason.MfaCodeRequired);
             }
 
@@ -239,7 +257,7 @@ public class AuthService : IAuthService
                         actorUserId: user.Id,
                         ipAddress: ipAddress), ct);
                     await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
-                        false, nameof(LoginFailureReason.InvalidMfaCode), null, false, ct);
+                        false, nameof(LoginFailureReason.InvalidMfaCode), null, false, ct, authMethod: loginMethod ?? "password");
                     return LoginResult.Fail(LoginFailureReason.InvalidMfaCode);
                 }
             }
@@ -263,7 +281,7 @@ public class AuthService : IAuthService
                     newValuesJson: "{\"currentIp\":\"" + (ipAddress ?? string.Empty) + "\",\"riskLevel\":\"" + riskLevel + "\"}",
                     ipAddress: ipAddress), ct);
                 await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
-                    false, nameof(LoginFailureReason.SessionRiskBlocked), riskLevel, false, ct);
+                    false, nameof(LoginFailureReason.SessionRiskBlocked), riskLevel, false, ct, authMethod: loginMethod ?? "password");
                 return LoginResult.Fail(LoginFailureReason.SessionRiskBlocked);
             }
 
@@ -294,7 +312,7 @@ public class AuthService : IAuthService
                 if (activeSessions >= license.MaxUsers)
                 {
                     await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
-                        false, nameof(LoginFailureReason.ConcurrencyLimitReached), riskLevel, false, ct);
+                        false, nameof(LoginFailureReason.ConcurrencyLimitReached), riskLevel, false, ct, authMethod: loginMethod ?? "password");
                     return LoginResult.Fail(LoginFailureReason.ConcurrencyLimitReached);
                 }
             }
@@ -327,7 +345,7 @@ public class AuthService : IAuthService
             ipAddress: ipAddress), ct);
 
         await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
-            true, null, riskLevel, false, ct);
+            true, null, riskLevel, false, ct, authMethod: loginMethod ?? "password");
 
         return LoginResult.Ok(new LoginResponse(
             AccessToken: _tokenService.GenerateAccessToken(user),
@@ -584,14 +602,14 @@ public class AuthService : IAuthService
     private async Task RecordLoginActivityAsync(
         Guid? userId, string username, string? ipAddress, string? userAgent,
         string? deviceInfo, bool isSuccess, string? failureReason,
-        string? riskLevel, bool userIsLockedOut, CancellationToken ct)
+        string? riskLevel, bool userIsLockedOut, CancellationToken ct, string? authMethod = null)
     {
         try
         {
             var entry = new LoginActivityLog(
                 userId, username, DateTime.UtcNow,
                 ipAddress, userAgent, deviceInfo,
-                isSuccess, failureReason, riskLevel, userIsLockedOut);
+                isSuccess, failureReason, riskLevel, userIsLockedOut, authMethod);
             await _loginActivity.AddAsync(entry, ct);
             await _loginActivity.SaveChangesAsync(ct);
         }

@@ -730,6 +730,11 @@ public class SsoSignInTests
         public Task<bool> UserHasLinkAsync(Guid userId, SsoProvider provider, CancellationToken ct = default)
             => Task.FromResult(Links.Any(l => l.UserId == userId && l.Provider == provider));
         public Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default) { Links.Add(link); return Task.CompletedTask; }
+        public Task<IReadOnlyList<SsoProviderSetting>> GetEnforcingSettingsAsync(Guid? tenantId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<SsoProviderSetting>>(Settings.Where(s => s.IsEnabled && s.EnforceSsoOnly && (s.TenantId == null || s.TenantId == tenantId)).ToList());
+        public Task<IReadOnlyList<ExternalLogin>> GetLinksForUserAsync(Guid userId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<ExternalLogin>>(Links.Where(l => l.UserId == userId).ToList());
+        public void RemoveLink(ExternalLogin link) => Links.Remove(link);
         public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(1);
     }
 

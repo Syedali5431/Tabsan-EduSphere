@@ -44,7 +44,7 @@ Positioning target after Plan M:
 
 | Phase | Name | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1 ✅ M1.2 ✅ M1.3 ✅ |
+| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1–M1.4 ✅ |
 | M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ⬜ |
 | M3 | SpeedGrader-style Grading Workspace | P1 | 5 dw | — | ⬜ |
 | M4 | Progressive Web App (installable + push) | P1 | 1–2 dw | — | ⬜ |
@@ -133,10 +133,23 @@ Design change from the original bullets: instead of the ASP.NET OpenIdConnect ha
 - Web integration: SAML start uses ACS + `SameSite=None; Secure` cookie, ACS POST without antiforgery signs in, foreign RelayState rejected, metadata route. Suite 16/16.
 - Not yet tried against a real IdP (Entra ID SAML / ADFS / Shibboleth) — do in M1.6 together with OIDC.
 
-### Stage M1.4 - Policy & 2FA interplay
-- [ ] `EnforceSsoOnly` blocks password login for non-SuperAdmin users of that tenant (break-glass SuperAdmin keeps password + 2FA).
+### Stage M1.4 - Policy & 2FA interplay ✅ (2026-10-18)
+- [x] `EnforceSsoOnly` blocks password login for non-SuperAdmin users of that tenant (break-glass SuperAdmin keeps password + 2FA). Rules (`SsoLoginPolicy`): applies when an **enabled, complete** provider with the flag covers the user's tenant **or the whole installation** (TenantId null); checked **after** the password is verified (policy not revealed to guessers; no failed-attempt increment); **not applied while the `sso` module is inactive** (a lapsed SSO licence can never lock an institution out). API returns 403 `SSO_REQUIRED`; portal shows "Your institution requires single sign-on…" above the SSO buttons. Audit `LoginBlockedSsoOnly`.
 - [x] SSO logins skip EduSphere TOTP when IdP asserts MFA (`amr` claim) — configurable via `TrustIdpMfa` *(done in M1.2)*.
-- [ ] Login activity + audit log entries for SSO logins / link / unlink.
+- [x] Login activity + audit log entries for SSO logins / link / unlink:
+  - `login_activity_logs.AuthMethod` (new column, `password` / `sso:<Provider>`) on every attempt, exposed in the login-activity API DTO. Migration `20261018080924_PlanMPhase1SsoLoginActivityMethod` (applied to LocalDB).
+  - SSO failures (bad state, token/assertion validation, domain not allowed, not linked, provider unavailable) now also land in login activity (`FailureReason` = `Sso<Reason>`, username = asserted email when known) — previously audit only.
+  - Linked accounts API (`SsoLinksController`): `GET /api/v1/sso/links` and `DELETE /api/v1/sso/links/{provider}` (self-service), `GET /api/v1/sso/links/users/{userId}` and `DELETE /api/v1/sso/links/users/{userId}/{provider}` (Admin/SuperAdmin, tenant-scoped user lookup). Every unlink audited as `SsoAccountUnlinked` (actor, provider, email, self-service flag). Self-service unlink of the **only** link is refused (409 `WOULD_LOCK_OUT`) when the user's password login is blocked by SSO-only; admins may still unlink. Link already audited as `SsoAccountLinked` (M1.2).
+- Note: refresh tokens issued by password logins **before** SSO-only was switched on keep working until they expire (≤ refresh lifetime); revoke sessions from Account Security if an immediate cut-over is needed.
+
+#### ✅ Implementation Summary (M1.4)
+- New: `Application/Auth/SsoAccountServices.cs` (`SsoLoginPolicy`, `SsoAccountService`), `API/Controllers/SsoLinksController.cs`, migration `PlanMPhase1SsoLoginActivityMethod`; tests `UnitTests/SsoPolicyTests.cs`, `IntegrationTests/SsoPolicyIntegrationTests.cs`.
+- Changed: `AuthService` (optional `ISsoLoginPolicy`, `SsoRequired` gate, auth method on every activity row), `LoginFailureReason.SsoRequired`, `AuthController` (403 `SSO_REQUIRED`), `LoginActivityLog` (+`AuthMethod`) + configuration + DTO/service mapping, `ISsoRepository` (+enforcing settings, links, remove), `SsoSignInService` (failures → login activity), API `Program.cs` (DI), Web `LoginController` (SSO-required message).
+
+#### ✅ Validation Summary (M1.4)
+- Unit: `SsoPolicyTests` (11) — tenant vs installation-wide enforcement, SuperAdmin exemption, module-inactive bypass, disabled/unflagged providers, unlink + audit, lock-out guard (self vs admin), not-found cases, auth method on activity. Suite 301/301.
+- Integration (real API + LocalDB): password login → 403 `SSO_REQUIRED` with activity (`SsoRequired`, `password`) and audit; SuperAdmin still allowed; allowed again when the module is deactivated and after the provider is removed; password success records `password`; SSO success records `sso:Google` and a not-linked failure records `SsoAccountNotLinked` with the asserted email; link list/unlink with audit; Student blocked from admin routes; admin unlink. Suite 317/317 (+1 pre-existing skip).
+- Web integration: SSO-required message shown with provider buttons. Suite 17/17.
 
 ### Stage M1.5 - UI
 - [ ] Login page: "Sign in with Microsoft / Google / Institution" buttons per tenant config.
@@ -495,3 +508,4 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-18 | Stage M1.1 completed (SSO data model, migration, module registration) | — |
 | 2026-10-18 | Stage M1.2 completed (OIDC sign-in: Microsoft / Google / generic, portal flow, MFA step) | — |
 | 2026-10-18 | Stage M1.3 completed (SAML 2.0 SP via ITfoxtec 4.21.0; IdentityModel aligned to 8.22.0) | — |
+| 2026-10-18 | Stage M1.4 completed (EnforceSsoOnly, auth method in login activity, linked-account API + audit) | — |

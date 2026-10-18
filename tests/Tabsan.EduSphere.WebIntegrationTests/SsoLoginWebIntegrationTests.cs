@@ -186,6 +186,28 @@ public class SsoLoginWebIntegrationTests : IClassFixture<WebApplicationFactory<W
         Assert.Equal("https://localhost/Login/SamlAcs", api.LastMetadataAcs);
     }
 
+    // ── SSO-only policy (Stage M1.4) ─────────────────────────────────────────
+
+    [Fact]
+    public async Task PasswordLogin_WhenSsoRequired_ShowsSsoMessageAndButtons()
+    {
+        var api = new FakeApi();
+        using var client = CreateClient(api);
+        var page = await client.GetStringAsync("/Login");
+        var token = Regex.Match(page, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"").Groups[1].Value;
+
+        var post = await client.PostAsync("/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["username"] = "student1",
+            ["password"] = "CorrectPassword#1"
+        }));
+        var html = await post.Content.ReadAsStringAsync();
+
+        Assert.Contains("requires single sign-on", html);
+        Assert.Contains("data-sso-provider=\"Google\"", html);
+    }
+
     // ── harness ──────────────────────────────────────────────────────────────
 
     private HttpClient CreateClient(FakeApi api)
@@ -253,6 +275,9 @@ public class SsoLoginWebIntegrationTests : IClassFixture<WebApplicationFactory<W
                     return CompleteStatus == HttpStatusCode.OK
                         ? Json(LoginJson)
                         : Json(CompleteBody ?? "{}", CompleteStatus);
+
+                case "/api/v1/auth/login":
+                    return Json("{\"error\":\"SSO_REQUIRED\",\"message\":\"Your institution requires single sign-on.\"}", HttpStatusCode.Forbidden);
 
                 case "/api/v1/sso/saml/complete":
                     LastSamlResponse = JsonDocument.Parse(body!).RootElement.GetProperty("samlResponse").GetString();
