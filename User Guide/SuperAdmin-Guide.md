@@ -233,6 +233,17 @@ Automated integrity verification at **Settings > Data Integrity** covers:
 - Dropped enrollment consistency
 - Pending modification requests
 
+### 9.10 Single Sign-On (Plan M1, October 2026)
+
+Configure Microsoft Entra ID, Google Workspace, other OpenID Connect or SAML 2.0 sign-in at **System Settings > Single Sign-On** (SuperAdmin only, requires the licensed **Single Sign-On** module):
+- Installation-wide or per-tenant providers (tenant users open `/Login?tenant=CODE`).
+- Values to register at the identity provider are shown on the page (redirect URI, SAML entity ID / ACS, SP metadata download).
+- Policies per provider: automatic linking by verified email, allowed email domains, trust the provider's MFA, and **Require single sign-on** (password login off for that scope; SuperAdmins always keep password sign-in).
+- Users manage their links under **Two-Factor Authentication > Linked sign-in accounts**.
+- Login-activity records (`/api/v1/login-activity`) include the sign-in method (`password` / `sso:<Provider>`); settings changes, links and unlinks are audited.
+
+Step-by-step provider setup, roll-out checklist and troubleshooting: [SSO Setup Guide](SSO-Setup-Guide.md).
+
 ## 10. Operational Workflows
 
 ### 10.1 New Department Onboarding

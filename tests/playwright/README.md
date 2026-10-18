@@ -56,7 +56,8 @@ tests/playwright/
 └── tests/
     ├── auth/
     │   ├── login.spec.ts         # Login, logout, session timeout
-    │   └── mfa.spec.ts           # MFA challenge flow
+    │   ├── mfa.spec.ts           # MFA challenge flow
+    │   └── sso-login.spec.ts     # SSO buttons per scope, IdP hand-off, forged callback, SP metadata (@sso)
     ├── authorization/
     │   └── role-sidebar.spec.ts  # Sidebar visibility & direct URL blocks
     ├── modules/

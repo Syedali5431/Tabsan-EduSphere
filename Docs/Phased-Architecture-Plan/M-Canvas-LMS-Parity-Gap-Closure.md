@@ -44,7 +44,7 @@ Positioning target after Plan M:
 
 | Phase | Name | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1–M1.5 ✅ (M1.6 left) |
+| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | ✅ M1.1–M1.6 (live IdP sign-in pending) |
 | M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ⬜ |
 | M3 | SpeedGrader-style Grading Workspace | P1 | 5 dw | — | ⬜ |
 | M4 | Progressive Web App (installable + push) | P1 | 1–2 dw | — | ⬜ |
@@ -169,15 +169,24 @@ Design change from the original bullets: instead of the ASP.NET OpenIdConnect ha
 - Web integration (real portal, fake API, signed in as SuperAdmin / Student): page renders all four provider cards with IdP values and never a secret; Save posts the right settings (switches, domain list, secret); Student is redirected away; security page lists linked accounts and Unlink calls the API. Suite 21/21. Unit 301/301.
 - Visual check in the browser against a local fake API: login buttons, admin page (cards, badges, switches, test toast), sidebar entry, linked-accounts card. Two fixes came out of it: status badges used Bootstrap 5.2 classes (the portal ships 5.1 → invisible badge) and the linked-accounts table broke words at narrow widths (now a stacked list).
 
-### Stage M1.6 - Tests & docs
-- [ ] Unit: linking rules, enforce-SSO policy. Integration: mocked OIDC handler round-trip. Playwright: button visibility per tenant.
-- [ ] Admin guide: Entra ID app registration + Google OAuth client steps.
+### Stage M1.6 - Tests & docs ✅ (2026-10-19)
+- [x] Unit: linking rules, enforce-SSO policy *(SsoSignInTests, SsoPolicyTests, SsoSamlClientTests, SsoFoundationTests — M1.1–M1.4)*. Integration: mocked OIDC handler round-trip — **`SsoProtocolIntegrationTests`** runs the **real** `OidcClient` and `SamlClient` inside the real API pipeline against in-memory IdPs: discovery + PKCE (the fake IdP rejects the code unless the S256 verifier matches) + signed id_token; SAML AuthnRequest (request ID and tenant-specific entity ID read back from the deflated request) + genuinely signed assertion; an assertion addressed to the installation-wide entity ID is refused for a tenant sign-in. Playwright: **`tests/playwright/tests/auth/sso-login.spec.ts`** (`@auth @sso`) — buttons match the API's enabled providers per scope (installation-wide and `SSO_TENANT_CODE`), each button's 302 goes to an https IdP with `state` + S256 (OIDC) or `SAMLRequest` + `RelayState` (SAML) and sets the HttpOnly browser-binding cookie, a forged callback is rejected, SP metadata is published; expectations adapt to whatever the deployment has configured.
+- [x] Admin guide: **`User Guide/SSO-Setup-Guide.md`** — prerequisites (licence/module, stable HTTPS address, outbound HTTPS, NTP), deployment settings (`Sso:PublicBaseUrl`, `AuthSecurity:Sso:AllowedRedirectUris` incl. both callback and ACS), Entra ID app registration, Google Workspace OAuth client, other OIDC, SAML (Entra ID, ADFS, Shibboleth) with the attribute mapping table, policy switches, linking/unlinking, roll-out checklist, troubleshooting table, security notes. SuperAdmin guide §9.10 links to it.
+
+#### ✅ Implementation Summary (M1.6)
+- New: `IntegrationTests/SsoProtocolIntegrationTests.cs`, `tests/playwright/tests/auth/sso-login.spec.ts`, `User Guide/SSO-Setup-Guide.md`.
+- Changed: `User Guide/SuperAdmin-Guide.md` (§9.10), `tests/playwright/.env.example` (`SSO_TENANT_CODE`), `tests/playwright/README.md`.
+
+#### ✅ Validation Summary (M1.6)
+- Integration 322/322 (+1 pre-existing skip) incl. the 2 real-protocol round trips; unit 301/301; web 21/21.
+- Playwright spec: 6/6 passed in Chromium against the Release portal + a local fake API, both installation-wide and with `SSO_TENANT_CODE=UNI` (the spec was first corrected to read the portal's 302 `Location` — Playwright does not route server redirects, and the fake IdP host does not resolve). It has not yet been run against a real deployment with SSO configured.
+- Note: `npx tsc` reports `Cannot find name 'process'` across the whole Playwright project (40 occurrences, pre-existing — `@types/node` is not a devDependency); Playwright itself runs the specs fine.
 
 Deliverables:
-- SSO login via Microsoft / Google / SAML per tenant, enforce-SSO option, admin config page.
+- SSO login via Microsoft / Google / SAML per tenant, enforce-SSO option, admin config page. ✅
 
 Acceptance:
-- A user of Tenant A can log in with Entra ID and lands on their correct role dashboard; Tenant B's config is not visible/usable from Tenant A.
+- A user of Tenant A can log in with Entra ID and lands on their correct role dashboard; Tenant B's config is not visible/usable from Tenant A. — **Verified in automation** (tenant-scoped settings/links, tenant-specific SAML audience, cross-tenant auto-link refused, providers listed per tenant). **Still open: one live sign-in per IdP type with a real Entra ID / Google Workspace / SAML tenant** (needs the institution's app registrations; follow `SSO-Setup-Guide.md` §9 roll-out checklist). The running live-test API/Web must also be redeployed from the current build, and it needs a stable HTTPS address (a quick-tunnel URL that changes on restart cannot be registered at an IdP).
 
 ---
 
@@ -523,3 +532,4 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-18 | Stage M1.3 completed (SAML 2.0 SP via ITfoxtec 4.21.0; IdentityModel aligned to 8.22.0) | — |
 | 2026-10-18 | Stage M1.4 completed (EnforceSsoOnly, auth method in login activity, linked-account API + audit) | — |
 | 2026-10-18 | Stage M1.5 completed (SSO admin page + API, linked accounts card, sidebar entry) | — |
+| 2026-10-19 | Stage M1.6 completed (real-protocol pipeline tests, Playwright SSO spec, SSO Setup Guide) — Phase M1 done pending a live IdP sign-in | — |
