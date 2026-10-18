@@ -353,6 +353,10 @@ builder.Services.AddScoped<IPasswordHasher, Argon2idPasswordHasher>();
 builder.Services.AddScoped<ITotpService, TotpService>();
 builder.Services.AddDataProtection().SetApplicationName("Tabsan.EduSphere.API");
 builder.Services.AddScoped<ITwoFactorStateStore, TwoFactorStateStore>();
+// Plan M1 Stage M1.2 — OpenID Connect single sign-on.
+builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.IOidcClient, Tabsan.EduSphere.Infrastructure.Auth.OidcClient>(client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoRepository, Tabsan.EduSphere.Infrastructure.Repositories.SsoRepository>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoSignInService, Tabsan.EduSphere.Application.Auth.SsoSignInService>();
 builder.Services.AddScoped<TwoFactorService>();
 builder.Services.AddScoped<QRCodeService>();
 builder.Services.AddScoped<TwoFactorSetupService>();

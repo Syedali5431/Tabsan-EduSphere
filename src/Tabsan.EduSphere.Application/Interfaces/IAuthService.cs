@@ -23,6 +23,9 @@ public interface IAuthService
     /// </summary>
     Task<AuthSecurityProfileResponse> GetSecurityProfileAsync(CancellationToken ct = default);
 
+    /// <summary>Plan M1: completes sign-in for a user already authenticated by an external SSO provider.</summary>
+    Task<LoginResult> ExternalLoginAsync(Guid userId, string provider, string? mfaCode, bool mfaSatisfiedExternally, string? ipAddress, string? deviceInfo, CancellationToken ct = default);
+
     /// <summary>
     /// Validates the presented refresh token, rotates it (old token revoked, new issued),
     /// and returns a new access + refresh token pair.

@@ -21,6 +21,7 @@ public sealed class PortalCapabilityMatrixService : IPortalCapabilityMatrixServi
 
     private static readonly CapabilitySpec[] Specs =
     [
+        new("single_sign_on", "Single Sign-On", "sso", "/Portal/SsoSettings", "Sign in with Microsoft, Google or the institution's SAML identity provider."),
         new("dashboard_overview", "Dashboard Overview", "authentication", "/Portal/Dashboard", "Role-aware dashboard with quick actions and summary tiles."),
         new("courses_enrollments", "Course and Enrollment Access", "courses", "/Portal/Courses", "Course catalog, offerings, and enrollment workflows."),
         new("assignments_workflow", "Assignments Workflow", "assignments", "/Portal/Assignments", "Assignment creation, submission, grading, and review."),

@@ -10,6 +10,10 @@
     var mfaPrivilegedOnly = (ViewData["MfaPrivilegedOnly"] as bool?) == true;
     var riskEnabled = (ViewData["SessionRiskEnabled"] as bool?) == true;
     var riskBlocking = (ViewData["SessionRiskBlocking"] as bool?) == true;
+    // Plan M1: SSO provider buttons and the SSO authenticator-code step.
+    var ssoProviders = ViewData["SsoProviders"] as IReadOnlyList<SsoProviderButton> ?? Array.Empty<SsoProviderButton>();
+    var ssoMfaTicket = ViewData["SsoMfaTicket"] as string;
+    var tenant = ViewData["Tenant"] as string;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -280,7 +284,38 @@
                         </div>
                     }
 
-                    <form method="post" asp-action="Index" asp-controller="Login" asp-route-returnUrl="@returnUrl" autocomplete="on" data-auth-form>
+                    @if (!string.IsNullOrWhiteSpace(ssoMfaTicket))
+                    {
+                    <form method="post" asp-action="SsoMfa" asp-controller="Login" autocomplete="off" data-auth-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticket" value="@ssoMfaTicket" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <input type="hidden" name="tenant" value="@tenant" />
+
+                        <div class="mb-4 mfa-field-wrap">
+                            <label for="ssoMfaCode" class="form-label fw-semibold">Authenticator code</label>
+                            <div class="auth-field-icon-group">
+                                <span class="auth-field-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Z" fill="currentColor"/></svg>
+                                </span>
+                                <input id="ssoMfaCode" name="mfaCode" type="text" class="form-control"
+                                       placeholder="6-digit code" inputmode="numeric" maxlength="10"
+                                       autocomplete="one-time-code" autofocus required />
+                            </div>
+                            <div class="form-text mfa-field-hint">
+                                <span>You signed in with single sign-on. Your account also requires the code from your authenticator app.</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 auth-submit" data-auth-submit>
+                            <span data-auth-submit-label>Verify and continue</span>
+                        </button>
+                        <a class="btn btn-link w-100 mt-2" asp-action="Index" asp-controller="Login" asp-route-tenant="@tenant">Start over</a>
+                    </form>
+                    }
+                    else
+                    {
+                    <form method="post" asp-action="Index" asp-controller="Login" asp-route-returnUrl="@returnUrl" asp-route-tenant="@tenant" autocomplete="on" data-auth-form>
                         @Html.AntiForgeryToken()
 
                         <div class="mb-3">
@@ -332,6 +367,22 @@
                             <span data-auth-submit-label>Sign In</span>
                         </button>
                     </form>
+
+                    @if (ssoProviders.Count > 0)
+                    {
+                        <div class="d-flex align-items-center my-3 text-body-secondary small" aria-hidden="true">
+                            <hr class="flex-grow-1 my-0" /><span class="px-2">or</span><hr class="flex-grow-1 my-0" />
+                        </div>
+                        <div class="d-grid gap-2" data-sso-providers>
+                            @foreach (var p in ssoProviders)
+                            {
+                                <a class="btn btn-outline-secondary" data-sso-provider="@p.Provider"
+                                   asp-action="Sso" asp-controller="Login" asp-route-provider="@p.Provider.ToLowerInvariant()"
+                                   asp-route-tenant="@tenant" asp-route-returnUrl="@returnUrl">@p.DisplayName</a>
+                            }
+                        </div>
+                    }
+                    }
 
                     <p class="auth-divider-note">Your session is protected and access is logged.</p>
                 </div>

@@ -1,0 +1,72 @@
+using Tabsan.EduSphere.Application.DTOs.Auth;
+using Tabsan.EduSphere.Domain.Enums;
+using Tabsan.EduSphere.Domain.Identity;
+
+namespace Tabsan.EduSphere.Application.Interfaces;
+
+// Plan M1 Stage M1.2 — SSO contracts.
+
+/// <summary>Connection details for one OpenID Connect provider (client secret already decrypted).</summary>
+public sealed record OidcProviderConfig(string Authority, string ClientId, string ClientSecret);
+
+/// <summary>Identity asserted by a validated id_token.</summary>
+public sealed record OidcIdentity(
+    string Subject,
+    string? Email,
+    bool EmailVerified,
+    string? Name,
+    bool MfaAsserted);
+
+/// <summary>Raised when an OIDC exchange or id_token validation fails. The message is safe to log, not to show.</summary>
+public sealed class OidcException : Exception
+{
+    public OidcException(string message, Exception? inner = null) : base(message, inner) { }
+}
+
+/// <summary>
+/// Low-level OpenID Connect authorization-code + PKCE client
+/// (discovery, authorize URL, code redemption, id_token validation).
+/// </summary>
+public interface IOidcClient
+{
+    /// <summary>Builds the provider's authorize URL for the code flow with PKCE (S256).</summary>
+    Task<string> BuildAuthorizationUrlAsync(
+        OidcProviderConfig provider, string redirectUri, string state, string nonce, string codeChallenge,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Redeems the authorization code and validates the returned id_token
+    /// (signature, issuer, audience, lifetime, nonce). Throws <see cref="OidcException"/> on failure.
+    /// </summary>
+    Task<OidcIdentity> RedeemCodeAsync(
+        OidcProviderConfig provider, string code, string redirectUri, string codeVerifier, string expectedNonce,
+        CancellationToken ct = default);
+}
+
+/// <summary>Persistence for SSO provider settings and external login links.</summary>
+public interface ISsoRepository
+{
+    Task<Guid?> GetTenantIdByCodeAsync(string tenantCode, CancellationToken ct = default);
+    Task<SsoProviderSetting?> GetSettingAsync(Guid? tenantId, SsoProvider provider, CancellationToken ct = default);
+    Task<IReadOnlyList<SsoProviderSetting>> GetEnabledSettingsAsync(Guid? tenantId, CancellationToken ct = default);
+    Task<ExternalLogin?> FindLinkAsync(Guid? tenantId, SsoProvider provider, string externalSubjectId, CancellationToken ct = default);
+    Task<bool> UserHasLinkAsync(Guid userId, SsoProvider provider, CancellationToken ct = default);
+    Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default);
+    Task<int> SaveChangesAsync(CancellationToken ct = default);
+}
+
+/// <summary>Orchestrates the browser SSO round trip on behalf of the web portal.</summary>
+public interface ISsoSignInService
+{
+    /// <summary>Enabled providers for the tenant (null/empty code = installation-wide providers).</summary>
+    Task<IReadOnlyList<SsoProviderSummary>> GetProvidersAsync(string? tenantCode, CancellationToken ct = default);
+
+    /// <summary>Starts a sign-in; returns null with a failure reason when it cannot start.</summary>
+    Task<(SsoStartResponse? Response, SsoFailureReason? Failure)> StartAsync(SsoStartRequest request, CancellationToken ct = default);
+
+    /// <summary>Completes the IdP callback: redeem code, resolve/link user, issue EduSphere tokens.</summary>
+    Task<SsoResult> CompleteAsync(SsoCompleteRequest request, string? ipAddress, CancellationToken ct = default);
+
+    /// <summary>Second step for users with TOTP enabled.</summary>
+    Task<SsoResult> CompleteMfaAsync(SsoMfaRequest request, string? ipAddress, CancellationToken ct = default);
+}

@@ -132,6 +132,50 @@ public class AuthService : IAuthService
             return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
         }
 
+        return await CompleteLoginAsync(user, request.Username, request.MfaCode, mfaSatisfiedExternally: false,
+            ipAddress, request.DeviceInfo, loginMethod: null, ct);
+    }
+
+    // ── Plan M1: SSO login ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Plan M1 Stage M1.2 — completes a sign-in for a user already authenticated by an external
+    /// identity provider (the caller has validated the id_token and resolved the linked user).
+    /// Applies the same gates as password login (active, lockout, MFA, session risk, license
+    /// concurrency) and issues the standard EduSphere JWT + refresh token.
+    /// Password ageing / forced password change are not applied to SSO sign-ins.
+    /// </summary>
+    public async Task<LoginResult> ExternalLoginAsync(
+        Guid userId, string provider, string? mfaCode, bool mfaSatisfiedExternally,
+        string? ipAddress, string? deviceInfo, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId, ct);
+        if (user is null || !user.IsActive || user.IsCurrentlyLockedOut())
+        {
+            await _audit.LogAsync(new AuditLog(
+                "LoginFailed",
+                "User",
+                entityId: userId.ToString(),
+                newValuesJson: "{\"reason\":\"sso_user_inactive_or_locked\",\"provider\":\"" + provider + "\"}",
+                ipAddress: ipAddress), ct);
+            await RecordLoginActivityAsync(user?.Id, user?.Username ?? "sso:" + provider, ipAddress, null, deviceInfo,
+                false, nameof(LoginFailureReason.InvalidCredentials), null, user?.IsCurrentlyLockedOut() ?? false, ct);
+            return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
+        }
+
+        return await CompleteLoginAsync(user, user.Username, mfaCode, mfaSatisfiedExternally,
+            ipAddress, deviceInfo, loginMethod: "sso:" + provider, ct);
+    }
+
+    /// <summary>
+    /// Shared tail of every primary authentication (password or SSO): MFA, session risk,
+    /// license concurrency, session creation and token issuance.
+    /// <paramref name="loginMethod"/> is null for password login, otherwise e.g. "sso:Microsoft".
+    /// </summary>
+    private async Task<LoginResult> CompleteLoginAsync(
+        User user, string loginName, string? mfaCode, bool mfaSatisfiedExternally,
+        string? ipAddress, string? deviceInfo, string? loginMethod, CancellationToken ct)
+    {
         var roleName = user.Role?.Name ?? string.Empty;
 
         // MFA is enforced only when the user has individually enabled it
@@ -140,9 +184,10 @@ public class AuthService : IAuthService
         // informs the UI but does not block login — only individual MFA setup gates access.
         var userHasMfa = user.MfaIsEnabled && !string.IsNullOrWhiteSpace(user.MfaTotpSecret);
 
-        if (userHasMfa)
+        // Plan M1: an IdP-asserted MFA (when trusted by tenant policy) satisfies the TOTP step.
+        if (userHasMfa && !mfaSatisfiedExternally)
         {
-            var provided = request.MfaCode?.Trim();
+            var provided = mfaCode?.Trim();
             if (string.IsNullOrWhiteSpace(provided))
             {
                 await _audit.LogAsync(new AuditLog(
@@ -151,7 +196,7 @@ public class AuthService : IAuthService
                     entityId: user.Id.ToString(),
                     actorUserId: user.Id,
                     ipAddress: ipAddress), ct);
-                await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
                     false, nameof(LoginFailureReason.MfaCodeRequired), null, false, ct);
                 return LoginResult.Fail(LoginFailureReason.MfaCodeRequired);
             }
@@ -193,7 +238,7 @@ public class AuthService : IAuthService
                         entityId: user.Id.ToString(),
                         actorUserId: user.Id,
                         ipAddress: ipAddress), ct);
-                    await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                    await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
                         false, nameof(LoginFailureReason.InvalidMfaCode), null, false, ct);
                     return LoginResult.Fail(LoginFailureReason.InvalidMfaCode);
                 }
@@ -217,7 +262,7 @@ public class AuthService : IAuthService
                     oldValuesJson: "{\"previousIp\":\"" + (mostRecentSession?.IpAddress ?? string.Empty) + "\"}",
                     newValuesJson: "{\"currentIp\":\"" + (ipAddress ?? string.Empty) + "\",\"riskLevel\":\"" + riskLevel + "\"}",
                     ipAddress: ipAddress), ct);
-                await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
                     false, nameof(LoginFailureReason.SessionRiskBlocked), riskLevel, false, ct);
                 return LoginResult.Fail(LoginFailureReason.SessionRiskBlocked);
             }
@@ -248,7 +293,7 @@ public class AuthService : IAuthService
                 var activeSessions = await _sessionRepo.CountActiveSessionsAsync(ct);
                 if (activeSessions >= license.MaxUsers)
                 {
-                    await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                    await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
                         false, nameof(LoginFailureReason.ConcurrencyLimitReached), riskLevel, false, ct);
                     return LoginResult.Fail(LoginFailureReason.ConcurrencyLimitReached);
                 }
@@ -259,7 +304,7 @@ public class AuthService : IAuthService
         var refreshHash = _tokenService.HashRefreshToken(rawRefresh);
         var refreshExpiry = _tokenService.GetRefreshTokenExpiry();
 
-        var session = new UserSession(user.Id, refreshHash, refreshExpiry, deviceInfo: request.DeviceInfo, ipAddress: ipAddress);
+        var session = new UserSession(user.Id, refreshHash, refreshExpiry, deviceInfo: deviceInfo, ipAddress: ipAddress);
         // Phase 2: Mark initial activity on session creation
         session.TouchActivity();
         await _sessionRepo.AddAsync(session, ct);
@@ -270,15 +315,18 @@ public class AuthService : IAuthService
         await _sessionRepo.SaveChangesAsync(ct);
 
         // Phase 2: Check password ageing
-        var passwordExpired = _security.PasswordAgeing.MaxPasswordAgeDays > 0
+        // Password ageing does not apply to SSO sign-ins (the IdP owns the credential).
+        var passwordExpired = loginMethod is null
+            && _security.PasswordAgeing.MaxPasswordAgeDays > 0
             && user.IsPasswordExpired(_security.PasswordAgeing.MaxPasswordAgeDays);
 
         await _audit.LogAsync(new AuditLog("Login", "User", user.Id.ToString(),
             actorUserId: user.Id,
-            newValuesJson: "{\"riskLevel\":\"" + riskLevel + "\",\"mfaEnabled\":" + userHasMfa.ToString().ToLowerInvariant() + "}",
+            newValuesJson: "{\"riskLevel\":\"" + riskLevel + "\",\"mfaEnabled\":" + userHasMfa.ToString().ToLowerInvariant()
+                + (loginMethod is null ? string.Empty : ",\"method\":\"" + loginMethod + "\"") + "}",
             ipAddress: ipAddress), ct);
 
-        await RecordLoginActivityAsync(user.Id, request.Username, ipAddress, null, request.DeviceInfo,
+        await RecordLoginActivityAsync(user.Id, loginName, ipAddress, null, deviceInfo,
             true, null, riskLevel, false, ct);
 
         return LoginResult.Ok(new LoginResponse(
@@ -288,7 +336,7 @@ public class AuthService : IAuthService
             Role: user.Role?.Name ?? string.Empty,
             UserId: user.Id,
             Username: user.Username,
-            MustChangePassword: user.MustChangePassword || passwordExpired,
+            MustChangePassword: (loginMethod is null && user.MustChangePassword) || passwordExpired,
             MfaEnabled: userHasMfa,
             SsoEnabled: _security.Sso.Enabled,
             SsoProvider: string.IsNullOrWhiteSpace(_security.Sso.Provider) ? null : _security.Sso.Provider,

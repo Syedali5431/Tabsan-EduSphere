@@ -19,6 +19,7 @@ public static class ModuleRegistry
         {
             // ── Core / Mandatory ────────────────────────────────────────────────
             ["authentication"]  = new("authentication",  AllRoles,   null, false),
+            ["sso"]             = new("sso",             AllRoles,   null, true),   // Plan M1 — license-gated
             ["departments"]     = new("departments",     AdminTier,  null, false),
             ["courses"]         = new("courses",         AllRoles,   null, false),
             ["sis"]             = new("sis",             AllRoles,   null, false),

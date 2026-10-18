@@ -31,6 +31,13 @@ public sealed class SsoSettings
     public bool Enabled { get; init; }
     public string Provider { get; init; } = "";
     public string LoginUrl { get; init; } = "";
+
+    /// <summary>
+    /// Plan M1: exact portal callback URLs the API may hand to identity providers
+    /// (e.g. "https://portal.uni.edu/Login/SsoCallback"). When empty, any absolute URL whose
+    /// path is /Login/SsoCallback is accepted (https, or http on localhost only).
+    /// </summary>
+    public string[] AllowedRedirectUris { get; init; } = [];
 }
 
 public sealed class SessionRiskSettings

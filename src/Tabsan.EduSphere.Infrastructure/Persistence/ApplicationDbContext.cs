@@ -52,6 +52,12 @@ public class ApplicationDbContext : DbContext
     /// <summary>Active refresh-token sessions per user.</summary>
     public DbSet<UserSession> UserSessions => Set<UserSession>();
 
+    /// <summary>Plan M1: links between users and external SSO identities.</summary>
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+
+    /// <summary>Plan M1: per-tenant SSO identity provider settings.</summary>
+    public DbSet<SsoProviderSetting> SsoProviderSettings => Set<SsoProviderSetting>();
+
     // ── Academic Core ──────────────────────────────────────────────────────
     /// <summary>University departments — the root organisational unit.</summary>
     public DbSet<Department> Departments => Set<Department>();

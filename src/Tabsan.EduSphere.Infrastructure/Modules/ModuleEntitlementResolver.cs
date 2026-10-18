@@ -110,6 +110,7 @@ public static class KnownModuleKeys
     public const string IsoCompliance      = "iso_compliance";
     public const string BackupDr           = "backup_dr";
     public const string DocumentManagement = "document_management";
+    public const string Sso                = "sso";
 
     /// <summary>All known keys — used for bulk cache invalidation.</summary>
     public static readonly IReadOnlyList<string> All = new[]
@@ -117,6 +118,6 @@ public static class KnownModuleKeys
         Authentication, Departments, Sis, Courses, Assignments,
         Quizzes, Attendance, Results, Notifications, Fyp,
         AiChat, Reports, Themes, AdvancedAudit,
-        IsoCompliance, BackupDr, DocumentManagement
+        IsoCompliance, BackupDr, DocumentManagement, Sso
     };
 }

@@ -4,7 +4,9 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Modules;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -162,6 +164,10 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
                 .ToList();
             foreach (var d in hosted)
                 services.Remove(d);
+
+            // Plan M1: SSO tests swap in a stub identity provider through this switch.
+            services.AddSingleton<SwitchableOidcClient>();
+            services.Replace(ServiceDescriptor.Transient<IOidcClient>(sp => sp.GetRequiredService<SwitchableOidcClient>()));
         });
     }
 

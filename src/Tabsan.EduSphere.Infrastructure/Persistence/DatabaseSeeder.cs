@@ -270,6 +270,7 @@ public static class DatabaseSeeder
             (KnownModuleKeys.IsoCompliance,      "ISO Compliance",            false),
             (KnownModuleKeys.BackupDr,           "Backup & Disaster Recovery", false),
             (KnownModuleKeys.DocumentManagement, "Document Management",       false),
+            (KnownModuleKeys.Sso,                "Single Sign-On (SSO)",      false),
         };
 
         foreach (var (key, name, mandatory) in definitions)
