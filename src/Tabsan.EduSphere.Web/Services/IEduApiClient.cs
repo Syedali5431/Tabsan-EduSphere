@@ -551,6 +551,13 @@ public interface IEduApiClient
     Task<LibraryConfigApiModel?> GetLibraryConfigAsync(CancellationToken ct);
     Task SaveLibraryConfigAsync(LibraryConfigApiModel model, CancellationToken ct);
     Task<LibraryLoansApiModel?> GetMyLibraryLoansAsync(CancellationToken ct);
+    // Plan M1.5 — single sign-on administration and linked accounts
+    Task<List<SsoProviderSettingApiModel>> GetSsoSettingsAsync(CancellationToken ct);
+    Task SaveSsoSettingAsync(string provider, string? tenantCode, SaveSsoSettingApiModel model, CancellationToken ct);
+    Task DeleteSsoSettingAsync(string provider, string? tenantCode, CancellationToken ct);
+    Task<SsoConnectionTestApiModel?> TestSsoSettingAsync(string provider, string? tenantCode, CancellationToken ct);
+    Task<List<SsoLinkApiModel>> GetMySsoLinksAsync(CancellationToken ct);
+    Task UnlinkMySsoAccountAsync(string provider, CancellationToken ct);
     Task<List<AccreditationTemplateApiModel>> GetAccreditationTemplatesAsync(CancellationToken ct);
     Task<AccreditationTemplateApiModel?> GetAccreditationTemplateAsync(Guid id, CancellationToken ct);
     Task<AccreditationTemplateApiModel?> CreateAccreditationTemplateAsync(CreateAccreditationTemplateForm form, CancellationToken ct);
@@ -3421,6 +3428,29 @@ public class EduApiClient : IEduApiClient
 
     public async Task<LibraryLoansApiModel?> GetMyLibraryLoansAsync(CancellationToken ct)
         => await GetAsync<LibraryLoansApiModel>("api/v1/library/loans", ct);
+
+    // Plan M1.5 — single sign-on administration and linked accounts
+    private static string SsoSettingPath(string provider, string? tenantCode, string suffix = "")
+        => $"api/v1/sso/settings/{Uri.EscapeDataString(provider)}{suffix}"
+           + (string.IsNullOrWhiteSpace(tenantCode) ? string.Empty : "?tenant=" + Uri.EscapeDataString(tenantCode.Trim()));
+
+    public async Task<List<SsoProviderSettingApiModel>> GetSsoSettingsAsync(CancellationToken ct)
+        => await GetAsync<List<SsoProviderSettingApiModel>>("api/v1/sso/settings", ct) ?? new();
+
+    public Task SaveSsoSettingAsync(string provider, string? tenantCode, SaveSsoSettingApiModel model, CancellationToken ct)
+        => PutAsync<SaveSsoSettingApiModel, object>(SsoSettingPath(provider, tenantCode), model, ct);
+
+    public Task DeleteSsoSettingAsync(string provider, string? tenantCode, CancellationToken ct)
+        => DeleteAsync(SsoSettingPath(provider, tenantCode), ct);
+
+    public Task<SsoConnectionTestApiModel?> TestSsoSettingAsync(string provider, string? tenantCode, CancellationToken ct)
+        => PostAsync<object, SsoConnectionTestApiModel>(SsoSettingPath(provider, tenantCode, "/test"), new { }, ct);
+
+    public async Task<List<SsoLinkApiModel>> GetMySsoLinksAsync(CancellationToken ct)
+        => await GetAsync<List<SsoLinkApiModel>>("api/v1/sso/links", ct) ?? new();
+
+    public Task UnlinkMySsoAccountAsync(string provider, CancellationToken ct)
+        => DeleteAsync($"api/v1/sso/links/{Uri.EscapeDataString(provider)}", ct);
 
     // Accreditation templates
     public Task<List<AccreditationTemplateApiModel>> GetAccreditationTemplatesAsync(CancellationToken ct)
@@ -6932,6 +6962,55 @@ public sealed class StudyPlanRecommendationApiModel
     public int                               MaxCreditLoad           { get; set; }
     public int                               RecommendedTotalCredits { get; set; }
     public List<RecommendedCourseApiModel>   Recommendations         { get; set; } = new();
+}
+
+// ── Plan M1.5: Single sign-on ───────────────────────────────────────────────
+
+public sealed class SsoProviderSettingApiModel
+{
+    public Guid Id { get; set; }
+    public string? TenantCode { get; set; }
+    public string Provider { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsEnabled { get; set; }
+    public bool IsComplete { get; set; }
+    public string? ClientId { get; set; }
+    public bool HasClientSecret { get; set; }
+    public string? Authority { get; set; }
+    public string? MetadataUrl { get; set; }
+    public List<string> AllowedEmailDomains { get; set; } = new();
+    public bool AutoLinkByEmail { get; set; }
+    public bool EnforceSsoOnly { get; set; }
+    public bool TrustIdpMfa { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public sealed class SaveSsoSettingApiModel
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string? ClientId { get; set; }
+    public string? ClientSecret { get; set; }
+    public string? Authority { get; set; }
+    public string? MetadataUrl { get; set; }
+    public List<string> AllowedEmailDomains { get; set; } = new();
+    public bool AutoLinkByEmail { get; set; }
+    public bool EnforceSsoOnly { get; set; }
+    public bool TrustIdpMfa { get; set; }
+    public bool Enabled { get; set; }
+}
+
+public sealed class SsoConnectionTestApiModel
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+}
+
+public sealed class SsoLinkApiModel
+{
+    public string Provider { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public DateTime LinkedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
 }
 
 // ── Phase 22: External Integrations ─────────────────────────────────────────

@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using Tabsan.EduSphere.Application.DTOs.Auth;
+using Tabsan.EduSphere.Web.Helpers;
 using Tabsan.EduSphere.Web.Models.Portal;
 using Tabsan.EduSphere.Web.Services;
 
@@ -88,6 +89,10 @@ public class PortalController : Controller
         [nameof(Announcements)] = "announcements",
         [nameof(StudyPlan)] = "study_plan",
         [nameof(LibraryConfig)] = "library_config",
+        [nameof(SsoSettings)] = "sso_settings",
+        [nameof(SaveSsoSetting)] = "sso_settings",
+        [nameof(TestSsoSetting)] = "sso_settings",
+        [nameof(DeleteSsoSetting)] = "sso_settings",
         [nameof(InstitutionPolicy)] = "institution_policy",
         [nameof(AuditLogs)] = "advanced_audit"
     };
@@ -685,6 +690,17 @@ public class PortalController : Controller
             catch
             {
                 // Status fetch is best-effort; page still renders.
+            }
+
+            // Plan M1.5: linked SSO accounts. A failure (e.g. SSO module not licensed) just hides the card.
+            try
+            {
+                model.SsoLinks = await _api.GetMySsoLinksAsync(HttpContext.RequestAborted);
+                model.SsoAvailable = true;
+            }
+            catch
+            {
+                model.SsoAvailable = false;
             }
         }
 
@@ -12844,6 +12860,119 @@ public class PortalController : Controller
         }
 
         return "Core";
+    }
+
+    // -- Plan M1 Stage M1.5: Single sign-on administration ----------------------------
+
+    [HttpGet]
+    public async Task<IActionResult> SsoSettings(string? tenant, CancellationToken ct)
+    {
+        ViewData["Title"] = "Single Sign-On";
+        if (_api.GetSessionIdentity()?.IsSuperAdmin != true)
+            return AccessDenied("Single sign-on settings are available to Super Admins only.");
+
+        var config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var tenantCode = string.IsNullOrWhiteSpace(tenant) ? null : tenant.Trim().ToUpperInvariant();
+        var model = new SsoSettingsPageModel
+        {
+            IsConnected = _api.IsConnected(),
+            TenantCode = tenantCode,
+            OidcRedirectUri = SsoPublicUrls.Build(Request, config, SsoPublicUrls.OidcCallbackPath),
+            SamlAcsUrl = SsoPublicUrls.Build(Request, config, SsoPublicUrls.SamlAcsPath),
+            SamlEntityId = SsoPublicUrls.SamlEntityId(Request, config, tenantCode),
+        };
+        model.SamlMetadataUrl = model.SamlEntityId;
+
+        if (!model.IsConnected) return View(model);
+        try
+        {
+            model.Settings = await _api.GetSsoSettingsAsync(ct);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("'sso'", StringComparison.OrdinalIgnoreCase))
+        {
+            model.ModuleUnavailable = true; // "Module 'sso' is disabled by license or configuration."
+        }
+        catch (Exception ex) { model.Message = ex.Message; }
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveSsoSetting(SsoSettingFormModel form, CancellationToken ct)
+    {
+        if (_api.GetSessionIdentity()?.IsSuperAdmin != true)
+            return AccessDenied("Single sign-on settings are available to Super Admins only.");
+
+        try
+        {
+            await _api.SaveSsoSettingAsync(form.Provider, form.TenantCode, new SaveSsoSettingApiModel
+            {
+                DisplayName = form.DisplayName?.Trim() ?? string.Empty,
+                ClientId = form.ClientId?.Trim(),
+                ClientSecret = string.IsNullOrWhiteSpace(form.ClientSecret) ? null : form.ClientSecret,
+                Authority = form.Authority?.Trim(),
+                MetadataUrl = form.MetadataUrl?.Trim(),
+                AllowedEmailDomains = (form.AllowedEmailDomains ?? string.Empty)
+                    .Split([',', ';', ' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList(),
+                AutoLinkByEmail = form.AutoLinkByEmail,
+                EnforceSsoOnly = form.EnforceSsoOnly,
+                TrustIdpMfa = form.TrustIdpMfa,
+                Enabled = form.Enabled
+            }, ct);
+            TempData["Success"] = $"{form.DisplayName} settings saved.";
+        }
+        catch (Exception ex) { TempData["Error"] = ex.Message; }
+        return RedirectToAction(nameof(SsoSettings), new { tenant = form.TenantCode });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestSsoSetting(string provider, string? tenantCode, CancellationToken ct)
+    {
+        if (_api.GetSessionIdentity()?.IsSuperAdmin != true)
+            return AccessDenied("Single sign-on settings are available to Super Admins only.");
+
+        try
+        {
+            var result = await _api.TestSsoSettingAsync(provider, tenantCode, ct);
+            TempData[result?.Success == true ? "Success" : "Error"] = result?.Message ?? "No response from the API.";
+        }
+        catch (Exception ex) { TempData["Error"] = ex.Message; }
+        return RedirectToAction(nameof(SsoSettings), new { tenant = tenantCode });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteSsoSetting(string provider, string? tenantCode, CancellationToken ct)
+    {
+        if (_api.GetSessionIdentity()?.IsSuperAdmin != true)
+            return AccessDenied("Single sign-on settings are available to Super Admins only.");
+
+        try
+        {
+            await _api.DeleteSsoSettingAsync(provider, tenantCode, ct);
+            TempData["Success"] = "Provider removed. Existing linked accounts are kept and work again if the provider is re-added.";
+        }
+        catch (Exception ex) { TempData["Error"] = ex.Message; }
+        return RedirectToAction(nameof(SsoSettings), new { tenant = tenantCode });
+    }
+
+    // Linked accounts on the personal security page (all roles).
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnlinkSsoAccount(string provider, CancellationToken ct)
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+
+        try
+        {
+            await _api.UnlinkMySsoAccountAsync(provider, ct);
+            TempData["SsoLinkMessage"] = $"{provider} account unlinked.";
+        }
+        catch (Exception ex) { TempData["SsoLinkError"] = ex.Message; }
+        return RedirectToAction(nameof(TwoFactorSettings));
     }
 
     // -- Phase 22: External Integrations ---------------------------------------------

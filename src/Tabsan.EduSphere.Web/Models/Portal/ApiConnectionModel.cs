@@ -341,6 +341,10 @@ public class TwoFactorSettingsPageModel
     public string? ManualKey { get; set; }
     public string? ProvisioningUri { get; set; }
     public string? QrCodeDataUrl { get; set; }
+
+    // Plan M1.5 — linked single sign-on accounts (shown only when the SSO module is available).
+    public bool SsoAvailable { get; set; }
+    public List<Tabsan.EduSphere.Web.Services.SsoLinkApiModel> SsoLinks { get; set; } = new();
 }
 
 // =============================================================================

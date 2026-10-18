@@ -1,0 +1,272 @@
+@model Tabsan.EduSphere.Web.Models.Portal.SsoSettingsPageModel
+@{
+    ViewData["Title"] = "Single Sign-On";
+    var scopeLabel = string.IsNullOrWhiteSpace(Model.TenantCode) ? "All tenants (installation-wide)" : $"Tenant {Model.TenantCode}";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info">@Model.Message</div>
+}
+
+<div class="mb-4">
+    <h2 class="h3 mb-1"><i class="bi bi-person-badge me-2"></i>Single Sign-On</h2>
+    <p class="text-muted mb-0">
+        Let people sign in with their institution account (Microsoft, Google, or any OpenID Connect or SAML 2.0 identity provider).
+        Users are matched to existing EduSphere accounts; no new accounts are created.
+    </p>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.</div>
+}
+else if (Model.ModuleUnavailable)
+{
+    <div class="alert alert-warning">
+        <strong>The Single Sign-On module is not active.</strong>
+        Activate it in <a asp-action="ModuleComposition">Module Composition</a> (it requires a licence that includes SSO), then return to this page.
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-end gap-3">
+                <div>
+                    <div class="small text-muted text-uppercase fw-semibold">Configuring</div>
+                    <div class="h6 mb-0" data-sso-scope>@scopeLabel</div>
+                </div>
+                <form method="get" asp-action="SsoSettings" class="d-flex gap-2 ms-lg-auto">
+                    <label class="visually-hidden" for="ssoTenant">Tenant code</label>
+                    <input id="ssoTenant" name="tenant" class="form-control form-control-sm" style="max-width: 12rem"
+                           placeholder="Tenant code (blank = all)" value="@Model.TenantCode" />
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Switch</button>
+                </form>
+            </div>
+            @if (Model.ConfiguredTenants.Any(t => !string.Equals(t ?? "", Model.TenantCode ?? "", StringComparison.OrdinalIgnoreCase)))
+            {
+                <div class="small mt-2">
+                    Also configured:
+                    @foreach (var t in Model.ConfiguredTenants.Where(t => !string.Equals(t ?? "", Model.TenantCode ?? "", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <a class="me-2" asp-action="SsoSettings" asp-route-tenant="@t">@(t ?? "All tenants")</a>
+                    }
+                </div>
+            }
+            <div class="form-text mt-2">
+                Installation-wide providers appear on the normal login page. Tenant providers appear on <code>/Login?tenant=CODE</code>.
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="h6 mb-3">Values to register at your identity provider</h3>
+            <dl class="row small mb-0">
+                <dt class="col-md-4">OpenID Connect redirect URI</dt>
+                <dd class="col-md-8 text-break"><code data-copy-value>@Model.OidcRedirectUri</code> <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-copy>Copy</button></dd>
+                <dt class="col-md-4">SAML entity ID (audience)</dt>
+                <dd class="col-md-8 text-break"><code data-copy-value>@Model.SamlEntityId</code> <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-copy>Copy</button></dd>
+                <dt class="col-md-4">SAML ACS URL (HTTP-POST)</dt>
+                <dd class="col-md-8 text-break"><code data-copy-value>@Model.SamlAcsUrl</code> <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-copy>Copy</button></dd>
+                <dt class="col-md-4">SAML metadata</dt>
+                <dd class="col-md-8"><a href="@Model.SamlMetadataUrl" target="_blank" rel="noopener">Download SP metadata</a></dd>
+            </dl>
+            <div class="form-text mt-2">
+                If the portal is published behind a proxy or tunnel and these show an internal address, set <code>Sso:PublicBaseUrl</code> in the portal configuration.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="ssoProviders">
+        @foreach (var (key, title, kind, defaultLabel) in Tabsan.EduSphere.Web.Models.Portal.SsoSettingsPageModel.ProviderCatalog)
+        {
+            var s = Model.For(key);
+            var isOidc = kind == "oidc";
+            var collapseId = "sso-" + key.ToLowerInvariant();
+            var (badgeText, badgeClass) = s is null ? ("Not configured", "bg-light text-dark border")
+                : !s.IsComplete ? ("Incomplete", "bg-warning text-dark")
+                : s.IsEnabled ? ("Enabled", "bg-success")
+                : ("Disabled", "bg-secondary");
+
+            <div class="accordion-item" data-sso-card="@key">
+                <h3 class="accordion-header">
+                    <button class="accordion-button @(s is null ? "collapsed" : "")" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId" aria-expanded="@(s is not null ? "true" : "false")" aria-controls="@collapseId">
+                        <span class="fw-semibold me-2">@title</span>
+                        <span class="badge rounded-pill @badgeClass">@badgeText</span>
+                        @if (s?.EnforceSsoOnly == true && s.IsEnabled)
+                        {
+                            <span class="badge rounded-pill bg-danger ms-2">SSO only</span>
+                        }
+                    </button>
+                </h3>
+                <div id="@collapseId" class="accordion-collapse collapse @(s is not null ? "show" : "")">
+                    <div class="accordion-body">
+                        <form asp-action="SaveSsoSetting" method="post" data-sso-form>
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Provider" value="@key" />
+                            <input type="hidden" name="TenantCode" value="@Model.TenantCode" />
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="@($"{key}-name")">Button label</label>
+                                    <input id="@($"{key}-name")" name="DisplayName" class="form-control" maxlength="100" required
+                                           value="@(s?.DisplayName ?? defaultLabel)" />
+                                </div>
+
+                                @if (isOidc)
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold" for="@($"{key}-client")">Client ID</label>
+                                        <input id="@($"{key}-client")" name="ClientId" class="form-control" maxlength="256" autocomplete="off" value="@s?.ClientId" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold" for="@($"{key}-secret")">Client secret</label>
+                                        <input id="@($"{key}-secret")" name="ClientSecret" type="password" class="form-control" maxlength="1024" autocomplete="new-password"
+                                               placeholder="@(s?.HasClientSecret == true ? "Stored — leave blank to keep" : "Paste the client secret")" />
+                                        <div class="form-text">Stored encrypted and never shown again.</div>
+                                    </div>
+                                    @if (key == "Google")
+                                    {
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Issuer</label>
+                                            <input class="form-control" value="https://accounts.google.com" readonly />
+                                            <input type="hidden" name="Authority" value="https://accounts.google.com" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold" for="@($"{key}-authority")">@(key == "Microsoft" ? "Authority (your directory)" : "Issuer / authority URL")</label>
+                                            <input id="@($"{key}-authority")" name="Authority" type="url" class="form-control" maxlength="500" value="@s?.Authority"
+                                                   placeholder="@(key == "Microsoft" ? "https://login.microsoftonline.com/{tenant-id}/v2.0" : "https://idp.example.edu")" />
+                                            @if (key == "Microsoft")
+                                            {
+                                                <div class="form-text">Use your own tenant ID or domain. <code>common</code> and <code>organizations</code> are not allowed.</div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold" for="@($"{key}-metadata")">IdP metadata URL</label>
+                                        <input id="@($"{key}-metadata")" name="MetadataUrl" type="url" class="form-control" maxlength="500" value="@s?.MetadataUrl"
+                                               placeholder="https://idp.example.edu/metadata.xml" />
+                                        <div class="form-text">Signing certificates and the sign-in URL are read from this document.</div>
+                                    </div>
+                                }
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="@($"{key}-domains")">Allowed email domains</label>
+                                    <input id="@($"{key}-domains")" name="AllowedEmailDomains" class="form-control" maxlength="1000"
+                                           value="@(s is null ? "" : string.Join(", ", s.AllowedEmailDomains))" placeholder="uni.edu, staff.uni.edu (blank = any)" />
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-enabled")" name="Enabled" value="true" @(s?.IsEnabled == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-enabled")">Show this provider on the login page</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-autolink")" name="AutoLinkByEmail" value="true" @(s?.AutoLinkByEmail == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-autolink")">Link to the existing EduSphere account with the same verified email on first sign-in</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-mfa")" name="TrustIdpMfa" value="true" @(s?.TrustIdpMfa == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-mfa")">Skip the EduSphere authenticator code when the identity provider already did multi-factor sign-in</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-enforce")" name="EnforceSsoOnly" value="true" data-enforce-switch @(s?.EnforceSsoOnly == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-enforce")">Require single sign-on (turn off password login)</label>
+                                    </div>
+                                    <div class="form-text">
+                                        With "Require single sign-on", users in this scope can no longer sign in with a password. Super Admins always keep password sign-in as a fallback.
+                                        Make sure users have linked accounts or that automatic linking is on.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save</button>
+                            </div>
+                        </form>
+
+                        @if (s is not null)
+                        {
+                            <hr />
+                            <div class="d-flex flex-wrap gap-2">
+                                <form asp-action="TestSsoSetting" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="provider" value="@key" />
+                                    <input type="hidden" name="tenantCode" value="@Model.TenantCode" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-plug me-1"></i>Test connection</button>
+                                </form>
+                                <form asp-action="DeleteSsoSetting" method="post" data-confirm="Remove @title? People will no longer see this sign-in option.">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="provider" value="@key" />
+                                    <input type="hidden" name="tenantCode" value="@Model.TenantCode" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Remove</button>
+                                </form>
+                                @if (s.UpdatedAt is not null)
+                                {
+                                    <span class="small text-muted align-self-center ms-auto">Last changed @s.UpdatedAt.Value.ToLocalTime().ToString("g")</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    (function () {
+        document.querySelectorAll('[data-copy]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var value = btn.parentElement.querySelector('[data-copy-value]').textContent.trim();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(value).then(function () {
+                        btn.textContent = 'Copied';
+                        setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (!confirm(form.getAttribute('data-confirm'))) e.preventDefault();
+            });
+        });
+
+        // Turning on "Require single sign-on" changes how everyone in scope signs in — confirm it.
+        document.querySelectorAll('form[data-sso-form]').forEach(function (form) {
+            var enforce = form.querySelector('[data-enforce-switch]');
+            var wasOn = enforce && enforce.checked;
+            form.addEventListener('submit', function (e) {
+                if (enforce && enforce.checked && !wasOn
+                    && !confirm('Require single sign-on? Users in this scope will no longer be able to sign in with a password.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    })();
+</script>

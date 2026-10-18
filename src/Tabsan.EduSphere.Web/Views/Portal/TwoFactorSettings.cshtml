@@ -318,4 +318,56 @@
             </div>
         </div>
     </div>
+
+    @* Plan M1.5 — linked single sign-on accounts *@
+    @if (Model.SsoAvailable)
+    {
+        <div class="security-card card mt-4" data-sso-links>
+            <div class="card-header">
+                <div class="small text-uppercase opacity-75">Single sign-on</div>
+                <div class="h5 mb-0">Linked sign-in accounts</div>
+            </div>
+            <div class="card-body p-4">
+                @if (TempData["SsoLinkMessage"] != null)
+                {
+                    <div class="alert alert-success py-2 small">@TempData["SsoLinkMessage"]</div>
+                }
+                @if (TempData["SsoLinkError"] != null)
+                {
+                    <div class="alert alert-danger py-2 small">@TempData["SsoLinkError"]</div>
+                }
+
+                @if (Model.SsoLinks.Count == 0)
+                {
+                    <p class="mb-0 text-muted">
+                        No accounts are linked. If your institution offers single sign-on, sign out and use its button on the login page.
+                    </p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var link in Model.SsoLinks)
+                        {
+                            <li class="d-flex flex-wrap align-items-center gap-2 py-2 border-bottom">
+                                <div class="flex-grow-1" style="min-width: 12rem;">
+                                    <div class="fw-semibold">@link.Provider</div>
+                                    <div class="small">@(link.Email ?? "No email shared")</div>
+                                    <div class="small text-muted">
+                                        Linked @link.LinkedAt.ToLocalTime().ToString("d")
+                                        · Last used @(link.LastLoginAt?.ToLocalTime().ToString("g") ?? "never")
+                                    </div>
+                                </div>
+                                <form asp-action="UnlinkSsoAccount" method="post" class="flex-shrink-0"
+                                      onsubmit="return confirm('Unlink your @link.Provider account? You will not be able to sign in with it until it is linked again.');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="provider" value="@link.Provider" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Unlink</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
 </div>

@@ -44,7 +44,7 @@ Positioning target after Plan M:
 
 | Phase | Name | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
-| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1–M1.4 ✅ |
+| M1 | Single Sign-On (OIDC + SAML) | P1 | 3 dw | — | 🟨 M1.1–M1.5 ✅ (M1.6 left) |
 | M2 | Quiz Engine Upgrade | P1 | 5–6 dw | — | ⬜ |
 | M3 | SpeedGrader-style Grading Workspace | P1 | 5 dw | — | ⬜ |
 | M4 | Progressive Web App (installable + push) | P1 | 1–2 dw | — | ⬜ |
@@ -151,10 +151,23 @@ Design change from the original bullets: instead of the ASP.NET OpenIdConnect ha
 - Integration (real API + LocalDB): password login → 403 `SSO_REQUIRED` with activity (`SsoRequired`, `password`) and audit; SuperAdmin still allowed; allowed again when the module is deactivated and after the provider is removed; password success records `password`; SSO success records `sso:Google` and a not-linked failure records `SsoAccountNotLinked` with the asserted email; link list/unlink with audit; Student blocked from admin routes; admin unlink. Suite 317/317 (+1 pre-existing skip).
 - Web integration: SSO-required message shown with provider buttons. Suite 17/17.
 
-### Stage M1.5 - UI
-- [ ] Login page: "Sign in with Microsoft / Google / Institution" buttons per tenant config.
-- [ ] Admin page `SsoSettings.cshtml`: configure provider, test connection, download SP metadata.
-- [ ] User Settings: view / unlink linked accounts.
+### Stage M1.5 - UI ✅ (2026-10-18)
+- [x] Login page: "Sign in with Microsoft / Google / Institution" buttons per tenant config *(done in M1.2; SSO-required message added in M1.4)*.
+- [x] Admin page `Views/Portal/SsoSettings.cshtml` (System Settings → **Single Sign-On**, SuperAdmin only): scope switch (installation-wide or `?tenant=CODE`), the values to register at the IdP (OIDC redirect URI, SAML entity ID / ACS URL, **Download SP metadata**) with copy buttons, one card per provider (Microsoft Entra ID, Google Workspace, other OIDC, SAML 2.0) with status badge, write-only client secret ("Stored — leave blank to keep"), allowed domains, switches (show on login page, auto-link by verified email, trust IdP MFA, require SSO with confirmation prompt), **Test connection**, **Remove**.
+- [x] Linked accounts: shown on the personal security page (**Two-Factor Authentication**, reachable by every role — the existing *User Settings* page is an admin user-management screen, so it was not used) as "Linked sign-in accounts" with Unlink (confirmation; API refuses with a clear message when it would lock the user out).
+- [x] Admin API `SsoSettingsController` (`/api/v1/sso/settings`, SuperAdmin only): list, `PUT {provider}?tenant=` (create/update; secret encrypted, never returned), `DELETE` (soft delete; links kept), `POST {provider}/test` (OIDC discovery / SAML metadata reachability + secret decryptable). Audit `SsoSettingsCreated` / `SsoSettingsUpdated` (no secret values, `secretChanged` flag) / `SsoSettingsDeleted`. Domain validation errors are returned as readable messages ("Authority: Use your institution's own Entra ID directory…").
+- [x] Sidebar: seeded menu `sso_settings` under System Settings (SuperAdmin only; denied for Admin/Faculty/Student/Finance), layout route map, SuperAdmin fallback list, and the static SuperAdmin settings block.
+- [x] `Sso:PublicBaseUrl` helper shared by login and admin pages (`Web/Helpers/SsoPublicUrls.cs`).
+
+#### ✅ Implementation Summary (M1.5)
+- New: `Application/Auth/SsoSettingsService.cs`, `API/Controllers/SsoSettingsController.cs`, `Web/Views/Portal/SsoSettings.cshtml`, `Web/Models/Portal/SsoSettingsPageModels.cs`, `Web/Helpers/SsoPublicUrls.cs`; tests `IntegrationTests/SsoSettingsIntegrationTests.cs`, `WebIntegrationTests/SsoAdminWebIntegrationTests.cs`.
+- Changed: `SsoDtos.cs` (settings DTOs), `ISsoInterfaces.cs` (`ISsoSettingsService`, repo `GetAllSettingsAsync` / `AddSettingAsync`), `SsoRepository`, API `Program.cs`, `DatabaseSeeder` (menu), Web `PortalController` (5 actions + menu-key map + linked accounts on the security page), `IEduApiClient` (6 calls + models), `TwoFactorSettings.cshtml`, `_Layout.cshtml`, `ApiConnectionModel.cs`, `LoginController` (shared URL helper).
+- No schema change.
+
+#### ✅ Validation Summary (M1.5)
+- Integration (API + LocalDB): non-SuperAdmins get 403; create (secret write-only, encrypted at rest, not in responses or audit) → update without secret keeps it → enable → list → test (stubbed IdP failure surfaces the message) → delete / delete again 404; Microsoft `common` authority and non-https SAML metadata rejected with field-named messages; unknown tenant rejected. Suite 320/320 (+1 pre-existing skip).
+- Web integration (real portal, fake API, signed in as SuperAdmin / Student): page renders all four provider cards with IdP values and never a secret; Save posts the right settings (switches, domain list, secret); Student is redirected away; security page lists linked accounts and Unlink calls the API. Suite 21/21. Unit 301/301.
+- Visual check in the browser against a local fake API: login buttons, admin page (cards, badges, switches, test toast), sidebar entry, linked-accounts card. Two fixes came out of it: status badges used Bootstrap 5.2 classes (the portal ships 5.1 → invisible badge) and the linked-accounts table broke words at narrow widths (now a stacked list).
 
 ### Stage M1.6 - Tests & docs
 - [ ] Unit: linking rules, enforce-SSO policy. Integration: mocked OIDC handler round-trip. Playwright: button visibility per tenant.
@@ -509,3 +522,4 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-18 | Stage M1.2 completed (OIDC sign-in: Microsoft / Google / generic, portal flow, MFA step) | — |
 | 2026-10-18 | Stage M1.3 completed (SAML 2.0 SP via ITfoxtec 4.21.0; IdentityModel aligned to 8.22.0) | — |
 | 2026-10-18 | Stage M1.4 completed (EnforceSsoOnly, auth method in login activity, linked-account API + audit) | — |
+| 2026-10-18 | Stage M1.5 completed (SSO admin page + API, linked accounts card, sidebar entry) | — |

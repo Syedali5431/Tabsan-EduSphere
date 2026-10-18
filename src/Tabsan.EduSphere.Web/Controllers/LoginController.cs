@@ -385,16 +385,7 @@ public class LoginController : Controller
         return View(nameof(Index));
     }
 
-    private string BuildPublicUrl(string path)
-    {
-        // Behind a tunnel/reverse proxy without forwarded headers, set Sso:PublicBaseUrl
-        // (e.g. https://portal.uni.edu) so the redirect URI matches the one registered at the IdP.
-        var configured = _config["Sso:PublicBaseUrl"];
-        var baseUrl = !string.IsNullOrWhiteSpace(configured)
-            ? configured.TrimEnd('/')
-            : $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
-        return baseUrl + path;
-    }
+    private string BuildPublicUrl(string path) => Helpers.SsoPublicUrls.Build(Request, _config, path);
 
     private SsoCookie? ReadSsoCookie()
     {

@@ -94,6 +94,12 @@ public interface ISsoRepository
 
     /// <summary>Plan M1.4: removes a link (the audit log keeps the history).</summary>
     void RemoveLink(ExternalLogin link);
+
+    /// <summary>Plan M1.5: every live provider setting with its tenant code (null = installation-wide).</summary>
+    Task<IReadOnlyList<(SsoProviderSetting Setting, string? TenantCode)>> GetAllSettingsAsync(CancellationToken ct = default);
+
+    /// <summary>Plan M1.5: stages a new provider setting.</summary>
+    Task AddSettingAsync(SsoProviderSetting setting, CancellationToken ct = default);
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
 
@@ -123,6 +129,22 @@ public interface ISsoAccountService
     /// leave the user with no way to sign in (password login blocked by SSO-only and no other link).
     /// </summary>
     Task<SsoUnlinkResult> UnlinkAsync(Guid userId, string provider, Guid actorUserId, bool isSelfService, string? ipAddress, CancellationToken ct = default);
+}
+
+/// <summary>Plan M1.5: SuperAdmin management of SSO provider settings (audited; secrets never returned).</summary>
+public interface ISsoSettingsService
+{
+    Task<IReadOnlyList<SsoProviderSettingDto>> ListAsync(CancellationToken ct = default);
+
+    /// <summary>Creates or updates one provider. Returns the saved setting, or an error message for the admin.</summary>
+    Task<(SsoProviderSettingDto? Saved, string? Error)> SaveAsync(
+        string provider, string? tenantCode, SaveSsoProviderSettingRequest request, Guid actorUserId, string? ipAddress, CancellationToken ct = default);
+
+    /// <summary>Removes one provider (soft delete). False when it does not exist.</summary>
+    Task<bool> DeleteAsync(string provider, string? tenantCode, Guid actorUserId, string? ipAddress, CancellationToken ct = default);
+
+    /// <summary>Checks that the saved configuration can reach the provider (discovery / metadata, secret decryptable).</summary>
+    Task<SsoConnectionTestResult> TestAsync(string provider, string? tenantCode, CancellationToken ct = default);
 }
 
 /// <summary>Orchestrates the browser SSO round trip on behalf of the web portal.</summary>

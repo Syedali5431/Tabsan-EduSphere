@@ -206,6 +206,9 @@ public class SsoPolicyTests
         public Task<IReadOnlyList<ExternalLogin>> GetLinksForUserAsync(Guid userId, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<ExternalLogin>>(Links.Where(l => l.UserId == userId).ToList());
         public void RemoveLink(ExternalLogin link) => Links.Remove(link);
+        public Task<IReadOnlyList<(SsoProviderSetting Setting, string? TenantCode)>> GetAllSettingsAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<(SsoProviderSetting, string?)>>(Settings.Select(s => (s, (string?)null)).ToList());
+        public Task AddSettingAsync(SsoProviderSetting setting, CancellationToken ct = default) { Settings.Add(setting); return Task.CompletedTask; }
         public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(1);
     }
 }

@@ -362,6 +362,7 @@ builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoSignInSer
 // Plan M1 Stage M1.4 — SSO-only enforcement for password login, linked-account management.
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoLoginPolicy, Tabsan.EduSphere.Application.Auth.SsoLoginPolicy>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoAccountService, Tabsan.EduSphere.Application.Auth.SsoAccountService>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoSettingsService, Tabsan.EduSphere.Application.Auth.SsoSettingsService>(); // Plan M1.5
 builder.Services.AddScoped<TwoFactorService>();
 builder.Services.AddScoped<QRCodeService>();
 builder.Services.AddScoped<TwoFactorSetupService>();

@@ -34,6 +34,43 @@ public sealed record SsoMfaRequest(
     [property: Required, StringLength(64)] string MfaCode,
     [property: StringLength(512)] string? DeviceInfo = null);
 
+// ── Plan M1 Stage M1.5 — admin configuration ────────────────────────────────
+
+/// <summary>One configured provider as shown to the SuperAdmin. The client secret is never returned.</summary>
+public sealed record SsoProviderSettingDto(
+    Guid Id,
+    string? TenantCode,
+    string Provider,
+    string DisplayName,
+    bool IsEnabled,
+    bool IsComplete,
+    string? ClientId,
+    bool HasClientSecret,
+    string? Authority,
+    string? MetadataUrl,
+    IReadOnlyList<string> AllowedEmailDomains,
+    bool AutoLinkByEmail,
+    bool EnforceSsoOnly,
+    bool TrustIdpMfa,
+    DateTime? UpdatedAt);
+
+/// <summary>Body for PUT /api/v1/sso/settings/{provider}?tenant=CODE (create or update).</summary>
+public sealed record SaveSsoProviderSettingRequest(
+    [property: Required, StringLength(100)] string DisplayName,
+    [property: StringLength(256)] string? ClientId,
+    /// <summary>New client secret. Null/empty keeps the stored secret.</summary>
+    [property: StringLength(1024)] string? ClientSecret,
+    [property: StringLength(500)] string? Authority,
+    [property: StringLength(500)] string? MetadataUrl,
+    IReadOnlyList<string>? AllowedEmailDomains,
+    bool AutoLinkByEmail,
+    bool EnforceSsoOnly,
+    bool TrustIdpMfa,
+    bool Enabled);
+
+/// <summary>Result of "Test connection".</summary>
+public sealed record SsoConnectionTestResult(bool Success, string Message);
+
 /// <summary>Why an SSO sign-in did not produce a session.</summary>
 public enum SsoFailureReason
 {

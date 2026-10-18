@@ -455,6 +455,7 @@ public static class DatabaseSeeder
         var libraryConfig       = await Upsert("library_config",       "Library Config",       "Configure external library integration", 10, parentId: systemSettings.Id, isSystemMenu: true);
         var accreditation       = await Upsert("accreditation",        "Accreditation",        "Manage accreditation templates and exports", 11, parentId: systemSettings.Id, isSystemMenu: true);
         var advancedAudit       = await Upsert("advanced_audit",       "Advanced Audit",       "System audit logs and compliance tracking", 12, parentId: systemSettings.Id, isSystemMenu: true);
+        var ssoSettings         = await Upsert("sso_settings",         "Single Sign-On",       "Configure SSO identity providers (Plan M1)", 13, parentId: systemSettings.Id, isSystemMenu: true);
 
         // Remove legacy Module Settings menu if present from older seeds.
         var legacyModuleSettings = await db.SidebarMenuItems
@@ -520,7 +521,8 @@ public static class DatabaseSeeder
             campusManagement.Id,
             libraryConfig.Id,
             accreditation.Id,
-            advancedAudit.Id
+            advancedAudit.Id,
+            ssoSettings.Id
         })
         {
             EnsureRoleAccess(id, "Admin",   isAllowed: false);
@@ -724,7 +726,8 @@ public static class DatabaseSeeder
             tenantManagement.Id,
             campusManagement.Id,
             libraryConfig.Id,
-            accreditation.Id
+            accreditation.Id,
+            ssoSettings.Id
         })
         {
             EnsureRoleAccess(id, "Finance", isAllowed: false);

@@ -50,5 +50,20 @@ public sealed class SsoRepository : ISsoRepository
 
     public void RemoveLink(ExternalLogin link) => _db.ExternalLogins.Remove(link);
 
+    public async Task<IReadOnlyList<(SsoProviderSetting Setting, string? TenantCode)>> GetAllSettingsAsync(CancellationToken ct = default)
+    {
+        var rows = await (
+                from s in _db.SsoProviderSettings.AsNoTracking()
+                join t in _db.Tenants.AsNoTracking() on s.TenantId equals (Guid?)t.Id into tenants
+                from t in tenants.DefaultIfEmpty()
+                orderby s.TenantId, s.Provider
+                select new { Setting = s, TenantCode = t == null ? null : t.Code })
+            .ToListAsync(ct);
+        return rows.Select(r => (r.Setting, r.TenantCode)).ToList();
+    }
+
+    public async Task AddSettingAsync(SsoProviderSetting setting, CancellationToken ct = default)
+        => await _db.SsoProviderSettings.AddAsync(setting, ct);
+
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _db.SaveChangesAsync(ct);
 }

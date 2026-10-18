@@ -1,4 +1,4 @@
-﻿@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
@@ -265,6 +265,8 @@
         "study_plan" => ("Portal", "StudyPlan"),
         // Final-Touches Phase 22 — External Integrations sidebar links
         "library_config" => ("Portal", "LibraryConfig"),
+        // Plan M1.5 — Single Sign-On settings
+        "sso_settings"   => ("Portal", "SsoSettings"),
         "accreditation"  => ("Portal", "AccreditationTemplates"),
         // Phase 23 — Institution Policy
         "institution_policy" => ("Portal", "InstitutionPolicy"),
@@ -287,7 +289,7 @@
         "payments" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 4H3V7h18Zm-6 6H5v-2h10Z\" fill=\"currentColor\"/></svg>",
         "notifications" or "announcements" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z\" fill=\"currentColor\"/></svg>",
         "helpdesk" or "discussion" or "aichat" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2Z\" fill=\"currentColor\"/></svg>",
-        "licenseupdate" or "themesettings" or "sidebarsettings" or "dashboardsettings" or "usersettings" or "institutionpolicy" or "modulecomposition" or "libraryconfig" or "accreditationtemplates" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.48 7.48 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.49-.4h-4.02a.5.5 0 0 0-.49.4l-.36 2.58c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.2 8.6a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94L2.32 14.28a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.58a.5.5 0 0 0 .49.4h4.02a.5.5 0 0 0 .49-.4l.36-2.58c.58-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z\" fill=\"currentColor\"/></svg>",
+        "licenseupdate" or "themesettings" or "sidebarsettings" or "dashboardsettings" or "usersettings" or "institutionpolicy" or "modulecomposition" or "libraryconfig" or "ssosettings" or "accreditationtemplates" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.48 7.48 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.49-.4h-4.02a.5.5 0 0 0-.49.4l-.36 2.58c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.2 8.6a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94L2.32 14.28a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.58a.5.5 0 0 0 .49.4h4.02a.5.5 0 0 0 .49-.4l.36-2.58c.58-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z\" fill=\"currentColor\"/></svg>",
         "twofactorsettings" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Zm0 4a3 3 0 0 1 3 3v1h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h1V9a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v1h2V9a1 1 0 0 0-1-1Z\" fill=\"currentColor\"/></svg>",
         _ => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\"/></svg>"
     };
@@ -692,6 +694,7 @@
                             ("Settings Related", 6, 2770, "Institution Policy", "Portal", "InstitutionPolicy"),
                             ("Settings Related", 6, 2780, "Module Composition", "Portal", "ModuleComposition"),
                             ("Settings Related", 6, 2790, "Library Config", "Portal", "LibraryConfig"),
+                            ("Settings Related", 6, 2795, "Single Sign-On", "Portal", "SsoSettings"),
                             ("Settings Related", 6, 2800, "Accreditation", "Portal", "AccreditationTemplates"),
                             ("Settings Related", 6, 2810, "Tenant Management", "Portal", "TenantManagement"),
                             ("Settings Related", 6, 2820, "Campus Management", "Portal", "CampusManagement")
@@ -879,6 +882,7 @@
                         <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">Dashboard Settings</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "TenantManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="TenantManagement" aria-current="@(IsActiveLink("Portal", "TenantManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TenantManagement"))</span><span class="menu-link-text">Tenant Management</span></a>
                         <a class="menu-link @(IsActiveLink("Portal", "CampusManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="CampusManagement" aria-current="@(IsActiveLink("Portal", "CampusManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("CampusManagement"))</span><span class="menu-link-text">Campus Management</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "SsoSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SsoSettings" aria-current="@(IsActiveLink("Portal", "SsoSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SsoSettings"))</span><span class="menu-link-text">Single Sign-On</span></a>
                     }
                 }
 
