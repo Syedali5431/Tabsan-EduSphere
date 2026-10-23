@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ThemeSettingsPageModel
 @{
-    ViewData["Title"] = "Theme Settings";
+    ViewData["Title"] = T.Text("Theme Settings");
     var tempMsg = TempData["Message"] as string ?? Model.Message;
 }
 
@@ -11,7 +11,7 @@
         <div class="col-12">
             <div class="alert alert-warning d-flex align-items-center gap-2">
                 <i class="bi bi-plug-fill"></i>
-                Not connected to the API. Configure the connection on the Dashboard.
+                @T["Not connected to the API. Configure the connection on the Dashboard."]
             </div>
         </div>
     }
@@ -23,8 +23,8 @@
         var alertIcon  = tempMsg.StartsWith("Error") ? "bi-x-circle-fill" : "bi-check-circle-fill";
         <div class="col-12">
             <div class="alert @alertClass alert-dismissible fade show" role="alert">
-                <i class="bi @alertIcon me-2"></i>@tempMsg
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <i class="bi @alertIcon me-2"></i>@T.Text(tempMsg)
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
             </div>
         </div>
     }
@@ -33,8 +33,8 @@
         <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-palette-fill text-primary"></i>
-                <strong>Portal Colour Theme</strong>
-                <span class="ms-auto text-muted small">Click a theme to preview, then save.</span>
+                <strong>@T["Portal Colour Theme"]</strong>
+                <span class="ms-auto text-muted small">@T["Click a theme to preview, then save."]</span>
             </div>
             <div class="card-body">
                 <div id="themeGrid" class="d-flex flex-wrap gap-3 mb-4">
@@ -62,10 +62,10 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="themeKey" id="themeKeyInput" value="@(Model.CurrentTheme ?? "")" />
                     <button type="submit" class="btn btn-primary" @(Model.IsConnected ? "" : "disabled")>
-                        <i class="bi bi-floppy me-1"></i> Save Theme
+                        <i class="bi bi-floppy me-1"></i> @T["Save Theme"]
                     </button>
                     <button type="button" class="btn btn-outline-secondary ms-2" onclick="previewTheme('')">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Preview
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> @T["Reset Preview"]
                     </button>
                 </form>
             </div>

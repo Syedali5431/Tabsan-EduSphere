@@ -21,5 +21,7 @@ public class IncidentLogConfiguration : IEntityTypeConfiguration<IncidentLog>
         builder.HasIndex(x => new { x.Status, x.ReportedAt }).HasDatabaseName("IX_incident_logs_status_reported");
         builder.HasIndex(x => new { x.Severity, x.Status }).HasDatabaseName("IX_incident_logs_severity_status");
         builder.HasIndex(x => x.ReportedBy).HasDatabaseName("IX_incident_logs_reported_by");
+        // Plan M14.2 index review: incidents assigned to a person.
+        builder.HasIndex(x => x.AssignedTo).HasDatabaseName("IX_incident_logs_assigned_to");
     }
 }

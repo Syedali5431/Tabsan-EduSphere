@@ -1,21 +1,21 @@
 @model Tabsan.EduSphere.Web.Models.Portal.QuestionBanksPageModel
 @using Tabsan.EduSphere.Web.Models.Portal
 @{
-    ViewData["Title"] = "Question banks";
+    ViewData["Title"] = T.Text("Question banks");
     var bank = Model.SelectedBank;
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     <div class="alert alert-info alert-dismissible fade show" role="status">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (Model.ImportErrors is { Count: > 0 })
 {
     <div class="alert alert-warning">
-        <div class="fw-semibold mb-1">Rows that were skipped</div>
+        <div class="fw-semibold mb-1">@T["Rows that were skipped"]</div>
         <ul class="small mb-0">
             @foreach (var e in Model.ImportErrors) { <li>@e</li> }
         </ul>
@@ -24,7 +24,7 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -32,25 +32,25 @@ else
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
-                    <a asp-action="Quizzes" asp-route-offeringId="@Model.OfferingId" class="small">← Quizzes</a>
-                    <h2 class="h5 mt-1 mb-3">Question banks</h2>
+                    <a asp-action="Quizzes" asp-route-offeringId="@Model.OfferingId" class="small">@T["← Quizzes"]</a>
+                    <h2 class="h5 mt-1 mb-3">@T["Question banks"]</h2>
                     <form method="get" asp-action="QuestionBanks" class="mb-3">
-                        <label class="form-label small" for="bank-offering">Course</label>
+                        <label class="form-label small" for="bank-offering">@T["Course"]</label>
                         <div class="d-flex gap-2">
                             <select id="bank-offering" name="offeringId" class="form-select form-select-sm">
-                                <option value="">All banks I can use</option>
+                                <option value="">@T["All banks I can use"]</option>
                                 @foreach (var o in Model.Offerings)
                                 {
                                     <option value="@o.Id" selected="@(Model.OfferingId == o.Id)">@o.Name</option>
                                 }
                             </select>
-                            <button class="btn btn-sm btn-outline-secondary">Show</button>
+                            <button class="btn btn-sm btn-outline-secondary">@T["Show"]</button>
                         </div>
                     </form>
 
                     @if (Model.Banks.Count == 0)
                     {
-                        <p class="text-muted small">No question banks yet.</p>
+                        <p class="text-muted small">@T["No question banks yet."]</p>
                     }
                     <div class="list-group mb-3">
                         @foreach (var b in Model.Banks)
@@ -59,7 +59,7 @@ else
                                asp-action="QuestionBanks" asp-route-offeringId="@Model.OfferingId" asp-route-bankId="@b.BankId">
                                 <span>
                                     <span class="fw-semibold">@b.Title</span>
-                                    @if (b.IsShared) { <span class="badge bg-info text-dark ms-1">Shared</span> }
+                                    @if (b.IsShared) { <span class="badge bg-info text-dark ms-1">@T["Shared"]</span> }
                                     @if (!string.IsNullOrWhiteSpace(b.Description)) { <span class="d-block small">@b.Description</span> }
                                 </span>
                                 <span class="badge bg-secondary">@b.QuestionCount</span>
@@ -67,14 +67,14 @@ else
                         }
                     </div>
 
-                    <h3 class="h6">New bank</h3>
+                    <h3 class="h6">@T["New bank"]</h3>
                     <form asp-action="CreateQuestionBank" method="post">
                         @Html.AntiForgeryToken()
-                        <input name="title" class="form-control form-control-sm mb-2" maxlength="200" placeholder="Title" aria-label="Title" required />
+                        <input name="title" class="form-control form-control-sm mb-2" maxlength="200" placeholder="@T["Title"]" aria-label="@T["Title"]" required />
                         <textarea name="description" class="form-control form-control-sm mb-2" rows="2" maxlength="1000" placeholder="Description (optional)" aria-label="Description"></textarea>
-                        <label class="form-label small" for="new-bank-offering">Course</label>
+                        <label class="form-label small" for="new-bank-offering">@T["Course"]</label>
                         <select id="new-bank-offering" name="courseOfferingId" class="form-select form-select-sm mb-2">
-                            <option value="">Not tied to a course</option>
+                            <option value="">@T["Not tied to a course"]</option>
                             @foreach (var o in Model.Offerings)
                             {
                                 <option value="@o.Id" selected="@(Model.OfferingId == o.Id)">@o.Name</option>
@@ -82,9 +82,9 @@ else
                         </select>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="new-bank-shared" name="isShared" value="true" />
-                            <label class="form-check-label small" for="new-bank-shared">Share with other teachers</label>
+                            <label class="form-check-label small" for="new-bank-shared">@T["Share with other teachers"]</label>
                         </div>
-                        <button class="btn btn-sm btn-primary">Create bank</button>
+                        <button class="btn btn-sm btn-primary">@T["Create bank"]</button>
                     </form>
                 </div>
             </div>
@@ -93,7 +93,7 @@ else
         <div class="col-lg-8">
             @if (bank is null)
             {
-                <div class="card border-0 shadow-sm"><div class="card-body text-muted">Choose a bank to see and edit its questions.</div></div>
+                <div class="card border-0 shadow-sm"><div class="card-body text-muted">@T["Choose a bank to see and edit its questions."]</div></div>
             }
             else
             {
@@ -102,14 +102,14 @@ else
                         <div class="d-flex flex-wrap gap-2 align-items-start mb-3">
                             <div class="flex-grow-1">
                                 <h2 class="h5 mb-0">@bank.Title</h2>
-                                <div class="small text-muted">@bank.Questions.Count question(s)</div>
+                                <div class="small text-muted">@T.Format("{0} question(s)", bank.Questions.Count)</div>
                             </div>
-                            <a class="btn btn-sm btn-outline-secondary" asp-action="ExportQuestionBank" asp-route-bankId="@bank.BankId">Export to Excel</a>
-                            <form asp-action="DeleteQuestionBank" method="post" onsubmit="return confirm('Delete this bank? Quizzes that already copied its questions keep them.');">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="ExportQuestionBank" asp-route-bankId="@bank.BankId">@T["Export to Excel"]</a>
+                            <form asp-action="DeleteQuestionBank" method="post" onsubmit="return confirm('@T.Js("Delete this bank? Quizzes that already copied its questions keep them.")');">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="bankId" value="@bank.BankId" />
                                 <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                                <button class="btn btn-sm btn-outline-danger">Delete bank</button>
+                                <button class="btn btn-sm btn-outline-danger">@T["Delete bank"]</button>
                             </form>
                         </div>
 
@@ -117,15 +117,15 @@ else
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="bankId" value="@bank.BankId" />
                             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                            <label class="small" for="bank-import">Import questions from Excel</label>
+                            <label class="small" for="bank-import">@T["Import questions from Excel"]</label>
                             <input id="bank-import" type="file" name="workbook" accept=".xlsx" class="form-control form-control-sm" style="max-width: 18rem;" required />
-                            <button class="btn btn-sm btn-outline-primary">Import</button>
-                            <span class="small text-muted">Tip: export first — the file includes a Help sheet showing the format.</span>
+                            <button class="btn btn-sm btn-outline-primary">@T["Import"]</button>
+                            <span class="small text-muted">@T["Tip: export first — the file includes a Help sheet showing the format."]</span>
                         </form>
 
                         @if (bank.Questions.Count == 0)
                         {
-                            <p class="text-muted">No questions yet.</p>
+                            <p class="text-muted">@T["No questions yet."]</p>
                         }
                         @foreach (var q in bank.Questions)
                         {
@@ -134,20 +134,21 @@ else
                                 <div class="d-flex flex-wrap gap-2 align-items-start">
                                     <div class="flex-grow-1" style="min-width: 14rem;">
                                         <div class="small text-muted">
-                                            @QuizBuilderPageModel.TypeLabel(q.Type) · @q.Marks.ToString("0.##") marks
-                                            @if (q.Difficulty.HasValue) { <span> · difficulty @q.Difficulty</span> }
+                                            @T.Format("{0} · {1} marks", QuizBuilderPageModel.TypeLabel(q.Type), q.Marks.ToString("0.##"))
+                                            @if (q.Difficulty.HasValue) { <span> @T.Format("· difficulty {0}", q.Difficulty)</span> }
                                             @if (!string.IsNullOrWhiteSpace(q.Tags)) { <span> · @q.Tags</span> }
                                         </div>
                                         <div class="fw-semibold" style="white-space: pre-wrap;">@q.Text</div>
                                     </div>
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">Edit</button>
-                                        <form asp-action="DeleteBankQuestion" method="post" onsubmit="return confirm('Remove this question from the bank?');">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" hidden data-outcome-align data-target-type="BankQuestion" data-target-id="@q.QuestionId">@T["Outcomes"]</button>
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">@T["Edit"]</button>
+                                        <form asp-action="DeleteBankQuestion" method="post" onsubmit="return confirm('@T.Js("Remove this question from the bank?")');">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="bankId" value="@bank.BankId" />
                                             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
                                             <input type="hidden" name="questionId" value="@q.QuestionId" />
-                                            <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                            <button class="btn btn-sm btn-outline-danger">@T["Remove"]</button>
                                         </form>
                                     </div>
                                 </div>
@@ -161,7 +162,7 @@ else
 
                 <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body">
-                        <h3 class="h5 mb-3">Add a question to this bank</h3>
+                        <h3 class="h5 mb-3">@T["Add a question to this bank"]</h3>
                         <partial name="_QuizQuestionEditor" model="@(new QuestionEditorModel { FormAction = Url.Action("AddBankQuestion")!, FormId = "new-bank-question", ShowBankMetadata = true, NextOrderIndex = bank.Questions.Count + 1, Hidden = new() { ["bankId"] = bank.BankId.ToString(), ["offeringId"] = Model.OfferingId?.ToString() ?? "" } })" />
                     </div>
                 </div>
@@ -172,4 +173,5 @@ else
 
 @section Scripts {
     <script src="~/js/quiz-editor.js" asp-append-version="true" defer></script>
+    <script src="~/js/outcome-align.js" asp-append-version="true" defer></script>
 }

@@ -257,7 +257,7 @@ public partial interface IEduApiClient
     // Final-Touches Phase 20 Stage 20.3 — discussion forum
     Task<List<DiscussionThreadApiModel>> GetDiscussionThreadsAsync(Guid offeringId, CancellationToken ct);
     Task<DiscussionThreadApiModel?> GetDiscussionThreadAsync(Guid threadId, CancellationToken ct);
-    Task<DiscussionThreadApiModel?> CreateDiscussionThreadAsync(Guid offeringId, Guid authorId, string title, CancellationToken ct);
+    Task<DiscussionThreadApiModel?> CreateDiscussionThreadAsync(Guid offeringId, Guid authorId, string title, CancellationToken ct, Guid? groupId = null);
     Task SetThreadPinnedAsync(Guid threadId, bool pinned, CancellationToken ct);
     Task CloseDiscussionThreadAsync(Guid threadId, CancellationToken ct);
     Task ReopenDiscussionThreadAsync(Guid threadId, CancellationToken ct);
@@ -1882,6 +1882,10 @@ public partial class EduApiClient : IEduApiClient
         var uri = new Uri(baseUri, path.TrimStart('/'));
         var request = new HttpRequestMessage(method, uri);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", connection.AccessToken);
+        // Plan M11 — the API answers (messages, validation, PDFs) in the portal language of this request.
+        var language = Tabsan.EduSphere.Application.Localization.PortalLanguages.Current;
+        if (language != Tabsan.EduSphere.Application.Localization.PortalLanguages.English)
+            request.Headers.AcceptLanguage.ParseAdd(language);
         return request;
     }
 
@@ -3131,8 +3135,8 @@ public partial class EduApiClient : IEduApiClient
     public Task<DiscussionThreadApiModel?> GetDiscussionThreadAsync(Guid threadId, CancellationToken ct)
         => GetAsync<DiscussionThreadApiModel>($"api/v1/discussion/thread/{threadId}", ct);
 
-    public Task<DiscussionThreadApiModel?> CreateDiscussionThreadAsync(Guid offeringId, Guid authorId, string title, CancellationToken ct)
-        => PostAsync<object, DiscussionThreadApiModel>("api/v1/discussion/thread", new { offeringId, authorId, title }, ct);
+    public Task<DiscussionThreadApiModel?> CreateDiscussionThreadAsync(Guid offeringId, Guid authorId, string title, CancellationToken ct, Guid? groupId = null)
+        => PostAsync<object, DiscussionThreadApiModel>("api/v1/discussion/thread", new { offeringId, authorId, title, groupId }, ct);
 
     public Task SetThreadPinnedAsync(Guid threadId, bool pinned, CancellationToken ct)
         => PostAsync<object, object>($"api/v1/discussion/thread/{threadId}/pin?pinned={pinned}", new { }, ct);
@@ -6868,6 +6872,8 @@ public sealed class DiscussionThreadApiModel
     public int      ReplyCount { get; set; }
     public DateTime CreatedAt  { get; set; }
     public List<DiscussionReplyApiModel> Replies { get; set; } = new();
+    /// <summary>Plan M8.3: set when the thread belongs to one student group.</summary>
+    public Guid?    GroupId    { get; set; }
 }
 
 public sealed class AnnouncementApiModel

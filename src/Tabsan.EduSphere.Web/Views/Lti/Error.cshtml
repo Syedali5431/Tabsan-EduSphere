@@ -1,0 +1,21 @@
+@model string
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@T["External tool - Tabsan EduSphere"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh; background: #f4f7fb;">
+    <main class="card border-0 shadow-sm m-3" style="max-width: 32rem;">
+        <div class="card-body p-4">
+            <h1 class="h5">@T["The tool could not be opened"]</h1>
+            <p class="mb-3">@Model</p>
+            <a class="btn btn-primary" href="/Portal/Dashboard">@T["Back to EduSphere"]</a>
+        </div>
+    </main>
+</body>
+</html>

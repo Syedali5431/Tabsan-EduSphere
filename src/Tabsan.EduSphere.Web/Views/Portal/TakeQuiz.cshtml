@@ -6,12 +6,12 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info" role="status">@Model.Message</div>
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected || info is null)
 {
-    <div class="alert alert-warning">This quiz is not available. <a asp-action="ViewQuizzes">Back to my quizzes</a></div>
+    <div class="alert alert-warning">@T["This quiz is not available."] <a asp-action="ViewQuizzes">@T["Back to my quizzes"]</a></div>
 }
 else
 {
@@ -19,14 +19,14 @@ else
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <a asp-action="ViewQuizzes" class="small">← My quizzes</a>
+                    <a asp-action="ViewQuizzes" class="small">@T["← My quizzes"]</a>
                     <h2 class="h4 mt-1">@info.Title</h2>
                     <ul class="list-unstyled small mb-3">
-                        <li><strong>Questions:</strong> @info.QuestionCount</li>
-                        <li><strong>Time limit:</strong> @(info.TimeLimitMinutes.HasValue ? $"{info.TimeLimitMinutes} minutes" : "None")</li>
-                        <li><strong>Attempts allowed:</strong> @(info.MaxAttempts == 0 ? "Unlimited" : info.MaxAttempts.ToString()) · used @Model.Attempts.Count</li>
-                        @if (info.AvailableFrom.HasValue) { <li><strong>Opens:</strong> @info.AvailableFrom.Value.ToLocalTime().ToString("g")</li> }
-                        @if (info.AvailableUntil.HasValue) { <li><strong>Closes:</strong> @info.AvailableUntil.Value.ToLocalTime().ToString("g")</li> }
+                        <li><strong>@T["Questions:"]</strong> @info.QuestionCount</li>
+                        <li><strong>@T["Time limit:"]</strong> @(info.TimeLimitMinutes.HasValue ? $"{info.TimeLimitMinutes} minutes" : T.Text("None"))</li>
+                        <li><strong>@T["Attempts allowed:"]</strong> @T.Format("{0} · used {1}", (info.MaxAttempts == 0 ? "Unlimited" : info.MaxAttempts.ToString()), Model.Attempts.Count)</li>
+                        @if (info.AvailableFrom.HasValue) { <li><strong>@T["Opens:"]</strong> @info.AvailableFrom.Value.ToLocalTime().ToString("g")</li> }
+                        @if (info.AvailableUntil.HasValue) { <li><strong>@T["Closes:"]</strong> @info.AvailableUntil.Value.ToLocalTime().ToString("g")</li> }
                     </ul>
                     @if (!string.IsNullOrWhiteSpace(info.Instructions))
                     {
@@ -35,7 +35,7 @@ else
 
                     @if (Model.InProgress is { } current)
                     {
-                        <a class="btn btn-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@current.Id">Resume attempt</a>
+                        <a class="btn btn-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@current.Id">@T["Resume attempt"]</a>
                     }
                     else if (Model.AttemptsLeft)
                     {
@@ -45,20 +45,20 @@ else
                             @if (info.RequiresAccessCode)
                             {
                                 <div>
-                                    <label class="form-label small" for="access-code">Access code</label>
+                                    <label class="form-label small" for="access-code">@T["Access code"]</label>
                                     <input id="access-code" name="accessCode" class="form-control" autocomplete="off" required />
                                 </div>
                             }
-                            <button class="btn btn-primary">@(Model.Attempts.Count == 0 ? "Start quiz" : "Start a new attempt")</button>
+                            <button class="btn btn-primary">@(Model.Attempts.Count == 0 ? T.Text("Start quiz") : T.Text("Start a new attempt"))</button>
                         </form>
                         @if (info.TimeLimitMinutes.HasValue)
                         {
-                            <p class="small text-muted mt-2 mb-0">The timer starts when you press start and keeps running if you leave the page. Your answers are submitted automatically when time runs out.</p>
+                            <p class="small text-muted mt-2 mb-0">@T["The timer starts when you press start and keeps running if you leave the page. Your answers are submitted automatically when time runs out."]</p>
                         }
                     }
                     else
                     {
-                        <div class="p-3 rounded border bg-light mb-0">You have used all your attempts.</div>
+                        <div class="p-3 rounded border bg-light mb-0">@T["You have used all your attempts."]</div>
                     }
                 </div>
             </div>
@@ -67,15 +67,15 @@ else
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h3 class="h6">My attempts</h3>
+                    <h3 class="h6">@T["My attempts"]</h3>
                     @if (Model.Attempts.Count == 0)
                     {
-                        <p class="text-muted small mb-0">None yet.</p>
+                        <p class="text-muted small mb-0">@T["None yet."]</p>
                     }
                     else
                     {
                         <table class="table table-sm align-middle mb-0">
-                            <thead><tr><th>Started</th><th>Status</th><th>Score</th><th></th></tr></thead>
+                            <thead><tr><th>@T["Started"]</th><th>@T["Status"]</th><th>@T["Score"]</th><th></th></tr></thead>
                             <tbody>
                                 @foreach (var a in Model.Attempts.OrderByDescending(a => a.StartedAt))
                                 {
@@ -87,11 +87,11 @@ else
                                         <td class="text-end">
                                             @if (inProgress)
                                             {
-                                                <a class="btn btn-sm btn-outline-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@a.Id">Resume</a>
+                                                <a class="btn btn-sm btn-outline-primary" asp-action="TakeQuizAttempt" asp-route-attemptId="@a.Id">@T["Resume"]</a>
                                             }
                                             else
                                             {
-                                                <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@a.Id">Review</a>
+                                                <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@a.Id">@T["Review"]</a>
                                             }
                                         </td>
                                     </tr>

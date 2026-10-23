@@ -132,7 +132,7 @@
 
         fetch(apiUrl)
             .then(function (res) {
-                if (!res.ok) throw new Error('API error: ' + res.status);
+                if (!res.ok) throw new Error(t('API error: ') + res.status);
                 return res.json();
             })
             .then(function (data) {
@@ -150,7 +150,7 @@
     function handleCourseChange(courseId) {
         fetch(DEFAULT_API_BASE + '/periods?courseId=' + encodeURIComponent(courseId))
             .then(function (res) {
-                if (!res.ok) throw new Error('API error: ' + res.status);
+                if (!res.ok) throw new Error(t('API error: ') + res.status);
                 return res.json();
             })
             .then(function (data) {

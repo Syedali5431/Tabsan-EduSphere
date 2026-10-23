@@ -1,5 +1,5 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = T.Text("Privacy Policy");
     var privacyPolicyContent = ViewData["PrivacyPolicyContent"] as string;
     var privacyPolicyUrl = ViewData["PrivacyPolicyUrl"] as string;
 }
@@ -15,11 +15,11 @@
 else if (!string.IsNullOrWhiteSpace(privacyPolicyUrl))
 {
     <p>
-        The full privacy policy is available at
+        @T["The full privacy policy is available at"]
         <a href="@privacyPolicyUrl" target="_blank" rel="noopener noreferrer">@privacyPolicyUrl</a>.
     </p>
 }
 else
 {
-    <p>Privacy policy content has not been configured yet.</p>
+    <p>@T["Privacy policy content has not been configured yet."]</p>
 }

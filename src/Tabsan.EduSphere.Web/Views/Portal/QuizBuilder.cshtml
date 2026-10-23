@@ -37,37 +37,37 @@
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     <div class="alert alert-info alert-dismissible fade show" role="status">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected || quiz is null)
 {
-    <div class="alert alert-warning">The quiz could not be loaded. <a asp-action="Quizzes">Back to quizzes</a></div>
+    <div class="alert alert-warning">@T["The quiz could not be loaded."] <a asp-action="Quizzes">@T["Back to quizzes"]</a></div>
 }
 else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body d-flex flex-wrap gap-3 align-items-start">
             <div class="flex-grow-1">
-                <a asp-action="Quizzes" asp-route-offeringId="@quiz.CourseOfferingId" class="small">← All quizzes</a>
+                <a asp-action="Quizzes" asp-route-offeringId="@quiz.CourseOfferingId" class="small">@T["← All quizzes"]</a>
                 <h2 class="h4 mb-1 mt-1">@quiz.Title</h2>
                 <div class="small text-muted">
-                    <span class="badge @(quiz.IsPublished ? "bg-success" : "bg-warning text-dark")">@(quiz.IsPublished ? "Published" : "Draft")</span>
-                    <span class="ms-2">Total @quiz.TotalMarks.ToString("0.##") marks</span>
-                    <span class="ms-2">@(quiz.TimeLimitMinutes.HasValue ? $"{quiz.TimeLimitMinutes} min" : "No time limit")</span>
-                    <span class="ms-2">@(quiz.MaxAttempts == 0 ? "Unlimited attempts" : $"{quiz.MaxAttempts} attempt(s)")</span>
+                    <span class="badge @(quiz.IsPublished ? "bg-success" : "bg-warning text-dark")">@(quiz.IsPublished ? T.Text("Published") : T.Text("Draft"))</span>
+                    <span class="ms-2">@T.Format("Total {0} marks", quiz.TotalMarks.ToString("0.##"))</span>
+                    <span class="ms-2">@(quiz.TimeLimitMinutes.HasValue ? $"{quiz.TimeLimitMinutes} min" : T.Text("No time limit"))</span>
+                    <span class="ms-2">@(quiz.MaxAttempts == 0 ? T.Text("Unlimited attempts") : $"{quiz.MaxAttempts} attempt(s)")</span>
                 </div>
                 @if (quiz.IsPublished)
                 {
-                    <div class="small mt-2">Changes apply to attempts started after you save. To rescore finished attempts, use <strong>Regrade</strong> on a question.</div>
+                    <div class="small mt-2">@T["Changes apply to attempts started after you save. To rescore finished attempts, use"] <strong>@T["Regrade"]</strong> @T["on a question."]</div>
                 }
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-sm btn-outline-primary" asp-action="QuizGrading" asp-route-quizId="@quiz.QuizId">Attempts &amp; grading</a>
-                <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@quiz.QuizId">Statistics</a>
-                <a class="btn btn-sm btn-outline-secondary" asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">Question banks</a>
+                <a class="btn btn-sm btn-outline-primary" asp-action="QuizGrading" asp-route-quizId="@quiz.QuizId">@T["Attempts &amp; grading"]</a>
+                <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@quiz.QuizId">@T["Statistics"]</a>
+                <a class="btn btn-sm btn-outline-secondary" asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">@T["Question banks"]</a>
             </div>
         </div>
     </div>
@@ -77,7 +77,7 @@ else
             @* ── Questions ───────────────────────────────────────────────── *@
             <div class="card border-0 shadow-sm mb-3" id="questions">
                 <div class="card-body">
-                    <h3 class="h5 mb-3">Questions</h3>
+                    <h3 class="h5 mb-3">@T["Questions"]</h3>
                     @{
                         var entries = quiz.Questions.Select(q => (Order: q.OrderIndex, Question: (QuestionResponse?)q, Group: (QuestionGroupResponse?)null))
                             .Concat((quiz.Groups ?? []).Select(g => (Order: g.OrderIndex, Question: (QuestionResponse?)null, Group: (QuestionGroupResponse?)g)))
@@ -85,7 +85,7 @@ else
                     }
                     @if (entries.Count == 0)
                     {
-                        <p class="text-muted mb-0">No questions yet. Add one below, or draw questions from a question bank.</p>
+                        <p class="text-muted mb-0">@T["No questions yet. Add one below, or draw questions from a question bank."]</p>
                     }
                     @foreach (var e in entries)
                     {
@@ -94,19 +94,19 @@ else
                             <div class="border rounded p-3 mb-2" data-quiz-group>
                                 <div class="d-flex flex-wrap gap-2 align-items-start">
                                     <div class="flex-grow-1">
-                                        <div class="small text-muted">#@g.OrderIndex · Random questions from a bank</div>
+                                        <div class="small text-muted">@T.Format("#{0} · Random questions from a bank", g.OrderIndex)</div>
                                         <div class="fw-semibold">@g.Title</div>
-                                        <div class="small">Pick @g.PickCount from <em>@g.BankTitle</em>@(g.TagFilter is null ? "" : $" (tag: {g.TagFilter})") · @g.MarksPerQuestion.ToString("0.##") marks each</div>
+                                        <div class="small">@T.Format("Pick {0} from", g.PickCount) <em>@g.BankTitle</em>@T.Format("{0} · {1} marks each", (g.TagFilter is null ? "" : $" (tag: {g.TagFilter})"), g.MarksPerQuestion.ToString("0.##"))</div>
                                         @if (g.AvailableQuestions < g.PickCount)
                                         {
-                                            <div class="small text-danger">Only @g.AvailableQuestions question(s) available — students will get fewer.</div>
+                                            <div class="small text-danger">@T.Format("Only {0} question(s) available — students will get fewer.", g.AvailableQuestions)</div>
                                         }
                                     </div>
-                                    <form asp-action="DeleteQuizGroup" method="post" onsubmit="return confirm('Remove this question group?');">
+                                    <form asp-action="DeleteQuizGroup" method="post" onsubmit="return confirm('@T.Js("Remove this question group?")');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                         <input type="hidden" name="groupId" value="@g.GroupId" />
-                                        <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                        <button class="btn btn-sm btn-outline-danger">@T["Remove"]</button>
                                     </form>
                                 </div>
                             </div>
@@ -118,17 +118,18 @@ else
                         <div class="border rounded p-3 mb-2" id="q-@q.QuestionId" data-quiz-question="@q.Type">
                             <div class="d-flex flex-wrap gap-2 align-items-start">
                                 <div class="flex-grow-1" style="min-width: 14rem;">
-                                    <div class="small text-muted">#@q.OrderIndex · @QuizBuilderPageModel.TypeLabel(q.Type) · @q.Marks.ToString("0.##") marks</div>
+                                    <div class="small text-muted">@T.Format("#{0} · {1} · {2} marks", q.OrderIndex, QuizBuilderPageModel.TypeLabel(q.Type), q.Marks.ToString("0.##"))</div>
                                     <div class="fw-semibold" style="white-space: pre-wrap;">@q.Text</div>
                                     <div class="small text-muted mt-1">@Summary(q)</div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-1">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">Edit</button>
-                                    <form asp-action="DeleteQuizQuestion" method="post" onsubmit="return confirm('Delete this question?');">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" hidden data-outcome-align data-target-type="QuizQuestion" data-target-id="@q.QuestionId">@T["Outcomes"]</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">@T["Edit"]</button>
+                                    <form asp-action="DeleteQuizQuestion" method="post" onsubmit="return confirm('@T.Js("Delete this question?")');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                         <input type="hidden" name="questionId" value="@q.QuestionId" />
-                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        <button class="btn btn-sm btn-outline-danger">@T["Delete"]</button>
                                     </form>
                                 </div>
                             </div>
@@ -138,9 +139,9 @@ else
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                     <input type="hidden" name="questionId" value="@q.QuestionId" />
-                                    <span class="small">Regrade finished attempts:</span>
-                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="Recalculate">Recalculate with current answers</button>
-                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="FullCredit" onclick="return confirm('Give every attempt full marks for this question?');">Give everyone full credit</button>
+                                    <span class="small">@T["Regrade finished attempts:"]</span>
+                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="Recalculate">@T["Recalculate with current answers"]</button>
+                                    <button class="btn btn-sm btn-outline-secondary" name="mode" value="FullCredit" onclick="return confirm('@T.Js("Give every attempt full marks for this question?")');">@T["Give everyone full credit"]</button>
                                 </form>
                             </div>
                         </div>
@@ -151,7 +152,7 @@ else
             @* ── Add question ────────────────────────────────────────────── *@
             <div class="card border-0 shadow-sm mb-3" id="add-question">
                 <div class="card-body">
-                    <h3 class="h5 mb-3">Add a question</h3>
+                    <h3 class="h5 mb-3">@T["Add a question"]</h3>
                     <partial name="_QuizQuestionEditor" model="@(new QuestionEditorModel { FormAction = Url.Action("AddQuizQuestion")!, FormId = "new-question", NextOrderIndex = nextOrder, Hidden = new() { ["quizId"] = quiz.QuizId.ToString() } })" />
                 </div>
             </div>
@@ -159,19 +160,19 @@ else
             @* ── Question banks ──────────────────────────────────────────── *@
             <div class="card border-0 shadow-sm mb-3" id="banks">
                 <div class="card-body">
-                    <h3 class="h5 mb-3">Use a question bank</h3>
+                    <h3 class="h5 mb-3">@T["Use a question bank"]</h3>
                     @if (Model.Banks.Count == 0)
                     {
-                        <p class="text-muted">No question banks yet. <a asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">Create one</a>.</p>
+                        <p class="text-muted">@T["No question banks yet."] <a asp-action="QuestionBanks" asp-route-offeringId="@quiz.CourseOfferingId">@T["Create one"]</a>.</p>
                     }
                     else
                     {
-                        <h4 class="h6">Draw random questions</h4>
+                        <h4 class="h6">@T["Draw random questions"]</h4>
                         <form asp-action="AddQuizGroup" method="post" class="row g-2 align-items-end mb-4">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="quizId" value="@quiz.QuizId" />
                             <div class="col-md-4">
-                                <label class="form-label small" for="grp-bank">Bank</label>
+                                <label class="form-label small" for="grp-bank">@T["Bank"]</label>
                                 <select id="grp-bank" name="questionBankId" class="form-select form-select-sm" required>
                                     @foreach (var b in Model.Banks)
                                     {
@@ -180,36 +181,36 @@ else
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small" for="grp-title">Label</label>
+                                <label class="form-label small" for="grp-title">@T["Label"]</label>
                                 <input id="grp-title" name="title" class="form-control form-control-sm" value="Random questions" maxlength="200" />
                             </div>
                             <div class="col-4 col-md-1">
-                                <label class="form-label small" for="grp-pick">Pick</label>
+                                <label class="form-label small" for="grp-pick">@T["Pick"]</label>
                                 <input id="grp-pick" name="pickCount" type="number" min="1" value="5" class="form-control form-control-sm" required />
                             </div>
                             <div class="col-4 col-md-2">
-                                <label class="form-label small" for="grp-marks">Marks each</label>
+                                <label class="form-label small" for="grp-marks">@T["Marks each"]</label>
                                 <input id="grp-marks" name="marksPerQuestion" type="number" step="0.25" min="0" value="1" class="form-control form-control-sm" required />
                             </div>
                             <div class="col-4 col-md-2">
-                                <label class="form-label small" for="grp-tag">Tag (optional)</label>
+                                <label class="form-label small" for="grp-tag">@T["Tag (optional)"]</label>
                                 <input id="grp-tag" name="tagFilter" class="form-control form-control-sm" maxlength="100" />
                             </div>
                             <input type="hidden" name="orderIndex" value="@nextOrder" />
-                            <div class="col-12"><button class="btn btn-sm btn-primary">Add question group</button></div>
+                            <div class="col-12"><button class="btn btn-sm btn-primary">@T["Add question group"]</button></div>
                         </form>
 
-                        <h4 class="h6">Copy questions from a bank</h4>
+                        <h4 class="h6">@T["Copy questions from a bank"]</h4>
                         <form method="get" asp-action="QuizBuilder" asp-fragment="banks" class="d-flex gap-2 mb-2">
                             <input type="hidden" name="quizId" value="@quiz.QuizId" />
-                            <label class="visually-hidden" for="copy-bank">Bank</label>
+                            <label class="visually-hidden" for="copy-bank">@T["Bank"]</label>
                             <select id="copy-bank" name="copyBankId" class="form-select form-select-sm" style="max-width: 20rem;">
                                 @foreach (var b in Model.Banks)
                                 {
                                     <option value="@b.BankId" selected="@(Model.CopyBank?.BankId == b.BankId)">@b.Title</option>
                                 }
                             </select>
-                            <button class="btn btn-sm btn-outline-secondary">Show questions</button>
+                            <button class="btn btn-sm btn-outline-secondary">@T["Show questions"]</button>
                         </form>
                         @if (Model.CopyBank is { } bank)
                         {
@@ -219,7 +220,7 @@ else
                                 <input type="hidden" name="bankId" value="@bank.BankId" />
                                 @if (bank.Questions.Count == 0)
                                 {
-                                    <p class="small text-muted">This bank has no questions.</p>
+                                    <p class="small text-muted">@T["This bank has no questions."]</p>
                                 }
                                 @foreach (var bq in bank.Questions)
                                 {
@@ -230,7 +231,7 @@ else
                                         </label>
                                     </div>
                                 }
-                                <button class="btn btn-sm btn-primary mt-2" @(bank.Questions.Count == 0 ? "disabled" : "")>Copy selected into this quiz</button>
+                                <button class="btn btn-sm btn-primary mt-2" @(bank.Questions.Count == 0 ? "disabled" : "")>@T["Copy selected into this quiz"]</button>
                             </form>
                         }
                     }
@@ -242,7 +243,7 @@ else
             @* ── Settings ────────────────────────────────────────────────── *@
             <div class="card border-0 shadow-sm mb-3" id="settings">
                 <div class="card-body">
-                    <h3 class="h5 mb-3">Delivery &amp; security</h3>
+                    <h3 class="h5 mb-3">@T["Delivery &amp; security"]</h3>
                     <form asp-action="SaveQuizSettings" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="quizId" value="@quiz.QuizId" />
@@ -259,12 +260,12 @@ else
                         @{ Switch("shuffleOptions", "Shuffle answer options", settings?.ShuffleOptions == true); }
                         @{ Switch("oneQuestionAtATime", "Show one question at a time", settings?.OneQuestionAtATime == true); }
                         @{ Switch("lockAnsweredQuestions", "Lock answers once saved (no going back)", settings?.LockAnsweredQuestions == true); }
-                        <label class="form-label small fw-semibold mt-2" for="set-code">Access code</label>
-                        <input id="set-code" name="accessCode" class="form-control form-control-sm" maxlength="100" value="@settings?.AccessCode" placeholder="Optional" autocomplete="off" />
-                        <label class="form-label small fw-semibold mt-2" for="set-ip">Allowed networks</label>
-                        <input id="set-ip" name="allowedIpRanges" class="form-control form-control-sm" maxlength="1000" value="@settings?.AllowedIpRanges" placeholder="e.g. 10.0.0.0/8, 192.168.1.20" />
-                        <div class="form-text">Blank = any network. Students outside these addresses cannot start the quiz.</div>
-                        <label class="form-label small fw-semibold mt-2" for="set-review">After submitting, students see</label>
+                        <label class="form-label small fw-semibold mt-2" for="set-code">@T["Access code"]</label>
+                        <input id="set-code" name="accessCode" class="form-control form-control-sm" maxlength="100" value="@settings?.AccessCode" placeholder="@T["Optional"]" autocomplete="off" />
+                        <label class="form-label small fw-semibold mt-2" for="set-ip">@T["Allowed networks"]</label>
+                        <input id="set-ip" name="allowedIpRanges" class="form-control form-control-sm" maxlength="1000" value="@settings?.AllowedIpRanges" placeholder="@T["e.g. 10.0.0.0/8, 192.168.1.20"]" />
+                        <div class="form-text">@T["Blank = any network. Students outside these addresses cannot start the quiz."]</div>
+                        <label class="form-label small fw-semibold mt-2" for="set-review">@T["After submitting, students see"]</label>
                         <select id="set-review" name="reviewVisibility" class="form-select form-select-sm">
                             @foreach (var (value, label) in new[] { ("None", "Nothing (just “submitted”)"), ("ScoreOnly", "Their score"), ("ResponsesAndScore", "Score and their answers"), ("CorrectAnswers", "Score, answers and correct answers") })
                             {
@@ -272,7 +273,7 @@ else
                             }
                         </select>
                         @{ Switch("reviewAfterCloseOnly", "Only show answers after the quiz closes", settings?.ReviewAfterCloseOnly == true); }
-                        <button class="btn btn-sm btn-primary mt-3">Save settings</button>
+                        <button class="btn btn-sm btn-primary mt-3">@T["Save settings"]</button>
                     </form>
                 </div>
             </div>
@@ -280,19 +281,19 @@ else
             @* ── Accommodations & overrides ──────────────────────────────── *@
             <div class="card border-0 shadow-sm mb-3" id="accommodations">
                 <div class="card-body">
-                    <h3 class="h5 mb-2">Extra time &amp; attempts</h3>
+                    <h3 class="h5 mb-2">@T["Extra time &amp; attempts"]</h3>
                     @foreach (var a in Model.Accommodations.Where(a => a.QuizId is null || a.QuizId == quiz.QuizId))
                     {
                         <div class="d-flex gap-2 align-items-start small border-bottom py-1">
                             <div class="flex-grow-1">
                                 <div class="fw-semibold">@(a.StudentName ?? a.StudentProfileId.ToString())</div>
-                                <div>×@a.TimeMultiplier.ToString("0.##") time @(a.ExtraTimeMinutes > 0 ? $"+ {a.ExtraTimeMinutes} min" : "")@(a.ExtraAttempts > 0 ? $", +{a.ExtraAttempts} attempt(s)" : "") · @(a.QuizId is null ? "all quizzes in this course" : "this quiz")</div>
+                                <div>@T.Format("×{0} time {1}{2} · {3}", a.TimeMultiplier.ToString("0.##"), (a.ExtraTimeMinutes > 0 ? $"+ {a.ExtraTimeMinutes} min" : ""), (a.ExtraAttempts > 0 ? $", +{a.ExtraAttempts} attempt(s)" : ""), (a.QuizId is null ? "all quizzes in this course" : "this quiz"))</div>
                             </div>
                             <form asp-action="DeleteQuizAccommodation" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                 <input type="hidden" name="id" value="@a.Id" />
-                                <button class="btn btn-sm btn-link text-danger p-0">Remove</button>
+                                <button class="btn btn-sm btn-link text-danger p-0">@T["Remove"]</button>
                             </form>
                         </div>
                     }
@@ -300,60 +301,60 @@ else
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="quizId" value="@quiz.QuizId" />
                         <input type="hidden" name="courseOfferingId" value="@quiz.CourseOfferingId" />
-                        <label class="form-label small" for="acc-student">Student</label>
+                        <label class="form-label small" for="acc-student">@T["Student"]</label>
                         <select id="acc-student" name="studentProfileId" class="form-select form-select-sm" required>
-                            <option value="">Choose…</option>
+                            <option value="">@T["Choose…"]</option>
                             @foreach (var s in Model.Roster)
                             {
                                 <option value="@s.StudentProfileId">@s.StudentName (@s.RegistrationNumber)</option>
                             }
                         </select>
                         <div class="row g-2 mt-1">
-                            <div class="col-4"><label class="form-label small" for="acc-mult">Time ×</label><input id="acc-mult" name="timeMultiplier" type="number" step="0.25" min="1" max="5" value="1.5" class="form-control form-control-sm" /></div>
-                            <div class="col-4"><label class="form-label small" for="acc-min">+ minutes</label><input id="acc-min" name="extraTimeMinutes" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
-                            <div class="col-4"><label class="form-label small" for="acc-att">+ attempts</label><input id="acc-att" name="extraAttempts" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
+                            <div class="col-4"><label class="form-label small" for="acc-mult">@T["Time ×"]</label><input id="acc-mult" name="timeMultiplier" type="number" step="0.25" min="1" max="5" value="1.5" class="form-control form-control-sm" /></div>
+                            <div class="col-4"><label class="form-label small" for="acc-min">@T["+ minutes"]</label><input id="acc-min" name="extraTimeMinutes" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
+                            <div class="col-4"><label class="form-label small" for="acc-att">@T["+ attempts"]</label><input id="acc-att" name="extraAttempts" type="number" min="0" value="0" class="form-control form-control-sm" /></div>
                         </div>
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="acc-all" name="allQuizzes" value="true" checked />
-                            <label class="form-check-label small" for="acc-all">Apply to every quiz in this course</label>
+                            <label class="form-check-label small" for="acc-all">@T["Apply to every quiz in this course"]</label>
                         </div>
-                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="Note (e.g. learning support plan)" aria-label="Note" />
-                        <button class="btn btn-sm btn-outline-primary mt-2">Save accommodation</button>
+                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="@T["Note (e.g. learning support plan)"]" aria-label="@T["Note"]" />
+                        <button class="btn btn-sm btn-outline-primary mt-2">@T["Save accommodation"]</button>
                     </form>
 
-                    <h3 class="h6 mt-4 mb-2">Different dates for one student</h3>
+                    <h3 class="h6 mt-4 mb-2">@T["Different dates for one student"]</h3>
                     @foreach (var o in Model.Overrides)
                     {
                         <div class="d-flex gap-2 align-items-start small border-bottom py-1">
                             <div class="flex-grow-1">
                                 <div class="fw-semibold">@(o.StudentName ?? o.StudentProfileId.ToString())</div>
-                                <div>@(o.AvailableFrom?.ToLocalTime().ToString("g") ?? "open") – @(o.AvailableUntil?.ToLocalTime().ToString("g") ?? "no end")</div>
+                                <div>@(o.AvailableFrom?.ToLocalTime().ToString("g") ?? "open") – @(o.AvailableUntil?.ToLocalTime().ToString("g") ?? T.Text("no end"))</div>
                             </div>
                             <form asp-action="DeleteQuizOverride" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                 <input type="hidden" name="id" value="@o.Id" />
-                                <button class="btn btn-sm btn-link text-danger p-0">Remove</button>
+                                <button class="btn btn-sm btn-link text-danger p-0">@T["Remove"]</button>
                             </form>
                         </div>
                     }
                     <form asp-action="SaveQuizOverride" method="post" class="mt-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="quizId" value="@quiz.QuizId" />
-                        <label class="form-label small" for="ovr-student">Student</label>
+                        <label class="form-label small" for="ovr-student">@T["Student"]</label>
                         <select id="ovr-student" name="studentProfileId" class="form-select form-select-sm" required>
-                            <option value="">Choose…</option>
+                            <option value="">@T["Choose…"]</option>
                             @foreach (var s in Model.Roster)
                             {
                                 <option value="@s.StudentProfileId">@s.StudentName (@s.RegistrationNumber)</option>
                             }
                         </select>
                         <div class="row g-2 mt-1">
-                            <div class="col-6"><label class="form-label small" for="ovr-from">Opens</label><input id="ovr-from" name="availableFrom" type="datetime-local" class="form-control form-control-sm" /></div>
-                            <div class="col-6"><label class="form-label small" for="ovr-until">Closes</label><input id="ovr-until" name="availableUntil" type="datetime-local" class="form-control form-control-sm" /></div>
+                            <div class="col-6"><label class="form-label small" for="ovr-from">@T["Opens"]</label><input id="ovr-from" name="availableFrom" type="datetime-local" class="form-control form-control-sm" /></div>
+                            <div class="col-6"><label class="form-label small" for="ovr-until">@T["Closes"]</label><input id="ovr-until" name="availableUntil" type="datetime-local" class="form-control form-control-sm" /></div>
                         </div>
-                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="Note (e.g. make-up sitting)" aria-label="Note" />
-                        <button class="btn btn-sm btn-outline-primary mt-2">Save dates</button>
+                        <input name="note" class="form-control form-control-sm mt-2" maxlength="500" placeholder="@T["Note (e.g. make-up sitting)"]" aria-label="@T["Note"]" />
+                        <button class="btn btn-sm btn-outline-primary mt-2">@T["Save dates"]</button>
                     </form>
                 </div>
             </div>
@@ -363,4 +364,5 @@ else
 
 @section Scripts {
     <script src="~/js/quiz-editor.js" asp-append-version="true" defer></script>
+    <script src="~/js/outcome-align.js" asp-append-version="true" defer></script>
 }

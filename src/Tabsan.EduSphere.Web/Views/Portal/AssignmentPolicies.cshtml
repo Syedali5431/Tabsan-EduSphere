@@ -1,0 +1,235 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AssignmentPoliciesPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("Late policy & groups");
+    var p = Model.LatePolicy;
+}
+
+@* Plan M8.1 / M8.3 — a course's late & missing policy and its student groups. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Late policy &amp; groups"]</h2>
+        <p class="text-muted mb-0">@T["Deductions for late work, grades for missing work, and the student groups used for group assignments and discussions."]</p>
+    </div>
+    @if (Model.OfferingId != Guid.Empty) { <a asp-action="Assignments" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-secondary">@T["Assignments"]</a> }
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else
+{
+    <form method="get" asp-action="AssignmentPolicies" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label small" for="ap-offering">@T["Course"]</label>
+            <select id="ap-offering" name="offeringId" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var o in Model.Offerings) { <option value="@o.Id" selected="@(o.Id == Model.OfferingId)">@o.Label</option> }
+            </select>
+        </div>
+        <noscript><div class="col-md-2"><button class="btn btn-sm btn-outline-secondary">@T["Show"]</button></div></noscript>
+    </form>
+
+    @if (Model.OfferingId == Guid.Empty || p is null)
+    {
+        <div class="border rounded p-3 bg-light">@(Model.Offerings.Count == 0 ? T.Text("You have no course offerings.") : T.Text("This course could not be loaded."))</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="col-xl-5">
+                <div class="card border-0 shadow-sm" data-late-policy>
+                    <div class="card-body">
+                        <h3 class="h5">@T["Late &amp; missing work"]</h3>
+                        <p class="small text-muted">@AssignmentPolicyFormat.Policy(p)</p>
+                        <form asp-action="SaveLatePolicy" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="lp-late" name="lateDeductionEnabled" value="true" checked="@p.LateDeductionEnabled" />
+                                <input type="hidden" name="lateDeductionEnabled" value="false" />
+                                <label class="form-check-label" for="lp-late">@T["Deduct points for late work"]</label>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-sm-4">
+                                    <label class="form-label small" for="lp-percent">@T["Deduction (%)"]</label>
+                                    <input class="form-control form-control-sm" id="lp-percent" name="deductionPercent" type="number" min="0" max="100" step="0.5" value="@AssignmentPolicyFormat.Marks(p.DeductionPercent)" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <label class="form-label small" for="lp-interval">@T["Per"]</label>
+                                    <select class="form-select form-select-sm" id="lp-interval" name="interval">
+                                        <option value="Day" selected="@(p.Interval == "Day")">@T["day late"]</option>
+                                        <option value="Hour" selected="@(p.Interval == "Hour")">@T["hour late"]</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-4">
+                                    <label class="form-label small" for="lp-floor">@T["Lowest grade (%)"]</label>
+                                    <input class="form-control form-control-sm" id="lp-floor" name="lowestGradePercent" type="number" min="0" max="100" step="0.5" value="@AssignmentPolicyFormat.Marks(p.LowestGradePercent)" />
+                                </div>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="lp-missing" name="missingEnabled" value="true" checked="@p.MissingEnabled" />
+                                <input type="hidden" name="missingEnabled" value="false" />
+                                <label class="form-check-label" for="lp-missing">@T["Grade work never handed in"]</label>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-sm-4">
+                                    <label class="form-label small" for="lp-missing-grade">@T["Missing grade (%)"]</label>
+                                    <input class="form-control form-control-sm" id="lp-missing-grade" name="missingGradePercent" type="number" min="0" max="100" step="0.5" value="@AssignmentPolicyFormat.Marks(p.MissingGradePercent)" />
+                                </div>
+                                <div class="col-sm-8 small text-muted align-self-end">@T["Given automatically (every hour) once a student's due date has passed. Handing in late work replaces it."]</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm">@T["Save policy"]</button>
+                        </form>
+                        @if (p.MissingEnabled)
+                        {
+                            <form asp-action="ApplyMissingGrades" method="post" class="mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                <button class="btn btn-outline-secondary btn-sm">@T["Grade missing work now"]</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-7">
+                <div class="card border-0 shadow-sm" data-group-sets>
+                    <div class="card-body">
+                        <h3 class="h5">@T["Group sets"]</h3>
+                        <p class="small text-muted">@T["A group set splits the class into groups (for example “Project teams”). A student is in at most one group of each set. Choose a set on an assignment to make it group work."]</p>
+                        <form asp-action="CreateGroupSet" method="post" class="row g-2 align-items-end mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                            <div class="col-sm-5"><label class="form-label small" for="gs-name">@T["New group set"]</label><input class="form-control form-control-sm" id="gs-name" name="name" maxlength="150" required placeholder="@T["Project teams"]" /></div>
+                            <div class="col-sm-3"><label class="form-label small" for="gs-max">@T["Largest group"]</label><input class="form-control form-control-sm" id="gs-max" name="maxSize" type="number" min="1" max="500" placeholder="@T["No limit"]" /></div>
+                            <div class="col-sm-2 form-check ms-2">
+                                <input class="form-check-input" type="checkbox" id="gs-self" name="selfSignup" value="true" />
+                                <input type="hidden" name="selfSignup" value="false" />
+                                <label class="form-check-label small" for="gs-self">@T["Students sign up"]</label>
+                            </div>
+                            <div class="col-sm-auto"><button class="btn btn-primary btn-sm">@T["Create"]</button></div>
+                        </form>
+
+                        @if (Model.GroupSets.Count == 0)
+                        {
+                            <div class="border rounded p-3 bg-light small">@T["No group sets yet."]</div>
+                        }
+                        @foreach (var set in Model.GroupSets)
+                        {
+                            var unassigned = set.Unassigned;
+                            <div class="border rounded p-2 mb-3" data-group-set="@set.Name">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <h4 class="h6 mb-0 me-auto">@set.Name</h4>
+                                    <span class="badge bg-light text-dark border">@(set.SelfSignup ? T.Text("Students sign up") : T.Text("Teacher assigns"))</span>
+                                    <span class="badge bg-light text-dark border">@(set.MaxSize is { } cap ? $"Up to {cap} per group" : T.Text("No size limit"))</span>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#gs-edit-@set.Id" aria-expanded="false" aria-controls="gs-edit-@set.Id">@T["Edit"]</button>
+                                    <form asp-action="DeleteGroupSet" method="post" class="d-inline" onsubmit="return confirm('@T.Js("Delete this group set and all its groups?")');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="setId" value="@set.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                        <button class="btn btn-sm btn-outline-danger">@T["Delete"]</button>
+                                    </form>
+                                </div>
+                                <div class="collapse mb-2" id="gs-edit-@set.Id">
+                                    <form asp-action="UpdateGroupSet" method="post" class="row g-2 align-items-end">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="setId" value="@set.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                        <div class="col-sm-5"><label class="form-label small" for="gs-name-@set.Id">@T["Name"]</label><input class="form-control form-control-sm" id="gs-name-@set.Id" name="name" value="@set.Name" maxlength="150" required /></div>
+                                        <div class="col-sm-3"><label class="form-label small" for="gs-max-@set.Id">@T["Largest group"]</label><input class="form-control form-control-sm" id="gs-max-@set.Id" name="maxSize" type="number" min="1" max="500" value="@set.MaxSize" /></div>
+                                        <div class="col-sm-2 form-check ms-2">
+                                            <input class="form-check-input" type="checkbox" id="gs-self-@set.Id" name="selfSignup" value="true" checked="@set.SelfSignup" />
+                                            <input type="hidden" name="selfSignup" value="false" />
+                                            <label class="form-check-label small" for="gs-self-@set.Id">@T["Students sign up"]</label>
+                                        </div>
+                                        <div class="col-sm-auto"><button class="btn btn-primary btn-sm">@T["Save"]</button></div>
+                                    </form>
+                                </div>
+
+                                <div class="row g-2 mb-2">
+                                    <form asp-action="CreateStudentGroup" method="post" class="col-12 col-xxl-6 d-flex gap-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="setId" value="@set.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                        <label class="visually-hidden" for="g-new-@set.Id">@T["New group name"]</label>
+                                        <input class="form-control form-control-sm" id="g-new-@set.Id" name="name" maxlength="150" required placeholder="@T["Group name"]" />
+                                        <button class="btn btn-sm btn-outline-primary text-nowrap">@T["Add group"]</button>
+                                    </form>
+                                    <form asp-action="SplitGroupSet" method="post" class="col-12 col-xxl-6 d-flex gap-1" onsubmit="return confirm('@T.Js("Put every student who is not in a group yet into new groups at random?")');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="setId" value="@set.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                        <label class="visually-hidden" for="g-split-by-@set.Id">@T["Split by"]</label>
+                                        <select class="form-select form-select-sm" id="g-split-by-@set.Id" name="splitBy" style="max-width: 9rem;">
+                                            <option value="count">@T["Groups:"]</option>
+                                            <option value="size">@T["Students per group:"]</option>
+                                        </select>
+                                        <label class="visually-hidden" for="g-split-@set.Id">@T["Number"]</label>
+                                        <input class="form-control form-control-sm" id="g-split-@set.Id" name="splitValue" type="number" min="1" max="500" value="2" required style="max-width: 5rem;" />
+                                        <button class="btn btn-sm btn-outline-secondary text-nowrap">@T["Split at random"]</button>
+                                    </form>
+                                </div>
+
+                                @if (set.Groups.Count == 0)
+                                {
+                                    <p class="small text-muted mb-1">@T["No groups yet."]</p>
+                                }
+                                <div class="row g-2">
+                                    @foreach (var g in set.Groups)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-2 h-100" data-group="@g.Name">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <strong class="me-auto">@g.Name</strong>
+                                                    <span class="small text-muted">@T.Format("{0} member(s)", g.MemberCount)</span>
+                                                    <form asp-action="DeleteStudentGroup" method="post" class="d-inline" onsubmit="return confirm('@T.Js("Delete this group?")');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="groupId" value="@g.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                                        <button class="btn btn-link btn-sm p-0 text-danger" aria-label="Delete group @g.Name">@T["Delete"]</button>
+                                                    </form>
+                                                </div>
+                                                <ul class="list-unstyled small mb-1">
+                                                    @foreach (var m in g.Members)
+                                                    {
+                                                        <li class="d-flex align-items-center gap-1">
+                                                            <span class="me-auto">@m.Name <span class="text-muted">@m.RegistrationNumber</span></span>
+                                                            <form asp-action="RemoveGroupMember" method="post" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="groupId" value="@g.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                                                <input type="hidden" name="studentProfileId" value="@m.StudentProfileId" />
+                                                                <button class="btn btn-link btn-sm p-0" aria-label="Remove @m.Name from @g.Name">@T["Remove"]</button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                                @if (unassigned.Count > 0)
+                                                {
+                                                    <form asp-action="AddGroupMember" method="post" class="d-flex gap-1">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="groupId" value="@g.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                                        <label class="visually-hidden" for="g-add-@g.Id">@T.Format("Add a student to {0}", g.Name)</label>
+                                                        <select class="form-select form-select-sm" id="g-add-@g.Id" name="studentProfileId">
+                                                            @foreach (var u in unassigned) { <option value="@u.StudentProfileId">@u.Name</option> }
+                                                        </select>
+                                                        <button class="btn btn-sm btn-outline-primary">@T["Add"]</button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (unassigned.Count > 0)
+                                {
+                                    <p class="small text-muted mt-2 mb-0" data-unassigned>@T.Format("Not in a group: {0}", string.Join(", ", unassigned.Select(u => u.Name)))</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

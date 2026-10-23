@@ -1,19 +1,19 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ResultCalculationSettingsPageModel
-@{ ViewData["Title"] = "Result Calculation"; }
+@{ ViewData["Title"] = T.Text("Result Calculation"); }
 
 @if (!string.IsNullOrWhiteSpace(TempData["Message"]?.ToString()))
 {
-    <div class="alert alert-info">@TempData["Message"]</div>
+    <div class="alert alert-info">@T.Text(TempData["Message"]?.ToString())</div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-danger">@Model.Message</div>
+    <div class="alert alert-danger">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -21,15 +21,15 @@ else
         <div class="card-body">
             <form method="get" asp-action="ResultCalculation" class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label">Institute</label>
+                    <label class="form-label" for="selectedInstitutionType">@T["Institute"]</label>
                     <select id="selectedInstitutionType" name="selectedInstitutionType" class="form-select" onchange="this.form.submit()">
-                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">University</option>
-                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">School</option>
-                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">College</option>
+                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">@T["University"]</option>
+                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">@T["School"]</option>
+                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">@T["College"]</option>
                     </select>
                 </div>
                 <div class="col-md-8">
-                    <div class="text-muted small mt-4">Result calculation settings shown below are scoped to the selected institute only.</div>
+                    <div class="text-muted small mt-4">@T["Result calculation settings shown below are scoped to the selected institute only."]</div>
                 </div>
             </form>
         </div>
@@ -40,21 +40,21 @@ else
         <div class="card-body">
             <div class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label">Course Type</label>
+                    <label class="form-label" for="courseTypeFilter">@T["Course Type"]</label>
                     <select id="courseTypeFilter" class="form-select" onchange="loadCoursesForType()">
-                        <option value="">All Courses</option>
-                        <option value="true">Semester-Based</option>
-                        <option value="false">Non-Semester-Based</option>
+                        <option value="">@T["All Courses"]</option>
+                        <option value="true">@T["Semester-Based"]</option>
+                        <option value="false">@T["Non-Semester-Based"]</option>
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label">Course</label>
+                    <label class="form-label" for="courseFilter">@T["Course"]</label>
                     <select id="courseFilter" class="form-select">
-                        <option value="">All (no filter)</option>
+                        <option value="">@T["All (no filter)"]</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" id="courseSearch" class="form-control" placeholder="Search course…" oninput="filterCourseDropdown()">
+                    <input type="text" id="courseSearch" class="form-control" placeholder="@T["Search course…"]" oninput="filterCourseDropdown()">
                 </div>
             </div>
         </div>
@@ -67,10 +67,10 @@ else
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h2 class="h5 mb-1">Section 1: GPA and Score</h2>
-                        <p class="text-muted mb-0">Add one or more GPA-to-score threshold rows.</p>
+                        <h2 class="h5 mb-1">@T["Section 1: GPA and Score"]</h2>
+                        <p class="text-muted mb-0">@T["Add one or more GPA-to-score threshold rows."]</p>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGpaRow()">Add Row</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGpaRow()">@T["Add Row"]</button>
                 </div>
 
                 <div id="gpaRows" class="d-grid gap-2">
@@ -79,13 +79,13 @@ else
                         <div class="row g-2 gpa-row align-items-end">
                             <div class="col-md-5">
                                 <label class="form-label">GPA</label>
-                                <input name="GpaRules[@i].GradePoint" class="form-control" type="number" step="0.01" value="@Model.GpaRules[i].GradePoint" />
+                                <input aria-label="GPA" name="GpaRules[@i].GradePoint" class="form-control" type="number" step="0.01" value="@Model.GpaRules[i].GradePoint" />
                                 <input name="GpaRules[@i].Id" type="hidden" value="@Model.GpaRules[i].Id" />
                                 <input name="GpaRules[@i].DisplayOrder" type="hidden" value="@(i + 1)" />
                             </div>
                             <div class="col-md-5">
-                                <label class="form-label">Score</label>
-                                <input name="GpaRules[@i].MinimumScore" class="form-control" type="number" step="0.01" value="@Model.GpaRules[i].MinimumScore" />
+                                <label class="form-label">@T["Score"]</label>
+                                <input aria-label="@T["Score"]" name="GpaRules[@i].MinimumScore" class="form-control" type="number" step="0.01" value="@Model.GpaRules[i].MinimumScore" />
                             </div>
                             <div class="col-md-2 text-end">
                                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">X</button>
@@ -100,10 +100,10 @@ else
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h2 class="h5 mb-1">Section 2: Subject Score Calculation</h2>
-                        <p class="text-muted mb-0">Define the assessment parts that combine into the current subject GPA.</p>
+                        <h2 class="h5 mb-1">@T["Section 2: Subject Score Calculation"]</h2>
+                        <p class="text-muted mb-0">@T["Define the assessment parts that combine into the current subject GPA."]</p>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addComponentRow()">Add Row</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addComponentRow()">@T["Add Row"]</button>
                 </div>
 
                 <div id="componentRows" class="d-grid gap-2">
@@ -111,19 +111,19 @@ else
                     {
                         <div class="row g-2 component-row align-items-end">
                             <div class="col-md-5">
-                                <label class="form-label">Component</label>
-                                <input name="ComponentRules[@i].Name" class="form-control" value="@Model.ComponentRules[i].Name" />
+                                <label class="form-label">@T["Component"]</label>
+                                <input aria-label="@T["Component"]" name="ComponentRules[@i].Name" class="form-control" value="@Model.ComponentRules[i].Name" />
                                 <input name="ComponentRules[@i].Id" type="hidden" value="@Model.ComponentRules[i].Id" />
                                 <input name="ComponentRules[@i].DisplayOrder" type="hidden" value="@(i + 1)" />
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Weightage</label>
-                                <input name="ComponentRules[@i].Weightage" class="form-control component-weight" type="number" step="0.01" value="@Model.ComponentRules[i].Weightage" />
+                                <label class="form-label">@T["Weightage"]</label>
+                                <input aria-label="@T["Weightage"]" name="ComponentRules[@i].Weightage" class="form-control component-weight" type="number" step="0.01" value="@Model.ComponentRules[i].Weightage" />
                             </div>
                             <div class="col-md-2">
                                 <div class="form-check mt-4 pt-2">
-                                    <input class="form-check-input" name="ComponentRules[@i].IsActive" type="checkbox" value="true" @(Model.ComponentRules[i].IsActive ? "checked" : null) />
-                                    <label class="form-check-label">Active</label>
+                                    <input aria-label="@T["Active"]" class="form-check-input" name="ComponentRules[@i].IsActive" type="checkbox" value="true" @(Model.ComponentRules[i].IsActive ? "checked" : null) />
+                                    <label class="form-check-label">@T["Active"]</label>
                                 </div>
                                 <input type="hidden" name="ComponentRules[@i].IsActive" value="false" />
                             </div>
@@ -134,12 +134,12 @@ else
                     }
                 </div>
 
-                <div class="mt-3 text-muted small">Active component total: <span id="componentTotal">0</span> / 100</div>
+                <div class="mt-3 text-muted small">@T["Active component total:"] <span id="componentTotal">0</span> / 100</div>
             </div>
         </div>
 
         <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="submit" class="btn btn-primary">@T["Save"]</button>
         </div>
     </form>
 
@@ -147,13 +147,13 @@ else
         <div class="row g-2 gpa-row align-items-end">
             <div class="col-md-5">
                 <label class="form-label">GPA</label>
-                <input name="GpaRules[__index__].GradePoint" class="form-control" type="number" step="0.01" />
+                <input aria-label="GPA" name="GpaRules[__index__].GradePoint" class="form-control" type="number" step="0.01" />
                 <input name="GpaRules[__index__].Id" type="hidden" />
                 <input name="GpaRules[__index__].DisplayOrder" type="hidden" value="__display__" />
             </div>
             <div class="col-md-5">
-                <label class="form-label">Score</label>
-                <input name="GpaRules[__index__].MinimumScore" class="form-control" type="number" step="0.01" />
+                <label class="form-label">@T["Score"]</label>
+                <input aria-label="@T["Score"]" name="GpaRules[__index__].MinimumScore" class="form-control" type="number" step="0.01" />
             </div>
             <div class="col-md-2 text-end">
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">X</button>
@@ -164,19 +164,19 @@ else
     <template id="componentRowTemplate">
         <div class="row g-2 component-row align-items-end">
             <div class="col-md-5">
-                <label class="form-label">Component</label>
-                <input name="ComponentRules[__index__].Name" class="form-control" />
+                <label class="form-label">@T["Component"]</label>
+                <input aria-label="@T["Component"]" name="ComponentRules[__index__].Name" class="form-control" />
                 <input name="ComponentRules[__index__].Id" type="hidden" />
                 <input name="ComponentRules[__index__].DisplayOrder" type="hidden" value="__display__" />
             </div>
             <div class="col-md-3">
-                <label class="form-label">Weightage</label>
-                <input name="ComponentRules[__index__].Weightage" class="form-control component-weight" type="number" step="0.01" value="0" />
+                <label class="form-label">@T["Weightage"]</label>
+                <input aria-label="@T["Weightage"]" name="ComponentRules[__index__].Weightage" class="form-control component-weight" type="number" step="0.01" value="0" />
             </div>
             <div class="col-md-2">
                 <div class="form-check mt-4 pt-2">
-                    <input class="form-check-input" name="ComponentRules[__index__].IsActive" type="checkbox" value="true" checked />
-                    <label class="form-check-label">Active</label>
+                    <input aria-label="@T["Active"]" class="form-check-input" name="ComponentRules[__index__].IsActive" type="checkbox" value="true" checked />
+                    <label class="form-check-label">@T["Active"]</label>
                 </div>
                 <input type="hidden" name="ComponentRules[__index__].IsActive" value="false" />
             </div>

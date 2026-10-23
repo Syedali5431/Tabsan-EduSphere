@@ -1,17 +1,17 @@
 @model Tabsan.EduSphere.Web.Models.Portal.TimetableStudentPageModel
 @{
-    ViewData["Title"] = "Student Timetable";
+    ViewData["Title"] = T.Text("Student Timetable");
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">
-        API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.
+        @T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.
     </div>
 }
 else
@@ -23,9 +23,9 @@ else
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-md-3">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
@@ -33,9 +33,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -47,9 +47,9 @@ else
                 {
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -61,9 +61,9 @@ else
                 @if (!User.IsInRole("Student"))
                 {
                 <div class="col-md-3">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">Select Department</option>
+                    <label class="form-label">@T["Department"]</label>
+                    <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["Select Department"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@d.Name</option>
@@ -73,9 +73,9 @@ else
                 }
 
                 <div class="col-md-3">
-                    <label class="form-label">Timetable</label>
-                    <select name="timetableId" class="form-select" onchange="this.form.submit()">
-                        <option value="">Latest</option>
+                    <label class="form-label">@T["Timetable"]</label>
+                    <select aria-label="@T["Timetable"]" name="timetableId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["Latest"]</option>
                         @foreach (var t in Model.Timetables)
                         {
                             <option value="@t.Id" selected="@(Model.SelectedTimetableId == t.Id)">@t.Title</option>
@@ -84,9 +84,9 @@ else
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Day Filter</label>
-                    <select name="dayOfWeek" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Days</option>
+                    <label class="form-label">@T["Day Filter"]</label>
+                    <select aria-label="@T["Day Filter"]" name="dayOfWeek" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Days"]</option>
                         @for (var i = 0; i <= 6; i++)
                         {
                             <option value="@i" selected="@(Model.SelectedDayOfWeek == i)">@((DayOfWeek)i)</option>
@@ -95,7 +95,7 @@ else
                 </div>
 
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                    <button type="submit" class="btn btn-primary w-100">@T["Apply"]</button>
                 </div>
             </form>
         </div>
@@ -103,10 +103,10 @@ else
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h2 class="h5">Published Timetables</h2>
+            <h2 class="h5">@T["Published Timetables"]</h2>
             @if (Model.Timetables.Count == 0)
             {
-                <p class="text-muted mb-0">No timetable available.</p>
+                <p class="text-muted mb-0">@T["No timetable available."]</p>
             }
             else
             {
@@ -142,7 +142,7 @@ else
                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                 <input type="hidden" name="dayOfWeek" value="@Model.SelectedDayOfWeek" />
-                                <button type="submit" class="btn btn-sm btn-outline-warning">Deactivate</button>
+                                <button type="submit" class="btn btn-sm btn-outline-warning">@T["Deactivate"]</button>
                             </form>
                         }
                         else
@@ -154,7 +154,7 @@ else
                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                 <input type="hidden" name="dayOfWeek" value="@Model.SelectedDayOfWeek" />
-                                <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                <button type="submit" class="btn btn-sm btn-outline-success">@T["Activate"]</button>
                             </form>
                         }
                     }
@@ -163,13 +163,13 @@ else
                     <table class="table table-sm table-striped">
                         <thead>
                             <tr>
-                                <th>SR#</th>
-                                <th>Day</th>
-                                <th>Time</th>
-                                <th>Subject</th>
-                                <th>Teacher</th>
-                                <th>Building</th>
-                                <th>Room</th>
+                                <th>@T["SR#"]</th>
+                                <th>@T["Day"]</th>
+                                <th>@T["Time"]</th>
+                                <th>@T["Subject"]</th>
+                                <th>@T["Teacher"]</th>
+                                <th>@T["Building"]</th>
+                                <th>@T["Room"]</th>
                             </tr>
                         </thead>
                         <tbody>

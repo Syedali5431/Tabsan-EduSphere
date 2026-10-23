@@ -77,6 +77,21 @@ public class NotificationRepository : INotificationRepository
             .ToListAsync(ct);
     }
 
+    /// <summary>Plan M11 — active recipient emails with each user's chosen language.</summary>
+    public async Task<IReadOnlyList<(string Email, string? Language)>> GetActiveUserEmailLanguagesAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default)
+    {
+        if (userIds.Count == 0)
+            return Array.Empty<(string, string?)>();
+
+        var normalizedIds = userIds.Distinct().ToList();
+        var rows = await _db.Users
+            .AsNoTracking()
+            .Where(u => normalizedIds.Contains(u.Id) && u.IsActive && !string.IsNullOrWhiteSpace(u.Email))
+            .Select(u => new { Email = u.Email!, u.PreferredLanguage })
+            .ToListAsync(ct);
+        return rows.GroupBy(r => r.Email, StringComparer.OrdinalIgnoreCase).Select(g => (g.Key, g.First().PreferredLanguage)).ToList();
+    }
+
     /// <summary>Returns active recipient phone numbers for the provided user IDs (Phase 32.3).</summary>
     public async Task<IReadOnlyList<string>> GetActiveUserPhoneNumbersAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default)
     {

@@ -7,6 +7,9 @@
     <UserSecretsId>tabsan-edusphere-api-dev</UserSecretsId>
     <!-- Plan I: preserve API publish continuity when transitive project content introduces duplicate appsettings files. -->
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+    <!-- Plan M14.3: XML comments feed the public API reference (Swagger/OpenAPI); undocumented members are not errors. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS1572;CS1574</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

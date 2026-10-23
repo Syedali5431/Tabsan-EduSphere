@@ -22,6 +22,10 @@ public sealed class PortalCapabilityMatrixService : IPortalCapabilityMatrixServi
     private static readonly CapabilitySpec[] Specs =
     [
         new("single_sign_on", "Single Sign-On", "sso", "/Portal/SsoSettings", "Sign in with Microsoft, Google or the institution's SAML identity provider."),
+        new("external_tools", "External Tools (LTI 1.3)", "lti", "/Portal/LtiTools", "Launch LTI 1.3 tools (H5P, Zoom, Turnitin…) from courses, with grades and rosters."),
+        new("learning_outcomes", "Learning Outcomes & Mastery", "outcomes", "/Portal/Outcomes", "Course and program outcomes aligned to rubrics and questions, mastery gradebook and accreditation attainment reports."),
+        new("similarity_checking", "Similarity / Plagiarism Checking", "similarity", "/Portal/SimilaritySettings", "Built-in comparison with other submissions or Copyleaks, with scores and reports in the grading workspace."),
+        new("live_classes", "Live Classes", "live_classes", "/Portal/LiveClasses", "Schedule BigBlueButton, Zoom or Teams classes from the timetable, join from the dashboard, attendance from who joined."),
         new("dashboard_overview", "Dashboard Overview", "authentication", "/Portal/Dashboard", "Role-aware dashboard with quick actions and summary tiles."),
         new("courses_enrollments", "Course and Enrollment Access", "courses", "/Portal/Courses", "Course catalog, offerings, and enrollment workflows."),
         new("assignments_workflow", "Assignments Workflow", "assignments", "/Portal/Assignments", "Assignment creation, submission, grading, and review."),

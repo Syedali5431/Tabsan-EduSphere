@@ -21,12 +21,14 @@ public class AssignmentController : ControllerBase
     private readonly IAssignmentService _service;
     private readonly IAccessScopeResolver _accessScope;
     private readonly ApplicationDbContext _db;
+    private readonly ISubmissionWorkspaceService _workspace;
 
-    public AssignmentController(IAssignmentService service, IAccessScopeResolver accessScope, ApplicationDbContext db)
+    public AssignmentController(IAssignmentService service, IAccessScopeResolver accessScope, ApplicationDbContext db, ISubmissionWorkspaceService workspace)
     {
         _service = service;
         _accessScope = accessScope;
         _db = db;
+        _workspace = workspace;
     }
 
     // ── Assignment CRUD ───────────────────────────────────────────────────────
@@ -159,6 +161,13 @@ public class AssignmentController : ControllerBase
             return offeringScopeResult;
 
         var list = await _service.GetByOfferingAsync(courseOfferingId, includeInactive, ct);
+        // Plan M8.2: a student sees their own due date ("Assign to" dates for them or their group).
+        if (User.IsInRole("Student") && GetCurrentStudentProfileId() is var studentId && studentId != Guid.Empty
+            && HttpContext.RequestServices.GetService<Tabsan.EduSphere.Application.Assignments.AssignmentPolicyService>() is { } policies)
+        {
+            var own = await policies.DueDatesForAsync(list.Select(a => a.Id).ToList(), studentId, ct);
+            list = list.Select(a => own.TryGetValue(a.Id, out var due) ? a with { DueDate = due } : a).ToList();
+        }
         return Ok(list);
     }
 
@@ -187,11 +196,20 @@ public class AssignmentController : ControllerBase
     {
         var studentProfileId = GetCurrentStudentProfileId();
         if (studentProfileId == Guid.Empty) return Unauthorized();
+        // Plan M7: an assignment placed in a locked module cannot be submitted yet.
+        if (await Services.ModuleGate.LockReasonAsync(HttpContext, studentProfileId, Domain.Lms.ModuleItemType.Assignment, request.AssignmentId, ct) is { } locked)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = locked });
 
-        var result = await _service.SubmitAsync(studentProfileId, request, ct);
-        return result is null
-            ? BadRequest("Submission rejected: assignment not published, past due date, or already submitted.")
-            : Ok(result);
+        // Plan M3: recorded as an attempt (resubmission allowed when the assignment allows more attempts).
+        var actor = new WorkspaceActor(GetCurrentUserId(), studentProfileId, false, false);
+        var result = await _workspace.SubmitLegacyAsync(actor, request.AssignmentId, request.FileUrl, request.TextContent, ct);
+        if (!result.Ok)
+            return BadRequest(new { message = result.Message ?? "Submission rejected: assignment not published, past due date, or already submitted." });
+
+        var d = result.Value!;
+        return Ok(new SubmissionResponse(d.SubmissionId, d.AssignmentId, d.AssignmentTitle, studentProfileId,
+            d.Attempts.FirstOrDefault()?.Files.FirstOrDefault(f => f.IsLegacy)?.LegacyUrl, d.Attempts.FirstOrDefault()?.TextContent,
+            d.SubmittedAt, d.Status, d.MarksAwarded, d.Feedback, d.GradedAt));
     }
 
     /// <summary>Returns the current student's own submissions (Student).</summary>
@@ -213,6 +231,8 @@ public class AssignmentController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
     public async Task<IActionResult> GetSubmissions(Guid id, CancellationToken ct)
     {
+        if (await EnsureCallerReachesAssignmentAsync(id, ct) is { } scopeError) return scopeError;
+
         var submissions = await _service.GetSubmissionsByAssignmentAsync(id, ct);
         return Ok(submissions);
     }
@@ -225,8 +245,17 @@ public class AssignmentController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var ok = await _service.GradeSubmissionAsync(request, userId, ct);
-        return ok ? NoContent() : BadRequest("Submission not found or marks out of range.");
+        if (await EnsureCallerReachesAssignmentAsync(request.AssignmentId, ct) is { } scopeError) return scopeError;
+
+        // Plan M3: same rules as the grading workspace (posting policy, moderated grading, gradebook sync).
+        var submissionId = await _db.AssignmentSubmissions.AsNoTracking()
+            .Where(s => s.AssignmentId == request.AssignmentId && s.StudentProfileId == request.StudentProfileId)
+            .Select(s => (Guid?)s.Id).FirstOrDefaultAsync(ct);
+        if (submissionId is null) return BadRequest("Submission not found or marks out of range.");
+
+        var actor = new WorkspaceActor(userId, null, true, User.IsInRole("Admin") || User.IsInRole("SuperAdmin"));
+        var result = await _workspace.SaveGradeAsync(actor, submissionId.Value, new SaveGradeRequest(request.MarksAwarded, request.Feedback), ct);
+        return result.Ok ? NoContent() : BadRequest(result.Message ?? "Submission not found or marks out of range.");
     }
 
     /// <summary>Rejects a submission (Faculty/Admin, e.g. plagiarism).</summary>
@@ -234,6 +263,8 @@ public class AssignmentController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin,Faculty")]
     public async Task<IActionResult> Reject(Guid assignmentId, Guid studentProfileId, CancellationToken ct)
     {
+        if (await EnsureCallerReachesAssignmentAsync(assignmentId, ct) is { } scopeError) return scopeError;
+
         var ok = await _service.RejectSubmissionAsync(assignmentId, studentProfileId, ct);
         return ok ? NoContent() : NotFound();
     }
@@ -310,6 +341,22 @@ public class AssignmentController : ControllerBase
         if (effectiveCampusId.HasValue && scope.CampusId != effectiveCampusId.Value)
             return Forbid();
 
+        return null;
+    }
+
+    /// <summary>Plan M3: staff reach an assignment only inside their own tenant/campus (each checked when the caller has one).</summary>
+    private async Task<IActionResult?> EnsureCallerReachesAssignmentAsync(Guid assignmentId, CancellationToken ct)
+    {
+        if (_accessScope.IsSuperAdmin()) return null;
+        var scope = await _db.Assignments.IgnoreQueryFilters().AsNoTracking()
+            .Where(a => a.Id == assignmentId)
+            .Join(_db.CourseOfferings.AsNoTracking(), a => a.CourseOfferingId, o => o.Id, (_, o) => new { o.TenantId, o.CampusId })
+            .FirstOrDefaultAsync(ct);
+        if (scope is null) return null; // the action reports not-found itself
+        var tenant = _accessScope.GetTenantId();
+        var campus = _accessScope.GetCampusId();
+        if (tenant.HasValue && scope.TenantId != tenant) return Forbid();
+        if (campus.HasValue && scope.CampusId != campus) return Forbid();
         return null;
     }
 

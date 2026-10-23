@@ -135,6 +135,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .HasMaxLength(50)
                .IsRequired(false);
 
+        // Plan M11: per-user portal language — nullable (institution default).
+        builder.Property(u => u.PreferredLanguage)
+               .HasMaxLength(8)
+               .IsRequired(false);
+
         // Phase 4 (P4-S2-02): force password change on first login after CSV import.
         builder.Property(u => u.MustChangePassword)
                .IsRequired()

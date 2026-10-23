@@ -1,0 +1,108 @@
+namespace Tabsan.EduSphere.Mobile.Core;
+
+/// <summary>
+/// Plan M12 — the app's own texts in English, Urdu and Arabic (the same languages as the portal, Plan M11). Data from the
+/// API (course names, messages) comes already translated because the app sends its language with every call.
+/// </summary>
+public static class AppText
+{
+    public static string Language { get; set; } = "en";
+
+    public static bool IsRtl => Language is "ur" or "ar";
+
+    public static string Get(string key) => Get(key, Language);
+
+    public static string Get(string key, string language)
+        => Texts.TryGetValue(key, out var row) ? language switch { "ur" => row.Ur, "ar" => row.Ar, _ => row.En } : key;
+
+    public static IReadOnlyCollection<string> Keys => Texts.Keys;
+
+    private static readonly Dictionary<string, (string En, string Ur, string Ar)> Texts = new()
+    {
+        ["SignIn"] = ("Sign in", "سائن اِن", "تسجيل الدخول"),
+        ["SignOut"] = ("Sign out", "سائن آؤٹ", "تسجيل الخروج"),
+        ["Username"] = ("Username", "صارف نام", "اسم المستخدم"),
+        ["Password"] = ("Password", "پاس ورڈ", "كلمة المرور"),
+        ["AuthenticatorCode"] = ("Authenticator code", "تصدیقی کوڈ", "رمز المصادقة"),
+        ["EnterAuthenticatorCode"] = ("Enter the code from your authenticator app.", "اپنی تصدیقی ایپ کا کوڈ درج کریں۔", "أدخل الرمز من تطبيق المصادقة."),
+        ["SignInWith"] = ("Sign in with {0}", "{0} کے ساتھ سائن اِن کریں", "تسجيل الدخول باستخدام {0}"),
+        ["UseSso"] = ("Your institution uses single sign-on. Use your organization's button below.", "آپ کا ادارہ سنگل سائن آن استعمال کرتا ہے۔ نیچے اپنے ادارے کا بٹن استعمال کریں۔", "تستخدم مؤسستك تسجيل الدخول الموحد. استخدم زر مؤسستك أدناه."),
+        ["WrongCredentials"] = ("The username or password is not correct.", "صارف نام یا پاس ورڈ درست نہیں۔", "اسم المستخدم أو كلمة المرور غير صحيحة."),
+        ["NoConnection"] = ("No connection to EduSphere. Check your internet and try again.", "EduSphere سے رابطہ نہیں۔ انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔", "لا يوجد اتصال بـ EduSphere. تحقق من الإنترنت وأعد المحاولة."),
+        ["UpdateRequired"] = ("This version of the app is no longer supported. Please update it.", "ایپ کا یہ ورژن اب معاون نہیں۔ براہ کرم اسے اپ ڈیٹ کریں۔", "لم يعد هذا الإصدار مدعومًا. يُرجى تحديث التطبيق."),
+        ["UpdateAvailable"] = ("A new version of the app is available.", "ایپ کا نیا ورژن دستیاب ہے۔", "يتوفر إصدار جديد من التطبيق."),
+        ["Update"] = ("Update", "اپ ڈیٹ کریں", "تحديث"),
+        ["Home"] = ("Home", "ہوم", "الرئيسية"),
+        ["Timetable"] = ("Timetable", "ٹائم ٹیبل", "الجدول"),
+        ["Courses"] = ("Courses", "کورسز", "المقررات"),
+        ["Results"] = ("Results", "نتائج", "النتائج"),
+        ["Attendance"] = ("Attendance", "حاضری", "الحضور"),
+        ["Notifications"] = ("Notifications", "اطلاعات", "الإشعارات"),
+        ["Announcements"] = ("Announcements", "اعلانات", "الإعلانات"),
+        ["Children"] = ("My children", "میرے بچے", "أبنائي"),
+        ["Settings"] = ("Settings", "ترتیبات", "الإعدادات"),
+        ["Language"] = ("Language", "زبان", "اللغة"),
+        ["Today"] = ("Today", "آج", "اليوم"),
+        ["NoClassesToday"] = ("No classes today.", "آج کوئی کلاس نہیں۔", "لا توجد حصص اليوم."),
+        ["Due"] = ("Due", "آخری تاریخ", "الموعد"),
+        ["NothingDue"] = ("Nothing due.", "کچھ باقی نہیں۔", "لا شيء مستحق."),
+        ["Done"] = ("Done", "مکمل", "تم"),
+        ["Overdue"] = ("Overdue", "تاخیر", "متأخر"),
+        ["Materials"] = ("Materials", "مواد", "المحتوى"),
+        ["Assignments"] = ("Assignments", "اسائنمنٹس", "الواجبات"),
+        ["Quizzes"] = ("Quizzes", "کوئز", "الاختبارات"),
+        ["Open"] = ("Open", "کھولیں", "فتح"),
+        ["TakeQuiz"] = ("Take the quiz", "کوئز دیں", "أداء الاختبار"),
+        ["QuizInPortal"] = ("Quizzes open in the portal, where timing and exam settings are kept.", "کوئز پورٹل میں کھلتے ہیں جہاں وقت اور امتحان کی ترتیبات محفوظ ہیں۔", "تُفتح الاختبارات في البوابة حيث تُحفظ إعدادات الوقت والامتحان."),
+        ["HandIn"] = ("Hand in", "جمع کرائیں", "تسليم"),
+        ["YourAnswer"] = ("Your answer (optional)", "آپ کا جواب (اختیاری)", "إجابتك (اختياري)"),
+        ["TakePhoto"] = ("Take a photo", "تصویر لیں", "التقاط صورة"),
+        ["AddFile"] = ("Add a file", "فائل شامل کریں", "إضافة ملف"),
+        ["Submitted"] = ("Your work has been submitted.", "آپ کا کام جمع ہو گیا۔", "تم تسليم عملك."),
+        ["AddSomething"] = ("Write something or add a file first.", "پہلے کچھ لکھیں یا فائل شامل کریں۔", "اكتب شيئًا أو أضف ملفًا أولًا."),
+        ["Marks"] = ("Marks", "نمبر", "الدرجات"),
+        ["Feedback"] = ("Feedback", "رائے", "الملاحظات"),
+        ["NotGradedYet"] = ("Not graded yet", "ابھی گریڈ نہیں ہوا", "لم يُقدَّر بعد"),
+        ["Cgpa"] = ("CGPA", "CGPA", "المعدل التراكمي"),
+        ["AttendanceRate"] = ("Attendance", "حاضری", "الحضور"),
+        ["Fees"] = ("Fees due", "واجب الادا فیس", "الرسوم المستحقة"),
+        ["Present"] = ("Present", "حاضر", "حاضر"),
+        ["Absent"] = ("Absent", "غیر حاضر", "غائب"),
+        ["Late"] = ("Late", "تاخیر", "متأخر"),
+        ["Excused"] = ("Excused", "رخصت", "معذور"),
+        ["TakeAttendance"] = ("Take attendance", "حاضری لگائیں", "تسجيل الحضور"),
+        ["AttendanceSaved"] = ("Attendance saved.", "حاضری محفوظ ہو گئی۔", "تم حفظ الحضور."),
+        ["ToGrade"] = ("To grade", "گریڈ کرنا باقی", "للتقدير"),
+        ["SaveGrade"] = ("Save grade", "گریڈ محفوظ کریں", "حفظ التقدير"),
+        ["GradeSaved"] = ("Grade saved.", "گریڈ محفوظ ہو گیا۔", "تم حفظ التقدير."),
+        ["NewAnnouncement"] = ("New announcement", "نیا اعلان", "إعلان جديد"),
+        ["Title"] = ("Title", "عنوان", "العنوان"),
+        ["Message"] = ("Message", "پیغام", "الرسالة"),
+        ["Post"] = ("Post", "شائع کریں", "نشر"),
+        ["AnnouncementPosted"] = ("Announcement posted.", "اعلان شائع ہو گیا۔", "تم نشر الإعلان."),
+        ["TitleAndMessage"] = ("Write a title and a message.", "عنوان اور پیغام لکھیں۔", "اكتب عنوانًا ورسالة."),
+        ["MarkAllRead"] = ("Mark all as read", "سب کو پڑھا ہوا نشان زد کریں", "تعليم الكل كمقروء"),
+        ["NoNotifications"] = ("No notifications yet.", "ابھی کوئی اطلاع نہیں۔", "لا توجد إشعارات بعد."),
+        ["LoadMore"] = ("Load more", "مزید دکھائیں", "عرض المزيد"),
+        ["Refresh"] = ("Refresh", "تازہ کریں", "تحديث"),
+        ["Save"] = ("Save", "محفوظ کریں", "حفظ"),
+        ["Cancel"] = ("Cancel", "منسوخ کریں", "إلغاء"),
+        ["Version"] = ("Version {0}", "ورژن {0}", "الإصدار {0}"),
+        ["SessionEnded"] = ("Your session has ended. Please sign in again.", "آپ کا سیشن ختم ہو گیا۔ براہ کرم دوبارہ سائن اِن کریں۔", "انتهت جلستك. يُرجى تسجيل الدخول مجددًا."),
+        ["Loading"] = ("Loading…", "لوڈ ہو رہا ہے…", "جارٍ التحميل…"),
+        ["Hello"] = ("Hello, {0}", "خوش آمدید، {0}", "مرحبًا، {0}"),
+        ["ReportCards"] = ("Report cards", "رپورٹ کارڈ", "بطاقات التقرير"),
+        ["NoReportCards"] = ("No report cards yet.", "ابھی کوئی رپورٹ کارڈ نہیں۔", "لا توجد بطاقات تقرير بعد."),
+        ["Discussions"] = ("Discussions", "مباحثے", "النقاشات"),
+        ["NoDiscussions"] = ("No discussions yet. Start one to message your class.", "ابھی کوئی مباحثہ نہیں۔ کلاس سے بات کرنے کے لیے نیا شروع کریں۔", "لا توجد نقاشات بعد. ابدأ نقاشًا لمراسلة صفك."),
+        ["NewDiscussion"] = ("New discussion", "نیا مباحثہ", "نقاش جديد"),
+        ["Start"] = ("Start", "شروع کریں", "ابدأ"),
+        ["Replies"] = ("{0} replies", "{0} جوابات", "{0} ردود"),
+        ["WriteReply"] = ("Write a reply", "جواب لکھیں", "اكتب ردًا"),
+        ["Send"] = ("Send", "بھیجیں", "إرسال"),
+        ["WriteMessage"] = ("Write a message first.", "پہلے پیغام لکھیں۔", "اكتب رسالة أولًا."),
+        ["DiscussionClosed"] = ("This discussion is closed.", "یہ مباحثہ بند ہے۔", "هذا النقاش مغلق."),
+        ["Pinned"] = ("Pinned", "نمایاں", "مثبّت"),
+        ["Solved"] = ("Solved", "حل شدہ", "تم الحل"),
+    };
+}

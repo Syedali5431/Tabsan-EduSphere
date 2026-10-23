@@ -1,5 +1,84 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update — Development Plan Synchronization (Plan M14)
+### Plan sync
+- Plan M14 completed — Plan M (M1–M14) is complete apart from external checks (live IdP/vendor/device runs, LTI certification, 5,000-user staging run, live cloud storage, assistive-technology user testing).
+- Accessibility gate: `npx playwright test --grep @a11y` (needs `@axe-core/playwright`); it fails on serious/critical findings. Add new portal actions to `tests/playwright/tests/a11y/portal-pages.json`.
+- Load: `tests/load/k6-exam-day.js` with `ExamDayLoadSeed`; see `tests/load/README.md`.
+- Storage: `MediaStorage:Provider` = `Local` | `Blob` | `AzureBlob` | `S3` (`MediaStorage:AzureBlob`, `MediaStorage:S3`). Request limits: `RateLimiting` (off in Testing). Tokens: `ApiTokens`. The OpenAPI snapshot `Docs/api/openapi-v1.json` is refreshed from `/swagger/v1/swagger.json` (`AppSettings:EnableSwagger`).
+### Validation sync
+- `ObjectStoreTests`, `ApiTokenTests`, `ApiTokenIntegrationTests`, `ApiTokensWebIntegrationTests`, Playwright `@a11y`.
+
+## 2026-10-23 Update — Development Plan Synchronization (Plan M13)
+### Plan sync
+- Plan M13 completed. The SCORM runtime is scorm-again 3.4.6 (MIT) vendored under `wwwroot/lib/scorm-again`; upgrades replace the two bundles. The player relay (`/scorm/play/{token}/`) needs no session; deploy it on a separate host name and set `Scorm:ContentOrigin` / `Scorm:PortalOrigin` in the portal to isolate package scripts from the portal.
+- Package files live under the API's `Scorm:StoragePath` (per package folder); include it in backups.
+### Validation sync
+- `ScormTests`, `ScormIntegrationTests`, `ScormWebIntegrationTests`, Playwright `@scorm` (needs the fake API's SCORM endpoints or a real package).
+
+## 2026-10-23 Update — Development Plan Synchronization (Plan M12)
+### Plan sync
+- Plan M12 completed with .NET MAUI (ADR `Docs/Decisions/ADR-M12-mobile-technology.md`): logic in `src/Tabsan.EduSphere.Mobile.Core` (net8.0, in the main solution and its tests), screens in `mobile/Tabsan.EduSphere.Mobile` (net9.0, built with `mobile/global.json` → SDK 9.0.313). iOS builds need a Mac.
+- New mobile endpoints are additive; keep them backward compatible for two app minor versions (see `mobile/README.md`).
+### Validation sync
+- `MobileAppTests`, `MobileIntegrationTests`, `MobileHandoffWebIntegrationTests`; Android build in CI needs the MAUI workload, Android SDK and JDK 17.
+
+## 2026-10-20 Update — Development Plan Synchronization (Plan M11)
+### Plan sync
+- Plan M11 completed with JSON translations keyed by the English text instead of `.resx` (3,002 portal and 335 API texts, Excel round trips, overrides without a release). Views were converted by a Razor-aware tool; new UI text must use `@T[...]` / `T.Format` / `T.Text` / `t()` — the unit tests fail on text without a key.
+- Cultures: English keeps the server culture; Urdu/Arabic use the Gregorian calendar and "." decimals so form values parse identically.
+### Validation sync
+- Missing-key report runs with the unit tests; the localisation Playwright spec runs against the Release portal.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M10)
+### Plan sync
+- Plan M10 completed: BigBlueButton first (on-demand meetings, signed links), Zoom and Teams behind the same interface, meeting links as the no-setup option; a later-registered provider of the same type replaces the built-in one.
+### Validation sync
+- Integration tests use stand-in providers registered in the test host; real conferencing accounts are not used in automated tests.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M9)
+### Plan sync
+- Plan M9 completed with a database-backed queue (hosted worker) instead of RabbitMQ and Copyleaks calls through the resilient outbound gateway; Turnitin stays an LTI tool (M5) because its Core API needs a partner agreement.
+### Validation sync
+- Real-API integration tests drive the built-in comparison end to end and play Copyleaks' webhook back to the API with a stand-in client.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M8)
+### Plan sync
+- Plan M8 completed. Deductions are applied when a grade is saved (the entered mark is kept), missing grades and due peer allocation run in an hourly worker; group work stores one attempt per member sharing the same files.
+### Validation sync
+- Real-API integration tests cover policy, overrides, missing grades, group hand-in/grading/discussions and peer review end to end.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M7)
+### Plan sync
+- Plan M7 completed. Progress is evaluated from live data on read (no event wiring), with first completions stored so they stick. Boolean hidden inputs must render "true"/"false" explicitly (Razor drops or empties boolean attribute values).
+### Validation sync
+- Real-API integration tests drive locks, the gate and completion with real submissions, grades and quiz attempts.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M6)
+### Plan sync
+- Plan M6 completed. Outcome evidence is produced by decorators around the M2/M3 gradebook syncs, so new grading paths only need to call the existing sync.
+### Validation sync
+- Real-API integration tests grade an assignment, a rubric and a quiz and check the mastery gradebook and attainment report.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M5)
+### Plan sync
+- Plan M5 completed except M5.6 (real vendor tools, 1EdTech certification) and Dynamic Registration. Platform keys live outside the repository (`Lti:KeyFile`, shared by every API node); `Lti:PlatformUrl` is the portal address and turns LTI on.
+### Validation sync
+- Fake-tool integration tests sign with their own RSA keys; the Playwright spec plays the tool in the browser. All automated suites green.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M4)
+### Plan sync
+- Plan M4 completed: PWA without third-party service-worker or push libraries (Web Push on .NET's ECDH/HKDF/AES-GCM/ECDSA). VAPID keys live outside the repository (`WebPush:KeyFile`); every API/worker node must share them (Docker volume `api_keys`).
+### Validation sync
+- RFC 8291 test vector reproduced byte-for-byte; all automated suites green.
+
+## 2026-10-19 Update — Development Plan Synchronization (Plan M1–M3)
+### Plan sync
+- Plan M (Canvas LMS parity, `Docs/Phased-Architecture-Plan/M-Canvas-LMS-Parity-Gap-Closure.md`): M1 Single Sign-On, M2 Quiz Engine Upgrade and M3 Grading Workspace completed; M4–M14 follow in the plan's order.
+- New dependencies: ITfoxtec.Identity.Saml2 4.21.0 (M1), PDFsharp 6.1.1 (M3), vendored PDF.js 3.11.174 (M3, `isEvalSupported:false`); optional Gotenberg 8 container for document conversion.
+### Validation sync
+- Migrations through `20261018180947_PlanMPhase3GradingWorkspace` applied to LocalDB with backfills verified; all automated suites green.
+
 ## 2026-06-22 Update — Profile Picture Upload & Graduated Demo Students
 ### Plan sync
 - Profile picture upload feature: User entity extended with ProfilePicturePath (nvarchar 500), EF migration created.

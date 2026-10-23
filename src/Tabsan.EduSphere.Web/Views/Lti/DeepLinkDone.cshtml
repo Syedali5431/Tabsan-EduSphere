@@ -1,0 +1,28 @@
+@model Tabsan.EduSphere.Application.Lti.LtiDeepLinkResult
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@T["Content added - Tabsan EduSphere"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh; background: #f4f7fb;">
+    <main class="card border-0 shadow-sm m-3" style="max-width: 34rem;">
+        <div class="card-body p-4">
+            <h1 class="h5">@(Model.Created == 0 ? T.Text("Nothing was added") : Model.Created == 1 ? T.Text("1 item added to the course") : $"{Model.Created} items added to the course")</h1>
+            @if (Model.Titles.Count > 0)
+            {
+                <ul>@foreach (var t in Model.Titles) { <li>@t</li> }</ul>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Message))
+            {
+                <p class="text-muted small">@T.Text(Model.Message)</p>
+            }
+            <a class="btn btn-primary" href="/Portal/LmsManage?offeringId=@Model.CourseOfferingId">@T["Back to the course"]</a>
+        </div>
+    </main>
+</body>
+</html>

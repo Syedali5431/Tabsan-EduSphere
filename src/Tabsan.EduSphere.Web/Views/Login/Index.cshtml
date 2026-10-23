@@ -1,5 +1,6 @@
+@inject TranslationStore Translations
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = T.Text("Login");
     Layout = null; // standalone page — no sidebar
     var error      = ViewData["Error"] as string;
     var returnUrl  = ViewData["ReturnUrl"] as string;
@@ -16,7 +17,7 @@
     var tenant = ViewData["Tenant"] as string;
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@T.Language" dir="@(T.IsRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,11 +25,20 @@
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
     <link rel="apple-touch-icon" href="~/images/apple-touch-icon.png" />
-    <title>Login — Tabsan EduSphere</title>
+    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+    <title>@T["Login — Tabsan EduSphere"]</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @if (T.IsRtl)
+    {
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    }
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         body {
@@ -251,28 +261,29 @@
 
         <div class="login-card px-3">
             <div class="auth-brand">
-                <img src="~/images/tabsan-mark.png" alt="Tabsan" class="auth-brand-mark" />
-                <h1 class="h4 fw-bold mb-0">Tabsan EduSphere</h1>
-                <p class="auth-subhead mb-0">Campus Portal</p>
+                <img src="~/images/tabsan-mark.png" alt="@T["Tabsan"]" class="auth-brand-mark" />
+                <h1 class="h4 fw-bold mb-0">@T["Tabsan EduSphere"]</h1>
+                <p class="auth-subhead mb-0">@T["Campus Portal"]</p>
+                <div class="d-flex justify-content-center mt-2">@await Html.PartialAsync("_LanguageSwitcher")</div>
             </div>
 
             <div class="card auth-card border-0">
                 <div class="card-body">
-                    <h2 class="h5 mb-1">Sign in to your account</h2>
-                    <p class="auth-subhead mb-4">Enter your credentials to continue.</p>
+                    <h2 class="h5 mb-1">@T["Sign in to your account"]</h2>
+                    <p class="auth-subhead mb-4">@T["Enter your credentials to continue."]</p>
 
                     @if (!string.IsNullOrWhiteSpace(error))
                     {
-                        <div class="alert alert-danger py-2 small mb-3" role="alert">@error</div>
+                        <div class="alert alert-danger py-2 small mb-3" role="alert">@T.Text(error)</div>
                     }
 
                     @if (ssoEnabled)
                     {
                         <div class="alert alert-info py-2 small mb-3" role="alert">
-                            Single sign-on is enabled@(string.IsNullOrWhiteSpace(ssoProvider) ? "" : $" ({ssoProvider})").
+                            @T.Format("Single sign-on is enabled{0}.", (string.IsNullOrWhiteSpace(ssoProvider) ? "" : $" ({ssoProvider})"))
                             @if (!string.IsNullOrWhiteSpace(ssoLoginUrl))
                             {
-                                <span> Use your organization's SSO entry point or <a href="@ssoLoginUrl" class="alert-link">continue via SSO</a>.</span>
+                                <span> @T["Use your organization's SSO entry point or"] <a href="@ssoLoginUrl" class="alert-link">continue via SSO</a>.</span>
                             }
                         </div>
                     }
@@ -280,7 +291,7 @@
                     @if (riskEnabled)
                     {
                         <div class="alert alert-warning py-2 small mb-3" role="alert">
-                            Session risk monitoring is active@(riskBlocking ? " (high-risk sign-ins are blocked)." : ".")
+                            @T.Format("Session risk monitoring is active{0}", (riskBlocking ? " (high-risk sign-ins are blocked)." : "."))
                         </div>
                     }
 
@@ -293,24 +304,24 @@
                         <input type="hidden" name="tenant" value="@tenant" />
 
                         <div class="mb-4 mfa-field-wrap">
-                            <label for="ssoMfaCode" class="form-label fw-semibold">Authenticator code</label>
+                            <label for="ssoMfaCode" class="form-label fw-semibold">@T["Authenticator code"]</label>
                             <div class="auth-field-icon-group">
                                 <span class="auth-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Z" fill="currentColor"/></svg>
                                 </span>
                                 <input id="ssoMfaCode" name="mfaCode" type="text" class="form-control"
-                                       placeholder="6-digit code" inputmode="numeric" maxlength="10"
+                                       placeholder="@T["6-digit code"]" inputmode="numeric" maxlength="10"
                                        autocomplete="one-time-code" autofocus required />
                             </div>
                             <div class="form-text mfa-field-hint">
-                                <span>You signed in with single sign-on. Your account also requires the code from your authenticator app.</span>
+                                <span>@T["You signed in with single sign-on. Your account also requires the code from your authenticator app."]</span>
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 auth-submit" data-auth-submit>
-                            <span data-auth-submit-label>Verify and continue</span>
+                            <span data-auth-submit-label>@T["Verify and continue"]</span>
                         </button>
-                        <a class="btn btn-link w-100 mt-2" asp-action="Index" asp-controller="Login" asp-route-tenant="@tenant">Start over</a>
+                        <a class="btn btn-link w-100 mt-2" asp-action="Index" asp-controller="Login" asp-route-tenant="@tenant">@T["Start over"]</a>
                     </form>
                     }
                     else
@@ -319,25 +330,25 @@
                         @Html.AntiForgeryToken()
 
                         <div class="mb-3">
-                            <label for="username" class="form-label fw-semibold">Username</label>
+                            <label for="username" class="form-label fw-semibold">@T["Username"]</label>
                             <div class="auth-field-icon-group">
                                 <span class="auth-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.14 0-8 2.15-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.85-3.86-5-8-5Z" fill="currentColor"/></svg>
                                 </span>
                                 <input id="username" name="username" type="text" class="form-control"
-                                       placeholder="e.g. superadmin" value="@(ViewData["Username"] as string)" autocomplete="username" required />
+                                       placeholder="@T["e.g. superadmin"]" value="@(ViewData["Username"] as string)" autocomplete="username" required />
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <label for="password" class="form-label fw-semibold">@T["Password"]</label>
                             <div class="auth-field-icon-group">
                                 <span class="auth-field-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none"><path d="M17 9V7a5 5 0 0 0-10 0v2a3 3 0 0 0-3 3v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a3 3 0 0 0-3-3ZM9 7a3 3 0 0 1 6 0v2H9V7Z" fill="currentColor"/></svg>
                                 </span>
                                 <input id="password" name="password" type="password" class="form-control pe-5"
-                                       placeholder="Your password" autocomplete="current-password" required data-password-input />
-                                <button type="button" class="auth-toggle-visibility" data-toggle-password aria-label="Show password" title="Show password">
+                                       placeholder="@T["Your password"]" autocomplete="current-password" required data-password-input />
+                                <button type="button" class="auth-toggle-visibility" data-toggle-password aria-label="@T["Show password"]" title="@T["Show password"]">
                                     <svg data-eye-open viewBox="0 0 24 24" fill="none"><path d="M12 5c-5.5 0-9.5 4.5-10 7 0.5 2.5 4.5 7 10 7s9.5-4.5 10-7c-0.5-2.5-4.5-7-10-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Z" fill="currentColor"/></svg>
                                     <svg data-eye-closed viewBox="0 0 24 24" fill="none" style="display:none;"><path d="M3 3l18 18M10.6 10.7a2.5 2.5 0 0 0 3.5 3.5M9.9 5.5A10.7 10.7 0 0 1 12 5c5.5 0 9.5 4.5 10 7-0.3 1.5-1.6 3.6-3.6 5.2M6.5 6.6C4.5 8 3.2 10 3 12c.5 2.5 4.5 7 10 7 1.2 0 2.3-.2 3.3-.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
@@ -347,31 +358,31 @@
                         @if (mfaEnabled)
                         {
                             <div class="mb-4 mfa-field-wrap">
-                                <label for="mfaCode" class="form-label fw-semibold">Authenticator code</label>
+                                <label for="mfaCode" class="form-label fw-semibold">@T["Authenticator code"]</label>
                                 <div class="auth-field-icon-group">
                                     <span class="auth-field-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Zm0 4a3 3 0 0 1 3 3v1h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h1V9a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v1h2V9a1 1 0 0 0-1-1Z" fill="currentColor"/></svg>
                                     </span>
                                     <input id="mfaCode" name="mfaCode" type="text" class="form-control"
-                                           placeholder="6-digit code" inputmode="numeric" pattern="[0-9]*" maxlength="10"
+                                           placeholder="@T["6-digit code"]" inputmode="numeric" pattern="[0-9]*" maxlength="10"
                                            autocomplete="one-time-code" autofocus />
                                 </div>
                                 <div class="form-text mfa-field-hint">
                                     <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Z" fill="currentColor"/></svg>
-                                    <span>Enter the code from your authenticator app@(mfaPrivilegedOnly ? " (required for privileged roles)" : "").</span>
+                                    <span>@T.Format("Enter the code from your authenticator app{0}.", (mfaPrivilegedOnly ? " (required for privileged roles)" : ""))</span>
                                 </div>
                             </div>
                         }
 
                         <button type="submit" class="btn btn-primary w-100 auth-submit" data-auth-submit>
-                            <span data-auth-submit-label>Sign In</span>
+                            <span data-auth-submit-label>@T["Sign In"]</span>
                         </button>
                     </form>
 
                     @if (ssoProviders.Count > 0)
                     {
                         <div class="d-flex align-items-center my-3 text-body-secondary small" aria-hidden="true">
-                            <hr class="flex-grow-1 my-0" /><span class="px-2">or</span><hr class="flex-grow-1 my-0" />
+                            <hr class="flex-grow-1 my-0" /><span class="px-2">@T["or"]</span><hr class="flex-grow-1 my-0" />
                         </div>
                         <div class="d-grid gap-2" data-sso-providers>
                             @foreach (var p in ssoProviders)
@@ -384,7 +395,7 @@
                     }
                     }
 
-                    <p class="auth-divider-note">Your session is protected and access is logged.</p>
+                    <p class="auth-divider-note">@T["Your session is protected and access is logged."]</p>
                 </div>
             </div>
         </div>
@@ -393,15 +404,24 @@
     <footer class="tns-global-footer" role="contentinfo" style="width:100%;margin-top:auto;">
         <div class="tns-global-footer-inner">
             <div class="tns-global-footer-top">
-                <a href="/" aria-label="Tabsan Nexora home">
-                    <img src="/images/tabsan-logo.png" alt="Tabsan — Building Next Era of Software" class="tns-global-footer-logo">
+                <a href="/" aria-label="@T["Tabsan Nexora home"]">
+                    <img src="/images/tabsan-logo.png" alt="@T["Tabsan — Building Next Era of Software"]" class="tns-global-footer-logo">
                 </a>
             </div>
-            <div class="tns-global-footer-copy">&copy; 2026 Tabsan Nexora. All rights reserved.</div>
+            <div class="tns-global-footer-copy">@T["&copy; 2026 Tabsan Nexora. All rights reserved."]</div>
         </div>
     </footer>
 
+    @if (T.Language != "en")
+    {
+        <script type="application/json" id="portal-text">@Html.Raw(Translations.ScriptJson(T.Language))</script>
+    }
+    <script src="~/js/i18n.js" asp-append-version="true"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Plan M4.2 — nobody is signed in here: drop pages and files saved for offline reading.
+        if (window.caches) { ['edusphere-pages-v1', 'edusphere-files-v1'].forEach(function (c) { caches.delete(c); }); }
+    </script>
     <script>
         (function () {
             var toggleBtn = document.querySelector('[data-toggle-password]');

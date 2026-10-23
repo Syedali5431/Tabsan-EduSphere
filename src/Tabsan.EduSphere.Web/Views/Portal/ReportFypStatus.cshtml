@@ -1,43 +1,43 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ReportFypStatusPageModel
 @{
-    ViewData["Title"] = "FYP Status Report";
+    ViewData["Title"] = T.Text("FYP Status Report");
     Layout = "~/Views/Shared/_Layout.cshtml";
     var statusOptions = new[] { "Proposed", "Approved", "InProgress", "Completed", "Rejected" };
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center mb-4">
-        <a asp-action="ReportCenter" asp-controller="Portal" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="ReportCenter" asp-controller="Portal" class="btn btn-sm btn-outline-secondary me-3" aria-label="@T["Report Center"]"><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
         <div>
-            <h2 class="mb-0"><i class="bi bi-mortarboard me-2"></i>FYP Status Report</h2>
-            <small class="text-muted">Final Year Project status overview</small>
+            <h2 class="mb-0"><i class="bi bi-mortarboard me-2"></i>@T["FYP Status Report"]</h2>
+            <small class="text-muted">@T["Final Year Project status overview"]</small>
         </div>
     </div>
 
     @if (!Model.IsConnected)
     {
-        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>Not connected to API.</div>
+        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>@T["Not connected to API."]</div>
     }
     else
     {
         if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@Model.Message</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@T.Text(Model.Message)</div>
         }
 
         <form method="get" class="card shadow-sm border-0 mb-4">
             <div class="card-body p-3">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label small mb-1">Institute</label>
-                        <select name="institutionType" class="form-select form-select-sm">
+                        <label class="form-label small mb-1">@T["Institute"]</label>
+                        <select aria-label="@T["Institute"]" name="institutionType" class="form-select form-select-sm">
                             @if (!Model.InstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="" selected>All Institutes</option>
+                                <option value="" selected>@T["All Institutes"]</option>
                             }
                             else if (Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="">All Institutes</option>
+                                <option value="">@T["All Institutes"]</option>
                             }
                             @foreach (var institution in Model.AvailableInstitutionTypes)
                             {
@@ -46,9 +46,9 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small mb-1">Department</label>
-                        <select name="departmentId" class="form-select form-select-sm">
-                            <option value="">All Departments</option>
+                        <label class="form-label small mb-1">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select form-select-sm">
+                            <option value="">@T["All Departments"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@DepartmentDisplayHelper.FormatLabel(d.Name, d.InstitutionType)</option>
@@ -56,9 +56,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small mb-1">Status</label>
-                        <select name="status" class="form-select form-select-sm">
-                            <option value="">All Statuses</option>
+                        <label class="form-label small mb-1">@T["Status"]</label>
+                        <select aria-label="@T["Status"]" name="status" class="form-select form-select-sm">
+                            <option value="">@T["All Statuses"]</option>
                             @foreach (var s in statusOptions)
                             {
                                 <option value="@s" selected="@(Model.SelectedStatus == s)">@s</option>
@@ -66,9 +66,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small mb-1">Student</label>
-                        <select name="studentId" class="form-select form-select-sm">
-                            <option value="">All Students</option>
+                        <label class="form-label small mb-1">@T["Student"]</label>
+                        <select aria-label="@T["Student"]" name="studentId" class="form-select form-select-sm">
+                            <option value="">@T["All Students"]</option>
                             @foreach (var s in Model.Students)
                             {
                                 <option value="@s.Id" selected="@(Model.StudentId == s.Id)">@s.Name</option>
@@ -76,21 +76,21 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>@T["Filter"]</button>
                     </div>
                     @if (Model.Report is not null)
                     {
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportFypStatus", "Portal", new { departmentId = Model.DepartmentId, status = Model.SelectedStatus, institutionType = Model.InstitutionType, studentId = Model.StudentId })"
-                               class="btn btn-success btn-sm w-100" title="Export Excel"><i class="bi bi-file-earmark-excel me-1"></i><span>Excel</span></a>
+                               class="btn btn-success btn-sm w-100" title="@T["Export Excel"]"><i class="bi bi-file-earmark-excel me-1"></i><span>@T["Excel"]</span></a>
                         </div>
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportFypStatusCsv", "Portal", new { departmentId = Model.DepartmentId, status = Model.SelectedStatus, institutionType = Model.InstitutionType, studentId = Model.StudentId })"
-                               class="btn btn-outline-success btn-sm w-100" title="Export CSV"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
+                               class="btn btn-outline-success btn-sm w-100" title="@T["Export CSV"]"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
                         </div>
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportFypStatusPdf", "Portal", new { departmentId = Model.DepartmentId, status = Model.SelectedStatus, institutionType = Model.InstitutionType, studentId = Model.StudentId })"
-                               class="btn btn-outline-danger btn-sm w-100" title="Export PDF"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
+                               class="btn btn-outline-danger btn-sm w-100" title="@T["Export PDF"]"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
                         </div>
                     }
                 </div>
@@ -102,7 +102,7 @@
             var r = Model.Report;
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="text-muted small">
-                    <strong>@r.TotalProjects</strong> project(s) &mdash; generated @r.GeneratedAt.ToString("dd MMM yyyy, HH:mm")
+                    <strong>@r.TotalProjects</strong> @T.Format("project(s) &mdash; generated {0}", r.GeneratedAt.ToString("dd MMM yyyy, HH:mm"))
                 </span>
             </div>
             <div class="card shadow-sm border-0">
@@ -111,14 +111,14 @@
                         <table class="table table-hover mb-0 table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Student</th>
-                                    <th>Reg. No.</th>
-                                    <th>Department</th>
-                                    <th>Supervisor</th>
-                                    <th>Status</th>
-                                    <th>Proposed</th>
-                                    <th class="text-center">Meetings</th>
+                                    <th>@T["Title"]</th>
+                                    <th>@T["Student"]</th>
+                                    <th>@T["Reg. No."]</th>
+                                    <th>@T["Department"]</th>
+                                    <th>@T["Supervisor"]</th>
+                                    <th>@T["Status"]</th>
+                                    <th>@T["Proposed"]</th>
+                                    <th class="text-center">@T["Meetings"]</th>
                                 </tr>
                             </thead>
                             <tbody>

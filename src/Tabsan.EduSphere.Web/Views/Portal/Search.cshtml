@@ -17,14 +17,14 @@
 @if (TempData["SearchError"] is string err)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        Search failed: @err
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Format("Search failed: {0}", err)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -32,14 +32,14 @@ else
         <div class="card-body">
             <form method="get" asp-action="Search" class="row g-2 align-items-end">
                 <div class="col">
-                    <label class="form-label visually-hidden" for="qInput">Search</label>
+                    <label class="form-label visually-hidden" for="qInput">@T["Search"]</label>
                     <input id="qInput" name="q" type="search" class="form-control"
-                           value="@Model.Query" placeholder="Enter at least 2 characters…"
+                           value="@Model.Query" placeholder="@T["Enter at least 2 characters…"]"
                            minlength="2" autofocus />
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" type="submit">
-                        <i class="bi bi-search me-1"></i>Search
+                        <i class="bi bi-search me-1"></i>@T["Search"]
                     </button>
                 </div>
             </form>
@@ -48,18 +48,18 @@ else
 
     @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.Query.Length < 2)
     {
-        <div class="alert alert-info">Please enter at least 2 characters.</div>
+        <div class="alert alert-info">@T["Please enter at least 2 characters."]</div>
     }
     else if (Model.Response is not null)
     {
         <p class="text-muted mb-3">
-            @Model.Response.TotalHits result@(Model.Response.TotalHits == 1 ? "" : "s") for
+            @T.Format("{0} result{1} for", Model.Response.TotalHits, (Model.Response.TotalHits == 1 ? "" : "s"))
             <strong>&ldquo;@Html.Encode(Model.Query)&rdquo;</strong>
         </p>
 
         @if (Model.Response.TotalHits == 0)
         {
-            <div class="alert alert-secondary">No results found. Try a different search term.</div>
+            <div class="alert alert-secondary">@T["No results found. Try a different search term."]</div>
         }
         else
         {
@@ -76,7 +76,7 @@ else
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="tab-all" data-bs-toggle="tab"
                             data-bs-target="#pane-all" type="button" role="tab">
-                        All <span class="badge bg-secondary ms-1">@Model.Response.TotalHits</span>
+                        @T["All"] <span class="badge bg-secondary ms-1">@Model.Response.TotalHits</span>
                     </button>
                 </li>
                 @foreach (var key in orderedKeys)

@@ -1,18 +1,18 @@
 @model Tabsan.EduSphere.Web.Models.Portal.DepartmentsPageModel
-@{ ViewData["Title"] = "Departments"; }
+@{ ViewData["Title"] = T.Text("Departments"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     var alertCls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-success";
     <div class="alert @alertCls alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -26,9 +26,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Tenant</label>
-                            <select class="form-select" name="tenantId" onchange="this.form.submit()">
-                                <option value="">All tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" class="form-select" name="tenantId" onchange="this.form.submit()">
+                                <option value="">@T["All tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -36,9 +36,9 @@ else
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select class="form-select" name="campusId" onchange="this.form.submit()">
-                                <option value="">All campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">@T["All campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -50,9 +50,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select class="form-select" name="campusId" onchange="this.form.submit()">
-                                <option value="">All campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">@T["All campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -66,7 +66,7 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
                     <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Apply</button>
+                        <button type="submit" class="btn btn-primary w-100">@T["Apply"]</button>
                     </div>
                 </form>
             </div>
@@ -75,19 +75,19 @@ else
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">Departments
+            <h2 class="h5 mb-3">@T["Departments"]
                 <span class="badge bg-secondary ms-2">@Model.Departments.Count</span>
                 @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                 {
                     <button type="button" class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#createDepartmentModal">
-                        <i class="fas fa-plus"></i> Add Department
+                        <i class="fas fa-plus"></i> @T["Add Department"]
                     </button>
                 }
             </h2>
 
             @if (Model.Departments.Count == 0)
             {
-                <p class="text-muted">No departments found.</p>
+                <p class="text-muted">@T["No departments found."]</p>
             }
             else
             {
@@ -95,10 +95,10 @@ else
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Institution</th>
-                                <th>Status</th>
+                                <th>@T["Code"]</th>
+                                <th>@T["Name"]</th>
+                                <th>@T["Institution"]</th>
+                                <th>@T["Status"]</th>
                                 @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                                 {
                                     <th></th>
@@ -115,19 +115,19 @@ else
                                         @switch (d.InstitutionType)
                                         {
                                             case 1:
-                                                <span class="badge bg-info">School</span>
+                                                <span class="badge bg-info">@T["School"]</span>
                                                 break;
                                             case 2:
-                                                <span class="badge bg-warning text-dark">College</span>
+                                                <span class="badge bg-warning text-dark">@T["College"]</span>
                                                 break;
-                                            default:
-                                                <span class="badge bg-primary">University</span>
+                                            @T["default:"]
+                                                <span class="badge bg-primary">@T["University"]</span>
                                                 break;
                                         }
                                     </td>
                                     <td>
                                         <span class="badge @(d.IsActive ? "bg-success" : "bg-secondary")">
-                                            @(d.IsActive ? "Active" : "Inactive")
+                                            @(d.IsActive ? T.Text("Active") : T.Text("Inactive"))
                                         </span>
                                     </td>
                                     @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
@@ -136,7 +136,7 @@ else
                                             <button type="button" class="btn btn-xs btn-outline-secondary btn-sm me-1"
                                                     data-bs-toggle="modal" data-bs-target="#editDeptModal"
                                                     data-id="@d.Id" data-name="@d.Name" data-institution-type="@d.InstitutionType">
-                                                Edit
+                                                @T["Edit"]
                                             </button>
                                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                                             {
@@ -145,16 +145,16 @@ else
                                                     <input type="hidden" name="id" value="@d.Id" />
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                    <input type="hidden" name="activate" value="@(!d.IsActive)" />
+                                                    <input type="hidden" name="activate" value="@(!d.IsActive ? "true" : "false")" />
                                                     @if (d.IsActive)
                                                     {
                                                         <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
-                                                                onclick="return confirm('Deactivate @d.Name?')">Deactivate</button>
+                                                                onclick="return confirm('@T.Js("Deactivate {0}?", d.Name)')">@T["Deactivate"]</button>
                                                     }
                                                     else
                                                     {
                                                         <button type="submit" class="btn btn-xs btn-outline-success btn-sm"
-                                                                onclick="return confirm('Activate @d.Name?')">Activate</button>
+                                                                onclick="return confirm('@T.Js("Activate {0}?", d.Name)')">@T["Activate"]</button>
                                                     }
                                                 </form>
                                             }
@@ -173,14 +173,14 @@ else
     {
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-body">
-                <h2 class="h5 mb-3">Admin Department Assignments</h2>
+                <h2 class="h5 mb-3">@T["Admin Department Assignments"]</h2>
                 <div class="mb-3">
-                    <a asp-action="AdminUsers" class="btn btn-sm btn-outline-primary">Open Admin User Management</a>
+                    <a asp-action="AdminUsers" class="btn btn-sm btn-outline-primary">@T["Open Admin User Management"]</a>
                 </div>
 
                 @if (Model.AdminUsers.Count == 0)
                 {
-                    <p class="text-muted mb-0">No active Admin users found.</p>
+                    <p class="text-muted mb-0">@T["No active Admin users found."]</p>
                 }
                 else
                 {
@@ -189,13 +189,13 @@ else
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-6">
-                            <label class="form-label">Admin User</label>
-                            <select class="form-select" name="selectedAdminUserId" onchange="this.form.submit()">
+                            <label class="form-label">@T["Admin User"]</label>
+                            <select aria-label="@T["Admin User"]" class="form-select" name="selectedAdminUserId" onchange="this.form.submit()">
                                 @foreach (var admin in Model.AdminUsers)
                                 {
                                     var selected = Model.SelectedAdminUserId == admin.Id;
                                     <option value="@admin.Id" selected="@selected">
-                                        @admin.UserName (@(string.IsNullOrWhiteSpace(admin.Email) ? "No email" : admin.Email))
+                                        @admin.UserName (@(string.IsNullOrWhiteSpace(admin.Email) ? T.Text("No email") : admin.Email))
                                     </option>
                                 }
                             </select>
@@ -207,8 +207,8 @@ else
                         <input type="hidden" name="adminUserId" value="@Model.SelectedAdminUserId" />
 
                         <div class="d-flex justify-content-end gap-2 mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllDeptAssignments(true)">Select All</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllDeptAssignments(false)">Clear</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllDeptAssignments(true)">@T["Select All"]</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllDeptAssignments(false)">@T["Clear"]</button>
                         </div>
 
                         <div class="row g-2">
@@ -227,7 +227,7 @@ else
                         </div>
 
                         <div class="mt-3">
-                            <button type="submit" class="btn btn-primary">Save Assignments</button>
+                            <button type="submit" class="btn btn-primary">@T["Save Assignments"]</button>
                         </div>
                     </form>
                 }
@@ -245,30 +245,30 @@ else
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Department</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Add Department"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Department Code <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control" required maxlength="20" placeholder="e.g. CS">
+                        <label class="form-label">@T["Department Code"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Department Code"]" type="text" name="code" class="form-control" required maxlength="20" placeholder="@T["e.g. CS"]">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Department Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" required maxlength="200" placeholder="e.g. Computer Science">
+                        <label class="form-label">@T["Department Name"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Department Name"]" type="text" name="name" class="form-control" required maxlength="200" placeholder="@T["e.g. Computer Science"]">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Institution Type <span class="text-danger">*</span></label>
-                        <select class="form-select" name="institutionType" required>
-                            <option value="0">University</option>
-                            <option value="1">School</option>
-                            <option value="2">College</option>
+                        <label class="form-label">@T["Institution Type"] <span class="text-danger">*</span></label>
+                        <select aria-label="@T["Institution Type"]" class="form-select" name="institutionType" required>
+                            <option value="0">@T["University"]</option>
+                            <option value="1">@T["School"]</option>
+                            <option value="2">@T["College"]</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Create"]</button>
                 </div>
             </div>
         </form>
@@ -285,26 +285,26 @@ else
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Department</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Edit Department"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">New Name <span class="text-danger">*</span></label>
+                        <label class="form-label" for="edit_deptName">@T["New Name"] <span class="text-danger">*</span></label>
                         <input type="text" id="edit_deptName" name="newName" class="form-control" required maxlength="200">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Institution Type</label>
+                        <label class="form-label" for="edit_institutionType">@T["Institution Type"]</label>
                         <select id="edit_institutionType" class="form-select" name="institutionType">
-                            <option value="0">University</option>
-                            <option value="1">School</option>
-                            <option value="2">College</option>
+                            <option value="0">@T["University"]</option>
+                            <option value="1">@T["School"]</option>
+                            <option value="2">@T["College"]</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Save"]</button>
                 </div>
             </div>
         </form>

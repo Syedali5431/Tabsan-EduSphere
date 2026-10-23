@@ -20,6 +20,10 @@ public static class ModuleRegistry
             // ── Core / Mandatory ────────────────────────────────────────────────
             ["authentication"]  = new("authentication",  AllRoles,   null, false),
             ["sso"]             = new("sso",             AllRoles,   null, true),   // Plan M1 — license-gated
+            ["lti"]             = new("lti",             AllRoles,   null, true),   // Plan M5 — license-gated
+            ["outcomes"]        = new("outcomes",        AllRoles,   null, true),   // Plan M6 — license-gated
+            ["similarity"]      = new("similarity",      AllRoles,   null, true),   // Plan M9 — license-gated
+            ["live_classes"]    = new("live_classes",    AllRoles,   null, true),   // Plan M10 — license-gated
             ["departments"]     = new("departments",     AdminTier,  null, false),
             ["courses"]         = new("courses",         AllRoles,   null, false),
             ["sis"]             = new("sis",             AllRoles,   null, false),

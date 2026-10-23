@@ -1,0 +1,103 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Plan M12 — the EduSphere app for students, teachers and parents (.NET MAUI; decision: Docs/Decisions/ADR-M12-mobile-technology.md).
+		All behaviour lives in src/Tabsan.EduSphere.Mobile.Core (tested with the main solution); this project draws the screens.
+
+		White-label builds (one app per institution): pass the properties below, e.g.
+		  dotnet publish -f net9.0-android -c Release -p:AppName="City University" -p:AppId=edu.cityuni.edusphere -p:ApiBaseUrl=https://api.cityuni.edu
+		or run mobile/build-whitelabel.ps1. See mobile/README.md.
+	-->
+	<PropertyGroup>
+		<AppName Condition="'$(AppName)' == ''">EduSphere</AppName>
+		<AppId Condition="'$(AppId)' == ''">com.tabsan.edusphere</AppId>
+		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">https://localhost:7061</ApiBaseUrl>
+		<AppColor Condition="'$(AppColor)' == ''">#0D3B66</AppColor>
+		<AppScheme Condition="'$(AppScheme)' == ''">edusphere</AppScheme>
+		<!-- Semantic version shown to users and checked against the API's minimum version; ApplicationVersion must grow with every store release. -->
+		<AppVersion Condition="'$(AppVersion)' == ''">1.0.0</AppVersion>
+		<AppBuild Condition="'$(AppBuild)' == ''">1</AppBuild>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+		<!-- Build only some platforms: -p:MobileTargets=net9.0-android (machines without every MAUI workload). -->
+		<TargetFrameworks Condition="'$(MobileTargets)' != ''">$(MobileTargets)</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>Tabsan.EduSphere.Mobile</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<ApplicationTitle>$(AppName)</ApplicationTitle>
+		<ApplicationId>$(AppId)</ApplicationId>
+		<ApplicationDisplayVersion>$(AppVersion)</ApplicationDisplayVersion>
+		<ApplicationVersion>$(AppBuild)</ApplicationVersion>
+
+		<WindowsPackageType>None</WindowsPackageType>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">23.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="$(AppColor)" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="$(AppColor)" BaseSize="128,128" />
+		<MauiImage Include="Resources\Images\*" />
+		<MauiFont Include="Resources\Fonts\*" />
+		<MauiAsset Include="Resources\Raw\**" Exclude="Resources\Raw\whitelabel.json" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Tabsan.EduSphere.Mobile.Core\Tabsan.EduSphere.Mobile.Core.csproj" />
+	</ItemGroup>
+
+	<!--
+		Push notifications on Android (Firebase Cloud Messaging): put the institution's google-services.json at
+		Platforms/Android/google-services.json, or pass -p:GoogleServicesJsonPath=... . Without it the app is built without
+		Firebase and simply has no push. iOS push (APNs through Firebase) is set up on a Mac — see mobile/README.md.
+	-->
+	<PropertyGroup>
+		<GoogleServicesJsonPath Condition="'$(GoogleServicesJsonPath)' == ''">$(MSBuildProjectDirectory)\Platforms\Android\google-services.json</GoogleServicesJsonPath>
+		<UseFirebase Condition="'$(UseFirebase)' == '' and Exists('$(GoogleServicesJsonPath)')">true</UseFirebase>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(UseFirebase)' == 'true' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<DefineConstants>$(DefineConstants);FIREBASE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(UseFirebase)' == 'true' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<PackageReference Include="Xamarin.Firebase.Messaging" Version="124.1.1.2" />
+		<GoogleServicesJson Include="$(GoogleServicesJsonPath)" />
+	</ItemGroup>
+
+	<!-- The sign-in return address scheme is compiled into the Android intent filter (iOS: Info.plist, set by build-whitelabel.ps1). -->
+	<Target Name="WriteWhiteLabelCode" BeforeTargets="CoreCompile">
+		<Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(AppScheme)', '^[a-z][a-z0-9.+-]{1,31}$'))" Text="AppScheme must be a lower-case URL scheme such as edusphere or cityuni (got '$(AppScheme)')." />
+		<WriteLinesToFile File="$(IntermediateOutputPath)WhiteLabel.g.cs" Overwrite="true" WriteOnlyWhenDifferent="true"
+			Lines="namespace Tabsan.EduSphere.Mobile%3B internal static class WhiteLabelBuild { public const string Scheme = &quot;$(AppScheme)&quot;%3B }" />
+		<ItemGroup>
+			<Compile Include="$(IntermediateOutputPath)WhiteLabel.g.cs" />
+			<FileWrites Include="$(IntermediateOutputPath)WhiteLabel.g.cs" />
+		</ItemGroup>
+	</Target>
+
+	<!-- The institution's settings, read at start-up (whitelabel.json in the app package). -->
+	<Target Name="WriteWhiteLabel" BeforeTargets="ResizetizeCollectItems;_CollectMauiAssets;PrepareForBuild">
+		<WriteLinesToFile File="Resources\Raw\whitelabel.json" Overwrite="true" WriteOnlyWhenDifferent="true"
+			Lines="{ &quot;appName&quot;: &quot;$(AppName)&quot;, &quot;apiBaseUrl&quot;: &quot;$(ApiBaseUrl)&quot;, &quot;appColor&quot;: &quot;$(AppColor)&quot;, &quot;appScheme&quot;: &quot;$(AppScheme)&quot;, &quot;appVersion&quot;: &quot;$(AppVersion)&quot; }" />
+		<!-- Generated (not in git), so added here: the Resources\Raw glob runs before the file exists on a fresh checkout. -->
+		<ItemGroup>
+			<MauiAsset Include="Resources\Raw\whitelabel.json" LogicalName="whitelabel.json" />
+		</ItemGroup>
+	</Target>
+
+</Project>

@@ -25,11 +25,15 @@ public class NotificationService : INotificationService
     private readonly ILogger<NotificationService> _logger;
     private readonly NotificationEmailOptions _emailOptions;
     private readonly NotificationSmsOptions _smsOptions;
+    private readonly IPushNotificationDispatcher? _pushDispatcher;
 
     private const int DeferredFanoutThreshold = 250;
     private static readonly TimeSpan InboxCacheTtl = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan BadgeCacheTtl = TimeSpan.FromSeconds(8);
     private static int _cacheVersion;
+
+    // Plan M11 — notification emails use each recipient's language.
+    private readonly Tabsan.EduSphere.Application.Localization.IPortalLanguageService? _languages;
 
     public NotificationService(
         INotificationRepository repo,
@@ -39,8 +43,12 @@ public class NotificationService : INotificationService
         ISmsDeliveryProvider? smsDeliveryProvider = null,
         ILogger<NotificationService>? logger = null,
         IOptions<NotificationEmailOptions>? emailOptions = null,
-        IOptions<NotificationSmsOptions>? smsOptions = null)
+        IOptions<NotificationSmsOptions>? smsOptions = null,
+        IPushNotificationDispatcher? pushDispatcher = null,
+        Tabsan.EduSphere.Application.Localization.IPortalLanguageService? languages = null)
     {
+        _languages = languages;
+        _pushDispatcher = pushDispatcher;
         _repo = repo;
         _fanoutQueue = fanoutQueue;
         _cache = cache ?? new MemoryCache(new MemoryCacheOptions());
@@ -64,6 +72,7 @@ public class NotificationService : INotificationService
         await FanOutRecipientsAsync(notification.Id, request.RecipientUserIds, ct);
         await DispatchEmailsAsync(notification.Title, notification.Body, notification.Type, request.RecipientUserIds, ct);
         await DispatchSmsAsync(notification.Title, notification.Body, notification.Type, request.RecipientUserIds, ct);
+        await DispatchPushAsync(notification.Title, notification.Body, notification.Type, request.RecipientUserIds, ct);
         BumpCacheVersion();
 
         return notification.Id;
@@ -84,6 +93,7 @@ public class NotificationService : INotificationService
         await FanOutRecipientsAsync(notification.Id, recipientUserIds, ct);
         await DispatchEmailsAsync(notification.Title, notification.Body, notification.Type, recipientUserIds, ct);
         await DispatchSmsAsync(notification.Title, notification.Body, notification.Type, recipientUserIds, ct);
+        await DispatchPushAsync(notification.Title, notification.Body, notification.Type, recipientUserIds, ct);
         BumpCacheVersion();
 
         return notification.Id;
@@ -212,7 +222,7 @@ public class NotificationService : INotificationService
         if (!_emailOptions.Enabled || _emailDeliveryProvider is null)
             return;
 
-        var emails = await _repo.GetActiveUserEmailsAsync(recipientUserIds, ct);
+        var emails = await _repo.GetActiveUserEmailLanguagesAsync(recipientUserIds, ct);
         if (emails.Count == 0)
             return;
 
@@ -221,10 +231,13 @@ public class NotificationService : INotificationService
             ? title
             : $"{subjectPrefix} {title}";
 
-        foreach (var email in emails)
+        foreach (var (email, preferred) in emails)
         {
             try
             {
+                var language = _languages is null
+                    ? Tabsan.EduSphere.Application.Localization.PortalLanguages.Normalize(preferred) ?? "en"
+                    : await _languages.ForRecipientAsync(preferred, ct);
                 await _emailDeliveryProvider.SendTemplateAsync(
                     email,
                     subject,
@@ -235,7 +248,8 @@ public class NotificationService : INotificationService
                         ["BODY"] = body,
                         ["TYPE"] = type.ToString(),
                         ["CREATED_AT_UTC"] = DateTime.UtcNow.ToString("u"),
-                        ["PORTAL_URL"] = _emailOptions.PortalUrl
+                        ["PORTAL_URL"] = _emailOptions.PortalUrl,
+                        ["LANGUAGE"] = language
                     },
                     ct);
             }
@@ -287,6 +301,17 @@ public class NotificationService : INotificationService
                     phoneNumber,
                     title);
             }
+        }
+    }
+
+    /// <summary>Plan M4.3: hands the notification to Web Push delivery (queued; never fails the send).</summary>
+    private async Task DispatchPushAsync(string title, string body, NotificationType type, IReadOnlyList<Guid> recipientUserIds, CancellationToken ct)
+    {
+        if (_pushDispatcher is null || recipientUserIds.Count == 0) return;
+        try { await _pushDispatcher.DispatchAsync(type, title, body, recipientUserIds.Distinct().ToList(), ct); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Push dispatch failed for notification '{Title}'.", title);
         }
     }
 

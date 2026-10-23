@@ -1,0 +1,159 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ModuleItemsEditorModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@using System.Text.Json
+@{
+    var m = Model.Module;
+    var p = $"m{m.Id:N}";
+    var allowed = new Dictionary<string, string[]>
+    {
+        ["Header"] = ["None"],
+        ["Page"] = ["None", "MustView", "MustMarkDone"],
+        ["Video"] = ["None", "MustView", "MustMarkDone"],
+        ["Material"] = ["None", "MustView", "MustMarkDone"],
+        ["ExternalUrl"] = ["None", "MustView", "MustMarkDone"],
+        ["Assignment"] = ["None", "MustView", "MustMarkDone", "MustSubmit", "MustScoreAtLeast"],
+        ["Quiz"] = ["None", "MustView", "MustMarkDone", "MustSubmit", "MustScoreAtLeast"],
+        ["ExternalTool"] = ["None", "MustView", "MustMarkDone", "MustSubmit", "MustScoreAtLeast"],
+        ["ScormPackage"] = ["None", "MustView", "MustMarkDone", "MustSubmit", "MustScoreAtLeast"],
+        ["Discussion"] = ["None", "MustView", "MustMarkDone", "MustContribute"]
+    };
+    var requirementNames = new Dictionary<string, string>
+    {
+        ["None"] = "No requirement", ["MustView"] = "View it", ["MustMarkDone"] = "Mark it as done", ["MustSubmit"] = "Submit it",
+        ["MustScoreAtLeast"] = "Score at least…", ["MustContribute"] = "Post in it"
+    };
+    var types = new[] { ("Assignment", "Assignment"), ("Quiz", "Quiz"), ("Discussion", "Discussion"), ("ExternalTool", "External tool"), ("ScormPackage", "SCORM package"), ("Video", "Video"),
+        ("Material", "Course material"), ("Page", "Text page"), ("ExternalUrl", "Web link"), ("Header", "Heading") };
+}
+<section class="border-top pt-3 mt-3" data-module-editor="@m.Id">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h3 class="h6 mb-0 me-auto">@T["Items"]</h3>
+        @if (m.UnlockAt is { } unlock) { <span class="badge bg-info text-dark">@T.Format("Opens {0} UTC", unlock.ToString("dd MMM yyyy HH:mm"))</span> }
+        @if (m.PrerequisiteModuleIds.Count > 0) { <span class="badge bg-info text-dark">@T.Format("After {0}", string.Join(", ", Model.AllModules.Where(x => m.PrerequisiteModuleIds.Contains(x.Id)).Select(x => x.Title)))</span> }
+        @if (m.RequireSequentialProgress) { <span class="badge bg-info text-dark">@T["In order"]</span> }
+    </div>
+
+    @if (m.Items.Count == 0)
+    {
+        <p class="small text-muted">@T["No items yet. Add assignments, quizzes, discussions, tools, videos, pages and links below; students work through them in this order."]</p>
+    }
+    <ol class="list-group mb-3" data-module-items>
+        @for (var i = 0; i < m.Items.Count; i++)
+        {
+            var item = m.Items[i];
+            var eid = $"{p}-e{i}";
+            <li class="list-group-item" style="padding-left: @(1 + item.IndentLevel * 1.5)rem;" data-module-item-row="@item.Id">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge bg-light text-dark border">@ModuleItemText.TypeLabel(item.ItemType)</span>
+                    <span class="@(item.ItemType == "Header" ? "fw-bold" : "") me-auto">@item.Title</span>
+                    @if (item.TargetMissing) { <span class="badge bg-danger">@T["No longer available"]</span> }
+                    @if (!item.IsPublished) { <span class="badge bg-secondary">@T["Hidden"]</span> }
+                    @if (item.RequirementType != "None") { <span class="badge bg-primary-subtle text-primary border">@ModuleItemText.Requirement(item.RequirementType, item.MinScorePercent)</span> }
+                    <form asp-action="MoveModuleItem" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="moduleId" value="@m.Id" /><input type="hidden" name="itemId" value="@item.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" /><input type="hidden" name="direction" value="-1" />
+                        <button class="btn btn-sm btn-outline-secondary py-0" disabled="@(i == 0)" aria-label="Move @item.Title up">↑</button>
+                    </form>
+                    <form asp-action="MoveModuleItem" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="moduleId" value="@m.Id" /><input type="hidden" name="itemId" value="@item.Id" />
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" /><input type="hidden" name="direction" value="1" />
+                        <button class="btn btn-sm btn-outline-secondary py-0" disabled="@(i == m.Items.Count - 1)" aria-label="Move @item.Title down">↓</button>
+                    </form>
+                    <button class="btn btn-sm btn-outline-primary py-0" type="button" data-bs-toggle="collapse" data-bs-target="#@eid" aria-expanded="false" aria-controls="@eid">@T["Edit"]</button>
+                    <form asp-action="RemoveModuleItem" method="post" class="d-inline" onsubmit="return confirm('@T.Js("Remove this item from the module? The assignment, quiz or file itself is kept.")');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@item.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <button class="btn btn-sm btn-outline-danger py-0">@T["Remove"]</button>
+                    </form>
+                </div>
+                <div class="collapse mt-2" id="@eid">
+                    <form asp-action="UpdateModuleItem" method="post" class="row g-2" data-requirement-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@item.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <div class="col-md-6"><label class="form-label small" for="@eid-title">@T["Title"]</label><input id="@eid-title" name="title" class="form-control form-control-sm" value="@item.Title" maxlength="300" required /></div>
+                        <div class="col-md-2"><label class="form-label small" for="@eid-indent">@T["Indent"]</label>
+                            <select id="@eid-indent" name="indentLevel" class="form-select form-select-sm">@for (var n = 0; n <= 3; n++) { <option value="@n" selected="@(item.IndentLevel == n)">@n</option> }</select></div>
+                        <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" id="@eid-pub" name="isPublished" value="true" checked="@item.IsPublished" /><label class="form-check-label small" for="@eid-pub">@T["Visible to students"]</label></div></div>
+                        @if (item.ItemType == "ExternalUrl")
+                        {
+                            <div class="col-12"><label class="form-label small" for="@eid-url">@T["Web address"]</label><input id="@eid-url" name="url" type="url" class="form-control form-control-sm" value="@item.Url" required /></div>
+                        }
+                        @if (item.ItemType == "Page")
+                        {
+                            <div class="col-12"><label class="form-label small" for="@eid-body">@T["Text"]</label><textarea id="@eid-body" name="body" class="form-control form-control-sm" rows="4">@item.Body</textarea></div>
+                        }
+                        <div class="col-md-6"><label class="form-label small" for="@eid-req">@T["To complete it, students must"]</label>
+                            <select id="@eid-req" name="requirementType" class="form-select form-select-sm" data-requirement>
+                                @foreach (var r in item.AllowedRequirements) { <option value="@r" selected="@(item.RequirementType == r)">@requirementNames[r]</option> }
+                            </select></div>
+                        <div class="col-md-3" data-min-score><label class="form-label small" for="@eid-min">@T["Minimum score (%)"]</label><input id="@eid-min" name="minScorePercent" type="number" min="1" max="100" step="0.5" class="form-control form-control-sm" value="@item.MinScorePercent" /></div>
+                        <div class="col-12"><button class="btn btn-sm btn-primary">@T["Save item"]</button></div>
+                    </form>
+                </div>
+            </li>
+        }
+    </ol>
+
+    <details class="mb-2">
+        <summary class="small fw-semibold">@T["Add an item"]</summary>
+        <form asp-action="AddModuleItem" method="post" class="row g-2 mt-1" data-add-item-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="moduleId" value="@m.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <div class="col-md-4"><label class="form-label small" for="@p-type">@T["Add"]</label>
+                <select id="@p-type" name="itemType" class="form-select form-select-sm" data-item-type>
+                    @foreach (var (value, text) in types) { <option value="@value">@text</option> }
+                </select></div>
+            <div class="col-md-8" data-for-target><label class="form-label small" for="@p-target">@T["Item"]</label>
+                <select id="@p-target" name="targetId" class="form-select form-select-sm" data-target-select>
+                    @foreach (var group in Model.Linkables.GroupBy(l => l.Type))
+                    {
+                        foreach (var l in group.OrderBy(l => l.Title)) { <option value="@l.Id" data-type="@l.Type">@l.Title@(l.Detail is null ? "" : $" ({l.Detail})")</option> }
+                    }
+                </select></div>
+            <div class="col-md-8" data-for-title><label class="form-label small" for="@p-title">@T["Title"]</label><input id="@p-title" name="title" class="form-control form-control-sm" maxlength="300" placeholder="@T["Leave empty to use the item's name"]" /></div>
+            <div class="col-12" data-for-url><label class="form-label small" for="@p-url">@T["Web address"]</label><input id="@p-url" name="url" type="url" class="form-control form-control-sm" placeholder="https://" /></div>
+            <div class="col-12" data-for-body><label class="form-label small" for="@p-body">@T["Text"]</label><textarea id="@p-body" name="body" class="form-control form-control-sm" rows="3"></textarea></div>
+            <div class="col-md-2"><label class="form-label small" for="@p-indent">@T["Indent"]</label>
+                <select id="@p-indent" name="indentLevel" class="form-select form-select-sm">@for (var n = 0; n <= 3; n++) { <option value="@n">@n</option> }</select></div>
+            <div class="col-md-6"><label class="form-label small" for="@p-req">@T["To complete it, students must"]</label>
+                <select id="@p-req" name="requirementType" class="form-select form-select-sm" data-requirement data-allowed="@JsonSerializer.Serialize(allowed)">
+                    @foreach (var r in requirementNames) { <option value="@r.Key">@r.Value</option> }
+                </select></div>
+            <div class="col-md-4" data-min-score><label class="form-label small" for="@p-min">@T["Minimum score (%)"]</label><input id="@p-min" name="minScorePercent" type="number" min="1" max="100" step="0.5" class="form-control form-control-sm" /></div>
+            <div class="col-12"><button class="btn btn-sm btn-primary">@T["Add item"]</button></div>
+        </form>
+    </details>
+
+    <details>
+        <summary class="small fw-semibold">@T["Release and completion"]</summary>
+        <form asp-action="SaveModuleRelease" method="post" class="row g-2 mt-1" data-release-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="moduleId" value="@m.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <div class="col-md-4"><label class="form-label small" for="@p-unlock">@T["Opens on (UTC, optional)"]</label>
+                <input id="@p-unlock" name="unlockAt" type="datetime-local" class="form-control form-control-sm" value="@(m.UnlockAt?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
+            <div class="col-md-4"><label class="form-label small" for="@p-mode">@T["Complete when students finish"]</label>
+                <select id="@p-mode" name="completionMode" class="form-select form-select-sm">
+                    <option value="All" selected="@(m.CompletionMode == "All")">@T["every item with a requirement"]</option>
+                    <option value="Any" selected="@(m.CompletionMode == "Any")">@T["any one item with a requirement"]</option>
+                </select></div>
+            <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" id="@p-seq" name="requireSequentialProgress" value="true" checked="@m.RequireSequentialProgress" /><label class="form-check-label small" for="@p-seq">@T["Students must work through items in order"]</label></div></div>
+            @{ var others = Model.AllModules.Where(x => x.Id != m.Id).ToList(); }
+            @if (others.Count > 0)
+            {
+                <fieldset class="col-12">
+                    <legend class="form-label small mb-1" style="font-size: .875rem;">@T["Open only after these modules are complete"]</legend>
+                    @foreach (var o in others)
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="@p-pre-@o.Id" name="prerequisiteModuleIds" value="@o.Id" checked="@m.PrerequisiteModuleIds.Contains(o.Id)" />
+                            <label class="form-check-label small" for="@p-pre-@o.Id">@o.Title</label>
+                        </div>
+                    }
+                </fieldset>
+            }
+            <div class="col-12"><button class="btn btn-sm btn-outline-primary">@T["Save release settings"]</button></div>
+        </form>
+    </details>
+</section>

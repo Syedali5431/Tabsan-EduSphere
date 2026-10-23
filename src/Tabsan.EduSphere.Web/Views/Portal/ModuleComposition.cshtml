@@ -1,58 +1,58 @@
 @model DashboardCompositionModel
 @{
-    ViewData["Title"] = "Module Composition";
+    ViewData["Title"] = T.Text("Module Composition");
 }
 
-<h2 class="mb-4">Module &amp; Dashboard Composition</h2>
+<h2 class="mb-4">@T["Module &amp; Dashboard Composition"]</h2>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected to API.</div>
+    <div class="alert alert-warning">@T["Not connected to API."]</div>
     return;
 }
 @if (Model.Message != null)
 {
-    <div class="alert alert-warning">@Model.Message</div>
+    <div class="alert alert-warning">@T.Text(Model.Message)</div>
 }
 
 @* ── Vocabulary ──────────────────────────────────────────────────────────── *@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
-        <i class="bi bi-translate me-2"></i> Active Academic Vocabulary
+        <i class="bi bi-translate me-2"></i> @T["Active Academic Vocabulary"]
     </div>
     <div class="card-body">
         <p class="text-muted small mb-3">
-            Labels used across all pages are derived from the current institution policy.
+            @T["Labels used across all pages are derived from the current institution policy."]
         </p>
         <div class="row row-cols-2 row-cols-md-5 g-3">
             <div class="col">
                 <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Period</div>
-                    <div class="fw-bold">@Model.PeriodLabel</div>
+                    <div class="text-muted small">@T["Period"]</div>
+                    <div class="fw-bold">@T.Text(Model.PeriodLabel)</div>
                 </div>
             </div>
             <div class="col">
                 <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Progression</div>
-                    <div class="fw-bold">@Model.ProgressionLabel</div>
+                    <div class="text-muted small">@T["Progression"]</div>
+                    <div class="fw-bold">@T.Text(Model.ProgressionLabel)</div>
                 </div>
             </div>
             <div class="col">
                 <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Grading</div>
-                    <div class="fw-bold">@Model.GradingLabel</div>
+                    <div class="text-muted small">@T["Grading"]</div>
+                    <div class="fw-bold">@T.Text(Model.GradingLabel)</div>
                 </div>
             </div>
             <div class="col">
                 <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Course</div>
-                    <div class="fw-bold">@Model.CourseLabel</div>
+                    <div class="text-muted small">@T["Course"]</div>
+                    <div class="fw-bold">@T.Text(Model.CourseLabel)</div>
                 </div>
             </div>
             <div class="col">
                 <div class="border rounded p-3 text-center">
-                    <div class="text-muted small">Student Group</div>
-                    <div class="fw-bold">@Model.StudentGroupLabel</div>
+                    <div class="text-muted small">@T["Student Group"]</div>
+                    <div class="fw-bold">@T.Text(Model.StudentGroupLabel)</div>
                 </div>
             </div>
         </div>
@@ -62,12 +62,12 @@
 @* ── Dashboard Widgets ──────────────────────────────────────────────────── *@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-success text-white">
-        <i class="bi bi-grid me-2"></i> Your Dashboard Widgets (@Model.Widgets.Count)
+        <i class="bi bi-grid me-2"></i> @T.Format("Your Dashboard Widgets ({0})", Model.Widgets.Count)
     </div>
     <div class="card-body">
         @if (!Model.Widgets.Any())
         {
-            <p class="text-muted">No widgets assigned for your role.</p>
+            <p class="text-muted">@T["No widgets assigned for your role."]</p>
         }
         else
         {
@@ -92,18 +92,18 @@
 @* ── Module Registry ────────────────────────────────────────────────────── *@
 <div class="card shadow-sm">
     <div class="card-header">
-        <i class="bi bi-list-check me-2"></i> Module Registry (@Model.Modules.Count modules)
+        <i class="bi bi-list-check me-2"></i> @T.Format("Module Registry ({0} modules)", Model.Modules.Count)
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Key</th>
-                        <th>Name</th>
-                        <th class="text-center">Active</th>
-                        <th class="text-center">Accessible (your role)</th>
-                        <th class="text-center">Action</th>
+                        <th>@T["Key"]</th>
+                        <th>@T["Name"]</th>
+                        <th class="text-center">@T["Active"]</th>
+                        <th class="text-center">@T["Accessible (your role)"]</th>
+                        <th class="text-center">@T["Action"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,11 +115,11 @@
                             <td class="text-center">
                                 @if (m.IsActive)
                                 {
-                                    <span class="badge bg-success">On</span>
+                                    <span class="badge bg-success">@T["On"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">Off</span>
+                                    <span class="badge bg-secondary">@T["Off"]</span>
                                 }
                             </td>
                             <td class="text-center">
@@ -138,15 +138,15 @@
                                     <form asp-action="ToggleCompositionModule" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="key" value="@m.Key" />
-                                        <input type="hidden" name="activate" value="@(!m.IsActive)" />
+                                        <input type="hidden" name="activate" value="@(!m.IsActive ? "true" : "false")" />
                                         <button type="submit" class="btn btn-sm @(m.IsActive ? "btn-outline-warning" : "btn-outline-success")">
-                                            @(m.IsActive ? "Deactivate" : "Activate")
+                                            @(m.IsActive ? T.Text("Deactivate") : T.Text("Activate"))
                                         </button>
                                     </form>
                                 }
                                 else
                                 {
-                                    <span class="text-muted small">SuperAdmin only</span>
+                                    <span class="text-muted small">@T["SuperAdmin only"]</span>
                                 }
                             </td>
                         </tr>

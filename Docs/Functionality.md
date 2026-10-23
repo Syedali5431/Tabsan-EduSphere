@@ -1,5 +1,121 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update — Plan M Phase M14 Accessibility, scale hardening and the public API
+### Implementation sync
+- Accessibility (WCAG 2.1 AA): every portal page is scanned with axe-core in Playwright (staff and student pages, login); 105 findings in 9 rules fixed to 0 — form fields named from their labels, icon buttons and close buttons named, labelled regions in the grading workspace, underlined links in text, stronger contrast on light panels, a visible 3 px keyboard focus ring. A keyboard walk covers the dashboard, quiz builder, grading workspace, question banks and course content. Accessibility Conformance Report (VPAT 2.5 structure) published.
+- Exam-day load test (k6): students start the same quiz, autosave and submit near the deadline; results publication and reading follow. A seeding test prepares the course, quiz and students.
+- Shared storage: submissions, conversions, uploads and SCORM files can live in Azure Blob Storage or Amazon S3 / S3-compatible storage (MinIO, R2, Wasabi) so several API servers share them; signed read links.
+- Request limits are now applied: per API token, per signed-in user and per address without sign-in, with 429 and Retry-After.
+- Public API: personal access tokens (`esk_…`) for integrations — created by Admin/Super Admin on the API Tokens page, shown once, stored hashed, optional read-only, expiry up to 365 days, revocable, audited; OpenAPI description, snapshot and developer guide.
+### Validation sync
+- axe 0 findings on 142 pages; exam-day run (500 students) 0 errors, p95 under 75 ms for start/autosave/submit; unit (object stores, tokens), integration (tokens, limits, OpenAPI generation), web (API Tokens page).
+
+## 2026-10-23 Update — Plan M Phase M13 SCORM packages and xAPI Learning Record Store
+### Implementation sync
+- Teachers upload SCORM 1.2 and SCORM 2004 packages (zip) on a course's content page; packages are checked for unsafe paths, size and a valid manifest before they are stored. Settings: title, allowed attempts, visibility, graded with marks; teachers can preview, see a per-student report and remove packages.
+- Students open packages from the course or its modules; the package runs in the portal with the SCORM runtime, saves progress (resume where they stopped), reports scores and completion, and finished packages reopen for review. The best score goes to the gradebook through the package's assignment; packages count for module completion requirements.
+- The player works without the portal session (sealed, time-limited play links) so it can run on a separate content address.
+- Learning Record Store (xAPI 1.0.3): administrators create credentials for activity providers; statements are stored, validated, voidable and searchable.
+### Validation sync
+- Unit, integration (+3), web (+4) and a Playwright spec with SCORM 1.2 and 2004 test packages in Chromium.
+
+## 2026-10-23 Update — Plan M Phase M12 Native Mobile App (students, teachers, parents)
+### Implementation sync
+- One EduSphere app for Android and iOS (.NET MAUI). Students: today's classes, due work, courses and materials, hand-in by camera or file, quizzes (opened in the portal), results, attendance, report cards, announcements, discussions, notifications. Teachers: take attendance, grade submissions, post announcements, discussions with the class. Parents: each child's results, attendance, report cards, fees and announcements.
+- Sign-in with password and authenticator code, or the institution's single sign-on in the phone's browser (PKCE hand-off through the portal). English, Urdu and Arabic.
+- Push notifications on the phone (Firebase Cloud Messaging) for the same events and choices as Web Push; tapping one opens the matching screen.
+- Per-institution white-label store builds (name, id, colours, API, sign-in scheme), app version gate (outdated apps are asked to update), self-hosted crash reports.
+### Validation sync
+- Unit +26 (mobile core and server pieces), integration +5, web +8; Android and Windows builds, white-label build. iOS needs a Mac; real-phone and live push checks open.
+
+## 2026-10-20 Update — Plan M Phase M11 Localisation (English, Urdu, Arabic)
+### Implementation sync
+- The whole portal is available in English, Urdu and Arabic: every page, menu, button, message, dialog and script text. Urdu and Arabic pages run right to left (layout, sidebar, Bootstrap, fonts).
+- Everyone picks a language from the top bar or the login page; signed-in users keep their choice on every device. The SuperAdmin sets the institution default (English, Urdu, Arabic, or the browser's language).
+- Emails (account unlocked, password reset, notifications) go out in each recipient's language; API messages and validation errors and PDF reports follow the language of the page.
+- Translators export all texts to Excel, fill in Urdu/Arabic and import the workbook; changes apply at once without a release. CI tests flag any text without a translation.
+### Validation sync
+- Unit +27, integration +5, web +4; Playwright localisation spec 3/3 (3 runs). A native-speaker review of the Urdu and Arabic texts is still to be done.
+
+## 2026-10-19 Update — Plan M Phase M10 Live Classes
+### Implementation sync
+- Teachers schedule online classes per course — ad hoc or for the next weeks of a timetable slot — with BigBlueButton, Zoom or Microsoft Teams (set up per institution), or by pasting any meeting link.
+- Students are notified when classes are scheduled, moved or cancelled and reminded 15 minutes before; a "Live now" banner with Join appears on every page while a class is open; every class has an "Add to calendar" file and appears on the academic calendar.
+- Attendance can be marked automatically from who joined (and how long, where Zoom/Teams report it), never overwriting a teacher's own marks; recordings are linked after the class.
+### Validation sync
+- Unit 493, integration 349 (+1 skip), web 75, contract 1; Playwright live-class spec 4/4 (3 runs). Live meetings on real BigBlueButton/Zoom/Teams accounts are still to be tried.
+
+## 2026-10-19 Update — Plan M Phase M9 Similarity (Plagiarism) Checking
+### Implementation sync
+- Assignments can check every handed-in attempt for copied text: a built-in comparison with the institution's other submissions (no vendor needed) or Copyleaks (web pages and publications), chosen per institution.
+- Typed text and .txt, .docx, .pdf (selectable text), .html and .rtf files are read; scores appear in the grading workspace with a report of matching passages and "Check again"; students can be shown their own score only.
+- Copyleaks API keys are encrypted at rest and never shown again; results arrive through a token-protected webhook.
+### Validation sync
+- Unit 485, integration 346 (+1 skip), web 72, contract 1; Playwright similarity spec 3/3 (3 runs). A live Copyleaks scan needs a vendor account and a public https API address.
+
+## 2026-10-19 Update — Plan M Phase M8 Assignment Enhancements
+### Implementation sync
+- Course late & missing policy: points deducted per started hour or day late (with a lowest-grade floor), missing work graded automatically after each student's due date; teachers can waive a deduction per submission and students see the mark before and after the deduction.
+- Assignments can open on a date and accept late work until a cut-off; teachers give one student or one group their own dates ("Assign to").
+- Student groups (group sets with manual groups, random split or self sign-up), group assignments handed in once per group and graded as a group or individually, and group-only discussion threads.
+- Peer review: reviews handed out after the due date (balanced, never your own or your group's work), rubric or score plus comments, anonymous by default; the teacher sees the peer average in the grading workspace.
+### Validation sync
+- Unit 476, integration 344 (+1 skip), web 69, contract 1; Playwright assignment-enhancement spec 4/4 (3 runs).
+
+## 2026-10-19 Update — Plan M Phase M7 Module Progress & Release Conditions
+### Implementation sync
+- Course modules are ordered lists of items (assignments, quizzes, discussions, external tools, videos, materials, pages, links, headings) with one completion requirement each (view, mark done, submit, score at least %, post).
+- Modules can open on a date, wait for other modules, and require items in order; students see progress bars and locked items with reasons, move with previous/next, and cannot start locked quizzes, submit locked assignments or launch locked tools. Teachers get a per-student progress report.
+- Fixed: every boolean on/off toggle form in the portal posted an empty value, so "Activate"/"Turn on"/"Show" never worked.
+### Validation sync
+- Unit 460, integration 341 (+1 skip), web 64, contract 1; Playwright module spec 3/3 (3 runs).
+
+## 2026-10-19 Update — Plan M Phase M6 Learning Outcomes & Mastery
+### Implementation sync
+- Institution, program (PLO) and course (CLO) outcomes with their own rating scales and mastery rules, CLO → PLO mapping and Excel import; teachers align outcomes to assignments, rubric criteria and quiz/bank questions with an "Outcomes" button.
+- Posted assignment grades, rubric levels, finished quiz answers and LTI tool scores become outcome evidence automatically; the Learning Mastery Gradebook, the student's My Outcomes page and the program attainment report (PDF/Excel) for accreditation read it.
+### Validation sync
+- Unit 446, integration 339 (+1 skip), web 59, contract 1; Playwright outcomes spec 4/4 (3 runs).
+
+## 2026-10-19 Update — Plan M Phase M5 External Tools (LTI 1.3)
+### Implementation sync
+- EduSphere is an LTI 1.3 / LTI Advantage platform: administrators register tools (System Settings › External Tools) and limit them to departments or courses; teachers add tools to courses or pick content inside a tool (Deep Linking); students open them without signing in again, in a new tab or inside the portal.
+- Tools allowed to grade create line items that are EduSphere assignments; their scores become graded submissions and reach the gradebook. Tools allowed to read the class list get teachers and students with roles, and names/emails only as the privacy level allows.
+### Validation sync
+- Unit 435, integration 336 (+1 skip), web 52, contract 1; Playwright LTI spec 4/4 (3 runs). Real vendor tools and 1EdTech certification still open.
+
+## 2026-10-19 Update — Plan M Phase M4 Progressive Web App
+### Implementation sync
+- The portal installs as an app (branded manifest, icons, shortcuts) and opens offline: timetable, announcements, course materials, notifications and dashboard pages viewed online — plus downloaded course files — stay readable without a connection; saved copies are wiped on sign-out.
+- Web Push notifications: users turn them on per device from the Notifications page and choose which notification types reach their devices; every portal notification is also delivered to subscribed devices.
+### Validation sync
+- Unit 413, integration 333 (+1 skip), web 41, contract 1; Playwright PWA spec 2/2. Installation and push delivery on real phones still to be checked.
+
+## 2026-10-19 Update — Plan M Phase M3 Grading Workspace
+### Implementation sync
+- Assignments keep every submission attempt (configurable attempts, accepted file types and size per assignment); files are stored by the API and served only to the submitting student and staff of the same tenant/campus.
+- Grading workspace: submission list with filters, PDF/image viewer with highlight, strike-out, box, text, pin and freehand annotations, autosaved marks and feedback, inline rubric scoring, attempt switcher, comments (grader-only and voice), next/previous student without reloading.
+- Grading policies: anonymous grading, automatic or manual grade posting (post/hide), moderated grading with provisional grades; posted grades feed the gradebook "Assignment(s)" component.
+- Office documents are converted to PDF by an optional Gotenberg service; annotated PDFs can be downloaded once grades are posted.
+- Student submission page: attempts, previews, posted grade with rubric breakdown, comments, resubmission.
+### Validation sync
+- Unit 395/395, integration 331/331 (+1 skip), web 33/33, contract 1/1; Playwright grading spec 2/2 against a local fake API. Conversion is not yet verified against a real Gotenberg container.
+
+## 2026-10-19 Update — Plan M Phase M2 Quiz Engine Upgrade
+### Implementation sync
+- Eleven question types (multiple choice/answers, true-false, matching, ordering, fill in the blanks, numeric, formula, short answer, essay, file upload) with automatic marking and partial credit.
+- Question banks (Excel import/export), random draw groups, shuffled questions/options with a per-attempt snapshot.
+- Accommodations (extra time/attempts), per-student availability overrides, server-enforced deadlines, access code, IP allow-list, one-question-at-a-time, answer locking, review visibility options.
+- Manual grading queue, regrade (recalculate or full credit), item analysis (difficulty, discrimination, option distribution); finished quiz scores feed the gradebook "Quiz(zes)" component.
+### Validation sync
+- All suites green at the M2 commit (unit 370, integration 327 + 1 skip, web 28, contract 1).
+
+## 2026-10-18 Update — Plan M Phase M1 Single Sign-On
+### Implementation sync
+- Sign-in with Microsoft Entra ID, Google Workspace, generic OpenID Connect and SAML 2.0, installation-wide or per tenant (`/Login?tenant=CODE`), with optional enforced SSO, email-domain rules and linked-account management; sign-in method recorded in login activity.
+### Validation sync
+- Real-protocol pipeline tests for OIDC and SAML; Playwright SSO spec 6/6 against a local fake API. A live sign-in with each identity provider is still to be done.
+
 ## 2026-07-12 Update — Phase 3 Medium Severity Fixes
 ### Implementation sync
 - Change-password feature verified: fully functional with current/new/confirm password flow under User Settings, backed by PUT api/v1/auth/change-password.

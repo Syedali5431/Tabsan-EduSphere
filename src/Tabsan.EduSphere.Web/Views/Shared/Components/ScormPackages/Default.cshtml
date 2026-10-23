@@ -1,0 +1,121 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ScormCardModel
+@* Plan M13 — SCORM packages of a course. *@
+@{
+    string StatusText(string? s) => s switch
+    {
+        "passed" => T.Text("Passed"),
+        "failed" => T.Text("Failed"),
+        "completed" => T.Text("Completed"),
+        "incomplete" => T.Text("In progress"),
+        "not attempted" => T.Text("Not started"),
+        _ => T.Text("Started")
+    };
+}
+<div class="card border-0 shadow-sm mb-3" id="scorm-packages">
+    <div class="card-body">
+        <h2 class="h5 mb-3">@T["SCORM packages"]</h2>
+        @if (Model.Packages.Count == 0)
+        {
+            <p class="text-muted small">@T["No SCORM packages in this course yet."]</p>
+        }
+        <div class="list-group mb-3">
+            @foreach (var p in Model.Packages)
+            {
+                var prefix = $"scorm-{p.Id:N}";
+                <div class="list-group-item">
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">
+                                @p.Title
+                                <span class="badge bg-light text-dark border ms-1">@p.Version</span>
+                                @if (p.Graded) { <span class="badge bg-info text-dark ms-1">@T.Format("Graded · {0} marks", p.MaxMarks.ToString("0.##"))</span> }
+                                @if (Model.Manage && !p.IsPublished) { <span class="badge bg-secondary ms-1">@T["Hidden"]</span> }
+                            </div>
+                            @if (Model.Manage)
+                            {
+                                <div class="small text-muted">
+                                    @T.Format("{0} files · {1} MB", p.FileCount, (p.SizeBytes / 1024d / 1024d).ToString("0.#"))
+                                    · @(p.MaxAttempts == 0 ? T.Text("Unlimited attempts") : T.Format("{0} attempt(s)", p.MaxAttempts))
+                                    @if (p.MasteryScore is { } mastery) { <text>· @T.Format("Pass mark {0}%", mastery.ToString("0.##"))</text> }
+                                </div>
+                                @if (p.ScoCount > 1)
+                                {
+                                    <div class="small text-warning-emphasis">@T.Format("The package has {0} SCOs; students start with the first one.", p.ScoCount)</div>
+                                }
+                            }
+                            else if (p.Mine is { } mine)
+                            {
+                                <div class="small text-muted">
+                                    @if (mine.AttemptsUsed == 0) { @T["Not started"] }
+                                    else
+                                    {
+                                        @StatusText(mine.Status)
+                                        @if (mine.BestScorePercent is { } best) { <text> · @T.Format("Best score {0}%", best.ToString("0.##"))</text> }
+                                    }
+                                </div>
+                            }
+                        </div>
+                        @if (Model.Manage)
+                        {
+                            <form asp-controller="Portal" asp-action="PreviewScorm" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="packageId" value="@p.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                <button class="btn btn-sm btn-outline-primary">@T["Preview"]</button>
+                            </form>
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Portal" asp-action="ScormReport" asp-route-packageId="@p.Id">@T["Report"]</a>
+                            @if (p.AssignmentId is { } assignmentId)
+                            {
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="Portal" asp-action="GradingWorkspace" asp-route-assignmentId="@assignmentId">@T["Grades"]</a>
+                            }
+                            <form asp-controller="Portal" asp-action="RemoveScormPackage" method="post" onsubmit="return confirm('@T.Js("Remove this package? Students' attempts and grades are kept.")')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="packageId" value="@p.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                <button class="btn btn-sm btn-outline-danger">@T["Remove"]</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="btn btn-sm btn-primary" href="/Portal/Scorm/@p.Id">@T["Open"]</a>
+                        }
+                    </div>
+                    @if (Model.Manage)
+                    {
+                        <details class="mt-2">
+                            <summary class="small">@T["Edit"]</summary>
+                            <form asp-controller="Portal" asp-action="UpdateScormPackage" method="post" class="row g-2 mt-1">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="packageId" value="@p.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                <div class="col-md-6"><label class="form-label small" for="@prefix-title">@T["Title"]</label><input id="@prefix-title" name="title" class="form-control form-control-sm" maxlength="300" value="@p.Title" required /></div>
+                                <div class="col-md-3"><label class="form-label small" for="@prefix-attempts">@T["Allowed attempts (0 = unlimited)"]</label><input id="@prefix-attempts" name="maxAttempts" type="number" min="0" max="100" class="form-control form-control-sm" value="@p.MaxAttempts" /></div>
+                                <div class="col-md-3"><label class="form-label small" for="@prefix-marks">@T["Marks"]</label><input id="@prefix-marks" name="maxMarks" type="number" min="1" max="1000" step="0.5" class="form-control form-control-sm" value="@p.MaxMarks.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" /></div>
+                                <div class="col-md-4 form-check ms-2"><input class="form-check-input" type="checkbox" id="@prefix-graded" name="graded" value="true" checked="@p.Graded" disabled="@p.Graded" /><label class="form-check-label small" for="@prefix-graded">@T["Graded (best score goes to the gradebook)"]</label>
+                                    @if (p.Graded) { <input type="hidden" name="graded" value="true" /> }</div>
+                                <div class="col-md-4 form-check ms-2"><input class="form-check-input" type="checkbox" id="@prefix-published" name="isPublished" value="true" checked="@p.IsPublished" /><label class="form-check-label small" for="@prefix-published">@T["Visible to students"]</label></div>
+                                <div class="col-12"><button class="btn btn-sm btn-primary">@T["Save"]</button></div>
+                            </form>
+                        </details>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (Model.Manage)
+        {
+            <details>
+                <summary class="small fw-semibold">@T["Upload a SCORM package"]</summary>
+                <form asp-controller="Portal" asp-action="UploadScormPackage" method="post" enctype="multipart/form-data" class="row g-2 mt-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                    <div class="col-12"><label class="form-label small" for="scorm-file">@T["Package (zip)"]</label><input id="scorm-file" name="file" type="file" accept=".zip,application/zip" class="form-control form-control-sm" required />
+                        <div class="form-text">@T.Format("SCORM 1.2 or SCORM 2004 zip with imsmanifest.xml, up to {0} MB.", Model.MaxUploadMb)</div></div>
+                    <div class="col-md-6"><label class="form-label small" for="scorm-title">@T["Title"]</label><input id="scorm-title" name="title" class="form-control form-control-sm" maxlength="300" placeholder="@T["Leave empty to use the package's title"]" /></div>
+                    <div class="col-md-3"><label class="form-label small" for="scorm-attempts">@T["Allowed attempts (0 = unlimited)"]</label><input id="scorm-attempts" name="maxAttempts" type="number" min="0" max="100" value="0" class="form-control form-control-sm" /></div>
+                    <div class="col-md-3"><label class="form-label small" for="scorm-marks">@T["Marks"]</label><input id="scorm-marks" name="maxMarks" type="number" min="1" max="1000" step="0.5" value="100" class="form-control form-control-sm" /></div>
+                    <div class="col-md-5 form-check ms-2"><input class="form-check-input" type="checkbox" id="scorm-graded" name="graded" value="true" /><label class="form-check-label small" for="scorm-graded">@T["Graded (best score goes to the gradebook)"]</label></div>
+                    <div class="col-md-4 form-check ms-2"><input class="form-check-input" type="checkbox" id="scorm-publish" name="publish" value="true" checked /><label class="form-check-label small" for="scorm-publish">@T["Visible to students"]</label></div>
+                    <div class="col-12"><button class="btn btn-sm btn-primary">@T["Upload"]</button></div>
+                </form>
+            </details>
+        }
+    </div>
+</div>

@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using QuestPDF.Fluent;
+using Tabsan.EduSphere.Infrastructure.Reporting;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Text.Json;
@@ -858,6 +859,8 @@ public sealed class AnalyticsService : IAnalyticsService
         {
             page.Size(PageSizes.A4.Landscape());
             page.Margin(30);
+            page.DefaultTextStyle(t => t.WithFonts());
+            PdfLanguage.Apply(page); // Plan M11
             page.Content().Column(col =>
             {
                 col.Item().Text($"Performance Report - {report.DepartmentName}").FontSize(16).Bold();
@@ -887,6 +890,8 @@ public sealed class AnalyticsService : IAnalyticsService
         {
             page.Size(PageSizes.A4.Landscape());
             page.Margin(30);
+            page.DefaultTextStyle(t => t.WithFonts());
+            PdfLanguage.Apply(page); // Plan M11
             page.Content().Column(col =>
             {
                 col.Item().Text($"Attendance Report - {report.DepartmentName}").FontSize(16).Bold();
@@ -962,6 +967,8 @@ public sealed class AnalyticsService : IAnalyticsService
         {
             page.Size(PageSizes.A4.Landscape());
             page.Margin(30);
+            page.DefaultTextStyle(t => t.WithFonts());
+            PdfLanguage.Apply(page); // Plan M11
             page.Content().Column(col =>
             {
                 col.Item().Text($"Top Performers - {report.DepartmentName}").FontSize(16).Bold();
@@ -1020,6 +1027,8 @@ public sealed class AnalyticsService : IAnalyticsService
         {
             page.Size(PageSizes.A4.Landscape());
             page.Margin(30);
+            page.DefaultTextStyle(t => t.WithFonts());
+            PdfLanguage.Apply(page); // Plan M11
             page.Content().Column(col =>
             {
                 col.Item().Text($"Performance Trends - {report.DepartmentName}").FontSize(16).Bold();
@@ -1072,6 +1081,8 @@ public sealed class AnalyticsService : IAnalyticsService
         {
             page.Size(PageSizes.A4.Landscape());
             page.Margin(30);
+            page.DefaultTextStyle(t => t.WithFonts());
+            PdfLanguage.Apply(page); // Plan M11
             page.Content().Column(col =>
             {
                 col.Item().Text("Comparative Summary").FontSize(16).Bold();

@@ -1,14 +1,14 @@
 @* Final-Touches Phase 17 Stage 17.1 — Degree Audit view (credit breakdown + eligibility) *@
 @model DegreeAuditPageModel
 @{
-    ViewData["Title"] = "Degree Audit";
+    ViewData["Title"] = T.Text("Degree Audit");
 }
 
-<h2 class="mb-4"><i class="bi bi-mortarboard-fill me-2"></i>Degree Audit</h2>
+<h2 class="mb-4"><i class="bi bi-mortarboard-fill me-2"></i>@T["Degree Audit"]</h2>
 
 @if (TempData["Message"] is string msg)
 {
-    <div class="alert alert-info">@msg</div>
+    <div class="alert alert-info">@T.Text(msg)</div>
 }
 
 @if (!User.IsInRole("Student"))
@@ -17,9 +17,9 @@
         <div class="card-body">
             <form method="get" asp-action="DegreeAudit" class="row g-2 align-items-end">
                 <div class="col-md-8">
-                    <label class="form-label">Student</label>
-                    <select class="form-select" name="studentProfileId" required>
-                        <option value="">Select student</option>
+                    <label class="form-label">@T["Student"]</label>
+                    <select aria-label="@T["Student"]" class="form-select" name="studentProfileId" required>
+                        <option value="">@T["Select student"]</option>
                         @foreach (var s in Model.Students)
                         {
                             <option value="@s.Id" selected="@(Model.SelectedStudentProfileId == s.Id ? "selected" : null)">
@@ -29,7 +29,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">Load Audit</button>
+                    <button type="submit" class="btn btn-primary w-100">@T["Load Audit"]</button>
                 </div>
             </form>
         </div>
@@ -45,20 +45,20 @@
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <strong>Program:</strong> @audit.ProgramName
+                    <strong>@T["Program:"]</strong> @audit.ProgramName
                 </div>
                 <div class="col-md-4">
-                    <strong>CGPA:</strong> @audit.Cgpa.ToString("F2")
+                    <strong>@T["CGPA:"]</strong> @audit.Cgpa.ToString("F2")
                 </div>
                 <div class="col-md-4">
-                    <strong>Eligibility:</strong>
+                    <strong>@T["Eligibility:"]</strong>
                     @if (audit.IsEligible)
                     {
-                        <span class="badge bg-success fs-6">Eligible to Graduate</span>
+                        <span class="badge bg-success fs-6">@T["Eligible to Graduate"]</span>
                     }
                     else
                     {
-                        <span class="badge bg-danger fs-6">Not Eligible</span>
+                        <span class="badge bg-danger fs-6">@T["Not Eligible"]</span>
                     }
                 </div>
             </div>
@@ -68,7 +68,7 @@
                     <div class="card text-center border-primary">
                         <div class="card-body py-2">
                             <div class="fs-4 fw-bold text-primary">@audit.TotalCreditsEarned</div>
-                            <small class="text-muted">Total Credits</small>
+                            <small class="text-muted">@T["Total Credits"]</small>
                         </div>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                     <div class="card text-center border-success">
                         <div class="card-body py-2">
                             <div class="fs-4 fw-bold text-success">@audit.CoreCreditsEarned</div>
-                            <small class="text-muted">Core Credits</small>
+                            <small class="text-muted">@T["Core Credits"]</small>
                         </div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
                     <div class="card text-center border-warning">
                         <div class="card-body py-2">
                             <div class="fs-4 fw-bold text-warning">@audit.ElectiveCreditsEarned</div>
-                            <small class="text-muted">Elective Credits</small>
+                            <small class="text-muted">@T["Elective Credits"]</small>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,7 @@
             @if (audit.UnmetRequirements.Count > 0)
             {
                 <div class="alert alert-warning">
-                    <strong>Unmet Requirements:</strong>
+                    <strong>@T["Unmet Requirements:"]</strong>
                     <ul class="mb-0 mt-2">
                         @foreach (var req in audit.UnmetRequirements)
                         {
@@ -103,10 +103,10 @@
                 </div>
             }
 
-            <h5 class="mt-4">Completed Courses</h5>
+            <h5 class="mt-4">@T["Completed Courses"]</h5>
             @if (audit.CompletedCourses.Count == 0)
             {
-                <p class="text-muted">No passing results found.</p>
+                <p class="text-muted">@T["No passing results found."]</p>
             }
             else
             {
@@ -114,11 +114,11 @@
                     <table class="table table-sm table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Code</th>
-                                <th>Title</th>
-                                <th class="text-center">Credits</th>
-                                <th class="text-center">Type</th>
-                                <th class="text-center">GPA Points</th>
+                                <th>@T["Code"]</th>
+                                <th>@T["Title"]</th>
+                                <th class="text-center">@T["Credits"]</th>
+                                <th class="text-center">@T["Type"]</th>
+                                <th class="text-center">@T["GPA Points"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -131,11 +131,11 @@
                                     <td class="text-center">
                                         @if (c.CourseType == "Core")
                                         {
-                                            <span class="badge bg-primary">Core</span>
+                                            <span class="badge bg-primary">@T["Core"]</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">Elective</span>
+                                            <span class="badge bg-secondary">@T["Elective"]</span>
                                         }
                                     </td>
                                     <td class="text-center">@(c.GradePoint?.ToString("F2") ?? "—")</td>
@@ -152,6 +152,6 @@ else
 {
     @if (User.IsInRole("Student") || Model.SelectedStudentProfileId.HasValue)
     {
-        <div class="alert alert-secondary">No audit data available.</div>
+        <div class="alert alert-secondary">@T["No audit data available."]</div>
     }
 }

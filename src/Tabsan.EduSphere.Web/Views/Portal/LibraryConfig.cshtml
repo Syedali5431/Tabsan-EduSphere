@@ -1,31 +1,31 @@
 @model Tabsan.EduSphere.Web.Models.Portal.LibraryConfigPageModel
 @{
-    ViewData["Title"] = "Library Integration";
+    ViewData["Title"] = T.Text("Library Integration");
 }
 
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(TempData["Success"]?.ToString())
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(TempData["Error"]?.ToString())
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">
-        API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.
+        @T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.
     </div>
 }
 else
@@ -34,39 +34,39 @@ else
         <div class="col-12 col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5 mb-4"><i class="bi bi-book me-2"></i>Library System Integration</h2>
+                    <h2 class="h5 mb-4"><i class="bi bi-book me-2"></i>@T["Library System Integration"]</h2>
                     <p class="text-muted small mb-4">
-                        Configure the external library catalogue and loan API. Students will be able to view
-                        their current loans from within EduSphere once the loan API URL is set.
+                        @T["Configure the external library catalogue and loan API. Students will be able to view"]
+                        @T["their current loans from within EduSphere once the loan API URL is set."]
                     </p>
                     <form asp-action="LibraryConfig" method="post">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Catalogue URL</label>
-                            <input type="url" name="CatalogueUrl" value="@Model.CatalogueUrl"
+                            <label class="form-label fw-semibold">@T["Catalogue URL"]</label>
+                            <input aria-label="@T["Catalogue URL"]" type="url" name="CatalogueUrl" value="@Model.CatalogueUrl"
                                    class="form-control" placeholder="https://library.example.com/catalogue" />
-                            <div class="form-text">Public-facing catalogue URL (used for deep-links).</div>
+                            <div class="form-text">@T["Public-facing catalogue URL (used for deep-links)."]</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Loan API URL</label>
-                            <input type="url" name="LoanApiUrl" value="@Model.LoanApiUrl"
+                            <label class="form-label fw-semibold">@T["Loan API URL"]</label>
+                            <input aria-label="@T["Loan API URL"]" type="url" name="LoanApiUrl" value="@Model.LoanApiUrl"
                                    class="form-control" placeholder="https://library.example.com/api/loans" />
-                            <div class="form-text">Endpoint that returns loan data for a student ID (<code>?id={studentId}</code>).</div>
+                            <div class="form-text">@T["Endpoint that returns loan data for a student ID ("]<code>?id={studentId}</code>).</div>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">API Token (Bearer)</label>
-                            <input type="password" name="ApiToken" value="@Model.ApiToken"
-                                   class="form-control" autocomplete="off" placeholder="Leave blank to keep existing token" />
-                            <div class="form-text">Sent as <code>Authorization: Bearer …</code> to the loan API.</div>
+                            <label class="form-label fw-semibold">@T["API Token (Bearer)"]</label>
+                            <input aria-label="@T["API Token (Bearer)"]" type="password" name="ApiToken" value="@Model.ApiToken"
+                                   class="form-control" autocomplete="off" placeholder="@T["Leave blank to keep existing token"]" />
+                            <div class="form-text">@T["Sent as"] <code>Authorization: Bearer …</code> @T["to the loan API."]</div>
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i>Save Configuration
+                                <i class="bi bi-save me-1"></i>@T["Save Configuration"]
                             </button>
                             @if (!string.IsNullOrWhiteSpace(Model.CatalogueUrl))
                             {
                                 <a href="@Model.CatalogueUrl" target="_blank" rel="noopener noreferrer"
                                    class="btn btn-outline-secondary">
-                                    <i class="bi bi-box-arrow-up-right me-1"></i>Open Catalogue
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>@T["Open Catalogue"]
                                 </a>
                             }
                         </div>

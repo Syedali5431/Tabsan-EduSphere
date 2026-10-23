@@ -1,0 +1,122 @@
+@model Tabsan.EduSphere.Web.Models.Portal.SimilaritySettingsPageModel
+@{
+    ViewData["Title"] = T.Text("Similarity Checking");
+    var s = Model.Settings;
+}
+
+@* Plan M9.1 — the similarity provider of the institution (or the installation default). *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Similarity Checking"]</h2>
+        <p class="text-muted mb-0">@T["Checks handed-in assignment work for copied text. Turn it on per assignment in the assignment's options."]</p>
+    </div>
+    @if (Model.IsSuperAdmin)
+    {
+        <div class="btn-group btn-group-sm" role="group" aria-label="@T["Which settings"]">
+            <a class="btn btn-outline-secondary @(Model.InstallationDefault ? "" : "active")" asp-action="SimilaritySettings" asp-route-installationDefault="false">@T["My institution"]</a>
+            <a class="btn btn-outline-secondary @(Model.InstallationDefault ? "active" : "")" asp-action="SimilaritySettings" asp-route-installationDefault="true">@T["Installation default"]</a>
+        </div>
+    }
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border rounded p-3 bg-light" data-module-off>@T["The Similarity / Plagiarism Checking module is not part of your licence."]</div>
+}
+else if (s is not null)
+{
+    <div class="row g-3">
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm" data-similarity-settings>
+                <div class="card-body">
+                    @if (s.IsDefault)
+                    {
+                        <p class="small text-muted">@(Model.InstallationDefault ? T.Text("Nothing saved yet — the built-in comparison is used.") : T.Text("This institution uses the installation default until you save its own settings."))</p>
+                    }
+                    <form asp-action="SaveSimilaritySettings" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="installationDefault" value="@(Model.InstallationDefault ? "true" : "false")" />
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="sim-enabled" name="isEnabled" value="true" checked="@s.IsEnabled" />
+                            <input type="hidden" name="isEnabled" value="false" />
+                            <label class="form-check-label" for="sim-enabled">@T["Check submissions"]</label>
+                        </div>
+                        <fieldset class="mb-3">
+                            <legend class="h6">@T["Checker"]</legend>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="provider" id="sim-internal" value="Internal" checked="@(s.Provider == "Internal")" />
+                                <label class="form-check-label" for="sim-internal"><strong>@T["Built-in comparison"]</strong> @T["— compares each submission with the other submissions in EduSphere. No account needed."]</label>
+                            </div>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="radio" name="provider" id="sim-copyleaks" value="Copyleaks" checked="@(s.Provider == "Copyleaks")" />
+                                <label class="form-check-label" for="sim-copyleaks"><strong>@T["Copyleaks"]</strong> @T["— also checks web pages and publications. Needs a Copyleaks account."]</label>
+                            </div>
+                        </fieldset>
+                        <div class="mb-3">
+                            <label class="form-label small" for="sim-scope">@T["Built-in comparison looks at"]</label>
+                            <select class="form-select form-select-sm" id="sim-scope" name="scope">
+                                <option value="Assignment" selected="@(s.Scope == "Assignment")">@T["The same assignment"]</option>
+                                <option value="Course" selected="@(s.Scope == "Course")">@T["Every assignment of the same course"]</option>
+                                <option value="Institution" selected="@(s.Scope == "Institution")">@T["Every course of the institution"]</option>
+                            </select>
+                        </div>
+                        <fieldset class="mb-3" data-copyleaks-fields>
+                            <legend class="h6">@T["Copyleaks account"]</legend>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small" for="sim-email">@T["Account email"]</label>
+                                    <input class="form-control form-control-sm" id="sim-email" name="accountEmail" type="email" maxlength="256" value="@s.AccountEmail" autocomplete="off" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small" for="sim-key">@T["API key"]</label>
+                                    <input class="form-control form-control-sm" id="sim-key" name="apiKey" type="password" autocomplete="new-password" placeholder="@(s.HasApiKey ? T.Text("Saved — leave empty to keep") : T.Text("Paste the API key"))" />
+                                </div>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="sim-sandbox" name="sandbox" value="true" checked="@s.Sandbox" />
+                                <input type="hidden" name="sandbox" value="false" />
+                                <label class="form-check-label small" for="sim-sandbox">@T["Sandbox (test mode — no credits used, sample results)"]</label>
+                            </div>
+                            @if (!s.WebhookReady)
+                            {
+                                <div class="border border-warning rounded p-2 small mt-2 bg-warning-subtle" role="note" data-webhook-missing>
+                                    @T["Copyleaks sends results back to the API, so set"] <code>Similarity:PublicApiBaseUrl</code> @T["to the API's public https address before using it."]
+                                </div>
+                            }
+                        </fieldset>
+                        <button class="btn btn-primary btn-sm">@T["Save"]</button>
+                    </form>
+                    <form asp-action="TestSimilaritySettings" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="installationDefault" value="@(Model.InstallationDefault ? "true" : "false")" />
+                        <button class="btn btn-outline-secondary btn-sm">@T["Test connection"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body small">
+                    <h3 class="h6">@T["How it works"]</h3>
+                    <ul class="mb-0">
+                        <li>@T["Turn on"] <em>@T["Check similarity"]</em> @T["in an assignment's options. Every attempt handed in is then checked within a minute."]</li>
+                        <li>@T["Typed text and .txt, .docx, .pdf (with selectable text), .html and .rtf files are read; scanned images are not."]</li>
+                        <li>@T["The score is the share of the work found elsewhere. Teachers see it in the grading workspace with a report of the matching passages."]</li>
+                        <li>@T["Students only see their own score, and only when the assignment allows it — never other students' work."]</li>
+                        <li>@T["A student's own earlier attempts and their group's work are not counted as matches."]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}

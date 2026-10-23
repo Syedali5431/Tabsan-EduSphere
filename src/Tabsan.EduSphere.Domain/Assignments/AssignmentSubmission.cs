@@ -67,6 +67,40 @@ public class AssignmentSubmission : BaseEntity
     /// <summary>Current lifecycle state of this submission.</summary>
     public SubmissionStatus Status { get; private set; } = SubmissionStatus.Submitted;
 
+    // ── Plan M3 ───────────────────────────────────────────────────────────────
+
+    /// <summary>Number of the latest attempt (1-based). <see cref="FileUrl"/>/<see cref="TextContent"/>/<see cref="SubmittedAt"/> mirror it.</summary>
+    public int CurrentAttemptNumber { get; private set; } = 1;
+
+    /// <summary>True when the latest attempt was late.</summary>
+    public bool IsLate { get; private set; }
+
+    /// <summary>When the grade became visible to the student (null = hidden / not graded).</summary>
+    public DateTime? PostedAt { get; private set; }
+
+    // ── Plan M8 ───────────────────────────────────────────────────────────────
+
+    /// <summary>The grade as entered, before any late deduction (<see cref="MarksAwarded"/> is the final grade).</summary>
+    public decimal? RawMarks { get; private set; }
+
+    /// <summary>Marks deducted by the course's late policy.</summary>
+    public decimal LatePenalty { get; private set; }
+
+    /// <summary>The teacher waived the late deduction for this submission.</summary>
+    public bool LatePenaltyWaived { get; private set; }
+
+    /// <summary>Graded automatically by the missing-submission policy (no work was handed in).</summary>
+    public bool IsMissing { get; private set; }
+
+    /// <summary>The group that handed this in together (group assignments).</summary>
+    public Guid? GroupId { get; private set; }
+
+    private readonly List<SubmissionAttempt> _attempts = new();
+    public IReadOnlyCollection<SubmissionAttempt> Attempts => _attempts;
+
+    /// <summary>True when the student may see marks, feedback, grader comments and annotations.</summary>
+    public bool IsGradeVisibleToStudent => PostedAt.HasValue && MarksAwarded.HasValue;
+
     private AssignmentSubmission() { }
 
     /// <summary>
@@ -83,20 +117,119 @@ public class AssignmentSubmission : BaseEntity
         TextContent = textContent?.Trim();
     }
 
+    /// <summary>Plan M3: a submission whose content arrives as its first attempt (files and/or text).</summary>
+    public static AssignmentSubmission Start(Guid assignmentId, Guid studentProfileId)
+        => new() { AssignmentId = assignmentId, StudentProfileId = studentProfileId, CurrentAttemptNumber = 0 };
+
+    /// <summary>
+    /// Plan M3: records a new attempt. The submission's summary fields follow the latest attempt, and a
+    /// graded submission goes back to "Submitted" (needs grading) — the earlier grade stays visible until regraded.
+    /// The caller adds the returned attempt (and its files) to the unit of work.
+    /// </summary>
+    public SubmissionAttempt AddAttempt(string? textContent, string? legacyFileUrl, DateTime submittedAt, bool isLate)
+    {
+        // CurrentAttemptNumber is persisted, so numbering works without loading the attempts.
+        var number = CurrentAttemptNumber + 1;
+        var attempt = new SubmissionAttempt(Id, number, textContent, submittedAt, isLate);
+        if (!string.IsNullOrWhiteSpace(legacyFileUrl)) attempt.AddLegacyFile(legacyFileUrl);
+        _attempts.Add(attempt);
+
+        CurrentAttemptNumber = number;
+        TextContent = attempt.TextContent;
+        FileUrl = string.IsNullOrWhiteSpace(legacyFileUrl) ? null : legacyFileUrl.Trim();
+        SubmittedAt = submittedAt;
+        IsLate = isLate;
+        if (Status != SubmissionStatus.Submitted) Status = SubmissionStatus.Submitted;
+        if (IsMissing)
+        {
+            // Plan M8: real work replaces the automatic "missing" grade.
+            IsMissing = false;
+            MarksAwarded = null;
+            RawMarks = null;
+            LatePenalty = 0;
+            GradedAt = null;
+            GradedByUserId = null;
+            PostedAt = null;
+        }
+        return attempt;
+    }
+
+    /// <summary>Plan M8.3: marks the submission as handed in by a group.</summary>
+    public void SetGroup(Guid groupId) => GroupId = groupId;
+
+    /// <summary>Plan M8.1: a grade for work never handed in. Only possible while there is no attempt.</summary>
+    public bool MarkMissing(decimal marks, DateTime now, bool postNow)
+    {
+        if (CurrentAttemptNumber > 0 || Status == SubmissionStatus.Rejected) return false;
+        if (IsMissing && MarksAwarded == marks) return false;
+        IsMissing = true;
+        RawMarks = marks;
+        LatePenalty = 0;
+        MarksAwarded = marks;
+        Feedback = null;
+        GradedAt = now;
+        GradedByUserId = null;
+        Status = SubmissionStatus.Graded;
+        if (postNow) PostedAt ??= now;
+        return true;
+    }
+
+    /// <summary>Plan M8.1: waives (or re-applies) the late deduction; <paramref name="penalty"/> is the deduction the policy gives.</summary>
+    public void SetLatePenaltyWaived(bool waived, decimal penalty)
+    {
+        LatePenaltyWaived = waived;
+        if (RawMarks is not { } raw) return;
+        LatePenalty = waived ? 0 : Math.Clamp(penalty, 0, raw);
+        MarksAwarded = raw - LatePenalty;
+    }
+
     /// <summary>
     /// Records marks and optional feedback for this submission.
     /// Marks must be between 0 and the assignment's max marks — validated at the service layer.
+    /// The grade is posted at once (the behaviour before Plan M3 posting policies).
     /// </summary>
     public void Grade(decimal marksAwarded, string? feedback, Guid gradedByUserId)
+        => Grade(marksAwarded, feedback, gradedByUserId, postNow: true);
+
+    /// <summary>Plan M3.5: grades, posting immediately only when the assignment's policy is automatic.</summary>
+    public void Grade(decimal marksAwarded, string? feedback, Guid gradedByUserId, bool postNow)
+        => Grade(marksAwarded, feedback, gradedByUserId, postNow, latePenalty: 0);
+
+    /// <summary>
+    /// Plan M8.1: grades with the late policy's deduction. <paramref name="marksAwarded"/> is the grade as entered;
+    /// the final grade (<see cref="MarksAwarded"/>) is that minus the deduction, unless the teacher waived it.
+    /// </summary>
+    public void Grade(decimal marksAwarded, string? feedback, Guid gradedByUserId, bool postNow, decimal latePenalty)
     {
         if (Status == SubmissionStatus.Rejected)
             throw new InvalidOperationException("Cannot grade a rejected submission.");
 
+        RawMarks = marksAwarded;
+        LatePenalty = LatePenaltyWaived ? 0 : Math.Clamp(latePenalty, 0, marksAwarded);
+        IsMissing = false;
+        marksAwarded -= LatePenalty;
         MarksAwarded = marksAwarded;
-        Feedback = feedback?.Trim();
+        Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
         GradedAt = DateTime.UtcNow;
         GradedByUserId = gradedByUserId;
         Status = SubmissionStatus.Graded;
+        if (postNow) PostedAt ??= GradedAt;
+    }
+
+    /// <summary>Plan M3.5: makes the grade visible to the student. Returns false when there is nothing to post.</summary>
+    public bool Post(DateTime now)
+    {
+        if (!MarksAwarded.HasValue || PostedAt.HasValue) return false;
+        PostedAt = now;
+        return true;
+    }
+
+    /// <summary>Plan M3.5: hides a posted grade again.</summary>
+    public bool Hide()
+    {
+        if (!PostedAt.HasValue) return false;
+        PostedAt = null;
+        return true;
     }
 
     /// <summary>
@@ -107,6 +240,10 @@ public class AssignmentSubmission : BaseEntity
     {
         Status = SubmissionStatus.Rejected;
         MarksAwarded = null;
+        RawMarks = null;
+        LatePenalty = 0;
+        IsMissing = false;
         GradedAt = null;
+        PostedAt = null;
     }
 }

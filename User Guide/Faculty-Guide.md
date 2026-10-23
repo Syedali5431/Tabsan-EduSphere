@@ -106,15 +106,27 @@ Create assignment:
 3. Set due date and max marks.
 4. Publish when ready.
 
-Grade submissions:
-1. Open assignment.
-2. Review each submission.
-3. Enter marks and feedback.
-4. Save grading.
+Submission settings (Grade > Settings, any time):
+- **Attempts allowed** — 1 by default; 0 means unlimited. Every resubmission is kept as a separate attempt.
+- **Accepted file types** — leave blank for documents, images, audio, video and zip; or list types such as `.pdf, .docx`. Web pages, scripts and programs are never accepted.
+- **Max file size** — up to 50 MB per file (10 files and 100 MB per attempt at most).
+- **Students see grades** — *as soon as they are saved* (default) or *only when I post them*.
+- **Anonymous grading** — graders see "Student 1, Student 2…" until every grade is posted (or you press *Reveal names*).
+- **Moderated grading** — other graders' marks become provisional; the moderator (whoever switched moderation on) picks the final grade.
+
+Grade submissions in the grading workspace (Assignments > **Grade**):
+1. The left column lists submissions (filter: All, Needs grading, Late, Graded not posted).
+2. The middle column shows the selected file: PDFs and images open in the viewer; Word/PowerPoint/Excel files appear as PDF once the conversion service has prepared them (otherwise use Download).
+3. Mark the work with the toolbar: highlight, strike-out, box, text, comment pin and freehand drawing. Click an annotation in the list below the page to jump to it; type in its box to attach a comment.
+4. Enter marks and feedback on the right — they save automatically (Ctrl+Enter saves at once). If the assignment has a rubric, choose a level per criterion and *Save rubric*; the total can set the marks (scaled to the assignment's marks).
+5. Add comments for the student, or tick *Graders only* for a private note. *Record* adds a voice comment.
+6. Move to the next student with **Alt+→** (previous: **Alt+←**) or the arrow buttons — the page does not reload.
+7. With manual posting, press **Post grades** when you are ready; students then see marks, feedback, comments and annotations. *Hide grades* takes them back.
 
 Good practices:
-- Use clear rubrics in assignment description.
-- Keep feedback specific and actionable.
+- Attach a rubric to the assignment so students see how marks were reached.
+- Keep feedback specific and actionable; use annotations for line-level comments.
+- Posted grades also update the gradebook's "Assignment"/"Assignments" component when your institution has one configured (hand-entered cells are never overwritten).
 
 ## 6. Quiz Management
 
@@ -123,13 +135,17 @@ Path: Sidebar > Quizzes
 Create quiz:
 1. Select course offering.
 2. Configure title, time limit, attempts, and availability window.
-3. Add questions and options.
-4. Publish.
+3. Open **Build** and add questions. Eleven types are available: multiple choice, multiple answers, true/false, matching, ordering, fill in the blanks (`[[name]]` marks each blank), numeric (exact ± tolerance or a range), formula (variables in `[brackets]` get new values for every student), short answer, essay and file upload.
+4. Optionally draw random questions from a **question bank** ("pick 5 from bank X") or copy bank questions in. Banks can be imported/exported as Excel.
+5. Set delivery and security: shuffle questions/options, one question at a time, lock answers, access code, allowed networks, and what students see afterwards (nothing, score, their answers, correct answers — optionally only after the quiz closes).
+6. Give individual students extra time/attempts or different dates under *Extra time & attempts*.
+7. Publish.
 
 Review attempts:
-1. Open quiz attempts list.
-2. Verify objective questions.
-3. Manually grade descriptive/short-answer responses if applicable.
+1. Open **Attempts & grading**: the queue lists short answers, essays and uploaded files waiting for marks.
+2. Objective questions are marked automatically (with partial credit where it makes sense).
+3. To fix a wrong key after students have answered, edit the question and press **Regrade** (recalculate, or give everyone full credit).
+4. **Statistics** shows difficulty and discrimination per question and how often each option was chosen.
 
 Operational advice:
 - Keep a short buffer between start time and class start.
@@ -237,6 +253,86 @@ When viewing student records or analytics, terminology will automatically adjust
 Best practice:
 - Keep titles clear and action-oriented
 - Include deadline and expected next action
+
+## 10.1 App Install and Device Notifications (Plan M4)
+
+- Install EduSphere from the profile menu (*Install the EduSphere app*) or the browser's install icon; on iPhone/iPad use Share › Add to Home Screen.
+- Turn on notifications for this device under **Notifications › Notifications on this device** and choose which types you want. Notifications you send to students also reach their subscribed devices.
+- Recently opened timetable, announcements, course material and notification pages stay readable offline; anything that changes data needs a connection. Sign out on shared computers — it clears the saved pages.
+
+## 10.2 External Tools in Your Course (Plan M5)
+
+Path: LMS Manage › External tools (shown when your institution has registered tools)
+
+- **Add an external tool**: choose the tool, a title, where it opens (**New tab** or **Inside EduSphere**) and, for a graded activity, **Points**. A graded item creates an assignment that receives the tool's scores automatically.
+- **Choose content from <tool>**: pick content inside the tool (for example an H5P activity); it is added to the course, with an assignment for anything the tool grades.
+- **Hide / Show** an item; **Grades** opens the grading workspace, where you can still adjust or post grades. Tool scores follow the assignment's posting policy.
+- Students open items from the course page without signing in again. If a tool shows a blank frame, set it to open in a new tab.
+
+## 10.3 Learning Outcomes and Mastery (Plan M6)
+
+Path: Learning Outcomes (menu) — when your institution uses the Learning Outcomes module
+
+1. **Course outcomes (CLOs):** on **Learning Outcomes**, choose Level *Course*, your course, a code (e.g. CLO1) and a title. Keep the default 0–4 scale or set your own levels, the mastery points and how mastery is calculated (decaying average, highest, most recent, average, or "mastered n times"). Under *contributes to these program outcomes*, tick the PLOs this CLO supports.
+2. **Align:** press **Outcomes** on a rubric criterion (Rubric Management), a quiz question (Quiz Builder), a bank question (Question Banks) or an assignment's settings, and tick what it assesses. Work you have already graded is counted straight away.
+3. **Mastery gradebook:** **Learning Outcomes › Mastery gradebook** shows each student × outcome, green (mastered), amber (near) or red (below). Export it to Excel. Only grades students can see count — unposted grades and ungraded essay answers are left out until you post or grade them.
+4. **Import:** download the template on the Learning Outcomes page to add many outcomes (and their PLO mapping) at once.
+
+## 10.4 Module Items, Requirements and Progress (Plan M7)
+
+Path: LMS Manage › a module › Items
+
+1. **Add items** in the order students should follow: assignments, quizzes, discussions, external tools, videos, course materials, text pages, web links and headings. The form only shows what each type needs.
+2. **Requirements:** choose what completes each item — *view it*, *mark it as done*, *submit it*, *score at least …%* (posted grade or best quiz attempt) or *post in it* (discussions).
+3. **Release and completion:** set an opening date (UTC), require items *in order*, choose whether *every* or *any one* required item completes the module, and pick modules that must be complete first. Students see locked items with the reason; locked quizzes, assignments and tools cannot be started or submitted.
+4. **Student progress** (top of LMS Manage) shows each student's progress per module; click a name for item-by-item detail.
+
+Tips: changing an item's requirement re-checks it for everyone; once a requirement is met it stays met, so a later regrade does not lock a student out.
+
+## 10.5 Late Policy, Groups, Assign-to Dates and Peer Review (Plan M8)
+
+Path: Assignments › choose a course › **Late policy & groups**, and **Options** next to an assignment (also **Options & dates** in the grading workspace).
+
+1. **Late & missing work (per course):** deduct a percentage of the points for every started hour or day late, never below a lowest grade; optionally grade work never handed in (given automatically once each student's due date passes — handing in late work replaces it). **Grade missing work now** applies it at once.
+2. **When students can hand in (per assignment):** an opening date and a *late work accepted until* cut-off. Work after the due date is late; after the cut-off it is refused. Dates are entered in UTC.
+3. **Assign to — different dates:** give one student (e.g. an extension) or one group their own due date, opening date and cut-off. A student's own dates win over their group's.
+4. **Groups:** create a group set, then add groups by hand, **Split at random** (by number of groups or students per group) or let students sign up (with a size limit). Choose the group set on an assignment to make it group work: one member hands in for the group, and one grade goes to every member unless you choose to grade each member separately. Groups also get private discussion threads (Discussion › *Post to*).
+5. **Peer review:** set reviews per student (0–5), a review due date and anonymity. Reviews are handed out automatically after the due date among students who handed in work (or press **Assign reviews now**). In the grading workspace you see each submission's peer average and can **Use peer average** as the mark.
+6. **In the grading workspace:** a late submission shows the deduction and the final grade; tick **Waive the late deduction** to give the full mark (and untick to restore it). Missing work is marked *Missing*.
+
+Tips: type the mark you would give — the deduction is applied on top and shown separately; the grouping of an assignment cannot change once work has been handed in.
+
+## 10.6 Similarity (Plagiarism) Checking (Plan M9)
+
+Path: Assignments › **Options** next to an assignment › *Similarity check*.
+
+1. Turn on **Check every handed-in attempt** (and, if you want, **Show students their own score**). Each attempt is checked within about a minute.
+2. In the grading workspace each submission shows *Similarity NN%* (green below 25%, amber below 50%, red from 50%). Select it and choose **Open report** to see the matching sources and passages side by side, or **Check again** — the first students to hand in have nothing to compare with until others hand in.
+3. Typed text and .txt, .docx, .pdf (with selectable text), .html and .rtf files are read; scanned images are not. A student's own earlier attempts and their group's work never count as matches.
+
+Tip: a high score is a prompt to look closer, not proof — quotations, references and templates match too.
+
+## 10.7 Live Classes (Plan M10)
+
+Path: **Live Classes** (sidebar) or the course page › *Live classes*.
+
+1. **Schedule a class:** title, start (UTC), length, and optionally a meeting link (Google Meet, Jitsi, any Zoom/Teams link). Without a link the institution's service (BigBlueButton, Zoom or Teams) creates the meeting. Students are notified and reminded 15 minutes before.
+2. **From the timetable:** pick the course's timetable slot and how many weeks — one class per week is created (weeks already scheduled are skipped).
+3. **Join:** **Start / join** on the class (you join as moderator/host). While a class is on, a *Live now* banner with **Join** shows on every page.
+4. **Attendance:** with *Mark attendance from who joined*, attendance is marked 10 minutes after the class ends — Present for students who joined (and stayed the minimum minutes, where Zoom/Teams report them), Absent for the others. Students who already have a mark for that day keep it. **Attendance** shows who joined; **Mark attendance now** does it at once.
+5. **Edit / Cancel** tells students; **Add to calendar** downloads a calendar file; recordings appear on the class when the service has one.
+
+## 10.8 Language (Plan M11)
+
+The portal speaks English, Urdu (اردو) and Arabic (العربية). Pick a language from the box in the top bar (or on the login page); Urdu and Arabic pages run right to left. Your choice is saved to your account, so it follows you to other devices. Dates and numbers you type in forms work the same in every language.
+
+## 10.9 Mobile app (Plan M12)
+
+In the EduSphere app open a course to **Take attendance** (tap each student to switch present → absent → late → excused, then Save), grade hand-ins (marks and feedback), post a **New announcement** or talk with the class in **Discussions**. Home shows today's classes and how many submissions wait for grading. Sign in as in the portal (password or single sign-on).
+
+## 10.10 SCORM Packages (Plan M13)
+
+On a course's **Manage Course Content** page, open **SCORM packages › Upload a SCORM package** and choose the zip exported from your authoring tool (Articulate, iSpring, Captivate, …; SCORM 1.2 or 2004). Set the allowed attempts (0 = unlimited), whether it is **Graded** (the best score goes to the gradebook, scaled to the marks you set) and whether students can see it. Use **Preview** to try it (nothing is recorded), **Report** to see each student's attempts, status, best and last score and time, and add the package to a module with a requirement such as "Score at least 80%". Packages with several SCOs start with the first one.
 
 ## 11. Theme and Accessibility
 

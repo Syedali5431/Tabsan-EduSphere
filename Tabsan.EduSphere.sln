@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash-util", "tools\hash-util\hash-util.csproj", "{02B02F8A-13ED-4C22-B67B-AA62A52FEA39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabsan.EduSphere.Mobile.Core", "src\Tabsan.EduSphere.Mobile.Core\Tabsan.EduSphere.Mobile.Core.csproj", "{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -173,6 +175,18 @@ Global
 		{02B02F8A-13ED-4C22-B67B-AA62A52FEA39}.Release|x64.Build.0 = Release|Any CPU
 		{02B02F8A-13ED-4C22-B67B-AA62A52FEA39}.Release|x86.ActiveCfg = Release|Any CPU
 		{02B02F8A-13ED-4C22-B67B-AA62A52FEA39}.Release|x86.Build.0 = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|x64.Build.0 = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Debug|x86.Build.0 = Debug|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|x64.ActiveCfg = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|x64.Build.0 = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|x86.ActiveCfg = Release|Any CPU
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -189,5 +203,6 @@ Global
 		{824D0683-5EC3-4327-B7E1-835981203F4B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{F0ED5863-7581-4EC5-8F3B-3177C42549EC} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{02B02F8A-13ED-4C22-B67B-AA62A52FEA39} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{3DABBDB0-46D0-4802-A8B7-F526CAAC996F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

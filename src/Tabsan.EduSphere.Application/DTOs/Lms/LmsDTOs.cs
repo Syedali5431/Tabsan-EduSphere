@@ -54,7 +54,8 @@ public sealed record CreateThreadRequest(
     Guid   AuthorId,
     string Title,
     string ThreadType = "Issue",
-    string? IssueSubType = null);
+    string? IssueSubType = null,
+    Guid? GroupId = null);
 
 public sealed record AddReplyRequest(
     Guid   ThreadId,
@@ -90,6 +91,8 @@ public sealed class DiscussionThreadDto
     public DateTime? ResolvedAt { get; set; }
     public string   TicketNumber { get; set; } = "";
     public bool     IsVisibleToAll { get; set; }
+    /// <summary>Plan M8.3: a group discussion (members and staff only).</summary>
+    public Guid?    GroupId { get; set; }
     
     public List<DiscussionReplyDto> Replies { get; set; } = new();
 }

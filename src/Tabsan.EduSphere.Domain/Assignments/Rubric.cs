@@ -44,6 +44,17 @@ public class Rubric : AuditableEntity
         IsActive = false;
         Touch();
     }
+
+    /// <summary>
+    /// Plan M3 fix: adds a criterion to this rubric. (Creating a criterion on its own never attached it,
+    /// so rubrics were saved without criteria.)
+    /// </summary>
+    public RubricCriterion AddCriterion(string name, decimal maxPoints, int displayOrder)
+    {
+        var criterion = RubricCriterion.Create(Id, name, maxPoints, displayOrder);
+        _criteria.Add(criterion);
+        return criterion;
+    }
 }
 
 /// <summary>
@@ -75,6 +86,16 @@ public class RubricCriterion : BaseEntity
             DisplayOrder = displayOrder,
             CreatedAt    = DateTime.UtcNow
         };
+    }
+
+    /// <summary>Plan M3 fix: adds a performance level to this criterion. Points may not exceed the criterion's maximum.</summary>
+    public RubricLevel AddLevel(string label, decimal pointsAwarded, int displayOrder)
+    {
+        if (pointsAwarded > MaxPoints)
+            throw new ArgumentException($"Level \"{label}\" awards more than the criterion's {MaxPoints} points.", nameof(pointsAwarded));
+        var level = RubricLevel.Create(Id, label, pointsAwarded, displayOrder);
+        _levels.Add(level);
+        return level;
     }
 }
 

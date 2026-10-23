@@ -1,9 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AiChatPageModel
-@{ ViewData["Title"] = "AI Chat"; }
+@{ ViewData["Title"] = T.Text("AI Chat"); }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -11,12 +11,12 @@ else
         <!-- Sidebar -->
         <div class="col-3 border-end d-flex flex-column" style="overflow:hidden;">
             <div class="p-2 border-bottom bg-light">
-                <span class="fw-semibold small">Conversations</span>
+                <span class="fw-semibold small">@T["Conversations"]</span>
             </div>
             <div class="flex-grow-1 overflow-auto">
                 @if (Model.Conversations.Count == 0)
                 {
-                    <p class="text-muted small p-2">No conversations yet.</p>
+                    <p class="text-muted small p-2">@T["No conversations yet."]</p>
                 }
                 else
                 {
@@ -36,7 +36,7 @@ else
                 }
             </div>
             <div class="p-2 border-top">
-                <a asp-action="AiChat" class="btn btn-outline-primary btn-sm w-100">+ New Chat</a>
+                <a asp-action="AiChat" class="btn btn-outline-primary btn-sm w-100">@T["+ New Chat"]</a>
             </div>
         </div>
 
@@ -47,7 +47,7 @@ else
                 {
                     <div class="text-center text-muted mt-5">
                         <div class="fs-1">🤖</div>
-                        <p>Ask me anything about your studies!</p>
+                        <p>@T["Ask me anything about your studies!"]</p>
                     </div>
                 }
                 else
@@ -70,15 +70,15 @@ else
 
             @if (!string.IsNullOrWhiteSpace(Model.Message))
             {
-                <div class="alert alert-danger mx-3 mb-2 py-2">@Model.Message</div>
+                <div class="alert alert-danger mx-3 mb-2 py-2">@T.Text(Model.Message)</div>
             }
 
             <div class="border-top p-2">
                 <form asp-action="AiChatSend" method="post" class="d-flex gap-2">
                     <input type="hidden" name="conversationId" value="@Model.ActiveConversationId" />
                     <input type="text" name="message" class="form-control"
-                           placeholder="Type your message…" autocomplete="off" required />
-                    <button type="submit" class="btn btn-primary">Send</button>
+                           placeholder="@T["Type your message…"]" autocomplete="off" required />
+                    <button type="submit" class="btn btn-primary">@T["Send"]</button>
                 </form>
             </div>
         </div>

@@ -282,6 +282,10 @@ Finance users cannot:
 
 ---
 
+## 7.5 Mobile App (Plan M12)
+
+One EduSphere app serves students, teachers and parents; the tabs depend on who signs in. Students: classes, due work, courses, hand-in with the camera, results, attendance, report cards. Teachers: attendance, grading, announcements, discussions. Parents: each child's results, attendance, report cards and fees. Sign in with your EduSphere account or your institution's single sign-on; notifications arrive on the phone. If the app says it must be updated, install the newest version from the store.
+
 ## 8. Troubleshooting
 
 - If you cannot log in, contact your department admin or SuperAdmin.

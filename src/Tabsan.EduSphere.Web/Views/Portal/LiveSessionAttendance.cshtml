@@ -1,0 +1,51 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LiveSessionAttendancePageModel
+@{
+    var r = Model.Report;
+    ViewData["Title"] = r is null ? "Live class attendance" : $"Attendance — {r.Title}";
+}
+
+@* Plan M10.3 — who joined a live class, and marking course attendance from it. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || r is null)
+{
+    <div class="border rounded p-3 bg-light">@T["This attendance is not available."] <a asp-action="LiveClasses" asp-route-offeringId="@Model.OfferingId">@T["Back to live classes"]</a></div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+        <div class="me-auto">
+            <a asp-action="LiveClasses" asp-route-offeringId="@Model.OfferingId" class="small">@T["← Live classes"]</a>
+            <h2 class="h3 mb-1">@r.Title</h2>
+            <p class="text-muted mb-0">@T.Format("{0} UTC · {1} of {2} joined", r.StartsAt.ToUniversalTime().ToString("ddd dd MMM yyyy, HH:mm"), r.Students.Count(s => s.Joined), r.Students.Count)
+                @if (r.AttendanceTakenAt is { } taken) { <text> @T.Format("· attendance marked {0} UTC", taken.ToUniversalTime().ToString("dd MMM HH:mm"))</text> }</p>
+        </div>
+        <form asp-action="TakeLiveAttendance" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="sessionId" value="@r.SessionId" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+            <button class="btn btn-primary btn-sm">@(r.AttendanceTakenAt is null ? T.Text("Mark attendance now") : T.Text("Mark again"))</button>
+        </form>
+    </div>
+    <p class="small text-muted">@T["Marking adds Present for students who joined (for the minimum time, when the service reports minutes) and Absent for the others, for the class's date. Students who already have a mark for that day keep it."]</p>
+    <div class="table-responsive border rounded">
+        <table class="table table-sm align-middle mb-0" data-live-attendance>
+            <caption class="visually-hidden">@T["Who joined the live class"]</caption>
+            <thead class="table-light text-nowrap"><tr><th scope="col">@T["Student"]</th><th scope="col">@T["Joined"]</th><th scope="col" class="text-end">@T["Minutes"]</th><th scope="col">@T["Counts as"]</th></tr></thead>
+            <tbody>
+                @foreach (var s in r.Students)
+                {
+                    <tr data-student="@s.Name">
+                        <td>@s.Name <span class="small text-muted">@s.RegistrationNumber</span></td>
+                        <td>@(s.FirstJoinedAt is { } at ? at.ToUniversalTime().ToString("HH:mm") + " UTC" : "—")</td>
+                        <td class="text-end">@(s.Minutes?.ToString() ?? "—")</td>
+                        <td><span class="badge @(s.Present ? "bg-success" : "bg-secondary")">@(s.Present ? T.Text("Present") : T.Text("Absent"))</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

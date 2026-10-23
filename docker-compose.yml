@@ -10,11 +10,33 @@ services:
       ASPNETCORE_ENVIRONMENT: Docker
       EDUSPHERE_ENVIRONMENT: Docker
       EDUSPHERE_DB_CONNECTION: "Server=db;Database=TabsanEduSphereDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;"
+      # Plan M3.2 — office submissions are converted to PDF for the grading viewer.
+      DocumentConversion__GotenbergUrl: "http://gotenberg:3000"
+      # Plan M4.3 — Web Push (VAPID) keys must survive container rebuilds, or every browser has to subscribe again.
+      WebPush__KeyFile: "/app/keys/vapid-keys.json"
+      WebPush__Subject: "mailto:support@tabsan.local"
+      # Plan M5 — LTI 1.3: the platform signing keys sit beside the VAPID keys. Set Lti__PlatformUrl to the portal's public https address to turn LTI on.
+      Lti__KeyFile: "/app/keys/lti-platform-keys.json"
+      Lti__PlatformUrl: ""
+    volumes:
+      - api_keys:/app/keys
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      gotenberg:
+        condition: service_started
+
+  # Plan M3.2 — LibreOffice-based DOCX/PPTX/XLSX/ODT → PDF conversion (internal only, no published port).
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: tabsan-edusphere-gotenberg
+    command:
+      - "gotenberg"
+      - "--api-timeout=120s"
+      - "--chromium-disable-javascript=true"
+    restart: unless-stopped
 
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -36,3 +58,4 @@ services:
 
 volumes:
   mssql_data:
+  api_keys:

@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ReportSettingsPageModel
 @{
-    ViewData["Title"] = "Report Settings";
+    ViewData["Title"] = T.Text("Report Settings");
     var tempMsg = TempData["Message"] as string ?? Model.Message;
     var allRoles = new[] { "Admin", "Faculty", "Student" };
 }
@@ -12,7 +12,7 @@
         <div class="col-12">
             <div class="alert alert-warning d-flex align-items-center gap-2">
                 <i class="bi bi-plug-fill"></i>
-                Not connected to the API. Configure the connection on the Dashboard.
+                @T["Not connected to the API. Configure the connection on the Dashboard."]
             </div>
         </div>
     }
@@ -24,8 +24,8 @@
         var alertIcon  = tempMsg.StartsWith("Error") ? "bi-x-circle-fill" : "bi-check-circle-fill";
         <div class="col-12">
             <div class="alert @alertClass alert-dismissible fade show" role="alert">
-                <i class="bi @alertIcon me-2"></i>@tempMsg
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <i class="bi @alertIcon me-2"></i>@T.Text(tempMsg)
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
             </div>
         </div>
     }
@@ -36,7 +36,7 @@
             <div class="card-header d-flex align-items-center gap-2" role="button"
                  data-bs-toggle="collapse" data-bs-target="#createReportPanel" aria-expanded="false">
                 <i class="bi bi-plus-circle-fill text-primary"></i>
-                <strong>Create New Report Definition</strong>
+                <strong>@T["Create New Report Definition"]</strong>
                 <i class="bi bi-chevron-down ms-auto"></i>
             </div>
             <div id="createReportPanel" class="collapse">
@@ -44,23 +44,23 @@
                     <form asp-action="CreateReport" method="post" class="row g-3">
                         @Html.AntiForgeryToken()
                         <div class="col-md-4">
-                            <label class="form-label">Key</label>
-                            <input name="Key" class="form-control" placeholder="e.g. attendance_summary"
+                            <label class="form-label">@T["Key"]</label>
+                            <input aria-label="@T["Key"]" name="Key" class="form-control" placeholder="@T["e.g. attendance_summary"]"
                                    required @(Model.IsConnected ? "" : "disabled") />
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Name</label>
-                            <input name="Name" class="form-control" placeholder="Display name"
+                            <label class="form-label">@T["Name"]</label>
+                            <input aria-label="@T["Name"]" name="Name" class="form-control" placeholder="@T["Display name"]"
                                    required @(Model.IsConnected ? "" : "disabled") />
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Purpose</label>
-                            <input name="Purpose" class="form-control" placeholder="Short description"
+                            <label class="form-label">@T["Purpose"]</label>
+                            <input aria-label="@T["Purpose"]" name="Purpose" class="form-control" placeholder="@T["Short description"]"
                                    @(Model.IsConnected ? "" : "disabled") />
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary" @(Model.IsConnected ? "" : "disabled")>
-                                <i class="bi bi-plus me-1"></i> Create
+                                <i class="bi bi-plus me-1"></i> @T["Create"]
                             </button>
                         </div>
                     </form>
@@ -74,13 +74,13 @@
         <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-bar-graph-fill text-primary"></i>
-                <strong>Report Definitions</strong>
+                <strong>@T["Report Definitions"]</strong>
                 <span class="badge bg-secondary ms-auto">@Model.Reports.Count</span>
             </div>
             <div class="card-body p-0">
                 @if (Model.Reports.Count == 0)
                 {
-                    <p class="text-muted p-3 mb-0">No report definitions found.</p>
+                    <p class="text-muted p-3 mb-0">@T["No report definitions found."]</p>
                 }
                 else
                 {
@@ -96,11 +96,11 @@
                                         <span class="me-2">
                                             @if (rpt.IsActive)
                                             {
-                                                <span class="badge bg-success">Active</span>
+                                                <span class="badge bg-success">@T["Active"]</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">Inactive</span>
+                                                <span class="badge bg-secondary">@T["Inactive"]</span>
                                             }
                                         </span>
                                         <strong>@rpt.Name</strong>
@@ -116,10 +116,10 @@
                                             <form asp-action="ToggleReport" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@rpt.Id" />
-                                                <input type="hidden" name="activate" value="@(!rpt.IsActive)" />
+                                                <input type="hidden" name="activate" value="@(!rpt.IsActive ? "true" : "false")" />
                                                 <button type="submit" class="btn btn-sm @(rpt.IsActive ? "btn-outline-warning" : "btn-outline-success")"
                                                         @(Model.IsConnected ? "" : "disabled")>
-                                                    @(rpt.IsActive ? "Deactivate" : "Activate")
+                                                    @(rpt.IsActive ? T.Text("Deactivate") : T.Text("Activate"))
                                                 </button>
                                             </form>
                                         </div>
@@ -129,7 +129,7 @@
                                             <form asp-action="UpdateReportRoles" method="post" class="d-flex align-items-center gap-3 flex-wrap">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@rpt.Id" />
-                                                <span class="fw-semibold small">Role Access:</span>
+                                                <span class="fw-semibold small">@T["Role Access:"]</span>
                                                 @foreach (var role in allRoles)
                                                 {
                                                     var fieldName  = $"{role.ToLower()}Allowed";
@@ -145,7 +145,7 @@
                                                 }
                                                 <button type="submit" class="btn btn-sm btn-outline-primary"
                                                         @(Model.IsConnected ? "" : "disabled")>
-                                                    <i class="bi bi-floppy me-1"></i> Save Roles
+                                                    <i class="bi bi-floppy me-1"></i> @T["Save Roles"]
                                                 </button>
                                             </form>
                                         </div>

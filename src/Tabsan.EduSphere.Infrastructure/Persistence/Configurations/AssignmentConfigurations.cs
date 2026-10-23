@@ -17,6 +17,16 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
         builder.Property(a => a.MaxMarks).HasColumnType("decimal(8,2)");
         builder.Property(a => a.RowVersion).IsRowVersion();
 
+        // Plan M3 — submission settings and grading policies (defaults come from the migration).
+        builder.Property(a => a.AllowedFileTypes).HasMaxLength(300);
+        builder.Property(a => a.PostingPolicy).HasConversion<string>().HasMaxLength(20);
+        builder.Ignore(a => a.NamesHidden);
+        builder.Ignore(a => a.EffectiveFileTypes);
+
+        // Plan M8 — availability window, groups and peer review (PeerReviewAnonymous defaults to true in the migration).
+        builder.Ignore(a => a.ClosesAt);
+        builder.HasIndex(a => a.GroupSetId).HasDatabaseName("IX_assignments_group_set");
+
         // Index for fast listing of assignments per offering.
         builder.HasIndex(a => a.CourseOfferingId)
                .HasDatabaseName("IX_assignments_offering_id");
@@ -42,6 +52,20 @@ public class AssignmentSubmissionConfiguration : IEntityTypeConfiguration<Assign
         builder.Property(s => s.Feedback).HasMaxLength(2000);
         builder.Property(s => s.MarksAwarded).HasColumnType("decimal(8,2)");
         builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(32);
+
+        // Plan M8 — late deduction, missing grades and group work.
+        builder.Property(s => s.RawMarks).HasColumnType("decimal(8,2)");
+        builder.Property(s => s.LatePenalty).HasColumnType("decimal(8,2)");
+        builder.HasIndex(s => s.GroupId).HasDatabaseName("IX_assignment_submissions_group");
+
+        // Plan M3 — attempts (every resubmission kept), latest-attempt flags and grade posting.
+        // Existing rows get 1 from the migration (no model default: 0 is a real value before the first attempt).
+        builder.Ignore(s => s.IsGradeVisibleToStudent);
+        builder.HasMany(s => s.Attempts)
+               .WithOne()
+               .HasForeignKey(a => a.SubmissionId)
+               .OnDelete(DeleteBehavior.Restrict);
+        builder.Navigation(s => s.Attempts).UsePropertyAccessMode(PropertyAccessMode.Field).HasField("_attempts");
 
         // One submission per student per assignment — the unique index enforces the business rule.
         builder.HasIndex(s => new { s.AssignmentId, s.StudentProfileId })

@@ -1,9 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.CourseMaterialStudentPageModel
 @{
-    ViewData["Title"] = "Course Materials";
-    ViewData["PageTitle"] = "Course Materials";
+    ViewData["Title"] = T.Text("Course Materials");
+    ViewData["PageTitle"] = T.Text("Course Materials");
     ViewData["ActivePage"] = "course_material";
-    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodFilterLabel) ? "Semester" : Model.PeriodFilterLabel;
+    var periodLabel = T.Text(string.IsNullOrWhiteSpace(Model.PeriodFilterLabel) ? "Semester" : Model.PeriodFilterLabel); // Plan M11: vocabulary, then language
     var periodPlaceholder = string.IsNullOrWhiteSpace(Model.PeriodFilterPlaceholder) ? "All Semesters" : Model.PeriodFilterPlaceholder;
 }
 
@@ -11,14 +11,14 @@
 {
     var cls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-info";
     <div class="alert @cls alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -26,9 +26,9 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Learning resources</span>
-                    <h2 class="h5 mb-1">Browse Course Materials</h2>
-                    <p class="text-muted mb-0">Find active files and links published by your faculty.</p>
+                    <span class="section-kicker">@T["Learning resources"]</span>
+                    <h2 class="h5 mb-1">@T["Browse Course Materials"]</h2>
+                    <p class="text-muted mb-0">@T["Find active files and links published by your faculty."]</p>
                 </div>
             </div>
 
@@ -37,7 +37,7 @@ else
                 @* ── Student: only Class/Semester → Subject (pre-assigned Tenant/Campus/Dept/Program) ── *@
                 <div class="col-md-4">
                     <label class="form-label">@periodLabel</label>
-                    <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                    <select aria-label="@periodLabel" name="semesterId" class="form-select" onchange="this.form.submit()">
                         <option value="">@periodPlaceholder</option>
                         @foreach (var s in Model.Semesters)
                         {
@@ -46,9 +46,9 @@ else
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Subject/Course</label>
-                    <select name="courseId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Subjects</option>
+                    <label class="form-label">@T["Subject/Course"]</label>
+                    <select aria-label="@T["Subject/Course"]" name="courseId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Subjects"]</option>
                         @foreach (var c in Model.Courses)
                         {
                             <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
@@ -56,7 +56,7 @@ else
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">@T["Apply Filters"]</button>
                 </div>
             </form>
         </div>
@@ -64,13 +64,13 @@ else
 
     <div class="page-section-card card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">Available Materials <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
+            <h2 class="h5 mb-3">@T["Available Materials"] <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
 
             @if (Model.Materials.Count == 0)
             {
                 <div class="empty-state-card">
-                    <h3>No materials available</h3>
-                    <p class="text-muted mb-0">Try selecting a different course filter.</p>
+                    <h3>@T["No materials available"]</h3>
+                    <p class="text-muted mb-0">@T["Try selecting a different course filter."]</p>
                 </div>
             }
             else
@@ -91,21 +91,21 @@ else
                                     }
                                     else
                                     {
-                                        <p class="small text-muted flex-grow-1">No description provided.</p>
+                                        <p class="small text-muted flex-grow-1">@T["No description provided."]</p>
                                     }
 
                                     <div class="d-flex gap-2 align-items-center mt-2">
                                         @if (!string.IsNullOrWhiteSpace(m.ExternalUrl))
                                         {
-                                            <a class="btn btn-sm btn-outline-primary" href="@m.ExternalUrl" target="_blank" rel="noopener">Open Link</a>
+                                            <a class="btn btn-sm btn-outline-primary" href="@m.ExternalUrl" target="_blank" rel="noopener">@T["Open Link"]</a>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(m.BlobPath))
                                         {
-                                            <a class="btn btn-sm btn-outline-secondary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="student">Download File</a>
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="student">@T["Download File"]</a>
                                         }
                                     </div>
 
-                                    <div class="small text-muted mt-3">Updated @m.UpdatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="small text-muted mt-3">@T.Format("Updated {0}", m.UpdatedAt.ToString("dd MMM yyyy"))</div>
                                 </div>
                             </article>
                         </div>

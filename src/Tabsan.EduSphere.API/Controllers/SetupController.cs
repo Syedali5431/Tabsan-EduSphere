@@ -62,7 +62,7 @@ public sealed class SetupController : Controller
 
     [HttpPost("/setup/import")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ImportProfile([FromForm] IFormFile? profileFile, CancellationToken ct)
+    public async Task<IActionResult> ImportProfile(IFormFile? profileFile, CancellationToken ct)
     {
         if (profileFile is null || profileFile.Length == 0)
         {

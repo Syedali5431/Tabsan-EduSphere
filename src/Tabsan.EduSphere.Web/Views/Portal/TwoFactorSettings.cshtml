@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.TwoFactorSettingsPageModel
 @{
-    ViewData["Title"] = "Two-Factor Authentication";
+    ViewData["Title"] = T.Text("Two-Factor Authentication");
     var message = TempData["Message"] as string ?? Model.Message;
     var hasSetup = !string.IsNullOrWhiteSpace(Model.QrCodeDataUrl);
     var isEnabled = Model.TwoFactorEnabled;
@@ -116,31 +116,31 @@
         <div class="security-panel">
             <div class="security-badge mb-3">
                 <i class="bi bi-shield-lock-fill"></i>
-                Secure account protection
+                @T["Secure account protection"]
             </div>
-            <h2 class="h3 mb-2">Two-Factor Authentication</h2>
+            <h2 class="h3 mb-2">@T["Two-Factor Authentication"]</h2>
             <p class="text-muted mb-3">
-                Use an authenticator app such as Google Authenticator or Authy to add a second login check.
-                The setup flow stays additive, and the legacy login screen continues to work as before.
+                @T["Use an authenticator app such as Google Authenticator or Authy to add a second login check."]
+                @T["The setup flow stays additive, and the legacy login screen continues to work as before."]
             </p>
             <div class="d-flex flex-wrap gap-2">
-                <span class="badge rounded-pill text-bg-light border security-chip">RFC 6238 TOTP</span>
-                <span class="badge rounded-pill text-bg-light border security-chip">QR + manual key</span>
-                <span class="badge rounded-pill text-bg-light border security-chip">Encrypted secret at rest</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">@T["RFC 6238 TOTP"]</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">@T["QR + manual key"]</span>
+                <span class="badge rounded-pill text-bg-light border security-chip">@T["Encrypted secret at rest"]</span>
             </div>
         </div>
 
         <div class="security-panel d-flex flex-column justify-content-between">
             <div>
-                <div class="text-uppercase small text-muted fw-semibold mb-2">Current session</div>
-                <div class="h5 mb-1">@(Model.CurrentUserId?.ToString() ?? "Unknown")</div>
-                <div class="mini-hint">Use this page to start setup, confirm the code, disable 2FA, or test the login hand-off.</div>
+                <div class="text-uppercase small text-muted fw-semibold mb-2">@T["Current session"]</div>
+                <div class="h5 mb-1">@(Model.CurrentUserId?.ToString() ?? T.Text("Unknown"))</div>
+                <div class="mini-hint">@T["Use this page to start setup, confirm the code, disable 2FA, or test the login hand-off."]</div>
             </div>
             <div class="mt-3">
                 <form asp-action="BeginTwoFactorSetup" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-qr-code-scan me-1"></i> Start 2FA Setup
+                        <i class="bi bi-qr-code-scan me-1"></i> @T["Start 2FA Setup"]
                     </button>
                 </form>
                 @if (hasSetup || hasStoredSecret)
@@ -148,7 +148,7 @@
                     <form asp-action="ResetTwoFactorSetup" method="post" class="d-inline ms-2">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> @T["Reset"]
                         </button>
                     </form>
                 }
@@ -160,22 +160,22 @@
     {
         <div class="alert alert-warning border-0 shadow-sm mb-3 py-2 small">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <strong>Setup in progress.</strong> Scan the QR code or enter the manual key in your authenticator app, then verify below.
-            Clicking <strong>Reset</strong> clears this setup so you can start fresh.
+            <strong>@T["Setup in progress."]</strong> @T["Scan the QR code or enter the manual key in your authenticator app, then verify below."]
+            @T["Clicking"] <strong>@T["Reset"]</strong> @T["clears this setup so you can start fresh."]
         </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(message))
     {
         <div class="alert alert-info border-0 shadow-sm mb-4">
-            <i class="bi bi-info-circle-fill me-2"></i>@message
+            <i class="bi bi-info-circle-fill me-2"></i>@T.Text(message)
         </div>
     }
 
     @if (!Model.IsConnected)
     {
         <div class="alert alert-warning border-0 shadow-sm mb-4">
-            <i class="bi bi-plug-fill me-2"></i>Connect the portal to the API before using 2FA setup or verification.
+            <i class="bi bi-plug-fill me-2"></i>@T["Connect the portal to the API before using 2FA setup or verification."]
         </div>
     }
 
@@ -184,10 +184,10 @@
             <div class="security-card card h-100">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="small text-uppercase opacity-75">Setup</div>
-                        <div class="h5 mb-0">Scan the QR code or enter the manual key</div>
+                        <div class="small text-uppercase opacity-75">@T["Setup"]</div>
+                        <div class="h5 mb-0">@T["Scan the QR code or enter the manual key"]</div>
                     </div>
-                    <span class="badge text-bg-light text-dark">@(hasSetup ? "Ready to verify" : "Not started")</span>
+                    <span class="badge text-bg-light text-dark">@(hasSetup ? T.Text("Ready to verify") : T.Text("Not started"))</span>
                 </div>
                 <div class="card-body p-4">
                     @if (hasSetup)
@@ -195,24 +195,24 @@
                         <div class="row g-4 align-items-center">
                             <div class="col-12 col-lg-6">
                                 <div class="qr-frame">
-                                    <img src="@Model.QrCodeDataUrl" alt="Authenticator QR code" />
+                                    <img src="@Model.QrCodeDataUrl" alt="@T["Authenticator QR code"]" />
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6">
                                 <div class="mb-3">
-                                    <div class="text-muted small text-uppercase mb-1">Issuer</div>
+                                    <div class="text-muted small text-uppercase mb-1">@T["Issuer"]</div>
                                     <div class="fw-semibold">@Model.Issuer</div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="text-muted small text-uppercase mb-1">Account</div>
+                                    <div class="text-muted small text-uppercase mb-1">@T["Account"]</div>
                                     <div class="fw-semibold">@Model.AccountName</div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="text-muted small text-uppercase mb-1">Manual key</div>
+                                    <div class="text-muted small text-uppercase mb-1">@T["Manual key"]</div>
                                     <div class="font-monospace small p-3 bg-light border rounded-3 text-break security-code-box">@Model.ManualKey</div>
                                 </div>
                                 <div class="mb-0">
-                                    <div class="text-muted small text-uppercase mb-1">Provisioning URI</div>
+                                    <div class="text-muted small text-uppercase mb-1">@T["Provisioning URI"]</div>
                                     <div class="font-monospace small p-3 bg-light border rounded-3 text-break security-code-box">@Model.ProvisioningUri</div>
                                 </div>
                             </div>
@@ -225,13 +225,13 @@
                             <div>
                                 @if (hasStoredSecret)
                                 {
-                                    <div class="fw-semibold mb-1">Setup already completed.</div>
-                                    <div class="mini-hint">Your authenticator app is registered. Use <strong>Enable 2FA</strong> on the right to turn it on with a code, or click <strong>Start 2FA Setup</strong> to view the QR / manual key again.</div>
+                                    <div class="fw-semibold mb-1">@T["Setup already completed."]</div>
+                                    <div class="mini-hint">@T["Your authenticator app is registered. Use"] <strong>@T["Enable 2FA"]</strong> @T["on the right to turn it on with a code, or click"] <strong>@T["Start 2FA Setup"]</strong> @T["to view the QR / manual key again."]</div>
                                 }
                                 else
                                 {
-                                    <div class="fw-semibold mb-1">Setup has not started yet.</div>
-                                    <div class="mini-hint">Click <strong>Start 2FA Setup</strong> to generate a new secret, QR code, and manual key.</div>
+                                    <div class="fw-semibold mb-1">@T["Setup has not started yet."]</div>
+                                    <div class="mini-hint">@T["Click"] <strong>@T["Start 2FA Setup"]</strong> @T["to generate a new secret, QR code, and manual key."]</div>
                                 }
                             </div>
                         </div>
@@ -245,17 +245,17 @@
             {
                 <div class="security-card card">
                     <div class="card-header">
-                        <div class="small text-uppercase opacity-75">Confirm setup</div>
-                        <div class="h5 mb-0">Verify the first TOTP code</div>
+                        <div class="small text-uppercase opacity-75">@T["Confirm setup"]</div>
+                        <div class="h5 mb-0">@T["Verify the first TOTP code"]</div>
                     </div>
                     <div class="card-body p-4">
                         <form asp-action="VerifyTwoFactorSetup" method="post">
                             @Html.AntiForgeryToken()
-                            <label for="setupCode" class="form-label fw-semibold">Authenticator code</label>
+                            <label for="setupCode" class="form-label fw-semibold">@T["Authenticator code"]</label>
                             <input id="setupCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                            <button type="submit" class="btn btn-success w-100">Verify and Enable</button>
+                            <button type="submit" class="btn btn-success w-100">@T["Verify and Enable"]</button>
                         </form>
-                        <div class="mini-hint mt-3">After a valid code is confirmed, the protected secret stays stored and 2FA becomes active.</div>
+                        <div class="mini-hint mt-3">@T["After a valid code is confirmed, the protected secret stays stored and 2FA becomes active."]</div>
                     </div>
                 </div>
             }
@@ -264,17 +264,17 @@
             {
                 <div class="security-card card">
                     <div class="card-header">
-                        <div class="small text-uppercase opacity-75">Disable</div>
-                        <div class="h5 mb-0">Turn off 2FA</div>
+                        <div class="small text-uppercase opacity-75">@T["Disable"]</div>
+                        <div class="h5 mb-0">@T["Turn off 2FA"]</div>
                     </div>
                     <div class="card-body p-4">
                         <form asp-action="DisableTwoFactor" method="post">
                             @Html.AntiForgeryToken()
-                            <label for="disableCode" class="form-label fw-semibold">Current authenticator code</label>
+                            <label for="disableCode" class="form-label fw-semibold">@T["Current authenticator code"]</label>
                             <input id="disableCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                            <button type="submit" class="btn btn-outline-danger w-100">Disable 2FA</button>
+                            <button type="submit" class="btn btn-outline-danger w-100">@T["Disable 2FA"]</button>
                         </form>
-                        <div class="mini-hint mt-3">Your authenticator registration is preserved so you can re-enable later.</div>
+                        <div class="mini-hint mt-3">@T["Your authenticator registration is preserved so you can re-enable later."]</div>
                     </div>
                 </div>
             }
@@ -282,38 +282,38 @@
             {
                 <div class="security-card card">
                     <div class="card-header">
-                        <div class="small text-uppercase opacity-75">Enable</div>
-                        <div class="h5 mb-0">Turn on 2FA</div>
+                        <div class="small text-uppercase opacity-75">@T["Enable"]</div>
+                        <div class="h5 mb-0">@T["Turn on 2FA"]</div>
                     </div>
                     <div class="card-body p-4">
                         <div class="d-flex align-items-start gap-2 mb-3 p-2 rounded-3 bg-light small">
                             <i class="bi bi-info-circle-fill text-primary"></i>
-                            <span>Your authenticator app is already registered. Enter a code to re-enable.</span>
+                            <span>@T["Your authenticator app is already registered. Enter a code to re-enable."]</span>
                         </div>
                         <form asp-action="EnableTwoFactor" method="post">
                             @Html.AntiForgeryToken()
-                            <label for="enableCode" class="form-label fw-semibold">Authenticator code</label>
+                            <label for="enableCode" class="form-label fw-semibold">@T["Authenticator code"]</label>
                             <input id="enableCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                            <button type="submit" class="btn btn-success w-100">Enable 2FA</button>
+                            <button type="submit" class="btn btn-success w-100">@T["Enable 2FA"]</button>
                         </form>
-                        <div class="mini-hint mt-3">No new setup needed — just verify with your existing authenticator app.</div>
+                        <div class="mini-hint mt-3">@T["No new setup needed — just verify with your existing authenticator app."]</div>
                     </div>
                 </div>
             }
 
             <div class="security-card card">
                 <div class="card-header">
-                    <div class="small text-uppercase opacity-75">Login verify</div>
-                    <div class="h5 mb-0">Test the login hand-off</div>
+                    <div class="small text-uppercase opacity-75">@T["Login verify"]</div>
+                    <div class="h5 mb-0">@T["Test the login hand-off"]</div>
                 </div>
                 <div class="card-body p-4">
                     <form asp-action="TestTwoFactorLogin" method="post">
                         @Html.AntiForgeryToken()
-                        <label for="loginCode" class="form-label fw-semibold">Login challenge code</label>
+                        <label for="loginCode" class="form-label fw-semibold">@T["Login challenge code"]</label>
                         <input id="loginCode" name="code" type="text" class="form-control code-input mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="123456" />
-                        <button type="submit" class="btn btn-primary w-100">Verify Login Challenge</button>
+                        <button type="submit" class="btn btn-primary w-100">@T["Verify Login Challenge"]</button>
                     </form>
-                    <div class="mini-hint mt-3">This mirrors the plug-in login hand-off endpoint used after the password step.</div>
+                    <div class="mini-hint mt-3">@T["This mirrors the plug-in login hand-off endpoint used after the password step."]</div>
                 </div>
             </div>
         </div>
@@ -324,23 +324,23 @@
     {
         <div class="security-card card mt-4" data-sso-links>
             <div class="card-header">
-                <div class="small text-uppercase opacity-75">Single sign-on</div>
-                <div class="h5 mb-0">Linked sign-in accounts</div>
+                <div class="small text-uppercase opacity-75">@T["Single sign-on"]</div>
+                <div class="h5 mb-0">@T["Linked sign-in accounts"]</div>
             </div>
             <div class="card-body p-4">
                 @if (TempData["SsoLinkMessage"] != null)
                 {
-                    <div class="alert alert-success py-2 small">@TempData["SsoLinkMessage"]</div>
+                    <div class="alert alert-success py-2 small">@T.Text(TempData["SsoLinkMessage"]?.ToString())</div>
                 }
                 @if (TempData["SsoLinkError"] != null)
                 {
-                    <div class="alert alert-danger py-2 small">@TempData["SsoLinkError"]</div>
+                    <div class="alert alert-danger py-2 small">@T.Text(TempData["SsoLinkError"]?.ToString())</div>
                 }
 
                 @if (Model.SsoLinks.Count == 0)
                 {
                     <p class="mb-0 text-muted">
-                        No accounts are linked. If your institution offers single sign-on, sign out and use its button on the login page.
+                        @T["No accounts are linked. If your institution offers single sign-on, sign out and use its button on the login page."]
                     </p>
                 }
                 else
@@ -351,17 +351,17 @@
                             <li class="d-flex flex-wrap align-items-center gap-2 py-2 border-bottom">
                                 <div class="flex-grow-1" style="min-width: 12rem;">
                                     <div class="fw-semibold">@link.Provider</div>
-                                    <div class="small">@(link.Email ?? "No email shared")</div>
+                                    <div class="small">@(link.Email ?? T.Text("No email shared"))</div>
                                     <div class="small text-muted">
-                                        Linked @link.LinkedAt.ToLocalTime().ToString("d")
-                                        · Last used @(link.LastLoginAt?.ToLocalTime().ToString("g") ?? "never")
+                                        @T.Format("Linked {0}", link.LinkedAt.ToLocalTime().ToString("d"))
+                                        @T.Format("· Last used {0}", (link.LastLoginAt?.ToLocalTime().ToString("g") ?? "never"))
                                     </div>
                                 </div>
                                 <form asp-action="UnlinkSsoAccount" method="post" class="flex-shrink-0"
-                                      onsubmit="return confirm('Unlink your @link.Provider account? You will not be able to sign in with it until it is linked again.');">
+                                      onsubmit="return confirm('@T.Js("Unlink your {0} account? You will not be able to sign in with it until it is linked again.", link.Provider)');">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="provider" value="@link.Provider" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Unlink</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">@T["Unlink"]</button>
                                 </form>
                             </li>
                         }

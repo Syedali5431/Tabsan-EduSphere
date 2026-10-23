@@ -82,6 +82,12 @@ public class RubricRepository : IRubricRepository
               .ThenInclude(c => c.Levels)
               .FirstOrDefaultAsync(r => r.Id == rubricId, ct);
 
+    public Task<Rubric?> GetByCriterionAsync(Guid criterionId, CancellationToken ct = default)
+        => _db.Rubrics
+              .Include(r => r.Criteria)
+              .ThenInclude(c => c.Levels)
+              .FirstOrDefaultAsync(r => r.Criteria.Any(c => c.Id == criterionId), ct);
+
     public async Task AddAsync(Rubric rubric, CancellationToken ct = default)
         => await _db.Rubrics.AddAsync(rubric, ct);
 

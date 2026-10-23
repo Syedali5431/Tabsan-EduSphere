@@ -299,6 +299,9 @@ public sealed class QuizController : ControllerBase
     {
         var studentProfileId = GetStudentProfileId();
         if (studentProfileId == Guid.Empty) return Forbid();
+        // Plan M7: a quiz placed in a locked module cannot be started yet.
+        if (await Services.ModuleGate.LockReasonAsync(HttpContext, studentProfileId, Domain.Lms.ModuleItemType.Quiz, id, ct) is { } locked)
+            return Conflict(new { error = "ModuleLocked", message = locked });
 
         var result = await _quizService.StartAttemptAsync(id, studentProfileId, request?.AccessCode, ClientIp(), ct);
         return result.Attempt is not null

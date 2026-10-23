@@ -6,25 +6,25 @@
 
 <div class="container-fluid">
     <div class="page-header mb-4 d-flex justify-content-between align-items-center">
-        <h2><i class="bi bi-award me-2"></i>Generate Certificates</h2>
+        <h2><i class="bi bi-award me-2"></i>@T["Generate Certificates"]</h2>
         @if (Model.CanManage)
         {
-            <span class="badge bg-success">Admin Manage Mode</span>
+            <span class="badge bg-success">@T["Admin Manage Mode"]</span>
         }
         else
         {
-            <span class="badge bg-secondary">View/Download Mode</span>
+            <span class="badge bg-secondary">@T["View/Download Mode"]</span>
         }
     </div>
 
     @if (!string.IsNullOrWhiteSpace(Model.Message))
     {
-        <div class="alert alert-info">@Model.Message</div>
+        <div class="alert alert-info">@T.Text(Model.Message)</div>
     }
 
     @if (!Model.IsConnected)
     {
-        <div class="alert alert-warning">Connect API from Dashboard first.</div>
+        <div class="alert alert-warning">@T["Connect API from Dashboard first."]</div>
     }
     else
     {
@@ -32,10 +32,10 @@
             <div class="card-body">
                 <form method="get" class="row g-2 align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label">Institution</label>
+                        <label class="form-label">@T["Institution"]</label>
                         @if (Model.CanSelectInstitution)
                         {
-                            <select name="institutionType" class="form-select" onchange="resetFiltersAndSubmit(this.form)">
+                            <select aria-label="@T["Institution"]" name="institutionType" class="form-select" onchange="resetFiltersAndSubmit(this.form)">
                                 @foreach (var institution in Model.AvailableInstitutionTypes)
                                 {
                                     <option value="@institution.Value" selected="@(Model.SelectedInstitutionType == institution.Value)">@institution.Label</option>
@@ -44,8 +44,8 @@
                         }
                         else
                         {
-                            <select class="form-select" disabled>
-                                <option selected>@(Model.AvailableInstitutionTypes.FirstOrDefault()?.Label ?? "University")</option>
+                            <select aria-label="@T["Institution"]" class="form-select" disabled>
+                                <option selected>@(Model.AvailableInstitutionTypes.FirstOrDefault()?.Label ?? T.Text("University"))</option>
                             </select>
                             <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                         }
@@ -54,9 +54,9 @@
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-4">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var tenant in Model.Tenants)
                                 {
                                     <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
@@ -65,9 +65,9 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
@@ -77,9 +77,9 @@
                     }
 
                     <div class="col-md-4">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Departments</option>
+                        <label class="form-label">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Departments"]</option>
                             @foreach (var department in Model.Departments)
                             {
                                 <option value="@department.Id" selected="@(Model.SelectedDepartmentId == department.Id)">@department.Name</option>
@@ -88,9 +88,9 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Course</label>
-                        <select name="courseId" class="form-select">
-                            <option value="">All Courses</option>
+                        <label class="form-label">@T["Course"]</label>
+                        <select aria-label="@T["Course"]" name="courseId" class="form-select">
+                            <option value="">@T["All Courses"]</option>
                             @foreach (var course in Model.Courses)
                             {
                                 <option value="@course.Id" selected="@(Model.SelectedCourseId == course.Id)">@course.Name</option>
@@ -100,8 +100,8 @@
 
                     <div class="col-md-4">
                         <label class="form-label">@Model.PeriodFilterLabel</label>
-                        <select name="semesterId" class="form-select">
-                            <option value="">All @Model.PeriodFilterLabel</option>
+                        <select aria-label="@Model.PeriodFilterLabel" name="semesterId" class="form-select">
+                            <option value="">@T.Format("All {0}", Model.PeriodFilterLabel)</option>
                             @foreach (var period in Model.Semesters)
                             {
                                 <option value="@period.Id" selected="@(Model.SelectedSemesterId == period.Id)">@period.Name</option>
@@ -110,8 +110,8 @@
                     </div>
 
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>Apply</button>
-                        <a href="@Url.Action("GenerateCertificates", "Portal")" class="btn btn-outline-secondary ms-2">Clear</a>
+                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-1"></i>@T["Apply"]</button>
+                        <a href="@Url.Action("GenerateCertificates", "Portal")" class="btn btn-outline-secondary ms-2">@T["Clear"]</a>
                     </div>
                 </form>
             </div>
@@ -121,7 +121,7 @@
         {
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
-                    <strong>Certificate Templates</strong>
+                    <strong>@T["Certificate Templates"]</strong>
                 </div>
                 <div class="card-body">
                     @if (Model.ShowUniversityCertificates)
@@ -129,10 +129,10 @@
                         <div class="row g-3">
                             <div class="col-lg-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-2">Degree Template (.docx)</h6>
+                                    <h6 class="mb-2">@T["Degree Template (.docx)"]</h6>
                                     <div class="d-flex flex-wrap gap-2 mb-2">
                                         <a class="btn btn-sm btn-outline-primary"
-                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "degree", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "degree", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">@T["Download Default"]</a>
                                     </div>
                                     <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
@@ -143,18 +143,18 @@
                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                        <input aria-label="@T["Word template (.docx)"]" type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Import Template"]</button>
                                     </form>
                                 </div>
                             </div>
 
                             <div class="col-lg-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-2">Transcript Template (.docx)</h6>
+                                    <h6 class="mb-2">@T["Transcript Template (.docx)"]</h6>
                                     <div class="d-flex flex-wrap gap-2 mb-2">
                                         <a class="btn btn-sm btn-outline-primary"
-                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "transcript", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "transcript", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">@T["Download Default"]</a>
                                     </div>
                                     <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
@@ -165,8 +165,8 @@
                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                        <input aria-label="@T["Word template (.docx)"]" type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Import Template"]</button>
                                     </form>
                                 </div>
                             </div>
@@ -177,10 +177,10 @@
                         <div class="row g-3">
                             <div class="col-lg-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-2">Completion Certificate Template (.docx)</h6>
+                                    <h6 class="mb-2">@T["Completion Certificate Template (.docx)"]</h6>
                                     <div class="d-flex flex-wrap gap-2 mb-2">
                                         <a class="btn btn-sm btn-outline-primary"
-                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "completion", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "completion", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">@T["Download Default"]</a>
                                     </div>
                                     <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
@@ -191,18 +191,18 @@
                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                        <input aria-label="@T["Word template (.docx)"]" type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Import Template"]</button>
                                     </form>
                                 </div>
                             </div>
 
                             <div class="col-lg-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-2">Report Card Template (.docx)</h6>
+                                    <h6 class="mb-2">@T["Report Card Template (.docx)"]</h6>
                                     <div class="d-flex flex-wrap gap-2 mb-2">
                                         <a class="btn btn-sm btn-outline-primary"
-                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "reportcard", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">Download Default</a>
+                                           href="@Url.Action("DownloadCertificateTemplate", "Portal", new { templateType = "reportcard", tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, departmentId = Model.SelectedDepartmentId, courseId = Model.SelectedCourseId, institutionType = Model.SelectedInstitutionType, semesterId = Model.SelectedSemesterId })">@T["Download Default"]</a>
                                     </div>
                                     <form method="post" enctype="multipart/form-data" asp-action="UploadCertificateTemplate" asp-controller="Portal" class="d-flex flex-wrap gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
@@ -213,8 +213,8 @@
                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                        <input type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Import Template</button>
+                                        <input aria-label="@T["Word template (.docx)"]" type="file" name="file" class="form-control form-control-sm" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Import Template"]</button>
                                     </form>
                                 </div>
                             </div>
@@ -226,7 +226,7 @@
 
         @if (!Model.Students.Any())
         {
-            <div class="alert alert-info">No students found for the selected scope.</div>
+            <div class="alert alert-info">@T["No students found for the selected scope."]</div>
         }
         else
         {
@@ -234,11 +234,11 @@
                 <div class="card-body border-bottom">
                     <div class="row g-2 align-items-center">
                         <div class="col-md-6 col-lg-4">
-                            <label for="certificateStudentSearch" class="form-label mb-1">Search Students</label>
+                            <label for="certificateStudentSearch" class="form-label mb-1">@T["Search Students"]</label>
                             <input id="certificateStudentSearch"
                                    type="search"
                                    class="form-control"
-                                   placeholder="Type name, registration, department, or program" />
+                                   placeholder="@T["Type name, registration, department, or program"]" />
                         </div>
                     </div>
                 </div>
@@ -246,19 +246,19 @@
                     <table id="certificateStudentsTable" class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Student</th>
-                                <th>Reg. #</th>
-                                <th>Department</th>
-                                <th>Program</th>
-                                <th>Graduated</th>
+                                <th>@T["Student"]</th>
+                                <th>@T["Reg. #"]</th>
+                                <th>@T["Department"]</th>
+                                <th>@T["Program"]</th>
+                                <th>@T["Graduated"]</th>
                                 @if (Model.ShowUniversityCertificates)
                                 {
-                                    <th>Degree</th>
-                                    <th>Transcript</th>
+                                    <th>@T["Degree"]</th>
+                                    <th>@T["Transcript"]</th>
                                 }
                                 else
                                 {
-                                    <th>Certificates</th>
+                                    <th>@T["Certificates"]</th>
                                 }
                             </tr>
                         </thead>
@@ -291,16 +291,16 @@
                                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Generate"]</button>
                                                     </form>
                                                 }
                                                 @if (student.LatestDegreeDocumentId.HasValue)
                                                 {
                                                     <a class="btn btn-sm btn-outline-primary"
-                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "docx" })">Download</a>
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "docx" })">@T["Download"]</a>
                                                     <a class="btn btn-sm btn-outline-secondary"
                                                        target="_blank"
-                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "pdf" })">Print</a>
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestDegreeDocumentId.Value, format = "pdf" })">@T["Print"]</a>
                                                 }
                                             </div>
                                         </td>
@@ -317,16 +317,16 @@
                                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Generate"]</button>
                                                     </form>
                                                 }
                                                 @if (student.LatestTranscriptDocumentId.HasValue)
                                                 {
                                                     <a class="btn btn-sm btn-outline-primary"
-                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "docx" })">Download</a>
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "docx" })">@T["Download"]</a>
                                                     <a class="btn btn-sm btn-outline-secondary"
                                                        target="_blank"
-                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "pdf" })">Print</a>
+                                                       href="@Url.Action("DownloadGeneratedCertificateDocument", "Portal", new { documentId = student.LatestTranscriptDocumentId.Value, format = "pdf" })">@T["Print"]</a>
                                                 }
                                             </div>
                                         </td>
@@ -347,13 +347,13 @@
                                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                                                         <select name="documentType" class="form-select form-select-sm" style="max-width: 220px;" required>
-                                                            <option value="">Select Type</option>
+                                                            <option value="">@T["Select Type"]</option>
                                                             @foreach (var docType in Model.AvailableDocumentTypes)
                                                             {
                                                                 <option value="@docType.Value">@docType.Label</option>
                                                             }
                                                         </select>
-                                                        <button type="submit" class="btn btn-sm btn-outline-success">Generate</button>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Generate"]</button>
                                                     </form>
                                                 }
                                             </div>
@@ -370,7 +370,7 @@
                                             }
                                             else
                                             {
-                                                <span class="text-muted">No generated certificates.</span>
+                                                <span class="text-muted">@T["No generated certificates."]</span>
                                             }
                                         </td>
                                     }

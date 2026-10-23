@@ -1,21 +1,21 @@
-﻿@model Tabsan.EduSphere.Web.Models.Portal.CoursesPageModel
+@model Tabsan.EduSphere.Web.Models.Portal.CoursesPageModel
 @{
-    ViewData["Title"] = "Courses & Offerings";
-    var periodLabel = string.IsNullOrWhiteSpace(Model.OfferingPeriodLabel) ? "Semester" : Model.OfferingPeriodLabel;
+    ViewData["Title"] = T.Text("Courses & Offerings");
+    var periodLabel = T.Text(string.IsNullOrWhiteSpace(Model.OfferingPeriodLabel) ? "Semester" : Model.OfferingPeriodLabel); // Plan M11: vocabulary, then language
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     var cls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-success";
     <div class="alert @cls alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -27,9 +27,9 @@ else
             <div class="card-body">
                 <div class="section-head mb-3">
                     <div>
-                        <span class="section-kicker">Scope selection</span>
-                        <h2 class="h5 mb-1">Tenant, campus and department</h2>
-                        <p class="text-muted mb-0">Use scope filters for both viewing and creating courses or offerings.</p>
+                        <span class="section-kicker">@T["Scope selection"]</span>
+                        <h2 class="h5 mb-1">@T["Tenant, campus and department"]</h2>
+                        <p class="text-muted mb-0">@T["Use scope filters for both viewing and creating courses or offerings."]</p>
                     </div>
                 </div>
                 <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar"
@@ -38,9 +38,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-4">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var tenant in Model.Tenants)
                                 {
                                     if (Model.SelectedTenantId == tenant.Id)
@@ -55,9 +55,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     if (Model.SelectedCampusId == campus.Id)
@@ -76,9 +76,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id ? "selected" : null)">@campus.Code - @campus.Name</option>
@@ -92,9 +92,9 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
                     <div class="col-md-4">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Departments</option>
+                        <label class="form-label">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Departments"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 if (Model.SelectedDepartmentId == d.Id)
@@ -109,7 +109,7 @@ else
                         </select>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-outline-primary">Apply Scope</button>
+                        <button type="submit" class="btn btn-outline-primary">@T["Apply Scope"]</button>
                     </div>
                 </form>
             </div>
@@ -120,9 +120,9 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Course operations</span>
-                    <h2 class="h5 mb-1">Courses and active offerings</h2>
-                    <p class="text-muted mb-0">Manage curriculum inventory and @periodLabel.ToLowerInvariant() offerings with institution-aware scoping.</p>
+                    <span class="section-kicker">@T["Course operations"]</span>
+                    <h2 class="h5 mb-1">@T["Courses and active offerings"]</h2>
+                    <p class="text-muted mb-0">@T.Format("Manage curriculum inventory and {0} offerings with institution-aware scoping.", periodLabel.ToLowerInvariant())</p>
                 </div>
             </div>
             <form method="get" asp-action="Courses" class="row g-2 align-items-end filter-toolbar"
@@ -130,9 +130,9 @@ else
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="col-md-4">
-                    <label class="form-label">Filter by Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Departments</option>
+                    <label class="form-label">@T["Filter by Department"]</label>
+                    <select aria-label="@T["Filter by Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Departments"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             if (Model.SelectedDepartmentId == d.Id)
@@ -155,19 +155,19 @@ else
             <div class="page-section-card card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="section-head mb-3">
-                        <h2 class="h5 mb-0">Courses <span class="badge bg-secondary ms-1">@Model.Courses.Count</span></h2>
+                        <h2 class="h5 mb-0">@T["Courses"] <span class="badge bg-secondary ms-1">@Model.Courses.Count</span></h2>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createCourseModal">
-                                Add Course
+                                @T["Add Course"]
                             </button>
                         }
                     </div>
                     @if (Model.Courses.Count == 0)
                     {
                         <div class="empty-state-card">
-                            <h3>No courses found</h3>
-                            <p class="text-muted mb-0">Create your first course to begin publishing @periodLabel.ToLowerInvariant() offerings.</p>
+                            <h3>@T["No courses found"]</h3>
+                            <p class="text-muted mb-0">@T.Format("Create your first course to begin publishing {0} offerings.", periodLabel.ToLowerInvariant())</p>
                         </div>
                     }
                     else
@@ -176,7 +176,7 @@ else
                             <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Code</th><th>Title</th><th>Dept</th><th>Cr.</th><th>Type</th>
+                                        <th>@T["Code"]</th><th>@T["Title"]</th><th>@T["Dept"]</th><th>@T["Cr."]</th><th>@T["Type"]</th>
                                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) { <th></th> }
                                     </tr>
                                 </thead>
@@ -191,7 +191,7 @@ else
                                             <td class="text-center">
                                                 @if (c.HasSemesters)
                                                 {
-                                                    <span class="badge stat-pill bg-info text-dark">Semester (@c.TotalSemesters)</span>
+                                                    <span class="badge stat-pill bg-info text-dark">@T.Format("Semester ({0})", c.TotalSemesters)</span>
                                                 }
                                                 else
                                                 {
@@ -208,7 +208,7 @@ else
                                                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                         <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
-                                                                onclick="return confirm('Deactivate @c.Code?')">Off</button>
+                                                                onclick="return confirm('@T.Js("Deactivate {0}?", c.Code)')">@T["Off"]</button>
                                                     </form>
                                                 </td>
                                             }
@@ -225,19 +225,19 @@ else
             <div class="page-section-card card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="section-head mb-3">
-                        <h2 class="h5 mb-0">Active Offerings <span class="badge bg-secondary ms-1">@Model.Offerings.Count</span></h2>
+                        <h2 class="h5 mb-0">@T["Active Offerings"] <span class="badge bg-secondary ms-1">@Model.Offerings.Count</span></h2>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createOfferingModal">
-                                Add Offering
+                                @T["Add Offering"]
                             </button>
                         }
                     </div>
                     @if (Model.Offerings.Count == 0)
                     {
                         <div class="empty-state-card">
-                            <h3>No offerings found</h3>
-                            <p class="text-muted mb-0">Offerings appear here once a course is assigned to faculty and @periodLabel.ToLowerInvariant().</p>
+                            <h3>@T["No offerings found"]</h3>
+                            <p class="text-muted mb-0">@T.Format("Offerings appear here once a course is assigned to faculty and {0}.", periodLabel.ToLowerInvariant())</p>
                         </div>
                     }
                     else
@@ -246,7 +246,7 @@ else
                             <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Course</th><th>Faculty</th><th>@periodLabel</th><th>Active</th>
+                                        <th>@T["Course"]</th><th>@T["Faculty"]</th><th>@periodLabel</th><th>@T["Active"]</th>
                                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) { <th></th> }
                                     </tr>
                                 </thead>
@@ -259,7 +259,7 @@ else
                                             <td>@o.SemesterName</td>
                                             <td class="text-center">
                                                 <span class="badge stat-pill @(o.IsActive ? "bg-success" : "bg-secondary")">
-                                                    @(o.IsActive ? "Yes" : "No")
+                                                    @(o.IsActive ? T.Text("Yes") : T.Text("No"))
                                                 </span>
                                             </td>
                                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
@@ -272,7 +272,7 @@ else
                                                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                         <button type="submit" class="btn btn-xs btn-outline-danger btn-sm"
-                                                                onclick="return confirm('Delete this offering?')">Del</button>
+                                                                onclick="return confirm('@T.Js("Delete this offering?")')">@T["Del"]</button>
                                                     </form>
                                                 </td>
                                             }
@@ -296,15 +296,15 @@ else
             <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Course</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Add Course"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -312,9 +312,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -323,17 +323,17 @@ else
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Course Code <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control" required maxlength="20" placeholder="e.g. CS301">
+                        <label class="form-label">@T["Course Code"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Course Code"]" type="text" name="code" class="form-control" required maxlength="20" placeholder="@T["e.g. CS301"]">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Course Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required maxlength="200">
+                        <label class="form-label">@T["Course Title"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Course Title"]" type="text" name="title" class="form-control" required maxlength="200">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Department <span class="text-danger">*</span></label>
-                        <select name="departmentId" class="form-select js-course-department" required>
-                            <option value="">Select department…</option>
+                        <label class="form-label">@T["Department"] <span class="text-danger">*</span></label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select js-course-department" required>
+                            <option value="">@T["Select department…"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 if (Model.SelectedDepartmentId == d.Id)
@@ -348,50 +348,50 @@ else
                         </select>
                     </div>
                     <div id="courseCreditHoursGroup" class="mb-3">
-                        <label class="form-label">Credit Hours <span class="text-danger">*</span></label>
-                        <input type="number" name="creditHours" class="form-control" min="1" max="6" required value="3">
+                        <label class="form-label">@T["Credit Hours"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Credit Hours"]" type="number" name="creditHours" class="form-control" min="1" max="6" required value="3">
                     </div>
                     @* Final-Touches Phase 19 Stage 19.1/19.2 — semester vs duration and grading type *@
                     <div id="courseSemesterTypeGroup" class="mb-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="hasSemesters" id="hasSemesters" value="true" checked onchange="toggleCourseType()">
-                            <label class="form-check-label" for="hasSemesters">This course is semester-based</label>
+                            <label class="form-check-label" for="hasSemesters">@T["This course is semester-based"]</label>
                         </div>
                     </div>
                     <div id="semesterFields">
                         <div class="mb-3">
-                            <label class="form-label">Number of Semesters</label>
+                            <label class="form-label">@T["Number of Semesters"]</label>
                             <input type="number" name="totalSemesters" class="form-control" min="1" max="16" value="4">
                         </div>
                     </div>
                     <div id="durationFields" style="display:none">
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="form-label">Duration</label>
-                                <input type="number" name="durationValue" class="form-control" min="1" value="6">
+                                <label class="form-label">@T["Duration"]</label>
+                                <input aria-label="@T["Duration"]" type="number" name="durationValue" class="form-control" min="1" value="6">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Unit</label>
-                                <select name="durationUnit" class="form-select">
-                                    <option value="Weeks">Weeks</option>
-                                    <option value="Months" selected>Months</option>
-                                    <option value="Years">Years</option>
+                                <label class="form-label">@T["Unit"]</label>
+                                <select aria-label="@T["Unit"]" name="durationUnit" class="form-select">
+                                    <option value="Weeks">@T["Weeks"]</option>
+                                    <option value="Months" selected>@T["Months"]</option>
+                                    <option value="Years">@T["Years"]</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Grading Type</label>
-                        <select name="gradingType" class="form-select">
+                        <label class="form-label">@T["Grading Type"]</label>
+                        <select aria-label="@T["Grading Type"]" name="gradingType" class="form-select">
                             <option value="GPA" selected>GPA</option>
-                            <option value="Percentage">Percentage</option>
-                            <option value="Grade">Grade</option>
+                            <option value="Percentage">@T["Percentage"]</option>
+                            <option value="Grade">@T["Grade"]</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Course</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Create Course"]</button>
                 </div>
             </div>
         </form>
@@ -452,15 +452,15 @@ document.addEventListener('DOMContentLoaded', function () {
             @Html.AntiForgeryToken()
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Course Offering</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Add Course Offering"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -468,9 +468,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -479,9 +479,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select">
-                            <option value="">All Departments</option>
+                        <label class="form-label">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select">
+                            <option value="">@T["All Departments"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -489,9 +489,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Course <span class="text-danger">*</span></label>
-                        <select name="courseId" class="form-select" required>
-                            <option value="">Select a course…</option>
+                        <label class="form-label">@T["Course"] <span class="text-danger">*</span></label>
+                        <select aria-label="@T["Course"]" name="courseId" class="form-select" required>
+                            <option value="">@T["Select a course…"]</option>
                             @foreach (var c in Model.Courses)
                             {
                                 <option value="@c.Id">@c.Code — @c.Title</option>
@@ -500,8 +500,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">@periodLabel <span class="text-danger">*</span></label>
-                        <select name="semesterId" class="form-select" required>
-                            <option value="">Select a @periodLabel.ToLowerInvariant()…</option>
+                        <select aria-label="@periodLabel" name="semesterId" class="form-select" required>
+                            <option value="">@T.Format("Select a {0}…", periodLabel.ToLowerInvariant())</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id">@s.Name</option>
@@ -509,9 +509,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Faculty (optional)</label>
-                        <select name="facultyUserId" class="form-select">
-                            <option value="">— None —</option>
+                        <label class="form-label">@T["Faculty (optional)"]</label>
+                        <select aria-label="@T["Faculty (optional)"]" name="facultyUserId" class="form-select">
+                            <option value="">@T["— None —"]</option>
                             @foreach (var f in Model.Faculty)
                             {
                                 <option value="@f.Id">@f.DisplayName</option>
@@ -519,13 +519,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Max Enrollment <span class="text-danger">*</span></label>
-                        <input type="number" name="maxEnrollment" class="form-control" min="1" required value="30">
+                        <label class="form-label">@T["Max Enrollment"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Max Enrollment"]" type="number" name="maxEnrollment" class="form-control" min="1" required value="30">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Offering</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Create Offering"]</button>
                 </div>
             </div>
         </form>

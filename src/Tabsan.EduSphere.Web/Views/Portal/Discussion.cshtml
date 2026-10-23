@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.DiscussionPageModel
 @{
-    ViewData["Title"]     = "Discussion";
-    ViewData["PageTitle"] = "Discussion Forum";
+    ViewData["Title"]     = T.Text("Discussion");
+    ViewData["PageTitle"] = T.Text("Discussion Forum");
     ViewData["ActivePage"] = "discussion";
 }
 
@@ -9,38 +9,46 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success alert-dismissible fade show">
-        @Model.SuccessMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.SuccessMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (Model.OfferingId == System.Guid.Empty)
 {
-    <div class="alert alert-info">Select a valid course offering to open discussion threads.</div>
+    <div class="alert alert-info">@T["Select a valid course offering to open discussion threads."]</div>
     return;
 }
 
 <div class="card mb-4">
-    <div class="card-header"><strong>Start a New Thread</strong></div>
+    <div class="card-header"><strong>@T["Start a New Thread"]</strong></div>
     <div class="card-body">
         <form asp-action="CreateDiscussionThread" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
             <div class="input-group">
-                <input name="title" class="form-control" placeholder="Thread title..." required />
-                <button type="submit" class="btn btn-primary">Post</button>
+                <input name="title" class="form-control" placeholder="@T["Thread title..."]" aria-label="@T["Thread title"]" required />
+                @if (Model.Groups.Any())
+                {
+                    @* Plan M8.3: a group discussion is seen only by the group (and teachers). *@
+                    <select name="groupId" class="form-select" style="max-width: 16rem;" aria-label="@T["Post to"]">
+                        <option value="">@T["Whole course"]</option>
+                        @foreach (var g in Model.Groups) { <option value="@g.Id">@T.Format("Group: {0}", g.Name)</option> }
+                    </select>
+                }
+                <button type="submit" class="btn btn-primary">@T["Post"]</button>
             </div>
         </form>
     </div>
@@ -48,7 +56,7 @@
 
 @if (!Model.Threads.Any())
 {
-    <div class="alert alert-info">No threads yet. Be the first to start a discussion!</div>
+    <div class="alert alert-info">@T["No threads yet. Be the first to start a discussion!"]</div>
 }
 else
 {
@@ -58,9 +66,10 @@ else
             <div class="list-group-item list-group-item-action">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        @if (thread.IsPinned) { <span class="badge bg-warning text-dark me-1">Pinned</span> }
-                        @if (thread.IsSolved) { <span class="badge bg-success me-1">Resolved</span> }
-                        @if (thread.IsClosed) { <span class="badge bg-secondary me-1">Closed</span> }
+                        @if (thread.IsPinned) { <span class="badge bg-warning text-dark me-1">@T["Pinned"]</span> }
+                        @if (thread.GroupId is not null) { <span class="badge bg-info text-dark me-1" data-group-thread>@thread.GroupName</span> }
+                        @if (thread.IsSolved) { <span class="badge bg-success me-1">@T["Resolved"]</span> }
+                        @if (thread.IsClosed) { <span class="badge bg-secondary me-1">@T["Closed"]</span> }
                         <a asp-action="DiscussionThreadDetail"
                            asp-route-threadId="@thread.Id"
                            asp-route-offeringId="@Model.OfferingId"
@@ -70,20 +79,20 @@ else
                 </div>
                 <div class="d-flex justify-content-between mt-1">
                     <small class="text-muted">
-                        by @thread.AuthorName &nbsp;·&nbsp; @thread.ReplyCount replies
+                        @T.Format("by {0} &nbsp;·&nbsp; {1} replies", thread.AuthorName, thread.ReplyCount)
                         @if (!string.IsNullOrWhiteSpace(thread.TicketNumber))
                         {
-                            <text>&nbsp;·&nbsp; Ticket: @thread.TicketNumber</text>
+                            <text>@T.Format("&nbsp;·&nbsp; Ticket: {0}", thread.TicketNumber)</text>
                         }
                     </small>
                     @if (Model.CanModerate)
                     {
                         <form asp-action="DeleteDiscussionThread" method="post" class="d-inline"
-                              onsubmit="return confirm('Delete this thread?')">
+                              onsubmit="return confirm('@T.Js("Delete this thread?")')">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="threadId" value="@thread.Id" />
                             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm">@T["Delete"]</button>
                         </form>
                     }
                 </div>

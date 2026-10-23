@@ -508,3 +508,16 @@ tests/load/results/
 # Tabsan-Lic: issued customer license files and vendor signing keys must never be committed
 tools/Tabsan.Lic/License/
 signing-keys.json
+
+# Plan M11 — translations uploaded through Language & Translations (per installation, not source)
+**/App_Data/translations/
+
+# Plan M12 — per-institution mobile build files (Firebase configuration, generated white-label settings, store builds)
+mobile/Tabsan.EduSphere.Mobile/Platforms/Android/google-services.json
+mobile/Tabsan.EduSphere.Mobile/Platforms/iOS/GoogleService-Info.plist
+mobile/Tabsan.EduSphere.Mobile/Resources/Raw/whitelabel.json
+mobile/artifacts/
+*.keystore
+
+# Plan M13 — extracted SCORM packages (uploaded content, per installation)
+**/App_Data/scorm/

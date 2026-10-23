@@ -1,0 +1,74 @@
+@model Tabsan.EduSphere.Web.Models.Portal.SimilarityReportPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var r = Model.Report;
+    ViewData["Title"] = r is null ? "Similarity report" : $"Similarity — {r.AssignmentTitle}";
+}
+
+@* Plan M9.3 — one similarity check: score, sources and matching passages (staff only). *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || r is null)
+{
+    <div class="border rounded p-3 bg-light">@T["This report is not available."] <a asp-action="Assignments">@T["Back to assignments"]</a></div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
+        <div class="me-auto">
+            <a asp-action="GradingWorkspace" asp-route-assignmentId="@r.AssignmentId" asp-route-submissionId="@r.SubmissionId" class="small">@T["← Grading workspace"]</a>
+            <h2 class="h3 mb-1">@r.StudentLabel</h2>
+            <p class="text-muted mb-0">@T.Format("{0} · attempt {1} · {2} · {3}", r.AssignmentTitle, r.AttemptNumber, r.Provider, (r.CompletedAt is { } done ? done.ToLocalTime().ToString("g") : "not finished"))</p>
+        </div>
+        <div class="text-end" data-similarity-score>
+            <span class="badge fs-5 @SimilarityFormat.BadgeClass(r.Status == "Completed" ? r.Score : null)">@SimilarityFormat.Status(r.Status, r.Score)</span>
+            <div class="small text-muted">@T["of the work found elsewhere"]</div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(r.Error))
+    {
+        <div class="border rounded p-3 bg-light mb-3" data-similarity-error>@r.Error</div>
+    }
+
+    @if (r.Status == "Completed" && r.Sources.Count == 0)
+    {
+        <div class="border rounded p-3 bg-light" data-no-sources>@T["No matching sources were found."]</div>
+    }
+
+    @foreach (var (source, i) in r.Sources.Select((s, i) => (s, i)))
+    {
+        <div class="card border-0 shadow-sm mb-3" data-source="@source.Label">
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <h3 class="h6 mb-0 me-auto">
+                        @(i + 1). @if (source.Url is { } url) { <a href="@url" target="_blank" rel="noopener noreferrer nofollow">@source.Label</a> } else { @source.Label }
+                    </h3>
+                    @if (source.MatchedWords is { } words) { <span class="small text-muted">@T.Format("{0} matching words", words)</span> }
+                    <span class="badge @SimilarityFormat.BadgeClass(source.Percent)">@source.Percent.ToString("0.#")%</span>
+                </div>
+                @foreach (var p in source.Passages)
+                {
+                    <div class="row g-2 mb-2 small">
+                        <div class="@(p.SourceText is null ? "col-12" : "col-md-6")">
+                            <div class="text-muted mb-1">@(p.SourceText is null ? T.Text("Matching text") : T.Text("In this submission"))</div>
+                            <blockquote class="border-start border-3 border-danger ps-2 mb-0" style="white-space: pre-wrap;"><mark>@p.Text</mark></blockquote>
+                        </div>
+                        @if (p.SourceText is { } sourceText)
+                        {
+                            <div class="col-md-6">
+                                <div class="text-muted mb-1">@T["In the source"]</div>
+                                <blockquote class="border-start border-3 border-secondary ps-2 mb-0" style="white-space: pre-wrap;">@sourceText</blockquote>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <p class="small text-muted">@T["A high score is a prompt to look closer, not proof of plagiarism: quotations, references and shared templates also match."]</p>
+}

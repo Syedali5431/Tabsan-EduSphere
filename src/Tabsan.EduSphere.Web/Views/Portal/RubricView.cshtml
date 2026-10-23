@@ -1,16 +1,16 @@
 @* Final-Touches Phase 16 Stage 16.2 — Rubric grade view (student/faculty) *@
 @model Tabsan.EduSphere.Web.Models.Portal.RubricViewPageModel
-@{ ViewData["Title"] = "Rubric Grade"; }
+@{ ViewData["Title"] = T.Text("Rubric Grade"); }
 
-@if (!string.IsNullOrWhiteSpace(Model.Message)) { <div class="alert alert-info">@Model.Message</div> }
+@if (!string.IsNullOrWhiteSpace(Model.Message)) { <div class="alert alert-info">@T.Text(Model.Message)</div> }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else if (Model.Grade is null)
 {
-    <div class="alert alert-info">No rubric grade found for this submission.</div>
+    <div class="alert alert-info">@T["No rubric grade found for this submission."]</div>
 }
 else
 {
@@ -21,17 +21,17 @@ else
         </div>
         <div class="card-body">
             <p class="mb-3">
-                <strong>Total Score:</strong>
+                <strong>@T["Total Score:"]</strong>
                 <span class="fs-5 fw-bold text-primary">@grade.TotalPoints / @grade.MaxTotalPoints</span>
             </p>
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead class="table-light">
                         <tr>
-                            <th>Criterion</th>
-                            <th>Level Chosen</th>
-                            <th>Points</th>
-                            <th>Max</th>
+                            <th>@T["Criterion"]</th>
+                            <th>@T["Level Chosen"]</th>
+                            <th>@T["Points"]</th>
+                            <th>@T["Max"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,7 +47,7 @@ else
                     </tbody>
                     <tfoot>
                         <tr class="fw-bold">
-                            <td colspan="2">Total</td>
+                            <td colspan="2">@T["Total"]</td>
                             <td>@grade.TotalPoints</td>
                             <td>@grade.MaxTotalPoints</td>
                         </tr>

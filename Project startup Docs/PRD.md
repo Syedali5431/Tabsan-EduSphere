@@ -1,5 +1,47 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-10-24 — PRD consolidation (Plans K, L and M1–M14)
+- Added §26 with the product requirements of Plans K (degree/transcript Word templates), L (TOTP two-factor sign-in) and M1–M14 (Canvas-parity LMS, mobile app, localisation, accessibility, scale, public API), a coverage index for Plans A–M and the open external checks; updated §3 roles, §4 scope (native apps and automatic quiz grading are now in scope), §7 sign-in, §10, §12, §18, §20, §21, §23–§25 to match.
+
+### 2026-10-24 — Product Requirements Synchronization (Plan M14: accessibility, scale, public API)
+- The portal meets WCAG 2.1 AA in automated checks (axe-core, 142 pages, 0 findings) with a published conformance report; exam-day load is tested; files can be kept in Azure Blob or S3 for several API servers; request limits protect the API; integrations use personal API tokens with documented OpenAPI v1.
+
+### 2026-10-23 — Product Requirements Synchronization (Plan M13: SCORM / xAPI)
+- Courses can contain SCORM 1.2/2004 packages from authoring tools, with resume, attempts, review, scores in the gradebook and module completion; xAPI activities can report to EduSphere's own Learning Record Store.
+
+### 2026-10-23 — Product Requirements Synchronization (Plan M12: Native Mobile App)
+- Students, teachers and parents use one EduSphere app (Android/iOS) with institutional single sign-on, push notifications, camera hand-in, results/attendance/report cards, teacher attendance and grading, and parent child views; institutions can publish it under their own name (white-label).
+
+### 2026-10-20 — Product Requirements Synchronization (Plan M11: Localisation)
+- The portal, its emails, messages and PDFs are available in English, Urdu and Arabic with right-to-left layout; users choose their language, the institution sets a default, and translators maintain texts through Excel.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M10: Live Classes)
+- Courses have live classes with BigBlueButton, Zoom, Teams or links, scheduled from the timetable, with notifications, reminders, calendar files, a join banner and attendance from who joined.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M9: Similarity Checking)
+- Institutions can check assignment submissions for copied work with a built-in comparison or Copyleaks; teachers see scores and passage reports, students optionally their own score.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M8: Assignment Enhancements)
+- Courses have a late & missing policy; assignments have availability windows, per-student/group dates, optional group work and peer review; groups also get private discussion threads.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M7: Module Progress & Release Conditions)
+- Teachers structure modules as ordered items with completion requirements, prerequisites, opening dates and sequential progression; students see their progress and what unlocks next; teachers see progress per student.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M6: Learning Outcomes & Mastery)
+- Institutions define learning outcomes, map course outcomes to program outcomes, align them to assessments and get mastery per student plus program attainment reports for accreditation.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M5: External Tools / LTI 1.3)
+- Institutions connect standards-based tools (H5P, Zoom, Turnitin, publisher content) once; teachers place them in courses or choose content inside them; grades flow back to the gradebook and rosters are shared only as allowed.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M4: Progressive Web App)
+- Students and staff can install EduSphere on phones and desktops, read recently opened timetable, announcements, materials and notifications offline, and receive push notifications per device with per-type choices.
+
+### 2026-10-19 — Product Requirements Synchronization (Plan M1–M3: SSO, Quiz Engine, Grading Workspace)
+- Institutions can let users sign in with Microsoft Entra ID, Google Workspace, other OpenID Connect providers or SAML 2.0, optionally enforcing SSO per tenant (licensed module "sso").
+- Quizzes support eleven question types, question banks, randomisation, accommodations, security options, review options, manual grading, regrading and item analysis.
+- Assignments keep every attempt, accept multiple files safely, and are graded in a single-screen workspace with annotations, rubric scoring, comments (including voice), anonymous/moderated grading and manual grade posting; students see feedback only once grades are posted.
+- Quiz and posted assignment scores flow into the gradebook components "Quiz(zes)" and "Assignment(s)" without overwriting hand-entered marks.
+
 ### 2026-07-12 — Phase 0 Guardrails Established
 - Phase 0 completed as a documentation-only safeguard to protect the existing working app behavior.
 - The creation order, POST endpoint boundaries, and protected modules were formally locked to prevent unrelated changes.
@@ -5356,7 +5398,9 @@ To deliver a scalable, long‑term university management system that preserves a
 - Admin (All departments access)
 - Super Admin (System authority)
 - Finance (Payment and receipt management)
+- Parent (linked children's results, attendance, report cards and fees — portal and mobile app)
 - External users (limited access)
+- Integrations (systems calling the REST API with a personal API token that acts as its owner — §26.16)
 
 ---
 
@@ -5386,12 +5430,17 @@ To deliver a scalable, long‑term university management system that preserves a
 - Database views and stored procedures
 - Free/open-source email API integration
 - Mobile-responsive, WCAG 2.1 AA accessible UI
+- LMS parity (Plan M, §26): single sign-on, quiz engine with banks and auto-graded question types, grading workspace, installable app with push, LTI 1.3 tools, learning outcomes, module progress, assignment policies/groups/peer review, similarity checking, live classes, SCORM/xAPI
+- English, Urdu and Arabic with right-to-left layout (§26.13)
+- Native mobile app for students, teachers and parents (Android/iOS, §26.14)
+- Degree/transcript generation from Word templates (§26.1) and TOTP two-factor sign-in (§26.2)
+- Public REST API with personal access tokens and OpenAPI documentation (§26.16)
 
 ### 4.2 Out of Scope
-- Native mobile apps
 - Alumni management
 - Career marketplace
-- Automated grading
+- Automated grading of free-text work (essays and short answers are marked by teachers; objective quiz questions are graded automatically — §26.4)
+- Rebuilding areas where EduSphere is already ahead of Canvas (SIS, results/GPA, degree audit, transcripts, timetable, attendance, finance, FYP, parent portal, AI, helpdesk, compliance, licensing, theming)
 
 ---
 
@@ -5506,6 +5555,12 @@ If license expires or becomes invalid:
   - Program
   - Current semester
 
+### Sign-in options (Plans L, M1, M12, M14)
+- Password sign-in with optional TOTP two-factor authentication (§26.2).
+- Single sign-on with Microsoft Entra ID, Google Workspace, other OpenID Connect providers or SAML 2.0, per tenant, with an "enforce SSO only" option (§26.3).
+- Mobile app sign-in with password + code or SSO through the portal (PKCE hand-off, §26.14).
+- Integrations use personal API tokens instead of passwords (§26.16).
+
 ---
 
 ## 8. Role-Based Functional Requirements
@@ -5609,6 +5664,12 @@ If license expires or becomes invalid:
 - Submit work
 - View feedback and grades
 
+### LMS parity additions (Plan M)
+- Quizzes: banks, eleven question types, randomisation, accommodations, security and review options, manual grading queue, regrade, item analysis (§26.4).
+- Assignments: attempt history, safe multi-file hand-in, comments incl. voice, document conversion, annotation, grading workspace with anonymous/moderated grading and grade posting (§26.5); late/missing policies, per-student/group dates, groups and peer review (§26.10); similarity checking (§26.11).
+- Course structure: module items with completion requirements and release conditions (§26.9); LTI tools (§26.7) and SCORM packages (§26.15) whose scores reach the gradebook.
+- Quiz, assignment, LTI and SCORM scores feed the gradebook automatically without overwriting hand-entered or published marks; outcomes mastery is calculated from the same grades (§26.8).
+
 ### 10.1 Result Calculation & GPA Automation
 
 #### Section 1: GPA-to-Score Mapping
@@ -5665,6 +5726,8 @@ If license expires or becomes invalid:
 - FYP meetings
 - Admin notices
 - Delivered via dashboard (+ optional email)
+- Also delivered as Web Push to installed/subscribed browsers (§26.6) and native push to the mobile app (§26.14), with per-type preferences per user
+- Live class scheduling changes and 15-minute reminders with calendar files (§26.12)
 
 ---
 
@@ -5751,6 +5814,13 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 | Report Settings | Super Admin only | Activate/deactivate reports per role; table: SR#, Report Name, Purpose, Roles (multi-select) |
 | Module Settings | Super Admin only | Activate/deactivate modules per role; table: SR#, Module Name, Purpose, Roles (multi-select), Status (Active/Inactive) |
 | Sidebar Settings | Super Admin only | Configure sidebar navigation visibility per role; table: SR#, Name, Purpose, Roles (checkbox list), Status (Active/Inactive). Click any top-level menu to reveal its sub-menus in the panel below. Super Admin always retains full access regardless of settings. |
+| Single Sign-On | Super Admin | Identity providers per tenant or installation, enforce SSO, SP metadata (§26.3) |
+| External Tools | Super Admin (Admin when granted) | LTI 1.3 tool registry, deployments, key rotation (§26.7) |
+| Similarity Checking | Admin, Super Admin | Built-in comparison or Copyleaks, scope, test connection (§26.11) |
+| Live Class Settings | Admin, Super Admin | BigBlueButton / Zoom / Teams accounts, test connection (§26.12) |
+| Language & Translations | Super Admin | Default language, coverage, Excel export/import of translations (§26.13) |
+| Learning Record Store | Super Admin (Admin when granted) | xAPI credentials and recent statements (§26.15) |
+| API Tokens | Admin, Super Admin | Personal access tokens for integrations (§26.16) |
 
 ---
 
@@ -5777,6 +5847,10 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - Admin or Super Admin resets non-admin locked accounts; only Super Admin resets Admin accounts
 - Dependency vulnerability scanning in CI; zero critical/high CVEs
 - Penetration test sign-off before production release
+- Request limits on the whole API: per API token, per signed-in user and per address without sign-in, 429 with Retry-After (§26.16)
+- Optional TOTP two-factor sign-in and single sign-on with full token/assertion validation (§26.2, §26.3)
+- API tokens, LTI access tokens and xAPI secrets stored only as hashes; provider secrets encrypted at rest and never returned (§26.17)
+- Third-party content isolated: LTI launches single-use and user-bound; SCORM packages checked before storage and playable from a separate content origin (§26.7, §26.15)
 
 ---
 
@@ -5788,6 +5862,8 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - 99.9% uptime SLA
 - SQL Views for high-traffic read patterns; Stored Procedures for complex write batches
 - Horizontal scaling-ready (stateless API layer)
+- Exam-day target: 5,000 students starting, autosaving and submitting one quiz — p95 start < 2 s, autosave < 1 s, submit < 3 s, < 1 % errors (k6 `tests/load/k6-exam-day.js`; §26.16)
+- Several API servers share Redis (distributed cache) and an object store (Azure Blob or S3) for files; foreign keys indexed (§26.16)
 
 ---
 
@@ -5802,8 +5878,10 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 ## 23. Mobile & Accessibility
 
 - Responsive UI: tested at 360 px, 768 px, 1280 px viewports
-- WCAG 2.1 AA compliance
+- WCAG 2.1 AA compliance — verified with axe-core on every portal page (0 serious/critical findings), keyboard operation with a visible focus ring, published Accessibility Conformance Report (§26.16)
 - Touch-friendly controls (44×44 px minimum tap targets)
+- Installable web app with offline pages and push (§26.6); native Android/iOS app for students, teachers and parents (§26.14)
+- Right-to-left layout for Urdu and Arabic (§26.13)
 - Lighthouse score ≥ 90 for Performance, Accessibility, Best Practices on core pages
 
 ---
@@ -5814,6 +5892,10 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - Chatbot response < 2 seconds
 - 10,000+ concurrent users
 - 99.9% uptime
+- Exam-day spike handled within the targets in §21
+- Languages: English, Urdu, Arabic; every new text translated before release (CI check)
+- Accessibility: WCAG 2.1 AA, automated scan in the test suite
+- API compatibility: changes within `/api/v1/` are additive; breaking changes need a new version
 
 ---
 
@@ -5826,10 +5908,149 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - AI integration (LLM via abstracted `IAiChatService`)
 - Email: `IEmailSender` abstraction over MailKit/SendGrid
 - Cloud-ready (Azure / AWS); Docker-compatible
+- Plan M additions: ITfoxtec.Identity.Saml2 (SAML), Otp.NET + QRCoder (TOTP), Gotenberg 8 (document conversion), PDF.js + PDFsharp (annotation), QuestPDF and ClosedXML (reports/Excel), in-house Web Push (RFC 8291/8292) and FCM v1, .NET MAUI (mobile app), scorm-again (SCORM runtime), Azure.Storage.Blobs and AWSSDK.S3 (shared storage), ASP.NET Core rate limiting, Swashbuckle (OpenAPI); tests with xUnit, Playwright + axe-core and k6
 
 ---
 
-## 26. Approval
+## 26. LMS Parity, Security Add-ons and Platform Hardening (Plans K, L and M — 2026)
+
+This section states the product requirements added by Plans K, L and M (October 2026 status). Plan M closed the gaps against Canvas LMS while keeping the areas where EduSphere was already ahead (SIS, results/GPA, degree audit, transcripts, timetable, attendance, finance, FYP, parent portal, AI, helpdesk, compliance, licensing, theming). Every capability below is implemented and tested unless listed in §26.19.
+
+### 26.0 Requirements coverage index (Plans A–M)
+
+| Plan | Scope | Where in this PRD | Status |
+|---|---|---|---|
+| A | Multi-tenant + campus architecture | §0 log (Plan A entries), §4, §8 | Complete |
+| B | Environment-based configuration and deployment (database connection handling) | §0 log (Plan B), §25 | Complete |
+| C | Course Material module (uploads and links, tenant/campus/institution-type isolation) | §0 log (Plan C) | Complete |
+| D | Analytics with interactive charts and global filters | §0 log (Plan D) | Complete |
+| E | Master system validation and audit | §0 log (Plan E) | Complete |
+| F | Finance role, fees, payments and receipts | §17, §0 log (Plan F) | Complete |
+| G | Result calculation by licensed institution type (School/College/University) | §10.1, §0 log (Plan G) | Complete |
+| H | Multi-environment configuration system (detection, fallback, Docker) | §0 log (Plan H) | Complete |
+| I | Build/publish exclusion (smaller packages) | §0 log (Plan I) | Complete |
+| J | Deep testing and auto-fix | §0 log (Plan J) | Complete |
+| K | Degree and transcript documents from Word templates | §26.1 | Complete |
+| L | Two-factor authentication (TOTP) | §26.2, §7 | Complete |
+| M1–M14 | Canvas-parity LMS, mobile, localisation, accessibility, scale, public API | §26.3–§26.16 | Complete; external checks open (§26.19) |
+
+### 26.1 Degree and transcript documents from Word templates (Plan K)
+- **Users:** Admin/SuperAdmin (templates, generation), Student (own documents).
+- **FR-K1** Administrators download the default degree and transcript templates (.docx), edit them in Word and upload them again; uploads are versioned and stored separately from other files.
+- **FR-K2** Placeholders `{{StudentName}}`, `{{FatherName}}`, `{{DegreeTitle}}`, `{{CGPA}}`, `{{IssueDate}}`, `{{SerialNumber}}` are replaced in paragraphs, tables, headers and footers; `{{QR_CODE}}` becomes a QR code image; `{{COURSE_TABLE}}` becomes the student's course rows. Unknown placeholders are left untouched.
+- **FR-K3** Each generated document gets a serial number and issue date; output paths are stored. PDF conversion is optional; the .docx is always available as a fallback.
+- **FR-K4** Students read their own documents at `/student/degree` and `/student/transcript`; existing authentication and result data are only read, never changed.
+
+### 26.2 Two-factor authentication — TOTP (Plan L)
+- **FR-L1** Any user can turn on two-factor sign-in with an authenticator app (RFC 6238 TOTP, Google Authenticator/Authy compatible): set-up with a QR code, confirmation with a valid code, turning it off with a valid code.
+- **FR-L2** With 2FA on, sign-in asks for the code after the password (and after single sign-on unless the identity provider asserts MFA and the institution trusts it, §26.3). A clock-drift window applies; repeated wrong codes are limited.
+- **FR-L3** Secrets are protected at rest and never returned by the API. The 2FA add-on does not change the existing login flow for users without 2FA.
+
+### 26.3 Single sign-on (M1)
+- **FR-M1.1** Institutions let users sign in with Microsoft Entra ID, Google Workspace, any OpenID Connect provider or SAML 2.0, configured per tenant or for the whole installation (licensed module `sso`; SuperAdmin page **Single Sign-On** with the values to register at the IdP and SP metadata download).
+- **FR-M1.2** OIDC uses authorisation code + PKCE with state/nonce; id_tokens are fully validated; Microsoft must be pinned to the institution's own directory. SAML responses must be signed, addressed to EduSphere's ACS and answer EduSphere's own request (no unsolicited responses).
+- **FR-M1.3** Accounts link by an existing link, or — only when enabled — by a verified email of an active user in the same tenant; an email-domain allow-list applies to every SSO sign-in.
+- **FR-M1.4** "Enforce SSO only" blocks password sign-in for that tenant's users (SuperAdmin keeps password + 2FA as break-glass). Users see and unlink their linked sign-in accounts (never locking themselves out).
+- **FR-M1.5** SSO sign-ins pass through the same checks as password sign-in (active/lockout, 2FA, session risk, licence concurrency) and are audited with the method used.
+
+### 26.4 Quiz engine (M2)
+- **FR-M2.1** Question banks (course/department/institution, shared or private) with tags, difficulty and archiving; Excel import/export; quizzes draw N random questions from a bank or copy them.
+- **FR-M2.2** Eleven question types: multiple choice, true/false, short answer, essay, multiple answers, matching, ordering, fill in the blanks, numeric (exact ± tolerance or range), formula (values generated per attempt) and file upload. Objective types are graded automatically with partial credit where it applies; short answer, essay and file upload go to a manual grading queue.
+- **FR-M2.3** Shuffled questions/options; each attempt stores exactly what the student saw (order, drawn questions, generated values) for review and regrade.
+- **FR-M2.4** Accommodations per student (time multiplier/extra minutes, extra attempts) and per-student availability; the deadline is enforced by the server (auto-submit, lazy time-out).
+- **FR-M2.5** Security: access code, IP allow-list (addresses or ranges), one question at a time, lock answers after moving on. Review options: none / score only / responses and score / correct answers, optionally only after the quiz closes.
+- **FR-M2.6** Regrade a question across all finished attempts; item analysis (difficulty, discrimination, option distribution).
+- **FR-M2.7** Best finished attempt per quiz feeds the gradebook's Quiz component, scaled to its weightage; hand-entered and published marks are never overwritten.
+
+### 26.5 Submissions and grading workspace (M3)
+- **FR-M3.1** Assignments keep every attempt (allowed attempts, safe file-type list, size limit, up to 10 files per attempt); students and staff comment on submissions (text, voice/video recording; grader-only comments).
+- **FR-M3.2** Office and text documents are converted to PDF in the background (Gotenberg) for viewing; the original always stays downloadable.
+- **FR-M3.3** One-screen grading workspace: student list with filters, document viewer with annotations (highlight, strike-out, box, text, pin, freehand), marks and feedback with autosave, inline rubric, keyboard navigation; students download an annotated PDF once grades are posted.
+- **FR-M3.4** Grading policies: anonymous grading, automatic or manual grade posting (hide/post), moderated grading with provisional grades and a moderator's final grade.
+- **FR-M3.5** Posted grades feed the gradebook's Assignment component without overwriting hand-entered marks.
+
+### 26.6 Installable app and web push (M4)
+- **FR-M4.1** The portal installs as a branded app (manifest with the institution's name and logo, shortcuts).
+- **FR-M4.2** Offline read-only copies of recently opened dashboard, timetable, announcements, course material and notifications pages and downloaded material files; copies are wiped on sign-out.
+- **FR-M4.3** Web Push to each subscribed device for every notification, with per-type preferences and device management; push endpoints are restricted to known push services; payloads carry no sensitive data.
+
+### 26.7 External tools — LTI 1.3 Advantage (M5)
+- **FR-M5.1** Administrators register LTI 1.3 tools and deployments (whole installation, department or course) on **External Tools**, with privacy level (names/emails) and grade/roster permissions; platform signing keys rotate from the page.
+- **FR-M5.2** Teachers place tools in courses (new tab or inside EduSphere) and choose content inside a tool (Deep Linking 2.0).
+- **FR-M5.3** Tools post grades through Assignment & Grade Services (line items become EduSphere assignments; scores become graded submissions and follow posting policies and the gradebook sync) and read rosters through NRPS within their privacy level.
+- **FR-M5.4** Launches are single-use and bound to the user; tool tokens are short-lived and stored hashed; redirect URIs exact; tool URLs https.
+
+### 26.8 Learning outcomes and mastery (M6)
+- **FR-M6.1** Outcomes at institution, program and course level with their own rating scales and mastery methods (highest, latest, average, decaying average, n-times mastery); course outcomes map to program outcomes; Excel import.
+- **FR-M6.2** Outcomes align to assignments, rubric criteria, quiz and bank questions; evidence comes from every grading path once grades are visible to students.
+- **FR-M6.3** Reports: Learning Mastery Gradebook (Excel), program attainment against a target (PDF/Excel) for accreditation, and the student's own mastery page.
+
+### 26.9 Modules: items, completion and release (M7)
+- **FR-M7.1** Modules are ordered lists of items (header, page, video, material, assignment, quiz, discussion, external tool, link, SCORM package) with indentation and publishing.
+- **FR-M7.2** One completion requirement per item (view, mark done, submit, score at least, contribute); progress is computed from live data and shown to students and teachers (per-student progress report).
+- **FR-M7.3** Release conditions: prerequisite modules, unlock dates, sequential order; locked items show the reason and the API refuses quizzes, submissions and tool launches that are only in locked places.
+
+### 26.10 Assignment policies, groups and peer review (M8)
+- **FR-M8.1** Course late policy (deduction per hour/day with a floor; teacher can waive per submission) and missing-work grade; assignment availability window and late cut-off.
+- **FR-M8.2** Per-student or per-group dates ("Assign to").
+- **FR-M8.3** Group sets (manual, random split, self sign-up with size limit); group assignments (one hand-in for all members, graded as a group or individually); group discussion threads.
+- **FR-M8.4** Peer review (0–5 reviews per submission, allocated fairly after the due date, anonymous by default, rubric or score); peer average visible to the teacher.
+
+### 26.11 Similarity checking (M9)
+- **FR-M9.1** Per-assignment similarity check with the built-in comparison (other submissions of the assignment, course or institution) or Copyleaks (API key encrypted at rest); queued checks survive restarts.
+- **FR-M9.2** Badges and reports with matching passages/sources in the grading workspace; "check again"; optionally students see only their own score.
+
+### 26.12 Live classes (M10)
+- **FR-M10.1** Live classes with BigBlueButton, Zoom, Microsoft Teams or a pasted link (per-tenant settings with encrypted secrets and a connection test).
+- **FR-M10.2** Scheduling ad hoc or for timetable slots over several weeks; notifications when scheduled/moved/cancelled, a 15-minute reminder, calendar (.ics) files, a "Live now" join banner on every page.
+- **FR-M10.3** Optional attendance from who joined (and minutes attended where the provider reports them), never overwriting a teacher's marks.
+
+### 26.13 Languages and right-to-left layout (M11)
+- **FR-M11.1** Portal, API messages, validation errors, emails and PDFs in English, Urdu and Arabic, with right-to-left layout for Urdu/Arabic.
+- **FR-M11.2** Language from the user's choice, then the institution default, then the browser; Gregorian dates and "." decimals in every language.
+- **FR-M11.3** **Language & Translations** page: coverage, Excel export/import of overrides without a release. CI fails when a portal text lacks a translation.
+
+### 26.14 Mobile app (M12)
+- **FR-M12.1** One EduSphere app (.NET MAUI) for students, teachers and parents on Android and iOS, signing in with username/password or the institution's SSO (PKCE hand-off through the portal), in English, Urdu or Arabic.
+- **FR-M12.2** Students: home summary, timetable, course materials, assignments with camera/file hand-in, quizzes (opened in the portal), announcements, discussions, results, attendance, report cards, notifications. Teachers: attendance, grading, announcements, discussions. Parents: their linked children's results, attendance, report cards, fee status and announcements.
+- **FR-M12.3** Native push (Firebase Cloud Messaging v1; APNs through FCM) honouring the web push preferences; a minimum app version gate (HTTP 426); self-hosted crash reports.
+- **FR-M12.4** White-label builds per institution (name, icons, colours, app id, URL scheme) with store texts.
+
+### 26.15 SCORM packages and xAPI (M13)
+- **FR-M13.1** Teachers upload SCORM 1.2/2004 packages (checked for unsafe paths, size, compression ratio and a valid manifest before storing), set attempts, visibility and marks, preview them and see a per-student report.
+- **FR-M13.2** Students launch packages from courses or modules; progress is saved and resumed; finished attempts reopen for review; the best score goes to the gradebook through the package's assignment and counts for module requirements.
+- **FR-M13.3** The player runs from sealed, time-limited links without the portal session and can be served from a separate content origin.
+- **FR-M13.4** Minimal xAPI 1.0.3 Learning Record Store (Basic credentials created by administrators, statement validation, voiding, queries).
+
+### 26.16 Accessibility, scale and the public API (M14)
+- **FR-M14.1 Accessibility:** every portal page meets WCAG 2.1 AA in automated checks (axe-core on 142 staff/student pages and the login page; serious or critical findings fail the test run); keyboard operation without traps with a visible focus indicator; an Accessibility Conformance Report (VPAT 2.5 structure) is published with its known limitations.
+- **FR-M14.2 Exam-day load:** the API handles a cohort starting the same quiz, autosaving and submitting near the deadline, then results publication and reading, with p95 start < 2 s, autosave < 1 s, submit < 3 s and < 1 % errors (k6 script and seeding test provided). Measured: 500 students on one workstation — 0 errors, p95 46 ms start / 65 ms autosave / 74 ms submit; the 5,000-user run requires staging.
+- **FR-M14.3 Shared storage:** submissions, conversions, uploads and SCORM files can be stored in a local folder, Azure Blob Storage or Amazon S3 / S3-compatible storage so several API servers share them; downloads use short-lived signed links.
+- **FR-M14.4 Request limits:** per API token (1,200/min), per signed-in user (600/min) and per address without sign-in (300/min), configurable, with exempt addresses/ranges for the portal server; 429 with Retry-After.
+- **FR-M14.5 Public API:** versioned REST API (`/api/v1/`, additive changes only within v1) documented with OpenAPI (snapshot `Docs/api/openapi-v1.json`) and a developer guide (`Docs/Public-API.md`). Personal access tokens (`esk_…`) for integrations: created by allowed roles (default Admin/SuperAdmin) on **API Tokens**, shown once, stored as a hash, optional read-only, expiry up to 365 days, revocable by the owner or administrators, unable to manage tokens, audited.
+
+### 26.17 Cross-cutting requirements for the added capabilities
+- **Licensing and modules:** new capabilities sit behind module keys and sidebar menus so SuperAdmins control who sees them (e.g. `sso`, `outcomes`, menus `sso_settings`, `external_tools`, `similarity_settings`, `live_class_settings`, `language_settings`, `xapi_settings`, `api_tokens`).
+- **Security:** provider secrets (SSO, Copyleaks, conferencing) encrypted at rest and never returned; signing keys (LTI, VAPID) kept outside the repository and backed up; outbound calls restricted (https, allow-listed push hosts, no server-side request forgery); third-party content (LTI tools, SCORM packages) isolated from the portal session; every configuration change and sign-in path audited.
+- **Data integrity:** automatic gradebook syncs (quiz, assignment, LTI, SCORM) never overwrite hand-entered or published marks; grades reach students only when posted.
+- **Localisation and accessibility:** every new page ships with Urdu and Arabic texts and passes the accessibility scan.
+- **Operations:** settings documented in the SuperAdmin/Admin guides, SSO Setup Guide and LTI Tool Setup Guide; database changes delivered as EF Core migrations.
+
+### 26.18 Acceptance evidence
+Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS-Parity-Gap-Closure.md` (unit, integration, web-integration and Playwright tests per phase). Final sweep (2026-10-24): unit 597/597, integration 367/368 (1 long-standing skip), web-integration 93/93, contract 1/1 and the Plan M Playwright specs 41/41 (SSO, assignments, grading, localisation, live classes, LTI, module progress, outcomes, PWA, SCORM, similarity, accessibility).
+
+### 26.19 Open items (need external systems or devices)
+- SSO: role-hint and student/staff-ID attribute mapping (deferred until user provisioning); a sign-in against a live institutional IdP.
+- PWA/mobile: install and push round trips on real Android/iOS devices; iOS build on a Mac; live FCM delivery.
+- LTI: Dynamic Registration (stretch); checks with real vendor tools (1EdTech reference tool, H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification.
+- Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
+- Localisation: native-speaker review of Urdu and Arabic texts.
+- SCORM: commercial authoring-tool packages and multi-SCO sequencing.
+- M14: the 5,000-user staging load run, a run against live Azure Blob/S3 accounts, and accessibility testing with assistive-technology users.
+
+---
+
+## 27. Approval
 
 | Name | Role | Signature | Date |
 |-----|------|----------|------|

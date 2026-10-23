@@ -1,0 +1,130 @@
+@model Tabsan.EduSphere.Web.Models.Portal.GradingWorkspacePageModel
+@using System.Text.Json
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var w = Model.Workspace;
+    ViewData["Title"] = w is null ? "Grading workspace" : $"Grading — {w.Title}";
+    var s = w?.Settings;
+    string U(string action, string idName) => Url.Action(action, new Dictionary<string, object?> { [idName] = "__id__" })!.Replace("__id__", "__id__");
+    var config = w is null ? "{}" : JsonSerializer.Serialize(new
+    {
+        assignmentId = w.AssignmentId,
+        maxMarks = w.MaxMarks,
+        moderated = s!.ModeratedGrading,
+        conversionEnabled = w.ConversionEnabled,
+        selected = Model.SelectedSubmissionId,
+        submissions = w.Submissions,
+        similarity = Model.Similarity.Values,
+        urls = new
+        {
+            detail = U("WorkspaceSubmission", "submissionId"),
+            grade = U("WorkspaceGrade", "submissionId"),
+            rubric = U("WorkspaceRubric", "submissionId"),
+            moderate = U("WorkspaceModerate", "submissionId"),
+            comment = U("WorkspaceComment", "submissionId"),
+            deleteComment = U("WorkspaceDeleteComment", "commentId"),
+            media = U("SubmissionCommentMedia", "commentId"),
+            file = U("SubmissionFile", "fileId"),
+            annotated = U("SubmissionFileAnnotated", "fileId"),
+            annotations = U("WorkspaceAnnotations", "fileId"),
+            addAnnotation = U("WorkspaceAddAnnotation", "fileId"),
+            updateAnnotation = U("WorkspaceUpdateAnnotation", "annotationId"),
+            deleteAnnotation = U("WorkspaceDeleteAnnotation", "annotationId"),
+            reconvert = U("WorkspaceReconvert", "fileId"),
+            latePenalty = U("WorkspaceLatePenalty", "submissionId"),
+            similarityReport = U("SimilarityReport", "id"),
+            similarityRecheck = U("WorkspaceSimilarityRecheck", "submissionId"),
+            worker = Url.Content("~/lib/pdfjs/pdf.worker.min.js")
+        }
+    }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || w is null)
+{
+    <div class="p-3 rounded border bg-light">@T["The grading workspace could not be loaded."] <a asp-action="Assignments">@T["Back to assignments"]</a></div>
+}
+else
+{
+    <div id="grading-workspace">
+        @Html.AntiForgeryToken()
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
+                <div class="flex-grow-1">
+                    <a asp-action="Assignments" asp-route-offeringId="@w.CourseOfferingId" asp-route-selectedAssignmentId="@w.AssignmentId" class="small">@T["← Assignments"]</a>
+                    <h2 class="h5 mb-0">@w.Title</h2>
+                    <div class="small text-muted">
+                        @T.Format("Due {0} · out of {1} ·", w.DueDate.ToLocalTime().ToString("g"), w.MaxMarks.ToString("0.##"))
+                        @T.Format("{0} graded · {1} posted", w.GradedCount, w.PostedCount)
+                        @if (s!.AnonymousGrading) { <span class="badge @(s.NamesHidden ? "bg-dark" : "bg-secondary") ms-1">@(s.NamesHidden ? T.Text("Anonymous") : T.Text("Anonymous (names revealed)"))</span> }
+                        <span class="badge bg-light text-dark border ms-1">@(s.PostingPolicy == "Manual" ? T.Text("Grades posted manually") : T.Text("Grades posted automatically"))</span>
+                        @if (s.ModeratedGrading) { <span class="badge bg-info text-dark ms-1">@T.Format("Moderated · {0}", (s.ModeratorName ?? "moderator"))</span> }
+                    </div>
+                </div>
+                <div class="btn-group btn-group-sm" role="group" aria-label="@T["Filter"]">
+                    @foreach (var (value, label) in GradingWorkspacePageModel.Filters)
+                    {
+                        <a class="btn btn-outline-secondary @(Model.Filter == value ? "active" : "")" aria-current="@(Model.Filter == value ? "true" : null)"
+                           asp-action="GradingWorkspace" asp-route-assignmentId="@w.AssignmentId" asp-route-filter="@value">@label</a>
+                    }
+                </div>
+                <form asp-action="ChangeAssignmentGradePosting" method="post" class="d-flex gap-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="assignmentId" value="@w.AssignmentId" />
+                    @if (w.GradedNotPostedCount > 0)
+                    {
+                        <button class="btn btn-sm btn-success" name="operation" value="post" onclick="return confirm('@T.Js("Post {0} grade(s) to students?", w.GradedNotPostedCount)');">@T.Format("Post grades ({0})", w.GradedNotPostedCount)</button>
+                    }
+                    @if (w.PostedCount > 0)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary" name="operation" value="hide" onclick="return confirm('@T.Js("Hide every posted grade from students again?")');">@T["Hide grades"]</button>
+                    }
+                    @if (s.NamesHidden)
+                    {
+                        <button class="btn btn-sm btn-outline-dark" name="operation" value="reveal" onclick="return confirm('@T.Js("Show student names to graders now?")');">@T["Reveal names"]</button>
+                    }
+                </form>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#ws-settings" aria-expanded="false" aria-controls="ws-settings">@T["Settings"]</button>
+                <a class="btn btn-sm btn-outline-secondary" asp-action="AssignmentOptions" asp-route-assignmentId="@w.AssignmentId" title="@T["Availability, group work, peer review and dates for particular students"]">@T["Options &amp; dates"]</a>
+            </div>
+            <div class="collapse border-top" id="ws-settings">
+                <div class="card-body">
+                    <partial name="_AssignmentSettingsForm" model="@(new AssignmentSettingsFormModel { Settings = s, ReturnUrl = Context.Request.Path + Context.Request.QueryString })" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-xl-3 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-2">
+                        <div class="d-flex gap-1 align-items-center mb-2">
+                            <button id="ws-prev" type="button" class="btn btn-sm btn-outline-secondary" title="@T["Previous student (Alt+←)"]" aria-label="@T["Previous student"]">←</button>
+                            <span id="ws-position" class="small text-muted flex-grow-1 text-center"></span>
+                            <button id="ws-next" type="button" class="btn btn-sm btn-outline-secondary" title="@T["Next student (Alt+→)"]" aria-label="@T["Next student"]">→</button>
+                        </div>
+                        <div id="ws-list" class="list-group list-group-flush" style="max-height: 75vh; overflow: auto;" role="region" aria-label="@T["Submissions"]"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-8">
+                <div class="card border-0 shadow-sm"><div class="card-body p-2" id="ws-viewer" role="region" aria-label="@T["Submission viewer"]"></div></div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card border-0 shadow-sm"><div class="card-body" id="ws-panel" aria-live="polite"></div></div>
+            </div>
+        </div>
+        <script type="application/json" id="workspace-config">@Html.Raw(config)</script>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/lib/pdfjs/pdf.min.js" asp-append-version="true"></script>
+    <script src="~/js/submission-viewer.js" asp-append-version="true"></script>
+    <script src="~/js/comment-recorder.js" asp-append-version="true"></script>
+    <script src="~/js/grading-workspace.js" asp-append-version="true"></script>
+}

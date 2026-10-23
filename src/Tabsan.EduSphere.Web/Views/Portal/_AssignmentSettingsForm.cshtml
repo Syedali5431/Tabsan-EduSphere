@@ -1,0 +1,48 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AssignmentSettingsFormModel
+@{
+    var s = Model.Settings;
+    var id = Model.FormId;
+}
+@* Plan M3 — submission settings and grading policies for one assignment. *@
+<form asp-action="SaveAssignmentSettings" method="post" class="row g-2">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="assignmentId" value="@s.AssignmentId" />
+    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+    <div class="col-sm-4 col-lg-2">
+        <label class="form-label small fw-semibold" for="@id-attempts">@T["Attempts allowed"]</label>
+        <input id="@id-attempts" name="allowedAttempts" type="number" min="0" max="100" value="@s.AllowedAttempts" class="form-control form-control-sm" />
+        <div class="form-text">@T["0 = unlimited"]</div>
+    </div>
+    <div class="col-sm-8 col-lg-5">
+        <label class="form-label small fw-semibold" for="@id-types">@T["Accepted file types"]</label>
+        <input id="@id-types" name="allowedFileTypes" value="@(s.FileTypesRestricted ? string.Join(", ", s.AllowedFileTypes) : string.Empty)" class="form-control form-control-sm" placeholder="@T["Blank = documents, images, audio, video, zip"]" />
+        <div class="form-text">@T["e.g. .pdf, .docx — web pages, scripts and programs are never accepted."]</div>
+    </div>
+    <div class="col-sm-4 col-lg-2">
+        <label class="form-label small fw-semibold" for="@id-size">@T["Max file size (MB)"]</label>
+        <input id="@id-size" name="maxFileSizeMb" type="number" min="1" max="50" value="@s.MaxFileSizeMb" class="form-control form-control-sm" />
+    </div>
+    <div class="col-sm-8 col-lg-3">
+        <label class="form-label small fw-semibold" for="@id-posting">@T["Students see grades"]</label>
+        <select id="@id-posting" name="postingPolicy" class="form-select form-select-sm">
+            <option value="Automatic" selected="@(s.PostingPolicy == "Automatic")">@T["As soon as they are saved"]</option>
+            <option value="Manual" selected="@(s.PostingPolicy == "Manual")">@T["Only when I post them"]</option>
+        </select>
+    </div>
+    <div class="col-12 d-flex flex-wrap gap-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="@id-anon" name="anonymousGrading" value="true" @(s.AnonymousGrading ? "checked" : "") />
+            <label class="form-check-label small" for="@id-anon">@T["Anonymous grading (hide names until grades are posted)"]</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="@id-moderated" name="moderatedGrading" value="true" @(s.ModeratedGrading ? "checked" : "") />
+            <label class="form-check-label small" for="@id-moderated">@T.Format("Moderated grading (other graders give provisional grades; {0} choose the final grade)", (s.ModeratedGrading ? (s.ModeratorName ?? "the moderator") : "you"))</label>
+        </div>
+    </div>
+    <div class="col-12 d-flex gap-2 align-items-center">
+        <button class="btn btn-sm btn-primary">@T["Save settings"]</button>
+        @* Plan M6 — learning outcomes this assignment assesses (shown when the module is active). *@
+        <button type="button" class="btn btn-sm btn-outline-secondary" hidden data-outcome-align data-target-type="Assignment" data-target-id="@s.AssignmentId">@T["Outcomes"]</button>
+    </div>
+</form>
+<script src="~/js/outcome-align.js" asp-append-version="true" defer></script>

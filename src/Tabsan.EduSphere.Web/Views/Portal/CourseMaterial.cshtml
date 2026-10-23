@@ -1,9 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.CourseMaterialManagePageModel
 @{
-    ViewData["Title"] = "Course Materials";
-    ViewData["PageTitle"] = "Course Materials";
+    ViewData["Title"] = T.Text("Course Materials");
+    ViewData["PageTitle"] = T.Text("Course Materials");
     ViewData["ActivePage"] = "course_material";
-    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodFilterLabel) ? "Semester" : Model.PeriodFilterLabel;
+    var periodLabel = T.Text(string.IsNullOrWhiteSpace(Model.PeriodFilterLabel) ? "Semester" : Model.PeriodFilterLabel); // Plan M11: vocabulary, then language
     var periodPlaceholder = string.IsNullOrWhiteSpace(Model.PeriodFilterPlaceholder) ? "All Semesters" : Model.PeriodFilterPlaceholder;
 }
 
@@ -11,14 +11,14 @@
 {
     var cls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-success";
     <div class="alert @cls alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -26,14 +26,14 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Course content</span>
-                    <h2 class="h5 mb-1">Manage Course Materials</h2>
-                    <p class="text-muted mb-0">Filter by scope and publish learning resources for students.</p>
+                    <span class="section-kicker">@T["Course content"]</span>
+                    <h2 class="h5 mb-1">@T["Manage Course Materials"]</h2>
+                    <p class="text-muted mb-0">@T["Filter by scope and publish learning resources for students."]</p>
                 </div>
                 @if (Model.CanManage)
                 {
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createMaterialModal">
-                        Add Material
+                        @T["Add Material"]
                     </button>
                 }
             </div>
@@ -44,9 +44,9 @@ else
                 @if (User.IsInRole("SuperAdmin"))
                 {
                     <div class="col-md-3">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
@@ -54,9 +54,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -68,9 +68,9 @@ else
                 {
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -84,9 +84,9 @@ else
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 }
                 <div class="col-md-3">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Departments</option>
+                    <label class="form-label">@T["Department"]</label>
+                    <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Departments"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -94,9 +94,9 @@ else
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Program</label>
-                    <select name="academicProgramId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Programs</option>
+                    <label class="form-label">@T["Program"]</label>
+                    <select aria-label="@T["Program"]" name="academicProgramId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Programs"]</option>
                         @foreach (var p in Model.Programs)
                         {
                             <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
@@ -105,7 +105,7 @@ else
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">@periodLabel</label>
-                    <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                    <select aria-label="@periodLabel" name="semesterId" class="form-select" onchange="this.form.submit()">
                         <option value="">@periodPlaceholder</option>
                         @foreach (var s in Model.Semesters)
                         {
@@ -114,9 +114,9 @@ else
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Subject/Course</label>
-                    <select name="courseId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Subjects</option>
+                    <label class="form-label">@T["Subject/Course"]</label>
+                    <select aria-label="@T["Subject/Course"]" name="courseId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Subjects"]</option>
                         @foreach (var c in Model.Courses)
                         {
                             <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
@@ -127,11 +127,11 @@ else
                     <div class="form-check mt-2">
                         <input type="hidden" name="activeOnly" value="false" />
                         <input class="form-check-input" type="checkbox" id="activeOnly" name="activeOnly" value="true" checked="@(Model.ActiveOnly ? "checked" : null)" onchange="this.form.submit()" />
-                        <label class="form-check-label" for="activeOnly">Active only</label>
+                        <label class="form-check-label" for="activeOnly">@T["Active only"]</label>
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">@T["Apply Filters"]</button>
                 </div>
             </form>
         </div>
@@ -139,13 +139,13 @@ else
 
     <div class="page-section-card card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">Materials <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
+            <h2 class="h5 mb-3">@T["Materials"] <span class="badge bg-secondary ms-1">@Model.Materials.Count</span></h2>
 
             @if (Model.Materials.Count == 0)
             {
                 <div class="empty-state-card">
-                    <h3>No materials found</h3>
-                    <p class="text-muted mb-0">Add a material or relax your filters to view existing content.</p>
+                    <h3>@T["No materials found"]</h3>
+                    <p class="text-muted mb-0">@T["Add a material or relax your filters to view existing content."]</p>
                 </div>
             }
             else
@@ -154,11 +154,11 @@ else
                     <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Title</th>
-                                <th>Type</th>
-                                <th>Link/File</th>
-                                <th>Status</th>
-                                <th>Updated</th>
+                                <th>@T["Title"]</th>
+                                <th>@T["Type"]</th>
+                                <th>@T["Link/File"]</th>
+                                <th>@T["Status"]</th>
+                                <th>@T["Updated"]</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -177,11 +177,11 @@ else
                                     <td>
                                         @if (!string.IsNullOrWhiteSpace(m.ExternalUrl))
                                         {
-                                            <a href="@m.ExternalUrl" target="_blank" rel="noopener">Open link</a>
+                                            <a href="@m.ExternalUrl" target="_blank" rel="noopener">@T["Open link"]</a>
                                         }
                                         else if (!string.IsNullOrWhiteSpace(m.BlobPath))
                                         {
-                                            <a class="btn btn-sm btn-outline-primary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="manage">Download file</a>
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="DownloadCourseMaterialFile" asp-route-id="@m.Id" asp-route-returnTo="manage">@T["Download file"]</a>
                                         }
                                         else
                                         {
@@ -190,7 +190,7 @@ else
                                     </td>
                                     <td>
                                         <span class="badge stat-pill @(m.IsActive ? "bg-success" : "bg-secondary")">
-                                            @(m.IsActive ? "Active" : "Inactive")
+                                            @(m.IsActive ? T.Text("Active") : T.Text("Inactive"))
                                         </span>
                                     </td>
                                     <td class="small text-muted">@m.UpdatedAt.ToString("dd MMM yyyy")</td>
@@ -199,12 +199,12 @@ else
                                                 class="btn btn-sm btn-outline-primary"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editMaterialModal-@m.Id">
-                                            Edit
+                                            @T["Edit"]
                                         </button>
                                         <form method="post" asp-action="SetCourseMaterialActive" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@m.Id" />
-                                            <input type="hidden" name="isActive" value="@(!m.IsActive)" />
+                                            <input type="hidden" name="isActive" value="@(!m.IsActive ? "true" : "false")" />
                                             <input type="hidden" name="selectedTenantId" value="@Model.SelectedTenantId" />
                                             <input type="hidden" name="selectedCampusId" value="@Model.SelectedCampusId" />
                                             <input type="hidden" name="selectedDepartmentId" value="@Model.SelectedDepartmentId" />
@@ -213,7 +213,7 @@ else
                                             <input type="hidden" name="selectedCourseId" value="@Model.SelectedCourseId" />
                                             <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                @(m.IsActive ? "Deactivate" : "Activate")
+                                                @(m.IsActive ? T.Text("Deactivate") : T.Text("Activate"))
                                             </button>
                                         </form>
                                     </td>
@@ -233,50 +233,50 @@ else
                                             <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title">Edit Material</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <h5 class="modal-title">@T["Edit Material"]</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="mb-3">
-                                                        <label class="form-label">Title</label>
-                                                        <input type="text" name="title" class="form-control" value="@m.Title" required />
+                                                        <label class="form-label">@T["Title"]</label>
+                                                        <input aria-label="@T["Title"]" type="text" name="title" class="form-control" value="@m.Title" required />
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Type</label>
-                                                        <select name="materialType" class="form-select">
-                                                            <option value="File" selected="@(m.MaterialType == "File" ? "selected" : null)">File</option>
-                                                            <option value="Link" selected="@(m.MaterialType == "Link" ? "selected" : null)">Link</option>
-                                                            <option value="FileAndLink" selected="@(m.MaterialType == "FileAndLink" ? "selected" : null)">File and Link</option>
+                                                        <label class="form-label">@T["Type"]</label>
+                                                        <select aria-label="@T["Type"]" name="materialType" class="form-select">
+                                                            <option value="File" selected="@(m.MaterialType == "File" ? "selected" : null)">@T["File"]</option>
+                                                            <option value="Link" selected="@(m.MaterialType == "Link" ? "selected" : null)">@T["Link"]</option>
+                                                            <option value="FileAndLink" selected="@(m.MaterialType == "FileAndLink" ? "selected" : null)">@T["File and Link"]</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Description</label>
-                                                        <textarea name="description" class="form-control" rows="3">@m.Description</textarea>
+                                                        <label class="form-label">@T["Description"]</label>
+                                                        <textarea aria-label="@T["Description"]" name="description" class="form-control" rows="3">@m.Description</textarea>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">External URL</label>
-                                                        <input type="url" name="externalUrl" class="form-control" value="@m.ExternalUrl" />
+                                                        <label class="form-label">@T["External URL"]</label>
+                                                        <input aria-label="@T["External URL"]" type="url" name="externalUrl" class="form-control" value="@m.ExternalUrl" />
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">File Path</label>
-                                                        <input type="text" name="blobPath" class="form-control" value="@m.BlobPath" />
+                                                        <label class="form-label">@T["File Path"]</label>
+                                                        <input aria-label="@T["File Path"]" type="text" name="blobPath" class="form-control" value="@m.BlobPath" />
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Upload File</label>
-                                                        <input type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
-                                                        <div class="form-text">Optional. Uploading replaces the current file path. Allowed: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG.</div>
+                                                        <label class="form-label">@T["Upload File"]</label>
+                                                        <input aria-label="@T["Upload File"]" type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
+                                                        <div class="form-text">@T["Optional. Uploading replaces the current file path. Allowed: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG."]</div>
                                                     </div>
                                                     <div class="form-check">
                                                         <input type="hidden" name="isActive" value="false" />
                                                         <input class="form-check-input" type="checkbox" name="isActive" value="true" checked="@(m.IsActive ? "checked" : null)" id="isActive-@m.Id">
-                                                        <label class="form-check-label" for="isActive-@m.Id">Active</label>
+                                                        <label class="form-check-label" for="isActive-@m.Id">@T["Active"]</label>
                                                     </div>
                                                     <input type="hidden" name="fileName" value="@m.FileName" />
                                                     <input type="hidden" name="fileSizeBytes" value="@m.FileSizeBytes" />
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                                                    <button type="submit" class="btn btn-primary">@T["Save"]</button>
                                                 </div>
                                             </div>
                                         </form>
@@ -304,14 +304,14 @@ else
             <input type="hidden" name="activeOnly" value="@Model.ActiveOnly" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Course Material</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Add Course Material"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select name="departmentId" class="form-select" required>
-                            <option value="">Select department...</option>
+                        <label class="form-label">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select" required>
+                            <option value="">@T["Select department..."]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -319,9 +319,9 @@ else
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Program</label>
-                        <select name="academicProgramId" class="form-select" required>
-                            <option value="">Select program...</option>
+                        <label class="form-label">@T["Program"]</label>
+                        <select aria-label="@T["Program"]" name="academicProgramId" class="form-select" required>
+                            <option value="">@T["Select program..."]</option>
                             @foreach (var p in Model.Programs)
                             {
                                 <option value="@p.Id" selected="@(Model.SelectedAcademicProgramId == p.Id ? "selected" : null)">@p.Name</option>
@@ -330,8 +330,8 @@ else
                     </div>
                     <div class="mb-3">
                         <label class="form-label">@periodLabel</label>
-                        <select name="semesterId" class="form-select">
-                            <option value="">Select @periodLabel.ToLowerInvariant() (optional)...</option>
+                        <select aria-label="@periodLabel" name="semesterId" class="form-select">
+                            <option value="">@T.Format("Select {0} (optional)...", periodLabel.ToLowerInvariant())</option>
                             @foreach (var s in Model.Semesters)
                             {
                                 <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
@@ -339,9 +339,9 @@ else
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Subject/Course</label>
-                        <select name="courseId" class="form-select" required>
-                            <option value="">Select subject...</option>
+                        <label class="form-label">@T["Subject/Course"]</label>
+                        <select aria-label="@T["Subject/Course"]" name="courseId" class="form-select" required>
+                            <option value="">@T["Select subject..."]</option>
                             @foreach (var c in Model.Courses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
@@ -349,41 +349,41 @@ else
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" name="title" class="form-control" required />
+                        <label class="form-label">@T["Title"]</label>
+                        <input aria-label="@T["Title"]" type="text" name="title" class="form-control" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <select name="materialType" class="form-select" required>
-                            <option value="File">File</option>
-                            <option value="Link">Link</option>
-                            <option value="FileAndLink">File and Link</option>
+                        <label class="form-label">@T["Type"]</label>
+                        <select aria-label="@T["Type"]" name="materialType" class="form-select" required>
+                            <option value="File">@T["File"]</option>
+                            <option value="Link">@T["Link"]</option>
+                            <option value="FileAndLink">@T["File and Link"]</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3"></textarea>
+                        <label class="form-label">@T["Description"]</label>
+                        <textarea aria-label="@T["Description"]" name="description" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">External URL</label>
-                        <input type="url" name="externalUrl" class="form-control" />
+                        <label class="form-label">@T["External URL"]</label>
+                        <input aria-label="@T["External URL"]" type="url" name="externalUrl" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">File Path</label>
-                        <input type="text" name="blobPath" class="form-control" />
+                        <label class="form-label">@T["File Path"]</label>
+                        <input aria-label="@T["File Path"]" type="text" name="blobPath" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Upload File</label>
-                        <input type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
-                        <div class="form-text">Allowed types: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG. Max 5 MB.</div>
+                        <label class="form-label">@T["Upload File"]</label>
+                        <input aria-label="@T["Upload File"]" type="file" name="materialFile" class="form-control" accept=".doc,.docx,.ppt,.pptx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png" />
+                        <div class="form-text">@T["Allowed types: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG. Max 5 MB."]</div>
                     </div>
                     <input type="hidden" name="fileName" value="" />
                     <input type="hidden" name="fileSizeBytes" value="" />
                     <input type="hidden" name="isActive" value="true" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Create"]</button>
                 </div>
             </div>
         </form>

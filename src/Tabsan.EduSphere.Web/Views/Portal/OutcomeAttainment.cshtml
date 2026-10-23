@@ -1,0 +1,106 @@
+@model Tabsan.EduSphere.Web.Models.Portal.OutcomeAttainmentPageModel
+@{
+    ViewData["Title"] = T.Text("Program Outcome Attainment");
+    var r = Model.Report;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Program Outcome Attainment"]</h2>
+        <p class="text-muted mb-0">@T["How many students of a program attained each program learning outcome — for accreditation reviews (PEC, HEC, NCAAA, ABET-style)."]</p>
+    </div>
+    <a asp-action="Outcomes" class="btn btn-sm btn-outline-secondary">@T["Outcomes"]</a>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border border-warning rounded p-3 bg-light" data-outcomes-module-off><strong>@T["The Learning Outcomes module is not active."]</strong> @T["Activate it in"] <a asp-action="ModuleComposition">@T["Module Composition"]</a>.</div>
+}
+else
+{
+    <form method="get" asp-action="OutcomeAttainment" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label small" for="a-program">@T["Program"]</label>
+            <select id="a-program" name="programId" class="form-select form-select-sm" required>
+                <option value="">@T["Choose a program…"]</option>
+                @foreach (var p in Model.Programs) { <option value="@p.Id" selected="@(p.Id == Model.ProgramId)">@p.Code — @p.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small" for="a-target">@T["Target (% of students)"]</label>
+            <input id="a-target" name="target" type="number" min="1" max="100" step="1" class="form-control form-control-sm" value="@Model.Target.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" />
+        </div>
+        <div class="col-md-3"><button class="btn btn-sm btn-primary">@T["Show report"]</button></div>
+    </form>
+
+    @if (r is not null)
+    {
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            <div class="small text-muted me-auto">@T.Format("{0} students in {1} {2}{3}", r.StudentsInProgram, r.ProgramCode, r.ProgramName, (r.DepartmentName is null ? "" : $" · {r.DepartmentName}"))</div>
+            <a asp-action="OutcomeAttainmentExport" asp-route-programId="@r.ProgramId" asp-route-format="pdf" asp-route-target="@Model.Target" class="btn btn-sm btn-outline-primary">@T["Download PDF"]</a>
+            <a asp-action="OutcomeAttainmentExport" asp-route-programId="@r.ProgramId" asp-route-format="xlsx" asp-route-target="@Model.Target" class="btn btn-sm btn-outline-primary">@T["Download Excel"]</a>
+        </div>
+        @if (r.Outcomes.Count == 0)
+        {
+            <div class="border rounded p-3 bg-light">@T["This program has no program outcomes yet. Add them on the"] <a asp-action="Outcomes" asp-route-level="Program" asp-route-programId="@r.ProgramId">@T["Learning Outcomes"]</a> @T["page."]</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle" data-attainment-table>
+                    <thead class="table-light text-nowrap">
+                        <tr><th>@T["Code"]</th><th>@T["Program outcome"]</th><th class="text-end">@T["Assessed"]</th><th class="text-end">@T["Attained"]</th><th style="min-width: 10rem;">@T["Attainment"]</th><th class="text-end">@T["Avg score"]</th><th>@T["Target"]</th><th>@T["Evidence from"]</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in r.Outcomes)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-nowrap">@o.Code</td>
+                                <td>
+                                    <div>@o.Title</div>
+                                    @if (o.MappedCourseOutcomes.Count > 0) { <div class="small text-muted">@T.Format("Mapped: {0}", string.Join("; ", o.MappedCourseOutcomes))</div> }
+                                </td>
+                                <td class="text-end">@o.StudentsAssessed</td>
+                                <td class="text-end">@o.StudentsMastered</td>
+                                <td>
+                                    @if (o.AttainmentPercent is { } a)
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: .6rem;" role="progressbar" aria-label="@o.Code attainment" aria-valuenow="@a" aria-valuemin="0" aria-valuemax="100">
+                                                <div class="progress-bar @(o.TargetMet == true ? "bg-success" : "bg-danger")" style="width: @a.ToString(System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                            </div>
+                                            <span class="small text-nowrap">@a.ToString("0.#")%</span>
+                                        </div>
+                                    }
+                                    else { <span class="small text-muted">@T["No evidence"]</span> }
+                                </td>
+                                <td class="text-end small text-nowrap">@(o.AverageScore is { } s ? $"{s:0.##} / {o.MaxPoints:0.##}" : "—")</td>
+                                <td>
+                                    @switch (o.TargetMet)
+                                    {
+                                        case true: <span class="badge bg-success">@T["Met"]</span> break;
+                                        case false: <span class="badge bg-danger">@T["Not met"]</span> break;
+                                        @T["default:"] <span class="badge bg-secondary">@T["No evidence"]</span> break;
+                                    }
+                                </td>
+                                <td class="small">
+                                    @foreach (var c in o.Contributions) { <div>@T.Format("{0}{1}: {2} students, avg {3}%", c.CourseCode, (c.SemesterName is null ? "" : $" ({c.SemesterName})"), c.Students, c.AveragePercent.ToString("0.#"))</div> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted">@T["A student attains an outcome when their mastery — combining evidence aligned directly to the program outcome and to the course outcomes mapped to it, using the outcome's calculation method — reaches the mastery points. Attainment is the share of assessed students who attained it."]</p>
+        }
+    }
+}

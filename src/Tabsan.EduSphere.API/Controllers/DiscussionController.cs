@@ -22,6 +22,20 @@ public class DiscussionController : ControllerBase
     private readonly IDiscussionService _discussion;
     public DiscussionController(IDiscussionService discussion) => _discussion = discussion;
 
+    // ── Plan M8.3: group discussions ───────────────────────────────────────────
+
+    private bool IsStaff() => User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+
+    private async Task<HashSet<Guid>> MyGroupsAsync(Guid offeringId, CancellationToken ct)
+    {
+        if (!Guid.TryParse(User.FindFirstValue("studentProfileId"), out var studentId)) return [];
+        var repo = HttpContext.RequestServices.GetRequiredService<Tabsan.EduSphere.Domain.Interfaces.IAssignmentPolicyRepository>();
+        return (await repo.GetMembershipsAsync(studentId, offeringId, ct)).Select(m => m.GroupId).ToHashSet();
+    }
+
+    private async Task<bool> CanSeeAsync(DiscussionThreadDto thread, CancellationToken ct)
+        => thread.GroupId is not { } groupId || IsStaff() || (await MyGroupsAsync(thread.OfferingId, ct)).Contains(groupId);
+
     // ── Threads ────────────────────────────────────────────────────────────────
 
     /// <summary>Returns all discussion threads for the given offering.</summary>
@@ -29,6 +43,12 @@ public class DiscussionController : ControllerBase
     public async Task<IActionResult> GetThreads(Guid offeringId, CancellationToken ct = default)
     {
         var threads = await _discussion.GetThreadsAsync(offeringId, ct);
+        // Plan M8.3: students only see their own groups' discussions.
+        if (!IsStaff())
+        {
+            var mine = await MyGroupsAsync(offeringId, ct);
+            threads = threads.Where(t => t.GroupId is not { } g || mine.Contains(g)).ToList();
+        }
         return Ok(threads);
     }
 
@@ -37,7 +57,7 @@ public class DiscussionController : ControllerBase
     public async Task<IActionResult> GetThread(Guid threadId, CancellationToken ct = default)
     {
         var thread = await _discussion.GetThreadAsync(threadId, ct);
-        return thread is null ? NotFound() : Ok(thread);
+        return thread is null || !await CanSeeAsync(thread, ct) ? NotFound() : Ok(thread);
     }
 
     /// <summary>Creates a new discussion thread. Any authenticated user can post.</summary>
@@ -47,6 +67,15 @@ public class DiscussionController : ControllerBase
         var callerId = ExtractCallerId();
         if (callerId == Guid.Empty) return Unauthorized();
         var actualRequest = request with { AuthorId = callerId };
+        // Plan M8.3: a group discussion belongs to a group of this course; students only start one in their own group.
+        if (request.GroupId is { } groupId)
+        {
+            var groups = HttpContext.RequestServices.GetRequiredService<Tabsan.EduSphere.Domain.Interfaces.IAssignmentPolicyRepository>();
+            var group = await groups.GetGroupAsync(groupId, ct);
+            var set = group is null ? null : await groups.GetGroupSetAsync(group.GroupSetId, ct);
+            if (set?.CourseOfferingId != request.OfferingId) return BadRequest(new { error = "Choose a group of this course." });
+            if (!IsStaff() && !(await MyGroupsAsync(request.OfferingId, ct)).Contains(groupId)) return Forbid();
+        }
         try
         {
             var thread = await _discussion.CreateThreadAsync(actualRequest, ct);
@@ -147,6 +176,7 @@ public class DiscussionController : ControllerBase
         var actualRequest = request with { AuthorId = callerId };
         var role = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         var isFacultyOrAdmin = role is "Faculty" or "Admin" or "SuperAdmin";
+        if (await _discussion.GetThreadAsync(request.ThreadId, ct) is { } target && !await CanSeeAsync(target, ct)) return NotFound();
         try
         {
             var reply = await _discussion.AddReplyAsync(actualRequest, isFacultyOrAdmin, ct);

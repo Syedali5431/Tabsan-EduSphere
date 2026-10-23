@@ -22,6 +22,13 @@ public sealed class EmailTemplateRenderer : IEmailTemplateRenderer
     public string Render(string templateName, IDictionary<string, string> tokens)
     {
         var filePath = Path.Combine(TemplatesDir, $"{templateName}.html");
+        // Plan M11 — the recipient's language (token LANGUAGE) picks a translated template when there is one.
+        if (tokens.TryGetValue("LANGUAGE", out var language) && !string.IsNullOrWhiteSpace(language)
+            && language.All(char.IsAsciiLetterLower) && language != "en")
+        {
+            var translated = Path.Combine(TemplatesDir, $"{templateName}.{language}.html");
+            if (File.Exists(translated)) filePath = translated;
+        }
 
         string html;
         if (File.Exists(filePath))

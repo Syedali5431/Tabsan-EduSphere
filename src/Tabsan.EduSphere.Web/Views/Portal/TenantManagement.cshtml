@@ -1,36 +1,36 @@
 @model Tabsan.EduSphere.Web.Models.Portal.TenantManagementPageModel
-@{ ViewData["Title"] = "Tenant Management"; }
+@{ ViewData["Title"] = T.Text("Tenant Management"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     var alertCls = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-info";
     <div class="alert @alertCls alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h2 class="h5 mb-3">Create Tenant</h2>
+            <h2 class="h5 mb-3">@T["Create Tenant"]</h2>
             <form asp-action="CreateTenant" method="post" class="row g-2 align-items-end">
                 @Html.AntiForgeryToken()
                 <div class="col-md-3">
-                    <label class="form-label">Code</label>
-                    <input name="code" class="form-control" required maxlength="64" placeholder="e.g. NORTH" />
+                    <label class="form-label">@T["Code"]</label>
+                    <input aria-label="@T["Code"]" name="code" class="form-control" required maxlength="64" placeholder="@T["e.g. NORTH"]" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Name</label>
-                    <input name="name" class="form-control" required maxlength="200" placeholder="Tenant display name" />
+                    <label class="form-label">@T["Name"]</label>
+                    <input aria-label="@T["Name"]" name="name" class="form-control" required maxlength="200" placeholder="@T["Tenant display name"]" />
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary w-100">Create Tenant</button>
+                    <button type="submit" class="btn btn-primary w-100">@T["Create Tenant"]</button>
                 </div>
             </form>
         </div>
@@ -39,13 +39,13 @@ else
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 mb-0">Tenants</h2>
-                <a asp-action="CampusManagement" class="btn btn-sm btn-outline-primary">Manage Campuses</a>
+                <h2 class="h5 mb-0">@T["Tenants"]</h2>
+                <a asp-action="CampusManagement" class="btn btn-sm btn-outline-primary">@T["Manage Campuses"]</a>
             </div>
 
             @if (Model.Tenants.Count == 0)
             {
-                <p class="text-muted mb-0">No tenants found.</p>
+                <p class="text-muted mb-0">@T["No tenants found."]</p>
             }
             else
             {
@@ -53,9 +53,9 @@ else
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Status</th>
+                                <th>@T["Code"]</th>
+                                <th>@T["Name"]</th>
+                                <th>@T["Status"]</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -69,21 +69,21 @@ else
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@tenant.Id" />
                                         <input type="text" name="newName" class="form-control form-control-sm" value="@tenant.Name" maxlength="200" required />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">@T["Save"]</button>
                                     </form>
                                 </td>
                                 <td>
                                     <span class="badge @(tenant.IsActive ? "bg-success" : "bg-secondary")">
-                                        @(tenant.IsActive ? "Active" : "Inactive")
+                                        @(tenant.IsActive ? T.Text("Active") : T.Text("Inactive"))
                                     </span>
                                 </td>
                                 <td class="text-end">
                                     <form asp-action="ToggleTenant" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@tenant.Id" />
-                                        <input type="hidden" name="activate" value="@(!tenant.IsActive)" />
+                                        <input type="hidden" name="activate" value="@(!tenant.IsActive ? "true" : "false")" />
                                         <button type="submit" class="btn btn-sm @(tenant.IsActive ? "btn-outline-danger" : "btn-outline-success")">
-                                            @(tenant.IsActive ? "Deactivate" : "Activate")
+                                            @(tenant.IsActive ? T.Text("Deactivate") : T.Text("Activate"))
                                         </button>
                                     </form>
                                 </td>

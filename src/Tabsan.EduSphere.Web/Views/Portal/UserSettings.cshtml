@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.UserSettingsPageModel
 @{
-    ViewData["Title"] = "User Settings";
+    ViewData["Title"] = T.Text("User Settings");
     var message = TempData["PortalMessage"] as string ?? Model.Message;
     var selectedUser = Model.SelectedUser;
 }
@@ -98,15 +98,15 @@
         <div class="col-12 col-lg-7">
             <div class="hero-card card h-100">
                 <div class="card-body">
-                    <div class="hero-kicker"><i class="bi bi-person-badge-fill"></i> Profile and access control</div>
-                    <h2 class="h3 mb-2">User Settings</h2>
+                    <div class="hero-kicker"><i class="bi bi-person-badge-fill"></i> @T["Profile and access control"]</div>
+                    <h2 class="h3 mb-2">@T["User Settings"]</h2>
                     <p class="mb-3 opacity-90">
-                        Update email, mobile number, address, or password. Admin and SuperAdmin users can also manage other accounts within scope.
+                        @T["Update email, mobile number, address, or password. Admin and SuperAdmin users can also manage other accounts within scope."]
                     </p>
                     <div class="d-flex flex-wrap gap-2">
-                        <span class="badge rounded-pill text-bg-light text-dark">Self-service profile updates</span>
-                        <span class="badge rounded-pill text-bg-light text-dark">Password change with current password</span>
-                        <span class="badge rounded-pill text-bg-light text-dark">Reset password to EduSphere147</span>
+                        <span class="badge rounded-pill text-bg-light text-dark">@T["Self-service profile updates"]</span>
+                        <span class="badge rounded-pill text-bg-light text-dark">@T["Password change with current password"]</span>
+                        <span class="badge rounded-pill text-bg-light text-dark">@T["Reset password to EduSphere147"]</span>
                     </div>
                 </div>
             </div>
@@ -115,18 +115,18 @@
             <div class="panel-card card h-100">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <div class="text-uppercase small text-muted fw-semibold mb-2">Current session</div>
-                        <div class="h5 mb-1">@(Model.Identity?.UserName ?? "Guest")</div>
-                        <div class="text-muted small">@(Model.Identity?.Roles.Count > 0 ? string.Join(", ", Model.Identity.Roles) : "No roles resolved")</div>
+                        <div class="text-uppercase small text-muted fw-semibold mb-2">@T["Current session"]</div>
+                        <div class="h5 mb-1">@(Model.Identity?.UserName ?? T.Text("Guest"))</div>
+                        <div class="text-muted small">@(Model.Identity?.Roles.Count > 0 ? string.Join(", ", Model.Identity.Roles) : T.Text("No roles resolved"))</div>
                     </div>
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         @if (Model.CanManageUsers)
                         {
-                            <span class="soft-chip"><i class="bi bi-funnel-fill"></i> Scoped directory access</span>
+                            <span class="soft-chip"><i class="bi bi-funnel-fill"></i> @T["Scoped directory access"]</span>
                         }
                         else
                         {
-                            <span class="soft-chip"><i class="bi bi-person-check-fill"></i> Personal account only</span>
+                            <span class="soft-chip"><i class="bi bi-person-check-fill"></i> @T["Personal account only"]</span>
                         }
                     </div>
                 </div>
@@ -137,14 +137,14 @@
     @if (!string.IsNullOrWhiteSpace(message))
     {
         <div class="alert @(message.StartsWith("Error", StringComparison.OrdinalIgnoreCase) ? "alert-danger" : "alert-success") alert-dismissible fade show shadow-sm border-0" role="alert">
-            @message
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @T.Text(message)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
         </div>
     }
 
     @if (!Model.IsConnected)
     {
-        <div class="alert alert-warning border-0 shadow-sm">Not connected. Open the Dashboard and configure the API connection first.</div>
+        <div class="alert alert-warning border-0 shadow-sm">@T["Not connected. Open the Dashboard and configure the API connection first."]</div>
     }
     else
     {
@@ -156,9 +156,9 @@
                         @if (Model.IsSuperAdmin)
                         {
                             <div class="col-md-3">
-                                <label class="form-label">Tenant</label>
-                                <select name="tenantId" class="form-select">
-                                    <option value="">All Tenants</option>
+                                <label class="form-label">@T["Tenant"]</label>
+                                <select aria-label="@T["Tenant"]" name="tenantId" class="form-select">
+                                    <option value="">@T["All Tenants"]</option>
                                     @foreach (var tenant in Model.Tenants)
                                     {
                                         <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
@@ -166,9 +166,9 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Campus</label>
-                                <select name="campusId" class="form-select">
-                                    <option value="">All Campuses</option>
+                                <label class="form-label">@T["Campus"]</label>
+                                <select aria-label="@T["Campus"]" name="campusId" class="form-select">
+                                    <option value="">@T["All Campuses"]</option>
                                     @foreach (var campus in Model.Campuses)
                                     {
                                         <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
@@ -177,9 +177,9 @@
                             </div>
                         }
                         <div class="col-md-2">
-                            <label class="form-label">Department</label>
-                            <select name="departmentId" class="form-select">
-                                <option value="">All Departments</option>
+                            <label class="form-label">@T["Department"]</label>
+                            <select aria-label="@T["Department"]" name="departmentId" class="form-select">
+                                <option value="">@T["All Departments"]</option>
                                 @foreach (var department in Model.Departments)
                                 {
                                     <option value="@department.Id" selected="@(Model.SelectedDepartmentId == department.Id)">@department.Name</option>
@@ -187,9 +187,9 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Course</label>
-                            <select name="courseId" class="form-select">
-                                <option value="">All Courses</option>
+                            <label class="form-label">@T["Course"]</label>
+                            <select aria-label="@T["Course"]" name="courseId" class="form-select">
+                                <option value="">@T["All Courses"]</option>
                                 @foreach (var course in Model.Courses)
                                 {
                                     <option value="@course.Id" selected="@(Model.SelectedCourseId == course.Id)">@course.Name</option>
@@ -197,12 +197,12 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Search</label>
-                            <input name="search" value="@Context.Request.Query["search"]" class="form-control" placeholder="Name or email" />
+                            <label class="form-label">@T["Search"]</label>
+                            <input aria-label="@T["Search"]" name="search" value="@Context.Request.Query["search"]" class="form-control" placeholder="@T["Name or email"]" />
                         </div>
                         <div class="col-12 d-flex justify-content-end gap-2">
-                            <button type="submit" class="btn btn-primary">Apply Filters</button>
-                            <a asp-action="UserSettings" class="btn btn-outline-secondary">Clear</a>
+                            <button type="submit" class="btn btn-primary">@T["Apply Filters"]</button>
+                            <a asp-action="UserSettings" class="btn btn-outline-secondary">@T["Clear"]</a>
                         </div>
                     </form>
                 </div>
@@ -214,8 +214,8 @@
                 <div class="panel-card card h-100">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="small text-uppercase text-muted">Users</div>
-                            <div class="fw-semibold">@(Model.CanManageUsers ? "Scoped directory" : "My account")</div>
+                            <div class="small text-uppercase text-muted">@T["Users"]</div>
+                            <div class="fw-semibold">@(Model.CanManageUsers ? T.Text("Scoped directory") : T.Text("My account"))</div>
                         </div>
                         @if (Model.CanManageUsers)
                         {
@@ -231,8 +231,8 @@
                                 <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                 <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                 <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
-                                <label class="form-label">Select user</label>
-                                <select name="selectedUserId" class="form-select" onchange="this.form.submit()">
+                                <label class="form-label">@T["Select user"]</label>
+                                <select aria-label="@T["Select user"]" name="selectedUserId" class="form-select" onchange="this.form.submit()">
                                     @foreach (var user in Model.Users)
                                     {
                                         <option value="@user.Id" selected="@(Model.SelectedUserId == user.Id)">
@@ -244,7 +244,7 @@
 
                             @if (Model.Users.Count == 0)
                             {
-                                <div class="p-3 text-muted">No users match the selected filters.</div>
+                                <div class="p-3 text-muted">@T["No users match the selected filters."]</div>
                             }
                             else
                             {
@@ -265,9 +265,9 @@
                                                     <div class="fw-semibold">@user.Username</div>
                                                     <div class="small opacity-75">@user.Role</div>
                                                 </div>
-                                                <span class="badge @(user.IsActive ? "bg-success" : "bg-secondary")">@(user.IsActive ? "Active" : "Inactive")</span>
+                                                <span class="badge @(user.IsActive ? "bg-success" : "bg-secondary")">@(user.IsActive ? T.Text("Active") : T.Text("Inactive"))</span>
                                             </div>
-                                            <div class="small mt-1 opacity-75">@(string.IsNullOrWhiteSpace(user.Email) ? "No email" : user.Email)</div>
+                                            <div class="small mt-1 opacity-75">@(string.IsNullOrWhiteSpace(user.Email) ? T.Text("No email") : user.Email)</div>
                                         </a>
                                     }
                                 </div>
@@ -278,7 +278,7 @@
                             <div class="p-3">
                                 @if (selectedUser is null)
                                 {
-                                    <div class="text-muted">Your profile details are unavailable right now.</div>
+                                    <div class="text-muted">@T["Your profile details are unavailable right now."]</div>
                                 }
                                 else
                                 {
@@ -299,8 +299,8 @@
                 <div class="panel-card card mb-4">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="small text-uppercase text-muted">Profile</div>
-                            <div class="fw-semibold">Update details</div>
+                            <div class="small text-uppercase text-muted">@T["Profile"]</div>
+                            <div class="fw-semibold">@T["Update details"]</div>
                         </div>
                         @if (selectedUser is not null)
                         {
@@ -310,19 +310,19 @@
                     <div class="card-body">
                         @if (selectedUser is null)
                         {
-                            <div class="text-muted">Select a user to view and edit their details.</div>
+                            <div class="text-muted">@T["Select a user to view and edit their details."]</div>
                         }
                         else
                         {
                             <div class="detail-grid mb-4">
-                                <div class="detail-item"><div class="detail-label">Username</div><div class="detail-value">@selectedUser.Username</div></div>
-                                <div class="detail-item"><div class="detail-label">Role</div><div class="detail-value">@selectedUser.Role</div></div>
-                                <div class="detail-item"><div class="detail-label">Full Name</div><div class="detail-value">@(selectedUser.FullName ?? "Not assigned")</div></div>
-                                <div class="detail-item"><div class="detail-label">Father Name</div><div class="detail-value">@(selectedUser.FatherName ?? "Not assigned")</div></div>
-                                <div class="detail-item"><div class="detail-label">Department</div><div class="detail-value">@(selectedUser.DepartmentName ?? "Not assigned")</div></div>
-                                <div class="detail-item"><div class="detail-label">Course</div><div class="detail-value">@(selectedUser.CourseName ?? "Not assigned")</div></div>
-                                <div class="detail-item"><div class="detail-label">Tenant</div><div class="detail-value">@(selectedUser.TenantId?.ToString() ?? "Not assigned")</div></div>
-                                <div class="detail-item"><div class="detail-label">Campus</div><div class="detail-value">@(selectedUser.CampusId?.ToString() ?? "Not assigned")</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Username"]</div><div class="detail-value">@selectedUser.Username</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Role"]</div><div class="detail-value">@selectedUser.Role</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Full Name"]</div><div class="detail-value">@(selectedUser.FullName ?? T.Text("Not assigned"))</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Father Name"]</div><div class="detail-value">@(selectedUser.FatherName ?? T.Text("Not assigned"))</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Department"]</div><div class="detail-value">@(selectedUser.DepartmentName ?? T.Text("Not assigned"))</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Course"]</div><div class="detail-value">@(selectedUser.CourseName ?? T.Text("Not assigned"))</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Tenant"]</div><div class="detail-value">@(selectedUser.TenantId?.ToString() ?? T.Text("Not assigned"))</div></div>
+                                <div class="detail-item"><div class="detail-label">@T["Campus"]</div><div class="detail-value">@(selectedUser.CampusId?.ToString() ?? T.Text("Not assigned"))</div></div>
                             </div>
 
                             <form asp-action="UpdateUserSettings" method="post" class="mb-3">
@@ -338,33 +338,33 @@
                                     @if (Model.CanManageUsers)
                                     {
                                         <div class="col-md-6">
-                                            <label class="form-label">Full Name</label>
-                                            <input name="FullName" type="text" class="form-control" value="@Model.Form.FullName" maxlength="200" />
+                                            <label class="form-label">@T["Full Name"]</label>
+                                            <input aria-label="@T["Full Name"]" name="FullName" type="text" class="form-control" value="@Model.Form.FullName" maxlength="200" />
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Father Name</label>
-                                            <input name="FatherName" type="text" class="form-control" value="@Model.Form.FatherName" maxlength="200" />
+                                            <label class="form-label">@T["Father Name"]</label>
+                                            <input aria-label="@T["Father Name"]" name="FatherName" type="text" class="form-control" value="@Model.Form.FatherName" maxlength="200" />
                                         </div>
                                     }
                                     <div class="col-md-4">
-                                        <label class="form-label">Email</label>
-                                        <input name="Email" type="email" class="form-control" value="@Model.Form.Email" maxlength="256" />
+                                        <label class="form-label">@T["Email"]</label>
+                                        <input aria-label="@T["Email"]" name="Email" type="email" class="form-control" value="@Model.Form.Email" maxlength="256" />
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Mobile</label>
-                                        <input name="PhoneNumber" type="text" class="form-control" value="@Model.Form.PhoneNumber" maxlength="32" />
+                                        <label class="form-label">@T["Mobile"]</label>
+                                        <input aria-label="@T["Mobile"]" name="PhoneNumber" type="text" class="form-control" value="@Model.Form.PhoneNumber" maxlength="32" />
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Address</label>
-                                        <input name="Address" type="text" class="form-control" value="@Model.Form.Address" maxlength="500" />
+                                        <label class="form-label">@T["Address"]</label>
+                                        <input aria-label="@T["Address"]" name="Address" type="text" class="form-control" value="@Model.Form.Address" maxlength="500" />
                                     </div>
                                 </div>
 
                                 <div class="mt-3 d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">Save Details</button>
+                                    <button type="submit" class="btn btn-primary">@T["Save Details"]</button>
                                     @if (Model.CanResetPasswords && (Model.IsSuperAdmin || !string.Equals(selectedUser.Role, "SuperAdmin", StringComparison.OrdinalIgnoreCase)))
                                     {
-                                        <button type="submit" class="btn btn-outline-warning" formaction="@Url.Action("ResetUserPassword", "Portal")" formmethod="post" name="userId" value="@selectedUser.Id">Reset Password to EduSphere147</button>
+                                        <button type="submit" class="btn btn-outline-warning" formaction="@Url.Action("ResetUserPassword", "Portal")" formmethod="post" name="userId" value="@selectedUser.Id">@T["Reset Password to EduSphere147"]</button>
                                     }
                                 </div>
                             </form>
@@ -374,15 +374,15 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-between mb-3">
                                         <div>
-                                            <div class="small text-uppercase text-muted">Photo</div>
-                                            <div class="fw-semibold">Profile Picture</div>
+                                            <div class="small text-uppercase text-muted">@T["Photo"]</div>
+                                            <div class="fw-semibold">@T["Profile Picture"]</div>
                                         </div>
                                     </div>
                                     <div class="row align-items-center g-3">
                                         <div class="col-auto">
                                             @if (!string.IsNullOrWhiteSpace(selectedUser.ProfilePicturePath))
                                             {
-                                                <img src="~/@selectedUser.ProfilePicturePath" alt="Profile picture" class="profile-picture-preview"
+                                                <img src="~/@selectedUser.ProfilePicturePath" alt="@T["Profile picture"]" class="profile-picture-preview"
                                                      style="width:80px;height:80px;border-radius:999px;object-fit:cover;border:2px solid var(--accent-soft, rgba(29,78,216,0.15));" />
                                             }
                                             else
@@ -407,11 +407,11 @@
                                                     <input type="file" name="profilePicture" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                                            class="form-control form-control-sm" style="max-width:320px;"
                                                            onchange="validateProfilePicture(this)" />
-                                                    <div class="form-text">JPG, JPEG, or PNG. Max 2 MB.</div>
+                                                    <div class="form-text">@T["JPG, JPEG, or PNG. Max 2 MB."]</div>
                                                     <div id="profilePictureError" class="invalid-feedback" style="display:none;"></div>
                                                 </div>
                                                 <button type="submit" class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-upload"></i> Upload Photo
+                                                    <i class="bi bi-upload"></i> @T["Upload Photo"]
                                                 </button>
                                             </form>
                                         </div>
@@ -425,8 +425,8 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-center justify-content-between mb-3">
                                             <div>
-                                                <div class="small text-uppercase text-muted">Password</div>
-                                                <div class="fw-semibold">Change your password</div>
+                                                <div class="small text-uppercase text-muted">@T["Password"]</div>
+                                                <div class="fw-semibold">@T["Change your password"]</div>
                                             </div>
                                         </div>
                                         <form asp-action="ChangeUserPassword" method="post">
@@ -440,21 +440,21 @@
 
                                             <div class="row g-3">
                                                 <div class="col-md-4">
-                                                    <label class="form-label">Current password</label>
-                                                    <input name="CurrentPassword" type="password" class="form-control" autocomplete="current-password" />
+                                                    <label class="form-label">@T["Current password"]</label>
+                                                    <input aria-label="@T["Current password"]" name="CurrentPassword" type="password" class="form-control" autocomplete="current-password" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="form-label">New password</label>
-                                                    <input name="NewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
+                                                    <label class="form-label">@T["New password"]</label>
+                                                    <input aria-label="@T["New password"]" name="NewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="form-label">Confirm new password</label>
-                                                    <input name="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
+                                                    <label class="form-label">@T["Confirm new password"]</label>
+                                                    <input aria-label="@T["Confirm new password"]" name="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" />
                                                 </div>
                                             </div>
 
                                             <div class="mt-3">
-                                                <button type="submit" class="btn btn-success">Change Password</button>
+                                                <button type="submit" class="btn btn-success">@T["Change Password"]</button>
                                             </div>
                                         </form>
                                     </div>

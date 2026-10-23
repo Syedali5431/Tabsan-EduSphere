@@ -27,6 +27,10 @@ public class LoginController : Controller
     private const string SsoCallbackPath = "/Login/SsoCallback";
     private const string SamlAcsPath = "/Login/SamlAcs";
 
+    // Plan M12: single sign-on started from the mobile app (the app's PKCE challenge, kept for this browser).
+    private const string AppSsoCookieName = ".Tabsan.EduSphere.AppSso";
+    private static readonly System.Text.RegularExpressions.Regex AppChallengeFormat = new("^[A-Za-z0-9_-]{43}$");
+
     public LoginController(IEduApiClient api, IConfiguration config, IHttpClientFactory http, IDataProtectionProvider dataProtection)
     {
         _api    = api;
@@ -202,10 +206,30 @@ public class LoginController : Controller
 
     // GET /Login/Sso/{provider}?tenant=CODE&returnUrl=...
     [HttpGet("Sso/{provider}")]
-    public async Task<IActionResult> Sso(string provider, string? tenant = null, string? returnUrl = null, CancellationToken ct = default)
+    public async Task<IActionResult> Sso(string provider, string? tenant = null, string? returnUrl = null, string? appChallenge = null, CancellationToken ct = default)
     {
-        if (_api.IsConnected())
-            return RedirectToAction(nameof(Index));
+        // Plan M12: the mobile app opens this page in the system browser with its PKCE challenge; the sign-in ends in
+        // the app (a one-time code sent to its URL scheme) instead of a portal session.
+        if (!string.IsNullOrEmpty(appChallenge))
+        {
+            if (!AppChallengeFormat.IsMatch(appChallenge))
+                return BadRequest();
+            // SAML comes back with a cross-site POST, which only carries SameSite=None (Secure) cookies.
+            var samlReturn = string.Equals(provider, "saml", StringComparison.OrdinalIgnoreCase);
+            Response.Cookies.Append(AppSsoCookieName, _ssoProtector.Protect(appChallenge), new CookieOptions
+            {
+                HttpOnly = true, Secure = samlReturn || Request.IsHttps, SameSite = samlReturn ? SameSiteMode.None : SameSiteMode.Lax,
+                IsEssential = true, Path = "/", MaxAge = TimeSpan.FromMinutes(10)
+            });
+        }
+        else
+        {
+            // A portal sign-in: an abandoned app sign-in from this browser must not take it over.
+            if (Request.Cookies.ContainsKey(AppSsoCookieName))
+                Response.Cookies.Delete(AppSsoCookieName, new CookieOptions { Path = "/" });
+            if (_api.IsConnected())
+                return RedirectToAction(nameof(Index));
+        }
 
         // SAML returns via an HTTP-POST to the ACS; OIDC via a GET to the callback.
         var isSaml = string.Equals(provider, "saml", StringComparison.OrdinalIgnoreCase);
@@ -333,9 +357,11 @@ public class LoginController : Controller
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<LoginApiResponse>(body, _json);
-                return result is null || string.IsNullOrWhiteSpace(result.AccessToken)
-                    ? await RenderLoginErrorAsync("Unexpected response from API.", returnUrl, ct)
-                    : CompleteSignIn(result, _configuredApiBaseUrl, returnUrl);
+                if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
+                    return await RenderLoginErrorAsync("Unexpected response from API.", returnUrl, ct);
+                if (ReadAppChallenge() is { } appChallenge)
+                    return await HandOffToAppAsync(result, appChallenge, returnUrl, ct);
+                return CompleteSignIn(result, _configuredApiBaseUrl, returnUrl);
             }
 
             var failure = TryDeserialize<SsoErrorApiResponse>(body);
@@ -386,6 +412,57 @@ public class LoginController : Controller
     }
 
     private string BuildPublicUrl(string path) => Helpers.SsoPublicUrls.Build(Request, _config, path);
+
+    private string? ReadAppChallenge()
+    {
+        if (!Request.Cookies.TryGetValue(AppSsoCookieName, out var raw) || string.IsNullOrEmpty(raw))
+            return null;
+        try
+        {
+            var challenge = _ssoProtector.Unprotect(raw);
+            return AppChallengeFormat.IsMatch(challenge) ? challenge : null;
+        }
+        catch (CryptographicException) { return null; }
+    }
+
+    /// <summary>
+    /// Plan M12: the sign-in was for the mobile app. Ask the API for a one-time code bound to the app's PKCE challenge, end the
+    /// browser's own session, and send the code to the app's URL scheme (the app redeems it with its verifier).
+    /// </summary>
+    private async Task<IActionResult> HandOffToAppAsync(LoginApiResponse login, string appChallenge, string? returnUrl, CancellationToken ct)
+    {
+        Response.Cookies.Delete(AppSsoCookieName, new CookieOptions { Path = "/" });
+        var client = _http.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_configuredApiBaseUrl}/api/v1/mobile/handoff")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { codeChallenge = appChallenge }), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", login.AccessToken);
+        using var response = await client.SendAsync(request, ct);
+        var handoff = response.IsSuccessStatusCode ? TryDeserialize<HandoffApiResponse>(await response.Content.ReadAsStringAsync(ct)) : null;
+
+        // The browser does not keep this session: the app gets its own tokens.
+        try
+        {
+            using var logout = new HttpRequestMessage(HttpMethod.Post, $"{_configuredApiBaseUrl}/api/v1/auth/logout")
+            {
+                Content = new StringContent(JsonSerializer.Serialize(new { refreshToken = login.RefreshToken }), Encoding.UTF8, "application/json")
+            };
+            logout.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", login.AccessToken);
+            using var _ = await client.SendAsync(logout, ct);
+        }
+        catch (HttpRequestException) { /* the unused session simply expires */ }
+
+        if (handoff is null || string.IsNullOrWhiteSpace(handoff.Code))
+            return await RenderLoginErrorAsync("Single sign-on failed. Please try again or sign in with your username and password.", returnUrl, ct);
+        var target = _config["Mobile:AppRedirectUri"];
+        if (string.IsNullOrWhiteSpace(target) || !Uri.TryCreate(target, UriKind.Absolute, out var appUri)
+            || appUri.Scheme is "http" or "https" or "javascript" or "data" or "file")
+            target = "edusphere://sso";
+        return Redirect($"{target}?code={Uri.EscapeDataString(handoff.Code)}");
+    }
+
+    private sealed record HandoffApiResponse(string Code, int ExpiresInSeconds);
 
     private SsoCookie? ReadSsoCookie()
     {

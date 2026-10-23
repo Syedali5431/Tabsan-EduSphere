@@ -66,8 +66,8 @@
             }
             case 'ShortAnswer':
             case 'Essay': {
-                var t = section.querySelector('[data-text]');
-                entry.textResponse = t ? t.value : '';
+                var textBox = section.querySelector('[data-text]');
+                entry.textResponse = textBox ? textBox.value : '';
                 break;
             }
             case 'FileUpload':
@@ -92,7 +92,7 @@
         headers = headers || {};
         headers.RequestVerificationToken = token;
         return fetch(url, { method: 'POST', credentials: 'same-origin', headers: headers, body: body })
-            .then(function (r) { return r.ok ? r.json() : { ok: false, message: 'The server could not save (' + r.status + ').' }; });
+            .then(function (r) { return r.ok ? r.json() : { ok: false, message: t('The server could not save (') + r.status + ').' }; });
     }
 
     function handleClosed(result) {
@@ -112,24 +112,24 @@
         var answers = sections.filter(function (s) { return ids.indexOf(s.dataset.qid) >= 0 && editable(s); }).map(collect).filter(Boolean);
         if (answers.length === 0) { ids.forEach(function (id) { delete dirty[id]; }); return Promise.resolve(true); }
         saving = true;
-        setStatus('Saving…');
+        setStatus(t('Saving…'));
         return post(saveUrl, JSON.stringify(answers), { 'Content-Type': 'application/json' })
             .then(function (result) {
                 saving = false;
                 if (handleClosed(result)) return false;
-                if (!result.ok) { setStatus(result.message || 'Could not save — retrying.', true); return false; }
+                if (!result.ok) { setStatus(result.message || t('Could not save — retrying.'), true); return false; }
                 ids.forEach(function (id) { delete dirty[id]; });
-                setStatus(Object.keys(dirty).length ? 'Unsaved changes' : 'All answers saved');
+                setStatus(Object.keys(dirty).length ? t('Unsaved changes') : t('All answers saved'));
                 return true;
             })
-            .catch(function () { saving = false; setStatus('Offline — answers will be saved when the connection returns.', true); return false; });
+            .catch(function () { saving = false; setStatus(t('Offline — answers will be saved when the connection returns.'), true); return false; });
     }
 
     var saveTimer = null;
     function markDirty(section) {
         if (!editable(section)) return;
         dirty[section.dataset.qid] = true;
-        setStatus('Unsaved changes');
+        setStatus(t('Unsaved changes'));
         clearTimeout(saveTimer);
         saveTimer = setTimeout(function () { save(); }, 1500);
     }
@@ -178,19 +178,19 @@
             var section = btn.closest('[data-question]');
             var input = section.querySelector('[data-file]');
             var label = section.querySelector('[data-file-name]');
-            if (!input.files || input.files.length === 0) { label.textContent = 'Choose a file first.'; return; }
+            if (!input.files || input.files.length === 0) { label.textContent = t('Choose a file first.'); return; }
             var fd = new FormData();
             fd.append('questionId', section.dataset.qid);
             fd.append('file', input.files[0]);
             btn.disabled = true;
-            label.textContent = 'Uploading…';
+            label.textContent = t('Uploading…');
             post(uploadUrl, fd).then(function (result) {
                 btn.disabled = false;
                 if (handleClosed(result)) return;
-                label.textContent = result.ok ? 'Uploaded: ' + result.fileName : (result.message || 'Upload failed.');
+                label.textContent = result.ok ? 'Uploaded: ' + result.fileName : (result.message || t('Upload failed.'));
                 label.classList.toggle('text-danger', !result.ok);
                 if (result.ok) input.value = '';
-            }).catch(function () { btn.disabled = false; label.textContent = 'Upload failed — check your connection.'; });
+            }).catch(function () { btn.disabled = false; label.textContent = t('Upload failed — check your connection.'); });
         });
     });
 
@@ -217,7 +217,7 @@
         pager.querySelector('[data-next]').addEventListener('click', function () {
             var section = sections[current];
             if (lockAnswered && editable(section)) {
-                if (!confirm('Your answer to this question will be final. Continue?')) return;
+                if (!confirm(t('Your answer to this question will be final. Continue?'))) return;
                 dirty[section.dataset.qid] = true;
             }
             save([section.dataset.qid]).then(function (ok) {
@@ -233,7 +233,7 @@
         if (submitting) return;
         submitting = true;
         submitForm.querySelector('input[name="answersJson"]').value = JSON.stringify(collectAll());
-        if (auto) setStatus('Time is up — submitting your answers…');
+        if (auto) setStatus(t('Time is up — submitting your answers…'));
         submitForm.submit();
     }
     submitForm.addEventListener('submit', function (e) {
@@ -246,7 +246,7 @@
             if (a.responseJson && /:\s*"[^"]+"|:\s*\[\s*"/.test(a.responseJson)) return false;
             return editable(s);
         }).length;
-        var msg = unanswered ? 'You have ' + unanswered + ' unanswered question(s). Submit anyway?' : 'Submit your quiz? You cannot change answers afterwards.';
+        var msg = unanswered ? t('You have ') + unanswered + ' unanswered question(s). Submit anyway?' : t('Submit your quiz? You cannot change answers afterwards.');
         if (confirm(msg)) submit(false);
     });
 

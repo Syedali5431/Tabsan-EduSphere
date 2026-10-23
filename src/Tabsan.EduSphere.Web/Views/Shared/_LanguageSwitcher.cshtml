@@ -1,0 +1,21 @@
+@using Tabsan.EduSphere.Application.Localization
+@* Plan M11 — language switcher (top bar and login page). Posts to /Language/Set and returns to this page. *@
+@{
+    var query = Context.Request.Query
+        .Where(q => !string.Equals(q.Key, "lang", StringComparison.OrdinalIgnoreCase))
+        .SelectMany(q => q.Value.Select(v => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(v ?? string.Empty)}"));
+    var queryString = string.Join("&", query);
+    var here = Context.Request.PathBase + Context.Request.Path + (queryString.Length > 0 ? "?" + queryString : string.Empty);
+}
+<form method="post" action="/Language/Set" class="lang-switcher" data-lang-switcher>
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@here" />
+    <label class="visually-hidden" for="portal-lang">@T["Language"]</label>
+    <select id="portal-lang" name="lang" class="form-select form-select-sm" aria-label="@T["Language"]" data-lang-select>
+        @foreach (var lang in PortalLanguages.All)
+        {
+            <option value="@lang" lang="@lang" selected="@(lang == T.Language)">@PortalLanguages.NativeName(lang)</option>
+        }
+    </select>
+    <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">@T["Change"]</button></noscript>
+</form>

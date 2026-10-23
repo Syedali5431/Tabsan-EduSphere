@@ -111,6 +111,10 @@ public static class KnownModuleKeys
     public const string BackupDr           = "backup_dr";
     public const string DocumentManagement = "document_management";
     public const string Sso                = "sso";
+    public const string Lti                = "lti";
+    public const string Outcomes           = "outcomes";
+    public const string Similarity         = "similarity";
+    public const string LiveClasses        = "live_classes";
 
     /// <summary>All known keys — used for bulk cache invalidation.</summary>
     public static readonly IReadOnlyList<string> All = new[]
@@ -118,6 +122,6 @@ public static class KnownModuleKeys
         Authentication, Departments, Sis, Courses, Assignments,
         Quizzes, Attendance, Results, Notifications, Fyp,
         AiChat, Reports, Themes, AdvancedAudit,
-        IsoCompliance, BackupDr, DocumentManagement, Sso
+        IsoCompliance, BackupDr, DocumentManagement, Sso, Lti, Outcomes, Similarity, LiveClasses
     };
 }

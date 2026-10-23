@@ -57,6 +57,8 @@ Repository Sync Note (15 May 2026):
 - [Finance-Guide.md](Finance-Guide.md)
 - [SuperAdmin-Guide.md](SuperAdmin-Guide.md)
 - [License-KeyGen-Guide.md](License-KeyGen-Guide.md)
+- [SSO-Setup-Guide.md](SSO-Setup-Guide.md) — single sign-on with Microsoft, Google, OIDC or SAML (Plan M1)
+- [LTI-Tool-Setup-Guide.md](LTI-Tool-Setup-Guide.md) — external tools such as H5P, Zoom, Turnitin (Plan M5)
 - [Training Manual.md](Training Manual.md)
 - [User Guide.md](User Guide.md)
 

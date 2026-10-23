@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.HelpdeskDetailPageModel
 @using Tabsan.EduSphere.Web.Models.Portal
 @{
-    ViewData["Title"] = "Ticket Detail";
+    ViewData["Title"] = T.Text("Ticket Detail");
     var ticket = Model.Ticket;
     var isStaff = Model.CallerRole is "SuperAdmin" or "Admin";
     var isFaculty = Model.CallerRole == "Faculty";
@@ -12,18 +12,18 @@
 {
     var cls = msg.StartsWith("Error") ? "alert-danger" : "alert-success";
     <div class="alert @cls alert-dismissible fade show" role="alert">
-        @msg <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(msg) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else if (ticket is null)
 {
-    <div class="alert alert-danger">Ticket not found or you do not have access.</div>
-    <a asp-action="Helpdesk" class="btn btn-outline-secondary">Back to Tickets</a>
+    <div class="alert alert-danger">@T["Ticket not found or you do not have access."]</div>
+    <a asp-action="Helpdesk" class="btn btn-outline-secondary">@T["Back to Tickets"]</a>
 }
 else
 {
@@ -33,20 +33,20 @@ else
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 <span class="badge bg-secondary">@ticket.Category</span>
                 <partial name="_TicketStatusBadge" model="ticket.Status" />
-                <span class="text-muted small">Created @ticket.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                <span class="text-muted small">@T.Format("Created {0}", ticket.CreatedAt.ToString("dd MMM yyyy HH:mm"))</span>
             </div>
         </div>
-        <a asp-action="Helpdesk" class="btn btn-sm btn-outline-secondary">Back to Tickets</a>
+        <a asp-action="Helpdesk" class="btn btn-sm btn-outline-secondary">@T["Back to Tickets"]</a>
     </div>
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <p class="mb-2">@ticket.Body</p>
             <div class="small text-muted">
-                Submitted by <strong>@ticket.SubmitterName</strong>
+                @T["Submitted by"] <strong>@ticket.SubmitterName</strong>
                 @if (!string.IsNullOrWhiteSpace(ticket.AssigneeName))
                 {
-                    <span> • Assigned to <strong>@ticket.AssigneeName</strong></span>
+                    <span> @T["• Assigned to"] <strong>@ticket.AssigneeName</strong></span>
                 }
             </div>
         </div>
@@ -56,14 +56,14 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <h3 class="h6 mb-3">Assignment</h3>
+                <h3 class="h6 mb-3">@T["Assignment"]</h3>
                 <form asp-action="HelpdeskAssign" method="post" class="row g-2 align-items-end">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="ticketId" value="@ticket.Id" />
                     <div class="col-md-8">
-                        <label class="form-label">Assign to Faculty</label>
-                        <select name="assignedToId" class="form-select" required>
-                            <option value="">Select faculty</option>
+                        <label class="form-label">@T["Assign to Faculty"]</label>
+                        <select aria-label="@T["Assign to Faculty"]" name="assignedToId" class="form-select" required>
+                            <option value="">@T["Select faculty"]</option>
                             @foreach (var u in Model.StaffUsers)
                             {
                                 <option value="@u.Id" selected="@(ticket.AssignedToId == u.Id)">@u.Name</option>
@@ -71,7 +71,7 @@ else
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <button type="submit" class="btn btn-outline-primary w-100">Assign</button>
+                        <button type="submit" class="btn btn-outline-primary w-100">@T["Assign"]</button>
                     </div>
                 </form>
             </div>
@@ -80,7 +80,7 @@ else
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h3 class="h6 mb-3">Conversation</h3>
+            <h3 class="h6 mb-3">@T["Conversation"]</h3>
 
             @{
                 var visibleMessages = canInternalNotes
@@ -90,7 +90,7 @@ else
 
             @if (!visibleMessages.Any())
             {
-                <div class="alert alert-light border">No replies yet.</div>
+                <div class="alert alert-light border">@T["No replies yet."]</div>
             }
             else
             {
@@ -104,7 +104,7 @@ else
                             </div>
                             @if (m.IsInternalNote)
                             {
-                                <div><span class="badge bg-dark">Internal Note</span></div>
+                                <div><span class="badge bg-dark">@T["Internal Note"]</span></div>
                             }
                             <div class="mt-1">@m.Body</div>
                         </div>
@@ -116,7 +116,7 @@ else
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h3 class="h6 mb-3">Post Reply</h3>
+            <h3 class="h6 mb-3">@T["Post Reply"]</h3>
             <form asp-action="HelpdeskAddMessage" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ticketId" value="@ticket.Id" />
@@ -127,10 +127,10 @@ else
                 {
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="isInternalNote" name="isInternalNote" value="true" />
-                        <label class="form-check-label" for="isInternalNote">Internal note (staff only)</label>
+                        <label class="form-check-label" for="isInternalNote">@T["Internal note (staff only)"]</label>
                     </div>
                 }
-                <button type="submit" class="btn btn-primary">Post Reply</button>
+                <button type="submit" class="btn btn-primary">@T["Post Reply"]</button>
             </form>
         </div>
     </div>
@@ -141,7 +141,7 @@ else
             <form asp-action="HelpdeskResolve" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ticketId" value="@ticket.Id" />
-                <button type="submit" class="btn btn-success">Resolve</button>
+                <button type="submit" class="btn btn-success">@T["Resolve"]</button>
             </form>
         }
 
@@ -150,7 +150,7 @@ else
             <form asp-action="HelpdeskClose" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ticketId" value="@ticket.Id" />
-                <button type="submit" class="btn btn-outline-secondary">Close</button>
+                <button type="submit" class="btn btn-outline-secondary">@T["Close"]</button>
             </form>
         }
 
@@ -159,7 +159,7 @@ else
             <form asp-action="HelpdeskReopen" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ticketId" value="@ticket.Id" />
-                <button type="submit" class="btn btn-warning">Reopen</button>
+                <button type="submit" class="btn btn-warning">@T["Reopen"]</button>
             </form>
         }
     </div>

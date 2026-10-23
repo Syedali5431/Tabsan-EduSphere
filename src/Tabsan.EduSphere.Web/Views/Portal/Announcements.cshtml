@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AnnouncementsPageModel
 @{
-    ViewData["Title"]     = "Announcements";
-    ViewData["PageTitle"] = "Course Announcements";
+    ViewData["Title"]     = T.Text("Announcements");
+    ViewData["PageTitle"] = T.Text("Course Announcements");
     ViewData["ActivePage"] = "announcements";
 }
 
@@ -9,20 +9,20 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success alert-dismissible fade show">
-        @Model.SuccessMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.SuccessMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
@@ -32,9 +32,9 @@
     @if (User.IsInRole("SuperAdmin"))
     {
         <div class="col-md-3">
-            <label class="form-label">Tenant</label>
-            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                <option value="">All Tenants</option>
+            <label class="form-label">@T["Tenant"]</label>
+            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                <option value="">@T["All Tenants"]</option>
                 @foreach (var t in Model.Tenants)
                 {
                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
@@ -42,9 +42,9 @@
             </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Campus</label>
-            <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                <option value="">All Campuses</option>
+            <label class="form-label">@T["Campus"]</label>
+            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                <option value="">@T["All Campuses"]</option>
                 @foreach (var c in Model.Campuses)
                 {
                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -56,9 +56,9 @@
     {
         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
         <div class="col-md-3">
-            <label class="form-label">Campus</label>
-            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                <option value="">All Campuses</option>
+            <label class="form-label">@T["Campus"]</label>
+            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                <option value="">@T["All Campuses"]</option>
                 @foreach (var c in Model.Campuses)
                 {
                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -72,9 +72,9 @@
         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
     }
     <div class="col-md-3">
-        <label class="form-label">Department</label>
-        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-            <option value="">All Departments</option>
+        <label class="form-label">@T["Department"]</label>
+        <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+            <option value="">@T["All Departments"]</option>
             @foreach (var d in Model.Departments)
             {
                 <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -82,15 +82,15 @@
         </select>
     </div>
     <div class="col-md-4">
-        <label class="form-label">Course Offering</label>
+        <label class="form-label">@T["Course Offering"]</label>
         @if (Model.Offerings.Any())
         {
             var hasCurrentOffering = Model.Offerings.Any(o => o.Id == Model.OfferingId);
-            <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                <option value="">All Offerings in Selected Department</option>
+            <select aria-label="@T["Course Offering"]" name="offeringId" class="form-select" onchange="this.form.submit()">
+                <option value="">@T["All Offerings in Selected Department"]</option>
                 @if (!hasCurrentOffering && Model.OfferingId != System.Guid.Empty)
                 {
-                    <option value="@Model.OfferingId" selected="selected">Current offering (@Model.OfferingId)</option>
+                    <option value="@Model.OfferingId" selected="selected">@T.Format("Current offering ({0})", Model.OfferingId)</option>
                 }
                 @foreach (var o in Model.Offerings)
                 {
@@ -106,16 +106,16 @@
     <div class="col-md-2">
         <div class="form-check mt-2">
             <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) onchange="this.form.submit()" />
-            <label class="form-check-label" for="includeInactive">Show inactive</label>
+            <label class="form-check-label" for="includeInactive">@T["Show inactive"]</label>
         </div>
     </div>
     <div class="col-md-2">
-        <button type="submit" class="btn btn-outline-primary w-100">Apply</button>
+        <button type="submit" class="btn btn-outline-primary w-100">@T["Apply"]</button>
     </div>
 </form>
 
 <div class="card mb-4">
-    <div class="card-header"><strong>Post Announcement</strong></div>
+    <div class="card-header"><strong>@T["Post Announcement"]</strong></div>
     <div class="card-body">
         <form asp-action="CreateAnnouncement" method="post">
             @Html.AntiForgeryToken()
@@ -123,7 +123,7 @@
             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
             <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
             <div class="mb-2">
-                <input name="title" class="form-control" placeholder="Announcement title..." required />
+                <input name="title" class="form-control" placeholder="@T["Announcement title..."]" required />
             </div>
             <div class="mb-2">
                 <textarea name="body" class="form-control" rows="3" placeholder="Message..." required></textarea>
@@ -131,25 +131,25 @@
             <div class="form-text mb-2">
                 @if (Model.OfferingId != System.Guid.Empty)
                 {
-                    <span>This announcement will be posted to the selected course offering.</span>
+                    <span>@T["This announcement will be posted to the selected course offering."]</span>
                 }
                 else if (Model.SelectedDepartmentId.HasValue)
                 {
-                    <span>This announcement will be posted to all offerings in the selected department.</span>
+                    <span>@T["This announcement will be posted to all offerings in the selected department."]</span>
                 }
                 else
                 {
-                    <span>Select a department or offering above before posting.</span>
+                    <span>@T["Select a department or offering above before posting."]</span>
                 }
             </div>
-            <button type="submit" class="btn btn-primary">Post</button>
+            <button type="submit" class="btn btn-primary">@T["Post"]</button>
         </form>
     </div>
 </div>
 
 @if (!Model.Announcements.Any())
 {
-    <div class="alert alert-info">No announcements for the selected scope.</div>
+    <div class="alert alert-info">@T["No announcements for the selected scope."]</div>
 }
 else
 {
@@ -157,11 +157,11 @@ else
         <table class="table table-sm table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Title</th>
-                    <th>Message</th>
-                    <th>Author</th>
-                    <th>Posted</th>
-                    <th>Status</th>
+                    <th>@T["Title"]</th>
+                    <th>@T["Message"]</th>
+                    <th>@T["Author"]</th>
+                    <th>@T["Posted"]</th>
+                    <th>@T["Status"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -169,12 +169,12 @@ else
                 @foreach (var a in Model.Announcements)
                 {
                     <tr>
-                        <td class="fw-semibold">@a.Title@if (a.Ids.Count > 1) { <span class="badge bg-info-subtle text-info-emphasis ms-1" title="Department-wide announcement">@a.Ids.Count offerings</span> }</td>
+                        <td class="fw-semibold">@a.Title@if (a.Ids.Count > 1) { <span class="badge bg-info-subtle text-info-emphasis ms-1" title="@T["Department-wide announcement"]">@T.Format("{0} offerings", a.Ids.Count)</span> }</td>
                         <td>@a.Body</td>
                         <td>@a.AuthorName</td>
                         <td class="text-muted">@a.PostedAt.ToString("MMM dd, yyyy HH:mm")</td>
                         <td>
-                            <span class="badge @(a.IsActive ? "bg-success" : "bg-secondary")">@(a.IsActive ? "Active" : "Inactive")</span>
+                            <span class="badge @(a.IsActive ? "bg-success" : "bg-secondary")">@(a.IsActive ? T.Text("Active") : T.Text("Inactive"))</span>
                         </td>
                         <td class="text-nowrap">
                             @if (Model.CanManage)
@@ -186,19 +186,19 @@ else
                                     <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
-                                    <input type="hidden" name="isActive" value="@(!a.IsActive)" />
+                                    <input type="hidden" name="isActive" value="@(!a.IsActive ? "true" : "false")" />
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                        @(a.IsActive ? "Deactivate" : "Activate")
+                                        @(a.IsActive ? T.Text("Deactivate") : T.Text("Activate"))
                                     </button>
                                 </form>
-                                <form asp-action="DeleteAnnouncement" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?')">
+                                <form asp-action="DeleteAnnouncement" method="post" class="d-inline" onsubmit="return confirm('@T.Js("Delete this announcement?")')">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="announcementId" value="@a.Id" />
                                     @foreach (var copyId in a.Ids) { <input type="hidden" name="announcementIds" value="@copyId" /> }
                                     <input type="hidden" name="offeringId" value="@(Model.OfferingId == System.Guid.Empty ? null : Model.OfferingId)" />
                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@T["Delete"]</button>
                                 </form>
                             }
                         </td>

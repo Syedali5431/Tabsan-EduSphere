@@ -1,0 +1,67 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ScormPageModel
+@{
+    ViewData["Title"] = Model.Package?.Title ?? T.Text("SCORM Package");
+    string StatusText(string? s) => s switch
+    {
+        "passed" => T.Text("Passed"),
+        "failed" => T.Text("Failed"),
+        "completed" => T.Text("Completed"),
+        "incomplete" => T.Text("In progress"),
+        "not attempted" => T.Text("Not started"),
+        _ => T.Text("Started")
+    };
+}
+@* Plan M13 — a student's SCORM package: status, attempts, and start / continue / review. *@
+<div class="container-fluid py-3">
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-warning">@T.Text(Model.Message)</div>
+    }
+    @if (Model.Package is { } p)
+    {
+        var mine = p.Mine;
+        var used = mine?.AttemptsUsed ?? 0;
+        var finished = mine?.Status is "completed" or "passed" or "failed";
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-1">@p.Title</h1>
+                <p class="text-muted small mb-3">@p.Version@(p.Graded ? " · " + T.Format("Graded · {0} marks", p.MaxMarks.ToString("0.##")) : "")</p>
+                <dl class="row small mb-3">
+                    <dt class="col-sm-3">@T["Status"]</dt>
+                    <dd class="col-sm-9">@(used == 0 ? T.Text("Not started") : StatusText(mine?.Status))</dd>
+                    <dt class="col-sm-3">@T["Attempts"]</dt>
+                    <dd class="col-sm-9">@(p.MaxAttempts == 0 ? T.Format("{0} (unlimited)", used) : T.Format("{0} of {1}", used, p.MaxAttempts))</dd>
+                    @if (mine?.BestScorePercent is { } best)
+                    {
+                        <dt class="col-sm-3">@T["Best score"]</dt>
+                        <dd class="col-sm-9">@best.ToString("0.##")%</dd>
+                    }
+                    @if (p.MasteryScore is { } mastery)
+                    {
+                        <dt class="col-sm-3">@T["Pass mark"]</dt>
+                        <dd class="col-sm-9">@mastery.ToString("0.##")%</dd>
+                    }
+                </dl>
+                <div class="d-flex flex-wrap gap-2">
+                    <form asp-action="LaunchScorm" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="packageId" value="@p.Id" />
+                        <input type="hidden" name="moduleItem" value="@Model.ModuleItemId" />
+                        <button class="btn btn-primary">@(used == 0 ? T.Text("Start") : finished ? T.Text("Review") : T.Text("Continue"))</button>
+                    </form>
+                    @if (used > 0 && mine?.CanStartNew == true)
+                    {
+                        <form asp-action="LaunchScorm" method="post" onsubmit="return confirm('@T.Js("Start a new attempt? Your best score is kept.")')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="packageId" value="@p.Id" />
+                            <input type="hidden" name="newAttempt" value="true" />
+                            <input type="hidden" name="moduleItem" value="@Model.ModuleItemId" />
+                            <button class="btn btn-outline-primary">@T["Start a new attempt"]</button>
+                        </form>
+                    }
+                    <a class="btn btn-outline-secondary" asp-action="CourseLms" asp-route-offeringId="@p.OfferingId">@T["Back to the course"]</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -210,7 +210,7 @@
 
 		function renderThreadContext() {
 			if (!state.activeConversationId) {
-				threadContext.textContent = 'Ready for a new conversation';
+				threadContext.textContent = t('Ready for a new conversation');
 				return;
 			}
 
@@ -219,8 +219,8 @@
 			});
 
 			threadContext.textContent = activeConversation
-				? (activeConversation.title || 'Current conversation')
-				: 'Current conversation';
+				? (activeConversation.title || t('Current conversation'))
+				: t('Current conversation');
 		}
 
 		function appendTyping() {
@@ -254,7 +254,7 @@
 				url += '?conversationId=' + encodeURIComponent(state.activeConversationId);
 			}
 
-			setStatus('Loading assistant history...');
+			setStatus(t('Loading assistant history...'));
 
 			return fetch(url, {
 				credentials: 'same-origin',
@@ -264,7 +264,7 @@
 			})
 				.then(function (response) {
 					if (!response.ok) {
-						throw new Error('Unable to load AI assistant state.');
+						throw new Error(t('Unable to load AI assistant state.'));
 					}
 
 					return response.json();
@@ -287,7 +287,7 @@
 					renderConversations();
 					renderThreadContext();
 					renderMessages();
-					setStatus(error.message || 'Unable to load AI assistant state.');
+					setStatus(error.message || t('Unable to load AI assistant state.'));
 				});
 		}
 
@@ -314,7 +314,7 @@
 			if (!existingConversation) {
 				state.conversations.unshift({
 					id: conversationId,
-					title: 'AI Chat · Today',
+					title: t('AI Chat · Today'),
 					createdAt: new Date().toISOString(),
 					lastMessageAt: new Date().toISOString()
 				});
@@ -368,14 +368,14 @@
 			})
 				.then(function (response) {
 					if (!response.ok) {
-						throw new Error('Unable to send message.');
+						throw new Error(t('Unable to send message.'));
 					}
 
 					return response.json();
 				})
 				.then(function (payload) {
 					if (!payload.success) {
-						throw new Error(payload.error || 'AI assistant is currently unavailable.');
+						throw new Error(payload.error || t('AI assistant is currently unavailable.'));
 					}
 
 					state.activeConversationId = payload.conversationId || state.activeConversationId;
@@ -383,7 +383,7 @@
 					upsertConversation(state.activeConversationId);
 					state.items.push(payload.assistantMessage || {
 						role: 'assistant',
-						content: 'No response returned.',
+						content: t('No response returned.'),
 						createdAt: new Date().toISOString()
 					});
 					renderConversations();
@@ -394,7 +394,7 @@
 					state.items.pop();
 					renderMessages();
 					input.value = messageText;
-					setStatus(error.message || 'Unable to send message.');
+					setStatus(error.message || t('Unable to send message.'));
 				})
 				.finally(function () {
 					state.isSending = false;
@@ -430,7 +430,7 @@
 			renderConversations();
 			renderThreadContext();
 			renderMessages();
-			setStatus('New conversation ready.');
+			setStatus(t('New conversation ready.'));
 			input.focus();
 		});
 

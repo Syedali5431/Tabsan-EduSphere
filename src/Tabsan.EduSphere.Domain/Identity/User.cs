@@ -81,6 +81,9 @@ public class User : AuditableEntity
     /// </summary>
     public string? ThemeKey { get; private set; }
 
+    /// <summary>Plan M11 — the portal language the user chose ("en", "ur", "ar"); null = the institution default.</summary>
+    public string? PreferredLanguage { get; private set; }
+
     /// <summary>
     /// When true the user must change their password before proceeding.
     /// Set to true on CSV import (P4-S2-02); cleared after a successful forced password change.
@@ -300,6 +303,13 @@ public class User : AuditableEntity
     public void SetTheme(string? themeKey)
     {
         ThemeKey = themeKey?.Trim().ToLowerInvariant();
+        Touch();
+    }
+
+    /// <summary>Plan M11 — sets (or clears with null) the user's portal language.</summary>
+    public void SetPreferredLanguage(string? language)
+    {
+        PreferredLanguage = string.IsNullOrWhiteSpace(language) ? null : language.Trim().ToLowerInvariant();
         Touch();
     }
 

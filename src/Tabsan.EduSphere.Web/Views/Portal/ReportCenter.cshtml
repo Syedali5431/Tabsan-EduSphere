@@ -1,35 +1,35 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ReportCenterPageModel
 @{
-    ViewData["Title"] = "Report Center";
+    ViewData["Title"] = T.Text("Report Center");
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h2 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Report Center</h2>
-            <small class="text-muted">Generate and export academic and finance reports</small>
+            <h2 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>@T["Report Center"]</h2>
+            <small class="text-muted">@T["Generate and export academic and finance reports"]</small>
         </div>
     </div>
 
     @if (!Model.IsConnected)
     {
-        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>Not connected to API. Please configure the connection.</div>
+        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>@T["Not connected to API. Please configure the connection."]</div>
     }
     else
     {
         @if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.Message</div>
+            <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@T.Text(Model.Message)</div>
         }
 
         @if (Model.Identity?.IsSuperAdmin == true)
         {
             <form method="get" asp-action="ReportCenter" class="row g-2 mb-3">
                 <div class="col-md-4">
-                    <label class="form-label mb-1">Tenant</label>
-                    <select class="form-select" name="tenantId" onchange="this.form.submit()">
-                        <option value="">All Tenants</option>
+                    <label class="form-label mb-1">@T["Tenant"]</label>
+                    <select aria-label="@T["Tenant"]" class="form-select" name="tenantId" onchange="this.form.submit()">
+                        <option value="">@T["All Tenants"]</option>
                         @foreach (var t in Model.Tenants)
                         {
                             if (Model.SelectedTenantId == t.Id)
@@ -44,9 +44,9 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label mb-1">Campus</label>
-                    <select class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                        <option value="">All Campuses</option>
+                    <label class="form-label mb-1">@T["Campus"]</label>
+                    <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                        <option value="">@T["All Campuses"]</option>
                         @foreach (var c in Model.Campuses)
                         {
                             if (Model.SelectedCampusId == c.Id)
@@ -61,14 +61,14 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-outline-primary w-100">Apply Scope</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">@T["Apply Scope"]</button>
                 </div>
             </form>
         }
 
         @if (Model.Reports.Count == 0)
         {
-            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No reports are available for your role.</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@T["No reports are available for your role."]</div>
         }
         else
         {
@@ -78,11 +78,11 @@
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 @if (Model.IsReportsActive)
                 {
-                    <button type="submit" class="btn btn-outline-danger" name="isActive" value="false">Deactivate Reports for Scope</button>
+                    <button type="submit" class="btn btn-outline-danger" name="isActive" value="false">@T["Deactivate Reports for Scope"]</button>
                 }
                 else
                 {
-                    <button type="submit" class="btn btn-outline-success" name="isActive" value="true">Activate Reports for Scope</button>
+                    <button type="submit" class="btn btn-outline-success" name="isActive" value="true">@T["Activate Reports for Scope"]</button>
                 }
             </form>
 
@@ -129,7 +129,7 @@
                                     </div>
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0 pb-3 px-4">
-                                    <span class="text-primary small fw-semibold">View Report <i class="bi bi-arrow-right"></i></span>
+                                    <span class="text-primary small fw-semibold">@T["View Report"] <i class="bi bi-arrow-right"></i></span>
                                 </div>
                             </div>
                         </a>

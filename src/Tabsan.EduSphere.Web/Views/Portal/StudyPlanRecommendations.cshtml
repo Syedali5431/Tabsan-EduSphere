@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.RecommendationsPageModel
 @{
-    ViewData["Title"]     = "Course Recommendations";
+    ViewData["Title"]     = T.Text("Course Recommendations");
     ViewData["PageTitle"] = "Recommended Courses — " + Model.PlannedSemesterName;
     ViewData["ActivePage"] = "study_plan";
 }
@@ -9,14 +9,14 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
@@ -29,10 +29,10 @@
                 <div class="col-md-6">
                     <input name="plannedSemesterName" class="form-control"
                            value="@Model.PlannedSemesterName"
-                           placeholder="Semester name (e.g. Fall 2026)" />
+                           placeholder="@T["Semester name (e.g. Fall 2026)"]" />
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary w-100">Get Recommendations</button>
+                    <button type="submit" class="btn btn-primary w-100">@T["Get Recommendations"]</button>
                 </div>
             </div>
         </form>
@@ -42,15 +42,15 @@
 @if (Model.Recommendations.Any())
 {
     <div class="alert alert-info">
-        Showing <strong>@Model.Recommendations.Count</strong> recommended courses
-        (@Model.RecommendedTotalCredits cr / max @Model.MaxCreditLoad cr)
+        @T["Showing"] <strong>@Model.Recommendations.Count</strong> @T["recommended courses"]
+        @T.Format("({0} cr / max {1} cr)", Model.RecommendedTotalCredits, Model.MaxCreditLoad)
     </div>
 
     <div class="table-responsive">
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
-                    <th>Code</th><th>Course</th><th>Credits</th><th>Type</th><th>Reason</th>
+                    <th>@T["Code"]</th><th>@T["Course"]</th><th>@T["Credits"]</th><th>@T["Type"]</th><th>@T["Reason"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,9 +71,9 @@
 else if (Model.IsConnected)
 {
     <div class="alert alert-success">
-        All required courses have been planned or passed — no additional recommendations.
+        @T["All required courses have been planned or passed — no additional recommendations."]
     </div>
 }
 
 <a href="@Url.Action("StudyPlan", "Portal", new { studentProfileId = Model.StudentProfileId })"
-   class="btn btn-outline-secondary mt-2">← Back to Plans</a>
+   class="btn btn-outline-secondary mt-2">@T["← Back to Plans"]</a>

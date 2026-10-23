@@ -1,5 +1,56 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update - Plan M14 API tokens and index review (Schema Posture)
+- Implementation: new table `api_tokens` (user, name, hint, token hash unique, read-only, expiry, last used at/address, revoked at/by, created); indexes `IX_api_tokens_user`, `IX_incident_logs_assigned_to`, `IX_rooms_BuildingId` (created only where missing); seeded sidebar menu `api_tokens`.
+- Index review: no unindexed foreign keys remain; SQL Server missing-index statistics empty after the exam-day load run.
+- Validation: migration `PlanMPhase14ApiTokensIndexes` applied to LocalDB; no pending model changes.
+
+## 2026-10-23 Update - Plan M13 SCORM / xAPI (Schema Posture)
+- Implementation: new tables `scorm_packages` (offering, title, version, launch path, files/size, mastery, attempts, published, assignment, marks, removed), `scorm_attempts` (package, student, number unique, completion/success, scores and percent, location, suspend data ≤64,000, exit, CMI JSON, time, commits, finished), `xapi_credentials` (name, key unique, secret hash, active, last used), `xapi_statements` (statement id unique, credential, actor key, verb, object, registration, score/success/completion, timestamp, stored, voided, JSON); column `assignments.ScormPackageId`; seeded sidebar menu `xapi_settings`.
+- Validation: migration `PlanMPhase13Scorm` applied to LocalDB; no pending model changes.
+
+## 2026-10-23 Update - Plan M12 Native Mobile App (Schema Posture)
+- Implementation: new tables `mobile_devices` (UserId, Platform, Token unique ≤512, AppVersion, DeviceModel, Language, IsActive, LastSeenAt, LastSuccessAt, ConsecutiveFailures) and `mobile_crash_reports` (UserId?, Platform, AppVersion, OsVersion, DeviceModel, ExceptionType, Message, StackTrace ≤16000, Screen, OccurredAt).
+- Validation: migration `PlanMPhase12Mobile` applied to LocalDB; no pending model changes.
+
+## 2026-10-20 Update - Plan M11 Localisation (Schema Posture)
+- Implementation: new column `users.PreferredLanguage` (nvarchar(8), null = institution default); portal setting `default_language` (en, ur, ar, auto) in `portal_settings`; seeded sidebar menu `language_settings` (SuperAdmin).
+- Validation: migration `PlanMPhase11Localisation` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M10 Live Classes (Schema Posture)
+- Implementation: new tables `conference_settings` (unique tenant), `live_sessions` (offering + start, status + start indexes), `live_session_attendance` (unique session + user); notification type `LiveClass` (stored as text, no column change).
+- Validation: migration `PlanMPhase10LiveClasses` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M9 Similarity Checking (Schema Posture)
+- Implementation: new tables `similarity_settings` (unique tenant), `similarity_checks` (queue + report), `similarity_documents` (unique submission + attempt), `similarity_fingerprints` (key document + position, index on hash); columns `assignments.SimilarityCheckEnabled`, `SimilarityVisibleToStudents`.
+- Validation: migration `PlanMPhase9Similarity` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M8 Assignment Enhancements (Schema Posture)
+- Implementation: new tables `late_policies` (unique offering), `assignment_overrides`, `group_sets`, `student_groups`, `student_group_members` (unique set + student), `peer_reviews` (unique submission + reviewer); columns `assignments.AvailableFrom/AvailableUntil/GroupSetId/GradeGroupIndividually/PeerReviewCount/PeerReviewDueDate/PeerReviewAnonymous`, `assignment_submissions.RawMarks/LatePenalty/LatePenaltyWaived/IsMissing/GroupId`, `discussion_threads.GroupId`; existing grades backfilled `RawMarks = MarksAwarded`.
+- Validation: migration `PlanMPhase8AssignmentEnhancements` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M7 Module Progress (Schema Posture)
+- Implementation: new tables `module_items`, `module_item_progress` (unique student + item), `module_prerequisites` (unique pair); columns `course_content_modules.UnlockAt`, `RequireSequentialProgress`, `CompletionMode`; existing videos backfilled as Video items.
+- Validation: migration `PlanMPhase7ModuleProgress` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M6 Learning Outcomes (Schema Posture)
+- Implementation: new tables `outcomes`, `outcome_rating_levels`, `outcome_mappings` (unique CLO + PLO), `outcome_alignments` (unique outcome + target), `student_outcome_results` (unique student + alignment + source; cascade with the alignment).
+- Validation: migration `PlanMPhase6Outcomes` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M5 LTI 1.3 (Schema Posture)
+- Implementation: new tables `lti_tools` (unique client ID), `lti_tool_deployments` (unique deployment ID), `lti_resource_links`, `lti_line_items`, `lti_scores`, `lti_launches`, `lti_used_nonces` (unique tool + value), `lti_access_tokens` (unique SHA-256 hash); column `assignments.ExternalToolId`. Expired launches, nonces and tokens are purged hourly.
+- Validation: migration `PlanMPhase5Lti` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M4 Web Push (Schema Posture)
+- Implementation: new tables `push_subscriptions` (unique endpoint, user, browser keys, failure counters; cascade with the user) and `notification_preferences` (unique user + type).
+- Validation: migration `PlanMPhase4WebPush` applied to LocalDB; no pending model changes.
+
+## 2026-10-19 Update - Plan M1–M3 SSO, Quiz Engine, Grading Workspace (Schema Posture)
+- Implementation (M1): new tables `sso_provider_settings`, `external_logins`; column `login_activity_logs.AuthMethod`.
+- Implementation (M2): new tables `question_banks`, `quiz_question_groups`, `quiz_attempt_items`, `quiz_answer_selections`, `quiz_accommodations`, `quiz_availability_overrides`; quiz delivery/security columns on `quizzes`; bank/config columns on `quiz_questions` (bank questions have `QuizId` null); `DeadlineAt`/`StartedFromIp` on `quiz_attempts`; structured response and grading columns on `quiz_answers`; `results.Source` (Manual / QuizSync / AssignmentSync).
+- Implementation (M3): new tables `submission_attempts`, `submission_files`, `submission_comments`, `submission_annotations`, `submission_provisional_grades`; submission settings and grading-policy columns on `assignments`; `CurrentAttemptNumber`, `IsLate`, `PostedAt` on `assignment_submissions`.
+- Validation: all changes additive; backfills verified on LocalDB (quiz answer selections; 14,417 submissions → attempt #1; existing grades marked posted); `has-pending-model-changes` clean.
+
 ## 2026-06-22 Update - Profile Picture Upload (Schema Posture)
 - Implementation: added ProfilePicturePath (nvarchar 500, nullable) to users table. Stores relative path to profile picture (e.g., uploads/profile-pictures/{guid}.jpg).
 - Validation: EF migration 20260621232659_AddUserProfilePicture, additive-only. No breaking changes.

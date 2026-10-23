@@ -1,25 +1,25 @@
 @* Final-Touches Phase 17 Stage 17.2 — Degree Rules management view (SuperAdmin) *@
 @model DegreeRulesPageModel
 @{
-    ViewData["Title"] = "Degree Rules";
+    ViewData["Title"] = T.Text("Degree Rules");
 }
 
-<h2 class="mb-4"><i class="bi bi-journal-check me-2"></i>Degree Rules</h2>
+<h2 class="mb-4"><i class="bi bi-journal-check me-2"></i>@T["Degree Rules"]</h2>
 
 @if (TempData["Message"] is string msg)
 {
-    <div class="alert alert-info">@msg</div>
+    <div class="alert alert-info">@T.Text(msg)</div>
 }
 
 <div class="card mb-4">
-    <div class="card-header fw-bold">Create New Degree Rule</div>
+    <div class="card-header fw-bold">@T["Create New Degree Rule"]</div>
     <div class="card-body">
         <form asp-action="DegreeRuleCreate" method="post">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Academic Program</label>
-                    <select name="AcademicProgramId" class="form-select" required>
-                        <option value="">— Select Program —</option>
+                    <label class="form-label">@T["Academic Program"]</label>
+                    <select aria-label="@T["Academic Program"]" name="AcademicProgramId" class="form-select" required>
+                        <option value="">@T["— Select Program —"]</option>
                         @foreach (var p in Model.Programs)
                         {
                             <option value="@p.Id">@p.Name</option>
@@ -27,31 +27,31 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Min Total Credits</label>
-                    <input type="number" name="MinTotalCredits" class="form-control" min="0" value="120" required />
+                    <label class="form-label">@T["Min Total Credits"]</label>
+                    <input aria-label="@T["Min Total Credits"]" type="number" name="MinTotalCredits" class="form-control" min="0" value="120" required />
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Min Core Credits</label>
-                    <input type="number" name="MinCoreCredits" class="form-control" min="0" value="90" required />
+                    <label class="form-label">@T["Min Core Credits"]</label>
+                    <input aria-label="@T["Min Core Credits"]" type="number" name="MinCoreCredits" class="form-control" min="0" value="90" required />
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Min Elective Credits</label>
-                    <input type="number" name="MinElectiveCredits" class="form-control" min="0" value="30" required />
+                    <label class="form-label">@T["Min Elective Credits"]</label>
+                    <input aria-label="@T["Min Elective Credits"]" type="number" name="MinElectiveCredits" class="form-control" min="0" value="30" required />
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Min GPA</label>
-                    <input type="number" name="MinGpa" class="form-control" min="0" max="4" step="0.01" value="2.00" required />
+                    <label class="form-label">@T["Min GPA"]</label>
+                    <input aria-label="@T["Min GPA"]" type="number" name="MinGpa" class="form-control" min="0" max="4" step="0.01" value="2.00" required />
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Create Rule</button>
+            <button type="submit" class="btn btn-primary mt-3">@T["Create Rule"]</button>
         </form>
     </div>
 </div>
 
-<h4>Existing Rules</h4>
+<h4>@T["Existing Rules"]</h4>
 @if (Model.Rules.Count == 0)
 {
-    <p class="text-muted">No degree rules configured yet.</p>
+    <p class="text-muted">@T["No degree rules configured yet."]</p>
 }
 else
 {
@@ -59,12 +59,12 @@ else
         <table class="table table-bordered align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Program</th>
-                    <th class="text-center">Min Total</th>
-                    <th class="text-center">Min Core</th>
-                    <th class="text-center">Min Elective</th>
-                    <th class="text-center">Min GPA</th>
-                    <th class="text-center">Required Courses</th>
+                    <th>@T["Program"]</th>
+                    <th class="text-center">@T["Min Total"]</th>
+                    <th class="text-center">@T["Min Core"]</th>
+                    <th class="text-center">@T["Min Elective"]</th>
+                    <th class="text-center">@T["Min GPA"]</th>
+                    <th class="text-center">@T["Required Courses"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -81,19 +81,19 @@ else
                             @if (r.RequiredCourses.Count > 0)
                             {
                                 <span title="@string.Join(", ", r.RequiredCourses.Select(c => c.CourseCode))">
-                                    @r.RequiredCourses.Count course(s)
+                                    @T.Format("{0} course(s)", r.RequiredCourses.Count)
                                 </span>
                             }
                             else
                             {
-                                <span class="text-muted">None</span>
+                                <span class="text-muted">@T["None"]</span>
                             }
                         </td>
                         <td class="text-center">
                             <form asp-action="DegreeRuleDelete" method="post" class="d-inline"
-                                  onsubmit="return confirm('Delete this degree rule?')">
+                                  onsubmit="return confirm('@T.Js("Delete this degree rule?")')">
                                 <input type="hidden" name="ruleId" value="@r.RuleId" />
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger">@T["Delete"]</button>
                             </form>
                         </td>
                     </tr>

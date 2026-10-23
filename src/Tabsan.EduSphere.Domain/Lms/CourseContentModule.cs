@@ -28,6 +28,15 @@ public class CourseContentModule : AuditableEntity
     /// <summary>UTC timestamp when the module was published.</summary>
     public DateTime? PublishedAt { get; private set; }
 
+    /// <summary>Plan M7: the module (and its items) open on this date.</summary>
+    public DateTime? UnlockAt { get; private set; }
+
+    /// <summary>Plan M7: items must be completed in order.</summary>
+    public bool RequireSequentialProgress { get; private set; }
+
+    /// <summary>Plan M7: whether all or any item requirements complete the module.</summary>
+    public ModuleCompletionMode CompletionMode { get; private set; }
+
     // Navigation
     public ICollection<ContentVideo> Videos { get; private set; } = new List<ContentVideo>();
 
@@ -57,6 +66,15 @@ public class CourseContentModule : AuditableEntity
         if (IsPublished) return;
         IsPublished = true;
         PublishedAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    /// <summary>Plan M7: release conditions (prerequisite modules are stored separately).</summary>
+    public void ConfigureRelease(DateTime? unlockAt, bool requireSequentialProgress, ModuleCompletionMode completionMode)
+    {
+        UnlockAt = unlockAt;
+        RequireSequentialProgress = requireSequentialProgress;
+        CompletionMode = completionMode;
         Touch();
     }
 

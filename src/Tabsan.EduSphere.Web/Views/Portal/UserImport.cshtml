@@ -1,13 +1,13 @@
 @model Tabsan.EduSphere.Web.Models.Portal.UserImportPageModel
 @{
-    ViewData["Title"] = "User Import";
+    ViewData["Title"] = T.Text("User Import");
 }
 
 <div class="row g-4">
     @if (!Model.IsConnected)
     {
         <div class="col-12">
-            <div class="alert alert-warning mb-0">Not connected to the API. Configure connection on Dashboard first.</div>
+            <div class="alert alert-warning mb-0">@T["Not connected to the API. Configure connection on Dashboard first."]</div>
         </div>
     }
     else
@@ -15,15 +15,15 @@
         <div class="col-12 col-lg-7">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Import Users From CSV</h2>
+                    <h2 class="h5 mb-3">@T["Import Users From CSV"]</h2>
 
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <form method="get" asp-action="UserImport" class="row g-2 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Tenant</label>
-                                <select class="form-select" name="tenantId" onchange="this.form.submit()">
-                                    <option value="">All Tenants</option>
+                                <label class="form-label">@T["Tenant"]</label>
+                                <select aria-label="@T["Tenant"]" class="form-select" name="tenantId" onchange="this.form.submit()">
+                                    <option value="">@T["All Tenants"]</option>
                                     @foreach (var tenant in Model.Tenants)
                                     {
                                         if (Model.SelectedTenantId == tenant.Id)
@@ -38,9 +38,9 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Campus</label>
-                                <select class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                                    <option value="">All Campuses</option>
+                                <label class="form-label">@T["Campus"]</label>
+                                <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                                    <option value="">@T["All Campuses"]</option>
                                     @foreach (var campus in Model.Campuses)
                                     {
                                         if (Model.SelectedCampusId == campus.Id)
@@ -61,29 +61,29 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                        <button type="submit" class="btn btn-outline-primary btn-sm">Create Sample CSV In User Import Sheets</button>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">@T["Create Sample CSV In User Import Sheets"]</button>
                         @if (!string.IsNullOrWhiteSpace(Model.GeneratedSampleFileName))
                         {
-                            <a class="btn btn-link btn-sm" asp-action="DownloadGeneratedUserImportSample" asp-route-fileName="@Model.GeneratedSampleFileName">Download Created Sample</a>
+                            <a class="btn btn-link btn-sm" asp-action="DownloadGeneratedUserImportSample" asp-route-fileName="@Model.GeneratedSampleFileName">@T["Download Created Sample"]</a>
                         }
                     </form>
 
                     <div class="alert alert-light border alert-dismissible fade show small mb-3" role="alert">
-                        <p class="mb-2"><strong>Use one of the official templates before upload:</strong></p>
+                        <p class="mb-2"><strong>@T["Use one of the official templates before upload:"]</strong></p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
-                            <a class="btn btn-sm btn-outline-secondary" asp-action="UserImportTemplate" asp-route-fileName="faculty-admin-import-template.csv">faculty-admin-import-template.csv</a>
-                            <a class="btn btn-sm btn-outline-secondary" asp-action="UserImportTemplate" asp-route-fileName="students-import-template.csv">students-import-template.csv</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="UserImportTemplate" asp-route-fileName="faculty-admin-import-template.csv">@T["faculty-admin-import-template.csv"]</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="UserImportTemplate" asp-route-fileName="students-import-template.csv">@T["students-import-template.csv"]</a>
                         </div>
                         <ul class="mb-0 ps-3">
-                            <li>Required columns: <strong>Username, Email, Role</strong></li>
-                            <li>Optional columns: <strong>FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments</strong>; for students also <strong>ProgramId</strong> (with DepartmentId) and <strong>RegistrationNumber</strong> to create the student profile</li>
-                            <li>Accepted file type: <strong>.csv</strong> only</li>
-                            <li>Role values: <strong>Admin</strong>, <strong>Faculty</strong>, <strong>Student</strong>, <strong>Finance</strong></li>
-                            <li>If you provide <strong>DepartmentId</strong>, use valid IDs from your current database.</li>
-                            <li>If you provide <strong>CampusAssignments</strong>, use pipe-separated campus GUIDs (example: <strong>guid1|guid2</strong>).</li>
-                            <li>Imported accounts use Username as temporary password and must change it at first login.</li>
+                            <li>@T["Required columns:"] <strong>@T["Username, Email, Role"]</strong></li>
+                            <li>@T["Optional columns:"] <strong>@T["FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments"]</strong>@T["; for students also"] <strong>@T["ProgramId"]</strong> @T["(with DepartmentId) and"] <strong>@T["RegistrationNumber"]</strong> @T["to create the student profile"]</li>
+                            <li>@T["Accepted file type:"] <strong>.csv</strong> @T["only"]</li>
+                            <li>@T["Role values:"] <strong>@T["Admin"]</strong>, <strong>@T["Faculty"]</strong>, <strong>@T["Student"]</strong>, <strong>@T["Finance"]</strong></li>
+                            <li>@T["If you provide"] <strong>@T["DepartmentId"]</strong>@T[", use valid IDs from your current database."]</li>
+                            <li>@T["If you provide"] <strong>@T["CampusAssignments"]</strong>@T[", use pipe-separated campus GUIDs (example:"] <strong>@T["guid1|guid2"]</strong>).</li>
+                            <li>@T["Imported accounts use Username as temporary password and must change it at first login."]</li>
                         </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
                     </div>
 
                     <form asp-action="ImportUsersCsv" method="post" enctype="multipart/form-data">
@@ -91,18 +91,18 @@
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <div class="mb-3">
-                            <label class="form-label" for="csvFile">CSV File</label>
+                            <label class="form-label" for="csvFile">@T["CSV File"]</label>
                             <input class="form-control" type="file" id="csvFile" name="csvFile" accept=".csv" required />
                         </div>
-                        <button type="submit" class="btn btn-primary">Upload and Import</button>
+                        <button type="submit" class="btn btn-primary">@T["Upload and Import"]</button>
                     </form>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Create Single User</h2>
-                    <p class="text-muted small mb-3">Manually create one user at a time. Imported accounts use Username as temporary password and must change it at first login.</p>
+                    <h2 class="h5 mb-3">@T["Create Single User"]</h2>
+                    <p class="text-muted small mb-3">@T["Manually create one user at a time. Imported accounts use Username as temporary password and must change it at first login."]</p>
 
                     <form asp-action="CreateSingleUser" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
@@ -111,50 +111,50 @@
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Username <span class="text-danger">*</span></label>
-                                <input class="form-control" name="Username" value="@Model.SingleUserForm.Username" placeholder="e.g. john.doe" required />
+                                <label class="form-label">@T["Username"] <span class="text-danger">*</span></label>
+                                <input aria-label="@T["Username"]" class="form-control" name="Username" value="@Model.SingleUserForm.Username" placeholder="@T["e.g. john.doe"]" required />
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Email <span class="text-danger">*</span></label>
-                                <input class="form-control" type="email" name="Email" value="@Model.SingleUserForm.Email" placeholder="e.g. john@tabsan.local" required />
+                                <label class="form-label">@T["Email"] <span class="text-danger">*</span></label>
+                                <input aria-label="@T["Email"]" class="form-control" type="email" name="Email" value="@Model.SingleUserForm.Email" placeholder="e.g. john@tabsan.local" required />
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Full Name</label>
-                                <input class="form-control" name="FullName" value="@Model.SingleUserForm.FullName" placeholder="e.g. John Doe" />
+                                <label class="form-label">@T["Full Name"]</label>
+                                <input aria-label="@T["Full Name"]" class="form-control" name="FullName" value="@Model.SingleUserForm.FullName" placeholder="@T["e.g. John Doe"]" />
                             </div>
                         </div>
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Role <span class="text-danger">*</span></label>
+                                <label class="form-label" for="singleUserRole">@T["Role"] <span class="text-danger">*</span></label>
                                 <select class="form-select" name="Role" id="singleUserRole" required onchange="toggleRoleFields()">
-                                    <option value="">— Select Role —</option>
-                                    <option value="Admin" selected="@(Model.SingleUserForm.Role == "Admin")">Admin</option>
-                                    <option value="Faculty" selected="@(Model.SingleUserForm.Role == "Faculty")">Faculty</option>
-                                    <option value="Student" selected="@(Model.SingleUserForm.Role == "Student")">Student</option>
-                                    <option value="Finance" selected="@(Model.SingleUserForm.Role == "Finance")">Finance</option>
+                                    <option value="">@T["— Select Role —"]</option>
+                                    <option value="Admin" selected="@(Model.SingleUserForm.Role == "Admin")">@T["Admin"]</option>
+                                    <option value="Faculty" selected="@(Model.SingleUserForm.Role == "Faculty")">@T["Faculty"]</option>
+                                    <option value="Student" selected="@(Model.SingleUserForm.Role == "Student")">@T["Student"]</option>
+                                    <option value="Finance" selected="@(Model.SingleUserForm.Role == "Finance")">@T["Finance"]</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Institution Type</label>
-                                <select class="form-select" name="InstitutionType">
-                                    <option value="">— Optional —</option>
-                                    <option value="University" selected="@(Model.SingleUserForm.InstitutionType == "University")">University</option>
-                                    <option value="School" selected="@(Model.SingleUserForm.InstitutionType == "School")">School</option>
-                                    <option value="College" selected="@(Model.SingleUserForm.InstitutionType == "College")">College</option>
+                                <label class="form-label">@T["Institution Type"]</label>
+                                <select aria-label="@T["Institution Type"]" class="form-select" name="InstitutionType">
+                                    <option value="">@T["— Optional —"]</option>
+                                    <option value="University" selected="@(Model.SingleUserForm.InstitutionType == "University")">@T["University"]</option>
+                                    <option value="School" selected="@(Model.SingleUserForm.InstitutionType == "School")">@T["School"]</option>
+                                    <option value="College" selected="@(Model.SingleUserForm.InstitutionType == "College")">@T["College"]</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Mobile Number</label>
-                                <input class="form-control" name="MobileNumber" value="@Model.SingleUserForm.MobileNumber" placeholder="e.g. +61412345678" />
+                                <label class="form-label">@T["Mobile Number"]</label>
+                                <input aria-label="@T["Mobile Number"]" class="form-control" name="MobileNumber" value="@Model.SingleUserForm.MobileNumber" placeholder="@T["e.g. +61412345678"]" />
                             </div>
                         </div>
 
                         <div class="row g-2 mb-3" id="facultyFields" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label">Department <span class="text-danger">*</span></label>
-                                <select class="form-select" name="DepartmentId">
-                                    <option value="">— Select Department —</option>
+                                <label class="form-label">@T["Department"] <span class="text-danger">*</span></label>
+                                <select aria-label="@T["Department"]" class="form-select" name="DepartmentId">
+                                    <option value="">@T["— Select Department —"]</option>
                                     @foreach (var dept in Model.AvailableDepartments)
                                     {
                                         <option value="@dept.Id">@dept.Name</option>
@@ -165,9 +165,9 @@
 
                         <div class="row g-2 mb-3" id="studentFields" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label">Department <span class="text-danger">*</span></label>
-                                <select class="form-select" name="DepartmentId">
-                                    <option value="">— Select Department —</option>
+                                <label class="form-label">@T["Department"] <span class="text-danger">*</span></label>
+                                <select aria-label="@T["Department"]" class="form-select" name="DepartmentId">
+                                    <option value="">@T["— Select Department —"]</option>
                                     @foreach (var dept in Model.AvailableDepartments)
                                     {
                                         <option value="@dept.Id">@dept.Name</option>
@@ -175,9 +175,9 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Program <span class="text-danger">*</span></label>
-                                <select class="form-select" name="ProgramId">
-                                    <option value="">— Select Program —</option>
+                                <label class="form-label">@T["Program"] <span class="text-danger">*</span></label>
+                                <select aria-label="@T["Program"]" class="form-select" name="ProgramId">
+                                    <option value="">@T["— Select Program —"]</option>
                                     @foreach (var deptGroup in Model.AvailablePrograms.GroupBy(p => p.DepartmentName))
                                     {
                                         <optgroup label="@deptGroup.Key">
@@ -188,34 +188,34 @@
                                         </optgroup>
                                     }
                                 </select>
-                                <div class="form-text">Creates the student's academic profile; choose a program of the selected department.</div>
+                                <div class="form-text">@T["Creates the student's academic profile; choose a program of the selected department."]</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Registration No.</label>
-                                <input class="form-control" name="RegistrationNumber" maxlength="50" value="@Model.SingleUserForm.RegistrationNumber" placeholder="Defaults to the username" />
+                                <label class="form-label">@T["Registration No."]</label>
+                                <input aria-label="@T["Registration No."]" class="form-control" name="RegistrationNumber" maxlength="50" value="@Model.SingleUserForm.RegistrationNumber" placeholder="@T["Defaults to the username"]" />
                             </div>
                         </div>
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Campus Assignments</label>
-                                <input class="form-control" name="CampusAssignments" value="@Model.SingleUserForm.CampusAssignments" placeholder="Pipe-separated GUIDs: id|id2" />
+                                <label class="form-label">@T["Campus Assignments"]</label>
+                                <input aria-label="@T["Campus Assignments"]" class="form-control" name="CampusAssignments" value="@Model.SingleUserForm.CampusAssignments" placeholder="@T["Pipe-separated GUIDs: id|id2"]" />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Address</label>
-                                <input class="form-control" name="Address" value="@Model.SingleUserForm.Address" placeholder="e.g. 123 Main St, City" />
+                                <label class="form-label">@T["Address"]</label>
+                                <input aria-label="@T["Address"]" class="form-control" name="Address" value="@Model.SingleUserForm.Address" placeholder="@T["e.g. 123 Main St, City"]" />
                             </div>
                         </div>
 
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Profile Photo</label>
-                                <input class="form-control" type="file" name="ProfilePhoto" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                                <div class="form-text">JPG or PNG, max 2MB</div>
+                                <label class="form-label">@T["Profile Photo"]</label>
+                                <input aria-label="@T["Profile Photo"]" class="form-control" type="file" name="ProfilePhoto" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                                <div class="form-text">@T["JPG or PNG, max 2MB"]</div>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-success">Create User</button>
+                        <button type="submit" class="btn btn-success">@T["Create User"]</button>
                     </form>
                 </div>
             </div>
@@ -245,7 +245,7 @@
         @if (!string.IsNullOrWhiteSpace(Model.Message))
         {
             <div class="col-12">
-                <div class="alert alert-info">@Model.Message</div>
+                <div class="alert alert-info">@T.Text(Model.Message)</div>
             </div>
         }
 
@@ -254,24 +254,24 @@
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <h2 class="h5 mb-3">Import Summary</h2>
+                        <h2 class="h5 mb-3">@T["Import Summary"]</h2>
                         <div class="row g-2 mb-3">
-                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>Total</strong><div>@Model.Result.TotalRows</div></div></div>
-                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>Imported</strong><div>@Model.Result.Imported</div></div></div>
-                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>Duplicates</strong><div>@Model.Result.Duplicates</div></div></div>
-                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>Errors</strong><div>@Model.Result.Errors</div></div></div>
+                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>@T["Total"]</strong><div>@Model.Result.TotalRows</div></div></div>
+                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>@T["Imported"]</strong><div>@Model.Result.Imported</div></div></div>
+                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>@T["Duplicates"]</strong><div>@Model.Result.Duplicates</div></div></div>
+                            <div class="col-6 col-md-3"><div class="border rounded p-2"><strong>@T["Errors"]</strong><div>@Model.Result.Errors</div></div></div>
                         </div>
 
                         @if (Model.Result.ErrorDetails.Count > 0)
                         {
-                            <h3 class="h6">Row-Level Validation Errors</h3>
-                            <p class="text-muted small mb-2">Fix the rows below in your CSV and re-upload the same template.</p>
+                            <h3 class="h6">@T["Row-Level Validation Errors"]</h3>
+                            <p class="text-muted small mb-2">@T["Fix the rows below in your CSV and re-upload the same template."]</p>
                             <div class="table-responsive">
                                 <table class="table table-sm table-striped align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="width: 20%;">Row</th>
-                                            <th>Issue</th>
+                                            <th style="width: 20%;">@T["Row"]</th>
+                                            <th>@T["Issue"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -282,7 +282,7 @@
                                             var message = parts.Length == 2 ? parts[1] : error;
                                             <tr>
                                                 <td><span class="badge bg-warning text-dark">@rowLabel</span></td>
-                                                <td>@message</td>
+                                                <td>@T.Text(message)</td>
                                             </tr>
                                         }
                                     </tbody>

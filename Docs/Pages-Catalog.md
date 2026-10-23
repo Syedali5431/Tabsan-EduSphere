@@ -47,6 +47,7 @@
 - [Institution Policy](#institution-policy)
 - [Library Integration](#library-integration)
 - [Prerequisites](#prerequisites)
+- [Plan M — Canvas Parity Pages](#plan-m--canvas-parity-pages)
 - [Error Page](#error-page)
 
 ---
@@ -1514,7 +1515,280 @@ Configuration page for library system integration. Manages connection settings a
 
 ---
 
+## Plan M — Canvas Parity Pages
+
+Pages added by Plan M (Canvas LMS parity, October 2026). Each is gated by its licensed module where noted.
+
+### Single Sign-On Settings (M1)
+**Route:** `/Portal/SsoSettings`  
+**View:** `Portal/SsoSettings.cshtml`  
+**Access:** SuperAdmin (menu `sso_settings`, module `sso`)
+
+Configure Microsoft, Google, generic OpenID Connect and SAML 2.0 identity providers per installation or tenant: values to register at the provider, connection test, allowed email domains, automatic linking, trusting the provider's MFA and "require single sign-on".
+
+---
+
+### Quiz Builder (M2)
+**Route:** `/Portal/QuizBuilder?quizId=…`  
+**View:** `Portal/QuizBuilder.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin (menu `quizzes`)
+
+Builds a quiz with 11 question types, random question groups from banks, delivery and security settings (shuffling, one question at a time, access code, allowed networks, review options), per-student extra time/attempts and date overrides. Each question has an **Outcomes** button (M6).
+
+---
+
+### Question Banks (M2)
+**Route:** `/Portal/QuestionBanks`  
+**View:** `Portal/QuestionBanks.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin
+
+Shared or course question banks with tags and difficulty, Excel import/export, and an **Outcomes** button per question (M6).
+
+---
+
+### Take Quiz / Quiz Attempt / Quiz Review (M2)
+**Routes:** `/Portal/TakeQuiz?quizId=…`, `/Portal/TakeQuizAttempt?attemptId=…`, `/Portal/QuizReview?attemptId=…`  
+**Views:** `Portal/TakeQuiz.cshtml`, `Portal/TakeQuizAttempt.cshtml`, `Portal/QuizReview.cshtml`  
+**Access:** Students (review also staff)
+
+Quiz start page (access code, attempts, time), the attempt page with a server-side deadline and autosave, and the review page that honours the quiz's review options.
+
+---
+
+### Quiz Grading and Statistics (M2)
+**Routes:** `/Portal/QuizGrading?quizId=…`, `/Portal/QuizStatistics?quizId=…`  
+**Views:** `Portal/QuizGrading.cshtml`, `Portal/QuizStatistics.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin
+
+Manual grading queue for essay/short-answer/file questions, regrade, and item analysis (difficulty, discrimination, answer distribution).
+
+---
+
+### Grading Workspace (M3)
+**Route:** `/Portal/GradingWorkspace?assignmentId=…`  
+**View:** `Portal/GradingWorkspace.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin (menu `assignments`)
+
+SpeedGrader-style workspace: student list (anonymous labels when enabled), PDF/document viewer with annotations, rubric, comments (text and voice), attempt history, provisional grades and moderation, posting grades.
+
+---
+
+### Assignment Submission (M3)
+**Route:** `/Portal/AssignmentSubmission?assignmentId=…`  
+**View:** `Portal/AssignmentSubmission.cshtml`  
+**Access:** Students
+
+Submit files and text, see every attempt, annotated feedback, comments and the grade once posted.
+
+---
+
+### Offline Page (M4)
+**Route:** `/offline.html`  
+**Access:** Public (served by the service worker)
+
+Shown by the installed app when a page is not available offline.
+
+---
+
+### External Tools Registry (M5)
+**Route:** `/Portal/LtiTools`  
+**View:** `Portal/LtiTools.cshtml`  
+**Access:** SuperAdmin; Admins when granted (menu `external_tools`, module `lti`)
+
+LTI 1.3 platform values for tool vendors, tool registration (keys, redirect URIs, privacy, grade/roster permissions), deployments per installation/department/course, enable/disable, signing-key rotation (SuperAdmin).
+
+---
+
+### External Tool Launch and Content Selection (M5)
+**Routes:** `/lti/launch/{itemId}` (frame or auto-post), `/lti/deep-link/{offeringId}`, `/lti/deep-link-return`  
+**Views:** `Lti/Frame.cshtml`, `Lti/AutoPost.cshtml`, `Lti/DeepLinkDone.cshtml`, `Lti/Error.cshtml`  
+**Access:** Signed-in course members (return page: the tool's signed response)
+
+Opens a course's external tool in a new tab or inside EduSphere, and shows what a teacher's content selection added to the course. The course card ("External tools") appears on Course Content and LMS Manage.
+
+---
+
+### Learning Outcomes (M6)
+**Route:** `/Portal/Outcomes`  
+**View:** `Portal/Outcomes.cshtml`  
+**Access:** Admin, SuperAdmin (all levels); Faculty (course outcomes) — menu `outcomes`, module `outcomes`
+
+Institution, program (PLO) and course (CLO) outcomes with rating scales and mastery rules, CLO → PLO mapping, Excel import with template, turn on/off.
+
+---
+
+### Learning Mastery Gradebook (M6)
+**Route:** `/Portal/OutcomeMastery?offeringId=…`  
+**View:** `Portal/OutcomeMastery.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin (menu `outcomes`)
+
+Students × outcomes grid coloured by mastery, mastered counts, Excel export, recalculation from current grades.
+
+---
+
+### Program Outcome Attainment (M6)
+**Route:** `/Portal/OutcomeAttainment?programId=…&target=…`  
+**View:** `Portal/OutcomeAttainment.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin (menu `outcomes`)
+
+Per program outcome: students assessed and attaining, attainment % against a target, average score, mapped course outcomes and contributing courses; PDF and Excel export for accreditation.
+
+---
+
+### My Outcomes (M6)
+**Route:** `/Portal/MyOutcomes`  
+**View:** `Portal/MyOutcomes.cshtml`  
+**Access:** Students (menu `my_outcomes`)
+
+The student's mastery of each outcome in their courses with the graded work behind it.
+
+---
+
+### Module Item (M7)
+**Route:** `/Portal/ModuleItem/{id}`  
+**View:** `Portal/ModuleItem.cshtml`  
+**Access:** Enrolled students; staff see a preview
+
+Opens a module item: records the view, shows text pages, videos, web links and materials with a previous/next bar and "Mark as done", explains why a locked item cannot open yet, and forwards assignments, quizzes, discussions and external tools to their own pages (which then show the previous/next bar).
+
+---
+
+### Module Progress (M7)
+**Route:** `/Portal/ModuleProgress?offeringId=…&studentId=…`  
+**View:** `Portal/ModuleProgress.cshtml`  
+**Access:** Faculty, Admin, SuperAdmin (menu `lms_manage`)
+
+Students × modules (required items done, locks), course progress per student, and one student's item-by-item detail.
+
+---
+
 ## Error Page
+
+### Late Policy & Groups (M8)
+**Route:** `/Portal/AssignmentPolicies?offeringId=…`
+**View:** `Portal/AssignmentPolicies.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (menu `assignments`, module `assignments`)
+
+A course's late-work deduction (per hour/day, lowest grade) and missing-work grade, and its group sets: create sets and groups, add/remove members, split at random, self sign-up and size limits.
+
+---
+
+### Assignment Options (M8)
+**Route:** `/Portal/AssignmentOptions?assignmentId=…`
+**View:** `Portal/AssignmentOptions.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (menu `assignments`)
+
+Opening date and late cut-off, group work (group set, grade individually), peer review (count, due date, anonymity), "Assign to" dates for one student or group, and the peer-review overview with **Assign reviews now**.
+
+---
+
+### My Groups (M8)
+**Route:** `/Portal/MyGroups?offeringId=…`
+**View:** `Portal/MyGroups.cshtml`
+**Access:** Student (menu `assignments`)
+
+The student's groups in a course; join or leave self sign-up groups.
+
+---
+
+### Peer Review (M8)
+**Route:** `/Portal/PeerReview/{id}`
+**View:** `Portal/PeerReview.cshtml`
+**Access:** Student — only the assigned reviewer (menu `assignments`)
+
+A classmate's work (text and files) with the assignment's rubric or a score box and a comment.
+
+---
+
+### Similarity Checking Settings (M9)
+**Route:** `/Portal/SimilaritySettings[?installationDefault=true]`
+**View:** `Portal/SimilaritySettings.cshtml`
+**Access:** SuperAdmin (Admin when granted; menu `similarity_settings`, module `similarity`)
+
+Choose the built-in comparison (and what it compares with) or Copyleaks (account email, encrypted API key, sandbox), test the connection; SuperAdmins also edit the installation default.
+
+---
+
+### Similarity Report (M9)
+**Route:** `/Portal/SimilarityReport/{checkId}`
+**View:** `Portal/SimilarityReport.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (menu `assignments`, module `similarity`)
+
+Score of one check with each matching source (another submission or a web page) and the matching passages side by side.
+
+---
+
+### Live Classes (M10)
+**Route:** `/Portal/LiveClasses?offeringId=…[&edit=…]`
+**View:** `Portal/LiveClasses.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (schedule); Students (join) — menu `live_classes`, module `live_classes`
+
+A course's live classes: schedule (ad hoc or timetable weeks), edit, cancel, join, add to calendar, recordings, attendance link.
+
+---
+
+### Live Class Attendance (M10)
+**Route:** `/Portal/LiveSessionAttendance/{sessionId}?offeringId=…`
+**View:** `Portal/LiveSessionAttendance.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (menu `live_classes`)
+
+Who joined a class (time, minutes) and **Mark attendance now**.
+
+---
+
+### Live Class Settings (M10)
+**Route:** `/Portal/LiveClassSettings[?installationDefault=true]`
+**View:** `Portal/LiveClassSettings.cshtml`
+**Access:** SuperAdmin (Admin when granted; menu `live_class_settings`, module `live_classes`)
+
+Conferencing service (links, BigBlueButton, Zoom, Teams), encrypted secret, joining window, connection test.
+
+---
+
+### Language & Translations (M11)
+**Route:** `/Portal/LanguageSettings` (export `/Portal/ExportTranslations`, import `POST /Portal/ImportTranslations`, default `POST /Portal/SaveDefaultLanguage`); switcher `POST /Language/Set` on every page and the login page
+**View:** `Portal/LanguageSettings.cshtml`, `Shared/_LanguageSwitcher.cshtml`
+**Access:** SuperAdmin (menu `language_settings`); the switcher is for everyone
+
+Institution default language, translation coverage per language, Excel export/import of Urdu and Arabic texts (overrides).
+
+---
+
+### SCORM Package (M13)
+**Route:** `/Portal/Scorm/{id}` (launch `POST /Portal/LaunchScorm`), player page `/Portal/ScormPlay/{id}`, player shell `/scorm/play/{token}/` (no layout, no session)
+**View:** `Portal/Scorm.cshtml`, `Portal/ScormPlay.cshtml`, `ScormPlay/Shell.cshtml`, `ScormPlay/Expired.cshtml`, card `Shared/Components/ScormPackages/Default.cshtml` (course page; content page for teachers)
+**Access:** enrolled students (teachers preview from the content page)
+
+Status, attempts, best score; Start / Continue / Review / new attempt; the package runs in the frame with the SCORM runtime.
+
+---
+
+### SCORM Package Report (M13)
+**Route:** `/Portal/ScormReport?packageId=` (upload/edit/remove/preview: `POST /Portal/UploadScormPackage`, `UpdateScormPackage`, `RemoveScormPackage`, `PreviewScorm`)
+**View:** `Portal/ScormReport.cshtml`
+**Access:** Faculty, Admin, SuperAdmin (menu `lms_manage`)
+
+Per student: attempts, status, best and last score, time spent, last activity.
+
+---
+
+### Learning Record Store (M13)
+**Route:** `/Portal/XapiSettings` (`POST /Portal/CreateXapiCredential`, `POST /Portal/DeactivateXapiCredential`)
+**View:** `Portal/XapiSettings.cshtml`
+**Access:** Admin, SuperAdmin (menu `xapi_settings`)
+
+xAPI credentials (secret shown once) and the latest statements.
+
+---
+
+### API Tokens (M14)
+**Route:** `/Portal/ApiTokens` (`POST /Portal/CreateApiToken`, `POST /Portal/RevokeApiToken`)
+**View:** `Portal/ApiTokens.cshtml`
+**Access:** Admin, SuperAdmin (menu `api_tokens`)
+
+Personal access tokens for the REST API: create (value shown once), my tokens, all tokens (administrators), revoke.
+
+---
 
 ### Error
 **Route:** (Handled by exception middleware)  
@@ -1573,8 +1847,9 @@ The global error page displayed when an unhandled exception occurs. Shows a user
 | **Certificates** | 1 |
 | **Institution Policy** | 1 |
 | **Library Integration** | 1 |
+| **Plan M (M1–M14)** | 34 |
 | **Error** | 1 |
-| **TOTAL** | **92 pages** |
+| **TOTAL** | **126 pages** |
 
 ---
 

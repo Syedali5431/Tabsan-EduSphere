@@ -1,0 +1,98 @@
+@model Tabsan.EduSphere.Web.Models.Portal.MyGroupsPageModel
+@{
+    ViewData["Title"] = T.Text("My groups");
+}
+
+@* Plan M8.3 — the student's groups in a course; joining and leaving self sign-up groups. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["My groups"]</h2>
+        <p class="text-muted mb-0">@T["Your groups for group assignments and group discussions."]</p>
+    </div>
+    @if (Model.OfferingId != Guid.Empty) { <a asp-action="Discussion" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-secondary">@T["Discussions"]</a> }
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else
+{
+    <form method="get" asp-action="MyGroups" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label small" for="mg-offering">@T["Course"]</label>
+            <select id="mg-offering" name="offeringId" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var o in Model.Offerings) { <option value="@o.Id" selected="@(o.Id == Model.OfferingId)">@o.Label</option> }
+            </select>
+        </div>
+        <noscript><div class="col-md-2"><button class="btn btn-sm btn-outline-secondary">@T["Show"]</button></div></noscript>
+    </form>
+
+    @if (Model.Groups.Count == 0)
+    {
+        <div class="border rounded p-3 bg-light" data-groups-empty>@(Model.Offerings.Count == 0 ? T.Text("You are not enrolled in any course.") : T.Text("This course has no groups."))</div>
+    }
+    <div class="row g-3">
+        @foreach (var set in Model.Groups)
+        {
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100" data-my-group-set="@set.GroupSetName">
+                    <div class="card-body">
+                        <h3 class="h5">@set.GroupSetName</h3>
+                        <p class="small text-muted">
+                            @(set.SelfSignup ? T.Text("Choose your own group.") : T.Text("Your teacher assigns these groups."))
+                            @if (set.MaxSize is { } max) { <text> @T.Format("Up to {0} per group.", max)</text> }
+                        </p>
+                        @if (set.Group is { } g)
+                        {
+                            <div class="border rounded p-2 mb-2" data-my-group="@g.Name">
+                                <div class="fw-semibold">@g.Name</div>
+                                <ul class="small mb-1">
+                                    @foreach (var m in g.Members) { <li>@m.Name</li> }
+                                </ul>
+                                @if (set.SelfSignup)
+                                {
+                                    <form asp-action="LeaveGroup" method="post" onsubmit="return confirm('@T.Js("Leave {0}?", g.Name)');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="groupId" value="@g.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                        <button class="btn btn-sm btn-outline-danger">@T["Leave group"]</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                        else if (!set.SelfSignup)
+                        {
+                            <p class="small mb-0">@T["You are not in a group yet."]</p>
+                        }
+                        else if (set.Joinable.Count == 0)
+                        {
+                            <p class="small mb-0">@T["There is no group with room. Ask your teacher."]</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var j in set.Joinable)
+                                {
+                                    <li class="list-group-item px-0 d-flex align-items-center gap-2">
+                                        <span class="me-auto">@j.Name <span class="small text-muted">@T.Format("· {0} member(s)", j.MemberCount)</span></span>
+                                        <form asp-action="JoinGroup" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="groupId" value="@j.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                            <button class="btn btn-sm btn-outline-primary" aria-label="Join @j.Name">@T["Join"]</button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

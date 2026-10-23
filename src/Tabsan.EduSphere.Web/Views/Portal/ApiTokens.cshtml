@@ -1,0 +1,88 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ApiTokensPageModel
+@{
+    ViewData["Title"] = T.Text("API Tokens");
+}
+@* Plan M14.3 — personal access tokens for the public REST API. *@
+<div class="container-fluid py-3">
+    <h1 class="h4">@T["API Tokens"]</h1>
+    <p class="text-muted">@T["Integrations (student information systems, reporting tools, scripts) call the EduSphere REST API with a token. A token acts as you, with your role and access; give each integration its own token and revoke it when it is no longer used."]</p>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-warning">@T.Text(Model.Message)</div>
+    }
+    @if (Model.Created is { } created)
+    {
+        <div class="border border-success rounded bg-success-subtle text-success-emphasis p-3 mb-3" role="status">
+            <p class="fw-semibold mb-2">@T["Token created. Copy it now — it is not shown again."]</p>
+            <code dir="ltr" class="d-block text-break user-select-all">@created.Value</code>
+            <p class="small mb-0 mt-2">@T.Format("Send it as: Authorization: Bearer <token> — base address {0}/api/v1/", Model.ApiBaseUrl)</p>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h5">@T["New token"]</h2>
+            <form asp-action="CreateApiToken" method="post" class="row g-2 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-md-5"><label class="form-label small" for="token-name">@T["Name"]</label><input id="token-name" name="name" class="form-control form-control-sm" maxlength="120" required placeholder="@T["e.g. Nightly SIS sync"]" /></div>
+                <div class="col-md-3"><label class="form-label small" for="token-days">@T["Valid for (days)"]</label><input id="token-days" name="expiresInDays" type="number" min="1" max="365" value="90" class="form-control form-control-sm" required /></div>
+                <div class="col-md-2 form-check ms-2"><input class="form-check-input" type="checkbox" id="token-readonly" name="readOnly" value="true" /><label class="form-check-label small" for="token-readonly">@T["Read only"]</label></div>
+                <div class="col-md-auto"><button class="btn btn-sm btn-primary">@T["Create token"]</button></div>
+            </form>
+        </div>
+    </div>
+
+    @foreach (var (heading, rows, owner) in new[] { (T.Text("My tokens"), Model.Mine, false), (T.Text("All tokens"), Model.All, true) })
+    {
+        if (owner && Model.All.Count == 0) { continue; }
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h5">@heading</h2>
+                @if (rows.Count == 0)
+                {
+                    <p class="small text-muted mb-0">@T["No tokens yet."]</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    @if (owner) { <th scope="col">@T["User"]</th> }
+                                    <th scope="col">@T["Name"]</th><th scope="col">@T["Token"]</th><th scope="col">@T["Access"]</th>
+                                    <th scope="col">@T["Expires"]</th><th scope="col">@T["Last used"]</th><th scope="col">@T["Status"]</th><th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in rows)
+                                {
+                                    <tr>
+                                        @if (owner) { <td>@t.UserName</td> }
+                                        <td>@t.Name</td>
+                                        <td><code dir="ltr">@t.Hint</code></td>
+                                        <td>@(t.ReadOnly ? T.Text("Read only") : T.Text("Read and write"))</td>
+                                        <td>@(t.ExpiresAt is { } e ? e.ToLocalTime().ToString("dd MMM yyyy") : T.Text("Never"))</td>
+                                        <td>@(t.LastUsedAt is { } u ? u.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "—")</td>
+                                        <td>@(t.Active ? T.Text("Active") : t.RevokedAt is not null ? T.Text("Revoked") : T.Text("Expired"))</td>
+                                        <td>
+                                            @if (t.Active)
+                                            {
+                                                <form asp-action="RevokeApiToken" method="post" onsubmit="return confirm('@T.Js("Revoke this token? Integrations using it stop working at once.")')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@t.Id" />
+                                                    <button class="btn btn-sm btn-outline-danger">@T["Revoke"]</button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <p class="small text-muted">@T["API reference: the API's /swagger page (OpenAPI), and Docs/Public-API.md in the product documentation."]</p>
+</div>

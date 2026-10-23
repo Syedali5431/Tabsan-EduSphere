@@ -1,39 +1,39 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AccreditationTemplatesPageModel
 @{
-    ViewData["Title"] = "Accreditation Templates";
+    ViewData["Title"] = T.Text("Accreditation Templates");
 }
 
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(TempData["Success"]?.ToString())
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(TempData["Error"]?.ToString())
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 <div class="row g-3">
     <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3"><i class="bi bi-download me-2"></i>Download Simple Template</h2>
+                <h2 class="h5 mb-3"><i class="bi bi-download me-2"></i>@T["Download Simple Template"]</h2>
                 <p class="text-muted small mb-3">
-                    Download a simple text template file and edit it as needed.
+                    @T["Download a simple text template file and edit it as needed."]
                 </p>
                 <a asp-action="DownloadAccreditationTemplate" class="btn btn-primary">
-                    <i class="bi bi-file-earmark-arrow-down me-1"></i>Download Template
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i>@T["Download Template"]
                 </a>
             </div>
         </div>
@@ -42,19 +42,19 @@
     <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3"><i class="bi bi-upload me-2"></i>Upload Template</h2>
+                <h2 class="h5 mb-3"><i class="bi bi-upload me-2"></i>@T["Upload Template"]</h2>
                 <p class="text-muted small mb-3">
-                    Upload a plain .txt or .csv file. No JSON needed.
+                    @T["Upload a plain .txt or .csv file. No JSON needed."]
                 </p>
 
                 <form id="accreditationTemplateUploadForm" asp-action="UploadAccreditationTemplate" method="post" enctype="multipart/form-data">
                     <div class="input-group">
-                        <input id="accreditationTemplateFileInput" type="file" name="templateFile" class="form-control" accept=".txt,.csv,text/plain,text/csv" required />
+                        <input id="accreditationTemplateFileInput" aria-label="@T["Template file"]" type="file" name="templateFile" class="form-control" accept=".txt,.csv,text/plain,text/csv" required />
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-upload me-1"></i>Upload
+                            <i class="bi bi-upload me-1"></i>@T["Upload"]
                         </button>
                     </div>
-                    <div class="form-text">Accepted formats: .txt or .csv (max 1 MB).</div>
+                    <div class="form-text">@T["Accepted formats: .txt or .csv (max 1 MB)."]</div>
                     <div id="accreditationTemplateUploadValidation" class="invalid-feedback d-block d-none"></div>
                 </form>
             </div>

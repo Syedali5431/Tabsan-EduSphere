@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.CourseLmsPageModel
 @{
-    ViewData["Title"]     = "Course Content";
-    ViewData["PageTitle"] = "Course Content";
+    ViewData["Title"]     = T.Text("Course Content");
+    ViewData["PageTitle"] = T.Text("Course Content");
     ViewData["ActivePage"] = "lms";
 }
 
@@ -9,13 +9,83 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
-@if (!Model.Modules.Any())
+@if (Model.Progress is { } progress)
 {
-    <div class="alert alert-info">No content has been published for this course yet.</div>
+    @* Plan M7 — modules as ordered items with progress, requirements and locks. *@
+    string Icon(string status) => status switch { "done" => "✓", "todo" => "○", "locked" => "🔒", _ => "•" };
+    string StatusText(string status) => status switch { "done" => "Done", "todo" => "To do", "locked" => "Locked", _ => "" };
+    <section class="card border-0 shadow-sm mb-3" aria-label="@T["Course progress"]" data-course-progress="@progress.CoursePercent">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+            <strong>@T["Your progress"]</strong>
+            <div class="progress flex-grow-1" style="height: .6rem; min-width: 10rem;" role="progressbar" aria-label="@T["Course progress"]" aria-valuenow="@progress.CoursePercent" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success" style="width: @progress.CoursePercent%"></div>
+            </div>
+            <span>@T.Format("{0}% complete", progress.CoursePercent)</span>
+        </div>
+    </section>
+    @if (progress.Modules.Count == 0)
+    {
+        <div class="border rounded p-3 bg-light">@T["No content has been published for this course yet."]</div>
+    }
+    @foreach (var module in progress.Modules)
+    {
+        <section class="card border-0 shadow-sm mb-3" aria-labelledby="mod-@module.Id" data-student-module="@module.Id" data-locked="@module.Locked.ToString().ToLowerInvariant()">
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <h2 class="h6 mb-0 me-auto" id="mod-@module.Id">@T.Format("Week {0} — {1}", module.WeekNumber, module.Title)</h2>
+                    @if (module.Locked) { <span class="badge bg-secondary" data-module-lock>🔒 @module.LockReason</span> }
+                    else if (module.Completed) { <span class="badge bg-success">@T["✓ Complete"]</span> }
+                    @if (module.Required > 0) { <span class="small text-muted">@T.Format("{0} of {1}", module.Done, module.Required)</span> }
+                </div>
+                @if (module.Required > 0)
+                {
+                    <div class="progress mb-3" style="height: .4rem;" role="progressbar" aria-label="@module.Title progress" aria-valuenow="@module.Percent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar @(module.Completed ? "bg-success" : "")" style="width: @module.Percent%"></div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(module.Body) && !module.Locked)
+                {
+                    <div class="mb-3 small">@Html.Raw(module.Body)</div>
+                }
+                <ul class="list-unstyled mb-0">
+                    @foreach (var item in module.Items)
+                    {
+                        if (item.ItemType == "Header")
+                        {
+                            <li class="fw-semibold mt-2 mb-1" style="padding-left: @(item.IndentLevel * 1.5)rem;">@item.Title</li>
+                            continue;
+                        }
+                        <li class="d-flex flex-wrap align-items-baseline gap-2 py-1 border-top" style="padding-left: @(item.IndentLevel * 1.5)rem;" data-student-item="@item.Id" data-status="@item.Status">
+                            <span aria-hidden="true" class="@(item.Status == "done" ? "text-success" : "text-muted")" style="width: 1.2rem;">@Icon(item.Status)</span>
+                            @if (item.Status == "locked")
+                            {
+                                <span class="text-muted">@item.Title</span>
+                                <span class="small text-muted">— @item.LockReason</span>
+                            }
+                            else
+                            {
+                                <a href="/Portal/ModuleItem/@item.Id">@item.Title</a>
+                            }
+                            <span class="small text-muted">@Tabsan.EduSphere.Web.Models.Portal.ModuleItemText.TypeLabel(item.ItemType)</span>
+                            @if (item.RequirementType != "None" && item.Status != "done")
+                            {
+                                <span class="small text-muted ms-auto">@Tabsan.EduSphere.Web.Models.Portal.ModuleItemText.Requirement(item.RequirementType, item.MinScorePercent)</span>
+                            }
+                            <span class="visually-hidden">@StatusText(item.Status)</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </section>
+    }
+}
+else if (!Model.Modules.Any())
+{
+    <div class="alert alert-info">@T["No content has been published for this course yet."]</div>
 }
 else
 {
@@ -38,7 +108,7 @@ else
                         }
                         @if (module.Videos.Any())
                         {
-                            <h6 class="mt-3">Videos</h6>
+                            <h6 class="mt-3">@T["Videos"]</h6>
                             <ul class="list-group">
                                 @foreach (var video in module.Videos)
                                 {
@@ -54,13 +124,13 @@ else
                                         {
                                             <div class="mt-2">
                                                 <a href="@video.StorageUrl" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-play-circle"></i> Watch Video
+                                                    <i class="bi bi-play-circle"></i> @T["Watch Video"]
                                                 </a>
                                             </div>
                                         }
                                         @if (video.DurationSeconds.HasValue)
                                         {
-                                            <small class="text-muted d-block mt-1">Duration: @(video.DurationSeconds / 60)m @(video.DurationSeconds % 60)s</small>
+                                            <small class="text-muted d-block mt-1">@T.Format("Duration: {0}m {1}s", (video.DurationSeconds / 60), (video.DurationSeconds % 60))</small>
                                         }
                                     </li>
                                 }
@@ -73,11 +143,29 @@ else
     </div>
 }
 
+@* Plan M5 — External tools (LTI 1.3); renders nothing when the course has none. *@
+<div class="mt-3">
+    @await Component.InvokeAsync("ExternalTools", new { offeringId = Model.OfferingId, manage = false })
+    @* Plan M13 — the course's SCORM packages for students (nothing when there are none). *@
+    @await Component.InvokeAsync("ScormPackages", new { offeringId = Model.OfferingId, manage = false })
+</div>
+
 <div class="mt-3">
     <a asp-action="Discussion" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary me-2">
-        <i class="bi bi-chat-dots"></i> Discussion
+        <i class="bi bi-chat-dots"></i> @T["Discussion"]
     </a>
-    <a asp-action="Announcements" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary">
-        <i class="bi bi-megaphone"></i> Announcements
+    <a asp-action="Announcements" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-megaphone"></i> @T["Announcements"]
     </a>
+    @* Plan M10: the course's live classes. *@
+    <a asp-action="LiveClasses" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-camera-video"></i> @T["Live classes"]
+    </a>
+    @if (User.IsInRole("Student"))
+    {
+        @* Plan M8.3: the student's groups in this course. *@
+        <a asp-action="MyGroups" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary">
+            <i class="bi bi-people"></i> @T["My groups"]
+        </a>
+    }
 </div>

@@ -1,18 +1,18 @@
 @model Tabsan.EduSphere.Web.Models.Portal.EnrollmentsPageModel
 @* Final-Touches Phase 8 Stage 8.1+8.2 — student own-courses view + admin roster + CRUD *@
-@{ ViewData["Title"] = "Enrollments"; }
+@{ ViewData["Title"] = T.Text("Enrollments"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     <div class="alert @(Model.Message.Contains("success") || Model.Message.Contains("enrolled") || Model.Message.Contains("dropped") ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else if (Model.IsStudent)
 {
@@ -22,16 +22,16 @@ else if (Model.IsStudent)
         <div class="card-body">
             <div class="section-head">
                 <div>
-                    <span class="section-kicker">Student enrollment</span>
-                    <h2 class="h5 mb-1">My Enrolled Courses
+                    <span class="section-kicker">@T["Student enrollment"]</span>
+                    <h2 class="h5 mb-1">@T["My Enrolled Courses"]
                         <span class="badge bg-secondary ms-1">@Model.MyCourses.Count</span>
                     </h2>
-                    <p class="text-muted mb-0">Review active enrollments and drop courses when needed.</p>
+                    <p class="text-muted mb-0">@T["Review active enrollments and drop courses when needed."]</p>
                 </div>
                 @if (Model.Offerings.Any())
                 {
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enrollModal">
-                        Enroll in Course
+                        @T["Enroll in Course"]
                     </button>
                 }
             </div>
@@ -41,8 +41,8 @@ else if (Model.IsStudent)
     @if (Model.MyCourses.Count == 0)
     {
         <div class="empty-state-card">
-            <h3>No enrollments yet</h3>
-            <p class="text-muted mb-0">You are not enrolled in any courses yet. Use the enroll button to join an active offering.</p>
+            <h3>@T["No enrollments yet"]</h3>
+            <p class="text-muted mb-0">@T["You are not enrolled in any courses yet. Use the enroll button to join an active offering."]</p>
         </div>
     }
     else
@@ -53,10 +53,10 @@ else if (Model.IsStudent)
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>Course</th>
-                                <th>Level</th>
-                            <th>Status</th>
-                            <th>Enrolled</th>
+                            <th>@T["Course"]</th>
+                                <th>@T["Level"]</th>
+                            <th>@T["Status"]</th>
+                            <th>@T["Enrolled"]</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -71,7 +71,7 @@ else if (Model.IsStudent)
                                 <td>
                                     @if (e.Status == "Active")
                                     {
-                                        <span class="badge stat-pill bg-success">Active</span>
+                                        <span class="badge stat-pill bg-success">@T["Active"]</span>
                                     }
                                     else
                                     {
@@ -88,7 +88,7 @@ else if (Model.IsStudent)
                                             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Drop @e.CourseCode?')">Drop</button>
+                                                    onclick="return confirm('@T.Js("Drop {0}?", e.CourseCode)')">@T["Drop"]</button>
                                         </form>
                                     }
                                 </td>
@@ -109,18 +109,18 @@ else if (Model.IsStudent)
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Enroll in a Course</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Enroll in a Course"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         @if (!Model.IsEnrollmentActive)
                         {
-                            <div class="alert alert-warning">Enrollment is deactivated for the selected tenant/campus scope.</div>
+                            <div class="alert alert-warning">@T["Enrollment is deactivated for the selected tenant/campus scope."]</div>
                         }
                         <div class="mb-3">
-                            <label class="form-label">Course Offering</label>
-                            <select name="courseOfferingId" class="form-select" required @(Model.IsEnrollmentActive ? null : "disabled")>
-                                <option value="">Select offering…</option>
+                            <label class="form-label">@T["Course Offering"]</label>
+                            <select aria-label="@T["Course Offering"]" name="courseOfferingId" class="form-select" required @(Model.IsEnrollmentActive ? null : "disabled")>
+                                <option value="">@T["Select offering…"]</option>
                                 @foreach (var o in Model.Offerings.Where(o => o.IsActive))
                                 {
                                     <option value="@o.Id">@o.CourseCode — @o.CourseTitle (@o.SemesterName)</option>
@@ -129,8 +129,8 @@ else if (Model.IsStudent)
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" @(Model.IsEnrollmentActive ? null : "disabled")>Enroll</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary" @(Model.IsEnrollmentActive ? null : "disabled")>@T["Enroll"]</button>
                     </div>
                 </div>
             </form>
@@ -143,7 +143,7 @@ else
     var ws = Model.Workspace;
     var semesterOfferings = Model.SemesterOfferings;
     var studentsById = ws?.Students.ToDictionary(s => s.Id) ?? new Dictionary<Guid, Tabsan.EduSphere.Web.Models.Portal.EnrollmentWorkspaceStudent>();
-    var levelLabel = ws?.InstitutionType == 0 ? "Semester" : "Class";
+    var levelLabel = T.Text(ws?.InstitutionType == 0 ? "Semester" : "Class"); // Plan M11: vocabulary, then language
     var selectedLevel = Model.SelectedLevel;
     var activeStudents = ws?.Students.Where(s => s.Status == "Active" && s.AccountActive).ToList() ?? new();
     var listedStudents = (!Model.ShowAllLevels && selectedLevel.HasValue)
@@ -161,9 +161,9 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Enrollment administration</span>
-                    <h2 class="h5 mb-1">Enroll students by department and @levelLabel.ToLowerInvariant()</h2>
-                    <p class="text-muted mb-0">Choose a department and @levelLabel.ToLowerInvariant(), tick the courses and the students, then enroll them all at once.</p>
+                    <span class="section-kicker">@T["Enrollment administration"]</span>
+                    <h2 class="h5 mb-1">@T.Format("Enroll students by department and {0}", levelLabel.ToLowerInvariant())</h2>
+                    <p class="text-muted mb-0">@T.Format("Choose a department and {0}, tick the courses and the students, then enroll them all at once.", levelLabel.ToLowerInvariant())</p>
                 </div>
                 @if (Model.IsAdminUser)
                 {
@@ -172,9 +172,9 @@ else
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <input type="hidden" name="offeringId" value="@Model.SelectedOfferingId" />
-                        <input type="hidden" name="isActive" value="@(!Model.IsEnrollmentActive)" />
+                        <input type="hidden" name="isActive" value="@(!Model.IsEnrollmentActive ? "true" : "false")" />
                         <button type="submit" class="btn @(Model.IsEnrollmentActive ? "btn-outline-danger" : "btn-outline-success") btn-sm">
-                            @(Model.IsEnrollmentActive ? "Deactivate Enrollment" : "Activate Enrollment")
+                            @(Model.IsEnrollmentActive ? T.Text("Deactivate Enrollment") : T.Text("Activate Enrollment"))
                         </button>
                     </form>
                 }
@@ -184,9 +184,9 @@ else
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-md-2">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="tabsanInstitutionChanged(this)">
-                            <option value="">All Tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="tabsanInstitutionChanged(this)">
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
@@ -194,9 +194,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.departmentId.value='';this.form.semesterId.value='';this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.departmentId.value='';this.form.semesterId.value='';this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -205,9 +205,9 @@ else
                     </div>
                 }
                 <div class="col-md-3">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.semesterId.value='';this.form.submit()">
-                        <option value="">Select department…</option>
+                    <label class="form-label">@T["Department"]</label>
+                    <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.semesterId.value='';this.form.submit()">
+                        <option value="">@T["Select department…"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -216,11 +216,11 @@ else
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">@levelLabel</label>
-                    <select name="semesterId" class="form-select" onchange="this.form.submit()" @(ws is null ? "disabled" : null)>
-                        <option value="">Select @levelLabel.ToLowerInvariant()…</option>
+                    <select aria-label="@levelLabel" name="semesterId" class="form-select" onchange="this.form.submit()" @(ws is null ? "disabled" : null)>
+                        <option value="">@T.Format("Select {0}…", levelLabel.ToLowerInvariant())</option>
                         @foreach (var s in Model.WorkspaceSemesters)
                         {
-                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name (@s.Courses course@(s.Courses == 1 ? "" : "s"))</option>
+                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@T.Format("{0} ({1} course{2})", s.Name, s.Courses, (s.Courses == 1 ? "" : "s"))</option>
                         }
                     </select>
                 </div>
@@ -236,20 +236,20 @@ else
     {
         <div class="page-section-card card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <h2 class="h6 mb-2">Last enrollment run</h2>
+                <h2 class="h6 mb-2">@T["Last enrollment run"]</h2>
                 <div class="d-flex flex-wrap gap-2 mb-2">
-                    <span class="badge bg-success">@bulk.Enrolled enrolled</span>
-                    @if (bulk.Waitlisted > 0) { <span class="badge bg-warning text-dark">@bulk.Waitlisted waitlisted</span> }
-                    @if (bulk.AlreadyEnrolled > 0) { <span class="badge bg-secondary">@bulk.AlreadyEnrolled already enrolled</span> }
-                    @if (bulk.Skipped > 0) { <span class="badge bg-danger">@bulk.Skipped not enrolled</span> }
+                    <span class="badge bg-success">@T.Format("{0} enrolled", bulk.Enrolled)</span>
+                    @if (bulk.Waitlisted > 0) { <span class="badge bg-warning text-dark">@T.Format("{0} waitlisted", bulk.Waitlisted)</span> }
+                    @if (bulk.AlreadyEnrolled > 0) { <span class="badge bg-secondary">@T.Format("{0} already enrolled", bulk.AlreadyEnrolled)</span> }
+                    @if (bulk.Skipped > 0) { <span class="badge bg-danger">@T.Format("{0} not enrolled", bulk.Skipped)</span> }
                 </div>
                 @if (bulk.Results.Count > 0)
                 {
                     <details @(bulk.Skipped > 0 ? "open" : null)>
-                        <summary class="small">Show students that were waitlisted or not enrolled, and why</summary>
+                        <summary class="small">@T["Show students that were waitlisted or not enrolled, and why"]</summary>
                         <div class="table-responsive mt-2">
                             <table class="table table-sm align-middle mb-0">
-                                <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Outcome</th><th>Reason</th></tr></thead>
+                                <thead><tr><th>@T["Roll No."]</th><th>@T["Name"]</th><th>@T["Course"]</th><th>@T["Outcome"]</th><th>@T["Reason"]</th></tr></thead>
                                 <tbody>
                                     @foreach (var r in bulk.Results)
                                     {
@@ -257,7 +257,7 @@ else
                                             <td><code>@r.RegistrationNumber</code></td>
                                             <td>@r.StudentName</td>
                                             <td class="small">@r.Course</td>
-                                            <td><span class="badge @(r.Outcome == "Waitlisted" ? "bg-warning text-dark" : "bg-danger")">@(r.Outcome == "Skipped" ? "Not enrolled" : r.Outcome)</span></td>
+                                            <td><span class="badge @(r.Outcome == "Waitlisted" ? "bg-warning text-dark" : "bg-danger")">@(r.Outcome == "Skipped" ? T.Text("Not enrolled") : r.Outcome)</span></td>
                                             <td class="small">@r.Message</td>
                                         </tr>
                                     }
@@ -273,22 +273,22 @@ else
     @if (!Model.SelectedDepartmentId.HasValue)
     {
         <div class="empty-state-card">
-            <h3>Select a department</h3>
-            <p class="text-muted mb-0">Start by choosing the department whose students you want to enroll.</p>
+            <h3>@T["Select a department"]</h3>
+            <p class="text-muted mb-0">@T["Start by choosing the department whose students you want to enroll."]</p>
         </div>
     }
     else if (ws is not null && ws.Offerings.Count == 0)
     {
         <div class="empty-state-card">
-            <h3>No courses to enroll in</h3>
-            <p class="text-muted mb-0">@(User.IsInRole("Faculty") && !Model.IsAdminUser ? "You are not teaching any course in this department." : "This department has no course offerings yet. Create them on the Courses page.")</p>
+            <h3>@T["No courses to enroll in"]</h3>
+            <p class="text-muted mb-0">@(User.IsInRole("Faculty") && !Model.IsAdminUser ? T.Text("You are not teaching any course in this department.") : T.Text("This department has no course offerings yet. Create them on the Courses page."))</p>
         </div>
     }
     else if (!Model.SelectedSemesterId.HasValue)
     {
         <div class="empty-state-card">
-            <h3>Select a @levelLabel.ToLowerInvariant()</h3>
-            <p class="text-muted mb-0">Choose the @levelLabel.ToLowerInvariant() to see its courses and students.</p>
+            <h3>@T.Format("Select a {0}", levelLabel.ToLowerInvariant())</h3>
+            <p class="text-muted mb-0">@T.Format("Choose the {0} to see its courses and students.", levelLabel.ToLowerInvariant())</p>
         </div>
     }
     else
@@ -307,15 +307,15 @@ else
             <div class="page-section-card card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <h2 class="h6 mb-0">1. Courses in @Model.SelectedSemesterName</h2>
-                        <span class="text-muted small">Tick the courses to enroll the selected students in.</span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanEnrollToggleAll('offeringIds', true)">Select all open</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('offeringIds', false)">Clear</button>
+                        <h2 class="h6 mb-0">@T.Format("1. Courses in {0}", Model.SelectedSemesterName)</h2>
+                        <span class="text-muted small">@T["Tick the courses to enroll the selected students in."]</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanEnrollToggleAll('offeringIds', true)">@T["Select all open"]</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('offeringIds', false)">@T["Clear"]</button>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
-                                <tr><th style="width:2.5rem"></th><th>Code</th><th>Course</th><th>Teacher</th><th>Seats</th><th>Status</th><th></th></tr>
+                                <tr><th style="width:2.5rem"></th><th>@T["Code"]</th><th>@T["Course"]</th><th>@T["Teacher"]</th><th>@T["Seats"]</th><th>@T["Status"]</th><th></th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var o in semesterOfferings)
@@ -336,11 +336,11 @@ else
                                             <a class="btn btn-sm btn-outline-secondary" asp-action="Enrollments"
                                                asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
                                                asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId"
-                                               asp-route-offeringId="@o.Id" asp-route-showAll="@(Model.ShowAllLevels ? "true" : null)" asp-fragment="roster">Roster</a>
+                                               asp-route-offeringId="@o.Id" asp-route-showAll="@(Model.ShowAllLevels ? "true" : null)" asp-fragment="roster">@T["Roster"]</a>
                                             @if (Model.IsAdminUser && !o.IsOpen && !o.SemesterClosed)
                                             {
                                                 <button type="submit" class="btn btn-sm btn-outline-success" formaction="@Url.Action("OpenOfferingForEnrollment")"
-                                                        name="targetOfferingId" value="@o.Id" formnovalidate>Open</button>
+                                                        name="targetOfferingId" value="@o.Id" formnovalidate>@T["Open"]</button>
                                             }
                                         </td>
                                     </tr>
@@ -350,7 +350,7 @@ else
                     </div>
                     @if (semesterOfferings.Any(o => !o.CanEnroll))
                     {
-                        <p class="small text-muted mt-2 mb-0">Courses that are closed, or whose @levelLabel.ToLowerInvariant() is closed, cannot take new enrollments.@(Model.IsAdminUser ? " Use Open to re-open a closed course." : "")</p>
+                        <p class="small text-muted mt-2 mb-0">@T.Format("Courses that are closed, or whose {0} is closed, cannot take new enrollments.{1}", levelLabel.ToLowerInvariant(), (Model.IsAdminUser ? " Use Open to re-open a closed course." : ""))</p>
                     }
                 </div>
             </div>
@@ -359,13 +359,13 @@ else
             <div class="page-section-card card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <h2 class="h6 mb-0">2. Students</h2>
+                        <h2 class="h6 mb-0">@T["2. Students"]</h2>
                         <span class="text-muted small">
                             @if (!Model.ShowAllLevels && selectedLevel.HasValue)
                             {
                                 @:Showing @ws!.DepartmentName students currently in @levelLabel.ToLowerInvariant() @selectedLevel (@listedStudents.Count).
                                 <a asp-action="Enrollments" asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
-                                   asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId" asp-route-showAll="true">Show all @activeStudents.Count department students</a>
+                                   asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId" asp-route-showAll="true">@T.Format("Show all {0} department students", activeStudents.Count)</a>
                             }
                             else
                             {
@@ -373,20 +373,20 @@ else
                                 @if (selectedLevel.HasValue)
                                 {
                                     <a asp-action="Enrollments" asp-route-institutionType="@institutionTypeValue" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId"
-                                       asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId">Only @levelLabel.ToLowerInvariant() @selectedLevel</a>
+                                       asp-route-departmentId="@Model.SelectedDepartmentId" asp-route-semesterId="@Model.SelectedSemesterId" asp-route-offeringId="@Model.SelectedOfferingId">@T.Format("Only {0} {1}", levelLabel.ToLowerInvariant(), selectedLevel)</a>
                                 }
                             }
                         </span>
                     </div>
                     <div class="row g-2 align-items-end mb-2">
                         <div class="col-md-4">
-                            <label class="form-label" for="studentSearch">Search</label>
-                            <input id="studentSearch" type="search" class="form-control" placeholder="Roll number or name" oninput="tabsanEnrollFilter()" />
+                            <label class="form-label" for="studentSearch">@T["Search"]</label>
+                            <input id="studentSearch" type="search" class="form-control" placeholder="@T["Roll number or name"]" oninput="tabsanEnrollFilter()" />
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label" for="studentProgram">Program</label>
+                            <label class="form-label" for="studentProgram">@T["Program"]</label>
                             <select id="studentProgram" class="form-select" onchange="tabsanEnrollFilter()">
-                                <option value="">All programs</option>
+                                <option value="">@T["All programs"]</option>
                                 @foreach (var p in listedStudents.Select(s => s.ProgramName).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().OrderBy(n => n))
                                 {
                                     <option value="@p">@p</option>
@@ -395,19 +395,19 @@ else
                         </div>
                         <div class="col-md-3 form-check ms-2 mb-2">
                             <input class="form-check-input" type="checkbox" id="hideEnrolled" onchange="tabsanEnrollFilter()" checked />
-                            <label class="form-check-label" for="hideEnrolled">Hide students already in every ticked course</label>
+                            <label class="form-check-label" for="hideEnrolled">@T["Hide students already in every ticked course"]</label>
                         </div>
                         <div class="col-md-auto ms-auto d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', true)">Select all shown</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', false)">Clear</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', true)">@T["Select all shown"]</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tabsanEnrollToggleAll('studentProfileIds', false)">@T["Clear"]</button>
                         </div>
                     </div>
 
                     @if (listedStudents.Count == 0)
                     {
                         <div class="empty-state-card">
-                            <h3>No students found</h3>
-                            <p class="text-muted mb-0">No active students match this department and @levelLabel.ToLowerInvariant().</p>
+                            <h3>@T["No students found"]</h3>
+                            <p class="text-muted mb-0">@T.Format("No active students match this department and {0}.", levelLabel.ToLowerInvariant())</p>
                         </div>
                     }
                     else
@@ -415,7 +415,7 @@ else
                         <div class="table-responsive" style="max-height: 32rem; overflow-y: auto;">
                             <table class="table table-hover align-middle mb-0" id="enrollStudentTable">
                                 <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
-                                    <tr><th style="width:2.5rem"></th><th>Roll No.</th><th>Name</th><th>Program</th><th>@levelLabel</th><th>Already in</th></tr>
+                                    <tr><th style="width:2.5rem"></th><th>@T["Roll No."]</th><th>@T["Name"]</th><th>@T["Program"]</th><th>@levelLabel</th><th>@T["Already in"]</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var s in listedStudents)
@@ -439,7 +439,7 @@ else
                                     }
                                 </tbody>
                             </table>
-                            <p id="enrollNoneShown" class="text-muted small p-3 mb-0" style="display:none">Every student in this list is already enrolled in the ticked courses (or does not match the search). Untick <em>Hide students already in every ticked course</em> to see them.</p>
+                            <p id="enrollNoneShown" class="text-muted small p-3 mb-0" style="display:none">@T["Every student in this list is already enrolled in the ticked courses (or does not match the search). Untick"] <em>@T["Hide students already in every ticked course"]</em> @T["to see them."]</p>
                         </div>
                     }
                 </div>
@@ -448,20 +448,20 @@ else
             @* ── Step 3: enroll ── *@
             <div class="page-section-card card border-0 shadow-sm mb-3" style="position: sticky; bottom: 0.5rem; z-index: 2;">
                 <div class="card-body d-flex flex-wrap align-items-center gap-3 py-2">
-                    <strong id="enrollSummary">0 students × 0 courses selected</strong>
+                    <strong id="enrollSummary">@T["0 students × 0 courses selected"]</strong>
                     @if (Model.IsAdminUser)
                     {
                         <div class="form-check mb-0">
                             <input class="form-check-input" type="checkbox" name="overrideClash" value="true" id="overrideClash" />
-                            <label class="form-check-label small" for="overrideClash">Allow timetable clashes</label>
+                            <label class="form-check-label small" for="overrideClash">@T["Allow timetable clashes"]</label>
                         </div>
-                        <input type="text" name="overrideReason" class="form-control form-control-sm" style="max-width: 16rem" placeholder="Reason for allowing clashes" />
+                        <input type="text" name="overrideReason" class="form-control form-control-sm" style="max-width: 16rem" placeholder="@T["Reason for allowing clashes"]" />
                     }
-                    <button type="submit" id="enrollSubmit" class="btn btn-primary ms-auto" disabled>Enroll selected students</button>
+                    <button type="submit" id="enrollSubmit" class="btn btn-primary ms-auto" disabled>@T["Enroll selected students"]</button>
                 </div>
                 @if (!Model.CanManage)
                 {
-                    <div class="px-3 pb-2 small text-muted">@(Model.IsEnrollmentActive ? "You can view enrollments but not change them." : "Enrollment is deactivated for this scope.")</div>
+                    <div class="px-3 pb-2 small text-muted">@(Model.IsEnrollmentActive ? T.Text("You can view enrollments but not change them.") : T.Text("Enrollment is deactivated for this scope."))</div>
                 }
             </div>
         </form>
@@ -482,23 +482,23 @@ else
                         <input type="hidden" name="institutionType" value="@institutionTypeValue" />
                         <input type="hidden" name="showAll" value="@(Model.ShowAllLevels ? "true" : "false")" />
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                            <h2 class="h6 mb-0">Roster — <code>@selectedOffering.CourseCode</code> @selectedOffering.CourseTitle</h2>
-                            <span class="badge bg-secondary">@roster.Count(r => r.Status == "Active") enrolled</span>
+                            <h2 class="h6 mb-0">@T["Roster —"] <code>@selectedOffering.CourseCode</code> @selectedOffering.CourseTitle</h2>
+                            <span class="badge bg-secondary">@T.Format("{0} enrolled", roster.Count(r => r.Status == "Active"))</span>
                             @if (roster.Any(r => r.Status == "Waitlisted"))
                             {
-                                <span class="badge bg-warning text-dark">@roster.Count(r => r.Status == "Waitlisted") waitlisted</span>
+                                <span class="badge bg-warning text-dark">@T.Format("{0} waitlisted", roster.Count(r => r.Status == "Waitlisted"))</span>
                             }
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanRosterCsv('@selectedOffering.CourseCode')" @(roster.Count == 0 ? "disabled" : null)>Download CSV</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="tabsanRosterCsv('@selectedOffering.CourseCode')" @(roster.Count == 0 ? "disabled" : null)>@T["Download CSV"]</button>
                             @if (Model.CanManage)
                             {
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return tabsanConfirmDrop()" @(roster.Count == 0 ? "disabled" : null)>Drop selected</button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return tabsanConfirmDrop()" @(roster.Count == 0 ? "disabled" : null)>@T["Drop selected"]</button>
                             }
                         </div>
                         @if (roster.Count == 0)
                         {
                             <div class="empty-state-card">
-                                <h3>No students enrolled</h3>
-                                <p class="text-muted mb-0">Nobody is enrolled in this course yet.</p>
+                                <h3>@T["No students enrolled"]</h3>
+                                <p class="text-muted mb-0">@T["Nobody is enrolled in this course yet."]</p>
                             </div>
                         }
                         else
@@ -507,8 +507,8 @@ else
                                 <table class="table table-hover align-middle mb-0" id="rosterTable">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="width:2.5rem">@if (Model.CanManage) { <input class="form-check-input" type="checkbox" aria-label="Select all" onchange="document.querySelectorAll('#rosterTable input[name=studentProfileIds]').forEach(c => c.checked = this.checked)" /> }</th>
-                                            <th>#</th><th>Roll No.</th><th>Name</th><th>Program</th><th>@levelLabel</th><th>Status</th><th>Enrolled on</th>
+                                            <th style="width:2.5rem">@if (Model.CanManage) { <input class="form-check-input" type="checkbox" aria-label="@T["Select all"]" onchange="document.querySelectorAll('#rosterTable input[name=studentProfileIds]').forEach(c => c.checked = this.checked)" /> }</th>
+                                            <th>#</th><th>@T["Roll No."]</th><th>@T["Name"]</th><th>@T["Program"]</th><th>@levelLabel</th><th>@T["Status"]</th><th>@T["Enrolled on"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -520,7 +520,7 @@ else
                                                 <td>@if (Model.CanManage) { <input class="form-check-input" type="checkbox" name="studentProfileIds" value="@e.StudentProfileId" aria-label="Select @st?.RegistrationNumber" /> }</td>
                                                 <td class="text-muted small">@(n++)</td>
                                                 <td><code>@(st?.RegistrationNumber ?? "—")</code></td>
-                                                <td>@(st?.FullName ?? "(student from another department)")</td>
+                                                <td>@(st?.FullName ?? T.Text("(student from another department)"))</td>
                                                 <td class="small">@st?.ProgramName</td>
                                                 <td>@st?.Level</td>
                                                 <td><span class="badge @(e.Status == "Active" ? "bg-success" : "bg-warning text-dark")">@e.Status</span></td>

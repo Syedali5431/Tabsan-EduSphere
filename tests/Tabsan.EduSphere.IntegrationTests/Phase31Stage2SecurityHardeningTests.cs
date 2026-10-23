@@ -60,7 +60,25 @@ public class Phase31Stage2SecurityHardeningTests
             "AuthController.SecurityProfile",
             "PortalSettingsController.GetLogoFile",
             "TwoFactorController.LoginVerify",
-            "StudentController.SelfRegister"
+            "StudentController.SelfRegister",
+            // Plan M9: Copyleaks calls back without a user; each check has its own one-time token (stored hashed).
+            "SimilarityController.CopyleaksWebhook",
+            // Plan M11: the login page needs the institution's default language before anyone signs in (read-only).
+            "LocalizationController.Get",
+            // Plan M12: the app reads branding/versions before sign-in, and redeems its one-time sign-in code
+            // (single use, bound to the app's PKCE verifier).
+            "MobileController.Config",
+            "MobileController.RedeemHandoff",
+            // Plan M13: the SCORM player is authorised by its sealed, time-limited play link (attempt + learner), not a sign-in,
+            // so content can run on a cookie-less content origin.
+            "ScormController.Commit",
+            "ScormController.Content",
+            "ScormController.Play",
+            // Plan M13.2: xAPI activity providers use HTTP Basic LRS credentials checked in the action ("about" is public by spec).
+            "XapiController.About",
+            "XapiController.Get",
+            "XapiController.Post",
+            "XapiController.Put"
         };
 
         Assert.Equal(expected.OrderBy(x => x), allowAnonymousEndpoints);

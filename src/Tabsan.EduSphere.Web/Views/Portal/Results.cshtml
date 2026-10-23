@@ -1,9 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ResultsPageModel
-@{ ViewData["Title"] = "Results"; }
+@{ ViewData["Title"] = T.Text("Results"); }
 @{
     var currentAction = (ViewData["ResultsAction"] as string) ?? (ViewContext.RouteData.Values["action"]?.ToString() ?? "Results");
     var canDownloadTemplate = Model.SelectedOfferingId.HasValue;
-    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel;
+    var periodLabel = T.Text(string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel); // Plan M11: vocabulary, then language
     var semesterLabels = Model.SemesterOptions
         .Select((s, index) => new { s.Name, Label = (index + 1).ToString() })
         .ToDictionary(x => x.Name, x => x.Label, StringComparer.OrdinalIgnoreCase);
@@ -126,13 +126,13 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (Model.MessageDetails.Count > 0)
 {
     <div class="alert alert-warning">
-        <div class="fw-semibold mb-1">Details</div>
+        <div class="fw-semibold mb-1">@T["Details"]</div>
         <ul class="mb-0">
             @foreach (var detail in Model.MessageDetails)
             {
@@ -144,7 +144,7 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -152,9 +152,9 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Result controls</span>
-                    <h2 class="h5 mb-1">Filter results by scoped academic context</h2>
-                    <p class="text-muted mb-0">@(string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) ? "Required filters must be selected before write actions are enabled." : "Select filters to view results.")</p>
+                    <span class="section-kicker">@T["Result controls"]</span>
+                    <h2 class="h5 mb-1">@T["Filter results by scoped academic context"]</h2>
+                    <p class="text-muted mb-0">@(string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) ? T.Text("Required filters must be selected before write actions are enabled.") : T.Text("Select filters to view results."))</p>
                 </div>
             </div>
             <form method="get" asp-action="@currentAction" class="row g-2 align-items-end filter-toolbar"
@@ -164,9 +164,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
@@ -174,9 +174,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -189,9 +189,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -209,9 +209,9 @@ else
                     @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Department <span class="text-danger">*</span></label>
+                            <label class="form-label" for="departmentId">@T["Department"] <span class="text-danger">*</span></label>
                             <select id="departmentId" name="departmentId" class="form-select" data-cascade="department" onchange="this.form.submit()">
-                                <option value="">Select department</option>
+                                <option value="">@T["Select department"]</option>
                                 @foreach (var d in Model.Departments)
                                 {
                                     <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id)">@d.Name</option>
@@ -219,9 +219,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Program/Course <span class="text-danger">*</span></label>
-                            <select name="courseId" class="form-select" onchange="this.form.submit()">
-                                <option value="">Select course</option>
+                            <label class="form-label">@T["Program/Course"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Program/Course"]" name="courseId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["Select course"]</option>
                                 @foreach (var c in Model.Courses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id)">@c.Name</option>
@@ -232,8 +232,8 @@ else
 
                     <div class="col-md-3">
                         <label class="form-label">@periodLabel</label>
-                        <select name="semesterName" class="form-select" onchange="this.form.submit()">
-                            <option value="">All @periodLabel</option>
+                        <select aria-label="@periodLabel" name="semesterName" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T.Format("All {0}", periodLabel)</option>
                             @foreach (var s in Model.SemesterOptions)
                             {
                                 <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@GetSemesterLabel(s.Name)</option>
@@ -244,9 +244,9 @@ else
                     @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-3">
-                            <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
-                                <option value="">Select subject</option>
+                            <label class="form-label">@T["Subject"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Subject"]" name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["Select subject"]</option>
                                 @foreach (var s in Model.Subjects)
                                 {
                                     <option value="@s.Id" selected="@(Model.SelectedSubjectOfferingId == s.Id)">@s.Name</option>
@@ -254,9 +254,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Exam Type <span class="text-danger">*</span></label>
-                            <select name="examType" class="form-select" onchange="this.form.submit()">
-                                <option value="">Select exam type</option>
+                            <label class="form-label">@T["Exam Type"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Exam Type"]" name="examType" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["Select exam type"]</option>
                                 @foreach (var e in Model.ExamTypeOptions)
                                 {
                                     <option value="@e.Name" selected="@(string.Equals(Model.SelectedExamType, e.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@e.Name</option>
@@ -267,9 +267,9 @@ else
                         <input type="hidden" name="offeringId" value="@Model.SelectedSubjectOfferingId" />
 
                         <div class="col-md-3">
-                            <label class="form-label">Student</label>
-                            <select name="studentId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All students</option>
+                            <label class="form-label">@T["Student"]</label>
+                            <select aria-label="@T["Student"]" name="studentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All students"]</option>
                                 @foreach (var r in Model.Roster)
                                 {
                                     <option value="@r.Id" selected="@(Model.SelectedStudentId == r.Id)">@r.StudentName (@r.RegistrationNumber)</option>
@@ -285,7 +285,7 @@ else
                     @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
+                            <button type="submit" class="btn btn-outline-secondary w-100">@T["Apply"]</button>
                         </div>
                     }
             </form>
@@ -295,19 +295,19 @@ else
     @if (Model.Cgpa.HasValue)
     {
         <div class="alert alert-primary page-section-card">
-            <strong>Overall CGPA:</strong> @Model.Cgpa.Value.ToString("0.00")
+            <strong>@T["Overall CGPA:"]</strong> @Model.Cgpa.Value.ToString("0.00")
         </div>
     }
 
     <div class="page-section-card card border-0 shadow-sm">
         <div class="card-body">
             <div class="section-head mb-3">
-                <h2 class="h5 mb-0">Results <span class="badge bg-secondary ms-1">@Model.Results.Count</span></h2>
+                <h2 class="h5 mb-0">@T["Results"] <span class="badge bg-secondary ms-1">@Model.Results.Count</span></h2>
                 @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
                     <div class="responsive-action-group">
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#enterResultModal" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">
-                            + Enter Result
+                            @T["+ Enter Result"]
                         </button>
                         <form asp-action="DownloadResultCsvTemplate" method="get" class="d-inline">
                             <input type="hidden" name="entryPoint" value="@currentAction" />
@@ -327,7 +327,7 @@ else
                                     class="btn btn-sm btn-outline-secondary"
                                     disabled="@(!canDownloadTemplate)"
                                     title="@(!canDownloadTemplate ? Model.SaveResultDisabledReason : null)">
-                                Get Template
+                                @T["Get Template"]
                             </button>
                         </form>
                         <form asp-action="ImportResultCsv" method="post" enctype="multipart/form-data" class="d-inline">
@@ -345,11 +345,11 @@ else
                             <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                             <input type="hidden" name="section" value="@Model.SelectedSection" />
                             <input type="hidden" name="batch" value="@Model.SelectedBatch" />
-                            <input type="file" name="csvFile" accept=".csv" class="form-control form-control-sm d-inline-block" style="width: 190px;" />
+                            <input aria-label="@T["CSV file"]" type="file" name="csvFile" accept=".csv" class="form-control form-control-sm d-inline-block" style="width: 190px;" />
                             <label class="form-check-label ms-1 me-1">
-                                <input type="checkbox" name="strictMode" value="true" class="form-check-input" /> strict
+                                <input type="checkbox" name="strictMode" value="true" class="form-check-input" /> @T["strict"]
                             </label>
-                            <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">Import Results</button>
+                            <button type="submit" class="btn btn-sm btn-outline-primary" disabled="@(!Model.CanWriteResults)" title="@(!Model.CanWriteResults ? Model.SaveResultDisabledReason : null)">@T["Import Results"]</button>
                         </form>
                         @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
                         {
@@ -368,7 +368,7 @@ else
                                 <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                                 <input type="hidden" name="section" value="@Model.SelectedSection" />
                                 <input type="hidden" name="batch" value="@Model.SelectedBatch" />
-                                <button type="submit" class="btn btn-sm btn-outline-info">Import Report</button>
+                                <button type="submit" class="btn btn-sm btn-outline-info">@T["Import Report"]</button>
                             </form>
                         }
                         <form asp-action="PublishAllResults" method="post" class="d-inline">
@@ -387,10 +387,10 @@ else
                             <input type="hidden" name="section" value="@Model.SelectedSection" />
                             <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                             <button type="submit" class="btn btn-sm btn-success"
-                                    onclick="return confirm('Publish all draft results for this offering?')"
+                                    onclick="return confirm('@T.Js("Publish all draft results for this offering?")')"
                                     disabled="@(!Model.CanPublishResults)"
                                     title="@(!Model.CanPublishResults ? Model.PublishResultDisabledReason : null)">
-                                Publish All
+                                @T["Publish All"]
                             </button>
                         </form>
                         <form asp-action="ExportResultSummaryCsv" method="get" class="d-inline">
@@ -399,7 +399,7 @@ else
                             <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                             <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                             <button type="submit" class="btn btn-sm btn-outline-primary">
-                                Export CSV
+                                @T["Export CSV"]
                             </button>
                         </form>
                         <form asp-action="ExportResultSummaryPdf" method="get" class="d-inline">
@@ -408,16 +408,16 @@ else
                             <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                             <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                             <button type="submit" class="btn btn-sm btn-outline-danger">
-                                Export PDF
+                                @T["Export PDF"]
                             </button>
                         </form>
                     </div>
                     <div class="text-muted small mt-1">
-                        Template CSV includes 2 example rows for format guidance; those example rows are skipped during import. Import report links are one-time use and expire after 2 hours.
+                        @T["Template CSV includes 2 example rows for format guidance; those example rows are skipped during import. Import report links are one-time use and expire after 2 hours."]
                     </div>
                     @if (!Model.CanPublishResults && Model.CanWriteResults)
                     {
-                        <div class="text-muted small mt-1">Publishing is approval-gated and available to Admin/SuperAdmin roles only.</div>
+                        <div class="text-muted small mt-1">@T["Publishing is approval-gated and available to Admin/SuperAdmin roles only."]</div>
                     }
                 }
                 else if (string.Equals(currentAction, "Results", StringComparison.OrdinalIgnoreCase) && Model.Results.Count > 0)
@@ -430,7 +430,7 @@ else
                             <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                             <button type="submit" class="btn btn-sm btn-outline-primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                                Export CSV
+                                @T["Export CSV"]
                             </button>
                         </form>
                         <form asp-action="ExportResultSummaryPdf" method="get" class="d-inline">
@@ -440,7 +440,7 @@ else
                             <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                                Export PDF
+                                @T["Export PDF"]
                             </button>
                         </form>
                     </div>
@@ -451,14 +451,14 @@ else
             {
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                        <h3 class="h6 mb-0">Result Entry Grid</h3>
+                        <h3 class="h6 mb-0">@T["Result Entry Grid"]</h3>
                         @if (!Model.CanWriteResults)
                         {
-                            <span class="badge bg-warning text-dark">Guidance state</span>
+                            <span class="badge bg-warning text-dark">@T["Guidance state"]</span>
                         }
                         else
                         {
-                            <span class="badge bg-success">Editable state</span>
+                            <span class="badge bg-success">@T["Editable state"]</span>
                         }
                     </div>
                     <p class="text-muted small mb-2">
@@ -475,19 +475,19 @@ else
                         <table class="table table-sm table-bordered align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Student Name</th>
-                                    <th>Marks Obtained</th>
-                                    <th>Max Marks</th>
-                                    <th>Grade</th>
-                                    <th>Remarks</th>
+                                    <th>@T["Student ID"]</th>
+                                    <th>@T["Student Name"]</th>
+                                    <th>@T["Marks Obtained"]</th>
+                                    <th>@T["Max Marks"]</th>
+                                    <th>@T["Grade"]</th>
+                                    <th>@T["Remarks"]</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @if (Model.Roster.Count == 0)
                                 {
                                     <tr>
-                                        <td colspan="6" class="text-muted">No roster rows available for the current selection.</td>
+                                        <td colspan="6" class="text-muted">@T["No roster rows available for the current selection."]</td>
                                     </tr>
                                 }
                                 else
@@ -498,16 +498,16 @@ else
                                             <td>@row.RegistrationNumber</td>
                                             <td>@row.StudentName</td>
                                             <td>
-                                                <input type="number" class="form-control form-control-sm" min="0" step="0.5" placeholder="0" disabled="@(!Model.CanWriteResults)" />
+                                                <input aria-label="@T["Marks Obtained"]" type="number" class="form-control form-control-sm" min="0" step="0.5" placeholder="0" disabled="@(!Model.CanWriteResults)" />
                                             </td>
                                             <td>
-                                                <input type="number" class="form-control form-control-sm" min="1" step="0.5" placeholder="100" disabled="@(!Model.CanWriteResults)" />
+                                                <input aria-label="@T["Max Marks"]" type="number" class="form-control form-control-sm" min="1" step="0.5" placeholder="100" disabled="@(!Model.CanWriteResults)" />
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm" maxlength="10" placeholder="A" disabled="@(!Model.CanWriteResults)" />
+                                                <input aria-label="@T["Grade"]" type="text" class="form-control form-control-sm" maxlength="10" placeholder="A" disabled="@(!Model.CanWriteResults)" />
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm" maxlength="120" placeholder="Optional note" disabled="@(!Model.CanWriteResults)" />
+                                                <input aria-label="@T["Remarks"]" type="text" class="form-control form-control-sm" maxlength="120" placeholder="@T["Optional note"]" disabled="@(!Model.CanWriteResults)" />
                                             </td>
                                         </tr>
                                     }
@@ -521,8 +521,8 @@ else
             @if (Model.Results.Count == 0)
             {
                 <div class="empty-state-card">
-                    <h3>No results found</h3>
-                    <p class="text-muted mb-0">There are no matching results for the current filter selection.</p>
+                    <h3>@T["No results found"]</h3>
+                    <p class="text-muted mb-0">@T["There are no matching results for the current filter selection."]</p>
                 </div>
             }
             else
@@ -531,19 +531,19 @@ else
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Course</th>
-                                <th>Student</th>
+                                <th>@T["Course"]</th>
+                                <th>@T["Student"]</th>
                                 <th>@periodLabel</th>
-                                <th>Marks</th>
-                                <th>Grade</th>
-                                <th>Published</th>
+                                <th>@T["Marks"]</th>
+                                <th>@T["Grade"]</th>
+                                <th>@T["Published"]</th>
                                 @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                                 {
-                                    <th>Actions</th>
+                                    <th>@T["Actions"]</th>
                                 }
                                 @if (User.IsInRole("Student"))
                                 {
-                                    <th>Re-check</th>
+                                    <th>@T["Re-check"]</th>
                                 }
                             </tr>
                         </thead>
@@ -563,7 +563,7 @@ else
                                     </td>
                                     <td>
                                         <span class="badge stat-pill @(r.IsPublished ? "bg-success" : "bg-secondary")">
-                                            @(r.IsPublished ? "Yes" : "Pending")
+                                            @(r.IsPublished ? T.Text("Yes") : T.Text("Pending"))
                                         </span>
                                     </td>
                                     @if (string.Equals(currentAction, "EnterResults", StringComparison.OrdinalIgnoreCase) && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
@@ -577,7 +577,7 @@ else
                                                         data-bs-toggle="modal" data-bs-target="#requestResultModificationModal"
                                                         data-resultid="@r.Id" data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
                                                         data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
-                                                    Request Modify
+                                                    @T["Request Modify"]
                                                 </button>
                                             }
                                             @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
@@ -586,13 +586,13 @@ else
                                                         data-bs-toggle="modal" data-bs-target="#correctResultModal"
                                                         data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
                                                         data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
-                                                    Update Result
+                                                    @T["Update Result"]
                                                 </button>
                                             }
                                             @if (r.StudentProfileId != Guid.Empty)
                                             {
                                                 <form asp-action="PromoteStudentFromResult" method="post" class="d-inline"
-                                                      onsubmit="return confirm('Promote @r.StudentName to next @periodLabel.ToLowerInvariant()?')">
+                                                      onsubmit="return confirm('@T.Js("Promote {0} to next {1}?", r.StudentName, periodLabel.ToLowerInvariant())')">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="entryPoint" value="@currentAction" />
                                                     <input type="hidden" name="studentProfileId" value="@r.StudentProfileId" />
@@ -608,7 +608,7 @@ else
                                                     <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
                                                     <input type="hidden" name="section" value="@Model.SelectedSection" />
                                                     <input type="hidden" name="batch" value="@Model.SelectedBatch" />
-                                                    <button type="submit" class="btn btn-xs btn-outline-primary btn-sm">Promote ↑</button>
+                                                    <button type="submit" class="btn btn-xs btn-outline-primary btn-sm">@T["Promote ↑"]</button>
                                                 </form>
                                             }
                                         </td>
@@ -622,7 +622,7 @@ else
                                                     data-offeringid="@r.CourseOfferingId"
                                                     data-resulttype="@r.ResultType"
                                                     data-coursename="@($"{r.CourseCode} - {r.CourseName}")">
-                                                Request Re-check
+                                                @T["Request Re-check"]
                                             </button>
                                         </td>
                                     }
@@ -658,14 +658,14 @@ else
                 <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Enter Result</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Enter Result"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Student <span class="text-danger">*</span></label>
-                            <select name="studentProfileId" class="form-select" required>
-                                <option value="">Select student…</option>
+                            <label class="form-label">@T["Student"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Student"]" name="studentProfileId" class="form-select" required>
+                                <option value="">@T["Select student…"]</option>
                                 @foreach (var s in Model.Roster)
                                 {
                                     <option value="@s.Id">@s.StudentName (@s.RegistrationNumber)</option>
@@ -673,22 +673,22 @@ else
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Result Type <span class="text-danger">*</span></label>
+                            <label class="form-label" for="resultType_select">@T["Result Type"] <span class="text-danger">*</span></label>
                             <select id="resultType_select" name="resultType" class="form-select" required>
-                                <option value="Midterm">Midterm</option>
-                                <option value="Final">Final</option>
-                                <option value="Quiz">Quiz</option>
-                                <option value="Assignment">Assignment</option>
+                                <option value="Midterm">@T["Midterm"]</option>
+                                <option value="Final">@T["Final"]</option>
+                                <option value="Quiz">@T["Quiz"]</option>
+                                <option value="Assignment">@T["Assignment"]</option>
                             </select>
                         </div>
                         <div class="row g-2">
                             <div class="col">
-                                <label class="form-label">Marks Obtained <span class="text-danger">*</span></label>
-                                <input name="marksObtained" type="number" step="0.5" min="0" class="form-control" required />
+                                <label class="form-label">@T["Marks Obtained"] <span class="text-danger">*</span></label>
+                                <input aria-label="@T["Marks Obtained"]" name="marksObtained" type="number" step="0.5" min="0" class="form-control" required />
                             </div>
                             <div class="col">
-                                <label class="form-label">Max Marks <span class="text-danger">*</span></label>
-                                <input name="maxMarks" type="number" step="0.5" min="1" class="form-control" required />
+                                <label class="form-label">@T["Max Marks"] <span class="text-danger">*</span></label>
+                                <input aria-label="@T["Max Marks"]" name="maxMarks" type="number" step="0.5" min="1" class="form-control" required />
                             </div>
                         </div>
                         @* Promote checkbox — hidden by default; shown by the JS below only when
@@ -697,14 +697,14 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="promote" value="true" id="promoteCheck" />
                                 <label class="form-check-label" for="promoteCheck">
-                                    Promote student to next @periodLabel.ToLowerInvariant() after saving
+                                    @T.Format("Promote student to next {0} after saving", periodLabel.ToLowerInvariant())
                                 </label>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Save"]</button>
                     </div>
                 </div>
             </form>
@@ -735,28 +735,28 @@ else
                 <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Correct Result</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Correct Result"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-2">
                             <div class="col">
-                                <label class="form-label">New Marks Obtained <span class="text-danger">*</span></label>
+                                <label class="form-label" for="correctResult_marksObtained">@T["New Marks Obtained"] <span class="text-danger">*</span></label>
                                 <input id="correctResult_marksObtained" name="newMarksObtained" type="number" step="0.5" min="0" class="form-control" required />
                             </div>
                             <div class="col">
-                                <label class="form-label">New Max Marks <span class="text-danger">*</span></label>
+                                <label class="form-label" for="correctResult_maxMarks">@T["New Max Marks"] <span class="text-danger">*</span></label>
                                 <input id="correctResult_maxMarks" name="newMaxMarks" type="number" step="0.5" min="1" class="form-control" required />
                             </div>
                         </div>
                         <div class="mt-3">
-                            <label class="form-label">Correction Reason <span class="text-danger">*</span></label>
-                            <textarea name="reason" class="form-control" rows="3" required placeholder="Document why this published result is being corrected"></textarea>
+                            <label class="form-label">@T["Correction Reason"] <span class="text-danger">*</span></label>
+                            <textarea aria-label="@T["Correction Reason"]" name="reason" class="form-control" rows="3" required placeholder="Document why this published result is being corrected"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Correction</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Save Correction"]</button>
                     </div>
                 </div>
             </form>
@@ -788,28 +788,28 @@ else
                 <input type="hidden" name="batch" value="@Model.SelectedBatch" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Request Result Modification</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Request Result Modification"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-2">
                             <div class="col">
-                                <label class="form-label">Proposed Marks Obtained <span class="text-danger">*</span></label>
+                                <label class="form-label" for="modifyResult_marksObtained">@T["Proposed Marks Obtained"] <span class="text-danger">*</span></label>
                                 <input id="modifyResult_marksObtained" name="newMarksObtained" type="number" step="0.5" min="0" class="form-control" required />
                             </div>
                             <div class="col">
-                                <label class="form-label">Proposed Max Marks <span class="text-danger">*</span></label>
+                                <label class="form-label" for="modifyResult_maxMarks">@T["Proposed Max Marks"] <span class="text-danger">*</span></label>
                                 <input id="modifyResult_maxMarks" name="newMaxMarks" type="number" step="0.5" min="1" class="form-control" required />
                             </div>
                         </div>
                         <div class="mt-3">
-                            <label class="form-label">Reason <span class="text-danger">*</span></label>
-                            <textarea name="reason" class="form-control" rows="3" required placeholder="Explain why this result needs modification"></textarea>
+                            <label class="form-label">@T["Reason"] <span class="text-danger">*</span></label>
+                            <textarea aria-label="@T["Reason"]" name="reason" class="form-control" rows="3" required placeholder="Explain why this result needs modification"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Submit Request"]</button>
                     </div>
                 </div>
             </form>
@@ -831,16 +831,16 @@ else
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Request Result Re-check</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Request Result Re-check"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
-                        <label class="form-label">Reason <span class="text-danger">*</span></label>
-                        <textarea name="reason" class="form-control" rows="3" required placeholder="Why should this result be re-checked?"></textarea>
+                        <label class="form-label">@T["Reason"] <span class="text-danger">*</span></label>
+                        <textarea aria-label="@T["Reason"]" name="reason" class="form-control" rows="3" required placeholder="Why should this result be re-checked?"></textarea>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit Re-check Request</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Submit Re-check Request"]</button>
                     </div>
                 </div>
             </form>
@@ -852,15 +852,15 @@ else
 {
     <div class="page-section-card card border-0 shadow-sm mt-3">
         <div class="card-body">
-            <h3 class="h6">Pending Result Modification Requests (@Model.PendingModificationRequests.Count)</h3>
+            <h3 class="h6">@T.Format("Pending Result Modification Requests ({0})", Model.PendingModificationRequests.Count)</h3>
             <div class="table-responsive">
                 <table class="table table-sm table-striped mb-0">
                     <thead>
                         <tr>
-                            <th>Request</th>
-                            <th>Reason</th>
-                            <th>Proposed Data</th>
-                            <th>Actions</th>
+                            <th>@T["Request"]</th>
+                            <th>@T["Reason"]</th>
+                            <th>@T["Proposed Data"]</th>
+                            <th>@T["Actions"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -878,7 +878,7 @@ else
                                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                         <input type="hidden" name="notes" value="Approved from results page" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Approve"]</button>
                                     </form>
                                     <form asp-action="RejectResultModificationRequest" method="post" class="d-inline ms-1">
                                         @Html.AntiForgeryToken()
@@ -887,7 +887,7 @@ else
                                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                         <input type="hidden" name="notes" value="Rejected from results page" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">@T["Reject"]</button>
                                     </form>
                                 </td>
                             </tr>

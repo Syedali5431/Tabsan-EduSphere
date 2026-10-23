@@ -1,0 +1,25 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ScormPlayerPageModel
+@{
+    ViewData["Title"] = Model.Title;
+    var back = Model.IsStaff
+        ? Url.Action("LmsManage", "Portal", new { offeringId = Model.OfferingId }) + "#scorm-packages"
+        : $"/Portal/Scorm/{Model.PackageId}" + (Model.ModuleItemId is { } m ? $"?moduleItem={m}" : "");
+}
+@* Plan M13 — the SCORM player inside the portal: the package runs in the frame (its own page under /scorm/play/). *@
+<div class="container-fluid py-2" data-scorm-page>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h1 class="h5 mb-0 me-auto">@Model.Title</h1>
+        @if (Model.Mode == "review") { <span class="badge bg-secondary">@T["Review — nothing is recorded"]</span> }
+        else if (Model.Mode == "preview") { <span class="badge bg-info text-dark">@T["Preview — nothing is recorded"]</span> }
+        else { <span class="badge bg-light text-dark border">@T.Format("Attempt {0}", Model.AttemptNumber)</span> }
+        <a class="btn btn-sm btn-outline-secondary" href="@back" data-scorm-exit>@T["Exit"]</a>
+    </div>
+    @* Not an .alert: site.js turns alerts present at load into toasts. *@
+    <div class="border border-success rounded bg-success-subtle text-success-emphasis px-3 py-2 mb-2 d-none" data-scorm-finished role="status">
+        @T["Your progress has been saved."] <a href="@back">@T["Back to the package"]</a>
+    </div>
+    <iframe class="scorm-frame" data-src="@Model.PlayerUrl" title="@Model.Title" allow="fullscreen; autoplay"></iframe>
+</div>
+@section Scripts {
+    <script src="~/js/scorm-page.js" asp-append-version="true"></script>
+}

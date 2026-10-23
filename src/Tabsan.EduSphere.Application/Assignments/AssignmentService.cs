@@ -21,11 +21,15 @@ public class AssignmentService : IAssignmentService
 {
     private readonly IAssignmentRepository _repo;
     private readonly IAuditService _audit;
+    private readonly IAssignmentGradebookSync? _gradebook;
+    private readonly IAssignmentPolicyService? _policies;
 
-    public AssignmentService(IAssignmentRepository repo, IAuditService audit)
+    public AssignmentService(IAssignmentRepository repo, IAuditService audit, IAssignmentGradebookSync? gradebook = null, IAssignmentPolicyService? policies = null)
     {
         _repo = repo;
         _audit = audit;
+        _gradebook = gradebook;
+        _policies = policies;
     }
 
     // ── Assignment management ─────────────────────────────────────────────────
@@ -214,7 +218,11 @@ public class AssignmentService : IAssignmentService
     public async Task<IReadOnlyList<SubmissionResponse>> GetMySubmissionsAsync(Guid studentProfileId, CancellationToken ct = default)
     {
         var submissions = await _repo.GetSubmissionsByStudentAsync(studentProfileId, ct);
-        return submissions.Select(s => ToSubmissionResponse(s, s.Assignment.Title)).ToList();
+        // Plan M3.5: marks and feedback reach the student only once the grade is posted.
+        return submissions.Select(s => ToSubmissionResponse(s, s.Assignment.Title) is var r && s.IsGradeVisibleToStudent
+                ? r
+                : r with { MarksAwarded = null, Feedback = null, GradedAt = null })
+            .ToList();
     }
 
     // ── Faculty grading ───────────────────────────────────────────────────────
@@ -244,13 +252,17 @@ public class AssignmentService : IAssignmentService
         // Validate marks range against the assignment's maximum.
         if (request.MarksAwarded < 0 || request.MarksAwarded > assignment.MaxMarks) return false;
 
-        submission.Grade(request.MarksAwarded, request.Feedback, gradedByUserId);
+        // Plan M8: the late policy's deduction applies here too.
+        var penalty = _policies is null ? 0 : await _policies.LatePenaltyAsync(assignment, submission, request.MarksAwarded, ct);
+        submission.Grade(request.MarksAwarded, request.Feedback, gradedByUserId, postNow: true, latePenalty: penalty);
         _repo.UpdateSubmission(submission);
         await _repo.SaveChangesAsync(ct);
 
         await _audit.LogAsync(new AuditLog("GradeSubmission", "AssignmentSubmission", submission.Id.ToString(),
             actorUserId: gradedByUserId), ct);
 
+        // Plan M6 fix: this grading path never refreshed the gradebook (and now outcome evidence) like the workspace does.
+        if (_gradebook is not null) await _gradebook.RefreshAsync(assignment.CourseOfferingId, submission.StudentProfileId, ct);
         return true;
     }
 

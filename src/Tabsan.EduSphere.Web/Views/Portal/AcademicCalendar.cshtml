@@ -1,33 +1,35 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AcademicCalendarPageModel
-@{ ViewData["Title"] = "Academic Calendar"; }
+@{ ViewData["Title"] = T.Text("Academic Calendar"); }
 
 @if (TempData["Message"] is string msg)
 {
     var cls = msg.StartsWith("Error") ? "alert-danger" : "alert-success";
     <div class="alert @cls alert-dismissible fade show" role="alert">
-        @msg
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(msg)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-warning">@Model.Message</div>
+    <div class="alert alert-warning">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
+    @* Plan M10: live classes appear next to the academic calendar. *@
+    @await Component.InvokeAsync("UpcomingLiveClasses")
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="get" asp-action="AcademicCalendar" class="row g-2 align-items-end"
                   data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 <div class="col-md-4">
-                    <label class="form-label">Filter by Semester</label>
-                    <select name="semesterId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Semesters</option>
+                    <label class="form-label">@T["Filter by Semester"]</label>
+                    <select aria-label="@T["Filter by Semester"]" name="semesterId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Semesters"]</option>
                         @foreach (var s in Model.Semesters)
                         {
                             <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
@@ -39,7 +41,7 @@ else
                     <div class="col-auto">
                         <a asp-action="AcademicDeadlines" asp-route-semesterId="@Model.SelectedSemesterId"
                            class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-cog"></i> Manage Deadlines
+                            <i class="fas fa-cog"></i> @T["Manage Deadlines"]
                         </a>
                     </div>
                 }
@@ -50,12 +52,12 @@ else
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <h2 class="h5 mb-3">
-                Deadlines &amp; Key Dates
+                @T["Deadlines &amp; Key Dates"]
                 <span class="badge bg-secondary ms-1">@Model.Deadlines.Count</span>
             </h2>
             @if (Model.Deadlines.Count == 0)
             {
-                <p class="text-muted">No deadlines found for the selected filter.</p>
+                <p class="text-muted">@T["No deadlines found for the selected filter."]</p>
             }
             else
             {
@@ -63,11 +65,11 @@ else
                     <table class="table table-sm table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Semester</th>
-                                <th>Title</th>
-                                <th>Date</th>
-                                <th>Days Remaining</th>
-                                <th>Description</th>
+                                <th>@T["Semester"]</th>
+                                <th>@T["Title"]</th>
+                                <th>@T["Date"]</th>
+                                <th>@T["Days Remaining"]</th>
+                                <th>@T["Description"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -83,8 +85,8 @@ else
                                     <td>@d.DeadlineDate.ToString("dd MMM yyyy")</td>
                                     <td>
                                         <span class="badge @badgeClass">
-                                            @(d.DaysUntilDeadline <= 0 ? "Passed"
-                                              : d.DaysUntilDeadline == 1 ? "Tomorrow"
+                                            @(d.DaysUntilDeadline <= 0 ? T.Text("Passed")
+                                              : d.DaysUntilDeadline == 1 ? T.Text("Tomorrow")
                                               : $"{d.DaysUntilDeadline} days")
                                         </span>
                                     </td>

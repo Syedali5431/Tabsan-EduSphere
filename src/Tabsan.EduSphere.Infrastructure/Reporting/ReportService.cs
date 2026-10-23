@@ -1047,6 +1047,11 @@ public sealed class ReportService : IReportService
 
     private static byte[] BuildPdfBytes(string title, string[] headers, IList<string[]> rows, (string Label, string Value)? footerSummary = null)
     {
+        // Plan M11 — labels in the request's language; the "Student" column is still found by its English header.
+        var englishHeaders = headers;
+        title = PdfLanguage.Text(title);
+        headers = headers.Select(PdfLanguage.Text).ToArray();
+        if (footerSummary is { } englishSummary) footerSummary = (PdfLanguage.Text(englishSummary.Label), englishSummary.Value);
         var primaryDark = Color.FromHex(ReportBranding.PrimaryDarkHex);
         var primary = Color.FromHex(ReportBranding.PrimaryHex);
         var accent = Color.FromHex(ReportBranding.AccentHex);
@@ -1063,9 +1068,10 @@ public sealed class ReportService : IReportService
             {
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(24);
-                page.DefaultTextStyle(x => x.FontSize(9).FontColor(textColor).FontFamily("Georgia"));
+                page.DefaultTextStyle(x => x.FontSize(9).FontColor(textColor).WithFonts("Georgia"));
+                PdfLanguage.Apply(page);
 
-                var studentColumnIndex = Array.FindIndex(headers, h => string.Equals(h, "Student", StringComparison.OrdinalIgnoreCase));
+                var studentColumnIndex = Array.FindIndex(englishHeaders, h => string.Equals(h, "Student", StringComparison.OrdinalIgnoreCase));
 
                 page.Header().Column(header =>
                 {
@@ -1085,7 +1091,7 @@ public sealed class ReportService : IReportService
 
                         row.ConstantItem(160).AlignRight().Column(metaCol =>
                         {
-                            metaCol.Item().AlignRight().Text($"Generated {generatedAt:dd MMM yyyy}").FontSize(8).FontColor(muted);
+                            metaCol.Item().AlignRight().Text(string.Format(PdfLanguage.Text("Generated {0}"), generatedAt.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture))).FontSize(8).FontColor(muted);
                             metaCol.Item().AlignRight().Text($"{generatedAt:HH:mm} UTC").FontSize(8).FontColor(muted);
                         });
                     });
@@ -1141,7 +1147,7 @@ public sealed class ReportService : IReportService
 
                 page.Footer().PaddingTop(8).Row(row =>
                 {
-                    row.RelativeItem().Text("Tabsan EduSphere — Confidential").FontSize(7.5f).FontColor(muted);
+                    row.RelativeItem().Text(PdfLanguage.Text("Tabsan EduSphere — Confidential")).FontSize(7.5f).FontColor(muted);
                     row.RelativeItem().AlignRight().Text(text =>
                     {
                         text.CurrentPageNumber().FontSize(7.5f).FontColor(muted);

@@ -1,5 +1,15 @@
 # Tabsan EduSphere Dashboard Menus
 
+## 2026-10-19 Synchronization Note (Plan M — Canvas Parity Menus)
+
+- New menu keys (seeded by `DatabaseSeeder`, role defaults in `Docs/Sidebar-Menu-Purpose.csv`):
+	- `sso_settings` — System Settings › Single Sign-On (SuperAdmin; module `sso`, Plan M1).
+	- `external_tools` — System Settings › External Tools (SuperAdmin; Admins when granted; module `lti`, Plan M5).
+	- `outcomes` — Learning Outcomes: outcomes, mastery gradebook, program attainment (Admin, Faculty; module `outcomes`, Plan M6).
+	- `my_outcomes` — My Outcomes (Student; module `outcomes`, Plan M6).
+- Quiz, grading-workspace and submission pages (Plan M2/M3) reuse the `quizzes` and `assignments` keys; the course "External tools" card (Plan M5) appears on Course Content and LMS Manage.
+- Single Sign-On and External Tools now appear under "Settings Related" in the grouped sidebar.
+
 ## 2026-06-02 Synchronization Note (Domain Script Packs and Full Dummy Coverage)
 
 - Menu topology and keys remain unchanged in this documentation sync.

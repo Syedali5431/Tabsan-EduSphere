@@ -1,29 +1,29 @@
 @model Tabsan.EduSphere.Web.Models.Portal.PortalCapabilityMatrixPageModel
 @{
-    ViewData["Title"] = "Portal Capability Matrix";
+    ViewData["Title"] = T.Text("Portal Capability Matrix");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Portal Capability Matrix</h2>
-    <a class="btn btn-outline-secondary" asp-controller="Portal" asp-action="Dashboard">Back to Dashboard</a>
+    <h2 class="mb-0">@T["Portal Capability Matrix"]</h2>
+    <a class="btn btn-outline-secondary" asp-controller="Portal" asp-action="Dashboard">@T["Back to Dashboard"]</a>
 </div>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">@Model.Message</div>
+    <div class="alert alert-warning">@T.Text(Model.Message)</div>
     return;
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 <div class="card mb-3">
     <div class="card-body d-flex flex-wrap gap-2">
-        <span class="badge @(Model.IncludeUniversity ? "text-bg-success" : "text-bg-secondary")">University</span>
-        <span class="badge @(Model.IncludeSchool ? "text-bg-success" : "text-bg-secondary")">School</span>
-        <span class="badge @(Model.IncludeCollege ? "text-bg-success" : "text-bg-secondary")">College</span>
+        <span class="badge @(Model.IncludeUniversity ? "text-bg-success" : "text-bg-secondary")">@T["University"]</span>
+        <span class="badge @(Model.IncludeSchool ? "text-bg-success" : "text-bg-secondary")">@T["School"]</span>
+        <span class="badge @(Model.IncludeCollege ? "text-bg-success" : "text-bg-secondary")">@T["College"]</span>
     </div>
 </div>
 
@@ -31,18 +31,18 @@
     <table class="table table-sm table-bordered align-middle">
         <thead class="table-light">
             <tr>
-                <th>Capability</th>
-                <th>Module</th>
-                <th>Route</th>
-                <th>Active</th>
-                <th>License</th>
-                <th>Student</th>
-                <th>Faculty</th>
-                <th>Admin</th>
-                <th>SuperAdmin</th>
-                <th>University</th>
-                <th>School</th>
-                <th>College</th>
+                <th>@T["Capability"]</th>
+                <th>@T["Module"]</th>
+                <th>@T["Route"]</th>
+                <th>@T["Active"]</th>
+                <th>@T["License"]</th>
+                <th>@T["Student"]</th>
+                <th>@T["Faculty"]</th>
+                <th>@T["Admin"]</th>
+                <th>@T["SuperAdmin"]</th>
+                <th>@T["University"]</th>
+                <th>@T["School"]</th>
+                <th>@T["College"]</th>
             </tr>
         </thead>
         <tbody>
@@ -58,15 +58,15 @@
                     <div class="text-muted small">@row.ModuleKey</div>
                 </td>
                 <td><code>@row.Route</code></td>
-                <td>@(row.IsModuleActive ? "Yes" : "No")</td>
-                <td>@(row.IsLicenseGated ? "Gated" : "Open")</td>
-                <td>@(row.Student ? "Yes" : "No")</td>
-                <td>@(row.Faculty ? "Yes" : "No")</td>
-                <td>@(row.Admin ? "Yes" : "No")</td>
-                <td>@(row.SuperAdmin ? "Yes" : "No")</td>
-                <td>@(row.University ? "Yes" : "No")</td>
-                <td>@(row.School ? "Yes" : "No")</td>
-                <td>@(row.College ? "Yes" : "No")</td>
+                <td>@(row.IsModuleActive ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.IsLicenseGated ? T.Text("Gated") : T.Text("Open"))</td>
+                <td>@(row.Student ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.Faculty ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.Admin ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.SuperAdmin ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.University ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.School ? T.Text("Yes") : T.Text("No"))</td>
+                <td>@(row.College ? T.Text("Yes") : T.Text("No"))</td>
             </tr>
         }
         </tbody>

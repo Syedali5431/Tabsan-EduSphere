@@ -62,6 +62,8 @@ public class DiscussionThreadConfiguration : IEntityTypeConfiguration<Discussion
         builder.ToTable("discussion_threads");
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Title).IsRequired().HasMaxLength(500);
+        // Plan M8.3 — group discussions.
+        builder.HasIndex(t => t.GroupId).HasDatabaseName("IX_discussion_threads_group");
         builder.Property(t => t.RowVersion).IsRowVersion();
 
         builder.HasOne<Domain.Academic.CourseOffering>()

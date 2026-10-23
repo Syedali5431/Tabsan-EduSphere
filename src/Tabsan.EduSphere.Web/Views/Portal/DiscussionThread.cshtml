@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.DiscussionDetailPageModel
 @{
     ViewData["Title"]     = Model.Thread?.Title ?? "Thread";
-    ViewData["PageTitle"] = "Discussion Thread";
+    ViewData["PageTitle"] = T.Text("Discussion Thread");
     ViewData["ActivePage"] = "discussion";
 }
 
@@ -9,43 +9,43 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success alert-dismissible fade show">
-        @Model.SuccessMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.SuccessMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (Model.Thread is null)
 {
-    <div class="alert alert-warning">Thread not found.</div>
+    <div class="alert alert-warning">@T["Thread not found."]</div>
     return;
 }
 
 <div class="card mb-4">
     <div class="card-header">
-        @if (Model.Thread.IsPinned) { <span class="badge bg-warning text-dark me-1">Pinned</span> }
-        @if (Model.Thread.IsSolved) { <span class="badge bg-success me-1">Resolved</span> }
-        @if (Model.Thread.IsClosed) { <span class="badge bg-secondary me-1">Closed</span> }
+        @if (Model.Thread.IsPinned) { <span class="badge bg-warning text-dark me-1">@T["Pinned"]</span> }
+        @if (Model.Thread.IsSolved) { <span class="badge bg-success me-1">@T["Resolved"]</span> }
+        @if (Model.Thread.IsClosed) { <span class="badge bg-secondary me-1">@T["Closed"]</span> }
         <strong>@Model.Thread.Title</strong>
-        <small class="text-muted ms-2">by @Model.Thread.AuthorName on @Model.Thread.CreatedAt.ToString("MMM dd, yyyy")</small>
+        <small class="text-muted ms-2">@T.Format("by {0} on {1}", Model.Thread.AuthorName, Model.Thread.CreatedAt.ToString("MMM dd, yyyy"))</small>
         @if (!string.IsNullOrWhiteSpace(Model.Thread.TicketNumber))
         {
-            <small class="text-muted ms-2">Ticket: @Model.Thread.TicketNumber</small>
+            <small class="text-muted ms-2">@T.Format("Ticket: {0}", Model.Thread.TicketNumber)</small>
         }
         @if (Model.Thread.IsSolved && !string.IsNullOrWhiteSpace(Model.Thread.ResolvedByName))
         {
-            <small class="text-muted ms-2">Resolved by @Model.Thread.ResolvedByName@(Model.Thread.ResolvedAt.HasValue ? $" on {Model.Thread.ResolvedAt.Value:MMM dd, yyyy HH:mm}" : "")</small>
+            <small class="text-muted ms-2">@T.Format("Resolved by {0}{1}", Model.Thread.ResolvedByName, (Model.Thread.ResolvedAt.HasValue ? $" on {Model.Thread.ResolvedAt.Value:MMM dd, yyyy HH:mm}" : ""))</small>
         }
     </div>
     <div class="card-body">
@@ -58,7 +58,7 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="threadId" value="@Model.Thread.Id" />
                         <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-success btn-sm">Mark Resolved</button>
+                        <button type="submit" class="btn btn-success btn-sm">@T["Mark Resolved"]</button>
                     </form>
                 }
                 else
@@ -67,7 +67,7 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="threadId" value="@Model.Thread.Id" />
                         <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">Mark Unresolved</button>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">@T["Mark Unresolved"]</button>
                     </form>
                 }
             </div>
@@ -75,7 +75,7 @@
 
         @if (!Model.Thread.Replies.Any())
         {
-            <p class="text-muted">No replies yet.</p>
+            <p class="text-muted">@T["No replies yet."]</p>
         }
         else
         {
@@ -90,12 +90,12 @@
                     @if (Model.CanModerate || (Model.CurrentUserId.HasValue && Model.CurrentUserId.Value == reply.AuthorId))
                     {
                         <form asp-action="DeleteDiscussionReply" method="post" class="d-inline"
-                              onsubmit="return confirm('Delete reply?')">
+                              onsubmit="return confirm('@T.Js("Delete reply?")')">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="replyId" value="@reply.Id" />
                             <input type="hidden" name="threadId" value="@Model.Thread.Id" />
                             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm">@T["Delete"]</button>
                         </form>
                     }
                 </div>
@@ -110,17 +110,17 @@
                 <input type="hidden" name="offeringId" value="@Model.OfferingId" />
                 <div class="input-group">
                     <textarea name="body" class="form-control" rows="2" placeholder="Write a reply..." required></textarea>
-                    <button type="submit" class="btn btn-primary">Reply</button>
+                    <button type="submit" class="btn btn-primary">@T["Reply"]</button>
                 </div>
             </form>
         }
         else
         {
-            <div class="alert alert-secondary mt-3">This thread is closed/resolved.</div>
+            <div class="alert alert-secondary mt-3">@T["This thread is closed/resolved."]</div>
         }
     </div>
 </div>
 
 <a asp-action="Discussion" asp-route-offeringId="@Model.OfferingId" class="btn btn-outline-secondary">
-    &larr; Back to Discussion
+    @T["&larr; Back to Discussion"]
 </a>

@@ -1,0 +1,92 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LiveClassSettingsPageModel
+@{
+    ViewData["Title"] = T.Text("Live Class Settings");
+    var s = Model.Settings;
+}
+
+@* Plan M10.1 — the institution's conferencing service. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Live Class Settings"]</h2>
+        <p class="text-muted mb-0">@T["The service teachers' live classes are created with. Teachers can always paste a meeting link instead."]</p>
+    </div>
+    @if (Model.IsSuperAdmin)
+    {
+        <div class="btn-group btn-group-sm" role="group" aria-label="@T["Which settings"]">
+            <a class="btn btn-outline-secondary @(Model.InstallationDefault ? "" : "active")" asp-action="LiveClassSettings" asp-route-installationDefault="false">@T["My institution"]</a>
+            <a class="btn btn-outline-secondary @(Model.InstallationDefault ? "active" : "")" asp-action="LiveClassSettings" asp-route-installationDefault="true">@T["Installation default"]</a>
+        </div>
+    }
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border rounded p-3 bg-light" data-module-off>@T["Live classes are not part of your licence."]</div>
+}
+else if (s is not null)
+{
+    <div class="row g-3">
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm" data-conference-settings>
+                <div class="card-body">
+                    @if (s.IsDefault) { <p class="small text-muted">@T["This institution uses the installation default until you save its own settings."]</p> }
+                    <form asp-action="SaveLiveClassSettings" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="installationDefault" value="@(Model.InstallationDefault ? "true" : "false")" />
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="cf-enabled" name="isEnabled" value="true" checked="@s.IsEnabled" />
+                            <input type="hidden" name="isEnabled" value="false" />
+                            <label class="form-check-label" for="cf-enabled">@T["Create meetings with this service"]</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small" for="cf-provider">@T["Service"]</label>
+                            <select class="form-select form-select-sm" id="cf-provider" name="provider">
+                                <option value="ExternalLink" selected="@(s.Provider == "ExternalLink")">@T["Meeting links only (teachers paste a link)"]</option>
+                                <option value="BigBlueButton" selected="@(s.Provider == "BigBlueButton")">@T["BigBlueButton (self-hosted)"]</option>
+                                <option value="Zoom" selected="@(s.Provider == "Zoom")">@T["Zoom (Server-to-Server OAuth app)"]</option>
+                                <option value="MicrosoftTeams" selected="@(s.Provider == "MicrosoftTeams")">@T["Microsoft Teams (Microsoft Graph)"]</option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-12"><label class="form-label small" for="cf-base">@T["BigBlueButton API address"]</label><input class="form-control form-control-sm" id="cf-base" name="baseUrl" type="url" maxlength="500" value="@s.BaseUrl" placeholder="https://bbb.example.edu/bigbluebutton/api" /></div>
+                            <div class="col-md-6"><label class="form-label small" for="cf-account">@T["Zoom account id / Entra tenant id"]</label><input class="form-control form-control-sm" id="cf-account" name="accountId" maxlength="200" value="@s.AccountId" autocomplete="off" /></div>
+                            <div class="col-md-6"><label class="form-label small" for="cf-client">@T["Client id"]</label><input class="form-control form-control-sm" id="cf-client" name="clientId" maxlength="200" value="@s.ClientId" autocomplete="off" /></div>
+                            <div class="col-md-6"><label class="form-label small" for="cf-secret">@T["Shared secret / client secret"]</label><input class="form-control form-control-sm" id="cf-secret" name="secret" type="password" autocomplete="new-password" placeholder="@(s.HasSecret ? T.Text("Saved — leave empty to keep") : T.Text("Paste the secret"))" /></div>
+                            <div class="col-md-6"><label class="form-label small" for="cf-organizer">@T["Organiser / host user"]</label><input class="form-control form-control-sm" id="cf-organizer" name="organizerUserId" maxlength="200" value="@s.OrganizerUserId" placeholder="@T["Teams: required · Zoom: “me”"]" /></div>
+                            <div class="col-md-6"><label class="form-label small" for="cf-early">@T["Joining opens (minutes before)"]</label><input class="form-control form-control-sm" id="cf-early" name="joinEarlyMinutes" type="number" min="0" max="120" value="@s.JoinEarlyMinutes" /></div>
+                        </div>
+                        <button class="btn btn-primary btn-sm">@T["Save"]</button>
+                    </form>
+                    <form asp-action="TestLiveClassSettings" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="installationDefault" value="@(Model.InstallationDefault ? "true" : "false")" />
+                        <button class="btn btn-outline-secondary btn-sm">@T["Test connection"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body small">
+                    <h3 class="h6">@T["What each service needs"]</h3>
+                    <ul class="mb-0">
+                        <li><strong>@T["BigBlueButton:"]</strong> @T["the API address and shared secret ("]<code>bbb-conf --secret</code>@T["). Meetings are opened when the first person joins; teachers join as moderators."]</li>
+                        <li><strong>@T["Zoom:"]</strong> @T["a Server-to-Server OAuth app (account id, client id, client secret) with meeting, report and recording scopes. Attendance uses Zoom's participant report (minutes)."]</li>
+                        <li><strong>@T["Microsoft Teams:"]</strong> @T["an Entra app with OnlineMeetings.ReadWrite.All and OnlineMeetingArtifact.Read.All (application), an application access policy, and the organiser's user id. Attendance uses Teams attendance reports."]</li>
+                        <li>@T["Secrets are encrypted and never shown again."]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}

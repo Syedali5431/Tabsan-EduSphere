@@ -1,0 +1,71 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ModuleItemPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var item = Model.Item;
+    ViewData["Title"] = item?.Title ?? "Module item";
+    bool SafeEmbed(string? url) => Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps;
+    bool SafeLink(string? url) => !string.IsNullOrWhiteSpace(url) && ((Uri.TryCreate(url, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttps || u.Scheme == Uri.UriSchemeHttp)) || (url.StartsWith('/') && !url.StartsWith("//")));
+}
+
+@if (Model.Nav is { } nav)
+{
+    <partial name="~/Views/Shared/Components/ModuleNav/Default.cshtml"
+             model="@(new ModuleNavModel { Nav = nav, ReturnUrl = Context.Request.Path.ToString(), IsStudent = !Model.IsStaff })" />
+}
+
+@if (item is null)
+{
+    <div class="border rounded p-3 bg-light" data-module-item-missing>@(Model.Message ?? T.Text("This item is not available."))</div>
+}
+else if (item.Locked)
+{
+    <div class="card border-0 shadow-sm" data-module-item-locked>
+        <div class="card-body">
+            <h2 class="h5">🔒 @item.Title</h2>
+            <p class="mb-3">@(item.LockReason ?? T.Text("This item is locked."))</p>
+            <a class="btn btn-sm btn-outline-primary" href="/Portal/CourseLms?offeringId=@item.CourseOfferingId">@T["Back to the course"]</a>
+        </div>
+    </div>
+}
+else
+{
+    <article class="card border-0 shadow-sm" data-module-item data-item-type="@item.ItemType">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+                <h2 class="h4 mb-0 me-auto">@item.Title</h2>
+                @if (Model.IsStaff) { <span class="badge bg-secondary">@T["Preview — progress is not recorded"]</span> }
+                else if (item.Status == "done") { <span class="badge bg-success">@T["✓ Done"]</span> }
+                else if (item.Status == "todo") { <span class="badge bg-warning text-dark">@T.Format("To do: {0}", ModuleItemText.Requirement(item.RequirementType, null))</span> }
+            </div>
+            @switch (item.ItemType)
+            {
+                case "Page":
+                    <div class="module-page" style="white-space: pre-wrap;">@item.Body</div>
+                    break;
+                case "Video":
+                    if (SafeEmbed(item.EmbedUrl))
+                    {
+                        <div class="ratio ratio-16x9"><iframe src="@item.EmbedUrl" title="@item.Title" allowfullscreen></iframe></div>
+                    }
+                    else if (SafeLink(item.StorageUrl))
+                    {
+                        <a class="btn btn-primary" href="@item.StorageUrl" target="_blank" rel="noopener">@T["Watch the video ↗"]</a>
+                    }
+                    else { <p class="text-muted">@T["This video has no address."]</p> }
+                    break;
+                case "ExternalUrl":
+                    <p class="text-muted small text-break">@item.Url</p>
+                    <a class="btn btn-primary" href="@item.Url" target="_blank" rel="noopener noreferrer">@T["Open the link ↗"]</a>
+                    break;
+                case "Material":
+                    if (SafeLink(item.Url)) { <a class="btn btn-primary me-2" href="@item.Url" target="_blank" rel="noopener noreferrer">@T["Open ↗"]</a> }
+                    if (item.MaterialHasFile) { <a class="btn btn-outline-primary" href="/Portal/DownloadCourseMaterialFile?id=@item.TargetId">@T["Download"]</a> }
+                    break;
+                @T["default:"]
+                    <p class="text-muted">@T["This item opens on its own page."]</p>
+                    break;
+            }
+        </div>
+    </article>
+    <p class="mt-3"><a class="small" href="/Portal/CourseLms?offeringId=@item.CourseOfferingId">@T["← All modules"]</a></p>
+}

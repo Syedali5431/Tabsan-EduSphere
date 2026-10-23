@@ -36,6 +36,10 @@ public interface INotificationRepository
     /// <summary>Returns active recipient email addresses for the provided user IDs.</summary>
     Task<IReadOnlyList<string>> GetActiveUserEmailsAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default);
 
+    /// <summary>Plan M11 — active recipient emails with each user's chosen language (null = institution default).</summary>
+    async Task<IReadOnlyList<(string Email, string? Language)>> GetActiveUserEmailLanguagesAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default)
+        => (await GetActiveUserEmailsAsync(userIds, ct)).Select(e => (e, (string?)null)).ToList();
+
     /// <summary>Returns active recipient phone numbers for the provided user IDs (Phase 32.3).</summary>
     Task<IReadOnlyList<string>> GetActiveUserPhoneNumbersAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default);
 

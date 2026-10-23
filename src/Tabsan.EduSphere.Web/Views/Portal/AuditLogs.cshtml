@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AuditLogsPageModel
 @{
-    ViewData["Title"] = "Audit Logs";
+    ViewData["Title"] = T.Text("Audit Logs");
     var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
     if (totalPages < 1) totalPages = 1;
 
@@ -15,88 +15,88 @@
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Audit Logs</h4>
+    <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>@T["Audit Logs"]</h4>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsCsv")">Export CSV</a>
-        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsExcel")">Export Excel</a>
-        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsPdf")">Export PDF</a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsCsv")">@T["Export CSV"]</a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsExcel")">@T["Export Excel"]</a>
+        <a class="btn btn-outline-secondary btn-sm" href="@ExportUrl("ExportAuditLogsPdf")">@T["Export PDF"]</a>
     </div>
 </div>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected to API. Configure your connection in Dashboard.</div>
+    <div class="alert alert-warning">@T["Not connected to API. Configure your connection in Dashboard."]</div>
 }
 else
 {
     if (TempData["PortalMessage"] is string portalMessage && !string.IsNullOrWhiteSpace(portalMessage))
     {
-        <div class="alert alert-info">@portalMessage</div>
+        <div class="alert alert-info">@T.Text(portalMessage)</div>
     }
 
     if (!string.IsNullOrWhiteSpace(Model.Message))
     {
-        <div class="alert alert-danger">@Model.Message</div>
+        <div class="alert alert-danger">@T.Text(Model.Message)</div>
     }
 
     <form method="get" asp-action="AuditLogs" class="row g-2 mb-3">
         <div class="col-md-3">
-            <label class="form-label">Search</label>
-            <input class="form-control" name="query" value="@Model.Query" placeholder="action/entity/ip" />
+            <label class="form-label">@T["Search"]</label>
+            <input aria-label="@T["Search"]" class="form-control" name="query" value="@Model.Query" placeholder="@T["action/entity/ip"]" />
         </div>
         <div class="col-md-2">
-            <label class="form-label">Actor User Id</label>
-            <input class="form-control" name="actorUserId" value="@Model.ActorUserId" placeholder="GUID" />
+            <label class="form-label">@T["Actor User Id"]</label>
+            <input aria-label="@T["Actor User Id"]" class="form-control" name="actorUserId" value="@Model.ActorUserId" placeholder="GUID" />
         </div>
         <div class="col-md-2">
-            <label class="form-label">Action</label>
-            <input class="form-control" name="action" value="@Model.Action" placeholder="Login, Update" />
+            <label class="form-label">@T["Action"]</label>
+            <input aria-label="@T["Action"]" class="form-control" name="action" value="@Model.Action" placeholder="@T["Login, Update"]" />
         </div>
         <div class="col-md-2">
-            <label class="form-label">Module (Entity)</label>
-            <input class="form-control" name="entityName" value="@Model.EntityName" placeholder="Student, Course" />
+            <label class="form-label">@T["Module (Entity)"]</label>
+            <input aria-label="@T["Module (Entity)"]" class="form-control" name="entityName" value="@Model.EntityName" placeholder="@T["Student, Course"]" />
         </div>
         <div class="col-md-1">
-            <label class="form-label">From (UTC)</label>
-            <input class="form-control" type="datetime-local" name="fromUtc" value="@(Model.FromUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
+            <label class="form-label">@T["From (UTC)"]</label>
+            <input aria-label="@T["From (UTC)"]" class="form-control" type="datetime-local" name="fromUtc" value="@(Model.FromUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
         </div>
         <div class="col-md-1">
-            <label class="form-label">To (UTC)</label>
-            <input class="form-control" type="datetime-local" name="toUtc" value="@(Model.ToUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
+            <label class="form-label">@T["To (UTC)"]</label>
+            <input aria-label="@T["To (UTC)"]" class="form-control" type="datetime-local" name="toUtc" value="@(Model.ToUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
         </div>
         <div class="col-md-1">
-            <label class="form-label">Rows</label>
-            <input class="form-control" type="number" min="1" max="200" name="pageSize" value="@Model.PageSize" />
+            <label class="form-label">@T["Rows"]</label>
+            <input aria-label="@T["Rows"]" class="form-control" type="number" min="1" max="200" name="pageSize" value="@Model.PageSize" />
         </div>
         <div class="col-12 d-flex gap-2 mt-2">
-            <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
-            <a asp-action="AuditLogs" class="btn btn-outline-secondary btn-sm">Reset</a>
+            <button type="submit" class="btn btn-primary btn-sm">@T["Apply Filters"]</button>
+            <a asp-action="AuditLogs" class="btn btn-outline-secondary btn-sm">@T["Reset"]</a>
         </div>
     </form>
 
-    <div class="small text-muted mb-2">Total Records: @Model.TotalCount</div>
+    <div class="small text-muted mb-2">@T.Format("Total Records: {0}", Model.TotalCount)</div>
 
     <div class="table-responsive">
         <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th>At (UTC)</th>
-                    <th>Action</th>
-                    <th>Entity</th>
-                    <th>Entity Id</th>
-                    <th>Actor User</th>
-                    <th>Role</th>
+                    <th>@T["At (UTC)"]</th>
+                    <th>@T["Action"]</th>
+                    <th>@T["Entity"]</th>
+                    <th>@T["Entity Id"]</th>
+                    <th>@T["Actor User"]</th>
+                    <th>@T["Role"]</th>
                     <th>IP</th>
-                    <th>User Agent</th>
-                    <th>Before</th>
-                    <th>After</th>
+                    <th>@T["User Agent"]</th>
+                    <th>@T["Before"]</th>
+                    <th>@T["After"]</th>
                 </tr>
             </thead>
             <tbody>
             @if (!Model.Logs.Any())
             {
                 <tr>
-                    <td colspan="10" class="text-center text-muted">No audit logs found for the selected filters.</td>
+                    <td colspan="10" class="text-center text-muted">@T["No audit logs found for the selected filters."]</td>
                 </tr>
             }
             else
@@ -121,14 +121,14 @@ else
         </table>
     </div>
 
-    <nav aria-label="Audit pagination" class="mt-2">
+    <nav aria-label="@T["Audit pagination"]" class="mt-2">
         <ul class="pagination pagination-sm mb-0">
             <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                <a class="page-link" href="@PageUrl(Model.Page - 1)">Previous</a>
+                <a class="page-link" href="@PageUrl(Model.Page - 1)">@T["Previous"]</a>
             </li>
-            <li class="page-item disabled"><span class="page-link">Page @Model.Page of @totalPages</span></li>
+            <li class="page-item disabled"><span class="page-link">@T.Format("Page {0} of {1}", Model.Page, totalPages)</span></li>
             <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
-                <a class="page-link" href="@PageUrl(Model.Page + 1)">Next</a>
+                <a class="page-link" href="@PageUrl(Model.Page + 1)">@T["Next"]</a>
             </li>
         </ul>
     </nav>

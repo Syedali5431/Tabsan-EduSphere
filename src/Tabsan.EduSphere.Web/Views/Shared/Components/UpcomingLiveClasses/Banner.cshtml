@@ -1,0 +1,18 @@
+@model Tabsan.EduSphere.Web.Models.Portal.UpcomingLiveClassesModel
+@using Tabsan.EduSphere.Web.Models.Portal
+
+@* Plan M10.2 — shown on every page while one of the user's live classes is open for joining. Not an .alert (site.js would turn it into a toast). *@
+<div class="border border-success rounded p-2 mb-3 bg-success-subtle d-flex flex-column gap-1" role="region" aria-label="@T["Live classes open now"]" data-live-banner>
+    @foreach (var s in Model.Sessions.Take(3))
+    {
+        <div class="d-flex flex-wrap align-items-center gap-2 small">
+            <span class="badge @LiveFormat.StateBadge(s.State)">@(s.State == "Live" ? T.Text("Live now") : T.Text("Starting soon"))</span>
+            <span class="me-auto"><strong>@s.Title</strong> · @s.CourseCode · @LiveFormat.When(s)</span>
+            <form asp-controller="Portal" asp-action="JoinLiveSession" method="post" target="_blank" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="sessionId" value="@s.Id" /><input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <button class="btn btn-sm btn-success" aria-label="Join @s.Title now">@T["Join"]</button>
+            </form>
+        </div>
+    }
+</div>

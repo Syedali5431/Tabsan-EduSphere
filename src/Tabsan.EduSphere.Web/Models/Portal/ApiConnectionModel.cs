@@ -2748,6 +2748,8 @@ public class CourseLmsPageModel
     public string             OfferingTitle { get; set; } = string.Empty;
     public List<LmsModuleItem> Modules      { get; set; } = new();
     public bool               IsConnected   { get; set; }
+    /// <summary>Plan M7: the student's modules with items, progress and locks (null for staff or when unavailable).</summary>
+    public Tabsan.EduSphere.Application.Lms.StudentModulesResponse? Progress { get; set; }
 }
 
 public class LmsManagePageModel
@@ -2758,6 +2760,9 @@ public class LmsManagePageModel
     public string?            SuccessMessage { get; set; }
     public string?            ErrorMessage   { get; set; }
     public bool               IsConnected    { get; set; }
+    /// <summary>Plan M7: module items, release settings and the course content they can point to (null when unavailable).</summary>
+    public Tabsan.EduSphere.Application.Lms.ModuleStructureResponse? Structure { get; set; }
+    public List<Tabsan.EduSphere.Application.Lms.LinkableResponse> Linkables { get; set; } = new();
 }
 
 public class DiscussionReplyItem
@@ -2772,6 +2777,9 @@ public class DiscussionReplyItem
 
 public class DiscussionThreadItem
 {
+    /// <summary>Plan M8.3: the student group the thread belongs to (null = whole course).</summary>
+    public Guid?    GroupId    { get; set; }
+    public string?  GroupName  { get; set; }
     public Guid     Id         { get; set; }
     public Guid     OfferingId { get; set; }
     public Guid     AuthorId   { get; set; }
@@ -2795,6 +2803,8 @@ public class DiscussionPageModel
     public bool   CanModerate   { get; set; }
     public string OfferingTitle { get; set; } = string.Empty;
     public List<DiscussionThreadItem> Threads { get; set; } = new();
+    /// <summary>Plan M8.3: groups the user can post to (students: their own; staff: every group of the course).</summary>
+    public List<(Guid Id, string Name)> Groups { get; set; } = new();
     public string? SuccessMessage { get; set; }
     public string? ErrorMessage   { get; set; }
     public bool    IsConnected    { get; set; }

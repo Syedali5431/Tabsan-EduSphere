@@ -1,0 +1,32 @@
+@model Tabsan.EduSphere.Web.Models.Portal.UpcomingLiveClassesModel
+@using Tabsan.EduSphere.Web.Models.Portal
+
+@* Plan M10.2 — the user's live classes in the next two weeks, with Join and Add to calendar. *@
+<section class="card border-0 shadow-sm mb-4" data-upcoming-live aria-labelledby="upcoming-live-title">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h2 class="h5 mb-0 me-auto" id="upcoming-live-title">@T["Live classes"]</h2>
+            <a class="small" asp-controller="Portal" asp-action="LiveClasses">@T["All live classes"]</a>
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var s in Model.Sessions.Take(6))
+            {
+                <li class="list-group-item px-0 d-flex flex-wrap align-items-center gap-2" data-upcoming-session="@s.Title">
+                    <div class="me-auto">
+                        <div class="fw-semibold">@s.Title <span class="badge @LiveFormat.StateBadge(s.State) ms-1">@s.State</span></div>
+                        <div class="small text-muted">@s.CourseCode · @LiveFormat.When(s) · @s.Provider</div>
+                    </div>
+                    @if (s.CanJoin)
+                    {
+                        <form asp-controller="Portal" asp-action="JoinLiveSession" method="post" target="_blank" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="sessionId" value="@s.Id" /><input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                            <button class="btn btn-sm btn-success" aria-label="Join @s.Title">@T["Join"]</button>
+                        </form>
+                    }
+                    <a class="btn btn-sm btn-outline-secondary" asp-controller="Portal" asp-action="LiveSessionCalendar" asp-route-sessionId="@s.Id" aria-label="Add @s.Title to my calendar">@T["Add to calendar"]</a>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

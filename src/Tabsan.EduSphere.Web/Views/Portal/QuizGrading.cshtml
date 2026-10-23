@@ -7,67 +7,67 @@
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
     <div class="alert alert-info alert-dismissible fade show" role="status">
-        @Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected || quiz is null)
 {
-    <div class="alert alert-warning">The quiz could not be loaded. <a asp-action="Quizzes">Back to quizzes</a></div>
+    <div class="alert alert-warning">@T["The quiz could not be loaded."] <a asp-action="Quizzes">@T["Back to quizzes"]</a></div>
 }
 else
 {
     <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
         <div class="flex-grow-1">
-            <a asp-action="QuizBuilder" asp-route-quizId="@quiz.QuizId" class="small">← Quiz builder</a>
+            <a asp-action="QuizBuilder" asp-route-quizId="@quiz.QuizId" class="small">@T["← Quiz builder"]</a>
             <h2 class="h4 mb-0 mt-1">@quiz.Title</h2>
         </div>
-        <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@quiz.QuizId">Statistics</a>
+        <a class="btn btn-sm btn-outline-primary" asp-action="QuizStatistics" asp-route-quizId="@quiz.QuizId">@T["Statistics"]</a>
     </div>
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h3 class="h5 mb-3">Needs marking <span class="badge bg-warning text-dark">@Model.Queue.Count</span></h3>
+            <h3 class="h5 mb-3">@T["Needs marking"] <span class="badge bg-warning text-dark">@Model.Queue.Count</span></h3>
             @if (Model.Queue.Count == 0)
             {
-                <p class="text-muted mb-0">Nothing to mark — every submitted answer has a score.</p>
+                <p class="text-muted mb-0">@T["Nothing to mark — every submitted answer has a score."]</p>
             }
             @foreach (var g in Model.Queue.GroupBy(i => i.QuestionId))
             {
                 var first = g.First();
                 <div class="mb-4">
-                    <div class="small text-muted">@Tabsan.EduSphere.Web.Models.Portal.QuizBuilderPageModel.TypeLabel(first.QuestionType) · @first.Marks.ToString("0.##") marks · @g.Count() answer(s)</div>
+                    <div class="small text-muted">@T.Format("{0} · {1} marks · {2} answer(s)", Tabsan.EduSphere.Web.Models.Portal.QuizBuilderPageModel.TypeLabel(first.QuestionType), first.Marks.ToString("0.##"), g.Count())</div>
                     <div class="fw-semibold mb-2" style="white-space: pre-wrap;">@first.QuestionText</div>
                     @foreach (var item in g.OrderBy(i => i.SubmittedAt))
                     {
                         <div class="border rounded p-2 mb-2">
                             <div class="d-flex flex-wrap justify-content-between small mb-1">
-                                <span class="fw-semibold">@(item.StudentName ?? "Student")</span>
+                                <span class="fw-semibold">@(item.StudentName ?? T.Text("Student"))</span>
                                 <span class="text-muted">@(item.SubmittedAt?.ToLocalTime().ToString("g"))
-                                    · <a asp-action="QuizReview" asp-route-attemptId="@item.AttemptId" asp-route-quizId="@quiz.QuizId">whole attempt</a></span>
+                                    · <a asp-action="QuizReview" asp-route-attemptId="@item.AttemptId" asp-route-quizId="@quiz.QuizId">@T["whole attempt"]</a></span>
                             </div>
                             @if (item.FileName is not null)
                             {
-                                <div class="mb-2"><a asp-action="DownloadQuizAnswerFile" asp-route-answerId="@item.AnswerId">Download @item.FileName</a></div>
+                                <div class="mb-2"><a asp-action="DownloadQuizAnswerFile" asp-route-answerId="@item.AnswerId">@T.Format("Download {0}", item.FileName)</a></div>
                             }
                             else
                             {
-                                <div class="p-2 bg-light rounded mb-2 small" style="white-space: pre-wrap; max-height: 20rem; overflow: auto;">@(string.IsNullOrWhiteSpace(item.TextResponse) ? "(no answer)" : item.TextResponse)</div>
+                                <div class="p-2 bg-light rounded mb-2 small" style="white-space: pre-wrap; max-height: 20rem; overflow: auto;">@(string.IsNullOrWhiteSpace(item.TextResponse) ? T.Text("(no answer)") : item.TextResponse)</div>
                             }
                             <form asp-action="GradeQuizAnswer" method="post" class="row g-2 align-items-end">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="quizId" value="@quiz.QuizId" />
                                 <input type="hidden" name="answerId" value="@item.AnswerId" />
                                 <div class="col-4 col-md-2">
-                                    <label class="form-label small" for="m-@item.AnswerId">Marks (max @item.Marks.ToString("0.##"))</label>
+                                    <label class="form-label small" for="m-@item.AnswerId">@T.Format("Marks (max {0})", item.Marks.ToString("0.##"))</label>
                                     <input id="m-@item.AnswerId" name="marksAwarded" type="number" step="0.25" min="0" max="@item.Marks" class="form-control form-control-sm" required />
                                 </div>
                                 <div class="col-8 col-md-8">
-                                    <label class="form-label small" for="fb-@item.AnswerId">Feedback (optional)</label>
+                                    <label class="form-label small" for="fb-@item.AnswerId">@T["Feedback (optional)"]</label>
                                     <input id="fb-@item.AnswerId" name="feedback" maxlength="2000" class="form-control form-control-sm" />
                                 </div>
-                                <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Save marks</button></div>
+                                <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">@T["Save marks"]</button></div>
                             </form>
                         </div>
                     }
@@ -78,21 +78,21 @@ else
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <h3 class="h5 mb-3">All attempts</h3>
+            <h3 class="h5 mb-3">@T["All attempts"]</h3>
             @if (Model.Attempts.Count == 0)
             {
-                <p class="text-muted mb-0">No attempts yet.</p>
+                <p class="text-muted mb-0">@T["No attempts yet."]</p>
             }
             else
             {
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0">
-                        <thead class="table-light"><tr><th>Student</th><th>Started</th><th>Finished</th><th>Status</th><th>Score</th><th></th></tr></thead>
+                        <thead class="table-light"><tr><th>@T["Student"]</th><th>@T["Started"]</th><th>@T["Finished"]</th><th>@T["Status"]</th><th>@T["Score"]</th><th></th></tr></thead>
                         <tbody>
                             @foreach (var a in Model.Attempts.OrderBy(a => a.StudentName).ThenByDescending(a => a.StartedAt))
                             {
                                 <tr>
-                                    <td>@(a.StudentName ?? "Student") <span class="small text-muted">@a.RegistrationNumber</span></td>
+                                    <td>@(a.StudentName ?? T.Text("Student")) <span class="small text-muted">@a.RegistrationNumber</span></td>
                                     <td class="small">@a.StartedAt.ToLocalTime().ToString("g")</td>
                                     <td class="small">@(a.FinishedAt?.ToLocalTime().ToString("g") ?? "—")</td>
                                     <td><span class="badge @(a.Status == "InProgress" ? "bg-warning text-dark" : a.Status == "TimedOut" ? "bg-info text-dark" : "bg-secondary")">@a.Status</span></td>
@@ -100,7 +100,7 @@ else
                                     <td class="text-end">
                                         @if (a.Status != "InProgress")
                                         {
-                                            <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@a.AttemptId" asp-route-quizId="@quiz.QuizId">Open</a>
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="QuizReview" asp-route-attemptId="@a.AttemptId" asp-route-quizId="@quiz.QuizId">@T["Open"]</a>
                                         }
                                     </td>
                                 </tr>

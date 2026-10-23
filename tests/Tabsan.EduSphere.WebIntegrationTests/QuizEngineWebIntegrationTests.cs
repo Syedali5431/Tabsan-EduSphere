@@ -33,7 +33,7 @@ public class QuizEngineWebIntegrationTests : IClassFixture<WebApplicationFactory
 
         Assert.Contains("What is the capital of Australia?", html);
         Assert.Contains("Correct: Canberra", html);
-        Assert.Contains("France &#x2192; Paris", html);
+        Assert.Contains("France → Paris", WebUtility.HtmlDecode(html)); // Plan M11: non-ASCII text is written as text
         Assert.Contains("Random geography", html);
         Assert.Contains("Only 2 question(s) available", html);
         Assert.True(Regex.Matches(html, "data-quiz-editor").Count >= 3, "each question gets an editor plus the add form");

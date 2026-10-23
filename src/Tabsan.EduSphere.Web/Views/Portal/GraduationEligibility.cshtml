@@ -1,26 +1,26 @@
 @* Final-Touches Phase 17 Stage 17.2 — Graduation eligibility list view (Admin/SuperAdmin) *@
 @model EligibilityPageModel
 @{
-    ViewData["Title"] = "Graduation Eligibility";
+    ViewData["Title"] = T.Text("Graduation Eligibility");
 }
 
-<h2 class="mb-4"><i class="bi bi-check2-circle me-2"></i>Graduation Eligibility</h2>
+<h2 class="mb-4"><i class="bi bi-check2-circle me-2"></i>@T["Graduation Eligibility"]</h2>
 
 @if (TempData["Message"] is string msg)
 {
-    <div class="alert alert-info">@msg</div>
+    <div class="alert alert-info">@T.Text(msg)</div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <span class="badge bg-success me-2">@Model.Items.Count(i => i.IsEligible) Eligible</span>
-        <span class="badge bg-danger">@Model.Items.Count(i => !i.IsEligible) Not Eligible</span>
+        <span class="badge bg-success me-2">@T.Format("{0} Eligible", Model.Items.Count(i => i.IsEligible))</span>
+        <span class="badge bg-danger">@T.Format("{0} Not Eligible", Model.Items.Count(i => !i.IsEligible))</span>
     </div>
 </div>
 
 @if (Model.Items.Count == 0)
 {
-    <p class="text-muted">No students found.</p>
+    <p class="text-muted">@T["No students found."]</p>
 }
 else
 {
@@ -28,12 +28,12 @@ else
         <table class="table table-bordered align-middle" id="eligibilityTable">
             <thead class="table-light">
                 <tr>
-                    <th>Registration No.</th>
-                    <th>Student Name</th>
-                    <th class="text-center">Credits Earned</th>
+                    <th>@T["Registration No."]</th>
+                    <th>@T["Student Name"]</th>
+                    <th class="text-center">@T["Credits Earned"]</th>
                     <th class="text-center">CGPA</th>
-                    <th class="text-center">Unmet Requirements</th>
-                    <th class="text-center">Status</th>
+                    <th class="text-center">@T["Unmet Requirements"]</th>
+                    <th class="text-center">@T["Status"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -48,7 +48,7 @@ else
                         <td class="text-center">
                             @if (item.UnmetCount == 0)
                             {
-                                <span class="text-success">None</span>
+                                <span class="text-success">@T["None"]</span>
                             }
                             else
                             {
@@ -58,17 +58,17 @@ else
                         <td class="text-center">
                             @if (item.IsEligible)
                             {
-                                <span class="badge bg-success">Eligible</span>
+                                <span class="badge bg-success">@T["Eligible"]</span>
                             }
                             else
                             {
-                                <span class="badge bg-danger">Not Eligible</span>
+                                <span class="badge bg-danger">@T["Not Eligible"]</span>
                             }
                         </td>
                         <td>
                             <a asp-action="DegreeAudit"
                                asp-route-studentProfileId="@item.StudentProfileId"
-                               class="btn btn-sm btn-outline-primary">View Audit</a>
+                               class="btn btn-sm btn-outline-primary">@T["View Audit"]</a>
 
                             @if (item.IsEligible)
                             {
@@ -81,8 +81,8 @@ else
                                     <input type="hidden" name="programId" value="@Model.ProgramId" />
                                     <button type="submit"
                                             class="btn btn-sm btn-success"
-                                            onclick="return confirm('Graduate this eligible student now?');">
-                                        Graduate
+                                            onclick="return confirm('@T.Js("Graduate this eligible student now?")');">
+                                        @T["Graduate"]
                                     </button>
                                 </form>
                             }

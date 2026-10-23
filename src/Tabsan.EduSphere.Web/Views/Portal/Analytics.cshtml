@@ -1,12 +1,12 @@
 @* Plan D Phase 1 Stage 1.1 — Chart.js integration and sample chart rendering *@
 @model Tabsan.EduSphere.Web.Models.Portal.AnalyticsPageModel
-@{ ViewData["Title"] = "Analytics"; }
+@{ ViewData["Title"] = T.Text("Analytics"); }
 
-<div id="analyticsMessage" class="alert alert-info @(string.IsNullOrWhiteSpace(Model.Message) ? "d-none" : string.Empty)">@Model.Message</div>
+<div id="analyticsMessage" class="alert alert-info @(string.IsNullOrWhiteSpace(Model.Message) ? "d-none" : string.Empty)">@T.Text(Model.Message)</div>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -18,15 +18,15 @@ else
             <form asp-action="Analytics" method="get" class="row g-3 align-items-end" id="analyticsFilterForm">
                 @* ── Institute (all roles) ── *@
                 <div class="col-md-3">
-                    <label class="form-label">Institute</label>
+                    <label class="form-label" for="analyticsInstitutionType">@T["Institute"]</label>
                     <select class="form-select" name="institutionType" id="analyticsInstitutionType">
                         @if (!Model.SelectedInstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
                         {
-                            <option value="" selected>All Institutes</option>
+                            <option value="" selected>@T["All Institutes"]</option>
                         }
                         else if (Model.AvailableInstitutionTypes.Count > 1)
                         {
-                            <option value="">All Institutes</option>
+                            <option value="">@T["All Institutes"]</option>
                         }
                         @foreach (var institution in Model.AvailableInstitutionTypes)
                         {
@@ -39,9 +39,9 @@ else
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-md-3">
-                        <label class="form-label">Tenant</label>
+                        <label class="form-label" for="analyticsTenantId">@T["Tenant"]</label>
                         <select class="form-select" name="tenantId" id="analyticsTenantId">
-                            <option value="">All Tenants</option>
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 if (Model.SelectedTenantId == t.Id)
@@ -56,9 +56,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
+                        <label class="form-label" for="analyticsCampusId">@T["Campus"]</label>
                         <select class="form-select" name="campusId" id="analyticsCampusId">
-                            <option value="">All Campuses</option>
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 if (Model.SelectedCampusId == c.Id)
@@ -78,9 +78,9 @@ else
                 {
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <div class="col-md-3">
-                        <label class="form-label">Campus</label>
+                        <label class="form-label" for="analyticsCampusId">@T["Campus"]</label>
                         <select class="form-select" name="campusId" id="analyticsCampusId">
-                            <option value="">All Campuses</option>
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 if (Model.SelectedCampusId == c.Id)
@@ -102,9 +102,9 @@ else
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 }
                 <div class="col-md-3">
-                    <label class="form-label">Department</label>
+                    <label class="form-label" for="analyticsDepartmentId">@T["Department"]</label>
                     <select class="form-select" name="departmentId" id="analyticsDepartmentId">
-                        <option value="">All Departments</option>
+                        <option value="">@T["All Departments"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             if (Model.SelectedDepartmentId == d.Id)
@@ -120,9 +120,9 @@ else
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Course</label>
+                    <label class="form-label" for="analyticsCourseId">@T["Course"]</label>
                     <select class="form-select" name="courseId" id="analyticsCourseId">
-                        <option value="">All Courses</option>
+                        <option value="">@T["All Courses"]</option>
                         @foreach (var c in Model.Courses)
                         {
                             if (Model.SelectedCourseId == c.Id)
@@ -138,7 +138,7 @@ else
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">@Model.PeriodFilterLabel</label>
+                    <label class="form-label" for="analyticsSemesterId">@Model.PeriodFilterLabel</label>
                     <select class="form-select" name="semesterId" id="analyticsSemesterId">
                         <option value="">@Model.PeriodFilterPlaceholder</option>
                         @foreach (var s in Model.Semesters)
@@ -156,8 +156,8 @@ else
                 </div>
 
                 <div class="col-12 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    <a asp-action="Analytics" class="btn btn-outline-secondary">Reset</a>
+                    <button type="submit" class="btn btn-primary">@T["Apply Filters"]</button>
+                    <a asp-action="Analytics" class="btn btn-outline-secondary">@T["Reset"]</a>
                 </div>
             </form>
 
@@ -169,9 +169,9 @@ else
                 <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                 <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                 <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
-                <input type="hidden" name="isActive" value="@(!Model.IsAnalyticsActive)" />
+                <input type="hidden" name="isActive" value="@(!Model.IsAnalyticsActive ? "true" : "false")" />
                 <button type="submit" class="btn @(Model.IsAnalyticsActive ? "btn-outline-danger" : "btn-outline-success")">
-                    @(Model.IsAnalyticsActive ? "Deactivate Analytics" : "Activate Analytics")
+                    @(Model.IsAnalyticsActive ? T.Text("Deactivate Analytics") : T.Text("Activate Analytics"))
                 </button>
             </form>
         </div>
@@ -201,7 +201,7 @@ else
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-light fw-bold d-flex align-items-center">
                     <i class="bi bi-bar-chart me-2"></i>
-                    Analytics Overview
+                    @T["Analytics Overview"]
                 </div>
                 <div class="card-body">
                     <div style="height:300px;max-height:350px;"><canvas id="sampleChart"></canvas></div>
@@ -212,33 +212,33 @@ else
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light fw-bold d-flex align-items-center">
                 <i class="bi bi-graph-up-arrow me-2"></i>
-                @(isFinanceOnly ? "Payment Analytics" : isFacultyOnly ? "Academic Trends" : "Advanced Trends")
+                @(isFinanceOnly ? T.Text("Payment Analytics") : isFacultyOnly ? T.Text("Academic Trends") : T.Text("Advanced Trends"))
             </div>
             <div class="card-body">
                 <div class="row g-4">
                     @if (!isFacultyOnly)
                     {
                     <div class="col-12 col-lg-6">
-                        <h6 class="fw-semibold mb-2">Payment Status (Paid vs Unpaid)</h6>
+                        <h6 class="fw-semibold mb-2">@T["Payment Status (Paid vs Unpaid)"]</h6>
                         <div style="height:380px;"><canvas id="paymentStatusChart"></canvas></div>
                     </div>
                     }
                     @if (!isFinanceOnly)
                     {
                         <div class="col-12 col-lg-6">
-                            <h6 class="fw-semibold mb-2">Student Distribution by Semester</h6>
+                            <h6 class="fw-semibold mb-2">@T["Student Distribution by Semester"]</h6>
                             <div style="height:380px;"><canvas id="studentDistributionChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
-                            <h6 class="fw-semibold mb-2">Department-wise Student Counts</h6>
+                            <h6 class="fw-semibold mb-2">@T["Department-wise Student Counts"]</h6>
                             <div style="height:300px;max-height:350px;"><canvas id="departmentCountChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
-                            <h6 class="fw-semibold mb-2">Course Trends (Avg Assignment Marks)</h6>
+                            <h6 class="fw-semibold mb-2">@T["Course Trends (Avg Assignment Marks)"]</h6>
                             <div style="height:220px;max-height:250px;"><canvas id="courseTrendChart"></canvas></div>
                         </div>
                         <div class="col-12 col-lg-6">
-                            <h6 class="fw-semibold mb-2">Semester Performance & Attendance Trend</h6>
+                            <h6 class="fw-semibold mb-2">@T["Semester Performance & Attendance Trend"]</h6>
                             <div style="height:220px;max-height:250px;"><canvas id="semesterTrendChart"></canvas></div>
                         </div>
                     }
@@ -259,15 +259,15 @@ else
                     <button class="accordion-button" type="button"
                             data-bs-toggle="collapse" data-bs-target="#collapsePerf">
                         <i class="bi bi-bar-chart-line me-2"></i>
-                        Performance — @Model.Performance.DepartmentName
-                        <span class="badge bg-primary ms-2">Avg @Model.Performance.AverageMarks.ToString("F1")%</span>
+                        @T.Format("Performance — {0}", Model.Performance.DepartmentName)
+                        <span class="badge bg-primary ms-2">@T.Format("Avg {0}%", Model.Performance.AverageMarks.ToString("F1"))</span>
                     </button>
                 </h2>
                 <div id="collapsePerf" class="accordion-collapse collapse show" data-bs-parent="#analyticsAccordion">
                     <div class="accordion-body p-0">
                         @if (Model.Performance.Students.Count == 0)
                         {
-                            <p class="text-muted p-3 mb-0">No student data available.</p>
+                            <p class="text-muted p-3 mb-0">@T["No student data available."]</p>
                         }
                         else
                         {
@@ -278,12 +278,12 @@ else
                                 <table class="table table-hover table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Reg No.</th>
-                                            <th>Name</th>
-                                            <th>Semester</th>
-                                            <th class="text-end">Avg Marks</th>
-                                            <th class="text-end">Assignments</th>
-                                            <th class="text-end">Submitted</th>
+                                            <th>@T["Reg No."]</th>
+                                            <th>@T["Name"]</th>
+                                            <th>@T["Semester"]</th>
+                                            <th class="text-end">@T["Avg Marks"]</th>
+                                            <th class="text-end">@T["Assignments"]</th>
+                                            <th class="text-end">@T["Submitted"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -292,7 +292,7 @@ else
                                             <tr>
                                                 <td class="font-monospace small">@s.RegistrationNumber</td>
                                                 <td>@s.FullName</td>
-                                                <td>Sem @s.CurrentSemester</td>
+                                                <td>@T.Format("Sem {0}", s.CurrentSemester)</td>
                                                 <td class="text-end fw-semibold">@s.AverageMarks.ToString("F1")%</td>
                                                 <td class="text-end">@s.TotalAssignments</td>
                                                 <td class="text-end">@s.SubmittedAssignments</td>
@@ -315,15 +315,15 @@ else
                     <button class="accordion-button collapsed" type="button"
                             data-bs-toggle="collapse" data-bs-target="#collapseAtt">
                         <i class="bi bi-calendar-check me-2"></i>
-                        Attendance — @Model.Attendance.DepartmentName
-                        <span class="badge bg-success ms-2">@Model.Attendance.OverallAttendancePercentage.ToString("F1")% overall</span>
+                        @T.Format("Attendance — {0}", Model.Attendance.DepartmentName)
+                        <span class="badge bg-success ms-2">@T.Format("{0}% overall", Model.Attendance.OverallAttendancePercentage.ToString("F1"))</span>
                     </button>
                 </h2>
                 <div id="collapseAtt" class="accordion-collapse collapse" data-bs-parent="#analyticsAccordion">
                     <div class="accordion-body p-0">
                         @if (Model.Attendance.Rows.Count == 0)
                         {
-                            <p class="text-muted p-3 mb-0">No attendance data available.</p>
+                            <p class="text-muted p-3 mb-0">@T["No attendance data available."]</p>
                         }
                         else
                         {
@@ -334,11 +334,11 @@ else
                                 <table class="table table-hover table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Student</th>
-                                            <th>Course</th>
-                                            <th class="text-end">Total Classes</th>
-                                            <th class="text-end">Attended</th>
-                                            <th class="text-end">Percentage</th>
+                                            <th>@T["Student"]</th>
+                                            <th>@T["Course"]</th>
+                                            <th class="text-end">@T["Total Classes"]</th>
+                                            <th class="text-end">@T["Attended"]</th>
+                                            <th class="text-end">@T["Percentage"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -360,8 +360,8 @@ else
                             @if (Model.Attendance.Rows.Count > 100)
                             {
                                 <p class="text-muted small p-3 mb-0">
-                                    Showing the 100 lowest-attendance rows of @Model.Attendance.Rows.Count total (sorted worst first).
-                                    See <a asp-controller="Portal" asp-action="ReportAttendance">Report Center → Attendance Summary</a> for the complete dataset.
+                                    @T.Format("Showing the 100 lowest-attendance rows of {0} total (sorted worst first).", Model.Attendance.Rows.Count)
+                                    @T["See"] <a asp-controller="Portal" asp-action="ReportAttendance">@T["Report Center → Attendance Summary"]</a> for the complete dataset.
                                 </p>
                             }
                         }
@@ -378,15 +378,15 @@ else
                     <button class="accordion-button collapsed" type="button"
                             data-bs-toggle="collapse" data-bs-target="#collapseAssign">
                         <i class="bi bi-clipboard-check me-2"></i>
-                        Assignments — @Model.Assignments.DepartmentName
-                        <span class="badge bg-warning text-dark ms-2">@Model.Assignments.Assignments.Count assignments</span>
+                        @T.Format("Assignments — {0}", Model.Assignments.DepartmentName)
+                        <span class="badge bg-warning text-dark ms-2">@T.Format("{0} assignments", Model.Assignments.Assignments.Count)</span>
                     </button>
                 </h2>
                 <div id="collapseAssign" class="accordion-collapse collapse" data-bs-parent="#analyticsAccordion">
                     <div class="accordion-body p-0">
                         @if (Model.Assignments.Assignments.Count == 0)
                         {
-                            <p class="text-muted p-3 mb-0">No assignment data available.</p>
+                            <p class="text-muted p-3 mb-0">@T["No assignment data available."]</p>
                         }
                         else
                         {
@@ -397,12 +397,12 @@ else
                                 <table class="table table-hover table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Title</th>
-                                            <th>Course</th>
-                                            <th class="text-end">Students</th>
-                                            <th class="text-end">Submitted</th>
-                                            <th class="text-end">Graded</th>
-                                            <th class="text-end">Avg Marks</th>
+                                            <th>@T["Title"]</th>
+                                            <th>@T["Course"]</th>
+                                            <th class="text-end">@T["Students"]</th>
+                                            <th class="text-end">@T["Submitted"]</th>
+                                            <th class="text-end">@T["Graded"]</th>
+                                            <th class="text-end">@T["Avg Marks"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -435,7 +435,7 @@ else
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center text-muted py-5">
                 <div class="fs-1 mb-2"><i class="bi bi-bar-chart"></i></div>
-                <p>@(isFinanceOnly ? "No payment analytics data available." : "No analytics data available.")</p>
+                <p>@(isFinanceOnly ? T.Text("No payment analytics data available.") : T.Text("No analytics data available."))</p>
             </div>
         </div>
     }

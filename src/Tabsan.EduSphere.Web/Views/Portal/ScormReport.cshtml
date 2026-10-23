@@ -1,0 +1,62 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ScormReportPageModel
+@{
+    ViewData["Title"] = Model.Report?.Package.Title ?? T.Text("SCORM Package Report");
+    string StatusText(string? s) => s switch
+    {
+        "passed" => T.Text("Passed"),
+        "failed" => T.Text("Failed"),
+        "completed" => T.Text("Completed"),
+        "incomplete" => T.Text("In progress"),
+        "not attempted" => T.Text("Not started"),
+        null => "—",
+        _ => T.Text("Started")
+    };
+    static string Duration(int seconds) => seconds <= 0 ? "—" : $"{seconds / 3600}:{seconds % 3600 / 60:00}:{seconds % 60:00}";
+}
+@* Plan M13 — per-student attempts, status, scores and time on a SCORM package. *@
+<div class="container-fluid py-3">
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-warning">@T.Text(Model.Message)</div>
+    }
+    @if (Model.Report is { } r)
+    {
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <h1 class="h4 mb-0 me-auto">@r.Package.Title</h1>
+            <span class="badge bg-light text-dark border">@r.Package.Version</span>
+            <a class="btn btn-sm btn-outline-secondary" href="@(Url.Action("LmsManage", "Portal", new { offeringId = r.Package.OfferingId }) + "#scorm-packages")">@T["Back to the course content"]</a>
+        </div>
+        var started = r.Learners.Count(l => l.Attempts > 0);
+        var done = r.Learners.Count(l => l.Status == "completed" || l.SuccessStatus is "passed" or "failed");
+        <p class="text-muted small">@T.Format("{0} of {1} students started · {2} finished", started, r.Learners.Count, done)</p>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">@T["Student"]</th>
+                        <th scope="col">@T["Attempts"]</th>
+                        <th scope="col">@T["Status"]</th>
+                        <th scope="col">@T["Best score"]</th>
+                        <th scope="col">@T["Last score"]</th>
+                        <th scope="col">@T["Time spent"]</th>
+                        <th scope="col">@T["Last activity"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in r.Learners)
+                    {
+                        <tr>
+                            <td>@l.Name <span class="text-muted small">@l.RegistrationNumber</span></td>
+                            <td>@l.Attempts</td>
+                            <td>@(l.Attempts == 0 ? T.Text("Not started") : l.SuccessStatus is "passed" or "failed" ? StatusText(l.SuccessStatus) : StatusText(l.Status))</td>
+                            <td>@(l.BestScorePercent is { } b ? b.ToString("0.##") + "%" : "—")</td>
+                            <td>@(l.LastScorePercent is { } s ? s.ToString("0.##") + "%" : "—")</td>
+                            <td>@Duration(l.TotalSeconds)</td>
+                            <td>@(l.LastActivityAt is { } a ? a.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

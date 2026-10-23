@@ -1,17 +1,17 @@
 @model Tabsan.EduSphere.Web.Models.Portal.BuildingsPageModel
 @{
-    ViewData["Title"] = "Buildings";
+    ViewData["Title"] = T.Text("Buildings");
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">
-        API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.
+        @T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.
     </div>
 }
 else
@@ -25,9 +25,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Tenant</label>
-                            <select class="form-select" name="tenantId" onchange="this.form.submit()">
-                                <option value="">All tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" class="form-select" name="tenantId" onchange="this.form.submit()">
+                                <option value="">@T["All tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -35,9 +35,9 @@ else
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select class="form-select" name="campusId" onchange="this.form.submit()">
-                                <option value="">All campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">@T["All campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -49,9 +49,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Campus</label>
-                            <select class="form-select" name="campusId" onchange="this.form.submit()">
-                                <option value="">All campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" class="form-select" name="campusId" onchange="this.form.submit()">
+                                <option value="">@T["All campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -65,7 +65,7 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     }
                     <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Apply</button>
+                        <button type="submit" class="btn btn-primary w-100">@T["Apply"]</button>
                     </div>
                 </form>
             </div>
@@ -77,14 +77,14 @@ else
         <div class="col-12 col-xl-5">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5">Buildings</h2>
+                    <h2 class="h5">@T["Buildings"]</h2>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Code</th>
-                                    <th>Active</th>
+                                    <th>@T["Name"]</th>
+                                    <th>@T["Code"]</th>
+                                    <th>@T["Active"]</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -99,15 +99,15 @@ else
                                         <td>
                                             @if (b.IsActive)
                                             {
-                                                <span class="badge bg-success">Yes</span>
+                                                <span class="badge bg-success">@T["Yes"]</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">No</span>
+                                                <span class="badge bg-secondary">@T["No"]</span>
                                             }
                                         </td>
                                         <td>
-                                            <a asp-action="Rooms" asp-route-buildingId="@b.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm">Rooms</a>
+                                            <a asp-action="Rooms" asp-route-buildingId="@b.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm">@T["Rooms"]</a>
                                         </td>
                                     </tr>
                                 }
@@ -123,7 +123,7 @@ else
             <!-- Create Building -->
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
-                    <h2 class="h5">Add Building</h2>
+                    <h2 class="h5">@T["Add Building"]</h2>
                     <form asp-action="CreateBuilding" method="post" class="row g-2" data-building-scope-form>
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
@@ -131,15 +131,15 @@ else
                         <input type="hidden" name="TenantId" value="@Model.SelectedTenantId" />
                         <input type="hidden" name="CampusId" value="@Model.SelectedCampusId" />
                         <div class="col-md-7">
-                            <label class="form-label">Name</label>
-                            <input name="form.Name" class="form-control" placeholder="e.g. Faculty Block A" required />
+                            <label class="form-label">@T["Name"]</label>
+                            <input aria-label="@T["Name"]" name="form.Name" class="form-control" placeholder="@T["e.g. Faculty Block A"]" required />
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Code</label>
-                            <input name="form.Code" class="form-control" placeholder="e.g. FBA" required maxlength="10" />
+                            <label class="form-label">@T["Code"]</label>
+                            <input aria-label="@T["Code"]" name="form.Code" class="form-control" placeholder="@T["e.g. FBA"]" required maxlength="10" />
                         </div>
                         <div class="col-12">
-                            <button class="btn btn-primary" type="submit">Create</button>
+                            <button class="btn btn-primary" type="submit">@T["Create"]</button>
                         </div>
                     </form>
                 </div>
@@ -150,22 +150,22 @@ else
             {
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <h2 class="h5">Edit: @Model.SelectedBuilding.Name</h2>
+                        <h2 class="h5">@T.Format("Edit: {0}", Model.SelectedBuilding.Name)</h2>
                         <form asp-action="UpdateBuilding" method="post" class="row g-2 mb-3">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.SelectedBuilding.Id" />
                             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             <div class="col-md-7">
-                                <label class="form-label">Name</label>
-                                <input name="form.Name" class="form-control" value="@Model.EditForm.Name" required />
+                                <label class="form-label">@T["Name"]</label>
+                                <input aria-label="@T["Name"]" name="form.Name" class="form-control" value="@Model.EditForm.Name" required />
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Code</label>
-                                <input name="form.Code" class="form-control" value="@Model.EditForm.Code" required maxlength="10" />
+                                <label class="form-label">@T["Code"]</label>
+                                <input aria-label="@T["Code"]" name="form.Code" class="form-control" value="@Model.EditForm.Code" required maxlength="10" />
                             </div>
                             <div class="col-12">
-                                <button class="btn btn-primary" type="submit">Save Changes</button>
+                                <button class="btn btn-primary" type="submit">@T["Save Changes"]</button>
                             </div>
                         </form>
 
@@ -173,20 +173,20 @@ else
                         <form asp-action="SetBuildingActive" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.SelectedBuilding.Id" />
-                            <input type="hidden" name="activate" value="@(!Model.SelectedBuilding.IsActive)" />
+                            <input type="hidden" name="activate" value="@(!Model.SelectedBuilding.IsActive ? "true" : "false")" />
                             <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                             @if (Model.SelectedBuilding.IsActive)
                             {
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+                                <button class="btn btn-outline-danger btn-sm" type="submit">@T["Deactivate"]</button>
                             }
                             else
                             {
-                                <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+                                <button class="btn btn-outline-success btn-sm" type="submit">@T["Activate"]</button>
                             }
                         </form>
 
-                        <a asp-action="Rooms" asp-route-buildingId="@Model.SelectedBuilding.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm ms-2">Manage Rooms</a>
+                        <a asp-action="Rooms" asp-route-buildingId="@Model.SelectedBuilding.Id" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" class="btn btn-outline-secondary btn-sm ms-2">@T["Manage Rooms"]</a>
                     </div>
                 </div>
             }

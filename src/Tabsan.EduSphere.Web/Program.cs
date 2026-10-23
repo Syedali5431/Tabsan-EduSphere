@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Tabsan.EduSphere.Application.Services;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Tabsan.EduSphere.Web.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -169,6 +172,16 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("EduApi");
+// Plan M13 — SCORM package uploads can be large (Scorm:MaxPackageMb on the API).
+builder.Services.AddHttpClient(Tabsan.EduSphere.Web.Services.EduApiClient.ScormUploadClient, c => c.Timeout = TimeSpan.FromMinutes(30));
+// Plan M11 — portal languages (English, Urdu, Arabic): translations keyed by the English text.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<TranslationStore>();
+builder.Services.AddSingleton<IPortalText, PortalText>();
+// Urdu and Arabic text is written as text, not as &#x…; entities (Razor's default encoder only passes Basic Latin).
+builder.Services.Configure<Microsoft.Extensions.WebEncoders.WebEncoderOptions>(options =>
+    options.TextEncoderSettings = new System.Text.Encodings.Web.TextEncoderSettings(System.Text.Unicode.UnicodeRanges.All));
+// Flash messages (TempData) are English keys translated where pages show them (@T.Text), in the language of that page.
 builder.Services.AddScoped<IEduApiClient, EduApiClient>();
 
 if (useForwardedHeaders)
@@ -216,6 +229,14 @@ app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = context =>
     {
+        // Plan M4.2 — the service worker must always be revalidated, or users keep an old version for days.
+        if (string.Equals(context.Context.Request.Path.Value, "/sw.js", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Context.Response.Headers["Cache-Control"] = "no-cache";
+            context.Context.Response.Headers["Service-Worker-Allowed"] = "/";
+            return;
+        }
+
         if (!staticAssetCachingEnabled)
         {
             return;
@@ -276,6 +297,17 @@ app.Use(async (context, next) =>
     }
 
     await next();
+});
+
+// Plan M11 — the request language: ?lang= → the user's saved choice → cookie → institution default → browser (when allowed).
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(PortalCultures.English),
+    SupportedCultures = PortalCultures.All,
+    SupportedUICultures = PortalCultures.All,
+    FallBackToParentCultures = false,
+    FallBackToParentUICultures = false,
+    RequestCultureProviders = [new PortalRequestCultureProvider()]
 });
 
 app.UseAuthorization();

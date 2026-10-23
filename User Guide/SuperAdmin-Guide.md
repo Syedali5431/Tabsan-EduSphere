@@ -244,6 +244,42 @@ Configure Microsoft Entra ID, Google Workspace, other OpenID Connect or SAML 2.0
 
 Step-by-step provider setup, roll-out checklist and troubleshooting: [SSO Setup Guide](SSO-Setup-Guide.md).
 
+### 9.11 Submission Files and Document Conversion (Plan M3, October 2026)
+
+- Assignment files are stored by the API in its media storage (`MediaStorage` section) and are only served to the student who submitted them and to staff of the same tenant/campus — never from a public folder. Files uploaded before Plan M3 stay at their old portal address until migrated.
+- Word, PowerPoint, Excel, OpenDocument, RTF and text submissions are shown in the grading viewer as PDF after conversion by a [Gotenberg 8](https://gotenberg.dev) service. Set `DocumentConversion:GotenbergUrl` (for example `http://gotenberg:3000`; `docker-compose.yml` already runs one) and keep the service on an internal network. Without it, those files are download-only and everything else works.
+- The conversion worker runs inside the API (`DocumentConversion:WorkerEnabled`, `PollSeconds`, `BatchSize`, `TimeoutSeconds`). Several API nodes can run it safely. A file that fails three times is marked *Failed*; graders can press *Try the preview again* after the service is fixed.
+- Annotated PDFs need a sans-serif font on the API host (the Docker image installs DejaVu; on Windows Arial is used). Without one, fonts bundled with PDFsharp are used.
+
+### 9.12 Installable App and Web Push (Plan M4, October 2026)
+
+- The portal is a Progressive Web App: the manifest takes the institution's name and logo from **Dashboard Settings › Branding**. Installation and push need the portal on **https** (localhost works for testing).
+- Web Push needs a VAPID key pair. The API creates one on first use in `WebPush:KeyFile` (default: the service account's app-data folder, `Tabsan/vapid-keys.json`) or reads `WebPush:PublicKey` / `WebPush:PrivateKey`. Every API node **and** the BackgroundJobs service must use the same keys; back the file up — new keys mean every browser has to turn notifications on again. In Docker the key file is on the `api_keys` volume.
+- Set `WebPush:Subject` to a real `mailto:` or `https:` contact (Apple requires it). `WebPush:AllowedHosts` lists the push services subscriptions may point to (Google, Mozilla, Microsoft, Apple by default) — only extend it for a push service you trust.
+- Set `WebPush:Enabled=false` to switch device notifications off; in-portal notifications are unaffected.
+
+### 9.13 External Tools — LTI 1.3 (Plan M5, October 2026)
+
+- Set `Lti:PlatformUrl` in the API settings to the portal's public https address (the platform issuer) and keep `Lti:KeyFile` (platform signing keys, created on first use) on storage every API node shares — back it up. In Docker it is on the `api_keys` volume.
+- **System Settings › External Tools** shows the values to give each tool vendor, registers tools (client ID and deployment ID are generated), limits a tool to a department or a course with deployments, and turns tools on or off. Only SuperAdmins can **rotate the signing key**; the previous key stays published for `Lti:RetiredKeyDays`.
+- Admins can manage the registry once you grant the **External Tools** menu in Sidebar Settings.
+- Choose the least personal data a tool needs (*Nothing / Name / Email / Name and email*), and allow grades or the class list only when the tool needs them. All registry changes are audited.
+
+Step-by-step registration, teacher workflow and troubleshooting: [LTI Tool Setup Guide](LTI-Tool-Setup-Guide.md).
+
+### 9.14 Learning Outcomes & Mastery (Plan M6, October 2026)
+
+- Activate the **Learning Outcomes & Mastery** module (`outcomes`) in Module Composition; menus **Learning Outcomes** (Admin, Faculty) and **My Outcomes** (Student) are seeded.
+- Outcomes created by a Super Admin without a tenant are installation-wide and visible to every tenant; tenant admins manage their own.
+- Evidence is calculated when work is graded, posted or hidden, when quiz attempts finish or are regraded, and when tool scores arrive (LTI). After bulk data changes, use **Recalculate** on a course's mastery gradebook.
+
+### 9.15 Shared Storage, Request Limits and API Tokens (Plan M14, October 2026)
+
+- **Shared storage for several API servers:** set `MediaStorage:Provider` to `AzureBlob` (`MediaStorage:AzureBlob:ConnectionString` or `ServiceUri` + `SasToken`, `Container`) or `S3` (`MediaStorage:S3:Bucket`, `Region` or `ServiceUrl` for MinIO/R2/Wasabi, access keys or the server's AWS role; `DisablePayloadSigning: true` for Cloudflare R2). Submissions, converted documents, uploads and SCORM package files then go to that store, and downloads use short-lived signed links. Files already stored locally are not moved automatically — copy them to the store with the same paths before switching.
+- **Request limits** (`RateLimiting`): per signed-in user 600 requests/minute, per API token 1,200, per address without sign-in 300. Over the limit, callers get 429 with Retry-After. `ExemptIps` lists addresses (or ranges such as `10.0.0.0/8`) never limited by address — by default only the server itself, which covers a portal on the same server. **When the portal runs on another server or container, add its address or network**: the portal makes the sign-in calls for all users, and they would otherwise share one 300/minute allowance (a problem at the start of an exam). Behind a reverse proxy, also set `ReverseProxy:Enabled` and `KnownProxies` so the API sees real client addresses.
+- **API tokens** (`ApiTokens`): `AllowedRoles` (default Admin and SuperAdmin), `MaxLifetimeDays` (365), `MaxTokensPerUser` (20). Creating and revoking tokens is audited (`ApiTokenCreated`, `ApiTokenRevoked`).
+- **Accessibility:** the portal passes automated WCAG 2.1 AA checks; see `Docs/Accessibility-Conformance-Report.md` for the conformance report and known limitations. Custom theme and branding colours are not covered by the audit — check contrast when you change them.
+
 ## 10. Operational Workflows
 
 ### 10.1 New Department Onboarding

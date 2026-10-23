@@ -23,12 +23,12 @@
         <div class="card-body py-2 d-flex flex-wrap gap-3 align-items-center">
             <div class="flex-grow-1">
                 <h2 class="h5 mb-0">@p.QuizTitle</h2>
-                <div class="small text-muted">@p.Questions.Count question(s) · @p.TotalMarks.ToString("0.##") marks</div>
+                <div class="small text-muted">@T.Format("{0} question(s) · {1} marks", p.Questions.Count, p.TotalMarks.ToString("0.##"))</div>
             </div>
-            <div class="small text-muted" data-save-status aria-live="polite">All answers saved</div>
+            <div class="small text-muted" data-save-status aria-live="polite">@T["All answers saved"]</div>
             @if (p.DeadlineAt.HasValue)
             {
-                <div class="fs-5 fw-semibold font-monospace px-2 rounded" data-timer role="timer" aria-live="off" title="Time remaining">--:--</div>
+                <div class="fs-5 fw-semibold font-monospace px-2 rounded" data-timer role="timer" aria-live="off" title="@T["Time remaining"]">--:--</div>
             }
         </div>
     </div>
@@ -39,7 +39,7 @@
     }
     @if (p.LockAnsweredQuestions)
     {
-        <div class="p-2 mb-3 rounded border border-warning small">Once you move to the next question your answer is final and cannot be changed.</div>
+        <div class="p-2 mb-3 rounded border border-warning small">@T["Once you move to the next question your answer is final and cannot be changed."]</div>
     }
 
     @foreach (var q in p.Questions)
@@ -49,8 +49,8 @@
         <section class="card border-0 shadow-sm mb-3" data-question data-qid="@q.QuestionId" data-type="@q.Type" data-locked="@(q.Locked ? "true" : "false")" aria-labelledby="@name-title">
             <div class="card-body">
                 <div class="d-flex justify-content-between small text-muted mb-1">
-                    <span id="@name-title">Question @q.Order</span>
-                    <span>@q.Marks.ToString("0.##") mark(s)@(q.Locked ? " · locked" : "")</span>
+                    <span id="@name-title">@T.Format("Question {0}", q.Order)</span>
+                    <span>@T.Format("{0} mark(s){1}", q.Marks.ToString("0.##"), (q.Locked ? " · locked" : ""))</span>
                 </div>
 
                 @if (q.Type == "FillInBlank")
@@ -78,7 +78,7 @@
                     case "TrueFalse":
                     case "MultipleAnswers":
                         var multi = q.Type == "MultipleAnswers";
-                        if (multi) { <div class="small text-muted mb-1">Select all that apply.</div> }
+                        if (multi) { <div class="small text-muted mb-1">@T["Select all that apply."]</div> }
                         foreach (var o in q.Options ?? [])
                         {
                             var oid = $"{name}-{o.Id}";
@@ -100,7 +100,7 @@
                                     <label class="col-sm-6 col-form-label col-form-label-sm" for="@name-@prompt.Id">@prompt.Text</label>
                                     <div class="col-sm-6">
                                         <select class="form-select form-select-sm" id="@name-@prompt.Id" data-match-id="@prompt.Id" disabled="@(q.Locked)">
-                                            <option value="">Choose…</option>
+                                            <option value="">@T["Choose…"]</option>
                                             @foreach (var choice in q.MatchingChoices ?? [])
                                             {
                                                 <option value="@choice" selected="@(choice == current)">@choice</option>
@@ -119,14 +119,14 @@
                         {
                             items = items.OrderBy(i => { var ix = savedOrder.ToList().IndexOf(i.Id); return ix < 0 ? int.MaxValue : ix; }).ToList();
                         }
-                        <div class="small text-muted mb-1">Use the arrows to put the items in the right order.</div>
+                        <div class="small text-muted mb-1">@T["Use the arrows to put the items in the right order."]</div>
                         <ol class="list-group list-group-numbered" data-order-list style="max-width: 40rem;">
                             @foreach (var item in items)
                             {
                                 <li class="list-group-item d-flex align-items-center gap-2" data-item-id="@item.Id">
                                     <span class="flex-grow-1">@item.Text</span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="-1" aria-label="Move up" disabled="@(q.Locked)">↑</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="1" aria-label="Move down" disabled="@(q.Locked)">↓</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="-1" aria-label="@T["Move up"]" disabled="@(q.Locked)">↑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-move="1" aria-label="@T["Move down"]" disabled="@(q.Locked)">↓</button>
                                 </li>
                             }
                         </ol>
@@ -135,11 +135,11 @@
                     case "Numeric":
                     case "Formula":
                         var num = QuizJson.Read<NumericResponse>(saved?.ResponseJson)?.Value;
-                        <input type="text" inputmode="decimal" class="form-control" style="max-width: 14rem;" data-numeric value="@num" aria-label="Your answer" disabled="@(q.Locked)" />
+                        <input type="text" inputmode="decimal" class="form-control" style="max-width: 14rem;" data-numeric value="@num" aria-label="@T["Your answer"]" disabled="@(q.Locked)" />
                         break;
 
                     case "ShortAnswer":
-                        <input type="text" class="form-control" maxlength="1000" data-text value="@saved?.TextResponse" aria-label="Your answer" disabled="@(q.Locked)" />
+                        <input type="text" class="form-control" maxlength="1000" data-text value="@saved?.TextResponse" aria-label="@T["Your answer"]" disabled="@(q.Locked)" />
                         break;
 
                     case "Essay":
@@ -150,11 +150,11 @@
                     case "FileUpload":
                         var accept = q.AllowedExtensions is { Count: > 0 } ? string.Join(",", q.AllowedExtensions) : null;
                         <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <input type="file" class="form-control form-control-sm" style="max-width: 22rem;" data-file accept="@accept" aria-label="Your file" disabled="@(q.Locked)" />
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-upload disabled="@(q.Locked)">Upload</button>
+                            <input type="file" class="form-control form-control-sm" style="max-width: 22rem;" data-file accept="@accept" aria-label="@T["Your file"]" disabled="@(q.Locked)" />
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-upload disabled="@(q.Locked)">@T["Upload"]</button>
                         </div>
                         <div class="form-text">
-                            @(q.AllowedExtensions is { Count: > 0 } ? $"Allowed: {string.Join(", ", q.AllowedExtensions)}. " : "")Max @(q.MaxFileSizeMb ?? 10) MB.
+                            @T.Format("{0}Max {1} MB.", (q.AllowedExtensions is { Count: > 0 } ? $"Allowed: {string.Join(", ", q.AllowedExtensions)}. " : ""), (q.MaxFileSizeMb ?? 10))
                             <span data-file-name>@(saved?.FileName is { } fn ? $"Uploaded: {fn}" : "")</span>
                         </div>
                         break;
@@ -164,15 +164,15 @@
     }
 
     <div class="d-flex flex-wrap gap-2 align-items-center mb-4" data-pager hidden>
-        <button type="button" class="btn btn-outline-secondary" data-prev>← Previous</button>
+        <button type="button" class="btn btn-outline-secondary" data-prev>@T["← Previous"]</button>
         <span class="small text-muted" data-page-label></span>
-        <button type="button" class="btn btn-outline-primary" data-next>Next →</button>
+        <button type="button" class="btn btn-outline-primary" data-next>@T["Next →"]</button>
     </div>
 
     <form asp-action="SubmitQuiz" asp-route-attemptId="@p.AttemptId" method="post" data-submit-form class="mb-5">
         @Html.AntiForgeryToken()
         <input type="hidden" name="answersJson" value="" />
-        <button type="submit" class="btn btn-success">Submit quiz</button>
+        <button type="submit" class="btn btn-success">@T["Submit quiz"]</button>
     </form>
 </div>
 

@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.LmsManagePageModel
 @{
-    ViewData["Title"]     = "Manage Course Content";
-    ViewData["PageTitle"] = "Manage Course Content";
+    ViewData["Title"]     = T.Text("Manage Course Content");
+    ViewData["PageTitle"] = T.Text("Manage Course Content");
     ViewData["ActivePage"] = "lms_manage";
 }
 
@@ -9,50 +9,60 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available.</div>
+    <div class="alert alert-warning">@T["API is not available."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success alert-dismissible fade show">
-        @Model.SuccessMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.SuccessMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage) <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (Model.OfferingId == System.Guid.Empty)
 {
-    <div class="alert alert-info">Select a valid course offering to manage LMS content.</div>
+    <div class="alert alert-info">@T["Select a valid course offering to manage LMS content."]</div>
     return;
 }
 
+@* Plan M7 — student progress through the modules *@
+<div class="d-flex justify-content-end mb-2">
+    <a asp-action="ModuleProgress" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-primary" data-module-progress-link>@T["Student progress"]</a>
+</div>
+
+@* Plan M5 — External tools (LTI 1.3) *@
+@await Component.InvokeAsync("ExternalTools", new { offeringId = Model.OfferingId, manage = true })
+@* Plan M13 — SCORM packages: upload, settings, preview, report. *@
+@await Component.InvokeAsync("ScormPackages", new { offeringId = Model.OfferingId, manage = true })
+
 <div class="card mb-4">
-    <div class="card-header"><strong>Add New Module</strong></div>
+    <div class="card-header"><strong>@T["Add New Module"]</strong></div>
     <div class="card-body">
         <form asp-action="CreateLmsModule" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="offeringId" value="@Model.OfferingId" />
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Title</label>
-                    <input name="title" class="form-control" required />
+                    <label class="form-label">@T["Title"]</label>
+                    <input aria-label="@T["Title"]" name="title" class="form-control" required />
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Week #</label>
-                    <input name="weekNumber" type="number" min="1" class="form-control" required />
+                    <label class="form-label">@T["Week #"]</label>
+                    <input aria-label="@T["Week #"]" name="weekNumber" type="number" min="1" class="form-control" required />
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Body (HTML allowed)</label>
-                    <textarea name="body" class="form-control" rows="3"></textarea>
+                    <label class="form-label">@T["Body (HTML allowed)"]</label>
+                    <textarea aria-label="@T["Body (HTML allowed)"]" name="body" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Add Module</button>
+                    <button type="submit" class="btn btn-primary">@T["Add Module"]</button>
                 </div>
             </div>
         </form>
@@ -63,14 +73,14 @@
 {
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span><strong>Week @module.WeekNumber — @module.Title</strong>
+            <span><strong>@T.Format("Week {0} — {1}", module.WeekNumber, module.Title)</strong>
                 @if (module.IsPublished)
                 {
-                    <span class="badge bg-success ms-2">Published</span>
+                    <span class="badge bg-success ms-2">@T["Published"]</span>
                 }
                 else
                 {
-                    <span class="badge bg-secondary ms-2">Draft</span>
+                    <span class="badge bg-secondary ms-2">@T["Draft"]</span>
                 }
             </span>
             <div class="btn-group btn-group-sm">
@@ -80,7 +90,7 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="moduleId" value="@module.Id" />
                         <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-warning btn-sm">Unpublish</button>
+                        <button type="submit" class="btn btn-warning btn-sm">@T["Unpublish"]</button>
                     </form>
                 }
                 else
@@ -89,15 +99,15 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="moduleId" value="@module.Id" />
                         <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                        <button type="submit" class="btn btn-success btn-sm">Publish</button>
+                        <button type="submit" class="btn btn-success btn-sm">@T["Publish"]</button>
                     </form>
                 }
                 <form asp-action="DeleteLmsModule" method="post" class="d-inline"
-                      onsubmit="return confirm('Delete this module?')">
+                      onsubmit="return confirm('@T.Js("Delete this module?")')">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="moduleId" value="@module.Id" />
                     <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-sm">@T["Delete"]</button>
                 </form>
             </div>
         </div>
@@ -107,20 +117,21 @@
                 <div class="mb-2 text-muted small">@Html.Raw(module.Body)</div>
             }
 
-            @if (module.Videos.Any())
+            @* Plan M7: videos are listed as module items once the item structure is available. *@
+            @if (module.Videos.Any() && Model.Structure is null)
             {
-                <h6>Videos</h6>
+                <h6>@T["Videos"]</h6>
                 <ul class="list-group list-group-flush mb-3">
                     @foreach (var video in module.Videos)
                     {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>@video.Title</span>
                             <form asp-action="DeleteLmsVideo" method="post"
-                                  onsubmit="return confirm('Delete video?')">
+                                  onsubmit="return confirm('@T.Js("Delete video?")')">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="videoId" value="@video.Id" />
                                 <input type="hidden" name="offeringId" value="@Model.OfferingId" />
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm">@T["Remove"]</button>
                             </form>
                         </li>
                     }
@@ -128,27 +139,37 @@
             }
 
             <details>
-                <summary class="btn btn-sm btn-outline-secondary mb-2">Add Video</summary>
+                <summary class="btn btn-sm btn-outline-secondary mb-2">@T["Add Video"]</summary>
                 <form asp-action="AddLmsVideo" method="post" class="mt-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="moduleId" value="@module.Id" />
                     <input type="hidden" name="offeringId" value="@Model.OfferingId" />
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <input name="title" class="form-control form-control-sm" placeholder="Video title" required />
+                            <input name="title" class="form-control form-control-sm" placeholder="@T["Video title"]" required />
                         </div>
                         <div class="col-md-4">
-                            <input name="embedUrl" class="form-control form-control-sm" placeholder="Embed URL (e.g. YouTube)" />
+                            <input name="embedUrl" class="form-control form-control-sm" placeholder="@T["Embed URL (e.g. YouTube)"]" />
                         </div>
                         <div class="col-md-3">
-                            <input name="durationSeconds" type="number" class="form-control form-control-sm" placeholder="Duration (sec)" />
+                            <input name="durationSeconds" type="number" class="form-control form-control-sm" placeholder="@T["Duration (sec)"]" />
                         </div>
                         <div class="col-md-1">
-                            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                            <button type="submit" class="btn btn-primary btn-sm">@T["Add"]</button>
                         </div>
                     </div>
                 </form>
             </details>
+
+            @{ var structureModule = Model.Structure?.Modules.FirstOrDefault(x => x.Id == module.Id); }
+            @if (structureModule is not null)
+            {
+                <partial name="_ModuleItemsEditor" model="@(new Tabsan.EduSphere.Web.Models.Portal.ModuleItemsEditorModel { OfferingId = Model.OfferingId, Module = structureModule, AllModules = Model.Structure!.Modules, Linkables = Model.Linkables })" />
+            }
         </div>
     </div>
+}
+
+@section Scripts {
+    <script src="~/js/module-editor.js" asp-append-version="true" defer></script>
 }

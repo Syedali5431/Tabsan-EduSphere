@@ -1,0 +1,333 @@
+@model Tabsan.EduSphere.Web.Models.Portal.OutcomesPageModel
+@{
+    ViewData["Title"] = T.Text("Learning Outcomes");
+    var e = Model.Editing;
+    var level = e?.Level ?? (Model.IsAdmin ? Model.Level ?? "Course" : "Course");
+    var ratings = e?.Ratings.ToList() ?? new List<Tabsan.EduSphere.Application.Outcomes.OutcomeRatingDto>
+    {
+        new("Exceeds mastery", 4), new("Meets mastery", 3), new("Near mastery", 2), new("Below mastery", 1), new("No evidence", 0)
+    };
+    var byId = Model.Outcomes.Concat(Model.ProgramOutcomes).GroupBy(o => o.Id).ToDictionary(g => g.Key, g => g.First());
+    string MethodText(string method, int? p) => method switch
+    {
+        "Highest" => "Highest score",
+        "Latest" => "Most recent score",
+        "Average" => "Average",
+        "NMastery" => $"Mastered {p ?? 5} times",
+        _ => $"Decaying average ({p ?? 65}% latest)"
+    };
+    string Scope(Tabsan.EduSphere.Application.Outcomes.OutcomeResponse o) => o.Level switch
+    {
+        "Program" => o.ProgramName ?? "Program",
+        "Course" => o.CourseName ?? "Course",
+        _ => "Institution"
+    };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-4">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Learning Outcomes"]</h2>
+        <p class="text-muted mb-0">@T["Define what students should achieve, align outcomes to rubric criteria, quiz questions and assignments, and follow mastery."]</p>
+    </div>
+    <a asp-action="OutcomeMastery" class="btn btn-outline-primary btn-sm">@T["Mastery gradebook"]</a>
+    <a asp-action="OutcomeAttainment" class="btn btn-outline-primary btn-sm">@T["Program attainment"]</a>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border border-warning rounded p-3 bg-light" data-outcomes-module-off>
+        <strong>@T["The Learning Outcomes module is not active."]</strong>
+        @T["Activate it in"] <a asp-action="ModuleComposition">@T["Module Composition"]</a> @T["(it requires a licence that includes it), then return to this page."]
+    </div>
+}
+else
+{
+    @if (Model.Import is { } import)
+    {
+        <div class="border rounded p-3 mb-3 bg-light" data-outcome-import-result>
+            <strong>@T["Import finished:"]</strong> @T.Format("{0} created, {1} updated, {2} mapped to program outcomes.", import.Created, import.Updated, import.Mapped)
+            @if (import.Errors.Count > 0)
+            {
+                <details class="mt-2" open>
+                    <summary class="small fw-semibold">@T.Format("{0} row(s) were skipped", import.Errors.Count)</summary>
+                    <ul class="small mb-0">@foreach (var err in import.Errors) { <li>@T.Text(err)</li> }</ul>
+                </details>
+            }
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Outcomes" class="row g-2 align-items-end mb-3">
+                <div class="col-sm-3">
+                    <label class="form-label small" for="f-level">@T["Level"]</label>
+                    <select id="f-level" name="level" class="form-select form-select-sm">
+                        <option value="">@T["All levels"]</option>
+                        @foreach (var l in new[] { "Institution", "Program", "Course" })
+                        {
+                            <option value="@l" selected="@(Model.Level == l)">@l</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-3">
+                    <label class="form-label small" for="f-program">@T["Program"]</label>
+                    <select id="f-program" name="programId" class="form-select form-select-sm">
+                        <option value="">@T["Any program"]</option>
+                        @foreach (var p in Model.Programs) { <option value="@p.Id" selected="@(Model.ProgramId == p.Id)">@p.Code — @p.Name</option> }
+                    </select>
+                </div>
+                <div class="col-sm-3">
+                    <label class="form-label small" for="f-course">@T["Course"]</label>
+                    <select id="f-course" name="courseId" class="form-select form-select-sm">
+                        <option value="">@T["Any course"]</option>
+                        @foreach (var c in Model.Courses) { <option value="@c.Id" selected="@(Model.CourseId == c.Id)">@c.Name</option> }
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="f-inactive" name="includeInactive" value="true" checked="@Model.IncludeInactive" />
+                        <label class="form-check-label small" for="f-inactive">@T["Show turned off"]</label>
+                    </div>
+                </div>
+                <div class="col-sm-1"><button class="btn btn-sm btn-outline-secondary w-100">@T["Filter"]</button></div>
+            </form>
+
+            @if (Model.Outcomes.Count == 0)
+            {
+                <p class="text-muted small mb-0">@T["No outcomes yet. Add one below or import them from Excel."]</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0" data-outcomes-table>
+                        <thead class="text-nowrap"><tr><th>@T["Code"]</th><th>@T["Outcome"]</th><th>@T["Level"]</th><th>@T["Mastery"]</th><th>@T["Contributes to"]</th><th class="text-end">@T["Aligned"]</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var o in Model.Outcomes)
+                            {
+                                <tr class="@(o.IsActive ? "" : "text-muted") @(e?.Id == o.Id ? "table-active" : "")">
+                                    <td class="text-nowrap fw-semibold">@(o.ParentId is null ? "" : "↳ ")@o.Code</td>
+                                    <td>
+                                        <div>@o.Title</div>
+                                        @if (!string.IsNullOrWhiteSpace(o.Description)) { <div class="small text-muted">@o.Description</div> }
+                                    </td>
+                                    <td class="small">@o.Level<div class="text-muted">@Scope(o)</div></td>
+                                    <td class="small text-nowrap">@T.Format("{0} of {1}", o.MasteryPoints.ToString("0.##"), o.MaxPoints.ToString("0.##"))<div class="text-muted">@MethodText(o.CalculationMethod, o.CalculationParameter)</div></td>
+                                    <td class="small">@string.Join(", ", o.ProgramOutcomeIds.Select(id => byId.TryGetValue(id, out var p) ? p.Code : "?"))</td>
+                                    <td class="text-end">@o.AlignmentCount</td>
+                                    <td class="text-end text-nowrap">
+                                        @if (!o.IsActive) { <span class="badge bg-secondary me-1">@T["Off"]</span> }
+                                        <a asp-action="Outcomes" asp-route-edit="@o.Id" class="btn btn-sm btn-outline-primary">@T["Edit"]</a>
+                                        <form asp-action="SetOutcomeActive" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="outcomeId" value="@o.Id" />
+                                            <input type="hidden" name="active" value="@(!o.IsActive ? "true" : "false")" />
+                                            <button class="btn btn-sm btn-outline-secondary">@(o.IsActive ? T.Text("Turn off") : T.Text("Turn on"))</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <h3 class="h6 mb-0">@(e is null ? T.Text("Add an outcome") : $"Edit {e.Code}")</h3>
+                        @if (e is not null) { <a asp-action="Outcomes" class="btn btn-sm btn-link ms-auto">@T["Add another"]</a> }
+                    </div>
+                    <form asp-action="SaveOutcome" method="post" class="row g-3" data-outcome-form>
+                        @Html.AntiForgeryToken()
+                        @if (e is not null) { <input type="hidden" name="Id" value="@e.Id" /> }
+                        <div class="col-md-4">
+                            <label class="form-label" for="o-level">@T["Level"]</label>
+                            <select id="o-level" name="Level" class="form-select" disabled="@(e is not null)">
+                                @if (Model.IsAdmin)
+                                {
+                                    <option value="Institution" selected="@(level == "Institution")">@T["Institution"]</option>
+                                    <option value="Program" selected="@(level == "Program")">@T["Program (PLO)"]</option>
+                                }
+                                <option value="Course" selected="@(level == "Course")">@T["Course (CLO)"]</option>
+                            </select>
+                            @if (e is not null) { <input type="hidden" name="Level" value="@e.Level" /> }
+                        </div>
+                        <div class="col-md-8" data-for-level="Program">
+                            <label class="form-label" for="o-program">@T["Program"]</label>
+                            <select id="o-program" name="ProgramId" class="form-select" disabled="@(e is not null)">
+                                @foreach (var p in Model.Programs) { <option value="@p.Id" selected="@((e?.ProgramId ?? Model.ProgramId) == p.Id)">@p.Code — @p.Name</option> }
+                            </select>
+                        </div>
+                        <div class="col-md-8" data-for-level="Course">
+                            <label class="form-label" for="o-course">@T["Course"]</label>
+                            <select id="o-course" name="CourseId" class="form-select" disabled="@(e is not null)">
+                                @foreach (var c in Model.Courses) { <option value="@c.Id" selected="@((e?.CourseId ?? Model.CourseId) == c.Id)">@c.Name</option> }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="o-code">@T["Code"]</label>
+                            <input id="o-code" name="Code" class="form-control" maxlength="40" required value="@e?.Code" placeholder="@T["e.g. CLO1"]" />
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label" for="o-title">@T["Title"]</label>
+                            <input id="o-title" name="Title" class="form-control" maxlength="300" required value="@e?.Title" placeholder="@T["Students will be able to…"]" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="o-description">@T["Description"]</label>
+                            <textarea id="o-description" name="Description" class="form-control" rows="2" maxlength="4000">@e?.Description</textarea>
+                        </div>
+                        @{
+                            var parents = Model.Outcomes.Concat(Model.ProgramOutcomes).GroupBy(o => o.Id).Select(g => g.First())
+                                .Where(o => o.Id != e?.Id && (e is null || (o.Level == e.Level && o.ProgramId == e.ProgramId && o.CourseId == e.CourseId))).ToList();
+                        }
+                        <div class="col-md-6">
+                            <label class="form-label" for="o-parent">@T["Part of (optional)"]</label>
+                            <select id="o-parent" name="ParentId" class="form-select">
+                                <option value="">@T["— none —"]</option>
+                                @foreach (var p in parents) { <option value="@p.Id" selected="@(e?.ParentId == p.Id)">@p.Code — @p.Title</option> }
+                            </select>
+                            <div class="form-text">@T["Same level and scope as this outcome."]</div>
+                        </div>
+
+                        <div class="col-12">
+                            <fieldset>
+                                <legend class="form-label mb-1" style="font-size: 1rem;">@T["Rating scale"]</legend>
+                                <div class="form-text mb-2">@T["Each level's points; scores on aligned work are shown on this scale. Leave a row empty to remove it."]</div>
+                                <div class="row g-2" data-rating-rows>
+                                    @for (var i = 0; i < Math.Max(ratings.Count + 2, 6); i++)
+                                    {
+                                        var r = i < ratings.Count ? ratings[i] : null;
+                                        <div class="col-8"><input name="RatingDescription" class="form-control form-control-sm" maxlength="100" value="@r?.Description" aria-label="Level @(i + 1) description" /></div>
+                                        <div class="col-4"><input name="RatingPoints" type="number" step="0.5" min="0" class="form-control form-control-sm" value="@(r?.Points.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" aria-label="Level @(i + 1) points" /></div>
+                                    }
+                                </div>
+                            </fieldset>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="o-mastery">@T["Mastery at (points)"]</label>
+                            <input id="o-mastery" name="MasteryPoints" type="number" step="0.5" min="0.5" class="form-control" value="@((e?.MasteryPoints ?? 3).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" />
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="o-method">@T["Calculate mastery from"]</label>
+                            <select id="o-method" name="CalculationMethod" class="form-select">
+                                @foreach (var (value, text) in new[] { ("DecayingAverage", "Decaying average"), ("Highest", "Highest score"), ("Latest", "Most recent score"), ("Average", "Average"), ("NMastery", "Mastered n times") })
+                                {
+                                    <option value="@value" selected="@((e?.CalculationMethod ?? "DecayingAverage") == value)">@text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3" data-method-parameter>
+                            <label class="form-label" for="o-parameter" data-parameter-label>@T["Latest weight (%)"]</label>
+                            <input id="o-parameter" name="CalculationParameter" type="number" min="1" max="99" class="form-control" value="@e?.CalculationParameter" />
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary">@(e is null ? T.Text("Add outcome") : T.Text("Save changes"))</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (e is { Level: "Course" })
+            {
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <h3 class="h6">@T.Format("{0} contributes to these program outcomes", e.Code)</h3>
+                        @if (Model.ProgramOutcomes.Count == 0)
+                        {
+                            <p class="small text-muted mb-0">@T["There are no program outcomes yet."]</p>
+                        }
+                        else
+                        {
+                            <form asp-action="SaveOutcomeMappings" method="post" data-outcome-mapping>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="outcomeId" value="@e.Id" />
+                                @foreach (var program in Model.ProgramOutcomes.GroupBy(p => p.ProgramName ?? "Program"))
+                                {
+                                    <fieldset class="mb-2">
+                                        <legend class="small fw-semibold mb-1" style="font-size: .85rem;">@program.Key</legend>
+                                        @foreach (var plo in program.OrderBy(p => p.Code))
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="programOutcomeIds" value="@plo.Id" id="map-@plo.Id" checked="@e.ProgramOutcomeIds.Contains(plo.Id)" />
+                                                <label class="form-check-label small" for="map-@plo.Id"><strong>@plo.Code</strong> @plo.Title</label>
+                                            </div>
+                                        }
+                                    </fieldset>
+                                }
+                                <button class="btn btn-sm btn-outline-primary">@T["Save mapping"]</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h6">@T["Import from Excel"]</h3>
+                    <p class="small text-muted">@T["Add or update many outcomes at once, including course-to-program mappings."]</p>
+                    <a asp-action="OutcomeTemplate" class="btn btn-sm btn-outline-secondary mb-3">@T["Download the template"]</a>
+                    <form asp-action="ImportOutcomes" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <label class="form-label small" for="o-import">@T["Workbook (.xlsx)"]</label>
+                        <input id="o-import" type="file" name="file" accept=".xlsx" class="form-control form-control-sm mb-2" required />
+                        <button class="btn btn-sm btn-primary">@T["Import"]</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body small">
+                    <h3 class="h6">@T["How alignment works"]</h3>
+                    <p class="mb-2">@T["Use the"] <strong>@T["Outcomes"]</strong> @T["button on a rubric criterion, a quiz or bank question, or an assignment's settings to choose what it assesses."]</p>
+                    <p class="mb-0">@T["Posted grades and finished quiz attempts then count as evidence. Course outcomes mapped to program outcomes feed the program attainment report."]</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var form = document.querySelector('[data-outcome-form]');
+            if (!form) return;
+            var level = form.querySelector('#o-level');
+            var method = form.querySelector('#o-method');
+            var paramBox = form.querySelector('[data-method-parameter]');
+            var paramLabel = form.querySelector('[data-parameter-label]');
+            var param = form.querySelector('#o-parameter');
+            function syncLevel() {
+                form.querySelectorAll('[data-for-level]').forEach(function (el) {
+                    var on = el.getAttribute('data-for-level') === level.value;
+                    el.hidden = !on;
+                    el.querySelectorAll('select').forEach(function (s) { if (!level.disabled) s.disabled = !on; });
+                });
+            }
+            function syncMethod() {
+                var m = method.value;
+                paramBox.hidden = !(m === 'DecayingAverage' || m === 'NMastery');
+                paramLabel.textContent = m === 'NMastery' ? 'Times needed' : 'Latest weight (%)';
+                param.max = m === 'NMastery' ? 10 : 99;
+                param.placeholder = m === 'NMastery' ? '5' : '65';
+            }
+            level.addEventListener('change', syncLevel);
+            method.addEventListener('change', syncMethod);
+            syncLevel();
+            syncMethod();
+        })();
+    </script>
+}

@@ -1,0 +1,93 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PeerReviewPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var t = Model.Task;
+    ViewData["Title"] = t is null ? "Peer review" : $"Peer review — {t.AssignmentTitle}";
+}
+
+@* Plan M8.4 — one peer review: the classmate's work, the rubric (or a score) and a comment. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || t is null)
+{
+    <div class="border rounded p-3 bg-light">@T["This review is not available."] <a asp-action="Assignments">@T["Back to assignments"]</a></div>
+}
+else
+{
+    <div class="mb-3">
+        <a asp-action="AssignmentSubmission" asp-route-assignmentId="@t.AssignmentId" class="small">← @t.AssignmentTitle</a>
+        <h2 class="h3 mb-1">@T.Format("Review: {0}", t.RevieweeLabel)</h2>
+        <p class="text-muted mb-0">
+            @(t.Status == "Completed" ? T.Text("You have reviewed this work — you can still change your review.") : T.Text("Read the work, then give your review."))
+            @if (t.DueDate is { } due) { <text> @T.Format("Reviews are due {0}.", due.ToLocalTime().ToString("f"))</text> }
+        </p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm" data-peer-work>
+                <div class="card-body">
+                    <h3 class="h5">@T["The work"]</h3>
+                    @if (!string.IsNullOrWhiteSpace(t.Text))
+                    {
+                        <div class="p-3 bg-light rounded mb-2" style="white-space: pre-wrap;" data-peer-text>@t.Text</div>
+                    }
+                    @if (t.Files.Count > 0)
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var f in t.Files)
+                            {
+                                <li><a asp-action="SubmissionFile" asp-route-fileId="@f.FileId">@f.FileName</a> <span class="small text-muted">@T.Format("({0} KB)", ((f.SizeBytes / 1024.0).ToString("0")))</span></li>
+                            }
+                        </ul>
+                    }
+                    @if (string.IsNullOrWhiteSpace(t.Text) && t.Files.Count == 0)
+                    {
+                        <p class="small text-muted mb-0">@T["Nothing to show."]</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm" data-peer-form>
+                <div class="card-body">
+                    <h3 class="h5">@T["Your review"]</h3>
+                    <form asp-action="SubmitPeerReview" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@t.Id" />
+                        <input type="hidden" name="assignmentId" value="@t.AssignmentId" />
+                        @if (t.Rubric.Count > 0)
+                        {
+                            @foreach (var c in t.Rubric)
+                            {
+                                <fieldset class="mb-2">
+                                    <legend class="small fw-semibold mb-1">@c.Name <span class="text-muted fw-normal">@T.Format("({0} pts)", AssignmentPolicyFormat.Marks(c.MaxPoints))</span></legend>
+                                    @foreach (var l in c.Levels)
+                                    {
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="rubric[@c.CriterionId]" id="lv-@l.LevelId" value="@l.LevelId" checked="@(c.ChosenLevelId == l.LevelId)" required />
+                                            <label class="form-check-label small" for="lv-@l.LevelId">@l.Label (@AssignmentPolicyFormat.Marks(l.Points))</label>
+                                        </div>
+                                    }
+                                </fieldset>
+                            }
+                            <div class="form-text mb-2">@T.Format("The rubric gives the score, scaled to the assignment's {0} points.", AssignmentPolicyFormat.Marks(t.MaxMarks))</div>
+                        }
+                        else
+                        {
+                            <label class="form-label small" for="pr-score">@T.Format("Score (out of {0}, optional)", AssignmentPolicyFormat.Marks(t.MaxMarks))</label>
+                            <input class="form-control form-control-sm mb-2" id="pr-score" name="score" type="number" min="0" max="@t.MaxMarks" step="0.5" value="@(t.Score?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" />
+                        }
+                        <label class="form-label small" for="pr-comment">@T["Comment"]</label>
+                        <textarea class="form-control form-control-sm mb-2" id="pr-comment" name="comment" rows="6" maxlength="4000" placeholder="What works well? What could be better?">@t.Comment</textarea>
+                        <button class="btn btn-primary btn-sm">@(t.Status == "Completed" ? T.Text("Update review") : T.Text("Submit review"))</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

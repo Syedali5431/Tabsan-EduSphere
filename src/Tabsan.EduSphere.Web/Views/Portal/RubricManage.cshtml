@@ -1,13 +1,13 @@
 @* Final-Touches Phase 16 Stage 16.2 — Rubric management view for Faculty *@
 @model Tabsan.EduSphere.Web.Models.Portal.RubricManagePageModel
-@{ ViewData["Title"] = "Rubric Management"; }
+@{ ViewData["Title"] = T.Text("Rubric Management"); }
 
-@if (!string.IsNullOrWhiteSpace(Model.Message)) { <div class="alert alert-info">@Model.Message</div> }
-@if (TempData["Message"] is string td) { <div class="alert alert-info">@td</div> }
+@if (!string.IsNullOrWhiteSpace(Model.Message)) { <div class="alert alert-info">@T.Text(Model.Message)</div> }
+@if (TempData["Message"] is string td) { <div class="alert alert-info">@T.Text(td)</div> }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -16,9 +16,9 @@ else
             <form method="get" asp-action="RubricManage" class="row g-2 align-items-end">
                 <partial name="_InstitutionFilter" />
                 <div class="col-md-4">
-                    <label class="form-label">Course Offering</label>
-                    <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Select Offering --</option>
+                    <label class="form-label">@T["Course Offering"]</label>
+                    <select aria-label="@T["Course Offering"]" name="offeringId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["-- Select Offering --"]</option>
                         @foreach (var o in Model.Offerings)
                         {
                             <option value="@o.Id" selected="@(Model.SelectedOffering == o.Id ? "selected" : null)">@o.Name</option>
@@ -29,9 +29,9 @@ else
                 {
                     <input type="hidden" name="offeringId" value="@Model.SelectedOffering" />
                     <div class="col-md-4">
-                        <label class="form-label">Assignment</label>
-                        <select name="assignmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Select Assignment --</option>
+                        <label class="form-label">@T["Assignment"]</label>
+                        <select aria-label="@T["Assignment"]" name="assignmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["-- Select Assignment --"]</option>
                             @foreach (var a in Model.Assignments)
                             {
                                 <option value="@a.Id" selected="@(Model.SelectedAssignment == a.Id ? "selected" : null)">@a.Title</option>
@@ -48,24 +48,24 @@ else
         if (Model.Rubric is null)
         {
             <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header"><h6 class="mb-0">Create Rubric</h6></div>
+                <div class="card-header"><h6 class="mb-0">@T["Create Rubric"]</h6></div>
                 <div class="card-body">
                     <form method="post" asp-action="RubricCreate" id="rubricForm">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="AssignmentId" value="@Model.SelectedAssignment" />
                         <input type="hidden" name="OfferingId" value="@Model.SelectedOffering" />
                         <div class="mb-3">
-                            <label class="form-label">Rubric Title</label>
-                            <input type="text" name="Title" class="form-control" required placeholder="e.g. Project Evaluation Rubric" />
+                            <label class="form-label">@T["Rubric Title"]</label>
+                            <input aria-label="@T["Rubric Title"]" type="text" name="Title" class="form-control" required placeholder="@T["e.g. Project Evaluation Rubric"]" />
                         </div>
                         <div id="criteria-container">
                             <div class="criterion-block border rounded p-3 mb-2" data-idx="0">
                                 <div class="row g-2 mb-2">
                                     <div class="col-md-5">
-                                        <input type="text" name="Criteria[0].Name" class="form-control" placeholder="Criterion name" required />
+                                        <input type="text" name="Criteria[0].Name" class="form-control" placeholder="@T["Criterion name"]" required />
                                     </div>
                                     <div class="col-md-2">
-                                        <input type="number" name="Criteria[0].MaxPoints" class="form-control" placeholder="Max pts" min="1" required />
+                                        <input type="number" name="Criteria[0].MaxPoints" class="form-control" placeholder="@T["Max pts"]" min="1" required />
                                     </div>
                                     <div class="col-md-2">
                                         <input type="hidden" name="Criteria[0].DisplayOrder" value="0" />
@@ -73,17 +73,17 @@ else
                                 </div>
                                 <div class="levels-container ps-3">
                                     <div class="row g-1 mb-1">
-                                        <div class="col-md-4"><input type="text" name="Criteria[0].Levels[0].Label" class="form-control form-control-sm" placeholder="Level label" required /></div>
-                                        <div class="col-md-2"><input type="number" name="Criteria[0].Levels[0].PointsAwarded" class="form-control form-control-sm" placeholder="Points" min="0" required /></div>
+                                        <div class="col-md-4"><input type="text" name="Criteria[0].Levels[0].Label" class="form-control form-control-sm" placeholder="@T["Level label"]" required /></div>
+                                        <div class="col-md-2"><input type="number" name="Criteria[0].Levels[0].PointsAwarded" class="form-control form-control-sm" placeholder="@T["Points"]" min="0" required /></div>
                                         <input type="hidden" name="Criteria[0].Levels[0].DisplayOrder" value="0" />
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary add-level-btn" data-crit="0">+ Level</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary add-level-btn" data-crit="0">@T["+ Level"]</button>
                             </div>
                         </div>
-                        <button type="button" id="addCriterion" class="btn btn-sm btn-outline-primary mb-3">+ Criterion</button>
+                        <button type="button" id="addCriterion" class="btn btn-sm btn-outline-primary mb-3">@T["+ Criterion"]</button>
                         <div>
-                            <button type="submit" class="btn btn-success">Save Rubric</button>
+                            <button type="submit" class="btn btn-success">@T["Save Rubric"]</button>
                         </div>
                     </form>
                 </div>
@@ -94,19 +94,20 @@ else
             var rubric = Model.Rubric;
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">@rubric.Title <span class="badge @(rubric.IsActive ? "bg-success" : "bg-secondary")">@(rubric.IsActive ? "Active" : "Inactive")</span></h6>
+                    <h6 class="mb-0">@rubric.Title <span class="badge @(rubric.IsActive ? "bg-success" : "bg-secondary")">@(rubric.IsActive ? T.Text("Active") : T.Text("Inactive"))</span></h6>
                     <form method="post" asp-action="RubricDelete" asp-route-rubricId="@rubric.RubricId" asp-route-offeringId="@Model.SelectedOffering" asp-route-assignmentId="@Model.SelectedAssignment">
                         @Html.AntiForgeryToken()
-                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete rubric?')">Delete</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('@T.Js("Delete rubric?")')">@T["Delete"]</button>
                     </form>
                 </div>
                 <div class="card-body">
                     @foreach (var c in rubric.Criteria.OrderBy(x => x.DisplayOrder))
                     {
                         <div class="mb-3">
-                            <strong>@c.Name</strong> <span class="text-muted">(max @c.MaxPoints pts)</span>
+                            <strong>@c.Name</strong> <span class="text-muted">@T.Format("(max {0} pts)", c.MaxPoints)</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2 py-0" hidden data-outcome-align data-target-type="RubricCriterion" data-target-id="@c.CriterionId">@T["Outcomes"]</button>
                             <table class="table table-sm table-bordered mt-1">
-                                <thead class="table-light"><tr><th>Level</th><th>Points</th></tr></thead>
+                                <thead class="table-light"><tr><th>@T["Level"]</th><th>@T["Points"]</th></tr></thead>
                                 <tbody>
                                     @foreach (var l in c.Levels.OrderBy(x => x.DisplayOrder))
                                     {
@@ -123,6 +124,7 @@ else
 }
 
 @section Scripts {
+    <script src="~/js/outcome-align.js" asp-append-version="true" defer></script>
     <script>
     // Final-Touches Phase 16 Stage 16.2 — dynamic criterion/level builder
     let critCount = 1;

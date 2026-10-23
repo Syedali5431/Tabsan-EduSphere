@@ -478,7 +478,7 @@ public class CertificateGenerationController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
-    public async Task<IActionResult> UploadAdditionalTemplate(string templateType, [FromForm] IFormFile? file, CancellationToken ct)
+    public async Task<IActionResult> UploadAdditionalTemplate(string templateType, IFormFile? file, CancellationToken ct)
     {
         var normalizedType = NormalizeAdditionalDocumentType(templateType);
         if (normalizedType is null)

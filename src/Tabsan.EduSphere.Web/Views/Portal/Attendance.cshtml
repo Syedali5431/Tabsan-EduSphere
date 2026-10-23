@@ -1,19 +1,19 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AttendancePageModel
-@{ ViewData["Title"] = "Attendance"; }
+@{ ViewData["Title"] = T.Text("Attendance"); }
 @{
     var attendanceAction = ViewData["AttendanceAction"]?.ToString() ?? "Attendance";
-    var periodLabel = string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel;
+    var periodLabel = T.Text(string.IsNullOrWhiteSpace(Model.PeriodLabel) ? "Semester" : Model.PeriodLabel); // Plan M11: vocabulary, then language
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (Model.MessageDetails.Count > 0)
 {
     <div class="alert alert-warning">
-        <strong>Import details</strong>
+        <strong>@T["Import details"]</strong>
         <ul class="mb-0 mt-2">
             @foreach (var detail in Model.MessageDetails)
             {
@@ -25,7 +25,7 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -37,9 +37,9 @@ else
                     @if (User.IsInRole("SuperAdmin"))
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" data-cascade="tenant" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" data-cascade="tenant" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
@@ -47,9 +47,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -61,9 +61,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" data-cascade="campus" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -79,11 +79,11 @@ else
                     @if (!User.IsInRole("Student"))
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Department</label>
+                            <label class="form-label" for="departmentId">@T["Department"]</label>
                             <select id="departmentId" name="departmentId" class="form-select"
                                     data-cascade="department" onchange="this.form.submit()"
                                     @(Model.SelectedDepartmentId.HasValue ? null : "")>
-                                <option value="">All Departments</option>
+                                <option value="">@T["All Departments"]</option>
                                 @foreach (var d in Model.Departments)
                                 {
                                     <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -91,11 +91,11 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Course</label>
+                            <label class="form-label" for="courseId">@T["Course"]</label>
                             <select id="courseId" name="courseId" class="form-select"
                                     data-cascade="course" onchange="this.form.submit()"
                                     @(Model.SelectedCourseId.HasValue || Model.SelectedDepartmentId.HasValue ? null : "disabled")>
-                                <option value="">All Courses</option>
+                                <option value="">@T["All Courses"]</option>
                                 @foreach (var c in Model.Courses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCourseId == c.Id ? "selected" : null)">@c.Name</option>
@@ -104,8 +104,8 @@ else
                         </div>
                         <div class="col-md-2">
                             <label class="form-label" data-period-label>@periodLabel</label>
-                            <select name="semesterName" class="form-select" data-cascade="period" onchange="this.form.submit()">
-                                <option value="" data-period-placeholder>All @periodLabel</option>
+                            <select aria-label="@periodLabel" name="semesterName" class="form-select" data-cascade="period" onchange="this.form.submit()">
+                                <option value="" data-period-placeholder>@T.Format("All {0}", periodLabel)</option>
                                 @foreach (var s in Model.SemesterOptions)
                                 {
                                     <option value="@s.Name" selected="@(string.Equals(Model.SelectedSemesterName, s.Name, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@s.Name</option>
@@ -114,9 +114,9 @@ else
                         </div>
                     }
                     <div class="col-md-5">
-                        <label class="form-label">Select Course Offering</label>
-                        <select name="offeringId" class="form-select" data-cascade="subject" onchange="this.form.submit()">
-                            <option value="">All / My Attendance</option>
+                        <label class="form-label">@T["Select Course Offering"]</label>
+                        <select aria-label="@T["Select Course Offering"]" name="offeringId" class="form-select" data-cascade="subject" onchange="this.form.submit()">
+                            <option value="">@T["All / My Attendance"]</option>
                             @foreach (var o in Model.CourseOfferings)
                             {
                                 <option value="@o.Id" selected="@(Model.SelectedOfferingId == o.Id ? "selected" : null)">@o.Name</option>
@@ -126,9 +126,9 @@ else
                     @if (Model.SelectedOfferingId.HasValue && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                     {
                         <div class="col-md-4">
-                            <label class="form-label">Student (Optional)</label>
-                            <select name="studentId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Students</option>
+                            <label class="form-label">@T["Student (Optional)"]</label>
+                            <select aria-label="@T["Student (Optional)"]" name="studentId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Students"]</option>
                                 @foreach (var s in Model.Students)
                                 {
                                     <option value="@s.Id" selected="@(Model.SelectedStudentId == s.Id ? "selected" : null)">@s.Name</option>
@@ -144,7 +144,7 @@ else
     {
         <div class="d-flex justify-content-end mb-3">
             <a asp-action="ReportLowAttendance" asp-route-threshold="75" class="btn btn-outline-danger btn-sm">
-                View Low Attendance (&lt;75%)
+                @T["View Low Attendance (&lt;75%)"]
             </a>
         </div>
     }
@@ -153,16 +153,16 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <h2 class="h5 mb-3">Attendance Summary</h2>
+                <h2 class="h5 mb-3">@T["Attendance Summary"]</h2>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Student</th>
-                                <th>Reg. No.</th>
-                                <th>Course</th>
-                                <th>Total</th>
-                                <th>Present</th>
+                                <th>@T["Student"]</th>
+                                <th>@T["Reg. No."]</th>
+                                <th>@T["Course"]</th>
+                                <th>@T["Total"]</th>
+                                <th>@T["Present"]</th>
                                 <th>%</th>
                             </tr>
                         </thead>
@@ -191,16 +191,16 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <h2 class="h5 mb-3 text-danger">Low Attendance (&lt;75%)</h2>
+                <h2 class="h5 mb-3 text-danger">@T["Low Attendance (&lt;75%)"]</h2>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Student</th>
-                                <th>Reg. No.</th>
-                                <th>Course</th>
-                                <th>Total</th>
-                                <th>Present</th>
+                                <th>@T["Student"]</th>
+                                <th>@T["Reg. No."]</th>
+                                <th>@T["Course"]</th>
+                                <th>@T["Total"]</th>
+                                <th>@T["Present"]</th>
                                 <th>%</th>
                             </tr>
                         </thead>
@@ -227,13 +227,13 @@ else
     {
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h2 class="h5 mb-3">Attendance Records
+                <h2 class="h5 mb-3">@T["Attendance Records"]
                     <span class="badge bg-secondary ms-1">@Model.Records.Count</span>
                 </h2>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
                         <thead class="table-light">
-                            <tr><th>Student</th><th>Reg. No.</th><th>Date</th><th>Status</th>@if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) { <th></th> }</tr>
+                            <tr><th>@T["Student"]</th><th>@T["Reg. No."]</th><th>@T["Date"]</th><th>@T["Status"]</th>@if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) { <th></th> }</tr>
                         </thead>
                         <tbody>
                             @foreach (var r in Model.Records)
@@ -250,7 +250,7 @@ else
                                     <td><code>@r.RegistrationNumber</code></td>
                                     <td>@r.Date.ToString("dd MMM yyyy")</td>
                                     <td><span class="badge @badgeCls">@r.Status</span>
-                                        @if (r.IsCorrected) { <span class="badge bg-info ms-1">Corrected</span> }
+                                        @if (r.IsCorrected) { <span class="badge bg-info ms-1">@T["Corrected"]</span> }
                                     </td>
                                     @if (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                     {
@@ -258,7 +258,7 @@ else
                                             <button type="button" class="btn btn-xs btn-outline-secondary btn-sm"
                                                     data-bs-toggle="modal" data-bs-target="#correctAttendanceModal"
                                                     data-studentid="@r.StudentProfileId" data-date="@r.Date.ToString("yyyy-MM-dd")" data-status="@r.Status">
-                                                Correct
+                                                @T["Correct"]
                                             </button>
                                         </td>
                                     }
@@ -276,7 +276,7 @@ else
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center text-muted py-5">
                 <div class="fs-1 mb-2">📋</div>
-                <p>Select a course offering to view attendance records.</p>
+                <p>@T["Select a course offering to view attendance records."]</p>
             </div>
         </div>
     }
@@ -289,7 +289,7 @@ else
 
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-header bg-light">
-                <strong>Mark Attendance</strong>
+                <strong>@T["Mark Attendance"]</strong>
             </div>
             <div class="card-body">
                 @if (writeActionsDisabled)
@@ -312,7 +312,7 @@ else
                            asp-route-studentId="@Model.SelectedStudentId"
                            asp-route-semesterName="@Model.SelectedSemesterName"
                            asp-route-entryPoint="@attendanceAction">
-                            Get Template
+                            @T["Get Template"]
                         </a>
 
                         @if (!string.IsNullOrWhiteSpace(Model.ImportReportToken))
@@ -328,12 +328,12 @@ else
                                asp-route-studentId="@Model.SelectedStudentId"
                                asp-route-semesterName="@Model.SelectedSemesterName"
                                asp-route-entryPoint="@attendanceAction">
-                                Download Last Import Report
+                                @T["Download Last Import Report"]
                             </a>
                         }
 
                         <div class="w-100">
-                            <small class="text-muted">Import reports are one-time download links and expire after 2 hours.</small>
+                            <small class="text-muted">@T["Import reports are one-time download links and expire after 2 hours."]</small>
                         </div>
 
                         <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
@@ -349,10 +349,10 @@ else
                             <input type="hidden" name="strictMode" value="false" />
                             <div class="form-check form-check-inline mb-0">
                                 <input class="form-check-input" type="checkbox" id="strictMode" name="strictMode" value="true" checked disabled="@writeActionsDisabled" />
-                                <label class="form-check-label" for="strictMode">Strict mode</label>
+                                <label class="form-check-label" for="strictMode">@T["Strict mode"]</label>
                             </div>
-                            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
-                            <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import Attendance</button>
+                            <input aria-label="@T["CSV file"]" type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
+                            <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">@T["Import Attendance"]</button>
                         </form>
                     </div>
                 }
@@ -370,7 +370,7 @@ else
                     <div class="table-responsive">
                         <table class="table table-sm mb-3">
                             <thead class="table-light">
-                                <tr><th>Student ID</th><th>Student Name</th><th>Date</th><th>Present</th></tr>
+                                <tr><th>@T["Student ID"]</th><th>@T["Student Name"]</th><th>@T["Date"]</th><th>@T["Present"]</th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var s in Model.Roster)
@@ -380,7 +380,7 @@ else
                                         <td>@s.StudentName</td>
                                         <td>
                                             <input type="hidden" name="studentIds" value="@s.Id" />
-                                            <input type="date" name="dates" class="form-control form-control-sm" style="min-width: 170px;"
+                                            <input aria-label="@T.Format("Date for {0}", s.StudentName)" type="date" name="dates" class="form-control form-control-sm" style="min-width: 170px;"
                                                    value="@DateTime.Today.ToString("yyyy-MM-dd")" required disabled="@writeActionsDisabled" />
                                         </td>
                                         <td>
@@ -388,11 +388,12 @@ else
                                             <div class="form-check mb-0">
                                                 <input type="checkbox"
                                                        class="form-check-input attendance-present-checkbox"
+                                                       aria-label="@T.Format("{0} present", s.StudentName)"
                                                        id="present_@s.Id"
                                                        data-status-target="status_@s.Id"
                                                        checked
                                                        disabled="@writeActionsDisabled" />
-                                                <label class="form-check-label" for="present_@s.Id">Present</label>
+                                                <label class="form-check-label" for="present_@s.Id">@T["Present"]</label>
                                             </div>
                                         </td>
                                     </tr>
@@ -400,7 +401,7 @@ else
                             </tbody>
                         </table>
                     </div>
-                    <button type="submit" class="btn btn-primary" disabled="@writeActionsDisabled">Save Attendance</button>
+                    <button type="submit" class="btn btn-primary" disabled="@writeActionsDisabled">@T["Save Attendance"]</button>
                 </form>
             </div>
         </div>
@@ -414,7 +415,7 @@ else
 
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-header bg-light">
-                <strong>Attendance Entry Table</strong>
+                <strong>@T["Attendance Entry Table"]</strong>
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2 mb-3">
@@ -428,7 +429,7 @@ else
                        asp-route-studentId="@Model.SelectedStudentId"
                        asp-route-semesterName="@Model.SelectedSemesterName"
                        asp-route-entryPoint="@attendanceAction">
-                        Get Template
+                        @T["Get Template"]
                     </a>
 
                     <form asp-action="ImportAttendanceCsv" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
@@ -444,10 +445,10 @@ else
                         <input type="hidden" name="strictMode" value="false" />
                         <div class="form-check form-check-inline mb-0">
                             <input class="form-check-input" type="checkbox" id="strictModeFallback" name="strictMode" value="true" checked disabled="@writeActionsDisabled" />
-                            <label class="form-check-label" for="strictModeFallback">Strict mode</label>
+                            <label class="form-check-label" for="strictModeFallback">@T["Strict mode"]</label>
                         </div>
-                        <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
-                        <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">Import Attendance</button>
+                        <input aria-label="@T["CSV file"]" type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" style="max-width: 280px;" required disabled="@writeActionsDisabled" />
+                        <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@writeActionsDisabled">@T["Import Attendance"]</button>
                     </form>
                 </div>
 
@@ -457,19 +458,19 @@ else
                 <div class="table-responsive">
                     <table class="table table-sm mb-3">
                         <thead class="table-light">
-                            <tr><th>Student ID</th><th>Student Name</th><th>Date</th><th>Present</th></tr>
+                            <tr><th>@T["Student ID"]</th><th>@T["Student Name"]</th><th>@T["Date"]</th><th>@T["Present"]</th></tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td class="text-muted">-</td>
-                                <td class="text-muted">Select required filters and offering</td>
-                                <td><input type="date" class="form-control form-control-sm" disabled /></td>
-                                <td><input type="checkbox" class="form-check-input" disabled /></td>
+                                <td class="text-muted">@T["Select required filters and offering"]</td>
+                                <td><input aria-label="@T["Date"]" type="date" class="form-control form-control-sm" disabled /></td>
+                                <td><input aria-label="@T["Present"]" type="checkbox" class="form-check-input" disabled /></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <button type="button" class="btn btn-primary" disabled>Save Attendance</button>
+                <button type="button" class="btn btn-primary" disabled>@T["Save Attendance"]</button>
             </div>
         </div>
     }
@@ -491,31 +492,31 @@ else
                     <input type="hidden" name="entryPoint" value="@attendanceAction" />
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Correct Attendance</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <h5 class="modal-title">@T["Correct Attendance"]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                <label class="form-label" for="correctAttendance_date">@T["Date"] <span class="text-danger">*</span></label>
                                 <input id="correctAttendance_date" name="date" type="date" class="form-control" required />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">New Status <span class="text-danger">*</span></label>
+                                <label class="form-label" for="correctAttendance_status">@T["New Status"] <span class="text-danger">*</span></label>
                                 <select id="correctAttendance_status" name="newStatus" class="form-select" required>
-                                    <option value="Present">Present</option>
-                                    <option value="Absent">Absent</option>
-                                    <option value="Late">Late</option>
-                                    <option value="Excused">Excused</option>
+                                    <option value="Present">@T["Present"]</option>
+                                    <option value="Absent">@T["Absent"]</option>
+                                    <option value="Late">@T["Late"]</option>
+                                    <option value="Excused">@T["Excused"]</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Remarks</label>
-                                <textarea name="remarks" class="form-control" rows="2"></textarea>
+                                <label class="form-label">@T["Remarks"]</label>
+                                <textarea aria-label="@T["Remarks"]" name="remarks" class="form-control" rows="2"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Correction</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@T["Save Correction"]</button>
                         </div>
                     </div>
                 </form>

@@ -1,16 +1,16 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ProgramsPageModel
 @{
-    ViewData["Title"] = "Programs";
+    ViewData["Title"] = T.Text("Programs");
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -45,9 +45,9 @@ else
                 @if (isSuperAdmin)
                 {
                     <div class="col-md-4">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -55,9 +55,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -69,9 +69,9 @@ else
                 {
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <div class="col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -85,9 +85,9 @@ else
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 }
                 <div class="col-md-4">
-                    <label class="form-label">Filter by Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Departments</option>
+                    <label class="form-label">@T["Filter by Department"]</label>
+                    <select aria-label="@T["Filter by Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Departments"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -102,24 +102,24 @@ else
     {
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
-                <h2 class="h5 mb-3">Create Program</h2>
+                <h2 class="h5 mb-3">@T["Create Program"]</h2>
                 <form method="post" asp-action="CreateProgram" class="row g-3">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                     <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
                     <div class="col-md-3">
-                        <label class="form-label">Code</label>
-                        <input type="text" name="code" class="form-control" maxlength="32" required />
+                        <label class="form-label">@T["Code"]</label>
+                        <input aria-label="@T["Code"]" type="text" name="code" class="form-control" maxlength="32" required />
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" maxlength="128" required />
+                        <label class="form-label">@T["Name"]</label>
+                        <input aria-label="@T["Name"]" type="text" name="name" class="form-control" maxlength="128" required />
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Department</label>
+                        <label class="form-label" for="programDepartmentSelect">@T["Department"]</label>
                         <select name="departmentId" id="programDepartmentSelect" class="form-select" required>
-                            <option value="">Select Department</option>
+                            <option value="">@T["Select Department"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" data-institution-type="@d.InstitutionType">@d.Name</option>
@@ -127,11 +127,11 @@ else
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label" id="programTotalLevelsLabel">@createCountLabel</label>
+                        <label class="form-label" id="programTotalLevelsLabel" for="programTotalLevelsInput">@createCountLabel</label>
                         <input type="number" name="totalSemesters" id="programTotalLevelsInput" class="form-control" min="1" max="20" value="8" required />
                     </div>
                     <div class="col-md-1 d-grid">
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary">@T["Create"]</button>
                     </div>
                 </form>
             </div>
@@ -140,11 +140,11 @@ else
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">Program List <span class="badge bg-secondary ms-2">@Model.Programs.Count</span></h2>
+            <h2 class="h5 mb-3">@T["Program List"] <span class="badge bg-secondary ms-2">@Model.Programs.Count</span></h2>
 
             @if (Model.Programs.Count == 0)
             {
-                <p class="text-muted mb-0">No programs found.</p>
+                <p class="text-muted mb-0">@T["No programs found."]</p>
             }
             else
             {
@@ -152,12 +152,12 @@ else
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Department</th>
+                                <th>@T["Code"]</th>
+                                <th>@T["Name"]</th>
+                                <th>@T["Department"]</th>
                                 <th class="text-center">@levelHeaderLabel</th>
-                                <th>Status</th>
-                                <th style="width: 340px;">Actions</th>
+                                <th>@T["Status"]</th>
+                                <th style="width: 340px;">@T["Actions"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -180,7 +180,7 @@ else
                                     <td>@p.DepartmentName</td>
                                     <td class="text-center">@p.TotalSemesters @(p.TotalSemesters == 1 ? rowLevelUnit : rowLevelUnit.EndsWith("s") ? rowLevelUnit + "es" : rowLevelUnit + "s")</td>
                                     <td>
-                                        <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? "Active" : "Inactive")</span>
+                                        <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? T.Text("Active") : T.Text("Inactive"))</span>
                                     </td>
                                     <td>
                                         @if (canManagePrograms)
@@ -193,18 +193,18 @@ else
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                     <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
                                                     <input type="text" name="newName" class="form-control form-control-sm" value="@p.Name" required maxlength="128" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary" @(p.IsActive ? null : "disabled")>Rename</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary" @(p.IsActive ? null : "disabled")>@T["Rename"]</button>
                                                 </form>
                                                 @if (User.IsInRole("SuperAdmin"))
                                                 {
-                                                    <form method="post" asp-action="SetProgramActive" onsubmit="return confirm('@(p.IsActive ? "Deactivate" : "Activate") this program?');">
+                                                    <form method="post" asp-action="SetProgramActive" onsubmit="return confirm('@T.Js("{0} this program?", (p.IsActive ? "Deactivate" : "Activate"))');">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@p.Id" />
-                                                        <input type="hidden" name="activate" value="@(!p.IsActive)" />
+                                                        <input type="hidden" name="activate" value="@(!p.IsActive ? "true" : "false")" />
                                                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                         <input type="hidden" name="filterDepartmentId" value="@Model.SelectedDepartmentId" />
-                                                        <button type="submit" class="btn btn-sm @(p.IsActive ? "btn-outline-danger" : "btn-outline-success")">@(p.IsActive ? "Deactivate" : "Activate")</button>
+                                                        <button type="submit" class="btn btn-sm @(p.IsActive ? "btn-outline-danger" : "btn-outline-success")">@(p.IsActive ? T.Text("Deactivate") : T.Text("Activate"))</button>
                                                     </form>
                                                 }
                                             </div>

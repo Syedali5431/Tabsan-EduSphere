@@ -80,8 +80,10 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
 
     public new async Task DisposeAsync()
     {
-        // Drop the test database after the full test run so nothing persists.
-        await ForceDropDatabaseAsync();
+        // Drop the test database after the full test run so nothing persists — except when it was seeded for a load run
+        // (Plan M14.2, ExamDayLoadSeed); the next test run drops it at start-up.
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("EDUSPHERE_LOAD_SEED_FILE")))
+            await ForceDropDatabaseAsync();
         await base.DisposeAsync();
     }
 
@@ -142,6 +144,19 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
                 Environment.SetEnvironmentVariable("EDUSPHERE_ENVIRONMENTS_FILE", sharedEnvironmentsFile);
                 config.AddJsonFile(sharedEnvironmentsFile, optional: true, reloadOnChange: false);
             }
+
+            // Plan M4.3: tests keep their Web Push (VAPID) keys in a temp folder, never in the developer's profile.
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["WebPush:KeyFile"] = Path.Combine(Path.GetTempPath(), "edusphere-integration-tests", "vapid-keys.json"),
+                // Plan M5: LTI platform address and signing keys for the tests.
+                ["Lti:PlatformUrl"] = "https://platform.test",
+                ["Lti:KeyFile"] = Path.Combine(Path.GetTempPath(), "edusphere-integration-tests", "lti-platform-keys.json"),
+                // Plan M9: Copyleaks webhooks need a public https API address.
+                ["Similarity:PublicApiBaseUrl"] = "https://api.example.test",
+                // Plan M13: extracted SCORM packages go to a temp folder.
+                ["Scorm:StoragePath"] = Path.Combine(Path.GetTempPath(), "edusphere-integration-tests", "scorm")
+            });
         });
 
         builder.ConfigureServices(services =>
@@ -170,6 +185,16 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
             services.Replace(ServiceDescriptor.Transient<IOidcClient>(sp => sp.GetRequiredService<SwitchableOidcClient>()));
             services.AddSingleton<SwitchableSamlClient>();
             services.Replace(ServiceDescriptor.Transient<ISamlClient>(sp => sp.GetRequiredService<SwitchableSamlClient>()));
+            services.AddSingleton<SwitchableWebPushSender>();
+            services.Replace(ServiceDescriptor.Transient<Tabsan.EduSphere.Application.Interfaces.IWebPushSender>(sp => sp.GetRequiredService<SwitchableWebPushSender>()));
+            // Plan M9: Copyleaks is never called; tests read the recorded scans.
+            services.AddSingleton<SwitchableCopyleaksClient>();
+            services.Replace(ServiceDescriptor.Transient<Tabsan.EduSphere.Application.Similarity.ICopyleaksClient>(sp => sp.GetRequiredService<SwitchableCopyleaksClient>()));
+            // Plan M10: stand-in BigBlueButton and Zoom (registered last, so they win over the real providers).
+            services.AddSingleton<StandInBigBlueButton>();
+            services.AddSingleton<StandInZoom>();
+            services.AddTransient<Tabsan.EduSphere.Application.LiveClasses.IConferenceProvider>(sp => sp.GetRequiredService<StandInBigBlueButton>());
+            services.AddTransient<Tabsan.EduSphere.Application.LiveClasses.IConferenceProvider>(sp => sp.GetRequiredService<StandInZoom>());
         });
     }
 

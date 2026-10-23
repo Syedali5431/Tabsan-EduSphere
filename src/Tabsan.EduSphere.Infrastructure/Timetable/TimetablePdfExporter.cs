@@ -1,4 +1,5 @@
 using QuestPDF.Fluent;
+using Tabsan.EduSphere.Infrastructure.Reporting;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Tabsan.EduSphere.Application.Dtos;
@@ -23,7 +24,8 @@ public class TimetablePdfExporter : ITimetablePdfExporter
             {
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(1.5f, Unit.Centimetre);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.DefaultTextStyle(x => x.FontSize(9).WithFonts());
+                PdfLanguage.Apply(page); // Plan M11
 
                 page.Header().Element(ComposeHeader(timetable));
                 page.Content().Element(ComposeGrid(timetable));

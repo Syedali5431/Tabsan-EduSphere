@@ -51,6 +51,12 @@ public class DiscussionThread : AuditableEntity
     /// <summary>Whether this discussion is visible to all users in the department (used for FAQ and shared solutions).</summary>
     public bool IsVisibleToAll { get; private set; }
 
+    /// <summary>Plan M8.3: a group's own discussion — visible to its members and staff only.</summary>
+    public Guid? GroupId { get; private set; }
+
+    /// <summary>Plan M8.3: makes this a group discussion.</summary>
+    public void SetGroup(Guid groupId) { GroupId = groupId; Touch(); }
+
     // Navigation
     public ICollection<DiscussionReply> Replies { get; private set; } = new List<DiscussionReply>();
 

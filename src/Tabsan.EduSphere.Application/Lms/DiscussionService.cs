@@ -78,6 +78,7 @@ public sealed class DiscussionService : IDiscussionService
             request.ThreadType,
             request.IssueSubType,
             ticketNumber);
+        if (request.GroupId is { } groupId) thread.SetGroup(groupId); // Plan M8.3 (membership is checked by the API)
             
         await _repo.AddThreadAsync(thread, ct);
         await _repo.SaveChangesAsync(ct);
@@ -222,6 +223,7 @@ public sealed class DiscussionService : IDiscussionService
         ResolvedAt    = t.ResolvedAt,
         TicketNumber  = t.TicketNumber,
         IsVisibleToAll = t.IsVisibleToAll,
+        GroupId       = t.GroupId,
         Replies       = replies
     };
 

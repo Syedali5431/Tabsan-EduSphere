@@ -1,22 +1,22 @@
 @model PrerequisitesPageModel
 @using Tabsan.EduSphere.Web.Models.Portal
 @{
-    ViewData["Title"] = "Course Prerequisites";
+    ViewData["Title"] = T.Text("Course Prerequisites");
     Layout = "_Layout";
 }
 
 @* Final-Touches Phase 15 Stage 15.1 — Prerequisites view: Admin/SuperAdmin manage course prerequisites *@
 
 <div class="container-fluid">
-    <h4 class="mb-3">Course Prerequisites</h4>
-    <p class="text-muted">Define which courses a student must pass before they can enroll in another course.</p>
+    <h4 class="mb-3">@T["Course Prerequisites"]</h4>
+    <p class="text-muted">@T["Define which courses a student must pass before they can enroll in another course."]</p>
 
     @if (Model.Message != null)
     {
         var alertClass = Model.Message.StartsWith("Error") ? "alert-danger" : "alert-success";
         <div class="alert @alertClass alert-dismissible fade show">
-            @Model.Message
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @T.Text(Model.Message)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
         </div>
     }
 
@@ -26,7 +26,7 @@
         <partial name="_InstitutionFilter" />
         <div class="col-auto">
             <select name="departmentId" class="form-select form-select-sm" onchange="this.form.submit()">
-                <option value="">All Departments</option>
+                <option value="">@T["All Departments"]</option>
                 @foreach (var d in Model.Departments)
                 {
                     <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -40,7 +40,7 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><strong>@group.CourseCode</strong> — @group.CourseTitle</span>
-                <span class="badge bg-secondary">@group.Prerequisites.Count prerequisite(s)</span>
+                <span class="badge bg-secondary">@T.Format("{0} prerequisite(s)", group.Prerequisites.Count)</span>
             </div>
             <div class="card-body">
                 @if (group.Prerequisites.Any())
@@ -56,7 +56,7 @@
                                     <input type="hidden" name="prerequisiteCourseId" value="@prereq.PrerequisiteCourseId" />
                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Remove this prerequisite?')">Remove</button>
+                                            onclick="return confirm('@T.Js("Remove this prerequisite?")')">@T["Remove"]</button>
                                 </form>
                             </li>
                         }
@@ -64,7 +64,7 @@
                 }
                 else
                 {
-                    <p class="text-muted small mb-2">No prerequisites defined.</p>
+                    <p class="text-muted small mb-2">@T["No prerequisites defined."]</p>
                 }
 
                 @* Opens the shared "Add Prerequisite" modal below, scoped to this course via data attributes. *@
@@ -72,7 +72,7 @@
                         data-bs-toggle="modal" data-bs-target="#addPrerequisiteModal"
                         data-course-id="@group.CourseId"
                         data-course-label="@group.CourseCode — @group.CourseTitle">
-                    Add Prerequisite
+                    @T["Add Prerequisite"]
                 </button>
             </div>
         </div>
@@ -80,7 +80,7 @@
 
     @if (!Model.CourseGroups.Any())
     {
-        <div class="alert alert-info">No courses found. Select a department to filter.</div>
+        <div class="alert alert-info">@T["No courses found. Select a department to filter."]</div>
     }
 </div>
 
@@ -95,13 +95,13 @@
                 <input type="hidden" name="courseId" id="addPrerequisiteCourseId" value="" />
                 <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                 <div class="modal-header">
-                    <h5 class="modal-title">Add prerequisite for <span id="addPrerequisiteCourseLabel"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">@T["Add prerequisite for"] <span id="addPrerequisiteCourseLabel"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="addPrerequisiteCourseSelect" class="form-label fw-semibold">Prerequisite course</label>
+                    <label for="addPrerequisiteCourseSelect" class="form-label fw-semibold">@T["Prerequisite course"]</label>
                     <select name="prerequisiteCourseId" id="addPrerequisiteCourseSelect" class="form-select" required>
-                        <option value="">— Select prerequisite course —</option>
+                        <option value="">@T["— Select prerequisite course —"]</option>
                         @foreach (var c in Model.Courses)
                         {
                             <option value="@c.Id">@c.Code — @c.Title</option>
@@ -109,8 +109,8 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Prerequisite</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Add Prerequisite"]</button>
                 </div>
             </form>
         </div>

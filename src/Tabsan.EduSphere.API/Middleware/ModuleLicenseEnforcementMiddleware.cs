@@ -72,7 +72,11 @@ public sealed class ModuleLicenseEnforcementMiddleware
         ("/api/v1/ai", "ai_chat"),
         ("/api/ai", "ai_chat"),
         ("/api/v1/theme", "themes"),
-        ("/api/v1/sso", "sso")
+        ("/api/v1/sso", "sso"),
+        ("/api/v1/lti", "lti"),
+        ("/api/v1/outcomes", "outcomes"),
+        ("/api/v1/similarity", "similarity"),
+        ("/api/v1/live", "live_classes")
     ];
 
     public async Task InvokeAsync(HttpContext context, IModuleEntitlementResolver entitlementResolver)

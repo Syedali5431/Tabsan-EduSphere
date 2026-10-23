@@ -1,0 +1,24 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ModuleNavModel
+@* Plan M7 — previous / next bar for pages opened from a course module. *@
+@{ var n = Model.Nav; }
+<nav class="module-nav d-flex flex-wrap align-items-center gap-2 border rounded px-3 py-2 mb-3 bg-light" aria-label="@T["Module navigation"]" data-module-nav>
+    @if (n.Previous is { } prev)
+    {
+        <a class="btn btn-sm btn-outline-secondary" href="/Portal/ModuleItem/@prev.Id" title="@prev.Title">@T["‹ Previous"]<span class="visually-hidden">: @prev.Title</span></a>
+    }
+    <a class="small text-muted text-decoration-none mx-auto" href="/Portal/CourseLms?offeringId=@n.CourseOfferingId">@n.ModuleTitle</a>
+    @if (Model.IsStudent && n.CanMarkDone)
+    {
+        <form action="/Portal/ModuleItemDone" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="itemId" value="@n.ItemId" />
+            <input type="hidden" name="done" value="@(n.Status != "done" ? "true" : "false")" />
+            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+            <button class="btn btn-sm @(n.Status == "done" ? "btn-success" : "btn-outline-success")" data-mark-done>@(n.Status == "done" ? T.Text("✓ Done") : T.Text("Mark as done"))</button>
+        </form>
+    }
+    @if (n.Next is { } next)
+    {
+        <a class="btn btn-sm btn-primary" href="/Portal/ModuleItem/@next.Id" title="@next.Title">@T["Next ›"]<span class="visually-hidden">: @next.Title@(next.Locked ? " (locked)" : "")</span></a>
+    }
+</nav>

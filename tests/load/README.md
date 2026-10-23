@@ -21,6 +21,7 @@ Phase 5 update:
 | `k6-auth-current.js` | Auth-focused load test for `/api/v1/auth/login` + `/api/v1/auth/security-profile` |
 | `k6-core-current.js` | Core authenticated flow test for dashboard, sidebar, and notifications |
 | `k6-phase10-progressive.js` | Progressive gate scenario for incremental scale validation and bottleneck signal capture |
+| `k6-exam-day.js` | Exam-day spike (Plan M14.2): quiz start, autosaves, submit near the deadline, results publication and reading — see [Exam-day test](#exam-day-test-plan-m142) |
 | `run-load-test.ps1` | PowerShell runner (recommended) |
 | `run-load-test.bat` | Windows batch wrapper |
 | `run-phase10-progressive.ps1` | Progressive gate orchestrator with bottleneck classification and retest loop |
@@ -293,6 +294,11 @@ Solution:
 3. Increase server rate limits
 ```
 
+Since Plan M14.2 the API applies request limits (`RateLimiting` settings: per signed-in user 600/min, per API token
+1200/min, per address without sign-in 300/min). A load generator signs in many users from one address, so either add the
+generator addresses to `RateLimiting:ExemptIps` on the target, raise the limits for the run, or use pre-issued tokens
+(`USERS_FILE` with a `token` column). The `exam_429` counter of `k6-exam-day.js` shows throttled requests.
+
 ### Memory Exhausted
 ```
 Error: Cannot allocate memory
@@ -369,3 +375,73 @@ Common threshold for all bands:
 - Confirmed reporting baseline includes payment summary support for Finance role.
 - Clarified release policy: upcoming Mobile APP features are roadmap items and do not change current subscription pricing.
 - Pricing policy remains unchanged; newly introduced platform enhancements are included free for existing subscribed plans.
+
+## Exam-day test (Plan M14.2)
+
+`k6-exam-day.js` models the worst hour of the term: every student of a course starts the same quiz within a few minutes,
+autosaves answers while working, and submits close to the deadline; then the teacher queues the results publication and
+students open their results.
+
+| Scenario | What each virtual user does | Metrics |
+|---|---|---|
+| `exam` (ramping arrival over `START_WINDOW`) | one student session: `POST quiz/{id}/start`, `GET` the paper, `AUTOSAVES` × `PUT` answers spread over `WORK_MINUTES`, `POST` submit | `exam_start_duration`, `exam_paper_duration`, `exam_save_duration`, `exam_submit_duration` |
+| `results` (after the exam) | the first iteration queues `POST result/publish-all/jobs?courseOfferingId=` as the teacher; the others `GET result/my-results` | `results_read_duration` |
+
+Every student session uses its own account (one line of `USERS_FILE` per session), because a student can only start a
+quiz as often as its attempt limit allows. Errors (`exam_errors`) and throttled requests (`exam_429`) are counted.
+
+### Targets (thresholds)
+
+| Threshold | Default | Variable |
+|---|---|---|
+| p95 quiz start | < 2,000 ms | `P95_START_MS` |
+| p95 autosave | < 1,000 ms | `P95_SAVE_MS` |
+| p95 submit | < 3,000 ms | `P95_SUBMIT_MS` |
+| error rate | < 1 % | `MAX_ERROR_RATE` |
+
+### Preparing data
+
+On a test system, the opt-in `ExamDayLoadSeed` integration test creates a course offering, a teacher, a published
+10-question quiz with unlimited attempts and N enrolled students, and writes their access tokens:
+
+```powershell
+$env:EDUSPHERE_LOAD_SEED_FILE = "C:loadexam-tokens.csv"   # token column; ids and teacher token go next to it (.env)
+$env:EDUSPHERE_LOAD_STUDENTS = "5000"
+dotnet test testsTabsan.EduSphere.IntegrationTests -c Release --filter "FullyQualifiedName~ExamDayLoadSeed"
+```
+
+The seed uses the integration-test database and keeps it after the run (the next integration-test run drops it). Point a
+Release API at that database to run against it. On staging, use real enrolled test accounts instead (`username,password` CSV).
+
+### Running
+
+```bash
+k6 run tests/load/k6-exam-day.js -e BASE_URL=https://api.staging.example.edu -e QUIZ_ID=<quiz guid> -e OFFERING_ID=<offering guid> -e USERS_FILE=exam-tokens.csv -e TEACHER_TOKEN=<token> -e EXAM_USERS=5000 -e START_WINDOW=5m -e WORK_MINUTES=20 -e AUTOSAVES=6 -e SUMMARY_JSON_PATH=exam-summary.json
+```
+
+`RUN_RESULTS=false` skips the results scenario; `RESULT_READERS` sets how many students read results (default 1,000).
+
+### 5,000-user run (staging)
+
+The target of Plan M14.2 is 5,000 concurrent students. That needs a staging environment shaped like production: two or
+more API instances behind the load balancer, SQL Server (not LocalDB), Redis (`ScaleOut:RedisConnectionString`), shared
+storage (`MediaStorage:Provider` = `AzureBlob` or `S3`), and one or more k6 generators (about 1,000 virtual users per
+generator; split `USERS_FILE` between them). Exempt the generator addresses from the request limits or use tokens.
+
+### Results so far (2026-10-24, one workstation)
+
+One Release API instance, SQL Server LocalDB and k6 on the same Windows workstation; 500 students arriving over 60 s,
+2 minutes of work, 4 autosaves each, then students reading their results (tokens from `ExamDayLoadSeed`).
+
+| Metric | p95 | p99 | max |
+|---|---|---|---|
+| quiz start | 46 ms | 74 ms | 81 ms |
+| load paper | 50 ms | 56 ms | 92 ms |
+| autosave | 65 ms | 84 ms | 131 ms |
+| submit | 74 ms | 145 ms | 2,062 ms |
+| read results | 123 ms | 535 ms | 706 ms |
+
+4,100 requests, 0.00 % errors, no 429s; checks: 500 starts, 500 papers, 2,000 autosaves, 500 submissions, 600 result
+reads, 0 failed; peak 701 virtual users. SQL Server's missing-index statistics were empty afterwards. The teacher's
+publication step was added after this run and checked in a 16-user smoke run (sign-in, start, autosave, submit,
+publication queued, results read: all passed). The full 5,000-user run on staging is still to be done.

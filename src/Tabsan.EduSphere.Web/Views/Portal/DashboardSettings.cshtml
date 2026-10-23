@@ -1,18 +1,18 @@
 @model Tabsan.EduSphere.Web.Models.Portal.DashboardSettingsPageModel
 @{
-    ViewData["Title"] = "Dashboard Settings";
+    ViewData["Title"] = T.Text("Dashboard Settings");
     var tempMsg = TempData["Message"] as string ?? Model.Message;
 }
 
 <div class="d-flex align-items-center mb-3 gap-2">
-    <h4 class="mb-0"><i class="bi bi-sliders me-2"></i>Dashboard Settings</h4>
+    <h4 class="mb-0"><i class="bi bi-sliders me-2"></i>@T["Dashboard Settings"]</h4>
 </div>
 
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning d-flex align-items-center gap-2">
         <i class="bi bi-plug-fill"></i>
-        Not connected to the API. Configure the connection on the Dashboard.
+        @T["Not connected to the API. Configure the connection on the Dashboard."]
     </div>
 }
 else
@@ -20,8 +20,8 @@ else
     @if (!string.IsNullOrWhiteSpace(tempMsg))
     {
         <div class="alert alert-info alert-dismissible fade show" role="alert">
-            @tempMsg
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @T.Text(tempMsg)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
         </div>
     }
 
@@ -31,8 +31,8 @@ else
             <div class="card">
                 <div class="card-header d-flex align-items-center gap-2">
                     <i class="bi bi-building text-primary"></i>
-                    <strong>Portal Branding</strong>
-                    <span class="ms-auto text-muted small">Controls the name, logo and footer text shown across the portal.</span>
+                    <strong>@T["Portal Branding"]</strong>
+                    <span class="ms-auto text-muted small">@T["Controls the name, logo and footer text shown across the portal."]</span>
                 </div>
                 <div class="card-body">
                     <form asp-action="DashboardSettings" method="post" enctype="multipart/form-data">
@@ -40,114 +40,114 @@ else
 
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label fw-semibold">University / Institution Name</label>
-                                <input type="text"
+                                <label class="form-label fw-semibold">@T["University / Institution Name"]</label>
+                                <input aria-label="@T["University / Institution Name"]" type="text"
                                        name="Branding.UniversityName"
                                        class="form-control"
                                        value="@Model.Branding.UniversityName"
                                        maxlength="200"
                                        required
-                                       placeholder="e.g. Tabsan EduSphere" />
-                                <div class="form-text">Displayed in the sidebar brand area and page titles.</div>
+                                       placeholder="@T["e.g. Tabsan EduSphere"]" />
+                                <div class="form-text">@T["Displayed in the sidebar brand area and page titles."]</div>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Portal Subtitle</label>
-                                <input type="text"
+                                <label class="form-label fw-semibold">@T["Portal Subtitle"]</label>
+                                <input aria-label="@T["Portal Subtitle"]" type="text"
                                        name="Branding.PortalSubtitle"
                                        class="form-control"
                                        value="@Model.Branding.PortalSubtitle"
                                        maxlength="100"
-                                       placeholder="e.g. Campus Portal" />
-                                <div class="form-text">Sub-line shown below the brand name in the sidebar.</div>
+                                       placeholder="@T["e.g. Campus Portal"]" />
+                                <div class="form-text">@T["Sub-line shown below the brand name in the sidebar."]</div>
                             </div>
 
                             <div class="col-md-8">
-                                <label class="form-label fw-semibold">Footer Text</label>
-                                <input type="text"
+                                <label class="form-label fw-semibold">@T["Footer Text"]</label>
+                                <input aria-label="@T["Footer Text"]" type="text"
                                        name="Branding.FooterText"
                                        class="form-control"
                                        value="@Model.Branding.FooterText"
                                        maxlength="200"
-                                       placeholder="e.g. © 2026 Tabsan EduSphere" />
-                                <div class="form-text">Shown in the page footer. Tip: include the © symbol and year.</div>
+                                       placeholder="@T["e.g. © 2026 Tabsan EduSphere"]" />
+                                <div class="form-text">@T["Shown in the page footer. Tip: include the © symbol and year."]</div>
                             </div>
 
                             @* ── P1-S6-02: Logo Upload ── *@
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Portal Logo</label>
+                                <label class="form-label fw-semibold">@T["Portal Logo"]</label>
                                 @if (!string.IsNullOrEmpty(Model.Branding.LogoImage))
                                 {
                                     <div class="mb-2">
                                         <img src="@Model.Branding.LogoImage"
-                                             alt="Current portal logo"
+                                             alt="@T["Current portal logo"]"
                                              class="border rounded p-1"
                                              style="max-height:64px;max-width:200px;object-fit:contain;" />
                                         <input type="hidden" name="Branding.LogoImage" value="@Model.Branding.LogoImage" />
                                     </div>
                                 }
-                                <input type="file"
+                                <input type="file" aria-label="@T["Logo"]"
                                        name="LogoFile"
                                        class="form-control"
                                        accept=".png,.jpg,.jpeg,.gif,.svg,.webp" />
-                                <div class="form-text">Optional. PNG, JPG, SVG or WebP, max 2 MB. Saved in database settings and shown in sidebar branding.</div>
+                                <div class="form-text">@T["Optional. PNG, JPG, SVG or WebP, max 2 MB. Saved in database settings and shown in sidebar branding."]</div>
                             </div>
 
                             @* ── P1-S6-03: Privacy Policy URL ── *@
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Privacy Policy URL</label>
-                                <input type="url"
+                                <label class="form-label fw-semibold">@T["Privacy Policy URL"]</label>
+                                <input aria-label="@T["Privacy Policy URL"]" type="url"
                                        name="Branding.PrivacyPolicyUrl"
                                        class="form-control"
                                        value="@Model.Branding.PrivacyPolicyUrl"
                                        maxlength="500"
                                        placeholder="https://yoursite.com/privacy" />
-                                <div class="form-text">Optional external link. If policy text is entered below, the portal uses its own Privacy page instead.</div>
+                                <div class="form-text">@T["Optional external link. If policy text is entered below, the portal uses its own Privacy page instead."]</div>
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Privacy Policy Text</label>
-                                <textarea name="Branding.PrivacyPolicyContent"
+                                <label class="form-label fw-semibold">@T["Privacy Policy Text"]</label>
+                                <textarea aria-label="@T["Privacy Policy Text"]" name="Branding.PrivacyPolicyContent"
                                           class="form-control"
                                           rows="6"
                                           maxlength="8000"
                                           placeholder="Enter the privacy policy content shown in the portal Privacy page.">@Model.Branding.PrivacyPolicyContent</textarea>
-                                <div class="form-text">Displayed in the General → Privacy page inside the portal.</div>
+                                <div class="form-text">@T["Displayed in the General → Privacy page inside the portal."]</div>
                             </div>
 
                             @* ── P1-S6-04: Text Style Options ── *@
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Font Family</label>
-                                <select name="Branding.FontFamily" class="form-select">
-                                    <option value="" selected="@(string.IsNullOrEmpty(Model.Branding.FontFamily))">Default (system)</option>
-                                    <option value="'Segoe UI', sans-serif" selected="@(Model.Branding.FontFamily == "'Segoe UI', sans-serif")">Segoe UI</option>
-                                    <option value="Arial, sans-serif" selected="@(Model.Branding.FontFamily == "Arial, sans-serif")">Arial</option>
-                                    <option value="'Trebuchet MS', sans-serif" selected="@(Model.Branding.FontFamily == "'Trebuchet MS', sans-serif")">Trebuchet MS</option>
-                                    <option value="'Georgia', serif" selected="@(Model.Branding.FontFamily == "'Georgia', serif")">Georgia (Serif)</option>
-                                    <option value="'Courier New', monospace" selected="@(Model.Branding.FontFamily == "'Courier New', monospace")">Courier New (Mono)</option>
+                                <label class="form-label fw-semibold">@T["Font Family"]</label>
+                                <select aria-label="@T["Font Family"]" name="Branding.FontFamily" class="form-select">
+                                    <option value="" selected="@(string.IsNullOrEmpty(Model.Branding.FontFamily))">@T["Default (system)"]</option>
+                                    <option value="'Segoe UI', sans-serif" selected="@(Model.Branding.FontFamily == "'Segoe UI', sans-serif")">@T["Segoe UI"]</option>
+                                    <option value="Arial, sans-serif" selected="@(Model.Branding.FontFamily == "Arial, sans-serif")">@T["Arial"]</option>
+                                    <option value="'Trebuchet MS', sans-serif" selected="@(Model.Branding.FontFamily == "'Trebuchet MS', sans-serif")">@T["Trebuchet MS"]</option>
+                                    <option value="'Georgia', serif" selected="@(Model.Branding.FontFamily == "'Georgia', serif")">@T["Georgia (Serif)"]</option>
+                                    <option value="'Courier New', monospace" selected="@(Model.Branding.FontFamily == "'Courier New', monospace")">@T["Courier New (Mono)"]</option>
                                 </select>
-                                <div class="form-text">Base font used across the portal.</div>
+                                <div class="form-text">@T["Base font used across the portal."]</div>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-semibold">Font Size</label>
-                                <select name="Branding.FontSize" class="form-select">
-                                    <option value="" selected="@(string.IsNullOrEmpty(Model.Branding.FontSize))">Default (16px)</option>
-                                    <option value="13px" selected="@(Model.Branding.FontSize == "13px")">Small (13px)</option>
-                                    <option value="14px" selected="@(Model.Branding.FontSize == "14px")">Compact (14px)</option>
-                                    <option value="16px" selected="@(Model.Branding.FontSize == "16px")">Normal (16px)</option>
-                                    <option value="18px" selected="@(Model.Branding.FontSize == "18px")">Large (18px)</option>
-                                    <option value="20px" selected="@(Model.Branding.FontSize == "20px")">Extra Large (20px)</option>
+                                <label class="form-label fw-semibold">@T["Font Size"]</label>
+                                <select aria-label="@T["Font Size"]" name="Branding.FontSize" class="form-select">
+                                    <option value="" selected="@(string.IsNullOrEmpty(Model.Branding.FontSize))">@T["Default (16px)"]</option>
+                                    <option value="13px" selected="@(Model.Branding.FontSize == "13px")">@T["Small (13px)"]</option>
+                                    <option value="14px" selected="@(Model.Branding.FontSize == "14px")">@T["Compact (14px)"]</option>
+                                    <option value="16px" selected="@(Model.Branding.FontSize == "16px")">@T["Normal (16px)"]</option>
+                                    <option value="18px" selected="@(Model.Branding.FontSize == "18px")">@T["Large (18px)"]</option>
+                                    <option value="20px" selected="@(Model.Branding.FontSize == "20px")">@T["Extra Large (20px)"]</option>
                                 </select>
-                                <div class="form-text">Base body text size.</div>
+                                <div class="form-text">@T["Base body text size."]</div>
                             </div>
 
                             <div class="col-12 pt-2">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-floppy me-1"></i> Save Branding
+                                    <i class="bi bi-floppy me-1"></i> @T["Save Branding"]
                                 </button>
                                 <a asp-action="Dashboard" class="btn btn-outline-secondary ms-2">
-                                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                                    <i class="bi bi-arrow-left me-1"></i> @T["Back to Dashboard"]
                                 </a>
                             </div>
                         </div>
@@ -159,17 +159,17 @@ else
         <div class="col-12">
             <div class="card border-0 bg-light">
                 <div class="card-body">
-                    <p class="mb-1 fw-semibold"><i class="bi bi-eye me-1"></i> Live Preview</p>
+                    <p class="mb-1 fw-semibold"><i class="bi bi-eye me-1"></i> @T["Live Preview"]</p>
                     <div class="d-flex align-items-center gap-3 p-2 border rounded bg-white">
                             <div class="brand-icon-preview d-flex align-items-center justify-content-center rounded fw-bold text-white"
                              id="prevIcon"
-                                style="width:48px;height:48px;background:var(--bs-primary);font-size:1rem;">Logo</div>
+                                style="width:48px;height:48px;background:var(--bs-primary);font-size:1rem;">@T["Logo"]</div>
                         <div>
-                            <div class="fw-bold" id="prevName">Tabsan EduSphere</div>
-                            <div class="text-muted small" id="prevSub">Campus Portal</div>
+                            <div class="fw-bold" id="prevName">@T["Tabsan EduSphere"]</div>
+                            <div class="text-muted small" id="prevSub">@T["Campus Portal"]</div>
                         </div>
                     </div>
-                    <div class="mt-2 text-muted small" id="prevFooter">© 2026 Tabsan EduSphere</div>
+                    <div class="mt-2 text-muted small" id="prevFooter">@T["© 2026 Tabsan EduSphere"]</div>
                 </div>
             </div>
         </div>

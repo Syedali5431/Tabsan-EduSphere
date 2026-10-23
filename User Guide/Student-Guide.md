@@ -88,30 +88,63 @@ Best practice: compare your course load and GPA trend at least once per week.
 Path: Sidebar > Assignments
 
 Typical flow:
-1. Open a course assignment.
-2. Read instructions and due date.
-3. Submit file or text response.
-4. Confirm submission.
-5. Reopen the assignment to verify timestamp and status.
+1. Open a course assignment (**Submit** or **Open** in the list).
+2. Read instructions, due date, accepted file types and size limit.
+3. Attach up to 10 files and/or type your answer, then **Submit**.
+4. Your attempt appears under *Your submission* with its time; click a file to preview it.
+5. If your teacher allows more than one attempt, use **Submit again** — earlier attempts are kept.
+
+After grading:
+- Your mark, feedback and rubric breakdown appear once your teacher posts the grade.
+- Files your teacher annotated show their notes in the preview; **Annotated PDF** downloads a copy with the marks and a list of comments.
+- Use *Comments* to ask a question or reply — type a message or press **Record** for a voice message.
 
 Important notes:
-- Treat submission confirmation as final unless your institution allows resubmission.
-- Late submissions may be blocked based on faculty settings.
+- Submissions after the due date are not accepted.
+- Web pages, scripts and programs cannot be uploaded.
+
+## 5.1 Due Dates, Late Work, Groups and Peer Review (Plan M8)
+
+- **Your dates:** an assignment may show *Your own dates* when your teacher gave you an extension. The page also shows when submissions open, until when late work is accepted and the course's late policy (for example "Late work loses 10% of the points per day late").
+- **Late and missing work:** late work may lose points — your grade shows the mark and the deduction. Work never handed in may get an automatic grade after the due date; handing it in late (while still allowed) replaces it.
+- **Groups:** Course Content or Assignments › **My groups** shows your groups. If students sign up themselves, join or leave a group there (not after your group has handed in work). For a group assignment one member hands in for everyone, and you must be in a group to hand in. Your group also has private discussion threads.
+- **Peer review:** after the due date you may be asked to review classmates' work — open the assignment, choose **Review**, read the work, choose rubric levels or a score and write a helpful comment. Reviews of your own work appear on the assignment page (anonymous unless your teacher turned that off).
+
+## 5.2 Similarity Score (Plan M9)
+
+If your teacher turned it on, the assignment page shows *Similarity check: NN%* — how much of your work matches other sources. You never see other students' work. Quote and reference what you use; if the score seems wrong, ask your teacher, who can see the full report.
+
+## 5.3 Live Classes (Plan M10)
+
+Your teachers' online classes are listed under **Live Classes** and on the academic calendar. You are notified when a class is scheduled, moved or cancelled, and reminded 15 minutes before. From 15 minutes before the start, a *Live now* banner with **Join** appears on every page — joining through the portal records your attendance. Use **Add to calendar** to put a class in your phone's or computer's calendar.
+
+## 5.4 Language (Plan M11)
+
+Choose English, اردو (Urdu) or العربية (Arabic) from the language box in the top bar or on the login page. The whole portal — menus, pages, messages — switches at once, and right-to-left for Urdu and Arabic. Your choice is remembered on every device; emails from the portal also come in your language.
+
+## 5.5 Mobile app (Plan M12)
+
+Install the EduSphere app from your institution's store link and sign in with your usual username and password (and authenticator code), or tap your institution's sign-in button — it opens your phone's browser and comes back to the app. The app shows today's classes, what is due, your courses and materials, results, attendance and report cards. Open an assignment and **Hand in** with a photo from the camera or a file. Quizzes open in the portal. Turn on notifications to hear about new work, results and announcements; choose the language under Settings.
+
+## 5.6 SCORM Packages (Plan M13)
+
+Some courses contain interactive lessons (SCORM packages). Open one from the course page or its module and press **Start**. Your place is saved: **Continue** takes you back where you stopped. When you finish, the package can be opened again for **Review**; if your teacher allows more attempts, **Start a new attempt** — your best score counts. Use **Exit** on the player page to leave (your progress is saved first).
 
 ## 6. Quizzes
 
 Path: Sidebar > Quizzes
 
 Typical flow:
-1. Open active quiz.
-2. Review attempts allowed, timer, and availability window.
-3. Start attempt.
-4. Answer all required questions.
-5. Submit before time ends.
+1. Open the quiz from *View Quizzes* (**Start**, **Resume** or **Open**).
+2. Review attempts allowed, timer, and availability window; enter the access code if your teacher gave one.
+3. Start the attempt. Answers save automatically as you go.
+4. Answer the questions (some types: drag items into order with the arrows, choose matches from the lists, type into the blanks inside a sentence, upload a file).
+5. Submit before time ends — when the timer reaches zero your saved answers are submitted for you.
+6. **Review** shows what your teacher allows: your score, your answers and/or the correct answers.
 
 Tips:
-- Stable internet is recommended.
-- Do not refresh during active timed attempts unless instructed.
+- Stable internet is recommended; if you lose connection, your last saved answers are kept and the timer keeps running on the server.
+- If the quiz shows one question at a time with locking, you cannot go back after pressing Next.
 
 ## 7. Attendance Tracking
 
@@ -148,6 +181,34 @@ Notification types can include:
 - Admin announcements
 
 Action recommendation: open notifications daily and mark read after action.
+
+### 9.1 Notifications on your phone or computer
+1. Open **Notifications** and, in *Notifications on this device*, press **Turn on**, then allow notifications when the browser asks.
+2. Choose which kinds of notification reach this device (for example announcements and assignments).
+3. **Send a test** checks it works; **Turn off** stops notifications on this device only.
+- iPhone/iPad: first add EduSphere to the Home Screen (Share › Add to Home Screen) and open it from there.
+- Signing out also stops notifications on that device.
+
+### 9.2 Install EduSphere as an app
+- On Android/desktop Chrome or Edge choose **Install the EduSphere app** in your profile menu (or the browser's install icon). On iPhone/iPad use Share › Add to Home Screen.
+- Pages you opened recently — dashboard, timetable, announcements, course materials and notifications — and course files you downloaded can still be read when you are offline. You cannot submit work or change anything while offline.
+- On a shared computer, always **Sign Out**: it removes the saved pages from that device.
+
+### 9.3 External tools in your courses
+
+- Your course page may list **External tools** (for example H5P activities, Zoom or Turnitin). Press **Open** — you are signed in to the tool automatically.
+- Items marked **Graded** send your score back to EduSphere; it appears under the assignment once your teacher's posting policy releases it.
+- If a tool says the launch has expired, go back to the course and press **Open** again.
+
+### 9.4 My Outcomes
+
+- **My Outcomes** shows, for each course that uses learning outcomes, how well your graded work shows you have mastered each outcome: *Mastered*, *Nearly there*, *Not yet* or *No evidence yet*.
+- Open **Evidence** to see which assignments and quizzes it comes from. Only grades your teacher has released count.
+
+### 9.5 Course modules and your progress
+
+- **Course Content** shows your progress in the course and in each module. Open items from the list; ✓ means done, ○ means still to do (with what is needed), 🔒 means locked (with why — for example *Complete “Week 1” first* or an opening date).
+- Use **Next ›** and **‹ Previous** at the top of an item to move through the module, and **Mark as done** where an item asks for it.
 
 ## 10. FYP Module
 

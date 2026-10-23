@@ -1,0 +1,279 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LtiToolsPageModel
+@{
+    ViewData["Title"] = T.Text("External Tools (LTI 1.3)");
+    var e = Model.Editing;
+    var isSuperAdmin = ViewContext.HttpContext.RequestServices.GetRequiredService<Tabsan.EduSphere.Web.Services.IEduApiClient>().GetSessionIdentity()?.IsSuperAdmin == true;
+    string ScopeName(Tabsan.EduSphere.Application.Lti.LtiDeploymentResponse d) => d.Scope switch
+    {
+        "Department" => "Department: " + (Model.Departments.FirstOrDefault(x => x.Id == d.ScopeId)?.Name ?? d.ScopeId?.ToString()),
+        "CourseOffering" => "Course: " + (Model.Offerings.FirstOrDefault(x => x.Id == d.ScopeId) is { } o ? $"{o.CourseCode} {o.CourseTitle} ({o.SemesterName})" : d.ScopeId?.ToString()),
+        _ => "Whole installation"
+    };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="mb-4">
+    <h2 class="h3 mb-1">@T["External Tools (LTI 1.3)"]</h2>
+    <p class="text-muted mb-0">
+        Register tools such as H5P, Zoom, Turnitin or a publisher's content once. Teachers then add them to their courses;
+        @T["tools can send scores to the gradebook and read the class list when you allow it."]
+    </p>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border border-warning rounded p-3 bg-light" data-lti-module-off>
+        <strong>@T["The External Tools module is not active."]</strong>
+        @T["Activate it in"] <a asp-action="ModuleComposition">@T["Module Composition"]</a> @T["(it requires a licence that includes it), then return to this page."]
+    </div>
+}
+else
+{
+    var p = Model.Platform;
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="h6 mb-3">@T["Values to give each tool"]</h3>
+            @if (p is null || !p.Configured)
+            {
+                <div class="border border-warning rounded p-3 bg-light small mb-3" data-lti-not-configured>
+                    @T["The platform address is not set. Put the portal's public address in"] <code>Lti:PlatformUrl</code>
+                    @T["(and a key file path in"] <code>Lti:KeyFile</code>@T[") in the API settings, then restart the API."]
+                </div>
+            }
+            else
+            {
+                <dl class="row small mb-0" data-lti-platform>
+                    <dt class="col-sm-4">@T["Issuer (platform ID)"]</dt><dd class="col-sm-8"><code>@p.Issuer</code></dd>
+                    <dt class="col-sm-4">@T["OIDC authorization URL"]</dt><dd class="col-sm-8"><code>@p.AuthorizationUrl</code></dd>
+                    <dt class="col-sm-4">@T["Access token URL"]</dt><dd class="col-sm-8"><code>@p.TokenUrl</code></dd>
+                    <dt class="col-sm-4">@T["Public keyset (JWKS) URL"]</dt><dd class="col-sm-8"><code>@p.JwksUrl</code></dd>
+                    <dt class="col-sm-4">@T["Deep linking return URL"]</dt><dd class="col-sm-8"><code>@p.DeepLinkReturnUrl</code></dd>
+                    <dt class="col-sm-4">@T["Client ID and deployment ID"]</dt><dd class="col-sm-8">@T["Shown for each tool below after you register it."]</dd>
+                </dl>
+                <details class="mt-3">
+                    <summary class="small fw-semibold">@T.Format("Signing keys ({0})", p.Keys.Count)</summary>
+                    <table class="table table-sm small mt-2 mb-2">
+                        <thead><tr><th>@T["Key ID"]</th><th>@T["Created"]</th><th>@T["Status"]</th></tr></thead>
+                        <tbody>
+                            @foreach (var k in p.Keys)
+                            {
+                                <tr>
+                                    <td><code>@k.Kid</code></td>
+                                    <td>@k.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td>@(k.Active ? T.Text("Signing") : k.RetiredAt is { } r ? $"Retired {r.ToLocalTime():dd MMM yyyy} (still published)" : T.Text("Published"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (isSuperAdmin)
+                    {
+                        <form asp-action="RotateLtiKeys" method="post" onsubmit="return confirm('@T.Js("Start signing with a new key? Tools fetch it from the JWKS URL automatically.")');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-sm btn-outline-secondary">@T["Rotate the signing key"]</button>
+                        </form>
+                    }
+                </details>
+            }
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <h3 class="h6 mb-0">@T["Registered tools"]</h3>
+                @if (e is not null) { <a asp-action="LtiTools" class="btn btn-sm btn-outline-primary ms-auto">@T["Register another tool"]</a> }
+            </div>
+            @if (Model.Tools.Count == 0)
+            {
+                <p class="text-muted small mb-0">@T["No tools yet. Use the form below to register one."]</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0" data-lti-tools>
+                        <thead><tr><th>@T["Tool"]</th><th>@T["Client ID"]</th><th>@T["Services"]</th><th>@T["Status"]</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var t in Model.Tools)
+                            {
+                                <tr class="@(e?.Id == t.Id ? "table-active" : "")">
+                                    <td><div class="fw-semibold">@t.Name</div><div class="small text-muted">@t.Description</div></td>
+                                    <td><code class="small">@t.ClientId</code></td>
+                                    <td class="small">
+                                        @(t.AllowGradeService ? T.Text("Grades") : "")@(t.AllowGradeService && t.AllowRosterService ? ", " : "")@(t.AllowRosterService ? T.Text("Class list") : "")
+                                        @if (!string.IsNullOrWhiteSpace(t.DeepLinkingUrl)) { <div>@T["Content selection"]</div> }
+                                        <div class="text-muted">@T.Format("Shares: {0}", t.PrivacyLevel)</div>
+                                    </td>
+                                    <td>@if (t.IsActive) { <span class="badge bg-success">@T["On"]</span> } else { <span class="badge bg-secondary">@T["Off"]</span> }</td>
+                                    <td class="text-end text-nowrap">
+                                        <a asp-action="LtiTools" asp-route-edit="@t.Id" class="btn btn-sm btn-outline-primary">@T["Edit"]</a>
+                                        <form asp-action="SetLtiToolActive" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="toolId" value="@t.Id" />
+                                            <input type="hidden" name="active" value="@(!t.IsActive ? "true" : "false")" />
+                                            <button class="btn btn-sm btn-outline-secondary">@(t.IsActive ? T.Text("Turn off") : T.Text("Turn on"))</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="h6 mb-3">@(e is null ? T.Text("Register a tool") : $"Edit {e.Name}")</h3>
+            @if (e is not null)
+            {
+                <dl class="row small">
+                    <dt class="col-sm-3">@T["Client ID"]</dt><dd class="col-sm-9"><code data-lti-client-id>@e.ClientId</code></dd>
+                </dl>
+            }
+            <form asp-action="SaveLtiTool" method="post" class="row g-3" data-lti-tool-form>
+                @Html.AntiForgeryToken()
+                @if (e is not null) { <input type="hidden" name="Id" value="@e.Id" /> }
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-name">@T["Name"]</label>
+                    <input id="lti-name" name="Name" class="form-control" maxlength="200" required value="@e?.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-description">@T["Description"]</label>
+                    <input id="lti-description" name="Description" class="form-control" maxlength="1000" value="@e?.Description" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-oidc">@T["Login initiation URL"]</label>
+                    <input id="lti-oidc" name="OidcInitiationUrl" type="url" class="form-control" required value="@e?.OidcInitiationUrl" placeholder="https://tool.example/lti/login" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-target-link">@T["Target link URI (launch URL)"]</label>
+                    <input id="lti-target-link" name="TargetLinkUri" type="url" class="form-control" required value="@e?.TargetLinkUri" placeholder="https://tool.example/lti/launch" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-redirects">@T["Redirect URIs"] <span class="text-muted small">@T["(one per line)"]</span></label>
+                    <textarea id="lti-redirects" name="RedirectUris" class="form-control" rows="2" required>@(e is null ? "" : string.Join("\n", e.RedirectUris))</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-deep-link">@T["Deep linking URL"] <span class="text-muted small">@T["(optional)"]</span></label>
+                    <input id="lti-deep-link" name="DeepLinkingUrl" type="url" class="form-control" value="@e?.DeepLinkingUrl" />
+                    <div class="form-text">@T["Lets teachers pick content inside the tool and add it to their course."]</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-jwks">@T["Tool's public keyset (JWKS) URL"]</label>
+                    <input id="lti-jwks" name="JwksUrl" type="url" class="form-control" value="@e?.JwksUrl" />
+                    <div class="form-text">@T["Or paste the tool's public key instead."]</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-pem">@T["Tool's public key (PEM)"]</label>
+                    <textarea id="lti-pem" name="PublicKeyPem" class="form-control font-monospace small" rows="3" placeholder="-----BEGIN PUBLIC KEY-----"></textarea>
+                    @if (e?.HasPublicKey == true) { <div class="form-text">@T["A key is stored. Leave this empty to keep it, or paste a new one to replace it. Entering a JWKS URL replaces the stored key."]</div> }
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-privacy">@T["What the tool learns about people"]</label>
+                    <select id="lti-privacy" name="PrivacyLevel" class="form-select">
+                        @foreach (var (value, text) in new[] { ("Anonymous", "Nothing (an anonymous ID only)"), ("NameOnly", "Name"), ("EmailOnly", "Email address"), ("Public", "Name and email address") })
+                        {
+                            <option value="@value" selected="@(string.Equals(e?.PrivacyLevel ?? "Anonymous", value, StringComparison.OrdinalIgnoreCase))">@text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="lti-custom">@T["Custom parameters"] <span class="text-muted small">@T["(name=value, one per line)"]</span></label>
+                    <textarea id="lti-custom" name="CustomParameters" class="form-control font-monospace small" rows="2">@e?.CustomParameters</textarea>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="lti-ags" name="AllowGradeService" value="true" checked="@(e?.AllowGradeService ?? true)" />
+                        <label class="form-check-label" for="lti-ags">@T["Allow the tool to send scores to the gradebook"]</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="lti-nrps" name="AllowRosterService" value="true" checked="@(e?.AllowRosterService ?? false)" />
+                        <label class="form-check-label" for="lti-nrps">@T["Allow the tool to read the class list"]</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary">@(e is null ? T.Text("Register tool") : T.Text("Save changes"))</button>
+                    @if (e is not null) { <a asp-action="LtiTools" class="btn btn-link">@T["Cancel"]</a> }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (e is not null)
+    {
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h3 class="h6 mb-1">@T.Format("Where {0} can be used", e.Name)</h3>
+                <p class="small text-muted">@T["Each deployment has its own deployment ID; give the IDs you use to the tool. Teachers see the tool only in courses a deployment covers."]</p>
+                <table class="table table-sm align-middle" data-lti-deployments>
+                    <thead><tr><th>@T["Covers"]</th><th>@T["Deployment ID"]</th><th>@T["Status"]</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var d in e.Deployments)
+                        {
+                            <tr>
+                                <td>@ScopeName(d)</td>
+                                <td><code>@d.DeploymentId</code></td>
+                                <td>@if (d.IsActive) { <span class="badge bg-success">@T["On"]</span> } else { <span class="badge bg-secondary">@T["Off"]</span> }</td>
+                                <td class="text-end">
+                                    <form asp-action="SetLtiDeploymentActive" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="toolId" value="@e.Id" />
+                                        <input type="hidden" name="deploymentId" value="@d.Id" />
+                                        <input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
+                                        <button class="btn btn-sm btn-outline-secondary">@(d.IsActive ? T.Text("Turn off") : T.Text("Turn on"))</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <form asp-action="AddLtiDeployment" method="post" class="row g-2 align-items-end" data-lti-deployment-form>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="toolId" value="@e.Id" />
+                    <div class="col-md-3">
+                        <label class="form-label small" for="dep-scope">@T["Add a deployment for"]</label>
+                        <select id="dep-scope" name="scope" class="form-select form-select-sm">
+                            <option value="Installation">@T["Whole installation"]</option>
+                            <option value="Department">@T["One department"]</option>
+                            <option value="CourseOffering">@T["One course"]</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" data-dep-for="Department">
+                        <label class="form-label small" for="dep-department">@T["Department"]</label>
+                        <select id="dep-department" name="departmentId" class="form-select form-select-sm">
+                            @foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-5" data-dep-for="CourseOffering">
+                        <label class="form-label small" for="dep-offering">@T["Course"]</label>
+                        <select id="dep-offering" name="offeringId" class="form-select form-select-sm">
+                            @foreach (var o in Model.Offerings) { <option value="@o.Id">@o.CourseCode @o.CourseTitle (@o.SemesterName)</option> }
+                        </select>
+                    </div>
+                    <div class="col-12"><button class="btn btn-sm btn-outline-primary">@T["Add deployment"]</button></div>
+                </form>
+                <script>
+                    (function () {
+                        // Show only the picker the chosen scope needs (both stay usable without script).
+                        var form = document.querySelector('[data-lti-deployment-form]');
+                        var scope = form.querySelector('#dep-scope');
+                        function sync() {
+                            form.querySelectorAll('[data-dep-for]').forEach(function (el) { el.hidden = el.getAttribute('data-dep-for') !== scope.value; });
+                        }
+                        scope.addEventListener('change', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
+        </div>
+    }
+}

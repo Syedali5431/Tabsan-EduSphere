@@ -1,0 +1,242 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AssignmentOptionsPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    var o = Model.Options;
+    ViewData["Title"] = $"Options — {Model.Title}";
+    var groups = Model.GroupSets.SelectMany(s => s.Groups.Select(g => (Set: s.Name, Group: g))).ToList();
+}
+
+@* Plan M8.2–M8.4 — availability window, group work, peer review, "Assign to" dates and the peer-review overview. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || o is null)
+{
+    <div class="border rounded p-3 bg-light">@T["This assignment could not be loaded."] <a asp-action="Assignments">@T["Back to assignments"]</a></div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+        <div class="me-auto">
+            <a asp-action="Assignments" asp-route-offeringId="@Model.OfferingId" asp-route-selectedAssignmentId="@Model.AssignmentId" class="small">@T["← Assignments"]</a>
+            <h2 class="h3 mb-1">@Model.Title</h2>
+            <p class="text-muted mb-0">@T.Format("Due {0} · out of {1}", AssignmentPolicyFormat.Show(o.DueDate), AssignmentPolicyFormat.Marks(Model.MaxMarks))</p>
+        </div>
+        <a asp-action="GradingWorkspace" asp-route-assignmentId="@Model.AssignmentId" class="btn btn-sm btn-outline-primary">@T["Grading workspace"]</a>
+        <a asp-action="AssignmentPolicies" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-secondary">@T["Late policy &amp; groups"]</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm mb-3" data-assignment-options>
+                <div class="card-body">
+                    <h3 class="h5">@T["Options"]</h3>
+                    <form asp-action="SaveAssignmentOptions" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="assignmentId" value="@Model.AssignmentId" />
+                        <fieldset class="mb-3">
+                            <legend class="h6">@T["When students can hand in"]</legend>
+                            <div class="row g-2">
+                                <div class="col-sm-6">
+                                    <label class="form-label small" for="ao-from">@T["Opens (UTC)"]</label>
+                                    <input class="form-control form-control-sm" id="ao-from" name="availableFrom" type="datetime-local" value="@AssignmentPolicyFormat.Input(o.AvailableFrom)" />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label small" for="ao-until">@T["Late work accepted until (UTC)"]</label>
+                                    <input class="form-control form-control-sm" id="ao-until" name="availableUntil" type="datetime-local" value="@AssignmentPolicyFormat.Input(o.AvailableUntil)" />
+                                </div>
+                            </div>
+                            <div class="form-text">@T["Leave “late work accepted until” empty to close at the due date. Work after the due date is late, and the course's late policy applies."]</div>
+                        </fieldset>
+
+                        <fieldset class="mb-3">
+                            <legend class="h6">@T["Group work"]</legend>
+                            <label class="form-label small" for="ao-set">@T["Group set"]</label>
+                            <select class="form-select form-select-sm" id="ao-set" name="groupSetId" disabled="@o.HasSubmissions">
+                                <option value="">@T["Individual work"]</option>
+                                @foreach (var s in Model.GroupSets) { <option value="@s.Id" selected="@(s.Id == o.GroupSetId)">@T.Format("{0} ({1} groups)", s.Name, s.Groups.Count)</option> }
+                            </select>
+                            @if (o.HasSubmissions)
+                            {
+                                <input type="hidden" name="groupSetId" value="@o.GroupSetId" />
+                                <div class="form-text">@T["Work has been handed in, so the grouping cannot change."]</div>
+                            }
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="ao-individual" name="gradeGroupIndividually" value="true" checked="@o.GradeGroupIndividually" />
+                                <input type="hidden" name="gradeGroupIndividually" value="false" />
+                                <label class="form-check-label small" for="ao-individual">@T["Grade each member separately (otherwise one grade for the group)"]</label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="mb-3">
+                            <legend class="h6">@T["Peer review"]</legend>
+                            <div class="row g-2">
+                                <div class="col-sm-5">
+                                    <label class="form-label small" for="ao-peer">@T["Reviews per student"]</label>
+                                    <input class="form-control form-control-sm" id="ao-peer" name="peerReviewCount" type="number" min="0" max="5" value="@o.PeerReviewCount" />
+                                </div>
+                                <div class="col-sm-7">
+                                    <label class="form-label small" for="ao-peer-due">@T["Reviews due (UTC)"]</label>
+                                    <input class="form-control form-control-sm" id="ao-peer-due" name="peerReviewDueDate" type="datetime-local" value="@AssignmentPolicyFormat.Input(o.PeerReviewDueDate)" />
+                                </div>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="ao-anon" name="peerReviewAnonymous" value="true" checked="@o.PeerReviewAnonymous" />
+                                <input type="hidden" name="peerReviewAnonymous" value="false" />
+                                <label class="form-check-label small" for="ao-anon">@T["Anonymous reviews"]</label>
+                            </div>
+                            <div class="form-text">@T["0 turns peer review off. Reviews are handed out automatically after the due date (or now, below)."]</div>
+                        </fieldset>
+                        <button class="btn btn-primary btn-sm">@T["Save options"]</button>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.Similarity is { } sim)
+            {
+                @* Plan M9: similarity checking for this assignment. *@
+                <div class="card border-0 shadow-sm mb-3" data-assignment-similarity>
+                    <div class="card-body">
+                        <h3 class="h5">@T["Similarity check"]</h3>
+                        <form asp-action="SaveAssignmentSimilarity" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="assignmentId" value="@Model.AssignmentId" />
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="sim-on" name="enabled" value="true" checked="@sim.Enabled" />
+                                <input type="hidden" name="enabled" value="false" />
+                                <label class="form-check-label" for="sim-on">@T["Check every handed-in attempt"]</label>
+                            </div>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" id="sim-students" name="visibleToStudents" value="true" checked="@sim.VisibleToStudents" />
+                                <input type="hidden" name="visibleToStudents" value="false" />
+                                <label class="form-check-label small" for="sim-students">@T["Show students their own score"]</label>
+                            </div>
+                            <div class="form-text mb-2">
+                                @T.Format("Checker: {0}.", (sim.Provider == "Copyleaks" ? "Copyleaks" : "built-in comparison"))
+                                @if (!sim.ProviderEnabled) { <strong>@T["Similarity checking is turned off or not set up for this institution."]</strong> }
+                            </div>
+                            <button class="btn btn-primary btn-sm">@T["Save"]</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm mb-3" data-overrides>
+                <div class="card-body">
+                    <h3 class="h5">@T["Assign to — different dates"]</h3>
+                    <p class="small text-muted">@T["Give one student (for example an extension) or one group their own dates. A student's own dates win over their group's."]</p>
+                    @if (Model.Overrides.Count == 0)
+                    {
+                        <p class="small text-muted" data-overrides-empty>@T["Everyone has the assignment's dates."]</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <caption class="visually-hidden">@T["Dates for particular students and groups"]</caption>
+                                <thead class="table-light text-nowrap"><tr><th scope="col">@T["For"]</th><th scope="col">@T["Dates"]</th><th scope="col"><span class="visually-hidden">@T["Remove"]</span></th></tr></thead>
+                                <tbody>
+                                    @foreach (var ov in Model.Overrides)
+                                    {
+                                        <tr data-override="@ov.TargetName">
+                                            <td>
+                                                <span class="badge bg-light text-dark border me-1">@ov.Target</span>@ov.TargetName
+                                                @if (!string.IsNullOrWhiteSpace(ov.Note)) { <div class="small text-muted">@ov.Note</div> }
+                                            </td>
+                                            <td class="small">
+                                                <div class="text-nowrap">@T.Format("Due {0}", AssignmentPolicyFormat.Show(ov.DueDate))</div>
+                                                @if (ov.AvailableFrom is not null) { <div class="text-nowrap text-muted">@T.Format("Opens {0}", AssignmentPolicyFormat.Show(ov.AvailableFrom))</div> }
+                                                @if (ov.AvailableUntil is not null) { <div class="text-nowrap text-muted">@T.Format("Late work until {0}", AssignmentPolicyFormat.Show(ov.AvailableUntil))</div> }
+                                            </td>
+                                            <td class="text-end">
+                                                <form asp-action="RemoveAssignmentOverride" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="assignmentId" value="@Model.AssignmentId" /><input type="hidden" name="overrideId" value="@ov.Id" />
+                                                    <button class="btn btn-link btn-sm p-0 text-danger" aria-label="Remove dates for @ov.TargetName">@T["Remove"]</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    <form asp-action="AddAssignmentOverride" method="post" class="row g-2 align-items-end">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="assignmentId" value="@Model.AssignmentId" />
+                        <div class="col-md-6">
+                            <label class="form-label small" for="ov-target">@T["For"]</label>
+                            <select class="form-select form-select-sm" id="ov-target" name="target" required>
+                                <option value="">@T["Choose…"]</option>
+                                <optgroup label="Students">
+                                    @foreach (var s in Model.Roster) { <option value="s:@s.StudentProfileId">@s.Name @(s.RegistrationNumber is null ? "" : $"({s.RegistrationNumber})")</option> }
+                                </optgroup>
+                                @if (groups.Count > 0)
+                                {
+                                    <optgroup label="Groups">
+                                        @foreach (var (set, g) in groups) { <option value="g:@g.Id">@g.Name — @set</option> }
+                                    </optgroup>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6"><label class="form-label small" for="ov-due">@T["Due (UTC)"]</label><input class="form-control form-control-sm" id="ov-due" name="dueDate" type="datetime-local" required /></div>
+                        <div class="col-md-6"><label class="form-label small" for="ov-from">@T["Opens (UTC, optional)"]</label><input class="form-control form-control-sm" id="ov-from" name="availableFrom" type="datetime-local" /></div>
+                        <div class="col-md-6"><label class="form-label small" for="ov-until">@T["Late work until (UTC, optional)"]</label><input class="form-control form-control-sm" id="ov-until" name="availableUntil" type="datetime-local" /></div>
+                        <div class="col-md-9"><label class="form-label small" for="ov-note">@T["Note"]</label><input class="form-control form-control-sm" id="ov-note" name="note" maxlength="300" placeholder="@T["e.g. medical extension"]" /></div>
+                        <div class="col-md-3"><button class="btn btn-primary btn-sm w-100">@T["Add dates"]</button></div>
+                    </form>
+                </div>
+            </div>
+
+            @if (o.PeerReviewCount > 0)
+            {
+                var pr = Model.PeerReviews;
+                <div class="card border-0 shadow-sm mb-3" data-peer-overview>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <h3 class="h5 mb-0 me-auto">@T["Peer reviews"]</h3>
+                            @if (pr is not null) { <span class="small text-muted">@T.Format("{0} of {1} done", pr.Completed, pr.Assigned)</span> }
+                            @if (pr is null || pr.Assigned == 0)
+                            {
+                                <form asp-action="AllocatePeerReviews" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="assignmentId" value="@Model.AssignmentId" />
+                                    <button class="btn btn-sm btn-outline-primary">@T["Assign reviews now"]</button>
+                                </form>
+                            }
+                        </div>
+                        @if (pr is null || pr.Reviews.Count == 0)
+                        {
+                            <p class="small text-muted mb-0">@T["No reviews assigned yet. They are assigned automatically after the due date, among the students who handed in work."]</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <caption class="visually-hidden">@T["Peer reviews"]</caption>
+                                    <thead class="table-light text-nowrap"><tr><th scope="col">@T["Reviewer"]</th><th scope="col">@T["Reviews"]</th><th scope="col">@T["Status"]</th><th scope="col" class="text-end">@T["Score"]</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var r in pr.Reviews)
+                                        {
+                                            <tr>
+                                                <td>@r.ReviewerLabel</td>
+                                                <td>@r.RevieweeLabel</td>
+                                                <td><span class="badge @(r.Status == "Completed" ? "bg-success" : "bg-warning text-dark")">@(r.Status == "Completed" ? T.Text("Done") : T.Text("To do"))</span></td>
+                                                <td class="text-end">@(r.Score is { } sc ? AssignmentPolicyFormat.Marks(sc) : "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

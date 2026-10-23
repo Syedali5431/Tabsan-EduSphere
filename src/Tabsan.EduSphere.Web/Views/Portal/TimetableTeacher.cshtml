@@ -1,17 +1,17 @@
 @model Tabsan.EduSphere.Web.Models.Portal.TimetableTeacherPageModel
 @{
-    ViewData["Title"] = "Teacher Timetable";
+    ViewData["Title"] = T.Text("Teacher Timetable");
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
     <div class="alert alert-warning">
-        API connection is not configured. Please set it on <a asp-action="Dashboard">Dashboard</a>.
+        @T["API connection is not configured. Please set it on"] <a asp-action="Dashboard">@T["Dashboard"]</a>.
     </div>
 }
 else
@@ -25,9 +25,9 @@ else
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Tenant</label>
-                        <select class="form-select" name="tenantId">
-                            <option value="">All tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" class="form-select" name="tenantId">
+                            <option value="">@T["All tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name (@t.Code)</option>
@@ -36,9 +36,9 @@ else
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select class="form-select" name="campusId">
-                            <option value="">All campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" class="form-select" name="campusId">
+                            <option value="">@T["All campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -49,9 +49,9 @@ else
                 else if (User.IsInRole("Admin"))
                 {
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Campus</label>
-                        <select class="form-select" name="campusId">
-                            <option value="">All campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" class="form-select" name="campusId">
+                            <option value="">@T["All campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name (@c.Code)</option>
@@ -63,9 +63,9 @@ else
                 @if (canManage)
                 {
                     <div class="col-12 col-md-3">
-                        <label class="form-label">Department</label>
-                        <select class="form-select" name="departmentId">
-                            <option value="">All departments</option>
+                        <label class="form-label">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" class="form-select" name="departmentId">
+                            <option value="">@T["All departments"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -74,9 +74,9 @@ else
                     </div>
 
                     <div class="col-12 col-md-3">
-                        <label class="form-label">Faculty</label>
-                        <select class="form-select" name="facultyUserId">
-                            <option value="">Select faculty</option>
+                        <label class="form-label">@T["Faculty"]</label>
+                        <select aria-label="@T["Faculty"]" class="form-select" name="facultyUserId">
+                            <option value="">@T["Select faculty"]</option>
                             @foreach (var f in Model.Faculty)
                             {
                                 <option value="@f.Id" selected="@(Model.SelectedFacultyUserId == f.Id ? "selected" : null)">@f.DisplayName</option>
@@ -88,12 +88,12 @@ else
                 <div class="col-12 col-md-2">
                     <div class="form-check mt-2">
                         <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) />
-                        <label class="form-check-label" for="includeInactive">Show deactivated</label>
+                        <label class="form-check-label" for="includeInactive">@T["Show deactivated"]</label>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                    <button type="submit" class="btn btn-primary w-100">@T["Apply"]</button>
                 </div>
             </form>
         </div>
@@ -101,11 +101,11 @@ else
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <h2 class="h5 mb-3">Assigned Classes</h2>
+            <h2 class="h5 mb-3">@T["Assigned Classes"]</h2>
 
             @if (Model.Entries.Count == 0)
             {
-                <p class="text-muted mb-0">No assigned timetable entries found.</p>
+                <p class="text-muted mb-0">@T["No assigned timetable entries found."]</p>
             }
             else
             {
@@ -113,18 +113,18 @@ else
                     <table class="table table-sm table-striped">
                         <thead>
                             <tr>
-                                <th>SR#</th>
-                                <th>Time</th>
-                                <th>Degree Name</th>
-                                <th>Semester</th>
-                                <th>Subject</th>
-                                <th>Building</th>
-                                <th>Room</th>
-                                <th>Title</th>
-                                <th>Status</th>
+                                <th>@T["SR#"]</th>
+                                <th>@T["Time"]</th>
+                                <th>@T["Degree Name"]</th>
+                                <th>@T["Semester"]</th>
+                                <th>@T["Subject"]</th>
+                                <th>@T["Building"]</th>
+                                <th>@T["Room"]</th>
+                                <th>@T["Title"]</th>
+                                <th>@T["Status"]</th>
                                 @if (canManage)
                                 {
-                                    <th>Actions</th>
+                                    <th>@T["Actions"]</th>
                                 }
                             </tr>
                         </thead>
@@ -142,7 +142,7 @@ else
                                     <td>@e.RoomNumber</td>
                                     <td>@e.TimetableTitle</td>
                                     <td>
-                                        <span class="badge @(e.IsActive ? "bg-success" : "bg-secondary")">@(e.IsActive ? "Active" : "Deactivated")</span>
+                                        <span class="badge @(e.IsActive ? "bg-success" : "bg-secondary")">@(e.IsActive ? T.Text("Active") : T.Text("Deactivated"))</span>
                                     </td>
                                     @if (canManage)
                                     {
@@ -157,7 +157,7 @@ else
                                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                     <input type="hidden" name="facultyUserId" value="@Model.SelectedFacultyUserId" />
                                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Deactivate</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@T["Deactivate"]</button>
                                                 </form>
                                             }
                                             else
@@ -170,7 +170,7 @@ else
                                                     <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                     <input type="hidden" name="facultyUserId" value="@Model.SelectedFacultyUserId" />
                                                     <input type="hidden" name="includeInactive" value="@Model.IncludeInactive" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">@T["Activate"]</button>
                                                 </form>
                                             }
                                         </td>

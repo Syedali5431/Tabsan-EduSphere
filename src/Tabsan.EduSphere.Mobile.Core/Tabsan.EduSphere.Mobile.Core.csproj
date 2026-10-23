@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Plan M12 — everything the EduSphere mobile app does that is not drawing screens: the API client (sign-in, refresh,
+    language, app version), single sign-on hand-off (PKCE), view models, app texts in English/Urdu/Arabic, crash reports
+    and the version policy. No MAUI dependency, so it builds and is tested with the rest of the solution; the MAUI app in
+    mobile/ references it.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Tabsan.EduSphere.Mobile.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -271,6 +271,10 @@ public static class DatabaseSeeder
             (KnownModuleKeys.BackupDr,           "Backup & Disaster Recovery", false),
             (KnownModuleKeys.DocumentManagement, "Document Management",       false),
             (KnownModuleKeys.Sso,                "Single Sign-On (SSO)",      false),
+            (KnownModuleKeys.Lti,                "External Tools (LTI 1.3)",  false),
+            (KnownModuleKeys.Outcomes,           "Learning Outcomes & Mastery", false),
+            (KnownModuleKeys.Similarity,         "Similarity / Plagiarism Checking", false),
+            (KnownModuleKeys.LiveClasses,        "Live Classes (BigBlueButton / Zoom / Teams)", false),
         };
 
         foreach (var (key, name, mandatory) in definitions)
@@ -417,6 +421,10 @@ public static class DatabaseSeeder
         var discussion       = await Upsert("discussion",        "Discussion",         "Threaded discussions for course collaboration and Q&A", 38);
         var announcements    = await Upsert("announcements",     "Announcements",      "Scoped institutional and course announcements", 39);
         var studyPlan        = await Upsert("study_plan",        "Study Plan",         "Plan student course pathways with advisor review", 40);
+        // Plan M6 — learning outcomes & mastery
+        var outcomesMenu     = await Upsert("outcomes",          "Learning Outcomes",  "Course and program outcomes, mastery gradebook and attainment reports", 41);
+        var myOutcomes       = await Upsert("my_outcomes",       "My Outcomes",        "Your mastery of course learning outcomes", 42);
+        var liveClasses      = await Upsert("live_classes",      "Live Classes",       "Scheduled online classes: join, recordings and attendance (Plan M10)", 43);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
         var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
@@ -456,6 +464,12 @@ public static class DatabaseSeeder
         var accreditation       = await Upsert("accreditation",        "Accreditation",        "Manage accreditation templates and exports", 11, parentId: systemSettings.Id, isSystemMenu: true);
         var advancedAudit       = await Upsert("advanced_audit",       "Advanced Audit",       "System audit logs and compliance tracking", 12, parentId: systemSettings.Id, isSystemMenu: true);
         var ssoSettings         = await Upsert("sso_settings",         "Single Sign-On",       "Configure SSO identity providers (Plan M1)", 13, parentId: systemSettings.Id, isSystemMenu: true);
+        var externalTools       = await Upsert("external_tools",       "External Tools",       "Register LTI 1.3 tools for courses (Plan M5)", 14, parentId: systemSettings.Id, isSystemMenu: true);
+        var similaritySettings  = await Upsert("similarity_settings",  "Similarity Checking",  "Choose the plagiarism checker (Plan M9)", 15, parentId: systemSettings.Id, isSystemMenu: true);
+        var liveClassSettings   = await Upsert("live_class_settings",  "Live Class Settings",  "Connect BigBlueButton, Zoom or Teams (Plan M10)", 16, parentId: systemSettings.Id, isSystemMenu: true);
+        var languageSettings    = await Upsert("language_settings",    "Language & Translations", "Default language and translation files (Plan M11)", 17, parentId: systemSettings.Id, isSystemMenu: true);
+        var xapiSettings        = await Upsert("xapi_settings",        "Learning Record Store", "xAPI credentials and statements (Plan M13)", 18, parentId: systemSettings.Id, isSystemMenu: true);
+        var apiTokens           = await Upsert("api_tokens",           "API Tokens",           "Personal access tokens for the REST API (Plan M14)", 19, parentId: systemSettings.Id, isSystemMenu: false);
 
         // Remove legacy Module Settings menu if present from older seeds.
         var legacyModuleSettings = await db.SidebarMenuItems
@@ -522,7 +536,12 @@ public static class DatabaseSeeder
             libraryConfig.Id,
             accreditation.Id,
             advancedAudit.Id,
-            ssoSettings.Id
+            ssoSettings.Id,
+            externalTools.Id,
+            similaritySettings.Id,
+            liveClassSettings.Id,
+            languageSettings.Id,
+            xapiSettings.Id
         })
         {
             EnsureRoleAccess(id, "Admin",   isAllowed: false);
@@ -597,6 +616,11 @@ public static class DatabaseSeeder
         EnsureRoleAccess(gradingConfig.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(gradingConfig.Id, "Student", isAllowed: false);
 
+        // Plan M14.3: API tokens for administrators (the API also checks ApiTokens:AllowedRoles).
+        EnsureRoleAccess(apiTokens.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(apiTokens.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(apiTokens.Id, "Student", isAllowed: false);
+
         EnsureRoleAccess(lmsManage.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(lmsManage.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(lmsManage.Id, "Student", isAllowed: false);
@@ -616,6 +640,18 @@ public static class DatabaseSeeder
         EnsureRoleAccess(studyPlan.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(studyPlan.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(studyPlan.Id, "Student", isAllowed: false); // Study Plan is Faculty/Admin only (commit 12ecfa8)
+
+        // Plan M6: staff manage outcomes and see mastery; students see their own.
+        EnsureRoleAccess(outcomesMenu.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(outcomesMenu.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(outcomesMenu.Id, "Student", isAllowed: false);
+        EnsureRoleAccess(myOutcomes.Id, "Admin",   isAllowed: false);
+        EnsureRoleAccess(myOutcomes.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(myOutcomes.Id, "Student", isAllowed: true);
+        // Plan M10: live classes — teachers schedule, students join.
+        EnsureRoleAccess(liveClasses.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(liveClasses.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(liveClasses.Id, "Student", isAllowed: true);
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
@@ -727,7 +763,12 @@ public static class DatabaseSeeder
             campusManagement.Id,
             libraryConfig.Id,
             accreditation.Id,
-            ssoSettings.Id
+            ssoSettings.Id,
+            externalTools.Id,
+            similaritySettings.Id,
+            liveClassSettings.Id,
+            languageSettings.Id,
+            xapiSettings.Id
         })
         {
             EnsureRoleAccess(id, "Finance", isAllowed: false);
@@ -746,6 +787,9 @@ public static class DatabaseSeeder
         EnsureRoleAccess(discussion.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(announcements.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(studyPlan.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(outcomesMenu.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(myOutcomes.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(liveClasses.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(prerequisites.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(gradebook.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(rubricManage.Id, "Finance", isAllowed: false);

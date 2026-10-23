@@ -14,6 +14,9 @@ public interface IRubricRepository
     Task<Rubric?> GetByAssignmentAsync(Guid assignmentId, CancellationToken ct = default);
     Task<Rubric?> GetByIdAsync(Guid rubricId, CancellationToken ct = default);
 
+    /// <summary>Plan M3 fix: the rubric (with criteria and levels) that owns a criterion.</summary>
+    Task<Rubric?> GetByCriterionAsync(Guid criterionId, CancellationToken ct = default);
+
     // Final-Touches Phase 16 Stage 16.2 — persist a complete rubric graph
     Task AddAsync(Rubric rubric, CancellationToken ct = default);
     void Update(Rubric rubric);

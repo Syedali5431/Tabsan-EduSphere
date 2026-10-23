@@ -148,6 +148,65 @@ public class ApplicationDbContext : DbContext
 
     /// <summary>Student submissions for assignments — permanent academic evidence.</summary>
     public DbSet<AssignmentSubmission> AssignmentSubmissions => Set<AssignmentSubmission>();
+    // Plan M3 — submission history, comments, annotations, moderated grading.
+    public DbSet<SubmissionAttempt> SubmissionAttempts => Set<SubmissionAttempt>();
+    public DbSet<SubmissionFile> SubmissionFiles => Set<SubmissionFile>();
+    public DbSet<SubmissionComment> SubmissionComments => Set<SubmissionComment>();
+    public DbSet<SubmissionAnnotation> SubmissionAnnotations => Set<SubmissionAnnotation>();
+    public DbSet<ProvisionalGrade> ProvisionalGrades => Set<ProvisionalGrade>();
+    // Plan M5 — LTI 1.3 platform.
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiTool> LtiTools => Set<Tabsan.EduSphere.Domain.Lti.LtiTool>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiToolDeployment> LtiToolDeployments => Set<Tabsan.EduSphere.Domain.Lti.LtiToolDeployment>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiResourceLink> LtiResourceLinks => Set<Tabsan.EduSphere.Domain.Lti.LtiResourceLink>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiLineItem> LtiLineItems => Set<Tabsan.EduSphere.Domain.Lti.LtiLineItem>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiScore> LtiScores => Set<Tabsan.EduSphere.Domain.Lti.LtiScore>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiLaunch> LtiLaunches => Set<Tabsan.EduSphere.Domain.Lti.LtiLaunch>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiUsedNonce> LtiUsedNonces => Set<Tabsan.EduSphere.Domain.Lti.LtiUsedNonce>();
+    public DbSet<Tabsan.EduSphere.Domain.Lti.LtiAccessToken> LtiAccessTokens => Set<Tabsan.EduSphere.Domain.Lti.LtiAccessToken>();
+
+    // Plan M6 — learning outcomes & mastery
+    public DbSet<Tabsan.EduSphere.Domain.Outcomes.Outcome> Outcomes => Set<Tabsan.EduSphere.Domain.Outcomes.Outcome>();
+    public DbSet<Tabsan.EduSphere.Domain.Outcomes.OutcomeRatingLevel> OutcomeRatingLevels => Set<Tabsan.EduSphere.Domain.Outcomes.OutcomeRatingLevel>();
+    public DbSet<Tabsan.EduSphere.Domain.Outcomes.OutcomeMapping> OutcomeMappings => Set<Tabsan.EduSphere.Domain.Outcomes.OutcomeMapping>();
+    public DbSet<Tabsan.EduSphere.Domain.Outcomes.OutcomeAlignment> OutcomeAlignments => Set<Tabsan.EduSphere.Domain.Outcomes.OutcomeAlignment>();
+    public DbSet<Tabsan.EduSphere.Domain.Outcomes.StudentOutcomeResult> StudentOutcomeResults => Set<Tabsan.EduSphere.Domain.Outcomes.StudentOutcomeResult>();
+
+    // Plan M7 — module items, progress and release conditions
+    public DbSet<Tabsan.EduSphere.Domain.Lms.ModuleItem> ModuleItems => Set<Tabsan.EduSphere.Domain.Lms.ModuleItem>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.ModuleItemProgress> ModuleItemProgress => Set<Tabsan.EduSphere.Domain.Lms.ModuleItemProgress>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.ModulePrerequisite> ModulePrerequisites => Set<Tabsan.EduSphere.Domain.Lms.ModulePrerequisite>();
+
+    // Plan M8 — late policy, overrides, student groups and peer review
+    public DbSet<LatePolicy> LatePolicies => Set<LatePolicy>();
+    public DbSet<AssignmentOverride> AssignmentOverrides => Set<AssignmentOverride>();
+    public DbSet<GroupSet> GroupSets => Set<GroupSet>();
+    public DbSet<StudentGroup> StudentGroups => Set<StudentGroup>();
+    public DbSet<StudentGroupMember> StudentGroupMembers => Set<StudentGroupMember>();
+    public DbSet<PeerReview> PeerReviews => Set<PeerReview>();
+
+    // Plan M9 — similarity checking
+    public DbSet<Tabsan.EduSphere.Domain.Similarity.SimilaritySetting> SimilaritySettings => Set<Tabsan.EduSphere.Domain.Similarity.SimilaritySetting>();
+    public DbSet<Tabsan.EduSphere.Domain.Similarity.SimilarityCheck> SimilarityChecks => Set<Tabsan.EduSphere.Domain.Similarity.SimilarityCheck>();
+    public DbSet<Tabsan.EduSphere.Domain.Similarity.SimilarityDocument> SimilarityDocuments => Set<Tabsan.EduSphere.Domain.Similarity.SimilarityDocument>();
+    public DbSet<Tabsan.EduSphere.Domain.Similarity.SimilarityFingerprint> SimilarityFingerprints => Set<Tabsan.EduSphere.Domain.Similarity.SimilarityFingerprint>();
+
+    // Plan M10 — live classes
+    public DbSet<Tabsan.EduSphere.Domain.LiveClasses.ConferenceSetting> ConferenceSettings => Set<Tabsan.EduSphere.Domain.LiveClasses.ConferenceSetting>();
+    public DbSet<Tabsan.EduSphere.Domain.LiveClasses.LiveSession> LiveSessions => Set<Tabsan.EduSphere.Domain.LiveClasses.LiveSession>();
+    public DbSet<Tabsan.EduSphere.Domain.LiveClasses.LiveSessionAttendance> LiveSessionAttendances => Set<Tabsan.EduSphere.Domain.LiveClasses.LiveSessionAttendance>();
+    // Plan M12 — mobile app
+    public DbSet<Tabsan.EduSphere.Domain.Mobile.MobileDevice> MobileDevices => Set<Tabsan.EduSphere.Domain.Mobile.MobileDevice>();
+    public DbSet<Tabsan.EduSphere.Domain.Mobile.MobileCrashReport> MobileCrashReports => Set<Tabsan.EduSphere.Domain.Mobile.MobileCrashReport>();
+    // Plan M14.3 — personal access tokens
+    public DbSet<Tabsan.EduSphere.Domain.Identity.ApiToken> ApiTokens => Set<Tabsan.EduSphere.Domain.Identity.ApiToken>();
+    // Plan M13 — SCORM packages and the xAPI statement store
+    public DbSet<Tabsan.EduSphere.Domain.Lms.ScormPackage> ScormPackages => Set<Tabsan.EduSphere.Domain.Lms.ScormPackage>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.ScormAttempt> ScormAttempts => Set<Tabsan.EduSphere.Domain.Lms.ScormAttempt>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.XapiCredential> XapiCredentials => Set<Tabsan.EduSphere.Domain.Lms.XapiCredential>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.XapiStatement> XapiStatements => Set<Tabsan.EduSphere.Domain.Lms.XapiStatement>();
+    // Plan M4.3 — Web Push.
+    public DbSet<Tabsan.EduSphere.Domain.Notifications.PushSubscription> PushSubscriptions => Set<Tabsan.EduSphere.Domain.Notifications.PushSubscription>();
+    public DbSet<Tabsan.EduSphere.Domain.Notifications.NotificationPreference> NotificationPreferences => Set<Tabsan.EduSphere.Domain.Notifications.NotificationPreference>();
 
     /// <summary>Published and draft result marks per student per course offering.</summary>
     public DbSet<Result> Results => Set<Result>();

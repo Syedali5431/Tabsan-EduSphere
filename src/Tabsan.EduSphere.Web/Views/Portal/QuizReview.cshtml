@@ -9,12 +9,12 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info" role="status">@Model.Message</div>
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
 }
 
 @if (r is null)
 {
-    <a asp-action="@(Model.IsFacultyView ? "QuizGrading" : "ViewQuizzes")" asp-route-quizId="@Model.QuizId">← Back</a>
+    <a asp-action="@(Model.IsFacultyView ? "QuizGrading" : "ViewQuizzes")" asp-route-quizId="@Model.QuizId">@T["← Back"]</a>
 }
 else
 {
@@ -23,27 +23,27 @@ else
             <div class="flex-grow-1">
                 @if (Model.IsFacultyView)
                 {
-                    <a asp-action="QuizGrading" asp-route-quizId="@r.QuizId" class="small">← Attempts &amp; grading</a>
+                    <a asp-action="QuizGrading" asp-route-quizId="@r.QuizId" class="small">@T["← Attempts &amp; grading"]</a>
                 }
                 else
                 {
-                    <a asp-action="TakeQuiz" asp-route-quizId="@r.QuizId" class="small">← Back to the quiz</a>
+                    <a asp-action="TakeQuiz" asp-route-quizId="@r.QuizId" class="small">@T["← Back to the quiz"]</a>
                 }
-                <h2 class="h4 mb-1 mt-1">@(Model.QuizTitle ?? "Quiz")</h2>
+                <h2 class="h4 mb-1 mt-1">@(Model.QuizTitle ?? T.Text("Quiz"))</h2>
                 <div class="small text-muted">
-                    Started @r.StartedAt.ToLocalTime().ToString("g")
-                    @if (r.FinishedAt.HasValue) { <span> · finished @r.FinishedAt.Value.ToLocalTime().ToString("g")</span> }
-                    · <span class="badge @(r.Status == "TimedOut" ? "bg-warning text-dark" : "bg-secondary")">@(r.Status == "TimedOut" ? "Submitted when time ran out" : r.Status)</span>
+                    @T.Format("Started {0}", r.StartedAt.ToLocalTime().ToString("g"))
+                    @if (r.FinishedAt.HasValue) { <span> @T.Format("· finished {0}", r.FinishedAt.Value.ToLocalTime().ToString("g"))</span> }
+                    · <span class="badge @(r.Status == "TimedOut" ? "bg-warning text-dark" : "bg-secondary")">@(r.Status == "TimedOut" ? T.Text("Submitted when time ran out") : r.Status)</span>
                 </div>
             </div>
             @if (r.TotalScore.HasValue || r.MaxScore > 0)
             {
                 <div class="text-end">
-                    <div class="small text-muted">Score</div>
+                    <div class="small text-muted">@T["Score"]</div>
                     <div class="fs-3 fw-semibold">@(r.TotalScore?.ToString("0.##") ?? "—")<span class="fs-6 text-muted"> / @r.MaxScore.ToString("0.##")</span></div>
                     @if (r.Items?.Any(i => i.PendingManualGrading) == true)
                     {
-                        <div class="small text-warning">Some answers are still being marked.</div>
+                        <div class="small text-warning">@T["Some answers are still being marked."]</div>
                     }
                 </div>
             }
@@ -53,7 +53,7 @@ else
     @if (r.Items is null)
     {
         <div class="p-3 rounded border bg-light mb-3">
-            @(r.ReviewVisibility == "None" ? "Your quiz has been submitted." : "Your answers are not shown for this quiz" + (r.ReviewVisibility == "ScoreOnly" ? "." : " yet."))
+            @(r.ReviewVisibility == "None" ? T.Text("Your quiz has been submitted.") : "Your answers are not shown for this quiz" + (r.ReviewVisibility == "ScoreOnly" ? "." : " yet."))
         </div>
     }
     else
@@ -69,15 +69,15 @@ else
             <section class="card shadow-sm mb-3 border-start border-4 @border">
                 <div class="card-body">
                     <div class="d-flex justify-content-between small text-muted mb-1">
-                        <span>Question @item.Order</span>
+                        <span>@T.Format("Question {0}", item.Order)</span>
                         <span>
-                            @if (item.PendingManualGrading) { <span class="badge bg-warning text-dark">Awaiting marking</span> }
+                            @if (item.PendingManualGrading) { <span class="badge bg-warning text-dark">@T["Awaiting marking"]</span> }
                             else { <span>@(item.MarksAwarded?.ToString("0.##") ?? "0") / @item.Marks.ToString("0.##")</span> }
                         </span>
                     </div>
                     <div class="fw-semibold mb-2" style="white-space: pre-wrap;">@q.Text</div>
 
-                    <div class="small text-muted">Answer</div>
+                    <div class="small text-muted">@T["Answer"]</div>
                     @switch (q.Type)
                     {
                         case "MultipleChoice":
@@ -96,7 +96,7 @@ else
                             <ul class="mb-2">
                                 @foreach (var p in q.MatchingPrompts ?? [])
                                 {
-                                    <li>@p.Text → <strong>@(matches is not null && matches.TryGetValue(p.Id, out var mv) && !string.IsNullOrEmpty(mv) ? mv : "(no answer)")</strong></li>
+                                    <li>@p.Text → <strong>@(matches is not null && matches.TryGetValue(p.Id, out var mv) && !string.IsNullOrEmpty(mv) ? mv : T.Text("(no answer)"))</strong></li>
                                 }
                             </ul>
                             break;
@@ -107,7 +107,7 @@ else
                             {
                                 <ol class="mb-2">@foreach (var id in order) { <li>@(byId.TryGetValue(id, out var t) ? t : id)</li> }</ol>
                             }
-                            else { <p class="mb-2">(no answer)</p> }
+                            else { <p class="mb-2">@T["(no answer)"]</p> }
                             break;
                         case "FillInBlank":
                             var blanks = QuizJson.Read<FillInBlankResponse>(saved?.ResponseJson)?.Blanks;
@@ -120,7 +120,7 @@ else
                             break;
                         case "Numeric":
                         case "Formula":
-                            <p class="mb-2"><strong>@(QuizJson.Read<NumericResponse>(saved?.ResponseJson)?.Value is { Length: > 0 } nv ? nv : "(no answer)")</strong></p>
+                            <p class="mb-2"><strong>@(QuizJson.Read<NumericResponse>(saved?.ResponseJson)?.Value is { Length: > 0 } nv ? nv : T.Text("(no answer)"))</strong></p>
                             break;
                         case "FileUpload":
                             if (saved?.FileName is { } fn)
@@ -133,20 +133,20 @@ else
                                     else { @fn }
                                 </p>
                             }
-                            else { <p class="mb-2">(no file)</p> }
+                            else { <p class="mb-2">@T["(no file)"]</p> }
                             break;
-                        default:
-                            <div class="p-2 bg-light rounded mb-2" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(saved?.TextResponse) ? "(no answer)" : saved!.TextResponse)</div>
+                        @T["default:"]
+                            <div class="p-2 bg-light rounded mb-2" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(saved?.TextResponse) ? T.Text("(no answer)") : saved!.TextResponse)</div>
                             break;
                     }
 
                     @if (!string.IsNullOrWhiteSpace(item.CorrectAnswer))
                     {
-                        <div class="small"><span class="text-success fw-semibold">Correct answer:</span> @item.CorrectAnswer</div>
+                        <div class="small"><span class="text-success fw-semibold">@T["Correct answer:"]</span> @item.CorrectAnswer</div>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.Feedback))
                     {
-                        <div class="small mt-1"><span class="fw-semibold">Feedback:</span> <span style="white-space: pre-wrap;">@item.Feedback</span></div>
+                        <div class="small mt-1"><span class="fw-semibold">@T["Feedback:"]</span> <span style="white-space: pre-wrap;">@item.Feedback</span></div>
                     }
 
                     @if (Model.IsFacultyView && answer is not null && manualTypes.Contains(q.Type))
@@ -156,14 +156,14 @@ else
                             <input type="hidden" name="quizId" value="@r.QuizId" />
                             <input type="hidden" name="answerId" value="@answer.AnswerId" />
                             <div class="col-4 col-md-2">
-                                <label class="form-label small" for="m-@answer.AnswerId">Marks</label>
+                                <label class="form-label small" for="m-@answer.AnswerId">@T["Marks"]</label>
                                 <input id="m-@answer.AnswerId" name="marksAwarded" type="number" step="0.25" min="0" max="@item.Marks" value="@item.MarksAwarded" class="form-control form-control-sm" required />
                             </div>
                             <div class="col-8 col-md-8">
-                                <label class="form-label small" for="fb-@answer.AnswerId">Feedback</label>
+                                <label class="form-label small" for="fb-@answer.AnswerId">@T["Feedback"]</label>
                                 <input id="fb-@answer.AnswerId" name="feedback" maxlength="2000" value="@item.Feedback" class="form-control form-control-sm" />
                             </div>
-                            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Save</button></div>
+                            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">@T["Save"]</button></div>
                         </form>
                     }
                 </div>

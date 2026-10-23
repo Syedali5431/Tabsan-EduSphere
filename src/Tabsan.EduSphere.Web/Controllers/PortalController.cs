@@ -58,6 +58,14 @@ public partial class PortalController : Controller
         [nameof(TakeQuiz)] = "quizzes",
         [nameof(TakeQuizAttempt)] = "quizzes",
         [nameof(QuizReview)] = "quizzes",
+        // Plan M3 grading workspace pages
+        [nameof(GradingWorkspace)] = "assignments",
+        [nameof(AssignmentSubmission)] = "assignments",
+        // Plan M8: late policy & groups, assignment options, the student's groups and peer reviews.
+        [nameof(AssignmentPolicies)] = "assignments",
+        [nameof(AssignmentOptions)] = "assignments",
+        [nameof(MyGroups)] = "assignments",
+        [nameof(PeerReview)] = "assignments",
         [nameof(Fyp)] = "fyp",
         [nameof(Helpdesk)] = "helpdesk",
         [nameof(Prerequisites)] = "prerequisites",
@@ -101,6 +109,52 @@ public partial class PortalController : Controller
         [nameof(SaveSsoSetting)] = "sso_settings",
         [nameof(TestSsoSetting)] = "sso_settings",
         [nameof(DeleteSsoSetting)] = "sso_settings",
+        // Plan M5 external tools (LTI 1.3)
+        [nameof(LtiTools)] = "external_tools",
+        // Plan M9: similarity checking settings; reports are assignment pages.
+        [nameof(SimilaritySettings)] = "similarity_settings",
+        [nameof(SimilarityReport)] = "assignments",
+        // Plan M10: live classes.
+        [nameof(LiveClasses)] = "live_classes",
+        [nameof(LiveSessionAttendance)] = "live_classes",
+        [nameof(LiveClassSettings)] = "live_class_settings",
+        // Plan M13: SCORM packages are course content; the xAPI store is a system setting.
+        [nameof(UploadScormPackage)] = "lms_manage",
+        [nameof(UpdateScormPackage)] = "lms_manage",
+        [nameof(RemoveScormPackage)] = "lms_manage",
+        [nameof(PreviewScorm)] = "lms_manage",
+        [nameof(ScormReport)] = "lms_manage",
+        [nameof(XapiSettings)] = "xapi_settings",
+        // Plan M14.3: personal access tokens.
+        [nameof(ApiTokens)] = "api_tokens",
+        [nameof(CreateApiToken)] = "api_tokens",
+        [nameof(RevokeApiToken)] = "api_tokens",
+        [nameof(CreateXapiCredential)] = "xapi_settings",
+        [nameof(DeactivateXapiCredential)] = "xapi_settings",
+        [nameof(LanguageSettings)] = "language_settings",
+        [nameof(ExportTranslations)] = "language_settings",
+        [nameof(ImportTranslations)] = "language_settings",
+        [nameof(SaveDefaultLanguage)] = "language_settings",
+        [nameof(SaveLtiTool)] = "external_tools",
+        [nameof(SetLtiToolActive)] = "external_tools",
+        [nameof(AddLtiDeployment)] = "external_tools",
+        [nameof(SetLtiDeploymentActive)] = "external_tools",
+        [nameof(RotateLtiKeys)] = "external_tools",
+        // Plan M6 learning outcomes & mastery
+        [nameof(Outcomes)] = "outcomes",
+        [nameof(SaveOutcome)] = "outcomes",
+        [nameof(SetOutcomeActive)] = "outcomes",
+        [nameof(SaveOutcomeMappings)] = "outcomes",
+        [nameof(ImportOutcomes)] = "outcomes",
+        [nameof(OutcomeTemplate)] = "outcomes",
+        [nameof(OutcomeMastery)] = "outcomes",
+        [nameof(OutcomeMasteryExport)] = "outcomes",
+        [nameof(RecalculateOutcomes)] = "outcomes",
+        [nameof(OutcomeAttainment)] = "outcomes",
+        [nameof(OutcomeAttainmentExport)] = "outcomes",
+        [nameof(MyOutcomes)] = "my_outcomes",
+        // Plan M7 module progress report
+        [nameof(ModuleProgress)] = "lms_manage",
         [nameof(InstitutionPolicy)] = "institution_policy",
         [nameof(AuditLogs)] = "advanced_audit"
     };
@@ -4872,52 +4926,28 @@ public partial class PortalController : Controller
     public async Task<IActionResult> SubmitAssignment(
         Guid assignmentId, Guid? offeringId, string? semesterName, string? textContent, IFormFile? submissionFile, CancellationToken ct)
     {
+        // Plan M3: files go to the API's protected storage (never the portal's public wwwroot) and every
+        // submission is recorded as an attempt; the API enforces type, size and attempt limits.
         if (_api.IsConnected())
         {
             try
             {
-                string? fileUrl = null;
-
+                var parts = new List<UploadPart>();
                 if (submissionFile is { Length: > 0 })
                 {
-                    // Validate before writing to disk — size, extension, and MIME check
-                    const long maxSubmissionBytes = 5 * 1024 * 1024;
-                    var allowedSubmissionExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                        { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
-
-                    if (submissionFile.Length > maxSubmissionBytes)
-                    {
-                        TempData["PortalMessage"] = "File exceeds the maximum allowed size of 5 MB.";
-                        return RedirectToAction(nameof(Assignments), new { offeringId, semesterName });
-                    }
-
-                    var submissionExt = Path.GetExtension(submissionFile.FileName);
-                    if (string.IsNullOrEmpty(submissionExt) || !allowedSubmissionExts.Contains(submissionExt))
-                    {
-                        TempData["PortalMessage"] = $"File type '{submissionExt}' is not permitted. Allowed: .pdf, .jpg, .jpeg, .png, .doc, .docx";
-                        return RedirectToAction(nameof(Assignments), new { offeringId, semesterName });
-                    }
-
-                    var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "assignment-submissions");
-                    Directory.CreateDirectory(uploadsRoot);
-
-                    var fileName = $"{Guid.NewGuid()}{submissionExt}";
-                    var physicalPath = Path.Combine(uploadsRoot, fileName);
-
-                    await using var stream = System.IO.File.Create(physicalPath);
-                    await submissionFile.CopyToAsync(stream, ct);
-
-                    fileUrl = $"/uploads/assignment-submissions/{fileName}";
+                    using var buffer = new MemoryStream();
+                    await submissionFile.CopyToAsync(buffer, ct);
+                    parts.Add(new UploadPart(Path.GetFileName(submissionFile.FileName), submissionFile.ContentType, buffer.ToArray()));
                 }
 
-                if (string.IsNullOrWhiteSpace(fileUrl) && string.IsNullOrWhiteSpace(textContent))
+                if (parts.Count == 0 && string.IsNullOrWhiteSpace(textContent))
                 {
                     TempData["PortalMessage"] = "Attach a file or add submission text before submitting.";
                     return RedirectToAction(nameof(Assignments), new { offeringId, semesterName });
                 }
 
-                await _api.SubmitAssignmentAsync(assignmentId, fileUrl, textContent, ct);
-                TempData["PortalMessage"] = "Assignment submitted for faculty review.";
+                var result = await _api.SubmitAssignmentWithFilesAsync(assignmentId, textContent, parts, ct);
+                TempData["PortalMessage"] = result.Ok ? "Assignment submitted for faculty review." : $"Error: {result.Message ?? "the submission was not accepted."}";
             }
             catch (Exception ex) { TempData["PortalMessage"] = $"Error: {ex.Message}"; }
         }
@@ -11646,6 +11676,15 @@ public partial class PortalController : Controller
                     DurationSeconds = v.DurationSeconds
                 }).ToList()
             }).ToList();
+
+            // Plan M7: students see items, progress and locks.
+            if (isStudent)
+            {
+                var progress = await _api.ModuleSendAsync(HttpMethod.Get, $"offerings/{offeringId}/my-modules", null, ct);
+                if (progress.Ok)
+                    model.Progress = System.Text.Json.JsonSerializer.Deserialize<Tabsan.EduSphere.Application.Lms.StudentModulesResponse>(progress.Body,
+                        new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            }
         }
         catch (Exception ex) { ViewData["Error"] = ex.Message; }
         return View(model);
@@ -11718,6 +11757,13 @@ public partial class PortalController : Controller
                     DurationSeconds = v.DurationSeconds
                 }).ToList()
             }).ToList();
+
+            // Plan M7: module items, release settings and what they can point to.
+            var json = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+            var structure = await _api.ModuleSendAsync(HttpMethod.Get, $"offerings/{offeringId}/structure", null, ct);
+            if (structure.Ok) model.Structure = System.Text.Json.JsonSerializer.Deserialize<Tabsan.EduSphere.Application.Lms.ModuleStructureResponse>(structure.Body, json);
+            var linkable = await _api.ModuleSendAsync(HttpMethod.Get, $"offerings/{offeringId}/linkable", null, ct);
+            if (linkable.Ok) model.Linkables = System.Text.Json.JsonSerializer.Deserialize<List<Tabsan.EduSphere.Application.Lms.LinkableResponse>>(linkable.Body, json) ?? new();
         }
         catch (Exception ex) { model.ErrorMessage = ex.Message; }
         return View(model);
@@ -12270,21 +12316,34 @@ public partial class PortalController : Controller
                 IsClosed = t.IsClosed, IsSolved = t.IsSolved,
                 ResolvedByName = t.ResolvedByName, ResolvedAt = t.ResolvedAt,
                 TicketNumber = t.TicketNumber,
-                ReplyCount = t.ReplyCount, CreatedAt = t.CreatedAt
+                ReplyCount = t.ReplyCount, CreatedAt = t.CreatedAt,
+                GroupId = t.GroupId
             }).ToList();
+
+            // Plan M8.3: group discussions — the groups this user can post to, and names for the badges.
+            try
+            {
+                model.Groups = canModerate
+                    ? (await _api.GetGroupSetsAsync(model.OfferingId, ct)).SelectMany(s => s.Groups.Select(g => (g.Id, $"{g.Name} ({s.Name})"))).ToList()
+                    : (await _api.GetMyGroupsAsync(model.OfferingId, ct)).Where(s => s.Group is not null).Select(s => (s.Group!.Id, $"{s.Group.Name} ({s.GroupSetName})")).ToList();
+            }
+            catch (Exception) { model.Groups = new(); }
+            var groupNames = model.Groups.ToDictionary(g => g.Id, g => g.Name);
+            foreach (var t in model.Threads.Where(t => t.GroupId is not null))
+                t.GroupName = groupNames.TryGetValue(t.GroupId!.Value, out var name) ? name : "Group";
         }
         catch (Exception ex) { model.ErrorMessage = ex.Message; }
         return View(model);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateDiscussionThread(Guid offeringId, string title, CancellationToken ct)
+    public async Task<IActionResult> CreateDiscussionThread(Guid offeringId, string title, Guid? groupId, CancellationToken ct)
     {
         if (_api.IsConnected())
         {
             try
             {
-                await _api.CreateDiscussionThreadAsync(offeringId, Guid.Empty, title, ct);
+                await _api.CreateDiscussionThreadAsync(offeringId, Guid.Empty, title, ct, groupId == Guid.Empty ? null : groupId);
                 TempData["SuccessMessage"] = "Thread created.";
             }
             catch (Exception ex) { TempData["ErrorMessage"] = ex.Message; }

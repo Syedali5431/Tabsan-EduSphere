@@ -1,0 +1,102 @@
+@model Tabsan.EduSphere.Web.Models.Portal.XapiSettingsPageModel
+@{
+    ViewData["Title"] = T.Text("Learning Record Store (xAPI)");
+}
+@* Plan M13.2 — credentials for xAPI activity providers and the latest statements. *@
+<div class="container-fluid py-3">
+    <h1 class="h4">@T["Learning Record Store (xAPI)"]</h1>
+    <p class="text-muted">@T["Activities that report with xAPI (Tin Can) send their statements here. Create credentials for each activity provider and enter the endpoint, key and secret in it."]</p>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-warning">@T.Text(Model.Message)</div>
+    }
+    @if (Model.Created is { } created)
+    {
+        <div class="alert alert-success">
+            <p class="mb-2 fw-semibold">@T["Credentials created. Copy the secret now — it is not shown again."]</p>
+            <dl class="row small mb-0">
+                <dt class="col-sm-2">@T["Endpoint"]</dt><dd class="col-sm-10"><code dir="ltr">@Model.Endpoint</code></dd>
+                <dt class="col-sm-2">@T["Key"]</dt><dd class="col-sm-10"><code dir="ltr">@created.Credential.Key</code></dd>
+                <dt class="col-sm-2">@T["Secret"]</dt><dd class="col-sm-10"><code dir="ltr">@created.Secret</code></dd>
+            </dl>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h5">@T["Credentials"]</h2>
+            <p class="small text-muted">@T.Format("Endpoint: {0} (HTTP Basic: key and secret; xAPI 1.0.3).", Model.Endpoint)</p>
+            <form asp-action="CreateXapiCredential" method="post" class="row g-2 mb-3">
+                @Html.AntiForgeryToken()
+                <div class="col-md-6"><label class="form-label small" for="xapi-name">@T["Name"]</label><input id="xapi-name" name="name" class="form-control form-control-sm" maxlength="200" required placeholder="@T["e.g. Safety training (Articulate)"]" /></div>
+                <div class="col-md-3 align-self-end"><button class="btn btn-sm btn-primary">@T["Create credentials"]</button></div>
+            </form>
+            @if (Model.Credentials.Count == 0)
+            {
+                <p class="small text-muted mb-0">@T["No credentials yet."]</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th scope="col">@T["Name"]</th><th scope="col">@T["Key"]</th><th scope="col">@T["Created"]</th><th scope="col">@T["Last used"]</th><th scope="col">@T["Status"]</th><th scope="col"></th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.Credentials)
+                            {
+                                <tr>
+                                    <td>@c.Name</td>
+                                    <td><code dir="ltr">@c.Key</code></td>
+                                    <td>@c.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                                    <td>@(c.LastUsedAt is { } u ? u.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "—")</td>
+                                    <td>@(c.IsActive ? T.Text("Active") : T.Text("Switched off"))</td>
+                                    <td>
+                                        @if (c.IsActive)
+                                        {
+                                            <form asp-action="DeactivateXapiCredential" method="post" onsubmit="return confirm('@T.Js("Switch these credentials off? The activity can no longer send statements.")')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <button class="btn btn-sm btn-outline-danger">@T["Switch off"]</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="h5">@T["Latest statements"]</h2>
+            @if (Model.Recent.Count == 0)
+            {
+                <p class="small text-muted mb-0">@T["No statements received yet."]</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0 small">
+                        <thead><tr><th scope="col">@T["When"]</th><th scope="col">@T["Actor"]</th><th scope="col">@T["Verb"]</th><th scope="col">@T["Activity"]</th><th scope="col">@T["Result"]</th><th scope="col">@T["Credentials"]</th></tr></thead>
+                        <tbody>
+                            @foreach (var s in Model.Recent)
+                            {
+                                <tr class="@(s.Voided ? "text-decoration-line-through text-muted" : "")">
+                                    <td>@s.Timestamp.ToLocalTime().ToString("dd MMM HH:mm")</td>
+                                    <td dir="ltr">@s.Actor</td>
+                                    <td dir="ltr">@s.Verb</td>
+                                    <td dir="ltr" class="text-break">@s.Object</td>
+                                    <td>@(s.ScoreScaled is { } sc ? (sc * 100).ToString("0.#") + "%" : "")@(s.Success is { } ok ? " " + (ok ? T.Text("Passed") : T.Text("Failed")) : "")@(s.Completion == true ? " " + T.Text("Completed") : "")</td>
+                                    <td>@s.Credential</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

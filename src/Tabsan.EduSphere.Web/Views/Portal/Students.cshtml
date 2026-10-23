@@ -1,14 +1,14 @@
 @model Tabsan.EduSphere.Web.Models.Portal.StudentsPageModel
-@{ ViewData["Title"] = "Students"; }
+@{ ViewData["Title"] = T.Text("Students"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-danger">@Model.Message</div>
+    <div class="alert alert-danger">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -16,9 +16,9 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Student directory</span>
-                    <h2 class="h5 mb-1">Filter and view students</h2>
-                    <p class="text-muted mb-0">Narrow by department and review student lifecycle status in one view.</p>
+                    <span class="section-kicker">@T["Student directory"]</span>
+                    <h2 class="h5 mb-1">@T["Filter and view students"]</h2>
+                    <p class="text-muted mb-0">@T["Narrow by department and review student lifecycle status in one view."]</p>
                 </div>
             </div>
             <form method="get" asp-action="Students" class="row g-2 align-items-end filter-toolbar"
@@ -26,11 +26,11 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-2">
-                            <label class="form-label">Institute</label>
+                            <label class="form-label">@T["Institute"]</label>
                             @if (Model.AvailableInstitutionTypes?.Count > 1)
                             {
-                                <select name="institutionType" class="form-select" onchange="this.form.submit()">
-                                    <option value="">All</option>
+                                <select aria-label="@T["Institute"]" name="institutionType" class="form-select" onchange="this.form.submit()">
+                                    <option value="">@T["All"]</option>
                                     @foreach (var it in Model.AvailableInstitutionTypes)
                                     {
                                         <option value="@it.Value" selected="@(Model.SelectedInstitutionType == it.Value ? "selected" : null)">@it.Label</option>
@@ -39,13 +39,13 @@ else
                             }
                             else
                             {
-                                <select class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? "All")</option></select>
+                                <select aria-label="@T["Institute"]" class="form-select" disabled><option>@(Model.AvailableInstitutionTypes?.FirstOrDefault()?.Label ?? T.Text("All"))</option></select>
                             }
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var t in Model.Tenants)
                                 {
                                     <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id)">@t.Name</option>
@@ -53,9 +53,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -67,9 +67,9 @@ else
                     {
                         <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                         <div class="col-md-2">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var c in Model.Campuses)
                                 {
                                     <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id)">@c.Name</option>
@@ -78,9 +78,9 @@ else
                         </div>
                     }
                 <div class="col-md-4">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Departments</option>
+                    <label class="form-label">@T["Department"]</label>
+                    <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["All Departments"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -94,7 +94,7 @@ else
     <section class="page-section-card card border-0 shadow-sm">
         <div class="card-body">
             <div class="section-head mb-3">
-                <h2 class="h5 mb-0">Student List
+                <h2 class="h5 mb-0">@T["Student List"]
                     <span class="badge bg-secondary ms-2">@Model.Students.Count</span>
                 </h2>
             </div>
@@ -102,8 +102,8 @@ else
             @if (Model.Students.Count == 0)
             {
                 <div class="empty-state-card">
-                    <h3>No students found</h3>
-                    <p class="text-muted mb-0">Try selecting a different department.</p>
+                    <h3>@T["No students found"]</h3>
+                    <p class="text-muted mb-0">@T["Try selecting a different department."]</p>
                 </div>
             }
             else
@@ -112,12 +112,12 @@ else
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Reg. No.</th>
-                                <th>Full Name</th>
-                                <th>Department</th>
-                                <th>Program</th>
-                                <th>Level</th>
-                                <th>Status</th>
+                                <th>@T["Reg. No."]</th>
+                                <th>@T["Full Name"]</th>
+                                <th>@T["Department"]</th>
+                                <th>@T["Program"]</th>
+                                <th>@T["Level"]</th>
+                                <th>@T["Status"]</th>
                             </tr>
                         </thead>
                         <tbody>

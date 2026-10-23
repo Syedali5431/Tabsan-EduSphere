@@ -1,0 +1,169 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LiveClassesPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("Live Classes");
+    var editing = Model.EditingId is { } eid ? Model.Sessions.FirstOrDefault(s => s.Id == eid) : null;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+@* Plan M10 — a course's live classes: schedule (ad hoc or from the timetable), join, calendar file, recordings, attendance. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Live Classes"]</h2>
+        <p class="text-muted mb-0">@(Model.IsStaff ? T.Text("Schedule online classes; students are notified, join from their dashboard, and attendance can be marked from who joined.") : T.Text("Your course's online classes. Joining opens shortly before the start."))</p>
+    </div>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border rounded p-3 bg-light" data-module-off>@T["Live classes are not part of your licence."]</div>
+}
+else
+{
+    <form method="get" asp-action="LiveClasses" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label small" for="lc-offering">@T["Course"]</label>
+            <select id="lc-offering" name="offeringId" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var o in Model.Offerings) { <option value="@o.Id" selected="@(o.Id == Model.OfferingId)">@o.Label</option> }
+            </select>
+        </div>
+        <noscript><div class="col-md-2"><button class="btn btn-sm btn-outline-secondary">@T["Show"]</button></div></noscript>
+    </form>
+
+    @if (Model.OfferingId == Guid.Empty)
+    {
+        <div class="border rounded p-3 bg-light">@(Model.IsStaff ? T.Text("You have no course offerings.") : T.Text("You are not enrolled in any course."))</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="@(Model.IsStaff ? "col-xl-7" : "col-12")">
+                <div class="card border-0 shadow-sm" data-live-sessions>
+                    <div class="card-body">
+                        <h3 class="h5">@T["Classes"]</h3>
+                        @if (Model.Sessions.Count == 0)
+                        {
+                            <p class="small text-muted mb-0" data-no-sessions>@T["No live classes yet."]</p>
+                        }
+                        <ul class="list-group list-group-flush">
+                            @foreach (var s in Model.Sessions.OrderBy(s => s.State == "Ended" || s.State == "Cancelled").ThenBy(s => s.StartsAt))
+                            {
+                                <li class="list-group-item px-0" data-session="@s.Title">
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <div class="me-auto">
+                                            <div class="fw-semibold">@s.Title <span class="badge @LiveFormat.StateBadge(s.State) ms-1">@s.State</span></div>
+                                            <div class="small text-muted">@LiveFormat.When(s) · @s.Provider @(Model.IsStaff && s.AutoAttendance ? T.Text(" · automatic attendance") : "")</div>
+                                            @if (!string.IsNullOrWhiteSpace(s.Description)) { <div class="small">@s.Description</div> }
+                                        </div>
+                                        @if (s.CanJoin)
+                                        {
+                                            <form asp-action="JoinLiveSession" method="post" target="_blank" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="sessionId" value="@s.Id" /><input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                <button class="btn btn-sm btn-success" aria-label="Join @s.Title">@(Model.IsStaff ? T.Text("Start / join") : T.Text("Join"))</button>
+                                            </form>
+                                        }
+                                        @if (s.State != "Cancelled" && s.State != "Ended")
+                                        {
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="LiveSessionCalendar" asp-route-sessionId="@s.Id" aria-label="Add @s.Title to my calendar">@T["Add to calendar"]</a>
+                                        }
+                                        @if (s.RecordingUrl is { } rec) { <a class="btn btn-sm btn-outline-primary" href="@rec" target="_blank" rel="noopener noreferrer">@T["Recording"]</a> }
+                                        @if (Model.IsStaff)
+                                        {
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="LiveSessionAttendance" asp-route-id="@s.Id" asp-route-offeringId="@Model.OfferingId">@T.Format("Attendance ({0})", s.Joined)</a>
+                                            @if (s.State == "Upcoming" || s.State == "Live")
+                                            {
+                                                <a class="btn btn-sm btn-outline-secondary" asp-action="LiveClasses" asp-route-offeringId="@Model.OfferingId" asp-route-edit="@s.Id">@T["Edit"]</a>
+                                                <form asp-action="CancelLiveSession" method="post" class="d-inline" onsubmit="return confirm('@T.Js("Cancel this class? Students will be told.")');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="sessionId" value="@s.Id" /><input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                                    <button class="btn btn-sm btn-outline-danger">@T["Cancel"]</button>
+                                                </form>
+                                            }
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.IsStaff)
+            {
+                <div class="col-xl-5">
+                    <div class="card border-0 shadow-sm mb-3" data-schedule-form>
+                        <div class="card-body">
+                            <h3 class="h5">@(editing is null ? T.Text("Schedule a class") : $"Edit “{editing.Title}”")</h3>
+                            <form asp-action="@(editing is null ? "ScheduleLiveSession" : "UpdateLiveSession")" method="post" class="row g-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                @if (editing is not null) { <input type="hidden" name="sessionId" value="@editing.Id" /> }
+                                <div class="col-12"><label class="form-label small" for="ls-title">@T["Title"]</label><input class="form-control form-control-sm" id="ls-title" name="title" maxlength="200" required value="@editing?.Title" /></div>
+                                <div class="col-md-7"><label class="form-label small" for="ls-start">@T["Starts (UTC)"]</label><input class="form-control form-control-sm" id="ls-start" name="startsAt" type="datetime-local" required value="@AssignmentPolicyFormat.Input(editing?.StartsAt)" /></div>
+                                <div class="col-md-5"><label class="form-label small" for="ls-duration">@T["Minutes"]</label><input class="form-control form-control-sm" id="ls-duration" name="durationMinutes" type="number" min="5" max="600" value="@(editing?.DurationMinutes ?? 60)" /></div>
+                                <div class="col-12"><label class="form-label small" for="ls-desc">@T["Description (optional)"]</label><textarea class="form-control form-control-sm" id="ls-desc" name="description" rows="2" maxlength="2000">@editing?.Description</textarea></div>
+                                <div class="col-12">
+                                    <label class="form-label small" for="ls-url">@T["Meeting link (optional)"]</label>
+                                    <input class="form-control form-control-sm" id="ls-url" name="meetingUrl" type="url" maxlength="2000" placeholder="https://… — leave empty to use the institution's conferencing service" />
+                                </div>
+                                <div class="col-md-7 form-check ms-2">
+                                    <input class="form-check-input" type="checkbox" id="ls-auto" name="autoAttendance" value="true" checked="@(editing?.AutoAttendance ?? true)" />
+                                    <input type="hidden" name="autoAttendance" value="false" />
+                                    <label class="form-check-label small" for="ls-auto">@T["Mark attendance from who joined"]</label>
+                                </div>
+                                <div class="col-md-4"><label class="form-label small" for="ls-min">@T["Minimum minutes"]</label><input class="form-control form-control-sm" id="ls-min" name="minimumMinutes" type="number" min="0" max="600" value="@(editing?.MinimumMinutes ?? 0)" /></div>
+                                <div class="col-12 d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm">@(editing is null ? T.Text("Schedule") : T.Text("Save"))</button>
+                                    @if (editing is not null) { <a class="btn btn-outline-secondary btn-sm" asp-action="LiveClasses" asp-route-offeringId="@Model.OfferingId">@T["Cancel editing"]</a> }
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm" data-timetable-form>
+                        <div class="card-body">
+                            <h3 class="h5">@T["From the timetable"]</h3>
+                            @if (Model.Slots.Count == 0)
+                            {
+                                <p class="small text-muted mb-0">@T["This course has no timetable slots in its semester."]</p>
+                            }
+                            else
+                            {
+                                <form asp-action="ScheduleLiveFromTimetable" method="post" class="row g-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                                    <div class="col-md-8">
+                                        <label class="form-label small" for="lt-slot">@T["Slot"]</label>
+                                        <select class="form-select form-select-sm" id="lt-slot" name="entryId">
+                                            @foreach (var slot in Model.Slots) { <option value="@slot.EntryId">@T.Format("{0} {1}–{2} UTC · {3} {4}", slot.Day, slot.Start, slot.End, slot.SubjectName, (slot.RoomNumber is null ? "" : $"(room {slot.RoomNumber})"))</option> }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4"><label class="form-label small" for="lt-weeks">@T["Weeks"]</label><input class="form-control form-control-sm" id="lt-weeks" name="weeks" type="number" min="1" max="20" value="4" /></div>
+                                    <div class="col-12"><label class="form-label small" for="lt-url">@T["Meeting link (optional)"]</label><input class="form-control form-control-sm" id="lt-url" name="meetingUrl" type="url" maxlength="2000" /></div>
+                                    <div class="col-md-7 form-check ms-2">
+                                        <input class="form-check-input" type="checkbox" id="lt-auto" name="autoAttendance" value="true" checked="checked" />
+                                        <input type="hidden" name="autoAttendance" value="false" />
+                                        <label class="form-check-label small" for="lt-auto">@T["Mark attendance from who joined"]</label>
+                                    </div>
+                                    <div class="col-md-4"><label class="form-label small" for="lt-min">@T["Minimum minutes"]</label><input class="form-control form-control-sm" id="lt-min" name="minimumMinutes" type="number" min="0" max="600" value="0" /></div>
+                                    <div class="col-12"><button class="btn btn-outline-primary btn-sm">@T["Schedule weeks"]</button></div>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}

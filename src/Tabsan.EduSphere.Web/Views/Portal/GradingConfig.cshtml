@@ -1,7 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.GradingConfigPageModel
 @{
-    ViewData["Title"]     = "Course Grading Configuration";
-    ViewData["PageTitle"] = "Grading Configuration";
+    ViewData["Title"]     = T.Text("Course Grading Configuration");
+    ViewData["PageTitle"] = T.Text("Grading Configuration");
     ViewData["ActivePage"] = "grading_config";
 }
 
@@ -9,57 +9,57 @@
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">API is not available. Grading configuration cannot be managed offline.</div>
+    <div class="alert alert-warning">@T["API is not available. Grading configuration cannot be managed offline."]</div>
     return;
 }
 
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success alert-dismissible fade show">
-        @Model.SuccessMessage
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.SuccessMessage)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        @Model.ErrorMessage
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        @T.Text(Model.ErrorMessage)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <h6 class="card-title mb-3">Select Scope</h6>
+        <h6 class="card-title mb-3">@T["Select Scope"]</h6>
         <form method="get" class="row g-2 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">Institute</label>
-                <select name="institutionType" class="form-select" onchange="this.form.submit()">
+                <label class="form-label">@T["Institute"]</label>
+                <select aria-label="@T["Institute"]" name="institutionType" class="form-select" onchange="this.form.submit()">
                     @if (Model.SelectedInstitutionType == 1)
                     {
-                        <option value="1" selected>School</option>
+                        <option value="1" selected>@T["School"]</option>
                     }
                     else
                     {
-                        <option value="1">School</option>
+                        <option value="1">@T["School"]</option>
                     }
 
                     @if (Model.SelectedInstitutionType == 2)
                     {
-                        <option value="2" selected>College</option>
+                        <option value="2" selected>@T["College"]</option>
                     }
                     else
                     {
-                        <option value="2">College</option>
+                        <option value="2">@T["College"]</option>
                     }
 
                     @if (Model.SelectedInstitutionType == 0)
                     {
-                        <option value="0" selected>University</option>
+                        <option value="0" selected>@T["University"]</option>
                     }
                     else
                     {
-                        <option value="0">University</option>
+                        <option value="0">@T["University"]</option>
                     }
                 </select>
             </div>
@@ -67,9 +67,9 @@
             @if (Model.CanSelectTenantCampus)
             {
                 <div class="col-md-3">
-                    <label class="form-label">Tenant</label>
-                    <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Select tenant --</option>
+                    <label class="form-label">@T["Tenant"]</label>
+                    <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["-- Select tenant --"]</option>
                         @foreach (var t in Model.Tenants)
                         {
                             if (Model.SelectedTenantId == t.Id)
@@ -85,9 +85,9 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Campus</label>
-                    <select name="campusId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Select campus --</option>
+                    <label class="form-label">@T["Campus"]</label>
+                    <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["-- Select campus --"]</option>
                         @foreach (var c in Model.Campuses)
                         {
                             if (Model.SelectedCampusId == c.Id)
@@ -109,9 +109,9 @@
             }
 
             <div class="col-md-3">
-                <label class="form-label">Department</label>
-                <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select department --</option>
+                <label class="form-label">@T["Department"]</label>
+                <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                    <option value="">@T["-- Select department --"]</option>
                     @foreach (var d in Model.Departments)
                     {
                         if (Model.SelectedDepartmentId == d.Id)
@@ -127,9 +127,9 @@
             </div>
 
             <div class="col-md-3">
-                <label class="form-label">@(Model.IsUniversitySelected ? "Semester" : "Class")</label>
-                <select name="semesterId" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select @(Model.IsUniversitySelected ? "semester" : "class") --</option>
+                <label class="form-label">@(Model.IsUniversitySelected ? T.Text("Semester") : T.Text("Class"))</label>
+                <select aria-label="@(Model.IsUniversitySelected ? T.Text("Semester") : T.Text("Class"))" name="semesterId" class="form-select" onchange="this.form.submit()">
+                    <option value="">@T.Format("-- Select {0} --", (Model.IsUniversitySelected ? "semester" : "class"))</option>
                     @foreach (var s in Model.Semesters)
                     {
                         if (Model.SelectedSemesterId == s.Id)
@@ -145,9 +145,9 @@
             </div>
 
             <div class="col-md-5">
-                <label class="form-label">Course</label>
-                <select name="courseId" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select a course --</option>
+                <label class="form-label">@T["Course"]</label>
+                <select aria-label="@T["Course"]" name="courseId" class="form-select" onchange="this.form.submit()">
+                    <option value="">@T["-- Select a course --"]</option>
                     @foreach (var c in Model.Courses)
                     {
                         if (Model.SelectedCourseId == c.Id)
@@ -165,9 +165,9 @@
             @if (Model.IsUniversitySelected)
             {
                 <div class="col-md-4">
-                    <label class="form-label">Subject</label>
-                    <select name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Select subject --</option>
+                    <label class="form-label">@T["Subject"]</label>
+                    <select aria-label="@T["Subject"]" name="subjectOfferingId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["-- Select subject --"]</option>
                         @foreach (var so in Model.SubjectOfferings)
                         {
                             if (Model.SelectedSubjectOfferingId == so.Id)
@@ -184,7 +184,7 @@
             }
 
             <div class="col-md-2">
-                <a class="btn btn-outline-secondary w-100" href="@Url.Action("GradingConfig", "Portal")">Clear</a>
+                <a class="btn btn-outline-secondary w-100" href="@Url.Action("GradingConfig", "Portal")">@T["Clear"]</a>
             </div>
         </form>
     </div>
@@ -193,7 +193,7 @@
 @if (!Model.IsUniversitySelected)
 {
     <div class="alert alert-info">
-        For school and college, saving grading applies the same configuration to all subjects in the selected scope.
+        @T["For school and college, saving grading applies the same configuration to all subjects in the selected scope."]
     </div>
 }
 
@@ -201,8 +201,8 @@
 {
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-transparent">
-            <strong>Institution Grading Setup</strong>
-            <div class="small text-muted">Separate SuperAdmin sections for School, College, and University grading policy.</div>
+            <strong>@T["Institution Grading Setup"]</strong>
+            <div class="small text-muted">@T["Separate SuperAdmin sections for School, College, and University grading policy."]</div>
         </div>
         <div class="card-body">
             <div class="row g-3">
@@ -225,8 +225,8 @@
                                 <input type="hidden" name="subjectOfferingId" value="@Model.SelectedSubjectOfferingId" />
 
                                 <div class="mb-2">
-                                    <label class="form-label">Pass Threshold</label>
-                                    <input type="number"
+                                    <label class="form-label">@T["Pass Threshold"]</label>
+                                    <input aria-label="@T["Pass Threshold"]" type="number"
                                            class="form-control"
                                            name="passThreshold"
                                            step="0.01"
@@ -234,12 +234,12 @@
                                          max="@(section.MaxThreshold)"
                                          value="@(section.PassThreshold)"
                                            required />
-                                     <small class="text-muted">Range: @(section.MinThreshold) to @(section.MaxThreshold)</small>
+                                     <small class="text-muted">@T.Format("Range: {0} to {1}", (section.MinThreshold), (section.MaxThreshold))</small>
                                 </div>
 
                                 <div class="mb-2">
-                                    <label class="form-label">Grade Ranges JSON (optional)</label>
-                                    <textarea class="form-control"
+                                    <label class="form-label">@T["Grade Ranges JSON (optional)"]</label>
+                                    <textarea aria-label="@T["Grade Ranges JSON (optional)"]" class="form-control"
                                               name="gradeRangesJson"
                                               rows="5"
                                               placeholder='[{"From":90,"To":100,"Label":"A+"}]'>@(section.GradeRangesJson)</textarea>
@@ -255,10 +255,10 @@
                                         <input class="form-check-input" type="checkbox" name="isActive" value="true" />
                                     }
                                     <input type="hidden" name="isActive" value="false" />
-                                    <label class="form-check-label">Active</label>
+                                    <label class="form-check-label">@T["Active"]</label>
                                 </div>
 
-                                <button type="submit" class="btn btn-sm btn-primary">Save @(section.Title)</button>
+                                <button type="submit" class="btn btn-sm btn-primary">@T.Format("Save {0}", (section.Title))</button>
                             </form>
                         </div>
                     </div>
@@ -289,41 +289,41 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
-                        <label class="form-label">Pass Threshold (%)</label>
-                        <input type="number" name="passThreshold" class="form-control"
+                        <label class="form-label">@T["Pass Threshold (%)"]</label>
+                        <input aria-label="@T["Pass Threshold (%)"]" type="number" name="passThreshold" class="form-control"
                                step="0.01" min="0" max="100" value="@Model.PassThreshold" required>
-                        <small class="text-muted">Minimum score to pass this course.</small>
+                        <small class="text-muted">@T["Minimum score to pass this course."]</small>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Grading Type</label>
-                        <select name="gradingType" class="form-select">
+                        <label class="form-label">@T["Grading Type"]</label>
+                        <select aria-label="@T["Grading Type"]" name="gradingType" class="form-select">
                             @{
                                 var gt = Model.GradingType;
                             }
                             @if (gt == "GPA")        { <option value="GPA" selected>GPA</option> }
                             else                     { <option value="GPA">GPA</option> }
-                            @if (gt == "Percentage") { <option value="Percentage" selected>Percentage</option> }
-                            else                     { <option value="Percentage">Percentage</option> }
-                            @if (gt == "Grade")      { <option value="Grade" selected>Grade</option> }
-                            else                     { <option value="Grade">Grade</option> }
+                            @if (gt == "Percentage") { <option value="Percentage" selected>@T["Percentage"]</option> }
+                            else                     { <option value="Percentage">@T["Percentage"]</option> }
+                            @if (gt == "Grade")      { <option value="Grade" selected>@T["Grade"]</option> }
+                            else                     { <option value="Grade">@T["Grade"]</option> }
                         </select>
                     </div>
                 </div>
 
                 @* Grade Range Builder *@
-                <h6 class="mb-3">Grade Ranges <small class="text-muted">(optional)</small></h6>
+                <h6 class="mb-3">@T["Grade Ranges"] <small class="text-muted">@T["(optional)"]</small></h6>
                 <div id="gradeRanges" class="mb-3">
                     @foreach (var r in Model.GradeRanges)
                     {
                         <div class="grade-range-row row g-2 align-items-center mb-2">
                             <div class="col-3">
-                                <input type="number" placeholder="From" value="@r.From" class="form-control form-control-sm range-from" min="0" max="100">
+                                <input type="number" placeholder="@T["From"]" value="@r.From" class="form-control form-control-sm range-from" min="0" max="100">
                             </div>
                             <div class="col-3">
-                                <input type="number" placeholder="To" value="@r.To" class="form-control form-control-sm range-to" min="0" max="100">
+                                <input type="number" placeholder="@T["To"]" value="@r.To" class="form-control form-control-sm range-to" min="0" max="100">
                             </div>
                             <div class="col-4">
-                                <input type="text" placeholder="Label (e.g. A+)" value="@r.Label" class="form-control form-control-sm range-label" maxlength="10">
+                                <input type="text" placeholder="@T["Label (e.g. A+)"]" value="@r.Label" class="form-control form-control-sm range-label" maxlength="10">
                             </div>
                             <div class="col-2">
                                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">×</button>
@@ -331,13 +331,13 @@
                         </div>
                     }
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="addRangeRow()">+ Add Grade Range</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="addRangeRow()">@T["+ Add Grade Range"]</button>
 
                 @* Hidden field — populated by JS before submit *@
                 <input type="hidden" name="gradeRangesJson" id="gradeRangesJson" />
 
                 <div>
-                    <button type="submit" class="btn btn-primary" onclick="buildRangesJson()">Save Configuration</button>
+                    <button type="submit" class="btn btn-primary" onclick="buildRangesJson()">@T["Save Configuration"]</button>
                 </div>
             </form>
         </div>

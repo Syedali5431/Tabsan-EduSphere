@@ -1,0 +1,11 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LtiFramePageModel
+@* Plan M5 — a tool shown inside the portal. The frame starts the launch itself. *@
+<div class="d-flex align-items-center gap-2 mb-2">
+    @if (!string.IsNullOrWhiteSpace(Model.ReturnUrl))
+    {
+        <a href="@Model.ReturnUrl" class="small">@T["← Back to the course"]</a>
+    }
+    <a href="@Model.FrameUrl" target="_blank" rel="noopener" class="small ms-auto">@T["Open in a new tab"]</a>
+</div>
+<iframe src="@Model.FrameUrl" title="@T["External tool"]" class="w-100 border rounded bg-white" style="height: 80vh;"
+        allow="microphone; camera; fullscreen; clipboard-write" referrerpolicy="origin"></iframe>

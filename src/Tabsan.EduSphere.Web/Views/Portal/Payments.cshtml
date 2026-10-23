@@ -1,16 +1,16 @@
 @model Tabsan.EduSphere.Web.Models.Portal.PaymentsPageModel
-@{ ViewData["Title"] = "Payment Receipts"; }
+@{ ViewData["Title"] = T.Text("Payment Receipts"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info alert-dismissible fade show">@Model.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert alert-info alert-dismissible fade show">@T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
     </div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -22,7 +22,7 @@ else
     @if (canManagePayments && hasStudentOptions)
     {
         <div class="page-section-card card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent fw-semibold">Create Fee Receipt</div>
+            <div class="card-header bg-transparent fw-semibold">@T["Create Fee Receipt"]</div>
             <div class="card-body">
                 <form method="post" asp-action="CreatePayment">
                     @Html.AntiForgeryToken()
@@ -33,9 +33,9 @@ else
                     <input type="hidden" name="page" value="@Model.Page" />
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Student</label>
-                            <select name="StudentProfileId" class="form-select" required>
-                                <option value="">— Select Student —</option>
+                            <label class="form-label">@T["Student"]</label>
+                            <select aria-label="@T["Student"]" name="StudentProfileId" class="form-select" required>
+                                <option value="">@T["— Select Student —"]</option>
                                 @foreach (var s in Model.Students)
                                 {
                                     <option value="@s.Id">@s.FullName (@s.RegistrationNumber)</option>
@@ -43,24 +43,24 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Amount</label>
-                            <input name="Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="e.g. 5000" required />
+                            <label class="form-label">@T["Amount"]</label>
+                            <input aria-label="@T["Amount"]" name="Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="@T["e.g. 5000"]" required />
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Receipt No</label>
-                            <input name="ReceiptNo" type="text" class="form-control" placeholder="e.g. RCPT-2026-0001" required />
+                            <label class="form-label">@T["Receipt No"]</label>
+                            <input aria-label="@T["Receipt No"]" name="ReceiptNo" type="text" class="form-control" placeholder="@T["e.g. RCPT-2026-0001"]" required />
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Description</label>
-                            <input name="Description" type="text" class="form-control" placeholder="e.g. Semester 1 Tuition" required />
+                            <label class="form-label">@T["Description"]</label>
+                            <input aria-label="@T["Description"]" name="Description" type="text" class="form-control" placeholder="@T["e.g. Semester 1 Tuition"]" required />
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Due Date</label>
-                            <input name="DueDate" type="date" class="form-control"
+                            <label class="form-label">@T["Due Date"]</label>
+                            <input aria-label="@T["Due Date"]" name="DueDate" type="date" class="form-control"
                                    value="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")" required />
                         </div>
                         <div class="col-md-12 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary w-100">Create</button>
+                            <button type="submit" class="btn btn-primary w-100">@T["Create"]</button>
                         </div>
                     </div>
                 </form>
@@ -70,7 +70,7 @@ else
     else if (canManagePayments)
     {
         <div class="alert alert-warning mb-3">
-            No students available in the current scope. Change tenant/campus filters or verify student seed data.
+            @T["No students available in the current scope. Change tenant/campus filters or verify student seed data."]
         </div>
     }
 
@@ -84,9 +84,9 @@ else
                     @if (Model.AvailableInstitutionTypes.Count > 0)
                     {
                         <div class="col-md-2">
-                            <label class="form-label mb-1">Institute</label>
-                            <select name="institutionType" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="">All Institutions</option>
+                            <label class="form-label mb-1">@T["Institute"]</label>
+                            <select aria-label="@T["Institute"]" name="institutionType" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">@T["All Institutions"]</option>
                                 @foreach (var institutionOption in Model.AvailableInstitutionTypes)
                                 {
                                     <option value="@institutionOption.Value" selected="@(Model.SelectedInstitutionType == institutionOption.Value)">@institutionOption.Label</option>
@@ -97,9 +97,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-2">
-                            <label class="form-label mb-1">Tenant</label>
-                            <select name="tenantId" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label mb-1">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var tenant in Model.Tenants)
                                 {
                                     <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id)">@tenant.Name</option>
@@ -107,9 +107,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label mb-1">Campus</label>
-                            <select name="campusId" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option value="">All Campuses</option>
+                            <label class="form-label mb-1">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id)">@campus.Name</option>
@@ -118,9 +118,9 @@ else
                         </div>
                     }
                     <div class="col-md-5">
-                        <label class="form-label mb-1">Filter by Student</label>
-                        <select name="studentId" class="form-select form-select-sm" onchange="this.form.submit()" disabled="@(!hasStudentOptions)">
-                            <option value="">All Students</option>
+                        <label class="form-label mb-1">@T["Filter by Student"]</label>
+                        <select aria-label="@T["Filter by Student"]" name="studentId" class="form-select form-select-sm" onchange="this.form.submit()" disabled="@(!hasStudentOptions)">
+                            <option value="">@T["All Students"]</option>
                             @foreach (var s in Model.Students)
                             {
                                 <option value="@s.Id" selected="@(Model.SelectedStudentId == s.Id)">
@@ -132,13 +132,13 @@ else
                     @if (Model.SelectedStudentId.HasValue)
                     {
                         <div class="col-auto">
-                            <a asp-action="Payments" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" asp-route-institutionType="@Model.SelectedInstitutionType" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+                            <a asp-action="Payments" asp-route-tenantId="@Model.SelectedTenantId" asp-route-campusId="@Model.SelectedCampusId" asp-route-institutionType="@Model.SelectedInstitutionType" class="btn btn-sm btn-outline-secondary">@T["Clear Filter"]</a>
                         </div>
                     }
                 </form>
 
                 <div class="d-flex flex-wrap gap-2 mt-3">
-                    <a asp-action="ExportPaymentsCsvTemplate" class="btn btn-sm btn-outline-primary">Export Template</a>
+                    <a asp-action="ExportPaymentsCsvTemplate" class="btn btn-sm btn-outline-primary">@T["Export Template"]</a>
                     <form method="post" asp-action="ImportPaymentsCsv" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="studentId" value="@Model.SelectedStudentId" />
@@ -146,8 +146,8 @@ else
                         <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                         <input type="hidden" name="page" value="@Model.Page" />
-                        <input type="file" name="csvFile" class="form-control form-control-sm" accept=".csv,text/csv" required />
-                        <button type="submit" class="btn btn-sm btn-outline-success">Import CSV</button>
+                        <input aria-label="@T["CSV file"]" type="file" name="csvFile" class="form-control form-control-sm" accept=".csv,text/csv" required />
+                        <button type="submit" class="btn btn-sm btn-outline-success">@T["Import CSV"]</button>
                     </form>
                 </div>
             </div>
@@ -159,20 +159,20 @@ else
         <div class="card-body">
             <div class="section-head mb-3">
                 <div>
-                    <span class="section-kicker">Finance receipts</span>
+                    <span class="section-kicker">@T["Finance receipts"]</span>
                     <h2 class="h5 mb-1">
-                        @(canManagePayments ? "All Receipts" : "My Receipts")
+                        @(canManagePayments ? T.Text("All Receipts") : T.Text("My Receipts"))
                         <span class="badge bg-secondary ms-1">@Model.Payments.Count</span>
                     </h2>
-                    <p class="text-muted mb-0">Track payment status, confirmations, and proof submissions.</p>
+                    <p class="text-muted mb-0">@T["Track payment status, confirmations, and proof submissions."]</p>
                 </div>
             </div>
 
             @if (Model.Payments.Count == 0)
             {
                 <div class="empty-state-card">
-                    <h3>No payment receipts found</h3>
-                    <p class="text-muted mb-0">Receipts will appear here once payment requests are created.</p>
+                    <h3>@T["No payment receipts found"]</h3>
+                    <p class="text-muted mb-0">@T["Receipts will appear here once payment requests are created."]</p>
                 </div>
             }
             else
@@ -181,15 +181,15 @@ else
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                @if (canManagePayments) { <th>Student</th> }
-                                <th>Receipt No</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Confirmed</th>
-                                <th>Last Updated</th>
-                                <th>Actions</th>
+                                @if (canManagePayments) { <th>@T["Student"]</th> }
+                                <th>@T["Receipt No"]</th>
+                                <th>@T["Description"]</th>
+                                <th>@T["Amount"]</th>
+                                <th>@T["Due Date"]</th>
+                                <th>@T["Status"]</th>
+                                <th>@T["Confirmed"]</th>
+                                <th>@T["Last Updated"]</th>
+                                <th>@T["Actions"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -216,7 +216,7 @@ else
                                         @r.FeeType
                                         @if (!string.IsNullOrWhiteSpace(r.ProofOfPaymentPath))
                                         {
-                                            <br /><small class="text-muted">Proof: @r.ProofOfPaymentPath</small>
+                                            <br /><small class="text-muted">@T.Format("Proof: {0}", r.ProofOfPaymentPath)</small>
                                         }
                                     </td>
                                     <td class="fw-semibold">@r.Amount.ToString("N2")</td>
@@ -233,7 +233,7 @@ else
                                                 <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1"
                                                         data-bs-toggle="collapse"
                                                         data-bs-target="#edit-@r.Id">
-                                                    Edit
+                                                    @T["Edit"]
                                                 </button>
                                             }
                                             @if (r.Status is "Pending" or "Submitted")
@@ -247,8 +247,8 @@ else
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                                                     <input type="hidden" name="page" value="@Model.Page" />
                                                     <button type="submit" class="btn btn-sm btn-success me-1"
-                                                            onclick="return confirm('Mark this receipt as Paid?')">
-                                                        Confirm Paid
+                                                            onclick="return confirm('@T.Js("Mark this receipt as Paid?")')">
+                                                        @T["Confirm Paid"]
                                                     </button>
                                                 </form>
                                             }
@@ -263,8 +263,8 @@ else
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
                                                     <input type="hidden" name="page" value="@Model.Page" />
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                            onclick="return confirm('Cancel this receipt?')">
-                                                        Cancel
+                                                            onclick="return confirm('@T.Js("Cancel this receipt?")')">
+                                                        @T["Cancel"]
                                                     </button>
                                                 </form>
                                             }
@@ -281,29 +281,29 @@ else
                                                         <input type="hidden" name="page" value="@Model.Page" />
                                                         <div class="row g-2">
                                                             <div class="col-md-4">
-                                                                <label class="form-label small mb-1">Amount</label>
-                                                                <input type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" value="@r.Amount" required />
+                                                                <label class="form-label small mb-1">@T["Amount"]</label>
+                                                                <input aria-label="@T["Amount"]" type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" value="@r.Amount" required />
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label small mb-1">Receipt No</label>
-                                                                <input type="text" name="receiptNo" class="form-control form-control-sm" value="@r.ReceiptNo" required />
+                                                                <label class="form-label small mb-1">@T["Receipt No"]</label>
+                                                                <input aria-label="@T["Receipt No"]" type="text" name="receiptNo" class="form-control form-control-sm" value="@r.ReceiptNo" required />
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label small mb-1">Due Date</label>
-                                                                <input type="date" name="dueDate" class="form-control form-control-sm" value="@r.DueDate.ToString("yyyy-MM-dd")" required />
+                                                                <label class="form-label small mb-1">@T["Due Date"]</label>
+                                                                <input aria-label="@T["Due Date"]" type="date" name="dueDate" class="form-control form-control-sm" value="@r.DueDate.ToString("yyyy-MM-dd")" required />
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label small mb-1">Notes</label>
-                                                                <input type="text" name="notes" class="form-control form-control-sm" value="@r.Notes" />
+                                                                <label class="form-label small mb-1">@T["Notes"]</label>
+                                                                <input aria-label="@T["Notes"]" type="text" name="notes" class="form-control form-control-sm" value="@r.Notes" />
                                                             </div>
                                                             <div class="col-12">
-                                                                <label class="form-label small mb-1">Description</label>
-                                                                <input type="text" name="description" class="form-control form-control-sm" value="@r.FeeType" required />
+                                                                <label class="form-label small mb-1">@T["Description"]</label>
+                                                                <input aria-label="@T["Description"]" type="text" name="description" class="form-control form-control-sm" value="@r.FeeType" required />
                                                             </div>
                                                         </div>
                                                         <div class="mt-3 d-flex gap-2">
-                                                            <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#edit-@r.Id">Close</button>
+                                                            <button type="submit" class="btn btn-sm btn-primary">@T["Save Changes"]</button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#edit-@r.Id">@T["Close"]</button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -315,7 +315,7 @@ else
                                             <button type="button" class="btn btn-sm btn-primary"
                                                     data-bs-toggle="collapse"
                                                     data-bs-target="#proof-@r.Id">
-                                                Submit Proof
+                                                @T["Submit Proof"]
                                             </button>
                                             <div class="collapse mt-2" id="proof-@r.Id">
                                                 <form method="post" asp-action="SubmitProof">
@@ -328,8 +328,8 @@ else
                                                     <input type="hidden" name="page" value="@Model.Page" />
                                                     <div class="input-group input-group-sm">
                                                         <input type="text" name="proofNote" class="form-control"
-                                                               placeholder="Transaction ID or reference note" required />
-                                                        <button type="submit" class="btn btn-success">Submit</button>
+                                                               placeholder="@T["Transaction ID or reference note"]" required />
+                                                        <button type="submit" class="btn btn-success">@T["Submit"]</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -351,12 +351,12 @@ else
                 <div class="d-flex justify-content-between align-items-center mt-3 responsive-pagination">
                     <a class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : null)"
                        href="@Url.Action("Payments", "Portal", new { studentId = Model.SelectedStudentId, tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, institutionType = Model.SelectedInstitutionType, page = Model.Page - 1 })">
-                        Previous
+                        @T["Previous"]
                     </a>
-                    <span class="text-muted">Page @Model.Page of @Model.TotalPages</span>
+                    <span class="text-muted">@T.Format("Page {0} of {1}", Model.Page, Model.TotalPages)</span>
                     <a class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.TotalPages ? "disabled" : null)"
                        href="@Url.Action("Payments", "Portal", new { studentId = Model.SelectedStudentId, tenantId = Model.SelectedTenantId, campusId = Model.SelectedCampusId, institutionType = Model.SelectedInstitutionType, page = Model.Page + 1 })">
-                        Next
+                        @T["Next"]
                     </a>
                 </div>
             }

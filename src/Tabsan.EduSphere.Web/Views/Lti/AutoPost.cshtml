@@ -1,0 +1,25 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LtiAutoPostModel
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="origin" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@Model.Title</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    @* Plan M5 — posts the LTI message to the tool (login initiation, or the id_token to its redirect URI). *@
+    <form method="post" action="@Model.Action" id="lti-auto-post" class="text-center p-4">
+        @foreach (var field in Model.Fields)
+        {
+            <input type="hidden" name="@field.Key" value="@field.Value" />
+        }
+        <p class="text-muted mb-3" role="status">@Model.Title</p>
+        <noscript><button type="submit" class="btn btn-primary">@T["Continue"]</button></noscript>
+    </form>
+    <script>document.getElementById('lti-auto-post').submit();</script>
+</body>
+</html>

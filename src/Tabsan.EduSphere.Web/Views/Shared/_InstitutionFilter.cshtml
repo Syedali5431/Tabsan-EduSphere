@@ -19,9 +19,9 @@
 @if (available.Count > 1)
 {
     <div class="@columnClass">
-        <label class="form-label">Institute</label>
-        <select name="institutionType" class="form-select" data-institution-filter onchange="tabsanInstitutionChanged(this)">
-            <option value="">All institutes</option>
+        <label class="form-label">@T["Institute"]</label>
+        <select aria-label="@T["Institute"]" name="institutionType" class="form-select" data-institution-filter onchange="tabsanInstitutionChanged(this)">
+            <option value="">@T["All institutes"]</option>
             @foreach (var type in available.Where(labels.ContainsKey))
             {
                 <option value="@type" selected="@(selected == type)">@labels[type]</option>

@@ -1,38 +1,38 @@
 @model InstitutionPolicyPageModel
 @{
-    ViewData["Title"] = "Institution Policy";
+    ViewData["Title"] = T.Text("Institution Policy");
 }
 
-<h2 class="mb-4">Institution Policy</h2>
+<h2 class="mb-4">@T["Institution Policy"]</h2>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected to API.</div>
+    <div class="alert alert-warning">@T["Not connected to API."]</div>
     return;
 }
 
 @if (TempData["Success"] is string ok)
 {
-    <div class="alert alert-success">@ok</div>
+    <div class="alert alert-success">@T.Text(ok)</div>
 }
 @if (TempData["Error"] is string err)
 {
-    <div class="alert alert-danger">@err</div>
+    <div class="alert alert-danger">@T.Text(err)</div>
 }
 @if (Model.Message != null)
 {
-    <div class="alert alert-warning">@Model.Message</div>
+    <div class="alert alert-warning">@T.Text(Model.Message)</div>
 }
 
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
-        <i class="bi bi-building-gear me-2"></i> Active Institution Types
+        <i class="bi bi-building-gear me-2"></i> @T["Active Institution Types"]
     </div>
     <div class="card-body">
         <p class="text-muted small mb-3">
-            Enable the institution types your organisation operates.
-            At least one type must remain enabled.
-            Changes take effect immediately for all users.
+            @T["Enable the institution types your organisation operates."]
+            @T["At least one type must remain enabled."]
+            @T["Changes take effect immediately for all users."]
         </p>
 
         <form asp-action="InstitutionPolicy" method="post">
@@ -44,11 +44,11 @@
                            id="chkUniversity" name="IncludeUniversity" value="true"
                            @(Model.IncludeUniversity ? "checked" : "") />
                     <label class="form-check-label fw-semibold" for="chkUniversity">
-                        University
+                        @T["University"]
                     </label>
                     <div class="text-muted small">
-                        Semester-based programs with GPA / CGPA tracking.
-                        All existing modules target this mode.
+                        @T["Semester-based programs with GPA / CGPA tracking."]
+                        @T["All existing modules target this mode."]
                     </div>
                 </div>
             </div>
@@ -59,11 +59,11 @@
                            id="chkSchool" name="IncludeSchool" value="true"
                            @(Model.IncludeSchool ? "checked" : "") />
                     <label class="form-check-label fw-semibold" for="chkSchool">
-                        School
+                        @T["School"]
                     </label>
                     <div class="text-muted small">
-                        Grade/class-based system (Grades 1–12), streams for Grades 9–12,
-                        percentage results, and end-of-year promotion.
+                        @T["Grade/class-based system (Grades 1–12), streams for Grades 9–12,"]
+                        @T["percentage results, and end-of-year promotion."]
                     </div>
                 </div>
             </div>
@@ -74,16 +74,16 @@
                            id="chkCollege" name="IncludeCollege" value="true"
                            @(Model.IncludeCollege ? "checked" : "") />
                     <label class="form-check-label fw-semibold" for="chkCollege">
-                        College
+                        @T["College"]
                     </label>
                     <div class="text-muted small">
-                        Year-based academic structure, percentage grading, and year-to-year progression.
+                        @T["Year-based academic structure, percentage grading, and year-to-year progression."]
                     </div>
                 </div>
             </div>
 
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save me-1"></i> Save Policy
+                <i class="bi bi-save me-1"></i> @T["Save Policy"]
             </button>
         </form>
     </div>

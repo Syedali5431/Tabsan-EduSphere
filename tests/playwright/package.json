@@ -21,6 +21,7 @@
     "codegen": "npx playwright codegen"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "^1.52.0",
     "dotenv": "^16.4.7",
     "typescript": "^5.7.0"

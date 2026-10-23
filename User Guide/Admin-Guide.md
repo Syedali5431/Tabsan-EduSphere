@@ -287,6 +287,22 @@ For change requests:
 - Review pending requests with evidence
 - Approve/reject with concise justification
 
+## 10.1 External Tools — LTI 1.3 (Plan M5)
+
+- If a SuperAdmin grants you the **External Tools** menu, you can register tools and limit them to your departments or courses: see the [LTI Tool Setup Guide](LTI-Tool-Setup-Guide.md).
+- Teachers add registered tools to their courses from **LMS Manage**; scores from graded tools reach the gradebook like assignment grades.
+
+## 10.2 Learning Outcomes and Accreditation (Plan M6)
+
+- **Learning Outcomes** lets you define institution outcomes and program learning outcomes (PLOs) for each academic program; teachers define course outcomes (CLOs) and map them to PLOs. Import many at once with the Excel template.
+- **Program attainment** reports, per PLO, how many students of the program attained it against your target (e.g. 70%), with the courses the evidence came from. Download it as PDF or Excel for PEC/HEC/NCAAA/ABET-style reviews.
+- Turning an outcome off hides it from lists and reports but keeps its evidence.
+
+## 10.3 Course Modules and Progress (Plan M7)
+
+- Teachers organise modules into ordered items with completion requirements, opening dates, prerequisites and "in order" progression on **LMS Manage**; **Student progress** shows where each student is.
+- "Activate", "Turn on" and "Show" buttons across the portal (departments, programs, buildings, rooms, tenants, campuses, modules, reports, announcements, materials and others) now work; they previously sent an empty value and silently did nothing.
+
 ## 11. Common Issues
 
 1. Faculty cannot see assigned course:
@@ -434,6 +450,48 @@ When opening a support incident, include all fields below:
 - Time of incident with timezone
 - Expected behavior vs actual behavior
 - Screenshot and request ID/correlation ID if available
+
+## Similarity Checking (Plan M9)
+
+Path: Settings › **Similarity Checking** (SuperAdmin by default; grant Admins in Sidebar Settings). Requires the *Similarity / Plagiarism Checking* licence module.
+
+- **Built-in comparison** needs no account: choose whether it compares with the same assignment, every assignment of the course, or the whole institution.
+- **Copyleaks** also checks web pages and publications: enter the account email and API key (stored encrypted, never shown again), optionally *Sandbox*, then **Test connection**. Copyleaks sends results back to the API, so the API's public https address must be set in `Similarity:PublicApiBaseUrl`.
+- SuperAdmins can also set the **installation default** used by institutions without their own settings.
+
+## Live Class Settings (Plan M10)
+
+Path: Settings › **Live Class Settings** (SuperAdmin by default; grant Admins in Sidebar Settings). Requires the *Live Classes* licence module.
+
+- **Meeting links only:** teachers paste a link for each class — nothing to connect.
+- **BigBlueButton:** API address (`https://…/bigbluebutton/api`) and shared secret (`bbb-conf --secret`).
+- **Zoom:** a Server-to-Server OAuth app — account id, client id, client secret; scopes for meetings, reports (attendance minutes) and cloud recordings. Optional host user (default the app's account user).
+- **Microsoft Teams:** an Entra app (tenant id, client id, client secret) with OnlineMeetings.ReadWrite.All and OnlineMeetingArtifact.Read.All application permissions, an application access policy, and the organiser's user id.
+- Secrets are encrypted and never shown again; changing the service forgets the old secret. **Test connection** checks the details. Set `LiveClasses:PortalBaseUrl` so calendar files link back to the portal.
+
+## Language & Translations (Plan M11)
+
+Path: Settings › **Language & Translations** (SuperAdmin).
+
+- **Default language:** English, Urdu, Arabic, or *the browser's language*. Used for people who have not chosen a language, on the login page, and for emails to them. Everyone can still switch from the top bar.
+- **Translations:** shows how many texts are translated per language. **Export to Excel** gives one row per English text with Urdu and Arabic columns (and where it is used). Translators fill in or correct the language columns — keeping `{0}`, `{1}` … — and you **Import** the workbook. Only changed texts are stored (in `App_Data/translations`, or `Localization:OverridesPath`); the portal uses them at once.
+- PDFs and emails follow the reader's language; official certificates keep their template language.
+
+## Mobile App (Plan M12)
+
+- Settings live in the API's `appsettings.json` section **Mobile**: `MinimumVersion` (older apps must update), `LatestVersion`, store links, `PortalBaseUrl`, `AppRedirectUri` (also in the portal's settings — must match the app's scheme), and `Fcm` (push: `Enabled`, service-account file). Never commit the Firebase key.
+- Parents see only children linked to them (Parent Portal links). Crash reports from phones are stored in `mobile_crash_reports`.
+- Institution-branded store builds: `mobile/build-whitelabel.ps1` (see `mobile/README.md`).
+
+## SCORM Packages and Learning Record Store (Plan M13)
+
+- **Package limits and storage** (API `appsettings.json`, section **Scorm**): `StoragePath` (extracted packages; back it up), `MaxPackageMb` (default 500), `MaxUncompressedMb` (2048), `MaxFiles` (20,000), `PlayTokenHours` (12).
+- **Isolating package scripts** (recommended): packages are third-party HTML and JavaScript. Point a second host name (e.g. `scorm.your-institution.edu`) at the portal and set the portal's `Scorm:ContentOrigin` to it and `Scorm:PortalOrigin` to the portal's address; the player then runs where it cannot read portal pages or cookies.
+- **Learning Record Store (xAPI):** Settings › **Learning Record Store** (SuperAdmin; grant Admins in Sidebar Settings). Create credentials per activity provider — the secret is shown once — and enter the endpoint, key and secret in the activity. Switch credentials off to stop an activity. The latest statements are listed below.
+
+## API Tokens (Plan M14)
+
+Integrations (student information systems, reporting tools, scripts) call the EduSphere REST API with a personal access token. Open **API Tokens** in the sidebar, enter a name (e.g. "Nightly SIS sync"), how many days it is valid (up to 365) and whether it is **Read only**, and press **Create token**. Copy the token at once — it is shown only once; EduSphere keeps only a fingerprint. The token acts as you (your role and access), so give each integration its own token and **Revoke** it when it is no longer used. Administrators see everyone's tokens under **All tokens** and can revoke any of them. Developers: the API's `/swagger` page and `Docs/Public-API.md`.
 
 ## 17. Admin Handover Template
 

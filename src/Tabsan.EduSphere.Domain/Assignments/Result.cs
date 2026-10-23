@@ -12,7 +12,10 @@ public enum ResultSource
     Manual = 0,
 
     /// <summary>Calculated from finished quiz attempts; kept up to date until published or edited by hand.</summary>
-    QuizSync = 1
+    QuizSync = 1,
+
+    /// <summary>Plan M3: calculated from posted assignment grades; same rules as <see cref="QuizSync"/>.</summary>
+    AssignmentSync = 2
 }
 
 /// <summary>

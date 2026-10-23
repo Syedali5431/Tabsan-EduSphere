@@ -1,0 +1,275 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AssignmentSubmissionPageModel
+@{
+    var v = Model.View;
+    var sub = v?.Submission;
+    ViewData["Title"] = v?.Title ?? "Assignment";
+    var accept = v is null ? "" : string.Join(",", v.Settings.AllowedFileTypes);
+    var canSubmit = v is not null && v.IsOpen && (sub is null || sub.CanResubmit);
+    var x = Model.Extras;
+    var blockedByGroup = x is { NeedsGroup: true };
+    if (blockedByGroup) canSubmit = false;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected || v is null)
+{
+    <div class="p-3 rounded border bg-light">@T["This assignment is not available."] <a asp-action="Assignments">@T["Back to assignments"]</a></div>
+}
+else
+{
+    <div id="submission-page"
+         data-file-url="@Url.Action("SubmissionFile", new { fileId = "__id__" })"
+         data-annotated-url="@Url.Action("SubmissionFileAnnotated", new { fileId = "__id__" })"
+         data-annotations-url="@Url.Action("WorkspaceAnnotations", new { fileId = "__id__" })"
+         data-comment-url="@(sub is null ? "" : Url.Action("WorkspaceComment", new { submissionId = sub.SubmissionId }))"
+         data-delete-comment-url="@Url.Action("WorkspaceDeleteComment", new { commentId = "__id__" })"
+         data-worker-url="@Url.Content("~/lib/pdfjs/pdf.worker.min.js")">
+        @Html.AntiForgeryToken()
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <a asp-action="Assignments" class="small">@T["← Assignments"]</a>
+                <h2 class="h4 mt-1 mb-1">@v.Title</h2>
+                <div class="small text-muted mb-2">
+                    @T.Format("Due {0} · {1} marks", v.DueDate.ToLocalTime().ToString("f"), v.MaxMarks.ToString("0.##"))
+                    · @(v.Settings.AllowedAttempts == 0 ? T.Text("unlimited attempts") : $"{v.Settings.AllowedAttempts} attempt(s)")
+                    @if (x?.DatesOverridden == true) { <span class="badge bg-info text-dark ms-1" data-dates-overridden>@T["Your own dates"]</span> }
+                    @if (!v.IsOpen) { <span class="badge bg-secondary ms-1">@T["Closed"]</span> }
+                </div>
+                @if (x is not null)
+                {
+                    <ul class="small list-unstyled mb-2" data-assignment-extras>
+                        @if (x.AvailableFrom is { } opens) { <li>@T.Format("Opens for submissions {0}", opens.ToLocalTime().ToString("f"))</li> }
+                        @if (x.ClosesAt > x.DueDate) { <li>@T.Format("Late work accepted until {0}", x.ClosesAt.ToLocalTime().ToString("f"))</li> }
+                        <li>@Tabsan.EduSphere.Web.Models.Portal.AssignmentPolicyFormat.Policy(x.LatePolicy)</li>
+                        @if (x.GroupName is not null)
+                        {
+                            <li>@T["Group work — your group"] <strong>@x.GroupName</strong> @T.Format("({0}) hands in once for everyone.", string.Join(", ", x.GroupMembers))</li>
+                        }
+                    </ul>
+                    @if (blockedByGroup)
+                    {
+                        @* Not an .alert: site.js turns alerts into toasts, and this note (with its link) must stay on the page. *@
+                        <div class="border border-warning rounded p-2 small mb-2 bg-warning-subtle" role="note" data-needs-group>
+                            @T["This is a group assignment. Join a group before handing in work."]
+                            <a asp-action="MyGroups" asp-route-offeringId="@x.CourseOfferingId">@T["Go to my groups"]</a>
+                        </div>
+                    }
+                }
+                @if (!string.IsNullOrWhiteSpace(v.Description))
+                {
+                    <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">@v.Description</div>
+                }
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-7">
+                @if (sub is not null)
+                {
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h3 class="h5">@T["Your submission"]</h3>
+                            @foreach (var attempt in sub.Attempts)
+                            {
+                                <div class="border rounded p-2 mb-2">
+                                    <div class="small fw-semibold">@T.Format("Attempt {0} · {1} {2}", attempt.AttemptNumber, attempt.SubmittedAt.ToLocalTime().ToString("g"), (attempt.IsLate ? "(late)" : ""))</div>
+                                    @if (!string.IsNullOrWhiteSpace(attempt.TextContent))
+                                    {
+                                        <div class="small p-2 bg-light rounded my-1" style="white-space: pre-wrap;">@attempt.TextContent</div>
+                                    }
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @foreach (var f in attempt.Files)
+                                        {
+                                            if (f.IsLegacy)
+                                            {
+                                                <a class="btn btn-sm btn-outline-secondary" href="@f.LegacyUrl" target="_blank" rel="noopener">@f.FileName</a>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-primary" data-preview
+                                                        data-file-id="@f.FileId" data-kind="@f.ViewerKind" data-name="@f.FileName"
+                                                        data-pdf="@(f.ViewerKind == "pdf" && !f.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ? "true" : "false")"
+                                                        data-annotations="@f.AnnotationCount">
+                                                    @f.FileName @(f.AnnotationCount > 0 ? $"· {f.AnnotationCount} note(s)" : "")
+                                                </button>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div id="student-viewer" class="mt-2" role="region" aria-label="@T["File preview"]"></div>
+                            @if (Model.Similarity is { } similarity)
+                            {
+                                @* Plan M9: the student's own similarity score (sources are never shown to students). *@
+                                <div class="small mt-2" data-my-similarity>
+                                    @T["Similarity check:"]
+                                    <span class="badge @Tabsan.EduSphere.Web.Models.Portal.SimilarityFormat.BadgeClass(similarity.Status == "Completed" ? similarity.Score : null)">@Tabsan.EduSphere.Web.Models.Portal.SimilarityFormat.Status(similarity.Status, similarity.Score)</span>
+                                    @if (similarity.Status == "Completed") { <span class="text-muted">@T["of your work matches other sources. Quote and reference what you use."]</span> }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (canSubmit)
+                {
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h3 class="h5">@(sub is null ? T.Text("Submit your work") : T.Text("Submit again"))</h3>
+                            @if (sub is not null)
+                            {
+                                <p class="small text-muted">@T.Format("Your earlier attempts are kept. {0}", (sub.AttemptsRemaining.HasValue ? $"{sub.AttemptsRemaining} attempt(s) left." : ""))</p>
+                            }
+                            <form asp-action="SubmitAssignmentFiles" method="post" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="assignmentId" value="@v.AssignmentId" />
+                                <label class="form-label small fw-semibold" for="submit-files">@T["Files"]</label>
+                                <input id="submit-files" type="file" name="files" multiple accept="@accept" class="form-control" />
+                                <div class="form-text">@T.Format("Up to 10 files, {0} MB each. Accepted: {1}", v.Settings.MaxFileSizeMb, string.Join(", ", v.Settings.AllowedFileTypes))</div>
+                                <label class="form-label small fw-semibold mt-2" for="submit-text">@T["Text (optional)"]</label>
+                                <textarea id="submit-text" name="textContent" rows="4" maxlength="8000" class="form-control"></textarea>
+                                <button class="btn btn-primary mt-2" onclick="return confirm('@T.Js("Submit now?")');">@T["Submit"]</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-5">
+                @if (sub is not null)
+                {
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h3 class="h5">@T["Grade"]</h3>
+                            @if (sub.IsPosted && sub.MarksAwarded.HasValue)
+                            {
+                                <div class="fs-3 fw-semibold">@sub.MarksAwarded.Value.ToString("0.##") <span class="fs-6 text-muted">/ @sub.MaxMarks.ToString("0.##")</span></div>
+                                @if (sub.IsMissing)
+                                {
+                                    <div class="small text-danger" data-missing-grade>@T["No work was handed in by the due date, so this is the missing-work grade."]</div>
+                                }
+                                else if (sub.LatePenalty > 0 && sub.RawMarks is { } raw)
+                                {
+                                    <div class="small text-muted" data-late-deduction>@T.Format("Marked {0}, late deduction −{1}.", raw.ToString("0.##"), sub.LatePenalty.ToString("0.##"))</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(sub.Feedback))
+                                {
+                                    <div class="mt-2 p-2 bg-light rounded" style="white-space: pre-wrap;">@sub.Feedback</div>
+                                }
+                                @if (sub.Rubric is { } r && r.Criteria.Any(c => c.SelectedLevelId.HasValue))
+                                {
+                                    <table class="table table-sm mt-2 mb-0">
+                                        <caption class="small">@r.Title — @r.TotalPoints.ToString("0.##") / @r.MaxPoints.ToString("0.##")</caption>
+                                        <tbody>
+                                            @foreach (var c in r.Criteria)
+                                            {
+                                                <tr><th scope="row" class="small">@c.Name</th><td class="small">@(c.Levels.FirstOrDefault(l => l.LevelId == c.SelectedLevelId)?.Label ?? "—")</td><td class="small text-end">@(c.Points?.ToString("0.##") ?? "—") / @c.MaxPoints.ToString("0.##")</td></tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">@(sub.Status == "Rejected" ? T.Text("This submission was rejected.") : T.Text("Not graded yet — your grade appears here once your teacher posts it."))</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h3 class="h5">@T["Comments"]</h3>
+                            <div id="student-comments">
+                                @if (sub.Comments.Count == 0) { <p class="small text-muted" data-empty>@T["No comments yet."]</p> }
+                                @foreach (var c in sub.Comments)
+                                {
+                                    <div class="border-bottom py-1 small" data-comment="@c.CommentId">
+                                        <div class="d-flex gap-2">
+                                            <span class="fw-semibold">@c.AuthorName</span>
+                                            <span class="text-muted ms-auto">@c.CreatedAt.ToLocalTime().ToString("g")</span>
+                                            @if (c.IsMine) { <button type="button" class="btn btn-link btn-sm p-0 text-danger" data-delete-comment="@c.CommentId">@T["Delete"]</button> }
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(c.Body)) { <div style="white-space: pre-wrap;">@c.Body</div> }
+                                        @if (c.HasMedia)
+                                        {
+                                            if ((c.MediaContentType ?? "").StartsWith("video"))
+                                            {
+                                                <video controls preload="none" class="w-100 mt-1" src="@Url.Action("SubmissionCommentMedia", new { commentId = c.CommentId })"></video>
+                                            }
+                                            else
+                                            {
+                                                <audio controls preload="none" class="w-100 mt-1" src="@Url.Action("SubmissionCommentMedia", new { commentId = c.CommentId })"></audio>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <form id="student-comment-form" class="mt-2">
+                                <label class="visually-hidden" for="student-comment-body">@T["Comment"]</label>
+                                <textarea id="student-comment-body" class="form-control form-control-sm mb-1" rows="2" maxlength="4000" placeholder="Ask your teacher a question or reply"></textarea>
+                                <div class="d-flex flex-wrap gap-2 align-items-center" id="student-comment-controls">
+                                    <button class="btn btn-sm btn-primary ms-auto" type="submit">@T["Add comment"]</button>
+                                </div>
+                                <div class="small text-muted" id="student-comment-status" aria-live="polite"></div>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                @if (x is { PeerReviewCount: > 0 })
+                {
+                    <div class="card border-0 shadow-sm mb-3" data-peer-reviews>
+                        <div class="card-body">
+                            <h3 class="h5">@T["Peer review"]</h3>
+                            <p class="small text-muted mb-2">
+                                @T.Format("Review {0} classmate submission(s){1}.", x.PeerReviewCount, (x.PeerReviewDueDate is { } prd ? $" by {prd.ToLocalTime():f}" : ""))
+                                @T["Reviews are handed out after the due date."]
+                            </p>
+                            @if (x.ReviewsToDo.Count == 0)
+                            {
+                                <p class="small text-muted">@T["No reviews assigned to you yet."]</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush mb-2">
+                                    @foreach (var r in x.ReviewsToDo)
+                                    {
+                                        <li class="list-group-item px-0 d-flex align-items-center gap-2">
+                                            <span class="flex-grow-1">@r.RevieweeLabel</span>
+                                            <span class="badge @(r.Status == "Completed" ? "bg-success" : "bg-warning text-dark")">@(r.Status == "Completed" ? T.Text("Done") : T.Text("To do"))</span>
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="PeerReview" asp-route-id="@r.Id">@(r.Status == "Completed" ? T.Text("Edit") : T.Text("Review"))</a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            <h4 class="h6 mt-3">@T["Reviews of your work"]</h4>
+                            @if (x.ReviewsReceived.Count == 0)
+                            {
+                                <p class="small text-muted mb-0">@T["None yet."]</p>
+                            }
+                            @foreach (var r in x.ReviewsReceived)
+                            {
+                                <div class="border rounded p-2 mb-2 small" data-received-review>
+                                    <div class="fw-semibold">@r.ReviewerLabel @(r.Score is { } sc ? $"· {sc:0.##} / {v.MaxMarks:0.##}" : "")</div>
+                                    @if (!string.IsNullOrWhiteSpace(r.Comment)) { <div style="white-space: pre-wrap;">@r.Comment</div> }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/lib/pdfjs/pdf.min.js" asp-append-version="true"></script>
+    <script src="~/js/submission-viewer.js" asp-append-version="true"></script>
+    <script src="~/js/comment-recorder.js" asp-append-version="true"></script>
+    <script src="~/js/submission-page.js" asp-append-version="true"></script>
+}

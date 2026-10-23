@@ -56,7 +56,7 @@ public class DegreeController : ControllerBase
 
     [HttpPost("template/upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadTemplate(IFormFile file, CancellationToken ct)
     {
         var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)
@@ -75,7 +75,7 @@ public class DegreeController : ControllerBase
 
     [HttpPost("template/transcript/upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadTranscriptTemplate([FromForm] IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadTranscriptTemplate(IFormFile file, CancellationToken ct)
     {
         var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)

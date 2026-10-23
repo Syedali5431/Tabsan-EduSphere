@@ -24,7 +24,10 @@ public enum NotificationType
     System = 5,
 
     /// <summary>Announcement from a department or institution admin.</summary>
-    Announcement = 6
+    Announcement = 6,
+
+    /// <summary>Plan M10: live class scheduled, moved, cancelled or starting soon.</summary>
+    LiveClass = 7
 }
 
 /// <summary>

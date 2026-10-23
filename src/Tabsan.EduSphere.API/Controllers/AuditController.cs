@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ClosedXML.Excel;
 using QuestPDF.Fluent;
+using Tabsan.EduSphere.Infrastructure.Reporting;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Globalization;
@@ -235,7 +236,8 @@ public sealed class AuditController : ControllerBase
             {
                 page.Margin(24);
                 page.Size(PageSizes.A4.Landscape());
-                page.DefaultTextStyle(TextStyle.Default.FontSize(8));
+                page.DefaultTextStyle(TextStyle.Default.FontSize(8).WithFonts());
+                Tabsan.EduSphere.Infrastructure.Reporting.PdfLanguage.Apply(page); // Plan M11
 
                 page.Header().Text($"Audit Logs Export ({items.Count} rows)").SemiBold().FontSize(12);
                 page.Content().Table(table =>

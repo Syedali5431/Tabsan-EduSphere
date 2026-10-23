@@ -6,6 +6,108 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| IObjectStore / FileSystemObjectStore / AzureBlobObjectStore / S3ObjectStore | Plan M14.2: object storage (local folder, Azure Blob, S3/S3-compatible) with metadata and signed read links | src/Tabsan.EduSphere.Infrastructure/Storage/ObjectStores.cs |
+| ObjectStoreMediaStorageService | Plan M14.2: media storage (submissions, conversions, uploads) in the shared object store | src/Tabsan.EduSphere.API/Services/ObjectStoreMediaStorageService.cs |
+| ObjectStoreScormContentStore | Plan M14.2: SCORM package files in the shared object store | src/Tabsan.EduSphere.Infrastructure/Lms/ObjectStoreScormContentStore.cs |
+| ApiRateLimiting | Plan M14.2: request limits per API token / user / address, 429 with Retry-After | src/Tabsan.EduSphere.API/Services/ApiRateLimiting.cs |
+| ApiTokenService | Plan M14.3: personal access tokens — create, list, revoke, authenticate (hashed, cached, expiry, per-user cap) | src/Tabsan.EduSphere.Application/Auth/ApiTokenService.cs |
+| ApiTokenAuthenticationHandler / ApiTokenGuardMiddleware | Plan M14.3: `Bearer esk_…` sign-in as the token's owner; read-only tokens only read; tokens cannot manage tokens | src/Tabsan.EduSphere.API/Services/ApiTokenAuthentication.cs |
+| ApiTokensController | Plan M14.3: api/v1/api-tokens — mine, create, revoke, all (Admin) | src/Tabsan.EduSphere.API/Controllers/ApiTokensController.cs |
+| PortalController (ApiTokens, CreateApiToken, RevokeApiToken) | Plan M14.3: API Tokens page | src/Tabsan.EduSphere.Web/Controllers/PortalController.ApiTokens.cs |
+| ScormService | Plan M13: package import, launch/resume/review/attempts, play data, commits, best score → gradebook, report, preview | src/Tabsan.EduSphere.Application/Lms/Scorm/ScormService.cs |
+| ScormPackageReader | Plan M13: zip safety checks and imsmanifest.xml (SCORM 1.2/2004) reading | src/Tabsan.EduSphere.Application/Lms/Scorm/ScormPackageReader.cs |
+| ScormCmi | Plan M13: SCORM data model on the server (commit values, mastery, time, start data for resume/review) | src/Tabsan.EduSphere.Application/Lms/Scorm/ScormCmi.cs |
+| XapiService | Plan M13.2: LRS credentials, statement validation, storage, voiding and queries | src/Tabsan.EduSphere.Application/Lms/Scorm/XapiService.cs |
+| ScormController | Plan M13: api/v1/scorm — packages (staff), my-packages/mine/launch (students), play/{token} shell data, content, commit | src/Tabsan.EduSphere.API/Controllers/ScormController.cs |
+| XapiController | Plan M13.2: api/v1/xapi — about, statements (Basic credentials), credentials and recent (Admin) | src/Tabsan.EduSphere.API/Controllers/XapiController.cs |
+| ScormPlayController | Plan M13: portal relay for the player shell, package files and commits under /scorm/play/{token}/ | src/Tabsan.EduSphere.Web/Controllers/ScormPlayController.cs |
+| PortalController (Scorm, ScormPlay, ScormReport, XapiSettings …) | Plan M13: package page, launch, player page, report, teacher actions, LRS page | src/Tabsan.EduSphere.Web/Controllers/PortalController.Scorm.cs |
+| MobileController | Plan M12: api/v1/mobile — config (public), handoff + redeem (public), home, timetable, courses, course, results, attendance, report-cards, children, devices, crash-reports | src/Tabsan.EduSphere.API/Controllers/MobileController.cs |
+| MobileService | Plan M12: app config, PKCE single-use SSO hand-off, device registry, crash reports, native push with preferences | src/Tabsan.EduSphere.Application/Mobile/MobileService.cs |
+| MobileQueries | Plan M12: one-call read models for phones by role (student, teacher, parent) with access checks | src/Tabsan.EduSphere.Infrastructure/Mobile/MobileQueries.cs |
+| ReportCardLines | Plan M12: report-card details (free-form JSON) as readable label/value lines | src/Tabsan.EduSphere.Application/Mobile/ReportCardLines.cs |
+| FcmPushSender | Plan M12: Firebase Cloud Messaging HTTP v1 (service-account JWT, cached token, dead-token detection) | src/Tabsan.EduSphere.Infrastructure/Mobile/FcmPushSender.cs |
+| LoginController.Sso (appChallenge) / HandOffToAppAsync | Plan M12: portal side of app SSO — one-time code to {scheme}://sso, portal session ended | src/Tabsan.EduSphere.Web/Controllers/LoginController.cs |
+| EduSphereClient / view models | Plan M12: the app's API client (sign-in, SSO, refresh, uploads) and screen logic | src/Tabsan.EduSphere.Mobile.Core/ |
+| build-whitelabel.ps1 | Plan M12: institution store build (.aab/.apk/.ipa) | mobile/build-whitelabel.ps1 |
+| PortalText / TranslationStore | Plan M11: view texts by English key (`T[...]`, `T.Format`, `T.Text`, `T.Js`), shipped translations + overrides, "{0}" patterns | src/Tabsan.EduSphere.Web/Localization/PortalText.cs |
+| PortalCultures / PortalLanguageResolver / PortalRequestCultureProvider | Plan M11: request language (query → user → cookie → institution default → browser) and Gregorian, "."-decimal cultures | src/Tabsan.EduSphere.Web/Localization/PortalCulture.cs |
+| TranslationWorkbook | Plan M11: coverage, Excel export and import of translations (changed texts kept as overrides) | src/Tabsan.EduSphere.Web/Localization/TranslationWorkbook.cs |
+| LanguageController.Set / PortalController.LanguageSettings | Plan M11: language switcher; Language & Translations page (default, export, import) | src/Tabsan.EduSphere.Web/Controllers/ |
+| PortalLanguages / TextLocalizer / PortalLanguageService | Plan M11: languages, API text catalogue with patterns, institution default and recipient language | src/Tabsan.EduSphere.Application/Localization/Localization.cs |
+| LocalizationController | Plan M11: /api/v1/localization (public default + languages), /default (SuperAdmin), /me | src/Tabsan.EduSphere.API/Controllers/LocalizationController.cs |
+| RequestLanguageMiddleware / LocalizedResponseFilter | Plan M11: Accept-Language → UI culture and Content-Language; translated messages, problem details and validation errors | src/Tabsan.EduSphere.API/Middleware/RequestLanguage.cs |
+| PdfLanguage | Plan M11: right-to-left QuestPDF pages, Arabic-script fonts, translated report labels | src/Tabsan.EduSphere.Infrastructure/Reporting/PdfLanguage.cs |
+| LiveClassService | Plan M10: settings/test, schedule (ad hoc, timetable weeks), update/cancel, upcoming, join, calendar, attendance report/marking, reminders, recordings | src/Tabsan.EduSphere.Application/LiveClasses/LiveClassService.cs |
+| LiveClassService.NextOccurrences | Plan M10: next weekly starts of a timetable slot (UTC) | src/Tabsan.EduSphere.Application/LiveClasses/LiveClassService.cs |
+| LiveCalendar.Event | Plan M10: iCalendar event with alarm for a live class | src/Tabsan.EduSphere.Application/LiveClasses/LiveClassContracts.cs |
+| BigBlueButtonProvider / ZoomProvider / TeamsProvider | Plan M10: conferencing providers (signed BBB API, Zoom S2S OAuth, Microsoft Graph) | src/Tabsan.EduSphere.Infrastructure/LiveClasses/ConferenceProviders.cs |
+| LiveClassRepository | Plan M10: settings, sessions, joins, timetable slots, attendance marks | src/Tabsan.EduSphere.Infrastructure/Repositories/LiveClassRepository.cs |
+| LiveClassesController / LiveClassWorker | Plan M10: /api/v1/live endpoints and the minute worker | src/Tabsan.EduSphere.API/ |
+| PortalController.LiveClasses / UpcomingLiveClassesViewComponent | Plan M10: live class pages, join, calendar, attendance, settings, banner and card | src/Tabsan.EduSphere.Web/ |
+| SimilarityService | Plan M9: settings, assignment option, queue, built-in comparison, Copyleaks submission/webhook, scores, reports, student score | src/Tabsan.EduSphere.Application/Similarity/SimilarityService.cs |
+| Fingerprinter / SimilarityScorer | Plan M9: words, winnowed fingerprints, coverage score and matching passages | src/Tabsan.EduSphere.Application/Similarity/Fingerprinter.cs |
+| CopyleaksWebhook.Parse | Plan M9: Copyleaks v3 status webhook (completed / error) | src/Tabsan.EduSphere.Application/Similarity/SimilarityContracts.cs |
+| SubmissionTextExtractor | Plan M9: text from txt/html/rtf/docx/pdf submissions | src/Tabsan.EduSphere.Infrastructure/Similarity/SubmissionTextExtractor.cs |
+| CopyleaksClient | Plan M9: Copyleaks login (cached) and scan submission | src/Tabsan.EduSphere.Infrastructure/Similarity/CopyleaksClient.cs |
+| SimilarityRepository | Plan M9: settings, checks queue, documents, fingerprint matches by scope | src/Tabsan.EduSphere.Infrastructure/Repositories/SimilarityRepository.cs |
+| SimilarityController / SimilarityWorker | Plan M9: /api/v1/similarity endpoints and the background queue | src/Tabsan.EduSphere.API/ |
+| PortalController.Similarity | Plan M9: settings page, report page, assignment option, workspace recheck, student score | src/Tabsan.EduSphere.Web/Controllers/PortalController.Similarity.cs |
+| AssignmentPolicyService | Plan M8: late policy, deductions, availability/options, Assign-to overrides, missing grades, waivers, student extras, own due dates | src/Tabsan.EduSphere.Application/Assignments/AssignmentPolicyService.cs |
+| GroupService | Plan M8: group sets, groups, members, random split, roster, student join/leave | src/Tabsan.EduSphere.Application/Assignments/GroupService.cs |
+| PeerReviewService / PeerReviewAllocator.Allocate | Plan M8: balanced peer-review allocation, reviewer task, rubric-scaled scores, overview | src/Tabsan.EduSphere.Application/Assignments/PeerReviewService.cs |
+| LatePolicy.PenaltyFor | Plan M8: deduction for a late hand-in (started intervals, floor) | src/Tabsan.EduSphere.Domain/Assignments/AssignmentEnhancements.cs |
+| AssignmentPolicyRepository | Plan M8: late policies, overrides, groups, memberships, peer reviews | src/Tabsan.EduSphere.Infrastructure/Repositories/AssignmentPolicyRepository.cs |
+| AssignmentPolicyController | Plan M8: /api/v1/assignment late-policy, options, overrides, groups, peer reviews, my-extras | src/Tabsan.EduSphere.API/Controllers/AssignmentPolicyController.cs |
+| AssignmentPolicyWorker | Plan M8: hourly missing grades and peer-review allocation after due dates | src/Tabsan.EduSphere.API/Services/AssignmentPolicyWorker.cs |
+| PortalController.Policies | Plan M8: Late policy & groups, Assignment options, My groups, Peer review pages | src/Tabsan.EduSphere.Web/Controllers/PortalController.Policies.cs |
+| ModuleItemService | Plan M7: module items, release settings, student view, open/done/nav, progress report, lock reasons | src/Tabsan.EduSphere.Application/Lms/ModuleItemService.cs |
+| ModuleProgressEvaluator | Plan M7: requirements, prerequisites, unlock dates, sequential locks, completion | src/Tabsan.EduSphere.Application/Lms/ModuleProgressEvaluator.cs |
+| ModuleItemRepository | Plan M7: items, progress, prerequisites and evidence from submissions, quizzes, discussions, LTI | src/Tabsan.EduSphere.Infrastructure/Repositories/ModuleItemRepository.cs |
+| ModuleItemsController | Plan M7: /api/v1/lms structure, items, release, my-modules, open, done, nav, progress | src/Tabsan.EduSphere.API/Controllers/ModuleItemsController.cs |
+| ModuleGate | Plan M7: refuses locked quizzes, submissions and tool launches | src/Tabsan.EduSphere.API/Services/ModuleGate.cs |
+| PortalController.Modules / ModuleNavViewComponent | Plan M7: item editor, item pages, previous/next bar, progress report | src/Tabsan.EduSphere.Web/ |
+| OutcomeService | Plan M6: outcomes CRUD, rating scales, CLO→PLO mappings, Excel import, alignments | src/Tabsan.EduSphere.Application/Outcomes/OutcomeService.cs |
+| OutcomeResultSync / OutcomeAware*GradebookSync | Plan M6: evidence from graded work; decorators on the assignment and quiz gradebook syncs | src/Tabsan.EduSphere.Application/Outcomes/OutcomeResultSync.cs |
+| MasteryCalculator | Plan M6: Highest / Latest / Average / DecayingAverage / NMastery, rating and status | src/Tabsan.EduSphere.Application/Outcomes/MasteryCalculator.cs |
+| OutcomeReportService | Plan M6: mastery gradebook, student mastery, program attainment | src/Tabsan.EduSphere.Application/Outcomes/OutcomeReportService.cs |
+| OutcomeDocuments | Plan M6: import template/reader, mastery workbook, attainment workbook and PDF | src/Tabsan.EduSphere.Infrastructure/Outcomes/OutcomeDocuments.cs |
+| OutcomesController | Plan M6: /api/v1/outcomes | src/Tabsan.EduSphere.API/Controllers/OutcomesController.cs |
+| PortalController.Outcomes / outcome-align.js | Plan M6: outcome pages and the alignment widget | src/Tabsan.EduSphere.Web/ |
+| LtiAdminService | Plan M5: tool registry, validation, deployments, key rotation, audit | src/Tabsan.EduSphere.Application/Lti/LtiAdminService.cs |
+| LtiLaunchService | Plan M5: course items, login initiation, OIDC authorize → id_token claims, Deep Linking response | src/Tabsan.EduSphere.Application/Lti/LtiLaunchService.cs |
+| LtiTokenService / LtiAgsNrpsService / LtiGradeBridge | Plan M5: client-credentials tokens, AGS line items/scores/results, NRPS memberships, scores → graded submissions | src/Tabsan.EduSphere.Application/Lti/LtiServiceEndpoints.cs |
+| LtiPlatformKeyStore / LtiToolJwtValidator | Plan M5: RS256 platform keys with rotation and JWKS; validation of tool-signed JWTs | src/Tabsan.EduSphere.Infrastructure/Lti/LtiCrypto.cs |
+| LtiAdminController / LtiCourseController / LtiProtocolController | Plan M5: /api/v1/lti registry, course items and launches, protocol and services | src/Tabsan.EduSphere.API/Controllers/LtiControllers.cs |
+| LtiController (Web) | Plan M5: /lti launch, authorize, deep-link return and service relays on the portal address | src/Tabsan.EduSphere.Web/Controllers/LtiController.cs |
+| ExternalToolsViewComponent / PortalController.LtiTools | Plan M5: course "External tools" card and admin tool registry page | src/Tabsan.EduSphere.Web/ |
+| PwaController.Manifest | Plan M4: branded web app manifest | src/Tabsan.EduSphere.Web/Controllers/PwaController.cs |
+| sw.js / pwa.js | Plan M4: service worker (shell, offline pages/files, push), install button, offline banner, sign-out wipe, device push card | src/Tabsan.EduSphere.Web/wwwroot/ |
+| PushNotificationService | Plan M4: push subscriptions, preferences, delivery with SSRF-safe endpoint rules | src/Tabsan.EduSphere.Application/Notifications/PushNotificationService.cs |
+| WebPushEncryption / VapidKeys / VapidKeyStore / WebPushSender | Plan M4: RFC 8291 encryption, RFC 8292 VAPID signing, key file, push service requests | src/Tabsan.EduSphere.Infrastructure/Notifications/WebPush.cs |
+| PushController | Plan M4: /api/v1/push summary, subscriptions, preferences, test | src/Tabsan.EduSphere.API/Controllers/PushController.cs |
+| PushDispatchQueue / PushDispatchWorker | Plan M4: queued push delivery for notifications sent by the API | src/Tabsan.EduSphere.API/Services/PushDispatchQueue.cs |
+| SubmissionWorkspaceService | Plan M3: attempts, multi-file submit, comments, annotations, grading workspace, posting/anonymity/moderation | src/Tabsan.EduSphere.Application/Assignments/SubmissionWorkspaceService*.cs |
+| AnnotationGeometry.Validate | Plan M3: per-type validation and re-serialisation of page-relative annotation geometry | src/Tabsan.EduSphere.Application/Assignments/AnnotationGeometry.cs |
+| SubmissionConversionProcessor.ProcessBatchAsync | Plan M3: claims and converts queued office files to PDF (retries, stale claims) | src/Tabsan.EduSphere.Application/Assignments/SubmissionConversionProcessor.cs |
+| AssignmentGradebookSync / AssignmentGradebookCalculator | Plan M3: posted assignment grades → "Assignment(s)" gradebook component | src/Tabsan.EduSphere.Application/Assignments/AssignmentGradebookSync.cs |
+| GotenbergDocumentConverter | Plan M3: DOCX/PPTX/XLSX/ODT → PDF through Gotenberg | src/Tabsan.EduSphere.Infrastructure/Documents/GotenbergDocumentConverter.cs |
+| AnnotatedPdfRenderer | Plan M3: draws annotations onto a PDF/image with PDFsharp and appends a comments page | src/Tabsan.EduSphere.Infrastructure/Documents/AnnotatedPdfRenderer.cs |
+| SubmissionWorkspaceRepository | Plan M3: EF data access for attempts, files, comments, annotations, provisional grades, conversion queue | src/Tabsan.EduSphere.Infrastructure/Repositories/SubmissionWorkspaceRepository.cs |
+| SubmissionWorkspaceController | Plan M3: /api/v1/assignment settings, submissions, files, comments, annotations, workspace, grade, rubric, moderate, post/hide grades, reveal names | src/Tabsan.EduSphere.API/Controllers/SubmissionWorkspaceController.cs |
+| SubmissionConversionWorker | Plan M3: background worker polling the conversion queue | src/Tabsan.EduSphere.API/Services/SubmissionConversionWorker.cs |
+| Rubric.AddCriterion / RubricCriterion.AddLevel | Plan M3 fix: rubric criteria and levels are attached and saved | src/Tabsan.EduSphere.Domain/Assignments/Rubric.cs |
+| PortalController.GradingWorkspace / AssignmentSubmission | Plan M3: grading workspace and student submission pages, JSON and file relays | src/Tabsan.EduSphere.Web/Controllers/PortalController.Grading.cs |
+| submission-viewer.js / grading-workspace.js / comment-recorder.js | Plan M3: PDF.js viewer with annotation layer, workspace navigation and autosave, voice comments | src/Tabsan.EduSphere.Web/wwwroot/js/ |
+| QuizService (Delivery, Grading partials) | Plan M2: paper, autosave, submit, deadline, review, grading queue, regrade, statistics | src/Tabsan.EduSphere.Application/Quizzes/QuizService*.cs |
+| QuestionGraders / QuestionAuthoring / FormulaEvaluator | Plan M2: grader per question type, config validation, safe formula evaluation | src/Tabsan.EduSphere.Application/Quizzes/Grading/ |
+| QuestionBankService / QuestionBankSpreadsheet | Plan M2: question banks and Excel import/export | src/Tabsan.EduSphere.Application/Quizzes/QuestionBankService.cs |
+| QuizGradebookSync | Plan M2: finished quiz scores → "Quiz(zes)" gradebook component | src/Tabsan.EduSphere.Application/Quizzes/QuizGradebookSync.cs |
+| QuestionBankController | Plan M2: /api/v1/quiz/banks CRUD, questions, import/export | src/Tabsan.EduSphere.API/Controllers/QuestionBankController.cs |
+| PortalController.QuizBuilder / TakeQuiz / QuizGrading / QuizStatistics | Plan M2: quiz builder, banks, take-quiz, review, grading and statistics pages | src/Tabsan.EduSphere.Web/Controllers/PortalController.Quizzes.cs |
+| SsoSignInService / SsoSettingsService / SsoAccountServices | Plan M1: SSO sign-in, provider settings, linked accounts, enforced SSO | src/Tabsan.EduSphere.Application/Auth/ |
+| OidcClient / SamlClient | Plan M1: OpenID Connect (PKCE) and SAML 2.0 protocol clients | src/Tabsan.EduSphere.Infrastructure/Auth/ |
+| SsoController / SsoSettingsController / SsoLinksController | Plan M1: /api/v1/sso start, callback, ACS, metadata, settings, links | src/Tabsan.EduSphere.API/Controllers/ |
 | QA Phases H-M All Modules Verified | Payments, Certificates, Study Plan, Degree Audit, Graduation, Reports, UI/UX | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase G Results Attendance Assignments Verified | EnterResults, EnterAttendance, BulkMarkAttendance, Assignments all operational | src/Tabsan.EduSphere.Web/Controllers/PortalController.cs |
 | QA Phase F Student Lifecycle Verified | Semester dropdown constrained to TotalSemesters, student CRUD pages | src/Tabsan.EduSphere.Web/Helpers/AcademicLevelRangeHelper.cs |

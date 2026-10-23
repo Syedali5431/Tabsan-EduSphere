@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Tabsan.EduSphere.Application.Auth;
 using Tabsan.EduSphere.Application.Dtos;
 using Tabsan.EduSphere.Application.Interfaces;
+using Tabsan.EduSphere.Application.Localization;
 using Tabsan.EduSphere.Domain.Auditing;
 using Tabsan.EduSphere.Domain.Identity;
 using Tabsan.EduSphere.Domain.Interfaces;
@@ -26,6 +27,9 @@ public class AccountSecurityService : IAccountSecurityService
     // Phase 2 - ISO Security
     private readonly IUserSessionRepository _sessionRepo;
     private readonly AuthSecurityOptions _security;
+    // Plan M11 - account emails in the recipient's language.
+    private readonly IPortalLanguageService? _languages;
+    private readonly ITextLocalizer? _text;
 
     public AccountSecurityService(
         IUserRepository userRepo,
@@ -36,8 +40,12 @@ public class AccountSecurityService : IAccountSecurityService
         IAuditService audit,
         IOptions<AuthSecurityOptions> security,
         IAccountSecurityEmailQueue? emailQueue = null,
-        IUserSessionRepository? sessionRepo = null)
+        IUserSessionRepository? sessionRepo = null,
+        IPortalLanguageService? languages = null,
+        ITextLocalizer? text = null)
     {
+        _languages         = languages;
+        _text              = text;
         _userRepo          = userRepo;
         _passwordHasher    = passwordHasher;
         _passwordHistory   = passwordHistory;
@@ -90,9 +98,12 @@ public class AccountSecurityService : IAccountSecurityService
         // Notify user by email if address is on file.
         if (!string.IsNullOrWhiteSpace(target.Email))
         {
+            var language = await RecipientLanguageAsync(target, ct);
+            var subject = _text?.Translate("Your account has been unlocked", language) ?? "Your account has been unlocked";
             var body = _templateRenderer.Render("account-unlocked", new Dictionary<string, string>
             {
-                ["USERNAME"] = target.Username
+                ["USERNAME"] = target.Username,
+                ["LANGUAGE"] = language
             });
             try
             {
@@ -101,7 +112,7 @@ public class AccountSecurityService : IAccountSecurityService
                 {
                     await _emailQueue.EnqueueAsync(new AccountSecurityEmailWorkItem(
                         target.Email,
-                        "Your account has been unlocked",
+                        subject,
                         body,
                         "account-unlocked",
                         DateTime.UtcNow),
@@ -109,7 +120,7 @@ public class AccountSecurityService : IAccountSecurityService
                 }
                 else
                 {
-                    await _emailSender.SendAsync(target.Email, "Your account has been unlocked", body, ct);
+                    await _emailSender.SendAsync(target.Email, subject, body, ct);
                 }
             }
             catch { /* non-fatal — unlock succeeded regardless */ }
@@ -176,9 +187,12 @@ public class AccountSecurityService : IAccountSecurityService
 
         if (!string.IsNullOrWhiteSpace(target.Email))
         {
+            var language = await RecipientLanguageAsync(target, ct);
+            var subject = _text?.Translate("Your password has been reset", language) ?? "Your password has been reset";
             var body = _templateRenderer.Render("password-reset", new Dictionary<string, string>
             {
-                ["USERNAME"] = target.Username
+                ["USERNAME"] = target.Username,
+                ["LANGUAGE"] = language
             });
             try
             {
@@ -186,7 +200,7 @@ public class AccountSecurityService : IAccountSecurityService
                 {
                     await _emailQueue.EnqueueAsync(new AccountSecurityEmailWorkItem(
                         target.Email,
-                        "Your password has been reset",
+                        subject,
                         body,
                         "password-reset",
                         DateTime.UtcNow),
@@ -194,11 +208,19 @@ public class AccountSecurityService : IAccountSecurityService
                 }
                 else
                 {
-                    await _emailSender.SendAsync(target.Email, "Your password has been reset", body, ct);
+                    await _emailSender.SendAsync(target.Email, subject, body, ct);
                 }
             }
             catch { /* non-fatal — reset succeeded regardless */ }
         }
+    }
+
+    /// <summary>Plan M11 — the user's own language, else the institution default.</summary>
+    private async Task<string> RecipientLanguageAsync(User target, CancellationToken ct)
+    {
+        if (_languages is null) return PortalLanguages.Normalize(target.PreferredLanguage) ?? PortalLanguages.English;
+        try { return await _languages.ForRecipientAsync(target.PreferredLanguage, ct); }
+        catch { return PortalLanguages.English; }
     }
 
     public async Task<IList<AccountLockoutStatusDto>> GetLockedAccountsAsync(CancellationToken ct = default)

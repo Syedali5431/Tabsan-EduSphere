@@ -13,8 +13,13 @@ namespace Tabsan.EduSphere.Application.Lms;
 public sealed class LmsService : ILmsService
 {
     private readonly ILmsRepository _repo;
+    private readonly IModuleItemRepository? _items;
 
-    public LmsService(ILmsRepository repo) => _repo = repo;
+    public LmsService(ILmsRepository repo, IModuleItemRepository? items = null)
+    {
+        _repo = repo;
+        _items = items;
+    }
 
     // ── Modules ────────────────────────────────────────────────────────────────
 
@@ -102,6 +107,14 @@ public sealed class LmsService : ILmsService
             request.ModuleId, request.Title, request.StorageUrl, request.EmbedUrl, request.DurationSeconds);
         await _repo.AddVideoAsync(video, ct);
         await _repo.SaveChangesAsync(ct);
+
+        // Plan M7: a new video becomes the module's last item.
+        if (_items is not null && await _repo.GetModuleByIdAsync(request.ModuleId, ct) is { } module)
+        {
+            var position = (await _items.GetItemsAsync(module.OfferingId, ct)).Where(i => i.ModuleId == module.Id).Select(i => i.Position).DefaultIfEmpty(0).Max() + 1;
+            _items.Add(new ModuleItem(module.Id, module.OfferingId, ModuleItemType.Video, video.Id, video.Title, null, null, position, Guid.Empty));
+            await _items.SaveChangesAsync(ct);
+        }
         return MapVideo(video);
     }
 
@@ -112,6 +125,13 @@ public sealed class LmsService : ILmsService
         video.SoftDelete();
         _repo.UpdateVideo(video);
         await _repo.SaveChangesAsync(ct);
+
+        // Plan M7: the video's module items go with it.
+        if (_items is not null)
+        {
+            foreach (var item in await _items.GetItemsByTargetAsync(ModuleItemType.Video, videoId, ct)) _items.Remove(item);
+            await _items.SaveChangesAsync(ct);
+        }
     }
 
     // ── Mappers ────────────────────────────────────────────────────────────────

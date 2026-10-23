@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d3b66" />
+    <title>Offline - Tabsan EduSphere</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f7fb; }
+        .offline-card { max-width: 30rem; }
+    </style>
+</head>
+<body>
+    <main class="offline-card card border-0 shadow-sm m-3">
+        <div class="card-body p-4 text-center">
+            <img src="/images/pwa/icon-192.png" alt="" width="72" height="72" class="mb-3 rounded" />
+            <h1 class="h4">You are offline</h1>
+            <p class="text-muted">This page has not been saved on this device. Pages you opened recently — your timetable, announcements,
+               course materials and notifications — can still be read without a connection.</p>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a class="btn btn-primary" href="/Portal/TimetableStudent">Timetable</a>
+                <a class="btn btn-outline-primary" href="/Portal/Announcements">Announcements</a>
+                <a class="btn btn-outline-primary" href="/Portal/Notifications">Notifications</a>
+            </div>
+            <button type="button" class="btn btn-link mt-3" onclick="location.reload()">Try again</button>
+        </div>
+    </main>
+</body>
+</html>

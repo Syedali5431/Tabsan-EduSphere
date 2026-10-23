@@ -1,0 +1,103 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ExternalToolsCardModel
+@* Plan M5 — External tools (LTI 1.3) in a course. *@
+<div class="card border-0 shadow-sm mb-3" id="external-tools">
+    <div class="card-body">
+        <h2 class="h5 mb-3">@T["External tools"]</h2>
+        @if (Model.Links.Count == 0)
+        {
+            <p class="text-muted small">@T["No external tools in this course yet."]</p>
+        }
+        <div class="list-group mb-3">
+            @foreach (var link in Model.Links)
+            {
+                var launchUrl = Url.Action("Launch", "Lti", new { linkId = link.Id, returnUrl = Model.ReturnUrl });
+                <div class="list-group-item d-flex flex-wrap gap-2 align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">
+                            @link.Title
+                            @if (!link.IsVisible) { <span class="badge bg-secondary ms-1">@T["Hidden"]</span> }
+                            @if (link.LineItemId.HasValue) { <span class="badge bg-info text-dark ms-1">@T["Graded"]</span> }
+                        </div>
+                        <div class="small text-muted">@link.ToolName@(string.IsNullOrWhiteSpace(link.Description) ? "" : " · " + link.Description)</div>
+                    </div>
+                    @if (link.PresentationTarget == "iframe")
+                    {
+                        <a class="btn btn-sm btn-primary" href="@launchUrl">@T["Open"]</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-sm btn-primary" href="@launchUrl" target="_blank" rel="noopener">@T["Open"] <span class="visually-hidden">@T["(opens in a new tab)"]</span>↗</a>
+                    }
+                    @if (Model.Manage)
+                    {
+                        @if (link.AssignmentId is { } assignmentId)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Portal" asp-action="GradingWorkspace" asp-route-assignmentId="@assignmentId">@T["Grades"]</a>
+                        }
+                        <form asp-controller="Portal" asp-action="SetLtiLinkVisible" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="linkId" value="@link.Id" />
+                            <input type="hidden" name="visible" value="@(!link.IsVisible ? "true" : "false")" />
+                            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                            <button class="btn btn-sm btn-outline-secondary">@(link.IsVisible ? T.Text("Hide") : T.Text("Show"))</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (Model.Manage)
+        {
+            @if (Model.Tools.Count == 0)
+            {
+                <p class="small text-muted mb-0">@T["No tools are available for this course. An administrator registers tools under System Settings › External Tools."]</p>
+            }
+            else
+            {
+                <details>
+                    <summary class="small fw-semibold">@T["Add an external tool"]</summary>
+                    <form asp-controller="Portal" asp-action="CreateLtiLink" method="post" class="row g-2 mt-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <div class="col-md-4">
+                            <label class="form-label small" for="lti-tool">@T["Tool"]</label>
+                            <select id="lti-tool" name="toolId" class="form-select form-select-sm" required>
+                                @foreach (var t in Model.Tools) { <option value="@t.ToolId">@t.Name</option> }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small" for="lti-title">@T["Title"]</label>
+                            <input id="lti-title" name="title" class="form-control form-control-sm" maxlength="200" required />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small" for="lti-target">@T["Opens"]</label>
+                            <select id="lti-target" name="presentationTarget" class="form-select form-select-sm">
+                                <option value="window">@T["New tab"]</option>
+                                <option value="iframe">@T["Inside EduSphere"]</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small" for="lti-max">@T["Points (optional)"]</label>
+                            <input id="lti-max" name="gradeMaximum" type="number" min="1" step="0.5" class="form-control form-control-sm" placeholder="@T["Not graded"]" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small" for="lti-desc">@T["Description"]</label>
+                            <input id="lti-desc" name="description" class="form-control form-control-sm" maxlength="1000" />
+                        </div>
+                        <div class="col-12"><button class="btn btn-sm btn-primary">@T["Add"]</button></div>
+                    </form>
+                </details>
+                @foreach (var t in Model.Tools.Where(t => t.SupportsDeepLinking))
+                {
+                    <form action="@Url.Action("DeepLink", "Lti", new { offeringId = Model.OfferingId })" method="post" class="d-inline-block mt-2 me-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="toolId" value="@t.ToolId" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <button class="btn btn-sm btn-outline-primary">@T.Format("Choose content from {0}", t.Name)</button>
+                    </form>
+                }
+            }
+        }
+    </div>
+</div>

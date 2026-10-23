@@ -1,5 +1,96 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update — 2026-10-24 (Plan M14: accessibility, scale hardening, public API)
+### Module impact summary
+- **All portal modules**: accessible names, contrast and keyboard focus across 106 views (no behaviour change).
+- **Media storage / SCORM**: optional Azure Blob or S3 storage (`MediaStorage:Provider`).
+- **Security**: request limits applied to the whole API; personal API tokens (new menu `api_tokens`, Admin/Super Admin).
+### Validation summary
+- axe 0 findings; exam-day load run; unit, integration and web tests for storage, tokens and limits.
+
+## Execution Update — 2026-10-23 (Plan M13: SCORM / xAPI)
+### Module impact summary
+- **LMS / course content**: SCORM packages on the course content page and as module items (`ScormPackage`).
+- **Assignments & gradebook**: graded packages create an assignment that receives the best score; students cannot upload to package or tool assignments.
+- **Settings**: new SuperAdmin menu `xapi_settings` (Learning Record Store credentials and statements).
+### Validation summary
+- Unit, integration (+3), web (+4); Playwright SCORM player spec.
+
+## Execution Update — 2026-10-23 (Plan M12: Native Mobile App)
+### Module impact summary
+- **Authentication/SSO**: app sign-in through the portal with a PKCE one-time code; version gate for outdated apps.
+- **Notifications**: native push next to Web Push, same per-type preferences; device registry.
+- **Student, Faculty, Parent portals**: read models for phones (home, timetable, courses, results, attendance, report cards, children); attendance, grading, announcements and discussions reuse the existing endpoints.
+- **Operations**: self-hosted crash reports; white-label build script.
+### Validation summary
+- Unit +26, integration +5, web +8; Android/Windows builds.
+
+## Execution Update — 2026-10-20 (Plan M11: Localisation)
+### Module impact summary
+- **Cross-cutting (all modules)**: every page text is translatable; Urdu/Arabic right-to-left layout; API answers, validation errors, emails and PDFs in the caller's/recipient's language.
+- **Settings**: new SuperAdmin menu `language_settings` (Language & Translations: default language, coverage, Excel export/import).
+- **User settings**: each user's language (`users.PreferredLanguage`), changed from the top-bar switcher.
+### Validation summary
+- Unit +27, integration +5, web +4; Playwright localisation spec green.
+
+## Execution Update — 2026-10-19 (Plan M10: Live Classes)
+### Module impact summary
+- **live_classes** (new, licence-gated): conferencing settings, sessions, join, calendar, attendance from joins and provider reports, worker; menus `live_classes`, `live_class_settings`.
+- **attendance**: live classes add Present/Absent marks for the class date without overwriting existing marks.
+- **notifications**: new `LiveClass` type (also a Web Push category).
+### Validation summary
+- Unit 493, integration 349 (+1 skip), web 75, contract 1; Playwright live-class spec green.
+
+## Execution Update — 2026-10-19 (Plan M9: Similarity Checking)
+### Module impact summary
+- **similarity** (new, licence-gated): provider settings, per-assignment checking, queue worker, reports, Copyleaks webhook; settings menu `similarity_settings`.
+- **assignments**: similarity option on assignments, badges and reports in the grading workspace, student score.
+### Validation summary
+- Unit 485, integration 346 (+1 skip), web 72, contract 1; Playwright similarity spec green.
+
+## Execution Update — 2026-10-19 (Plan M8: Assignment Enhancements)
+### Module impact summary
+- **assignments**: late/missing policy, availability and late cut-off, Assign-to dates, group sets and group assignments, peer review, waivers and peer averages in the grading workspace.
+- **notifications (discussion)**: threads can belong to a student group and are visible only to that group and staff.
+### Validation summary
+- Unit 476, integration 344 (+1 skip), web 69, contract 1; Playwright assignment-enhancement spec green.
+
+## Execution Update — 2026-10-19 (Plan M7: Module Progress & Release Conditions)
+### Module impact summary
+- **lms**: module items, requirements, release conditions, item pages and progress report; videos are module items.
+- **quizzes / assignments / lti**: starting, submitting or launching is refused while the item's module is locked for the student.
+### Validation summary
+- Unit 460, integration 341 (+1 skip), web 64, contract 1; Playwright module spec green.
+
+## Execution Update — 2026-10-19 (Plan M6: Learning Outcomes & Mastery)
+### Module impact summary
+- New module **outcomes**: Learning Outcomes, Mastery gradebook, Program attainment (staff) and My Outcomes (students).
+- **assignments / quizzes / lti**: grading feeds outcome evidence; the legacy grade and rubric endpoints now refresh the gradebook as well.
+### Validation summary
+- Unit 446, integration 339 (+1 skip), web 59, contract 1; Playwright outcomes spec green.
+
+## Execution Update — 2026-10-19 (Plan M5: External Tools / LTI 1.3)
+### Module impact summary
+- New module **lti** ("External Tools (LTI 1.3)"): tool registry page, course card on LMS pages, `/lti/*` platform endpoints on the portal address, `/api/v1/lti/*` in the API (gated by the module).
+- **assignments**: tool line items are assignments (`ExternalToolId`); tool scores become graded submissions.
+### Validation summary
+- Unit 435, integration 336 (+1 skip), web 52, contract 1; Playwright LTI spec green.
+
+## Execution Update — 2026-10-19 (Plan M4: Progressive Web App)
+### Module impact summary
+- **notifications**: Web Push delivery for every notification, device management and per-type preferences on the Notifications page.
+- Portal shell: manifest, service worker, offline page, install button.
+### Validation summary
+- Unit 413, integration 333 (+1 skip), web 41, contract 1; Playwright PWA spec green.
+
+## Execution Update — 2026-10-19 (Plan M1–M3: SSO, Quiz Engine, Grading Workspace)
+### Module impact summary
+- **sso** (new, licensed): OIDC/SAML sign-in, provider settings page, linked accounts, enforced SSO.
+- **quizzes**: quiz builder, question banks, eleven question types, take-quiz paper with autosave and server deadline, review, grading queue, regrade, statistics, gradebook sync.
+- **assignments**: submission attempts and files, grading workspace with annotations, rubric scoring, comments, anonymous/moderated grading, grade posting, gradebook sync; optional Gotenberg document conversion.
+### Validation summary
+- Unit 395, integration 331 (+1 skip), web 33, contract 1 — all passing at 2026-10-19.
+
 ## Execution Update — 2026-06-22 (Profile Picture Upload & Graduated Demo Students)
 ### Module impact: User Settings, Portal Navigation, Demo Data
 - User Settings: New profile picture upload card with preview, validation, and upload button. Accepts JPG/JPEG/PNG up to 2 MB. Saves to wwwroot/uploads/profile-pictures.

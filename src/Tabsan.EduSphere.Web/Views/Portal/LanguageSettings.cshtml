@@ -1,0 +1,92 @@
+@model Tabsan.EduSphere.Web.Models.Portal.LanguageSettingsPageModel
+@using Tabsan.EduSphere.Application.Localization
+@{
+    ViewData["Title"] = T.Text("Language & Translations");
+}
+
+@* Plan M11 — default language and the translation workflow. *@
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="mb-3">
+    <h2 class="h3 mb-1">@T["Language & Translations"]</h2>
+    <p class="text-muted mb-0">@T["The portal is available in English, Urdu and Arabic. Everyone can switch language from the top bar; their choice is remembered."]</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-xl-5">
+        <div class="card border-0 shadow-sm h-100" data-default-language>
+            <div class="card-body">
+                <h3 class="h5">@T["Default language"]</h3>
+                <p class="small text-muted">@T["Used for people who have not chosen a language, on the login page and for emails to them."]</p>
+                @if (!Model.IsConnected)
+                {
+                    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+                }
+                else
+                {
+                    <form asp-action="SaveDefaultLanguage" method="post">
+                        @Html.AntiForgeryToken()
+                        <label class="form-label small" for="lang-default">@T["Language"]</label>
+                        <select class="form-select form-select-sm mb-3" id="lang-default" name="language">
+                            @foreach (var lang in PortalLanguages.All)
+                            {
+                                <option value="@lang" selected="@(Model.DefaultLanguage == lang)">@T.Text(PortalLanguages.EnglishName(lang)) — @PortalLanguages.NativeName(lang)</option>
+                            }
+                            <option value="auto" selected="@(Model.DefaultLanguage == "auto")">@T["The browser's language (English when it is not offered)"]</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm">@T["Save"]</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-7">
+        <div class="card border-0 shadow-sm h-100" data-translation-coverage>
+            <div class="card-body">
+                <h3 class="h5">@T["Translations"]</h3>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-3">
+                        <thead><tr><th>@T["Language"]</th><th>@T["Translated"]</th><th>@T["Changed by your translators"]</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.Coverage)
+                            {
+                                <tr data-language="@c.Language">
+                                    <td>@T.Text(c.Name) @if (T.Language != c.Language) { <span class="text-muted" lang="@c.Language">@PortalLanguages.NativeName(c.Language)</span> }</td>
+                                    <td>@T.Format("{0} of {1}", c.Translated, c.Keys)</td>
+                                    <td>@c.Overrides</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @foreach (var c in Model.Coverage.Where(c => c.MissingSample.Count > 0))
+                {
+                    <details class="mb-2" data-missing="@c.Language">
+                        <summary class="small">@T.Format("Not yet translated into {0}", T.Text(c.Name))</summary>
+                        <ul class="small mb-0">@foreach (var k in c.MissingSample) { <li>@k</li> }</ul>
+                    </details>
+                }
+                <ol class="small text-muted">
+                    <li>@T["Export the workbook: one row per English text, a column per language."]</li>
+                    <li>@T["Translators fill in or correct the language columns, keeping {0}, {1} … as they are."]</li>
+                    <li>@T["Import the workbook. Only changed texts are kept, and the portal uses them at once — no new release needed."]</li>
+                </ol>
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+                    <a class="btn btn-outline-secondary btn-sm" asp-action="ExportTranslations">@T["Export to Excel"]</a>
+                    <form asp-action="ImportTranslations" method="post" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-end">
+                        @Html.AntiForgeryToken()
+                        <div>
+                            <label class="form-label small" for="tr-file">@T["Translated workbook (.xlsx)"]</label>
+                            <input class="form-control form-control-sm" id="tr-file" name="file" type="file" accept=".xlsx" required />
+                        </div>
+                        <button class="btn btn-primary btn-sm">@T["Import"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

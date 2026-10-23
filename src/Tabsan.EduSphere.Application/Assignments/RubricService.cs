@@ -14,10 +14,14 @@ public class RubricService : IRubricService
 {
     // Final-Touches Phase 16 Stage 16.2 — dependencies
     private readonly IRubricRepository _rubricRepo;
+    private readonly ISubmissionWorkspaceRepository? _submissions;
+    private readonly IAssignmentGradebookSync? _gradebook;
 
-    public RubricService(IRubricRepository rubricRepo)
+    public RubricService(IRubricRepository rubricRepo, ISubmissionWorkspaceRepository? submissions = null, IAssignmentGradebookSync? gradebook = null)
     {
         _rubricRepo = rubricRepo;
+        _submissions = submissions;
+        _gradebook = gradebook;
     }
 
     // ── Query ─────────────────────────────────────────────────────────────────
@@ -36,12 +40,13 @@ public class RubricService : IRubricService
         // Final-Touches Phase 16 Stage 16.2 — build complete rubric graph
         var rubric = Rubric.Create(request.AssignmentId, request.Title, createdByUserId);
 
+        // Plan M3 fix: criteria and levels are attached to the rubric (they were created but never saved).
         foreach (var cReq in request.Criteria.OrderBy(c => c.DisplayOrder))
         {
-            var criterion = RubricCriterion.Create(rubric.Id, cReq.Name, cReq.MaxPoints, cReq.DisplayOrder);
+            var criterion = rubric.AddCriterion(cReq.Name, cReq.MaxPoints, cReq.DisplayOrder);
             foreach (var lReq in cReq.Levels.OrderBy(l => l.DisplayOrder))
             {
-                RubricLevel.Create(criterion.Id, lReq.Label, lReq.PointsAwarded, lReq.DisplayOrder);
+                criterion.AddLevel(lReq.Label, lReq.PointsAwarded, lReq.DisplayOrder);
             }
         }
 
@@ -91,19 +96,22 @@ public class RubricService : IRubricService
         // by getting any existing grade for the submission (or by loading the rubric linked to the assignment).
         // Use the rubric loaded from the repo for validation.
 
+        // Plan M3 fix: points come from the chosen level of the rubric that owns the criterion
+        // (they were always stored as 0), and a level must belong to its criterion.
+        var rubric = await _rubricRepo.GetByCriterionAsync(criterionId, ct)
+            ?? throw new KeyNotFoundException("The rubric for this criterion was not found.");
+
         foreach (var gradeReq in request.Grades)
         {
+            var points = ResolveLevelPoints(rubric, gradeReq.CriterionId, gradeReq.LevelId);
             var existing = await _rubricRepo.GetStudentGradeAsync(request.SubmissionId, gradeReq.CriterionId, ct);
             if (existing is not null)
             {
-                // Resolve the level's PointsAwarded from the rubric's in-memory data
-                var points = await ResolveLevelPointsAsync(gradeReq.CriterionId, gradeReq.LevelId, ct);
                 existing.Update(gradeReq.LevelId, points, gradedByUserId);
                 _rubricRepo.UpdateStudentGrade(existing);
             }
             else
             {
-                var points = await ResolveLevelPointsAsync(gradeReq.CriterionId, gradeReq.LevelId, ct);
                 var grade = RubricStudentGrade.Create(
                     request.SubmissionId,
                     gradeReq.CriterionId,
@@ -115,6 +123,12 @@ public class RubricService : IRubricService
         }
 
         await _rubricRepo.SaveChangesAsync(ct);
+
+        // Plan M6: rubric criteria can be aligned to outcomes, so refresh the submission's evidence.
+        if (_submissions is not null && _gradebook is not null
+            && await _submissions.GetSubmissionAsync(request.SubmissionId, false, ct) is { } submission
+            && await _submissions.GetAssignmentAsync(submission.AssignmentId, ct) is { } assignment)
+            await _gradebook.RefreshAsync(assignment.CourseOfferingId, submission.StudentProfileId, ct);
         return (await GetSubmissionGradeAsync(Guid.Empty, request.SubmissionId, ct))!;
     }
 
@@ -155,22 +169,13 @@ public class RubricService : IRubricService
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private async Task<decimal> ResolveLevelPointsAsync(
-        Guid criterionId,
-        Guid levelId,
-        CancellationToken ct)
+    private static decimal ResolveLevelPoints(Rubric rubric, Guid criterionId, Guid levelId)
     {
-        // Final-Touches Phase 16 Stage 16.2 — resolve level points from stored rubric data
-        // Load the rubric containing this criterion to get the level's PointsAwarded value
-        // We cannot load rubric by criterionId directly without a join; look at grades or
-        // fall back to 0 with a note. A dedicated repo method would be cleaner, but to
-        // keep the interface minimal we store PointsAwarded on the grade directly.
-        // The caller provides the levelId from the rubric data the API already returned,
-        // so the controller will pass level points instead.
-        // For this implementation the controller passes pre-resolved data via RubricGradeRequest.
-        // We'll return 0 here; the controller layer will use the overload that accepts points.
-        await Task.CompletedTask;
-        return 0m; // resolved by controller before calling this service
+        var criterion = rubric.Criteria.FirstOrDefault(c => c.Id == criterionId)
+            ?? throw new InvalidOperationException("A criterion does not belong to this rubric.");
+        var level = criterion.Levels.FirstOrDefault(l => l.Id == levelId)
+            ?? throw new InvalidOperationException($"That level does not belong to \"{criterion.Name}\".");
+        return level.PointsAwarded;
     }
 
     private static RubricResponse MapRubric(Rubric rubric) => new()

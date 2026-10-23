@@ -1,14 +1,14 @@
 @model Tabsan.EduSphere.Web.Models.Portal.StudentLifecyclePageModel
-@{ ViewData["Title"] = "Student Lifecycle"; }
+@{ ViewData["Title"] = T.Text("Student Lifecycle"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -16,20 +16,20 @@ else
         <div class="card-body">
             <form method="get" asp-action="StudentLifecycle" class="row g-2 align-items-end">
                 <div class="col-md-2">
-                    <label class="form-label">Institution</label>
-                    <select name="institutionType" class="form-select" onchange="resetStudentFiltersAndSubmit(this.form)">
-                        <option value="">All</option>
-                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">University</option>
-                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">School</option>
-                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">College</option>
+                    <label class="form-label">@T["Institution"]</label>
+                    <select aria-label="@T["Institution"]" name="institutionType" class="form-select" onchange="resetStudentFiltersAndSubmit(this.form)">
+                        <option value="">@T["All"]</option>
+                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">@T["University"]</option>
+                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">@T["School"]</option>
+                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">@T["College"]</option>
                     </select>
                 </div>
                 @if (Model.Identity?.IsSuperAdmin == true)
                 {
                     <div class="col-md-2">
-                        <label class="form-label">Tenant</label>
-                        <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Tenants</option>
+                        <label class="form-label">@T["Tenant"]</label>
+                        <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All Tenants"]</option>
                             @foreach (var t in Model.Tenants)
                             {
                                 <option value="@t.Id" selected="@(Model.SelectedTenantId == t.Id ? "selected" : null)">@t.Name</option>
@@ -37,9 +37,9 @@ else
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Campus</label>
-                        <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                            <option value="">All Campuses</option>
+                        <label class="form-label">@T["Campus"]</label>
+                        <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                            <option value="">@T["All Campuses"]</option>
                             @foreach (var c in Model.Campuses)
                             {
                                 <option value="@c.Id" selected="@(Model.SelectedCampusId == c.Id ? "selected" : null)">@c.Name</option>
@@ -48,9 +48,9 @@ else
                     </div>
                 }
                 <div class="col-md-2">
-                    <label class="form-label">Department</label>
-                    <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                        <option value="">Select…</option>
+                    <label class="form-label">@T["Department"]</label>
+                    <select aria-label="@T["Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["Select…"]</option>
                         @foreach (var d in Model.Departments)
                         {
                             <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -58,8 +58,8 @@ else
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">@Model.PeriodLabel</label>
-                    <select name="semester" class="form-select" onchange="this.form.submit()">
+                    <label class="form-label">@T.Text(Model.PeriodLabel)</label>
+                    <select aria-label="@T.Text(Model.PeriodLabel)" name="semester" class="form-select" onchange="this.form.submit()">
                         @for (int i = Model.MinAcademicLevel; i <= Model.MaxAcademicLevel; i++)
                         {
                             <option value="@i" selected="@(Model.SelectedSemester == i ? "selected" : null)">@i</option>
@@ -75,14 +75,14 @@ else
         {
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabGrad">
-                    Graduation Candidates
+                    @T["Graduation Candidates"]
                     <span class="badge bg-danger ms-1">@Model.GraduationCandidates.Count</span>
                 </button>
             </li>
         }
         <li class="nav-item">
             <button class="nav-link @(Model.ShowGraduationSection ? null : "active")" data-bs-toggle="tab" data-bs-target="#tabSem">
-                @Model.PeriodLabel Students
+                @T.Format("{0} Students", T.Text(Model.PeriodLabel))
                 <span class="badge bg-secondary ms-1">@Model.StudentsBySemester.Count</span>
             </button>
         </li>
@@ -94,7 +94,7 @@ else
             <div class="tab-pane fade show active" id="tabGrad">
                 @if (Model.GraduationCandidates.Count == 0)
                 {
-                    <p class="text-muted">No graduation candidates in this department.</p>
+                    <p class="text-muted">@T["No graduation candidates in this department."]</p>
                 }
                 else
                 {
@@ -102,11 +102,11 @@ else
                         <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Reg. No.</th>
-                                    <th>Name</th>
-                                    <th>Program</th>
+                                    <th>@T["Reg. No."]</th>
+                                    <th>@T["Name"]</th>
+                                    <th>@T["Program"]</th>
                                     <th>CGPA</th>
-                                    <th>Action</th>
+                                    <th>@T["Action"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -124,8 +124,8 @@ else
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                 <button type="submit" class="btn btn-success btn-sm"
-                                                        onclick="return confirm('Graduate this student?')">
-                                                    Graduate
+                                                        onclick="return confirm('@T.Js("Graduate this student?")')">
+                                                    @T["Graduate"]
                                                 </button>
                                             </form>
                                         </td>
@@ -141,14 +141,14 @@ else
         <div class="tab-pane fade @(Model.ShowGraduationSection ? null : "show active")" id="tabSem">
             @if (Model.StudentsBySemester.Count == 0)
             {
-                <p class="text-muted">No students in selected department / @Model.PeriodLabel.ToLowerInvariant().</p>
+                <p class="text-muted">@T.Format("No students in selected department / {0}.", T.Text(Model.PeriodLabel).ToLowerInvariant())</p>
             }
             else
             {
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
-                            <tr><th>Reg. No.</th><th>Name</th><th>@Model.PeriodLabel</th><th>Action</th></tr>
+                            <tr><th>@T["Reg. No."]</th><th>@T["Name"]</th><th>@T.Text(Model.PeriodLabel)</th><th>@T["Action"]</th></tr>
                         </thead>
                         <tbody>
                             @foreach (var s in Model.StudentsBySemester)
@@ -165,8 +165,8 @@ else
                                             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                             <input type="hidden" name="semester" value="@Model.SelectedSemester" />
                                             <button type="submit" class="btn btn-outline-primary btn-sm"
-                                                    onclick="return confirm('Promote this student?')">
-                                                Promote
+                                                    onclick="return confirm('@T.Js("Promote this student?")')">
+                                                @T["Promote"]
                                             </button>
                                         </form>
                                     </td>

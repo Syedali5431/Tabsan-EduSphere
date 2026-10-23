@@ -87,6 +87,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(connecti
 // ── Repository + notification services ───────────────────────────────────────
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+// Plan M4.3 — background notifications also reach subscribed browsers (same VAPID keys as the API).
+builder.Services.Configure<WebPushOptions>(builder.Configuration.GetSection(WebPushOptions.SectionName));
+builder.Services.AddSingleton<Tabsan.EduSphere.Infrastructure.Notifications.VapidKeyStore>();
+builder.Services.AddHttpClient<IWebPushSender, Tabsan.EduSphere.Infrastructure.Notifications.WebPushSender>(c => c.Timeout = TimeSpan.FromSeconds(15))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
+builder.Services.AddScoped<IPushSubscriptionRepository, Tabsan.EduSphere.Infrastructure.Repositories.PushSubscriptionRepository>();
+builder.Services.AddScoped<IPushNotificationService, Tabsan.EduSphere.Application.Notifications.PushNotificationService>();
+builder.Services.AddScoped<IPushNotificationDispatcher, Tabsan.EduSphere.Application.Notifications.DirectPushNotificationDispatcher>();
 builder.Services.AddScoped<IParentStudentLinkRepository, ParentStudentLinkRepository>();
 builder.Services.AddScoped<IEmailSender, MailKitEmailSender>();
 builder.Services.AddSingleton<IEmailTemplateRenderer, EmailTemplateRenderer>();

@@ -1,0 +1,76 @@
+@model Tabsan.EduSphere.Web.Models.Portal.MyOutcomesPageModel
+@{
+    ViewData["Title"] = T.Text("My Outcomes");
+    string Badge(string status) => status switch { "mastered" => "bg-success", "near" => "bg-warning text-dark", "below" => "bg-danger", _ => "bg-secondary" };
+    string StatusText(string status) => status switch { "mastered" => "Mastered", "near" => "Nearly there", "below" => "Not yet", _ => "No evidence yet" };
+    string Pct(decimal value, decimal max) => max <= 0 ? "0" : Math.Round(Math.Clamp(value / max * 100, 0, 100), 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+}
+
+<div class="mb-3">
+    <h2 class="h3 mb-1">@T["My Outcomes"]</h2>
+    <p class="text-muted mb-0">@T["What your graded work shows you have mastered in each course."]</p>
+</div>
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+}
+else if (Model.ModuleOff)
+{
+    <div class="border rounded p-3 bg-light" data-outcomes-module-off>@T["Learning outcomes are not in use at your institution."]</div>
+}
+else if (Model.Courses.Count == 0)
+{
+    <div class="border rounded p-3 bg-light" data-my-outcomes-empty>@T["None of your courses assess learning outcomes yet."]</div>
+}
+else
+{
+    foreach (var course in Model.Courses)
+    {
+        <section class="card border-0 shadow-sm mb-3" aria-labelledby="c-@course.CourseOfferingId">
+            <div class="card-body">
+                <h3 class="h6 mb-3" id="c-@course.CourseOfferingId">@course.CourseCode @course.CourseTitle <span class="text-muted fw-normal">@course.SemesterName</span></h3>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var o in course.Outcomes)
+                    {
+                        <li class="border-top py-2" data-outcome-item data-status="@o.Status">
+                            <div class="d-flex flex-wrap gap-2 align-items-baseline">
+                                <strong>@o.Code</strong>
+                                <span class="flex-grow-1">@o.Title</span>
+                                <span class="badge @Badge(o.Status)">@StatusText(o.Status)</span>
+                            </div>
+                            @if (o.Score is { } score)
+                            {
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="progress flex-grow-1 position-relative" style="height: .55rem;" role="progressbar" aria-label="@o.Code mastery" aria-valuenow="@score" aria-valuemin="0" aria-valuemax="@o.MaxPoints">
+                                        <div class="progress-bar @(o.Mastered ? "bg-success" : o.Status == "near" ? "bg-warning" : "bg-danger")" style="width: @Pct(score, o.MaxPoints)%"></div>
+                                    </div>
+                                    <span class="small text-nowrap">@T.Format("{0} of {1} {2}", score.ToString("0.##"), o.MaxPoints.ToString("0.##"), (o.Rating is null ? "" : $"· {o.Rating}"))</span>
+                                </div>
+                                <div class="small text-muted">@T.Format("Mastery at {0}", o.MasteryPoints.ToString("0.##"))</div>
+                                <details class="small mt-1">
+                                    <summary>@T.Format("Evidence ({0})", o.Evidence.Count)</summary>
+                                    <ul class="mb-0">
+                                        @foreach (var ev in o.Evidence)
+                                        {
+                                            <li>@ev.Source: @ev.Title — @ev.Score.ToString("0.##") (@ev.AssessedAt.ToLocalTime().ToString("dd MMM yyyy"))</li>
+                                        }
+                                    </ul>
+                                </details>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(o.Description))
+                            {
+                                <div class="small text-muted mt-1">@o.Description</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </section>
+    }
+}

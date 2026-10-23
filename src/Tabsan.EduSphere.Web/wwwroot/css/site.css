@@ -30,8 +30,8 @@
   .btn, .btn-sm, .btn-lg {
     min-width: 80px;
     font-size: 0.95rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-inline-start: 0.5rem;
+    padding-inline-end: 0.5rem;
   }
   .btn-group, .btn-group-sm {
     flex-direction: column;
@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(36,111,190,0.12);
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
   transition: box-shadow 0.18s, background 0.18s;
 }
 .theme-icon svg {
@@ -700,7 +700,7 @@ tr th {
 .skip-to-main {
   position: absolute;
   top: -100%;
-  left: 0;
+  inset-inline-start: 0;
   z-index: 9999;
   padding: 0.7rem 1rem;
   background: #000;
@@ -856,7 +856,7 @@ tr th {
   flex-direction: column;
   gap: 0.3rem;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding-inline-end: 0.25rem;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -1098,7 +1098,7 @@ tr th {
   }
 
   body.sidebar-collapsed .sidebar-nav {
-    padding-right: 0;
+    padding-inline-end: 0;
     gap: 0.2rem;
   }
 
@@ -1140,7 +1140,7 @@ tr th {
 
 .search-pill .input-group-text {
   color: var(--color-slate-500);
-  padding-left: 1rem;
+  padding-inline-start: 1rem;
 }
 
 .search-pill .input-group-text svg {
@@ -1313,7 +1313,7 @@ tr th {
 
 .profile-menu-panel {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + 0.55rem);
   min-width: 14rem;
   padding: 0.75rem;
@@ -1377,7 +1377,7 @@ tr th {
 
 @media (max-width: 1199.98px) {
   .rooms-page .col-xl-7 {
-    padding-right: calc(var(--bs-gutter-x) * 0.5);
+    padding-inline-end: calc(var(--bs-gutter-x) * 0.5);
   }
 }
 
@@ -1536,14 +1536,14 @@ tr th {
 
 .dashboard-checklist li {
   position: relative;
-  padding-left: 1.8rem;
+  padding-inline-start: 1.8rem;
   color: var(--color-slate-700);
 }
 
 .dashboard-checklist li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.45rem;
   width: 0.95rem;
   height: 0.95rem;
@@ -1644,7 +1644,7 @@ tr th {
 .toast-stack {
   position: fixed;
   top: 5.5rem;
-  right: 1.25rem;
+  inset-inline-end: 1.25rem;
   z-index: 1100;
   display: grid;
   gap: 0.75rem;
@@ -1720,7 +1720,7 @@ tr th {
 
 .ai-chat-widget {
   position: fixed;
-  right: 1.5rem;
+  inset-inline-end: 1.5rem;
   bottom: 1.5rem;
   z-index: 1000;
 }
@@ -1738,7 +1738,7 @@ tr th {
 
 .ai-chat-panel {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 5.8rem;
   width: min(26rem, calc(100vw - 2rem));
   max-height: min(44rem, calc(100vh - 7rem));
@@ -1856,7 +1856,7 @@ tr th {
 }
 
 .ai-chat-conversations {
-  border-right: 1px solid rgba(18, 32, 51, 0.06);
+  border-inline-end: 1px solid rgba(18, 32, 51, 0.06);
   background: rgba(248, 251, 255, 0.88);
   padding: 1rem 0.85rem;
 }
@@ -1886,7 +1886,7 @@ tr th {
   width: 100%;
   display: grid;
   gap: 0.18rem;
-  text-align: left;
+  text-align: start;
   padding: 0.8rem;
   border-radius: 1rem;
   border: 1px solid transparent;
@@ -2311,7 +2311,7 @@ tr th {
   .app-sidebar {
     position: fixed;
     top: 0;
-    left: 0;
+    inset-inline-start: 0;
     bottom: 0;
     width: min(88vw, 320px);
     transform: translateX(-100%);
@@ -2334,8 +2334,8 @@ tr th {
   .app-header,
   .app-content,
   .app-footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
   }
 
   .header-meta {
@@ -2373,7 +2373,7 @@ tr th {
 
   .ai-chat-panel {
     width: min(100vw - 1rem, 28rem);
-    right: 0;
+    inset-inline-end: 0;
   }
 }
 
@@ -2405,8 +2405,8 @@ tr th {
   }
 
   .profile-menu-panel {
-    left: 0;
-    right: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
     min-width: 0;
   }
 
@@ -2447,8 +2447,8 @@ tr th {
   }
 
   .table-responsive {
-    margin-left: -0.25rem;
-    margin-right: -0.25rem;
+    margin-inline-start: -0.25rem;
+    margin-inline-end: -0.25rem;
   }
 
   .empty-state-card {
@@ -2480,8 +2480,8 @@ tr th {
   }
 
   .ai-chat-widget {
-    right: 0.75rem;
-    left: 0.75rem;
+    inset-inline-end: 0.75rem;
+    inset-inline-start: 0.75rem;
     bottom: 0.75rem;
   }
 
@@ -2496,8 +2496,8 @@ tr th {
 
   .ai-chat-panel {
     position: fixed;
-    left: 0.75rem;
-    right: 0.75rem;
+    inset-inline-start: 0.75rem;
+    inset-inline-end: 0.75rem;
     bottom: 5.5rem;
     width: auto;
     max-height: calc(100vh - 8rem);
@@ -2518,15 +2518,15 @@ tr th {
   }
 
   .ai-chat-conversations {
-    border-right: 0;
+    border-inline-end: 0;
     border-bottom: 1px solid rgba(18, 32, 51, 0.06);
   }
 
   .toast-stack {
     top: auto;
     bottom: 6rem;
-    right: 0.75rem;
-    left: 0.75rem;
+    inset-inline-end: 0.75rem;
+    inset-inline-start: 0.75rem;
     width: auto;
   }
 }
@@ -2839,3 +2839,90 @@ html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="gra
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) :is(.table-primary, .table-info, .table-warning, .table-success, .table-danger) .text-muted { color: var(--dark-text-muted) !important; }
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) .text-bg-light { background-color: var(--surface-3) !important; color: var(--dark-text-strong) !important; border: 1px solid var(--surface-border-strong); }
 .card:not(.dashboard-hero) .dashboard-stat-card .dashboard-stat-value { color: #fff; }
+
+/* ── Plan M11 — right-to-left languages (Urdu, Arabic) ─────────────────────────────
+   Layout spacing uses logical properties (padding-inline-start …), so most rules flip on their own with dir="rtl";
+   the rules below cover transforms and fonts. */
+:root[lang="ur"] body {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Sans Arabic", "Inter", system-ui, sans-serif;
+  line-height: 2;
+}
+
+:root[lang="ar"] body {
+  font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, "Inter", system-ui, sans-serif;
+}
+
+[dir="rtl"] .menu-link:hover {
+  transform: translateX(-3px);
+}
+
+/* Codes, numbers, e-mail addresses and links keep left-to-right order inside right-to-left text. */
+[dir="rtl"] code,
+[dir="rtl"] kbd,
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="tel"] {
+  direction: ltr;
+  unicode-bidi: plaintext;
+}
+
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="tel"] {
+  text-align: end;
+}
+
+@media (max-width: 991.98px) {
+  [dir="rtl"] .app-sidebar {
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] body.sidebar-open .app-sidebar {
+    transform: translateX(0);
+  }
+}
+
+.lang-switcher .form-select {
+  min-width: 7.5rem;
+}
+
+/* Plan M13 — SCORM player frame */
+.scorm-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 190px);
+  min-height: 480px;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+/* Plan M14.1 — links inside running text are underlined, so they are not told apart by colour alone (WCAG 1.4.1). */
+#main-content p a:not(.btn),
+#main-content .alert a:not(.btn),
+#main-content .form-text a,
+#main-content .p-3 > a:not(.btn):not(.badge) {
+  text-decoration: underline;
+}
+
+/* Plan M14.1 — muted text and outline buttons on light grey panels keep a 4.5:1 contrast (WCAG 1.4.3); dark themes set their own. */
+html:not(:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"])) .bg-light :is(.text-muted, .form-text, small.text-muted) {
+  color: #565e64 !important;
+}
+html:not(:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"])) :is(.bg-light.text-danger, .bg-light .text-danger) {
+  color: #b02a37 !important;
+}
+html:not(:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"])) .bg-light .btn-outline-primary:not(:hover):not(:active):not(:focus-visible) {
+  color: #0a58ca;
+  border-color: #0a58ca;
+}
+
+/* Plan M14.1 — a clearly visible keyboard focus ring (WCAG 2.4.7); mouse clicks keep the softer :focus style above. */
+html :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #1d5fa8;
+  outline-offset: 2px;
+}
+html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: #8cc4ff;
+}

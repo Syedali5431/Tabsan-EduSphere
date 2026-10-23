@@ -1,6 +1,6 @@
 @model Tabsan.EduSphere.Web.Models.Portal.SidebarSettingsPageModel
 @{
-    ViewData["Title"] = "Sidebar Settings";
+    ViewData["Title"] = T.Text("Sidebar Settings");
     var roles = new[] { "Admin", "Faculty", "Student" };
     var message = TempData["Message"] as string;
 
@@ -57,39 +57,39 @@
 }
 
 <div class="d-flex align-items-center mb-3 gap-2">
-    <h4 class="mb-0"><i class="bi bi-layout-sidebar me-2"></i>Sidebar Settings</h4>
+    <h4 class="mb-0"><i class="bi bi-layout-sidebar me-2"></i>@T["Sidebar Settings"]</h4>
 </div>
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected to the API. Configure your connection in Dashboard.</div>
+    <div class="alert alert-warning">@T["Not connected to the API. Configure your connection in Dashboard."]</div>
 }
 else
 {
     @if (!string.IsNullOrEmpty(message))
     {
         <div class="alert alert-info alert-dismissible fade show" role="alert">
-            @message
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @T.Text(message)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
         </div>
     }
     @if (!string.IsNullOrEmpty(Model.Message))
     {
-        <div class="alert alert-danger">@Model.Message</div>
+        <div class="alert alert-danger">@T.Text(Model.Message)</div>
     }
 
     <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
         <i class="bi bi-shield-lock-fill fs-5 text-primary mt-1"></i>
         <div>
-            <strong>SuperAdmin</strong> always retains full sidebar access regardless of these settings.
-            These controls affect <strong>Admin</strong>, <strong>Faculty</strong>, and <strong>Student</strong> roles only.
-            System menus (marked <span class="badge bg-secondary">System</span>) cannot be deactivated.
+            <strong>@T["SuperAdmin"]</strong> @T["always retains full sidebar access regardless of these settings."]
+            @T["These controls affect"] <strong>@T["Admin"]</strong>, <strong>@T["Faculty"]</strong>@T[", and"] <strong>@T["Student"]</strong> @T["roles only."]
+            @T["System menus (marked"] <span class="badge bg-secondary">@T["System"]</span>@T[") cannot be deactivated."]
         </div>
     </div>
 
     @if (!Model.TopLevelMenus.Any())
     {
-        <div class="text-muted">No sidebar menu items found. Run the application once to seed defaults.</div>
+        <div class="text-muted">@T["No sidebar menu items found. Run the application once to seed defaults."]</div>
     }
     else
     {
@@ -98,14 +98,14 @@ else
                 <thead class="table-dark">
                     <tr>
                         <th style="width:3rem">#</th>
-                        <th>Name</th>
-                        <th>Purpose</th>
+                        <th>@T["Name"]</th>
+                        <th>@T["Purpose"]</th>
                         @foreach (var role in roles)
                         {
                             <th class="text-center" style="width:6rem">@role</th>
                         }
-                        <th class="text-center" style="width:6rem">Active</th>
-                        <th class="text-center" style="width:5rem">Type</th>
+                        <th class="text-center" style="width:6rem">@T["Active"]</th>
+                        <th class="text-center" style="width:5rem">@T["Type"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,11 +168,11 @@ else
                             <td class="text-center">
                                 @if (item.IsSystemMenu)
                                 {
-                                    <span class="badge bg-secondary">System</span>
+                                    <span class="badge bg-secondary">@T["System"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-light text-dark border">Menu</span>
+                                    <span class="badge bg-light text-dark border">@T["Menu"]</span>
                                 }
                             </td>
                         </tr>
@@ -225,11 +225,11 @@ else
                                     <td class="text-center">
                                         @if (sub.IsSystemMenu)
                                         {
-                                            <span class="badge bg-secondary">System</span>
+                                            <span class="badge bg-secondary">@T["System"]</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-light text-dark border">Sub</span>
+                                            <span class="badge bg-light text-dark border">@T["Sub"]</span>
                                         }
                                     </td>
                                 </tr>

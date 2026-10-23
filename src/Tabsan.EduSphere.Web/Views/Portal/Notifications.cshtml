@@ -1,28 +1,48 @@
 @model Tabsan.EduSphere.Web.Models.Portal.NotificationsPageModel
-@{ ViewData["Title"] = "Notifications"; }
+@{ ViewData["Title"] = T.Text("Notifications"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
+    @* Plan M4.3 — Web Push on this device (wwwroot/js/pwa.js). *@
+    <div class="card border-0 shadow-sm mb-3" id="push-device-card"
+         data-summary-url="@Url.Action("PushSummary")" data-subscribe-url="@Url.Action("PushSubscribe")"
+         data-unsubscribe-url="@Url.Action("PushUnsubscribe")" data-prefs-url="@Url.Action("PushPreferences")" data-test-url="@Url.Action("PushTest")">
+        @Html.AntiForgeryToken()
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="flex-grow-1">
+                    <h2 class="h6 mb-0">@T["Notifications on this device"]</h2>
+                    <div class="small text-muted" data-push-status aria-live="polite">@T["Checking…"]</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" data-push-enable hidden>@T["Turn on"]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-push-test hidden>@T["Send a test"]</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-push-disable hidden>@T["Turn off"]</button>
+            </div>
+            <div class="mt-2" data-push-prefs hidden aria-label="@T["Which notifications reach your devices"]"></div>
+            <ul class="small text-muted mt-2 mb-0" data-push-devices></ul>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 class="h5 mb-0">Inbox</h2>
+            <h2 class="h5 mb-0">@T["Inbox"]</h2>
             @if (Model.UnreadCount > 0)
             {
-                <span class="badge bg-danger">@Model.UnreadCount unread</span>
+                <span class="badge bg-danger">@T.Format("{0} unread", Model.UnreadCount)</span>
             }
         </div>
         <form asp-action="MarkAllRead" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark All Read</button>
+            <button type="submit" class="btn btn-sm btn-outline-secondary">@T["Mark All Read"]</button>
         </form>
     </div>
 
@@ -31,7 +51,7 @@ else
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center text-muted py-5">
                 <div class="fs-1 mb-2">🔔</div>
-                <p class="mb-0">No notifications yet.</p>
+                <p class="mb-0">@T["No notifications yet."]</p>
             </div>
         </div>
     }
@@ -53,13 +73,13 @@ else
                         <span class="badge bg-secondary">@n.NotificationType</span>
                         @if (!n.IsRead)
                         {
-                            <span class="badge bg-primary">New</span>
+                            <span class="badge bg-primary">@T["New"]</span>
                             @* Final-Touches Phase 6 Stage 6.1 — per-notification mark-as-read button *@
                             <form asp-action="MarkNotificationRead" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@n.Id" />
-                                <button type="submit" class="btn btn-sm btn-link p-0 text-muted" title="Mark as read">
-                                    <i class="bi bi-check2"></i> Mark read
+                                <button type="submit" class="btn btn-sm btn-link p-0 text-muted" title="@T["Mark as read"]">
+                                    <i class="bi bi-check2"></i> @T["Mark read"]
                                 </button>
                             </form>
                         }

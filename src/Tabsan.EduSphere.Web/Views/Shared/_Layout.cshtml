@@ -1,3 +1,4 @@
+@inject TranslationStore Translations
 @inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
@@ -267,6 +268,15 @@
         "library_config" => ("Portal", "LibraryConfig"),
         // Plan M1.5 — Single Sign-On settings
         "sso_settings"   => ("Portal", "SsoSettings"),
+        // Plan M5 — External tools (LTI 1.3)
+        "external_tools" => ("Portal", "LtiTools"),
+        "similarity_settings" => ("Portal", "SimilaritySettings"),
+        "live_class_settings" => ("Portal", "LiveClassSettings"),
+        "language_settings" => ("Portal", "LanguageSettings"),
+        "live_classes"   => ("Portal", "LiveClasses"),
+        // Plan M6 — learning outcomes & mastery
+        "outcomes"       => ("Portal", "Outcomes"),
+        "my_outcomes"    => ("Portal", "MyOutcomes"),
         "accreditation"  => ("Portal", "AccreditationTemplates"),
         // Phase 23 — Institution Policy
         "institution_policy" => ("Portal", "InstitutionPolicy"),
@@ -284,12 +294,12 @@
         "timetableadmin" or "timetablestudent" or "timetableteacher" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M7 2v2H5a2 2 0 0 0-2 2v13a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm12 7H5v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9Z\" fill=\"currentColor\"/></svg>",
         "students" or "userimport" or "adminusers" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M16 11a4 4 0 1 0-3.999-4A4 4 0 0 0 16 11ZM8 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 14c-.29 0-.62.02-.97.05C4.64 14.3 0 15.47 0 18v2h6v-2c0-1.51.8-2.82 2.29-3.8A8.7 8.7 0 0 0 8 14Z\" fill=\"currentColor\"/></svg>",
         "departments" or "programs" or "courses" or "prerequisites" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3 1 9l11 6 9-4.91V17h2V9L12 3Zm0 14L5.5 13.45V17L12 21l6.5-4v-3.55L12 17Z\" fill=\"currentColor\"/></svg>",
-        "assignments" or "quizzes" or "viewquizzes" or "results" or "gradebook" or "gradingconfig" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-2h2Zm0-4H7v-2h2Zm0-4H7V7h2Zm8 8h-6v-2h6Zm0-4h-6v-2h6Zm0-4h-6V7h6Z\" fill=\"currentColor\"/></svg>",
+        "assignments" or "quizzes" or "viewquizzes" or "results" or "gradebook" or "gradingconfig" or "outcomes" or "myoutcomes" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-2h2Zm0-4H7v-2h2Zm0-4H7V7h2Zm8 8h-6v-2h6Zm0-4h-6v-2h6Zm0-4h-6V7h6Z\" fill=\"currentColor\"/></svg>",
         "attendance" or "analytics" or "reportcenter" or "reportsettings" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 9.2h3V19H5V9.2Zm5.5-4.7h3V19h-3V4.5ZM16 12h3v7h-3v-7Z\" fill=\"currentColor\"/></svg>",
         "payments" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 4H3V7h18Zm-6 6H5v-2h10Z\" fill=\"currentColor\"/></svg>",
         "notifications" or "announcements" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z\" fill=\"currentColor\"/></svg>",
         "helpdesk" or "discussion" or "aichat" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2Z\" fill=\"currentColor\"/></svg>",
-        "licenseupdate" or "themesettings" or "sidebarsettings" or "dashboardsettings" or "usersettings" or "institutionpolicy" or "modulecomposition" or "libraryconfig" or "ssosettings" or "accreditationtemplates" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.48 7.48 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.49-.4h-4.02a.5.5 0 0 0-.49.4l-.36 2.58c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.2 8.6a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94L2.32 14.28a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.58a.5.5 0 0 0 .49.4h4.02a.5.5 0 0 0 .49-.4l.36-2.58c.58-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z\" fill=\"currentColor\"/></svg>",
+        "licenseupdate" or "themesettings" or "sidebarsettings" or "dashboardsettings" or "usersettings" or "institutionpolicy" or "modulecomposition" or "libraryconfig" or "ssosettings" or "ltitools" or "similaritysettings" or "liveclasssettings" or "languagesettings" or "accreditationtemplates" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.48 7.48 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.49-.4h-4.02a.5.5 0 0 0-.49.4l-.36 2.58c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.2 8.6a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94L2.32 14.28a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.58a.5.5 0 0 0 .49.4h4.02a.5.5 0 0 0 .49-.4l.36-2.58c.58-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z\" fill=\"currentColor\"/></svg>",
         "twofactorsettings" => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2 3 6v6c0 5 3.8 9.7 9 10 5.2-.3 9-5 9-10V6l-9-4Zm0 4a3 3 0 0 1 3 3v1h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h1V9a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v1h2V9a1 1 0 0 0-1-1Z\" fill=\"currentColor\"/></svg>",
         _ => "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\"/></svg>"
     };
@@ -342,6 +352,8 @@
         "generate_certificates" => ("Academic Related", 5),
         "grading_config" => ("Academic Related", 5),
         "study_plan" => ("Academic Related", 5),
+        "outcomes" => ("Academic Related", 5),
+        "my_outcomes" => ("Student Related", 4),
         "result_calculation" => ("Academic Related", 5),
 
         "payments" => ("Financial Related", 6),
@@ -363,6 +375,12 @@
         "module_composition" => ("Settings Related", 7),
         "library_config" => ("Settings Related", 7),
         "accreditation" => ("Settings Related", 7),
+        "sso_settings" => ("Settings Related", 7),
+        "external_tools" => ("Settings Related", 7),
+        "similarity_settings" => ("Settings Related", 7),
+        "live_class_settings" => ("Settings Related", 7),
+        "language_settings" => ("Settings Related", 7),
+        "live_classes" => ("Academic Related", 5),
         "notifications" => ("Settings Related", 7),
         "helpdesk" => ("Settings Related", 7),
 
@@ -419,20 +437,35 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(string.IsNullOrEmpty(currentTheme) ? "" : Html.Raw($"data-theme=\"{currentTheme}\""))>
+<html lang="@T.Language" dir="@(T.IsRtl ? "rtl" : "ltr")" @(string.IsNullOrEmpty(currentTheme) ? "" : Html.Raw($"data-theme=\"{currentTheme}\""))>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Tabsan EduSphere — Campus management portal for academics, attendance, assignments, and more." />
-    <meta name="theme-color" content="#0d6efd" />
+    <meta name="theme-color" content="#0d3b66" />
+    @* Plan M4 — installable app *@
+    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="EduSphere" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
     <link rel="apple-touch-icon" href="~/images/apple-touch-icon.png" />
-    <title>@ViewData["Title"] - Tabsan EduSphere</title>
+    <title>@T.Format("{0} - Tabsan EduSphere", T.Text(ViewData["Title"]?.ToString()))</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @if (T.IsRtl)
+    {
+        @* Plan M11 — right-to-left Bootstrap and fonts with Urdu/Arabic script. *@
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    }
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Tabsan.EduSphere.Web.styles.css" asp-append-version="true" />
     @if (!string.IsNullOrEmpty(branding.FontFamily) || !string.IsNullOrEmpty(branding.FontSize))
@@ -522,7 +555,7 @@
         }
     </style>
 </head>
-<body data-user-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
+<body data-push-unsubscribe-url="@Url.Action("PushUnsubscribe", "Portal")" data-user-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Finance") ? "Finance" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
     @if (requiresLoginRedirect)
     {
         <script>window.location.replace('/Login?returnUrl=@loginReturnUrl');</script>
@@ -531,15 +564,15 @@
         </noscript>
     }
 
-    <a href="#main-content" class="skip-to-main visually-hidden-focusable">Skip to main content</a>
+    <a href="#main-content" class="skip-to-main visually-hidden-focusable">@T["Skip to main content"]</a>
     <div class="page-loader" data-page-loader aria-hidden="true">
         <div class="page-loader-spinner"></div>
-        <div class="page-loader-copy">Loading workspace</div>
+        <div class="page-loader-copy">@T["Loading workspace"]</div>
     </div>
     <div class="app-shell">
-        <aside class="app-sidebar" role="complementary" aria-label="Application sidebar" data-app-sidebar>
+        <aside class="app-sidebar" role="complementary" aria-label="@T["Application sidebar"]" data-app-sidebar>
             <div class="app-sidebar-topbar d-lg-none">
-                <button type="button" class="sidebar-toggle sidebar-toggle-inline" data-sidebar-close aria-label="Close navigation">
+                <button type="button" class="sidebar-toggle sidebar-toggle-inline" data-sidebar-close aria-label="@T["Close navigation"]">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -555,11 +588,11 @@
                 <div class="brand-meta">
                     <div class="brand-name">@branding.UniversityName</div>
                     <div class="brand-subtitle">@branding.PortalSubtitle</div>
-                    <span class="brand-tag">Institution Hub</span>
+                    <span class="brand-tag">@T["Institution Hub"]</span>
                 </div>
             </div>
 
-            <nav class="sidebar-nav" role="navigation" aria-label="Main navigation">
+            <nav class="sidebar-nav" role="navigation" aria-label="@T["Main navigation"]">
                 @if (useDynamicMenus)
                 {
                     var groupedLinks = new List<(string Group, int GroupSort, int ItemSort, string Name, string Controller, string Action)>();
@@ -685,6 +718,7 @@
                             ("Faculty Related", 2, 2690, "Discussion", "Portal", "Discussion"),
                             ("Faculty Related", 2, 2700, "Announcements", "Portal", "Announcements"),
                             ("Academic Related", 4, 2710, "Study Plan", "Portal", "StudyPlan"),
+                            ("Academic Related", 4, 2715, "Learning Outcomes", "Portal", "Outcomes"),
                             ("Settings Related", 6, 2720, "Report Settings", "Portal", "ReportSettings"),
                             ("Settings Related", 6, 2730, "Sidebar Settings", "Portal", "SidebarSettings"),
                             ("Settings Related", 6, 2740, "Theme Settings", "Portal", "ThemeSettings"),
@@ -695,6 +729,10 @@
                             ("Settings Related", 6, 2780, "Module Composition", "Portal", "ModuleComposition"),
                             ("Settings Related", 6, 2790, "Library Config", "Portal", "LibraryConfig"),
                             ("Settings Related", 6, 2795, "Single Sign-On", "Portal", "SsoSettings"),
+                            ("Settings Related", 6, 2797, "External Tools", "Portal", "LtiTools"),
+                            ("Settings Related", 6, 2798, "Similarity Checking", "Portal", "SimilaritySettings"),
+                            ("Settings Related", 6, 2799, "Live Class Settings", "Portal", "LiveClassSettings"),
+                            ("Settings Related", 6, 2800, "Language & Translations", "Portal", "LanguageSettings"),
                             ("Settings Related", 6, 2800, "Accreditation", "Portal", "AccreditationTemplates"),
                             ("Settings Related", 6, 2810, "Tenant Management", "Portal", "TenantManagement"),
                             ("Settings Related", 6, 2820, "Campus Management", "Portal", "CampusManagement")
@@ -740,7 +778,7 @@
                         .ThenBy(l => l.ItemSort)
                         .GroupBy(l => l.Group))
                     {
-                        <div class="menu-label">@group.Key</div>
+                        <div class="menu-label">@T.Text(group.Key)</div>
                         foreach (var link in group)
                         {
                             if (!showDegreeAuditSidebar && IsUniversityOnlyAction(link.Action))
@@ -756,150 +794,154 @@
                             var isActive = IsActiveLink(link.Controller, link.Action);
                             <a class="menu-link @(isActive ? "is-active" : "")" asp-controller="@link.Controller" asp-action="@link.Action" aria-current="@(isActive ? "page" : null)">
                                 <span class="menu-link-icon">@Html.Raw(ResolveMenuIcon(link.Action))</span>
-                                <span class="menu-link-text">@link.Name</span>
+                                <span class="menu-link-text">@T.Text(link.Name)</span>
                             </a>
                         }
                     }
                 }
                 else
                 {
-                    <div class="menu-label">Overview</div>
+                    <div class="menu-label">@T["Overview"]</div>
                     @if (showSuperAdminLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "Dashboard") ? "is-active" : "")" asp-controller="Portal" asp-action="Dashboard" aria-current="@(IsActiveLink("Portal", "Dashboard") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">Dashboard</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Dashboard") ? "is-active" : "")" asp-controller="Portal" asp-action="Dashboard" aria-current="@(IsActiveLink("Portal", "Dashboard") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">@T["Dashboard"]</span></a>
                     }
 
-                    <div class="menu-label">Timetable</div>
+                    <div class="menu-label">@T["Timetable"]</div>
                     @if (showAdminLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "TimetableAdmin") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableAdmin" aria-current="@(IsActiveLink("Portal", "TimetableAdmin") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableAdmin"))</span><span class="menu-link-text">Manage Timetables</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableAdmin") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableAdmin" aria-current="@(IsActiveLink("Portal", "TimetableAdmin") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableAdmin"))</span><span class="menu-link-text">@T["Manage Timetables"]</span></a>
                     }
 
                     @if (showStudentLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "TimetableStudent") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableStudent" aria-current="@(IsActiveLink("Portal", "TimetableStudent") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableStudent"))</span><span class="menu-link-text">Student Timetable</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableStudent") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableStudent" aria-current="@(IsActiveLink("Portal", "TimetableStudent") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableStudent"))</span><span class="menu-link-text">@T["Student Timetable"]</span></a>
                     }
 
                     @if (showFacultyLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "TimetableTeacher") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableTeacher" aria-current="@(IsActiveLink("Portal", "TimetableTeacher") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableTeacher"))</span><span class="menu-link-text">Teacher Timetable</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TimetableTeacher") ? "is-active" : "")" asp-controller="Portal" asp-action="TimetableTeacher" aria-current="@(IsActiveLink("Portal", "TimetableTeacher") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TimetableTeacher"))</span><span class="menu-link-text">@T["Teacher Timetable"]</span></a>
                     }
 
                     @if (showAdminLinks)
                     {
-                        <div class="menu-label">Lookups</div>
-                        <a class="menu-link @(IsActiveLink("Portal", "Buildings") ? "is-active" : "")" asp-controller="Portal" asp-action="Buildings" aria-current="@(IsActiveLink("Portal", "Buildings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Buildings"))</span><span class="menu-link-text">Buildings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "Rooms") ? "is-active" : "")" asp-controller="Portal" asp-action="Rooms" aria-current="@(IsActiveLink("Portal", "Rooms") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Rooms"))</span><span class="menu-link-text">Rooms</span></a>
+                        <div class="menu-label">@T["Lookups"]</div>
+                        <a class="menu-link @(IsActiveLink("Portal", "Buildings") ? "is-active" : "")" asp-controller="Portal" asp-action="Buildings" aria-current="@(IsActiveLink("Portal", "Buildings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Buildings"))</span><span class="menu-link-text">@T["Buildings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Rooms") ? "is-active" : "")" asp-controller="Portal" asp-action="Rooms" aria-current="@(IsActiveLink("Portal", "Rooms") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Rooms"))</span><span class="menu-link-text">@T["Rooms"]</span></a>
                     }
 
-                    <div class="menu-label">Notifications</div>
-                    <a class="menu-link @(IsActiveLink("Portal", "Notifications") ? "is-active" : "")" asp-controller="Portal" asp-action="Notifications" aria-current="@(IsActiveLink("Portal", "Notifications") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Notifications"))</span><span class="menu-link-text">Inbox</span></a>
+                    <div class="menu-label">@T["Notifications"]</div>
+                    <a class="menu-link @(IsActiveLink("Portal", "Notifications") ? "is-active" : "")" asp-controller="Portal" asp-action="Notifications" aria-current="@(IsActiveLink("Portal", "Notifications") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Notifications"))</span><span class="menu-link-text">@T["Inbox"]</span></a>
 
                     @if (showAdminLinks || showFacultyLinks)
                     {
-                        <div class="menu-label">Academic Management</div>
+                        <div class="menu-label">@T["Academic Management"]</div>
                         @if (showAdminLinks)
                         {
-                            <a class="menu-link @(IsActiveLink("Portal", "Students") ? "is-active" : "")" asp-controller="Portal" asp-action="Students" aria-current="@(IsActiveLink("Portal", "Students") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Students"))</span><span class="menu-link-text">Students</span></a>
-                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">User Import</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Students") ? "is-active" : "")" asp-controller="Portal" asp-action="Students" aria-current="@(IsActiveLink("Portal", "Students") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Students"))</span><span class="menu-link-text">@T["Students"]</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">@T["User Import"]</span></a>
                         }
                         @if (showAdminLinks || showFacultyLinks)
                         {
-                            <a class="menu-link @(IsActiveLink("Portal", "Departments") ? "is-active" : "")" asp-controller="Portal" asp-action="Departments" aria-current="@(IsActiveLink("Portal", "Departments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Departments"))</span><span class="menu-link-text">Departments</span></a>
-                            <a class="menu-link @(IsActiveLink("Portal", "Programs") ? "is-active" : "")" asp-controller="Portal" asp-action="Programs" aria-current="@(IsActiveLink("Portal", "Programs") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Programs"))</span><span class="menu-link-text">Programs</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Departments") ? "is-active" : "")" asp-controller="Portal" asp-action="Departments" aria-current="@(IsActiveLink("Portal", "Departments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Departments"))</span><span class="menu-link-text">@T["Departments"]</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Programs") ? "is-active" : "")" asp-controller="Portal" asp-action="Programs" aria-current="@(IsActiveLink("Portal", "Programs") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Programs"))</span><span class="menu-link-text">@T["Programs"]</span></a>
                         }
-                        <a class="menu-link @(IsActiveLink("Portal", "Courses") ? "is-active" : "")" asp-controller="Portal" asp-action="Courses" aria-current="@(IsActiveLink("Portal", "Courses") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Courses"))</span><span class="menu-link-text">Courses</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "Enrollments") ? "is-active" : "")" asp-controller="Portal" asp-action="Enrollments" aria-current="@(IsActiveLink("Portal", "Enrollments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Enrollments"))</span><span class="menu-link-text">Enrollments</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Courses") ? "is-active" : "")" asp-controller="Portal" asp-action="Courses" aria-current="@(IsActiveLink("Portal", "Courses") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Courses"))</span><span class="menu-link-text">@T["Courses"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Enrollments") ? "is-active" : "")" asp-controller="Portal" asp-action="Enrollments" aria-current="@(IsActiveLink("Portal", "Enrollments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Enrollments"))</span><span class="menu-link-text">@T["Enrollments"]</span></a>
                     }
 
-                    <div class="menu-label">Learning</div>
-                    <a class="menu-link @(IsActiveLink("Portal", "Assignments") ? "is-active" : "")" asp-controller="Portal" asp-action="Assignments" aria-current="@(IsActiveLink("Portal", "Assignments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Assignments"))</span><span class="menu-link-text">Assignments</span></a>
-                    <a class="menu-link @(IsActiveLink("Portal", "Attendance") ? "is-active" : "")" asp-controller="Portal" asp-action="Attendance" aria-current="@(IsActiveLink("Portal", "Attendance") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Attendance"))</span><span class="menu-link-text">Attendance</span></a>
-                    <a class="menu-link @(IsActiveLink("Portal", "Results") ? "is-active" : "")" asp-controller="Portal" asp-action="Results" aria-current="@(IsActiveLink("Portal", "Results") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Results"))</span><span class="menu-link-text">Results</span></a>
+                    <div class="menu-label">@T["Learning"]</div>
+                    <a class="menu-link @(IsActiveLink("Portal", "Assignments") ? "is-active" : "")" asp-controller="Portal" asp-action="Assignments" aria-current="@(IsActiveLink("Portal", "Assignments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Assignments"))</span><span class="menu-link-text">@T["Assignments"]</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Attendance") ? "is-active" : "")" asp-controller="Portal" asp-action="Attendance" aria-current="@(IsActiveLink("Portal", "Attendance") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Attendance"))</span><span class="menu-link-text">@T["Attendance"]</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Results") ? "is-active" : "")" asp-controller="Portal" asp-action="Results" aria-current="@(IsActiveLink("Portal", "Results") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Results"))</span><span class="menu-link-text">@T["Results"]</span></a>
                     @if (showStudentLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "ViewQuizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="ViewQuizzes" aria-current="@(IsActiveLink("Portal", "ViewQuizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ViewQuizzes"))</span><span class="menu-link-text">View Quizzes</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ViewQuizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="ViewQuizzes" aria-current="@(IsActiveLink("Portal", "ViewQuizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ViewQuizzes"))</span><span class="menu-link-text">@T["View Quizzes"]</span></a>
                     }
                     @if (showFacultyLinks || showAdminLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "Quizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="Quizzes" aria-current="@(IsActiveLink("Portal", "Quizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Quizzes"))</span><span class="menu-link-text">Quizzes</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Quizzes") ? "is-active" : "")" asp-controller="Portal" asp-action="Quizzes" aria-current="@(IsActiveLink("Portal", "Quizzes") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Quizzes"))</span><span class="menu-link-text">@T["Quizzes"]</span></a>
                     }
                     @if (canStudentSeeFyp && showDegreeAuditSidebar)
                     {
                         <a class="menu-link @(IsActiveLink("Portal", "Fyp") ? "is-active" : "")" asp-controller="Portal" asp-action="Fyp" aria-current="@(IsActiveLink("Portal", "Fyp") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Fyp"))</span><span class="menu-link-text">FYP</span></a>
                     }
-                    <a class="menu-link @(IsActiveLink("Portal", "Helpdesk") ? "is-active" : "")" asp-controller="Portal" asp-action="Helpdesk" aria-current="@(IsActiveLink("Portal", "Helpdesk") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Helpdesk"))</span><span class="menu-link-text">Helpdesk</span></a>
+                    <a class="menu-link @(IsActiveLink("Portal", "Helpdesk") ? "is-active" : "")" asp-controller="Portal" asp-action="Helpdesk" aria-current="@(IsActiveLink("Portal", "Helpdesk") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Helpdesk"))</span><span class="menu-link-text">@T["Helpdesk"]</span></a>
 
                     @if (showAdminLinks || showFacultyLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "Prerequisites") ? "is-active" : "")" asp-controller="Portal" asp-action="Prerequisites" aria-current="@(IsActiveLink("Portal", "Prerequisites") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Prerequisites"))</span><span class="menu-link-text">Prerequisites</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Prerequisites") ? "is-active" : "")" asp-controller="Portal" asp-action="Prerequisites" aria-current="@(IsActiveLink("Portal", "Prerequisites") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Prerequisites"))</span><span class="menu-link-text">@T["Prerequisites"]</span></a>
                     }
 
                     @* Final-Touches Phase 16 Stage 16.1 — Gradebook sidebar link (Faculty/Admin) *@
                     @if (showFacultyLinks || showAdminLinks)
                     {
-                        <a class="menu-link @(IsActiveLink("Portal", "Gradebook") ? "is-active" : "")" asp-controller="Portal" asp-action="Gradebook" aria-current="@(IsActiveLink("Portal", "Gradebook") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Gradebook"))</span><span class="menu-link-text">Gradebook</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "RubricManage") ? "is-active" : "")" asp-controller="Portal" asp-action="RubricManage" aria-current="@(IsActiveLink("Portal", "RubricManage") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("RubricManage"))</span><span class="menu-link-text">Rubric Management</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "Gradebook") ? "is-active" : "")" asp-controller="Portal" asp-action="Gradebook" aria-current="@(IsActiveLink("Portal", "Gradebook") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Gradebook"))</span><span class="menu-link-text">@T["Gradebook"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "RubricManage") ? "is-active" : "")" asp-controller="Portal" asp-action="RubricManage" aria-current="@(IsActiveLink("Portal", "RubricManage") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("RubricManage"))</span><span class="menu-link-text">@T["Rubric Management"]</span></a>
                     }
 
                     @if (isConnected)
                     {
-                        <div class="menu-label">Admin Tools</div>
-                        <a class="menu-link @(IsActiveLink("Portal", "Analytics") ? "is-active" : "")" asp-controller="Portal" asp-action="Analytics" aria-current="@(IsActiveLink("Portal", "Analytics") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Analytics"))</span><span class="menu-link-text">Analytics</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "ReportCenter") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportCenter" aria-current="@(IsActiveLink("Portal", "ReportCenter") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportCenter"))</span><span class="menu-link-text">Report Center</span></a>
+                        <div class="menu-label">@T["Admin Tools"]</div>
+                        <a class="menu-link @(IsActiveLink("Portal", "Analytics") ? "is-active" : "")" asp-controller="Portal" asp-action="Analytics" aria-current="@(IsActiveLink("Portal", "Analytics") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Analytics"))</span><span class="menu-link-text">@T["Analytics"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ReportCenter") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportCenter" aria-current="@(IsActiveLink("Portal", "ReportCenter") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportCenter"))</span><span class="menu-link-text">@T["Report Center"]</span></a>
                         @if (showAdminLinks || showFacultyLinks)
                         {
-                            <a class="menu-link @(IsActiveLink("Portal", "ResultCalculation") ? "is-active" : "")" asp-controller="Portal" asp-action="ResultCalculation" aria-current="@(IsActiveLink("Portal", "ResultCalculation") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ResultCalculation"))</span><span class="menu-link-text">Result Calculation</span></a>
-                            <a class="menu-link @(IsActiveLink("Portal", "StudentLifecycle") ? "is-active" : "")" asp-controller="Portal" asp-action="StudentLifecycle" aria-current="@(IsActiveLink("Portal", "StudentLifecycle") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("StudentLifecycle"))</span><span class="menu-link-text">Student Lifecycle</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "ResultCalculation") ? "is-active" : "")" asp-controller="Portal" asp-action="ResultCalculation" aria-current="@(IsActiveLink("Portal", "ResultCalculation") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ResultCalculation"))</span><span class="menu-link-text">@T["Result Calculation"]</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "StudentLifecycle") ? "is-active" : "")" asp-controller="Portal" asp-action="StudentLifecycle" aria-current="@(IsActiveLink("Portal", "StudentLifecycle") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("StudentLifecycle"))</span><span class="menu-link-text">@T["Student Lifecycle"]</span></a>
                         }
                         @if (showAdminLinks || showFinanceLinks)
                         {
-                            <a class="menu-link @(IsActiveLink("Portal", "Payments") ? "is-active" : "")" asp-controller="Portal" asp-action="Payments" aria-current="@(IsActiveLink("Portal", "Payments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Payments"))</span><span class="menu-link-text">Payments</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "Payments") ? "is-active" : "")" asp-controller="Portal" asp-action="Payments" aria-current="@(IsActiveLink("Portal", "Payments") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Payments"))</span><span class="menu-link-text">@T["Payments"]</span></a>
                         }
                     }
 
                     @if (!showSuperAdminLinks && isConnected)
                     {
-                        <div class="menu-label">Settings</div>
-                        <a class="menu-link @(IsActiveLink("Portal", "UserSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="UserSettings" aria-current="@(IsActiveLink("Portal", "UserSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserSettings"))</span><span class="menu-link-text">User Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">Two-Factor Authentication</span></a>
+                        <div class="menu-label">@T["Settings"]</div>
+                        <a class="menu-link @(IsActiveLink("Portal", "UserSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="UserSettings" aria-current="@(IsActiveLink("Portal", "UserSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserSettings"))</span><span class="menu-link-text">@T["User Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">@T["Theme Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">@T["Two-Factor Authentication"]</span></a>
                         @if (showAdminLinks)
                         {
-                            <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">Dashboard Settings</span></a>
-                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">User Import</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">@T["Dashboard Settings"]</span></a>
+                            <a class="menu-link @(IsActiveLink("Portal", "UserImport") ? "is-active" : "")" asp-controller="Portal" asp-action="UserImport" aria-current="@(IsActiveLink("Portal", "UserImport") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("UserImport"))</span><span class="menu-link-text">@T["User Import"]</span></a>
                         }
                     }
 
                     @if (showSuperAdminLinks)
                     {
-                        <div class="menu-label">System Settings</div>
-                        <a class="menu-link @(IsActiveLink("Portal", "ReportSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportSettings" aria-current="@(IsActiveLink("Portal", "ReportSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportSettings"))</span><span class="menu-link-text">Report Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "SidebarSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SidebarSettings" aria-current="@(IsActiveLink("Portal", "SidebarSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SidebarSettings"))</span><span class="menu-link-text">Sidebar Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "LicenseUpdate") ? "is-active" : "")" asp-controller="Portal" asp-action="LicenseUpdate" aria-current="@(IsActiveLink("Portal", "LicenseUpdate") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LicenseUpdate"))</span><span class="menu-link-text">License Update</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">Theme Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">Two-Factor Authentication</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">Dashboard Settings</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "TenantManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="TenantManagement" aria-current="@(IsActiveLink("Portal", "TenantManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TenantManagement"))</span><span class="menu-link-text">Tenant Management</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "CampusManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="CampusManagement" aria-current="@(IsActiveLink("Portal", "CampusManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("CampusManagement"))</span><span class="menu-link-text">Campus Management</span></a>
-                        <a class="menu-link @(IsActiveLink("Portal", "SsoSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SsoSettings" aria-current="@(IsActiveLink("Portal", "SsoSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SsoSettings"))</span><span class="menu-link-text">Single Sign-On</span></a>
+                        <div class="menu-label">@T["System Settings"]</div>
+                        <a class="menu-link @(IsActiveLink("Portal", "ReportSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ReportSettings" aria-current="@(IsActiveLink("Portal", "ReportSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ReportSettings"))</span><span class="menu-link-text">@T["Report Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "SidebarSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SidebarSettings" aria-current="@(IsActiveLink("Portal", "SidebarSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SidebarSettings"))</span><span class="menu-link-text">@T["Sidebar Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "LicenseUpdate") ? "is-active" : "")" asp-controller="Portal" asp-action="LicenseUpdate" aria-current="@(IsActiveLink("Portal", "LicenseUpdate") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LicenseUpdate"))</span><span class="menu-link-text">@T["License Update"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "ThemeSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="ThemeSettings" aria-current="@(IsActiveLink("Portal", "ThemeSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("ThemeSettings"))</span><span class="menu-link-text">@T["Theme Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TwoFactorSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="TwoFactorSettings" aria-current="@(IsActiveLink("Portal", "TwoFactorSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TwoFactorSettings"))</span><span class="menu-link-text">@T["Two-Factor Authentication"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "DashboardSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="DashboardSettings" aria-current="@(IsActiveLink("Portal", "DashboardSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("DashboardSettings"))</span><span class="menu-link-text">@T["Dashboard Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "TenantManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="TenantManagement" aria-current="@(IsActiveLink("Portal", "TenantManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("TenantManagement"))</span><span class="menu-link-text">@T["Tenant Management"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "CampusManagement") ? "is-active" : "")" asp-controller="Portal" asp-action="CampusManagement" aria-current="@(IsActiveLink("Portal", "CampusManagement") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("CampusManagement"))</span><span class="menu-link-text">@T["Campus Management"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "SsoSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SsoSettings" aria-current="@(IsActiveLink("Portal", "SsoSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SsoSettings"))</span><span class="menu-link-text">@T["Single Sign-On"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "LtiTools") ? "is-active" : "")" asp-controller="Portal" asp-action="LtiTools" aria-current="@(IsActiveLink("Portal", "LtiTools") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LtiTools"))</span><span class="menu-link-text">@T["External Tools"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "SimilaritySettings") ? "is-active" : "")" asp-controller="Portal" asp-action="SimilaritySettings" aria-current="@(IsActiveLink("Portal", "SimilaritySettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("SimilaritySettings"))</span><span class="menu-link-text">@T["Similarity Checking"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "LiveClassSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="LiveClassSettings" aria-current="@(IsActiveLink("Portal", "LiveClassSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LiveClassSettings"))</span><span class="menu-link-text">@T["Live Class Settings"]</span></a>
+                        <a class="menu-link @(IsActiveLink("Portal", "LanguageSettings") ? "is-active" : "")" asp-controller="Portal" asp-action="LanguageSettings" aria-current="@(IsActiveLink("Portal", "LanguageSettings") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("LanguageSettings"))</span><span class="menu-link-text">@T["Language & Translations"]</span></a>
                     }
                 }
 
-                <div class="menu-label">General</div>
-                <a class="menu-link @(IsActiveLink("Home", "Privacy") ? "is-active" : "")" asp-controller="Home" asp-action="Privacy" aria-current="@(IsActiveLink("Home", "Privacy") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Privacy"))</span><span class="menu-link-text">Privacy</span></a>
+                <div class="menu-label">@T["General"]</div>
+                <a class="menu-link @(IsActiveLink("Home", "Privacy") ? "is-active" : "")" asp-controller="Home" asp-action="Privacy" aria-current="@(IsActiveLink("Home", "Privacy") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Privacy"))</span><span class="menu-link-text">@T["Privacy"]</span></a>
             </nav>
         </aside>
 
         <section class="app-main">
             <header class="app-header" role="banner">
                 <div class="app-header-primary">
-                    <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Open navigation">
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="@T["Open navigation"]">
                         <span></span><span></span><span></span>
                     </button>
                     <div>
-                        <p class="page-eyebrow">Academic operations workspace</p>
-                        <h1 class="page-title">@ViewData["Title"]</h1>
+                        <p class="page-eyebrow">@T["Academic operations workspace"]</p>
+                        <h1 class="page-title">@T.Text(ViewData["Title"]?.ToString())</h1>
                     </div>
                 </div>
 
@@ -911,10 +953,10 @@
                             <div class="input-group input-group-sm search-pill">
                                 <span class="input-group-text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 1 0 3.874 10.582l4.272 4.272 1.414-1.414-4.272-4.272A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" fill="currentColor"/></svg></span>
                                 <input id="globalSearchInput" name="q" type="search"
-                                       class="form-control" placeholder="Search…"
-                                       aria-label="Global search" minlength="2" />
-                                <button class="btn btn-outline-secondary" type="submit" aria-label="Search">
-                                    Go
+                                       class="form-control" placeholder="@T["Search…"]"
+                                       aria-label="@T["Global search"]" minlength="2" />
+                                <button class="btn btn-outline-secondary" type="submit" aria-label="@T["Search"]">
+                                    @T["Go"]
                                 </button>
                             </div>
                         </form>
@@ -926,11 +968,12 @@
                 }
 
                 <div class="header-meta">
+                    @await Html.PartialAsync("_LanguageSwitcher")
                     @if (isConnected)
                     {
-                        <a class="header-chip header-chip-notification" asp-controller="Portal" asp-action="Notifications" aria-label="Open notifications">
+                        <a class="header-chip header-chip-notification" asp-controller="Portal" asp-action="Notifications" aria-label="@T["Open notifications"]">
                             <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
-                            <span class="header-chip-copy">Notifications</span>
+                            <span class="header-chip-copy">@T["Notifications"]</span>
                             <span class="header-chip-dot" aria-hidden="true"></span>
                         </a>
                     }
@@ -938,14 +981,14 @@
                     {
                         <div class="header-chip header-chip-notification">
                             <span class="header-chip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" fill="currentColor"/></svg></span>
-                            <span class="header-chip-copy">Live portal</span>
+                            <span class="header-chip-copy">@T["Live portal"]</span>
                         </div>
                     }
 
                     @if (isConnected)
                     {
                         <details class="profile-menu">
-                            <summary class="auth-chip" aria-label="Open profile menu">
+                            <summary class="auth-chip" aria-label="@T["Open profile menu"]">
                                 @if (!string.IsNullOrWhiteSpace(profilePicturePath))
                                 {
                                     <img src="~/@profilePicturePath" alt="@displayName" class="auth-avatar auth-avatar-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
@@ -959,44 +1002,49 @@
                                     <span class="auth-name">@displayName</span>
                                     @if (sessionId?.Roles.Count > 0)
                                     {
-                                        <span class="auth-role">@string.Join(" / ", sessionId.Roles)</span>
+                                        <span class="auth-role">@string.Join(" / ", sessionId.Roles.Select(r => T.Text(r)))</span>
                                     }
                                     else
                                     {
-                                        <span class="auth-role">Guest session</span>
+                                        <span class="auth-role">@T["Guest session"]</span>
                                     }
                                 </div>
                                 <span class="auth-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             </summary>
                             <div class="profile-menu-panel">
-                                <div class="profile-menu-role">@((sessionId?.Roles.Count > 0) ? string.Join(" / ", sessionId.Roles) : "Connected user")</div>
+                                <div class="profile-menu-role">@((sessionId?.Roles.Count > 0) ? string.Join(" / ", sessionId.Roles.Select(r => T.Text(r))) : T.Text("Connected user"))</div>
                                 @if (isSuperAdmin)
                                 {
-                                    <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">Open Dashboard</a>
+                                    <a asp-controller="Portal" asp-action="Dashboard" class="profile-menu-link">@T["Open Dashboard"]</a>
                                 }
-                                <a asp-controller="Portal" asp-action="Notifications" class="profile-menu-link">View Notifications</a>
-                                <a asp-controller="Portal" asp-action="UserSettings" class="profile-menu-link">User Settings</a>
-                                <a asp-controller="Portal" asp-action="TwoFactorSettings" class="profile-menu-link">Two-Factor Authentication</a>
+                                <a asp-controller="Portal" asp-action="Notifications" class="profile-menu-link">@T["View Notifications"]</a>
+                                <a asp-controller="Portal" asp-action="UserSettings" class="profile-menu-link">@T["User Settings"]</a>
+                                <a asp-controller="Portal" asp-action="TwoFactorSettings" class="profile-menu-link">@T["Two-Factor Authentication"]</a>
                                 @if (isSuperAdmin)
                                 {
-                                    <a asp-controller="Portal" asp-action="ThemeSettings" class="profile-menu-link">Theme Settings</a>
+                                    <a asp-controller="Portal" asp-action="ThemeSettings" class="profile-menu-link">@T["Theme Settings"]</a>
                                 }
+                                <button type="button" class="profile-menu-link btn btn-link text-start w-100" data-pwa-install hidden>@T["Install the EduSphere app"]</button>
                                 <form method="post" asp-controller="Login" asp-action="Logout" class="profile-menu-signout">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Sign Out</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">@T["Sign Out"]</button>
                                 </form>
                             </div>
                         </details>
                     }
                     else
                     {
-                        <a asp-controller="Login" asp-action="Index" class="btn btn-sm btn-primary">Sign In</a>
+                        <a asp-controller="Login" asp-action="Index" class="btn btn-sm btn-primary">@T["Sign In"]</a>
                     }
                 </div>
             </header>
 
             <main class="app-content" id="main-content" tabindex="-1">
                 <div class="toast-stack" data-toast-stack aria-live="polite" aria-atomic="true"></div>
+                @* Plan M10 — "Live now" banner with Join while one of the user's live classes is open. *@
+                @await Component.InvokeAsync("UpcomingLiveClasses", new { banner = true })
+                @* Plan M7 — previous/next bar when a page was opened from a course module (?moduleItem=…). *@
+                @await Component.InvokeAsync("ModuleNav")
                 @RenderBody()
             </main>
 
@@ -1004,11 +1052,11 @@
                 <span>@branding.FooterText</span>
                 @if (!string.IsNullOrWhiteSpace(branding.PrivacyPolicyContent))
                 {
-                    <span class="ms-3"><a asp-controller="Home" asp-action="Privacy" class="text-muted small">Privacy Policy</a></span>
+                    <span class="ms-3"><a asp-controller="Home" asp-action="Privacy" class="text-muted small">@T["Privacy Policy"]</a></span>
                 }
                 else if (!string.IsNullOrEmpty(branding.PrivacyPolicyUrl))
                 {
-                    <span class="ms-3"><a href="@branding.PrivacyPolicyUrl" target="_blank" rel="noopener noreferrer" class="text-muted small">Privacy Policy</a></span>
+                    <span class="ms-3"><a href="@branding.PrivacyPolicyUrl" target="_blank" rel="noopener noreferrer" class="text-muted small">@T["Privacy Policy"]</a></span>
                 }
             </footer>
         </section>
@@ -1016,11 +1064,11 @@
         <footer class="tns-global-footer" role="contentinfo">
             <div class="tns-global-footer-inner">
                 <div class="tns-global-footer-top">
-                    <a href="/" aria-label="Tabsan Nexora home">
-                        <img src="/images/tabsan-logo.png" alt="Tabsan — Building Next Era of Software" class="tns-global-footer-logo">
+                    <a href="/" aria-label="@T["Tabsan Nexora home"]">
+                        <img src="/images/tabsan-logo.png" alt="@T["Tabsan — Building Next Era of Software"]" class="tns-global-footer-logo">
                     </a>
                 </div>
-                <div class="tns-global-footer-copy">&copy; 2026 Tabsan Nexora. All rights reserved.</div>
+                <div class="tns-global-footer-copy">@T["&copy; 2026 Tabsan Nexora. All rights reserved."]</div>
             </div>
         </footer>
 
@@ -1030,7 +1078,7 @@
                  data-ai-chat-widget
                  data-load-url="@Url.Action("AiChatWidgetState", "Portal")"
                  data-send-url="@Url.Action("AiChatWidgetSend", "Portal")">
-                <button type="button" class="ai-chat-backdrop" data-ai-chat-backdrop aria-label="Close AI assistant"></button>
+                <button type="button" class="ai-chat-backdrop" data-ai-chat-backdrop aria-label="@T["Close AI assistant"]"></button>
 
                 @await Html.PartialAsync("ChatPanel")
                 @await Html.PartialAsync("FloatingChatButton")
@@ -1038,9 +1086,16 @@
         }
     </div>
 
+    @if (T.Language != "en")
+    {
+        <script type="application/json" id="portal-text">@Html.Raw(Translations.ScriptJson(T.Language))</script>
+    }
+    @* Not deferred: page scripts below call t() while they load. *@
+    <script src="~/js/i18n.js" asp-append-version="true"></script>
     <script src="~/lib/jquery/dist/jquery.min.js" defer></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="~/js/site.js" asp-append-version="true" defer></script>
+    <script src="~/js/pwa.js" asp-append-version="true" defer></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     @* Phase 13 — Typeahead for global search bar *@

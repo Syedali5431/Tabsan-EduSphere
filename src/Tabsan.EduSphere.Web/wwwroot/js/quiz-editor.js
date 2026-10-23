@@ -13,17 +13,17 @@
         Numeric: 'numeric', Formula: 'formula', FileUpload: 'file', Essay: 'essay', ShortAnswer: null
     };
     var HELP = {
-        MultipleChoice: 'Add the answer options and mark the one correct answer.',
-        MultipleAnswers: 'Add the options and tick every correct one. With partial credit, wrong picks cancel right picks.',
-        TrueFalse: 'Mark which statement is correct.',
-        Matching: 'Each prompt has one correct answer. Wrong extra answers make it harder.',
-        Ordering: 'List the items in the CORRECT order — students get them shuffled.',
-        FillInBlank: 'Put [[1]], [[2]] … in the question text where the blanks go, then list the accepted answers for each.',
-        Numeric: 'Give the exact answer (with an optional ± tolerance) or an accepted range.',
-        Formula: 'Write variables in the question as [a], [b]. Each attempt gets its own random values.',
-        ShortAnswer: 'Students type a short answer that you mark by hand.',
-        Essay: 'Students write a long answer that you mark by hand.',
-        FileUpload: 'Students upload a file that you mark by hand.'
+        MultipleChoice: t('Add the answer options and mark the one correct answer.'),
+        MultipleAnswers: t('Add the options and tick every correct one. With partial credit, wrong picks cancel right picks.'),
+        TrueFalse: t('Mark which statement is correct.'),
+        Matching: t('Each prompt has one correct answer. Wrong extra answers make it harder.'),
+        Ordering: t('List the items in the CORRECT order — students get them shuffled.'),
+        FillInBlank: t('Put [[1]], [[2]] … in the question text where the blanks go, then list the accepted answers for each.'),
+        Numeric: t('Give the exact answer (with an optional ± tolerance) or an accepted range.'),
+        Formula: t('Write variables in the question as [a], [b]. Each attempt gets its own random values.'),
+        ShortAnswer: t('Students type a short answer that you mark by hand.'),
+        Essay: t('Students write a long answer that you mark by hand.'),
+        FileUpload: t('Students upload a file that you mark by hand.')
     };
 
     function el(tag, attrs, text) {
@@ -68,13 +68,13 @@
             var row = el('div', { class: 'input-group input-group-sm mb-2', 'data-option-row': '' });
             var mark = el('div', { class: 'input-group-text' });
             var inputType = type === 'MultipleAnswers' ? 'checkbox' : 'radio';
-            var check = el('input', { type: inputType, class: 'form-check-input mt-0', name: uid + '-correct', 'aria-label': 'Correct answer', checked: correct });
+            var check = el('input', { type: inputType, class: 'form-check-input mt-0', name: uid + '-correct', 'aria-label': t('Correct answer'), checked: correct });
             mark.appendChild(check);
-            var input = el('input', { type: 'text', class: 'form-control', maxlength: '1000', placeholder: 'Answer option', 'aria-label': 'Answer option' });
+            var input = el('input', { type: 'text', class: 'form-control', maxlength: '1000', placeholder: t('Answer option'), 'aria-label': t('Answer option') });
             input.value = text || '';
             row.appendChild(mark);
             row.appendChild(input);
-            if (type !== 'TrueFalse') row.appendChild(removeButton(function () { row.remove(); }, 'Remove option'));
+            if (type !== 'TrueFalse') row.appendChild(removeButton(function () { row.remove(); }, t('Remove option')));
             optionList.appendChild(row);
         }
         function resetOptions(fromExisting) {
@@ -98,10 +98,10 @@
         function addPair(prompt, answer) {
             var row = el('div', { class: 'input-group input-group-sm mb-2', 'data-pair-row': '' });
             var p = el('input', { type: 'text', class: 'form-control', placeholder: 'Prompt', 'aria-label': 'Prompt', maxlength: '1000' });
-            var a = el('input', { type: 'text', class: 'form-control', placeholder: 'Correct answer', 'aria-label': 'Correct answer', maxlength: '1000' });
+            var a = el('input', { type: 'text', class: 'form-control', placeholder: t('Correct answer'), 'aria-label': t('Correct answer'), maxlength: '1000' });
             p.value = prompt || ''; a.value = answer || '';
             row.appendChild(p); row.appendChild(el('span', { class: 'input-group-text' }, '→')); row.appendChild(a);
-            row.appendChild(removeButton(function () { row.remove(); }, 'Remove pair'));
+            row.appendChild(removeButton(function () { row.remove(); }, t('Remove pair')));
             pairList.appendChild(row);
         }
         var addPairBtn = form.querySelector('[data-add-pair]');
@@ -113,10 +113,10 @@
             var row = el('div', { class: 'input-group input-group-sm mb-2', 'data-order-row': '' });
             var input = el('input', { type: 'text', class: 'form-control', placeholder: 'Item', 'aria-label': 'Item', maxlength: '1000' });
             input.value = text || '';
-            var up = el('button', { type: 'button', class: 'btn btn-sm btn-outline-secondary', 'aria-label': 'Move up' }, '↑');
+            var up = el('button', { type: 'button', class: 'btn btn-sm btn-outline-secondary', 'aria-label': t('Move up') }, '↑');
             up.addEventListener('click', function () { if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling); });
             row.appendChild(input); row.appendChild(up);
-            row.appendChild(removeButton(function () { row.remove(); }, 'Remove item'));
+            row.appendChild(removeButton(function () { row.remove(); }, t('Remove item')));
             orderList.appendChild(row);
         }
         var addOrderBtn = form.querySelector('[data-add-order-item]');
@@ -138,12 +138,12 @@
             blankList.textContent = '';
             var ids = blankIds();
             if (!ids.length) {
-                blankList.appendChild(el('p', { class: 'small text-muted mb-0' }, 'No blanks yet — add [[1]] to the question text.'));
+                blankList.appendChild(el('p', { class: 'small text-muted mb-0' }, t('No blanks yet — add [[1]] to the question text.')));
                 return;
             }
             ids.forEach(function (id) {
                 var row = el('div', { class: 'mb-2', 'data-blank-row': id });
-                row.appendChild(el('label', { class: 'form-label small fw-semibold mb-1', for: uid + '-blank-' + id }, 'Blank [[' + id + ']] — accepted answers, one per line'));
+                row.appendChild(el('label', { class: 'form-label small fw-semibold mb-1', for: uid + '-blank-' + id }, t('Blank [[') + id + ']] — accepted answers, one per line'));
                 var ta = el('textarea', { class: 'form-control form-control-sm', rows: '2', id: uid + '-blank-' + id });
                 ta.value = previous[id] ? previous[id].answers : '';
                 var wrap = el('div', { class: 'form-check form-check-inline small mt-1' });
@@ -171,7 +171,7 @@
             row.appendChild(cell('min', v.min, 'col-3'));
             row.appendChild(cell('max', v.max, 'col-3'));
             row.appendChild(cell('decimals', v.decimals === undefined ? 0 : v.decimals, 'col-2'));
-            var rm = el('div', { class: 'col-1' }); rm.appendChild(removeButton(function () { row.remove(); }, 'Remove variable'));
+            var rm = el('div', { class: 'col-1' }); rm.appendChild(removeButton(function () { row.remove(); }, t('Remove variable')));
             row.appendChild(rm);
             varList.appendChild(row);
         }

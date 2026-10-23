@@ -1,16 +1,16 @@
 @* Final-Touches Phase 16 Stage 16.1 — Gradebook grid view for Faculty *@
 @model Tabsan.EduSphere.Web.Models.Portal.GradebookPageModel
-@{ ViewData["Title"] = "Gradebook"; }
+@{ ViewData["Title"] = T.Text("Gradebook"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
-@if (TempData["Message"] is string td) { <div class="alert alert-info">@td</div> }
+@if (TempData["Message"] is string td) { <div class="alert alert-info">@T.Text(td)</div> }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -20,9 +20,9 @@ else
                   data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
                 <partial name="_InstitutionFilter" />
                 <div class="col-md-5">
-                    <label class="form-label">Course Offering</label>
-                    <select name="offeringId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Select Offering --</option>
+                    <label class="form-label">@T["Course Offering"]</label>
+                    <select aria-label="@T["Course Offering"]" name="offeringId" class="form-select" onchange="this.form.submit()">
+                        <option value="">@T["-- Select Offering --"]</option>
                         @foreach (var o in Model.Offerings)
                         {
                             <option value="@o.Id" selected="@(Model.SelectedOffering == o.Id ? "selected" : null)">@o.Name</option>
@@ -41,12 +41,12 @@ else
 
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Gradebook Grid</h6>
+                <h6 class="mb-0">@T["Gradebook Grid"]</h6>
                 <div class="d-flex gap-2">
                     @if (components.Count > 0)
                     {
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Download CSV Template</button>
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">@T["Download CSV Template"]</button>
                             <ul class="dropdown-menu">
                                 @foreach (var comp in components)
                                 {
@@ -57,7 +57,7 @@ else
                     }
                     <form method="post" asp-action="GradebookPublishAll" asp-route-offeringId="@grid.CourseOfferingId">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Publish all results?')">Publish All</button>
+                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('@T.Js("Publish all results?")')">@T["Publish All"]</button>
                     </form>
                 </div>
             </div>
@@ -65,8 +65,8 @@ else
                 <table class="table table-bordered table-sm mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Reg #</th>
-                            <th>Student</th>
+                            <th>@T["Reg #"]</th>
+                            <th>@T["Student"]</th>
                             @foreach (var col in grid.Columns)
                             {
                                 <th>@col.ComponentName<br/><small class="text-muted">(@col.Weightage%)</small></th>
@@ -78,7 +78,7 @@ else
                             }
                             else
                             {
-                                <th>Percentage</th>
+                                <th>@T["Percentage"]</th>
                             }
                         </tr>
                     </thead>
@@ -101,7 +101,7 @@ else
                                                value="@(cell?.MarksObtained?.ToString("0.##"))"
                                                @(cell?.IsPublished == true ? "disabled" : "") />
                                         @if (cell?.IsPublished == true)
-                                        { <span class="badge bg-success ms-1">Published</span> }
+                                        { <span class="badge bg-success ms-1">@T["Published"]</span> }
                                     </td>
                                 }
                                 @if (isUniversity)
@@ -122,24 +122,24 @@ else
 
         @* Bulk CSV Upload *@
         <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header"><h6 class="mb-0">Bulk Grade Upload (CSV)</h6></div>
+            <div class="card-header"><h6 class="mb-0">@T["Bulk Grade Upload (CSV)"]</h6></div>
             <div class="card-body">
                 <form method="post" asp-action="GradebookBulkUpload" enctype="multipart/form-data" class="row g-2 align-items-end">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="offeringId" value="@grid.CourseOfferingId" />
                     <div class="col-md-3">
-                        <label class="form-label">Component</label>
-                        <select name="componentName" class="form-select">
+                        <label class="form-label">@T["Component"]</label>
+                        <select aria-label="@T["Component"]" name="componentName" class="form-select">
                             @foreach (var comp in components)
                             { <option value="@comp">@comp</option> }
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">CSV File</label>
-                        <input type="file" name="file" accept=".csv" class="form-control" />
+                        <label class="form-label">@T["CSV File"]</label>
+                        <input aria-label="@T["CSV File"]" type="file" name="file" accept=".csv" class="form-control" />
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Preview</button>
+                        <button type="submit" class="btn btn-primary w-100">@T["Preview"]</button>
                     </div>
                 </form>
 
@@ -150,10 +150,10 @@ else
                     if (preview is not null)
                     {
                         <div class="mt-3">
-                            <p>Total: <strong>@preview.TotalRows</strong> | Valid: <strong class="text-success">@preview.ValidRows</strong> | Errors: <strong class="text-danger">@preview.ErrorRows</strong></p>
+                            <p>@T["Total:"] <strong>@preview.TotalRows</strong> @T["| Valid:"] <strong class="text-success">@preview.ValidRows</strong> @T["| Errors:"] <strong class="text-danger">@preview.ErrorRows</strong></p>
                             <div class="table-responsive">
                                 <table class="table table-sm table-bordered">
-                                    <thead class="table-light"><tr><th>Reg #</th><th>Student</th><th>Marks</th><th>Max</th><th>Error</th></tr></thead>
+                                    <thead class="table-light"><tr><th>@T["Reg #"]</th><th>@T["Student"]</th><th>@T["Marks"]</th><th>@T["Max"]</th><th>@T["Error"]</th></tr></thead>
                                     <tbody>
                                         @foreach (var r in preview.Rows)
                                         {
@@ -174,7 +174,7 @@ else
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="offeringId" value="@TempData["BulkOffering"]" />
                                     <input type="hidden" name="previewJson" value="@previewJson" />
-                                    <button type="submit" class="btn btn-success">Confirm &amp; Apply @preview.ValidRows valid row(s)</button>
+                                    <button type="submit" class="btn btn-success">@T.Format("Confirm &amp; Apply {0} valid row(s)", preview.ValidRows)</button>
                                 </form>
                             }
                         </div>

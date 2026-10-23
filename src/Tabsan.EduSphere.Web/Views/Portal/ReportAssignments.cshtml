@@ -1,42 +1,42 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ReportAssignmentsPageModel
 @{
-    ViewData["Title"] = "Assignment Summary Report";
+    ViewData["Title"] = T.Text("Assignment Summary Report");
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center mb-4">
-        <a asp-action="ReportCenter" asp-controller="Portal" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="ReportCenter" asp-controller="Portal" class="btn btn-sm btn-outline-secondary me-3" aria-label="@T["Report Center"]"><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
         <div>
-            <h2 class="mb-0"><i class="bi bi-journal-check me-2"></i>Assignment Summary</h2>
-            <small class="text-muted">Submission and grading snapshot across assignments</small>
+            <h2 class="mb-0"><i class="bi bi-journal-check me-2"></i>@T["Assignment Summary"]</h2>
+            <small class="text-muted">@T["Submission and grading snapshot across assignments"]</small>
         </div>
     </div>
 
     @if (!Model.IsConnected)
     {
-        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>Not connected to API.</div>
+        <div class="alert alert-warning"><i class="bi bi-wifi-off me-2"></i>@T["Not connected to API."]</div>
     }
     else
     {
         if (!string.IsNullOrEmpty(Model.Message))
         {
-            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@Model.Message</div>
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>@T.Text(Model.Message)</div>
         }
 
         <form method="get" class="card shadow-sm border-0 mb-4">
             <div class="card-body p-3">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label small mb-1">Institute</label>
-                        <select name="institutionType" class="form-select form-select-sm">
+                        <label class="form-label small mb-1">@T["Institute"]</label>
+                        <select aria-label="@T["Institute"]" name="institutionType" class="form-select form-select-sm">
                             @if (!Model.InstitutionType.HasValue && Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="" selected>All Institutes</option>
+                                <option value="" selected>@T["All Institutes"]</option>
                             }
                             else if (Model.AvailableInstitutionTypes.Count > 1)
                             {
-                                <option value="">All Institutes</option>
+                                <option value="">@T["All Institutes"]</option>
                             }
                             @foreach (var institution in Model.AvailableInstitutionTypes)
                             {
@@ -45,9 +45,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small mb-1">Department</label>
-                        <select name="departmentId" class="form-select form-select-sm">
-                            <option value="">All Departments</option>
+                        <label class="form-label small mb-1">@T["Department"]</label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select form-select-sm">
+                            <option value="">@T["All Departments"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@DepartmentDisplayHelper.FormatLabel(d.Name, d.InstitutionType)</option>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small mb-1">@Model.PeriodFilterLabel</label>
-                        <select name="semesterId" class="form-select form-select-sm">
+                        <select aria-label="@Model.PeriodFilterLabel" name="semesterId" class="form-select form-select-sm">
                             <option value="">@Model.PeriodFilterPlaceholder</option>
                             @foreach (var s in Model.Semesters)
                             {
@@ -65,9 +65,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small mb-1">Course Offering</label>
-                        <select name="offeringId" class="form-select form-select-sm">
-                            <option value="">All Offerings</option>
+                        <label class="form-label small mb-1">@T["Course Offering"]</label>
+                        <select aria-label="@T["Course Offering"]" name="offeringId" class="form-select form-select-sm">
+                            <option value="">@T["All Offerings"]</option>
                             @foreach (var o in Model.Offerings)
                             {
                                 <option value="@o.Id" selected="@(Model.OfferingId == o.Id)">@o.CourseCode - @o.CourseTitle</option>
@@ -75,21 +75,21 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>@T["Filter"]</button>
                     </div>
                     @if (Model.Report is not null)
                     {
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportAssignmentSummary", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, offeringId = Model.OfferingId, studentId = Model.StudentId, institutionType = Model.InstitutionType })"
-                               class="btn btn-success btn-sm w-100" title="Export Excel"><i class="bi bi-file-earmark-excel me-1"></i><span>Excel</span></a>
+                               class="btn btn-success btn-sm w-100" title="@T["Export Excel"]"><i class="bi bi-file-earmark-excel me-1"></i><span>@T["Excel"]</span></a>
                         </div>
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportAssignmentSummaryCsv", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, offeringId = Model.OfferingId, studentId = Model.StudentId, institutionType = Model.InstitutionType })"
-                               class="btn btn-outline-success btn-sm w-100" title="Export CSV"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
+                               class="btn btn-outline-success btn-sm w-100" title="@T["Export CSV"]"><i class="bi bi-filetype-csv me-1"></i><span>CSV</span></a>
                         </div>
                         <div class="col-md-1">
                             <a href="@Url.Action("ExportAssignmentSummaryPdf", "Portal", new { semesterId = Model.SemesterId, departmentId = Model.DepartmentId, offeringId = Model.OfferingId, studentId = Model.StudentId, institutionType = Model.InstitutionType })"
-                               class="btn btn-outline-danger btn-sm w-100" title="Export PDF"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
+                               class="btn btn-outline-danger btn-sm w-100" title="@T["Export PDF"]"><i class="bi bi-filetype-pdf me-1"></i><span>PDF</span></a>
                         </div>
                     }
                 </div>
@@ -99,7 +99,7 @@
         @if (Model.Report is not null)
         {
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-muted small">@Model.Report.TotalSubmissions submission(s) - generated @Model.Report.GeneratedAt.ToString("dd MMM yyyy, HH:mm")</span>
+                <span class="text-muted small">@T.Format("{0} submission(s) - generated {1}", Model.Report.TotalSubmissions, Model.Report.GeneratedAt.ToString("dd MMM yyyy, HH:mm"))</span>
             </div>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-0">
@@ -107,14 +107,14 @@
                         <table class="table table-hover mb-0 table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Reg. No.</th>
-                                    <th>Student</th>
-                                    <th>Course</th>
-                                    <th>Assignment</th>
-                                    <th>Due Date</th>
-                                    <th>Submitted</th>
-                                    <th>Status</th>
-                                    <th class="text-center">Marks</th>
+                                    <th>@T["Reg. No."]</th>
+                                    <th>@T["Student"]</th>
+                                    <th>@T["Course"]</th>
+                                    <th>@T["Assignment"]</th>
+                                    <th>@T["Due Date"]</th>
+                                    <th>@T["Submitted"]</th>
+                                    <th>@T["Status"]</th>
+                                    <th class="text-center">@T["Marks"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -142,7 +142,7 @@
         }
         else
         {
-            <div class="alert alert-secondary"><i class="bi bi-info-circle me-2"></i>Select filters above and click Filter to generate the report.</div>
+            <div class="alert alert-secondary"><i class="bi bi-info-circle me-2"></i>@T["Select filters above and click Filter to generate the report."]</div>
         }
     }
 </div>

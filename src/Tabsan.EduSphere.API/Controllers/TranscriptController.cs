@@ -45,7 +45,7 @@ public class TranscriptController : ControllerBase
 
     [HttpPost("template/upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadTemplate([FromForm] IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadTemplate(IFormFile file, CancellationToken ct)
     {
         var gate = await EnsureDegreeTranscriptGenerationEnabledAsync(ct);
         if (gate is not null)

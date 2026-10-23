@@ -1,14 +1,14 @@
 @model Tabsan.EduSphere.Web.Models.Portal.FypPageModel
-@{ ViewData["Title"] = "FYP Management"; }
+@{ ViewData["Title"] = T.Text("FYP Management"); }
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-info">@T.Text(Model.Message)</div>
 }
 
 @if (!Model.IsConnected)
 {
-    <div class="alert alert-warning">Not connected. <a asp-action="Dashboard">Configure API</a>.</div>
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
 }
 else
 {
@@ -21,9 +21,9 @@ else
                     @if (Model.Identity?.IsSuperAdmin == true)
                     {
                         <div class="col-md-3">
-                            <label class="form-label">Tenant</label>
-                            <select name="tenantId" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Tenants</option>
+                            <label class="form-label">@T["Tenant"]</label>
+                            <select aria-label="@T["Tenant"]" name="tenantId" class="form-select" onchange="this.form.submit()">
+                                <option value="">@T["All Tenants"]</option>
                                 @foreach (var tenant in Model.Tenants)
                                 {
                                     <option value="@tenant.Id" selected="@(Model.SelectedTenantId == tenant.Id ? "selected" : null)">@tenant.Name</option>
@@ -31,9 +31,9 @@ else
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Campus</label>
-                            <select name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
-                                <option value="">All Campuses</option>
+                            <label class="form-label">@T["Campus"]</label>
+                            <select aria-label="@T["Campus"]" name="campusId" class="form-select" onchange="this.form.submit()" @(Model.SelectedTenantId.HasValue ? null : "disabled")>
+                                <option value="">@T["All Campuses"]</option>
                                 @foreach (var campus in Model.Campuses)
                                 {
                                     <option value="@campus.Id" selected="@(Model.SelectedCampusId == campus.Id ? "selected" : null)">@campus.Name</option>
@@ -42,9 +42,9 @@ else
                         </div>
                     }
                     <div class="col-md-4">
-                        <label class="form-label">Filter by Department</label>
-                        <select name="departmentId" class="form-select" onchange="this.form.submit()">
-                            <option value="">All / My Projects</option>
+                        <label class="form-label">@T["Filter by Department"]</label>
+                        <select aria-label="@T["Filter by Department"]" name="departmentId" class="form-select" onchange="this.form.submit()">
+                            <option value="">@T["All / My Projects"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -61,33 +61,33 @@ else
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h5 mb-0">Projects
+                        <h2 class="h5 mb-0">@T["Projects"]
                             <span class="badge bg-secondary ms-1">@Model.Projects.Count</span>
                         </h2>
                         @if (User.IsInRole("Student"))
                         {
                             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#proposeFypModal">
-                                + Propose Project
+                                @T["+ Propose Project"]
                             </button>
                         }
                         else if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("Faculty"))
                         {
                             @* Issue-Fix Phase 3 Stage 3.8 — Faculty can create FYP for their dept students. *@
                             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createFypModal">
-                                + Create Project
+                                @T["+ Create Project"]
                             </button>
                         }
                     </div>
                     @if (Model.Projects.Count == 0)
                     {
-                        <p class="text-muted">No FYP projects found.</p>
+                        <p class="text-muted">@T["No FYP projects found."]</p>
                     }
                     else
                     {
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
-                                    <tr><th>Title</th><th>Student</th><th>Supervisor</th><th>Department</th><th>Status</th><th>Result</th><th></th></tr>
+                                    <tr><th>@T["Title"]</th><th>@T["Student"]</th><th>@T["Supervisor"]</th><th>@T["Department"]</th><th>@T["Status"]</th><th>@T["Result"]</th><th></th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var p in Model.Projects)
@@ -120,7 +120,7 @@ else
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#editFypModal"
                                                     data-projectid="@p.Id" data-title="@p.Title" data-description="@p.Description">
-                                                Edit
+                                                @T["Edit"]
                                             </button>
                                         }
                                         @if (p.Status == "Proposed" && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
@@ -131,12 +131,12 @@ else
                                                 <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
-                                                <button type="submit" class="btn btn-xs btn-outline-success btn-sm">Approve</button>
+                                                <button type="submit" class="btn btn-xs btn-outline-success btn-sm">@T["Approve"]</button>
                                             </form>
                                             <button class="btn btn-xs btn-outline-danger btn-sm"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#rejectFypModal"
-                                                    data-projectid="@p.Id">Reject</button>
+                                                    data-projectid="@p.Id">@T["Reject"]</button>
                                         }
                                         @if ((p.Status == "Approved" || p.Status == "InProgress") && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                                         {
@@ -145,7 +145,7 @@ else
                                                 <button class="btn btn-xs btn-outline-secondary btn-sm"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#assignSupervisorModal"
-                                                        data-projectid="@p.Id">Supervisor</button>
+                                                        data-projectid="@p.Id">@T["Supervisor"]</button>
                                             }
                                             <form asp-action="CompleteFypProject" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
@@ -154,7 +154,7 @@ else
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                 <button type="submit" class="btn btn-xs btn-outline-primary btn-sm"
-                                                        onclick="return confirm('Mark project as complete?')">Complete</button>
+                                                        onclick="return confirm('@T.Js("Mark project as complete?")')">@T["Complete"]</button>
                                             </form>
                                         }
                                         @if ((User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("Faculty")) && string.Equals(p.Status, "Completed", StringComparison.OrdinalIgnoreCase))
@@ -164,7 +164,7 @@ else
                                                     data-bs-target="#enterFypResultModal"
                                                     data-projectid="@p.Id"
                                                     data-result="@p.FinalResult">
-                                                Enter Result
+                                                @T["Enter Result"]
                                             </button>
                                         }
                                         @if (User.IsInRole("Student") && p.Status == "InProgress")
@@ -177,15 +177,15 @@ else
                                                     <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                     <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                     <button type="submit" class="btn btn-xs btn-outline-primary btn-sm"
-                                                            onclick="return confirm('Request completion review from assigned faculty?')">
-                                                        Request Completion
+                                                            onclick="return confirm('@T.Js("Request completion review from assigned faculty?")')">
+                                                        @T["Request Completion"]
                                                     </button>
                                                 </form>
                                             }
                                             else
                                             {
                                                 <span class="badge bg-info text-dark">
-                                                    Awaiting Approval (@p.CompletionApprovalCount/@p.RequiredApprovalCount)
+                                                    @T.Format("Awaiting Approval ({0}/{1})", p.CompletionApprovalCount, p.RequiredApprovalCount)
                                                 </span>
                                             }
                                         }
@@ -197,11 +197,11 @@ else
                                                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
                                                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                                                 <button type="submit" class="btn btn-xs btn-outline-success btn-sm">
-                                                    Approve Completion
+                                                    @T["Approve Completion"]
                                                 </button>
                                             </form>
                                             <span class="badge bg-light text-dark border">
-                                                @p.CompletionApprovalCount/@p.RequiredApprovalCount approvals
+                                                @T.Format("{0}/{1} approvals", p.CompletionApprovalCount, p.RequiredApprovalCount)
                                             </span>
                                         }
                                     </td>
@@ -218,10 +218,10 @@ else
         <div class="col-12 col-xl-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Upcoming Meetings</h2>
+                    <h2 class="h5 mb-3">@T["Upcoming Meetings"]</h2>
                     @if (Model.UpcomingMeetings.Count == 0)
                     {
-                        <p class="text-muted small">No upcoming meetings.</p>
+                        <p class="text-muted small">@T["No upcoming meetings."]</p>
                     }
                     else
                     {
@@ -255,14 +255,14 @@ else
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Propose FYP Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Propose FYP Project"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Department <span class="text-danger">*</span></label>
-                        <select name="departmentId" class="form-select" required>
-                            <option value="">Select department…</option>
+                        <label class="form-label">@T["Department"] <span class="text-danger">*</span></label>
+                        <select aria-label="@T["Department"]" name="departmentId" class="form-select" required>
+                            <option value="">@T["Select department…"]</option>
                             @foreach (var d in Model.Departments)
                             {
                                 <option value="@d.Id">@d.Name</option>
@@ -270,17 +270,17 @@ else
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Title <span class="text-danger">*</span></label>
-                        <input name="title" class="form-control" required maxlength="200" />
+                        <label class="form-label">@T["Title"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Title"]" name="title" class="form-control" required maxlength="200" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="4" required></textarea>
+                        <label class="form-label">@T["Description"] <span class="text-danger">*</span></label>
+                        <textarea aria-label="@T["Description"]" name="description" class="form-control" rows="4" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Proposal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Submit Proposal"]</button>
                 </div>
             </div>
         </form>
@@ -298,14 +298,14 @@ else
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Create FYP Project</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Create FYP Project"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Student <span class="text-danger">*</span></label>
-                            <select name="studentProfileId" class="form-select" required>
-                                <option value="">Select student…</option>
+                            <label class="form-label">@T["Student"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Student"]" name="studentProfileId" class="form-select" required>
+                                <option value="">@T["Select student…"]</option>
                                 @foreach (var s in Model.Students)
                                 {
                                     <option value="@s.Id">@s.FullName (@s.RegistrationNumber)</option>
@@ -313,9 +313,9 @@ else
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Department <span class="text-danger">*</span></label>
-                            <select name="departmentId" class="form-select" required>
-                                <option value="">Select department…</option>
+                            <label class="form-label">@T["Department"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Department"]" name="departmentId" class="form-select" required>
+                                <option value="">@T["Select department…"]</option>
                                 @foreach (var d in Model.Departments)
                                 {
                                     <option value="@d.Id" selected="@(Model.SelectedDepartmentId == d.Id ? "selected" : null)">@d.Name</option>
@@ -323,17 +323,17 @@ else
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Title <span class="text-danger">*</span></label>
-                            <input name="title" class="form-control" required maxlength="200" />
+                            <label class="form-label">@T["Title"] <span class="text-danger">*</span></label>
+                            <input aria-label="@T["Title"]" name="title" class="form-control" required maxlength="200" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea name="description" class="form-control" rows="4" required></textarea>
+                            <label class="form-label">@T["Description"] <span class="text-danger">*</span></label>
+                            <textarea aria-label="@T["Description"]" name="description" class="form-control" rows="4" required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Create Project</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Create Project"]</button>
                     </div>
                 </div>
             </form>
@@ -350,22 +350,22 @@ else
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit FYP Project</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Edit FYP Project"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <label class="form-label" for="edit_fypTitle">@T["Title"] <span class="text-danger">*</span></label>
                             <input id="edit_fypTitle" name="title" class="form-control" required maxlength="200" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <label class="form-label" for="edit_fypDescription">@T["Description"] <span class="text-danger">*</span></label>
                             <textarea id="edit_fypDescription" name="description" class="form-control" rows="4" required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Save Changes"]</button>
                     </div>
                 </div>
             </form>
@@ -384,18 +384,18 @@ else
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Reject Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Reject Project"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Reason / Remarks <span class="text-danger">*</span></label>
-                        <textarea name="remarks" class="form-control" rows="3" required></textarea>
+                        <label class="form-label">@T["Reason / Remarks"] <span class="text-danger">*</span></label>
+                        <textarea aria-label="@T["Reason / Remarks"]" name="remarks" class="form-control" rows="3" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-danger">@T["Reject"]</button>
                 </div>
             </div>
         </form>
@@ -415,14 +415,14 @@ else
                 <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Assign Supervisor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">@T["Assign Supervisor"]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Supervisor (Faculty) <span class="text-danger">*</span></label>
-                            <select name="supervisorUserId" class="form-select" required>
-                                <option value="">Select faculty…</option>
+                            <label class="form-label">@T["Supervisor (Faculty)"] <span class="text-danger">*</span></label>
+                            <select aria-label="@T["Supervisor (Faculty)"]" name="supervisorUserId" class="form-select" required>
+                                <option value="">@T["Select faculty…"]</option>
                                 @foreach (var f in Model.Faculty)
                                 {
                                     <option value="@f.Id">@f.DisplayName</option>
@@ -431,8 +431,8 @@ else
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Assign</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@T["Assign"]</button>
                     </div>
                 </div>
             </form>
@@ -450,16 +450,16 @@ else
             <input type="hidden" name="campusId" value="@Model.SelectedCampusId" />
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Enter FYP Result</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">@T["Enter FYP Result"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="form-label">Result <span class="text-danger">*</span></label>
-                    <input id="enter_resultValue" name="result" class="form-control" required maxlength="200" placeholder="e.g. A, Pass, Distinction" />
+                    <label class="form-label" for="enter_resultValue">@T["Result"] <span class="text-danger">*</span></label>
+                    <input id="enter_resultValue" name="result" class="form-control" required maxlength="200" placeholder="@T["e.g. A, Pass, Distinction"]" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Result</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@T["Save Result"]</button>
                 </div>
             </div>
         </form>
