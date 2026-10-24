@@ -55,4 +55,11 @@ public sealed class SsoSettingFormModel
     public bool EnforceSsoOnly { get; set; }
     public bool TrustIdpMfa { get; set; }
     public bool Enabled { get; set; }
+    public string? IdClaim { get; set; }
+    public bool LinkById { get; set; }
+    public string? RoleClaim { get; set; }
+    public string? RoleMappings { get; set; }
+    public bool RequireRoleMatch { get; set; }
+    public bool SignAuthnRequests { get; set; }
+    public bool RequireEncryptedAssertions { get; set; }
 }

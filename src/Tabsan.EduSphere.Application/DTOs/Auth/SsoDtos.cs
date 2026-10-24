@@ -52,7 +52,14 @@ public sealed record SsoProviderSettingDto(
     bool AutoLinkByEmail,
     bool EnforceSsoOnly,
     bool TrustIdpMfa,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    string? IdClaim = null,
+    bool LinkById = false,
+    string? RoleClaim = null,
+    string? RoleMappings = null,
+    bool RequireRoleMatch = false,
+    bool SignAuthnRequests = false,
+    bool RequireEncryptedAssertions = false);
 
 /// <summary>Body for PUT /api/v1/sso/settings/{provider}?tenant=CODE (create or update).</summary>
 public sealed record SaveSsoProviderSettingRequest(
@@ -66,7 +73,17 @@ public sealed record SaveSsoProviderSettingRequest(
     bool AutoLinkByEmail,
     bool EnforceSsoOnly,
     bool TrustIdpMfa,
-    bool Enabled);
+    bool Enabled,
+    /// <summary>Claim/attribute with the institution ID (student registration number or username).</summary>
+    [property: StringLength(256)] string? IdClaim = null,
+    bool LinkById = false,
+    /// <summary>Claim/attribute with role / affiliation values.</summary>
+    [property: StringLength(256)] string? RoleClaim = null,
+    /// <summary>"value=Role" pairs separated by ";" (several roles: "value=Faculty|Admin").</summary>
+    [property: StringLength(1000)] string? RoleMappings = null,
+    bool RequireRoleMatch = false,
+    bool SignAuthnRequests = false,
+    bool RequireEncryptedAssertions = false);
 
 /// <summary>Result of "Test connection".</summary>
 public sealed record SsoConnectionTestResult(bool Success, string Message);
@@ -99,7 +116,10 @@ public enum SsoFailureReason
     InvalidMfaCode,
 
     /// <summary>The standard login gates refused the sign-in (inactive, locked, risk, license limit).</summary>
-    LoginRejected
+    LoginRejected,
+
+    /// <summary>The identity provider's role values do not map to the account's EduSphere role (RequireRoleMatch).</summary>
+    RoleNotAllowed
 }
 
 /// <summary>Outcome of an SSO step. On success <see cref="Response"/> is the normal login payload.</summary>

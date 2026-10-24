@@ -1,0 +1,19 @@
+@model Tabsan.EduSphere.Application.Lti.LtiRegistrationStart
+@{
+    ViewData["Title"] = T.Text("Register an external tool");
+}
+@* Plan M5.1 — LTI Dynamic Registration: the tool's registration page runs in this frame; it posts
+   { subject: "org.imsglobal.lti.close" } when it is finished. *@
+<div class="container-fluid py-3" data-lti-registration data-tool-origin="@Model.ToolOrigin" data-done-url="@Url.Action("LtiTools")">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h2 class="h4 mb-0">@T["Register an external tool"]</h2>
+        <a asp-action="LtiTools" class="btn btn-sm btn-outline-primary ms-auto">@T["Back to External Tools"]</a>
+    </div>
+    <p class="small mb-3">
+        @T["Complete the steps on the tool's page below. When it finishes, the tool is added switched off: check what it shares and which services it may use, then turn it on."]
+    </p>
+    <iframe src="@Model.Url" title="@T["Tool registration"]" class="w-100 border rounded bg-white" style="height: 75vh;" allow="clipboard-write"></iframe>
+</div>
+@section Scripts {
+    <script src="~/js/lti-register.js" asp-append-version="true"></script>
+}

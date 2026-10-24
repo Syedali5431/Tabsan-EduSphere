@@ -152,6 +152,7 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
                 // Plan M5: LTI platform address and signing keys for the tests.
                 ["Lti:PlatformUrl"] = "https://platform.test",
                 ["Lti:KeyFile"] = Path.Combine(Path.GetTempPath(), "edusphere-integration-tests", "lti-platform-keys.json"),
+                ["AuthSecurity:Sso:SpCertificateFile"] = Path.Combine(Path.GetTempPath(), "edusphere-integration-tests", "saml-sp-certificate.json"),
                 // Plan M9: Copyleaks webhooks need a public https API address.
                 ["Similarity:PublicApiBaseUrl"] = "https://api.example.test",
                 // Plan M13: extracted SCORM packages go to a temp folder.

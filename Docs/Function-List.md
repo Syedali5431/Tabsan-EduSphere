@@ -6,6 +6,11 @@
 
 | Function Name | Purpose | Location |
 |--------------|--------|----------|
+| SamlServiceProviderCertificate | Plan M1: SAML SP certificate (sign AuthnRequests, decrypt assertions; created on first use) | src/Tabsan.EduSphere.Infrastructure/Auth/SamlServiceProviderCertificate.cs |
+| SsoProviderSetting.SetAttributeMapping / MapRoles / SetSamlSecurity | Plan M1: institution-ID and role mapping, SAML signing/encryption options | src/Tabsan.EduSphere.Domain/Identity/SsoProviderSetting.cs |
+| LtiDynamicRegistrationService | Plan M5.1: LTI Dynamic Registration — start (token + URL), OpenID configuration, tool registration | src/Tabsan.EduSphere.Application/Lti/LtiDynamicRegistration.cs |
+| LtiAgsNrpsService.Page | Plan M5: AGS/NRPS paging with rel="next" links | src/Tabsan.EduSphere.Application/Lti/LtiServiceEndpoints.cs |
+| PortalController.StartLtiRegistration | Plan M5.1: registration frame page | src/Tabsan.EduSphere.Web/Controllers/PortalController.Lti.cs |
 | IObjectStore / FileSystemObjectStore / AzureBlobObjectStore / S3ObjectStore | Plan M14.2: object storage (local folder, Azure Blob, S3/S3-compatible) with metadata and signed read links | src/Tabsan.EduSphere.Infrastructure/Storage/ObjectStores.cs |
 | ObjectStoreMediaStorageService | Plan M14.2: media storage (submissions, conversions, uploads) in the shared object store | src/Tabsan.EduSphere.API/Services/ObjectStoreMediaStorageService.cs |
 | ObjectStoreScormContentStore | Plan M14.2: SCORM package files in the shared object store | src/Tabsan.EduSphere.Infrastructure/Lms/ObjectStoreScormContentStore.cs |

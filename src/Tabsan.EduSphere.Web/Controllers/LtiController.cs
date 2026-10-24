@@ -108,6 +108,13 @@ public sealed class LtiController : Controller
     [HttpGet("jwks")]
     public Task<IActionResult> Jwks(CancellationToken ct) => RelayAsync("api/v1/lti/jwks", ct);
 
+    // LTI Dynamic Registration: the tool reads the platform configuration and posts its registration (bearer registration token).
+    [HttpGet("openid-configuration")]
+    public Task<IActionResult> OpenIdConfiguration(CancellationToken ct) => RelayAsync("api/v1/lti/openid-configuration", ct);
+
+    [HttpPost("register"), IgnoreAntiforgeryToken]
+    public Task<IActionResult> Register(CancellationToken ct) => RelayAsync("api/v1/lti/register", ct);
+
     [HttpPost("token"), IgnoreAntiforgeryToken]
     public Task<IActionResult> Token(CancellationToken ct) => RelayAsync("api/v1/lti/token", ct);
 
@@ -141,6 +148,7 @@ public sealed class LtiController : Controller
         var bytes = await response.Content.ReadAsByteArrayAsync(ct);
         if (response.Headers.CacheControl is { } cache) Response.Headers.CacheControl = cache.ToString();
         if (response.Headers.WwwAuthenticate.Count > 0) Response.Headers.WWWAuthenticate = response.Headers.WwwAuthenticate.ToString();
+        if (response.Headers.TryGetValues("Link", out var link)) Response.Headers.Link = string.Join(", ", link); // AGS/NRPS paging
         return new RawResult((int)response.StatusCode, response.Content.Headers.ContentType?.ToString(), bytes);
     }
 

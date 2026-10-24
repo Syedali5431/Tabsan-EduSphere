@@ -383,6 +383,7 @@ public class LoginController : Controller
     {
         "AccountNotLinked"      => "This account is not linked to an EduSphere user. Sign in with your username and password, or ask your administrator to link it.",
         "EmailDomainNotAllowed" => "This account's email domain is not allowed for this institution.",
+        "RoleNotAllowed"        => "Your identity provider reports a role that does not match this EduSphere account. Contact your administrator.",
         "InvalidState"          => "Your single sign-on session expired or is invalid. Please try again.",
         "LoginRejected"         => failure.LoginFailure switch
         {

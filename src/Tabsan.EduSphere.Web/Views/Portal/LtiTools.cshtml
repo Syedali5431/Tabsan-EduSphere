@@ -111,7 +111,10 @@ else
                                         @if (!string.IsNullOrWhiteSpace(t.DeepLinkingUrl)) { <div>@T["Content selection"]</div> }
                                         <div class="text-muted">@T.Format("Shares: {0}", t.PrivacyLevel)</div>
                                     </td>
-                                    <td>@if (t.IsActive) { <span class="badge bg-success">@T["On"]</span> } else { <span class="badge bg-secondary">@T["Off"]</span> }</td>
+                                    <td>
+                                        @if (t.IsActive) { <span class="badge bg-success">@T["On"]</span> } else { <span class="badge bg-secondary">@T["Off"]</span> }
+                                        @if (t.RegisteredDynamicallyAt is not null && !t.IsActive) { <div class="small" data-lti-review>@T["Registered by the tool — review, then turn on"]</div> }
+                                    </td>
                                     <td class="text-end text-nowrap">
                                         <a asp-action="LtiTools" asp-route-edit="@t.Id" class="btn btn-sm btn-outline-primary">@T["Edit"]</a>
                                         <form asp-action="SetLtiToolActive" method="post" class="d-inline">
@@ -129,6 +132,24 @@ else
             }
         </div>
     </div>
+
+    @if (e is null)
+    {
+        <div class="card border-0 shadow-sm mb-4" data-lti-dynamic-registration>
+            <div class="card-body">
+                <h3 class="h6 mb-1">@T["Register with the tool's registration URL"]</h3>
+                <p class="small text-muted mb-3">@T["For tools that support LTI Dynamic Registration: paste the registration URL from the tool's set-up instructions. The tool reads EduSphere's details and registers itself; it is added switched off for you to review."]</p>
+                <form asp-action="StartLtiRegistration" method="post" class="row g-2 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-9">
+                        <label class="form-label fw-semibold" for="lti-registration-url">@T["Registration URL"]</label>
+                        <input id="lti-registration-url" name="registrationUrl" type="url" class="form-control" maxlength="1000" required placeholder="https://tool.example.com/lti/register" />
+                    </div>
+                    <div class="col-md-3"><button type="submit" class="btn btn-primary w-100">@T["Start registration"]</button></div>
+                </form>
+            </div>
+        </div>
+    }
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">

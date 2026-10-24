@@ -512,6 +512,114 @@ public class SsoSignInTests
             .FailureReason.Should().Be(SsoFailureReason.InvalidState);
     }
 
+    // ── Attribute mapping: institution ID and role (Plan M1 deferred item, 2026-10-24) ──
+
+    private static ExternalIdentity WithAttributes(string subject, string? email, params (string Name, string[] Values)[] attributes)
+        => new(subject, email, EmailVerified: true, Name: null, MfaAsserted: false,
+            Attributes: attributes.ToDictionary(a => a.Name, a => a.Values, StringComparer.OrdinalIgnoreCase));
+
+    [Fact]
+    public async Task Complete_LinksByInstitutionId_WhenEnabled()
+    {
+        var h = new Harness();
+        var setting = h.AddSetting(SsoProvider.GenericOidc, enabled: true);
+        setting.SetAttributeMapping("employee_id", linkById: true, null, null, requireRoleMatch: false);
+        var user = h.AddUser("someone.else@uni.edu", role: "Student");
+        h.Repo.InstitutionIds["REG-2026-001"] = [user.Id];
+
+        var result = await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("sub-1", "personal@gmail.com", ("Employee_ID", ["REG-2026-001"])));
+
+        result.IsSuccess.Should().BeTrue();
+        h.Repo.Links.Should().ContainSingle(l => l.UserId == user.Id && l.ExternalSubjectId == "sub-1");
+        h.Audit.Entries.Should().Contain(e => e.Action == "SsoAccountLinked" && e.NewValuesJson!.Contains("auto_id"));
+    }
+
+    [Fact]
+    public async Task Complete_DoesNotLinkByUnknownOrAmbiguousId_OrWhenSwitchedOff()
+    {
+        var h = new Harness();
+        var setting = h.AddSetting(SsoProvider.GenericOidc, enabled: true);
+        setting.SetAttributeMapping("employee_id", linkById: true, null, null, requireRoleMatch: false);
+        var a = h.AddUser("a@uni.edu");
+        var b = h.AddUser("b@uni.edu");
+        h.Repo.InstitutionIds["DUP"] = [a.Id, b.Id];
+        h.Repo.InstitutionIds["ONE"] = [a.Id];
+
+        (await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("s1", null, ("employee_id", ["DUP"])))).FailureReason
+            .Should().Be(SsoFailureReason.AccountNotLinked);
+        (await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("s2", null, ("employee_id", ["NOPE"])))).FailureReason
+            .Should().Be(SsoFailureReason.AccountNotLinked);
+
+        setting.SetAttributeMapping("employee_id", linkById: false, null, null, requireRoleMatch: false);
+        (await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("s3", null, ("employee_id", ["ONE"])))).FailureReason
+            .Should().Be(SsoFailureReason.AccountNotLinked);
+        h.Repo.Links.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Complete_RoleMismatch_IsRefused_AndCreatesNoLink()
+    {
+        var h = new Harness();
+        var setting = h.AddSetting(SsoProvider.GenericOidc, enabled: true, autoLink: true);
+        setting.SetAttributeMapping(null, false, "roles", "student=Student; faculty=Faculty", requireRoleMatch: true);
+        h.AddUser("teacher@uni.edu", role: "Faculty");
+
+        var result = await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("s1", "teacher@uni.edu", ("roles", ["student"])));
+
+        result.FailureReason.Should().Be(SsoFailureReason.RoleNotAllowed);
+        h.Repo.Links.Should().BeEmpty();
+        h.Auth.Calls.Should().BeEmpty();
+        h.Audit.Entries.Should().Contain(e => e.Action == "SsoLoginFailed" && e.NewValuesJson!.Contains("RoleNotAllowed") && e.NewValuesJson.Contains("Faculty"));
+
+        // No role asserted at all is refused too.
+        (await h.RoundTripAsync(SsoProvider.GenericOidc, WithAttributes("s1", "teacher@uni.edu"))).FailureReason
+            .Should().Be(SsoFailureReason.RoleNotAllowed);
+    }
+
+    [Fact]
+    public async Task Complete_RoleMatch_ChecksExistingLinks_AndUnderstandsScopedAffiliations()
+    {
+        var h = new Harness();
+        var setting = h.AddSetting(SsoProvider.Saml, enabled: true);
+        const string affiliation = "urn:oid:1.3.6.1.4.1.5923.1.1.1.9"; // eduPersonScopedAffiliation
+        setting.SetAttributeMapping(null, false, affiliation, "faculty=Faculty|Admin; student=Student", requireRoleMatch: true);
+        var teacher = h.AddUser("t@uni.edu", role: "Faculty");
+        h.Link(SsoProvider.Saml, "persistent-1", teacher);
+
+        h.Saml.Identity = WithAttributes("persistent-1", "t@uni.edu", (affiliation, ["member@uni.edu", "Faculty@uni.edu"]));
+        (await SamlRoundTripAsync(h)).IsSuccess.Should().BeTrue();
+
+        h.Saml.Identity = WithAttributes("persistent-1", "t@uni.edu", (affiliation, ["student@uni.edu"]));
+        (await SamlRoundTripAsync(h)).FailureReason.Should().Be(SsoFailureReason.RoleNotAllowed);
+    }
+
+    [Fact]
+    public async Task Saml_SigningAndEncryptionOptions_ReachTheSamlClient()
+    {
+        var h = new Harness();
+        var setting = h.AddSetting(SsoProvider.Saml, enabled: true);
+        setting.SetSamlSecurity(signAuthnRequests: true, requireEncryptedAssertions: true);
+        var user = h.AddUser("x@uni.edu");
+        h.Link(SsoProvider.Saml, "persistent-1", user);
+        h.Saml.Identity = new ExternalIdentity("persistent-1", "x@uni.edu", true, null, false);
+
+        (await SamlRoundTripAsync(h)).IsSuccess.Should().BeTrue();
+        h.Saml.LastSigned.Should().BeTrue();
+        h.Saml.LastRequireEncrypted.Should().BeTrue();
+
+        (await h.Service.GetSamlMetadataAsync(SamlAcs, null)).Should().NotBeNull();
+        h.Saml.LastMetadataSigned.Should().BeTrue();
+    }
+
+    private const string SamlAcs = "https://portal.uni.edu/Login/SamlAcs";
+
+    private static async Task<SsoResult> SamlRoundTripAsync(Harness h)
+    {
+        var (start, failure) = await h.Service.StartAsync(new SsoStartRequest("Saml", SamlAcs, h.TenantId is null ? null : "UNI"));
+        failure.Should().BeNull();
+        return await h.Service.CompleteSamlAsync(new SsoSamlCompleteRequest("PHNhbWw+", start!.State), "10.0.0.1");
+    }
+
     [Fact]
     public async Task SamlMetadata_OnlyForAllowedAcs()
     {
@@ -618,7 +726,8 @@ public class SsoSignInTests
             Repo.TenantForCodeUni = tenantId;
             var users = Proxy<IUserRepository>.Create(new()
             {
-                ["GetByEmailAsync"] = a => Task.FromResult(_users.FirstOrDefault(u => string.Equals(u.Email, (string)a[0]!, StringComparison.OrdinalIgnoreCase)))
+                ["GetByEmailAsync"] = a => Task.FromResult(_users.FirstOrDefault(u => string.Equals(u.Email, (string)a[0]!, StringComparison.OrdinalIgnoreCase))),
+                ["GetByIdAsync"] = a => Task.FromResult(_users.FirstOrDefault(u => u.Id == (Guid)a[0]!))
             });
             Service = new SsoSignInService(Repo, Oidc, Saml, new PlainEncryption(), users, Auth, Audit.Service,
                 new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions())),
@@ -645,11 +754,13 @@ public class SsoSignInTests
             return s;
         }
 
-        public User AddUser(string email, Guid? tenantId = null)
+        public User AddUser(string email, Guid? tenantId = null, string? role = null)
         {
             tenantId ??= TenantId;
             var user = new User("u" + _users.Count, "hash", 1, email,
                 tenantId: tenantId, campusId: tenantId is null ? null : Guid.NewGuid());
+            if (role is not null)
+                typeof(User).GetProperty(nameof(User.Role))!.SetValue(user, new Role(role, role, isSystemRole: true));
             _users.Add(user);
             return user;
         }
@@ -696,29 +807,41 @@ public class SsoSignInTests
         public ExternalIdentity? Identity { get; set; }
         public SamlServiceProvider? LastSp, LastValidatedSp;
         public string? LastRelayState, LastExpectedRequestId;
+        public bool LastSigned, LastRequireEncrypted, LastMetadataSigned;
 
-        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default)
+        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, bool signRequest = false, CancellationToken ct = default)
         {
             LastSp = sp;
+            LastSigned = signRequest;
             LastRelayState = relayState;
             return Task.FromResult(new SamlAuthnRequest("https://idp.uni.edu/sso?SAMLRequest=x&RelayState=" + relayState, RequestId));
         }
 
-        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId, CancellationToken ct = default)
+        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
+            bool requireEncryptedAssertion = false, CancellationToken ct = default)
         {
             LastValidatedSp = sp;
+            LastRequireEncrypted = requireEncryptedAssertion;
             LastExpectedRequestId = expectedRequestId;
             return Identity is null ? throw new SsoProtocolException("bad assertion") : Task.FromResult(Identity);
         }
 
-        public string BuildServiceProviderMetadata(SamlServiceProvider sp) => $"<md for {sp.EntityId}>";
+        public string BuildServiceProviderMetadata(SamlServiceProvider sp, bool authnRequestsSigned = false)
+        {
+            LastMetadataSigned = authnRequestsSigned;
+            return $"<md for {sp.EntityId}>";
+        }
     }
     private sealed class FakeSsoRepo : ISsoRepository
     {
         public readonly List<SsoProviderSetting> Settings = new();
         public readonly List<ExternalLogin> Links = new();
+        /// <summary>Institution ID → user ids (students' registration numbers / usernames).</summary>
+        public readonly Dictionary<string, List<Guid>> InstitutionIds = new(StringComparer.Ordinal);
 
         public Guid? TenantForCodeUni { get; set; }
+        public Task<IReadOnlyList<Guid>> FindUserIdsByInstitutionIdAsync(Guid? tenantId, string institutionId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Guid>>(InstitutionIds.TryGetValue(institutionId, out var ids) ? ids : []);
         public Task<Guid?> GetTenantIdByCodeAsync(string tenantCode, CancellationToken ct = default)
             => Task.FromResult(tenantCode == "UNI" ? TenantForCodeUni : null);
         public Task<SsoProviderSetting?> GetSettingAsync(Guid? tenantId, SsoProvider provider, CancellationToken ct = default)

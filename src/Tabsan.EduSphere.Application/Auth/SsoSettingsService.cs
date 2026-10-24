@@ -73,6 +73,8 @@ public sealed class SsoSettingsService : ISsoSettingsService
             }
 
             setting.SetPolicy(request.AutoLinkByEmail, request.EnforceSsoOnly, request.TrustIdpMfa, request.AllowedEmailDomains);
+            setting.SetAttributeMapping(request.IdClaim, request.LinkById, request.RoleClaim, request.RoleMappings, request.RequireRoleMatch);
+            setting.SetSamlSecurity(!setting.IsOidc && request.SignAuthnRequests, !setting.IsOidc && request.RequireEncryptedAssertions);
 
             if (request.Enabled)
                 setting.Enable();
@@ -104,6 +106,13 @@ public sealed class SsoSettingsService : ISsoSettingsService
                 setting.AutoLinkByEmail,
                 setting.EnforceSsoOnly,
                 setting.TrustIdpMfa,
+                setting.IdClaim,
+                setting.LinkById,
+                setting.RoleClaim,
+                setting.RoleMappings,
+                setting.RequireRoleMatch,
+                setting.SignAuthnRequests,
+                setting.RequireEncryptedAssertions,
                 secretChanged
             }),
             ipAddress: ipAddress), ct);
@@ -163,7 +172,7 @@ public sealed class SsoSettingsService : ISsoSettingsService
                 return new(true, $"Connected: the OpenID configuration at {setting.Authority} was loaded. Complete a real sign-in to confirm the client ID and secret.");
             }
 
-            await _saml.BuildAuthnRequestAsync(setting.MetadataUrl!, TestSp, "test", ct);
+            await _saml.BuildAuthnRequestAsync(setting.MetadataUrl!, TestSp, "test", setting.SignAuthnRequests, ct);
             return new(true, "Connected: the IdP metadata was loaded and contains a signing certificate and a single sign-on endpoint.");
         }
         catch (SsoProtocolException ex)
@@ -198,6 +207,9 @@ public sealed class SsoSettingsService : ISsoSettingsService
             "clientId" => "Client ID",
             "authority" => "Authority",
             "metadataUrl" => "Metadata URL",
+            "idClaim" => "Institution ID claim",
+            "roleClaim" => "Role claim",
+            "roleMappings" => "Role mapping",
             _ => p
         } : null;
         var text = idx > 0 ? message[..idx] : message;
@@ -207,5 +219,6 @@ public sealed class SsoSettingsService : ISsoSettingsService
     private static SsoProviderSettingDto ToDto(SsoProviderSetting s, string? tenantCode) => new(
         s.Id, tenantCode, s.Provider.ToString(), s.DisplayName, s.IsEnabled, s.IsComplete,
         s.ClientId, !string.IsNullOrEmpty(s.ClientSecretEncrypted), s.Authority, s.MetadataUrl,
-        s.GetAllowedEmailDomains(), s.AutoLinkByEmail, s.EnforceSsoOnly, s.TrustIdpMfa, s.UpdatedAt);
+        s.GetAllowedEmailDomains(), s.AutoLinkByEmail, s.EnforceSsoOnly, s.TrustIdpMfa, s.UpdatedAt,
+        s.IdClaim, s.LinkById, s.RoleClaim, s.RoleMappings, s.RequireRoleMatch, s.SignAuthnRequests, s.RequireEncryptedAssertions);
 }

@@ -86,6 +86,17 @@ public class LtiTool : BaseEntity
 
     public IReadOnlyList<string> RedirectUriList => RedirectUris.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
+    /// <summary>Set when the tool registered itself (LTI Dynamic Registration); such tools start switched off for review.</summary>
+    public DateTime? RegisteredDynamicallyAt { get; private set; }
+
+    /// <summary>LTI Dynamic Registration: the tool registered itself — it stays off until an administrator reviews and enables it.</summary>
+    public void MarkDynamicallyRegistered()
+    {
+        RegisteredDynamicallyAt = DateTime.UtcNow;
+        IsActive = false;
+        Touch();
+    }
+
     public void SetActive(bool active) { IsActive = active; Touch(); }
 
     public LtiToolDeployment AddDeployment(LtiDeploymentScope scope, Guid? scopeId)

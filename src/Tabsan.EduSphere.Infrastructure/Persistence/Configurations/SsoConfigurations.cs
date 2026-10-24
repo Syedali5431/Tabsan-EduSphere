@@ -66,6 +66,13 @@ public class SsoProviderSettingConfiguration : IEntityTypeConfiguration<SsoProvi
         builder.Property(x => x.AutoLinkByEmail).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.EnforceSsoOnly).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.TrustIdpMfa).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.IdClaim).HasMaxLength(256);
+        builder.Property(x => x.LinkById).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.RoleClaim).HasMaxLength(256);
+        builder.Property(x => x.RoleMappings).HasMaxLength(1000);
+        builder.Property(x => x.RequireRoleMatch).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.SignAuthnRequests).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.RequireEncryptedAssertions).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.RowVersion).IsRowVersion();
 
         builder.Ignore(x => x.IsOidc);

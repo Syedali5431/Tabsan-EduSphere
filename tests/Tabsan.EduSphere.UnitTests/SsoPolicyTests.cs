@@ -201,6 +201,8 @@ public class SsoPolicyTests
         public Task<bool> UserHasLinkAsync(Guid userId, SsoProvider provider, CancellationToken ct = default)
             => Task.FromResult(Links.Any(l => l.UserId == userId && l.Provider == provider));
         public Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default) { Links.Add(link); return Task.CompletedTask; }
+        public Task<IReadOnlyList<Guid>> FindUserIdsByInstitutionIdAsync(Guid? tenantId, string institutionId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<Guid>>([]);
         public Task<IReadOnlyList<SsoProviderSetting>> GetEnforcingSettingsAsync(Guid? tenantId, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<SsoProviderSetting>>(Settings.Where(s => s.IsEnabled && s.EnforceSsoOnly && (s.TenantId == null || s.TenantId == tenantId)).ToList());
         public Task<IReadOnlyList<ExternalLogin>> GetLinksForUserAsync(Guid userId, CancellationToken ct = default)

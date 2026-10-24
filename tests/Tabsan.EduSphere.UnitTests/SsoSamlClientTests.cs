@@ -172,6 +172,107 @@ public class SsoSamlClientTests
         await act.Should().ThrowAsync<SsoProtocolException>();
     }
 
+    // ── Signed requests and encrypted assertions (SP certificate) ──
+
+    private static SamlServiceProviderCertificate SpCertificate()
+        => new(Path.Combine(Path.GetTempPath(), "edusphere-saml-tests", Guid.NewGuid().ToString("N") + ".json"));
+
+    [Fact]
+    public async Task SignedAuthnRequest_CarriesASignatureTheSpCertificateVerifies()
+    {
+        var idp = new FakeSamlIdp();
+        var sp = SpCertificate();
+        var request = await new SamlClient(new HttpClient(idp), sp).BuildAuthnRequestAsync(idp.MetadataUrl, Sp, "relay-1", signRequest: true);
+
+        var query = new Uri(request.RedirectUrl).Query.TrimStart('?');
+        var signatureAt = query.IndexOf("&Signature=", StringComparison.Ordinal);
+        signatureAt.Should().BePositive();
+        var parsed = QueryHelpers.ParseQuery(query);
+        parsed["SigAlg"].ToString().Should().Be("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+        using var key = sp.PublicCertificate.GetRSAPublicKey()!;
+        key.VerifyData(Encoding.UTF8.GetBytes(query[..signatureAt]), Convert.FromBase64String(parsed["Signature"].ToString()),
+            HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1).Should().BeTrue();
+
+        // Unsigned by default.
+        var plain = await new SamlClient(new HttpClient(idp), sp).BuildAuthnRequestAsync(idp.MetadataUrl, Sp, "relay-2");
+        plain.RedirectUrl.Should().NotContain("Signature=");
+    }
+
+    [Fact]
+    public async Task SigningWithoutAnSpCertificate_Fails()
+    {
+        var idp = new FakeSamlIdp();
+        var act = () => new SamlClient(new HttpClient(idp)).BuildAuthnRequestAsync(idp.MetadataUrl, Sp, "r", signRequest: true);
+        await act.Should().ThrowAsync<SsoProtocolException>();
+    }
+
+    [Fact]
+    public async Task EncryptedAssertion_IsDecrypted_AndCanBeRequired()
+    {
+        var idp = new FakeSamlIdp();
+        var sp = SpCertificate();
+        var client = new SamlClient(new HttpClient(idp), sp);
+        var encrypted = idp.Respond("_r", attributes: new() { ["email"] = "ali@uni.edu" }, encryptFor: sp.PublicCertificate);
+        Encoding.UTF8.GetString(Convert.FromBase64String(encrypted)).Should().Contain("EncryptedAssertion").And.NotContain("ali@uni.edu");
+
+        var identity = await client.ValidateResponseAsync(idp.MetadataUrl, Sp, encrypted, "_r", requireEncryptedAssertion: true);
+        identity.Email.Should().Be("ali@uni.edu");
+        identity.Subject.Should().Be("persistent-123");
+
+        // A plain assertion is accepted unless encryption is required.
+        (await client.ValidateResponseAsync(idp.MetadataUrl, Sp, idp.Respond("_p"), "_p")).Subject.Should().Be("persistent-123");
+        var act = () => client.ValidateResponseAsync(idp.MetadataUrl, Sp, idp.Respond("_q"), "_q", requireEncryptedAssertion: true);
+        await act.Should().ThrowAsync<SsoProtocolException>();
+    }
+
+    [Fact]
+    public async Task AssertionEncryptedForAnotherCertificate_IsRejected()
+    {
+        var idp = new FakeSamlIdp();
+        using var other = FakeSamlIdp.CreateCertificate("CN=Someone else");
+        var response = idp.Respond("_r", encryptFor: new X509Certificate2(other.Export(X509ContentType.Cert)));
+
+        var act = () => new SamlClient(new HttpClient(idp), SpCertificate()).ValidateResponseAsync(idp.MetadataUrl, Sp, response, "_r");
+        await act.Should().ThrowAsync<SsoProtocolException>();
+    }
+
+    [Fact]
+    public async Task Attributes_KeepEveryValue_ForIdAndRoleMapping()
+    {
+        var idp = new FakeSamlIdp();
+        var response = idp.Respond("_r", attributes: new() { ["urn:oid:2.16.840.1.113730.3.1.3"] = "EMP-77" },
+            multiValued: [("urn:oid:1.3.6.1.4.1.5923.1.1.1.1", "member"), ("urn:oid:1.3.6.1.4.1.5923.1.1.1.1", "faculty")]);
+
+        var identity = await new SamlClient(new HttpClient(idp)).ValidateResponseAsync(idp.MetadataUrl, Sp, response, "_r");
+
+        identity.Values("urn:oid:2.16.840.1.113730.3.1.3").Should().Equal("EMP-77");
+        identity.Values("URN:OID:1.3.6.1.4.1.5923.1.1.1.1").Should().BeEquivalentTo("member", "faculty");
+        identity.Values("missing").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ServiceProviderMetadata_PublishesTheSpCertificate_ForSigningAndEncryption()
+    {
+        var sp = SpCertificate();
+        var xml = new SamlClient(new HttpClient(), sp).BuildServiceProviderMetadata(Sp, authnRequestsSigned: true);
+        var certificate = Convert.ToBase64String(sp.PublicCertificate.RawData);
+
+        xml.Should().Contain("AuthnRequestsSigned=\"true\"");
+        xml.Should().Contain("use=\"signing\"").And.Contain("use=\"encryption\"");
+        xml.Should().Contain(certificate);
+        new SamlClient(new HttpClient(), sp).BuildServiceProviderMetadata(Sp).Should().Contain("AuthnRequestsSigned=\"false\"");
+    }
+
+    [Fact]
+    public void SpCertificate_IsCreatedOnce_AndReusedFromItsFile()
+    {
+        var file = Path.Combine(Path.GetTempPath(), "edusphere-saml-tests", Guid.NewGuid().ToString("N") + ".json");
+        var first = new SamlServiceProviderCertificate(file).Certificate;
+        first.HasPrivateKey.Should().BeTrue();
+        File.Exists(file).Should().BeTrue();
+        new SamlServiceProviderCertificate(file).Certificate.Thumbprint.Should().Be(first.Thumbprint);
+    }
+
     [Fact]
     public void ServiceProviderMetadata_DescribesAcsAndRequiresSignedAssertions()
     {
@@ -227,14 +328,17 @@ public class SsoSamlClientTests
             string? authnContext = null,
             DateTime? issuedAt = null,
             Saml2StatusCodes status = Saml2StatusCodes.Success,
-            X509Certificate2? signingCertificate = null)
+            X509Certificate2? signingCertificate = null,
+            X509Certificate2? encryptFor = null,
+            (string Type, string Value)[]? multiValued = null)
         {
             var now = issuedAt ?? DateTime.UtcNow;
             var config = new Saml2Configuration
             {
                 Issuer = EntityId,
                 SigningCertificate = signingCertificate ?? _certificate,
-                AuthnResponseSignType = Saml2AuthnResponseSignTypes.SignAssertionAndResponse
+                AuthnResponseSignType = Saml2AuthnResponseSignTypes.SignAssertionAndResponse,
+                EncryptionCertificate = encryptFor
             };
 
             var response = new Saml2AuthnResponse(config)
@@ -246,7 +350,9 @@ public class SsoSamlClientTests
             };
 
             // An AttributeStatement must contain at least one attribute; real IdPs always send some.
-            var claims = (attributes ?? new()).Select(kv => new Claim(kv.Key, kv.Value)).Append(new Claim("urn:oid:0.9.2342.19200300.100.1.1", "ali")).ToList();
+            var claims = (attributes ?? new()).Select(kv => new Claim(kv.Key, kv.Value))
+                .Concat((multiValued ?? []).Select(m => new Claim(m.Type, m.Value)))
+                .Append(new Claim("urn:oid:0.9.2342.19200300.100.1.1", "ali")).ToList();
             response.ClaimsIdentity = new ClaimsIdentity(claims);
 
             if (status == Saml2StatusCodes.Success)

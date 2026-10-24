@@ -12988,7 +12988,14 @@ public partial class PortalController : Controller
                 AutoLinkByEmail = form.AutoLinkByEmail,
                 EnforceSsoOnly = form.EnforceSsoOnly,
                 TrustIdpMfa = form.TrustIdpMfa,
-                Enabled = form.Enabled
+                Enabled = form.Enabled,
+                IdClaim = string.IsNullOrWhiteSpace(form.IdClaim) ? null : form.IdClaim.Trim(),
+                LinkById = form.LinkById,
+                RoleClaim = string.IsNullOrWhiteSpace(form.RoleClaim) ? null : form.RoleClaim.Trim(),
+                RoleMappings = string.IsNullOrWhiteSpace(form.RoleMappings) ? null : form.RoleMappings.Trim(),
+                RequireRoleMatch = form.RequireRoleMatch,
+                SignAuthnRequests = form.SignAuthnRequests,
+                RequireEncryptedAssertions = form.RequireEncryptedAssertions
             }, ct);
             TempData["Success"] = $"{form.DisplayName} settings saved.";
         }

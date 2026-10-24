@@ -180,6 +180,28 @@ else
                                 </div>
 
                                 <div class="col-12">
+                                    <h4 class="h6 mt-2 mb-0">@T["Attribute mapping"]</h4>
+                                    <div class="form-text">@T["Optional. Use only claims or attributes the identity provider controls (people cannot edit them)."]</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="@($"{key}-idclaim")">@T["Institution ID claim or attribute"]</label>
+                                    <input id="@($"{key}-idclaim")" name="IdClaim" class="form-control" maxlength="256" value="@s?.IdClaim"
+                                           placeholder="@(isOidc ? "employee_id" : "urn:oid:2.16.840.1.113730.3.1.3")" />
+                                    <div class="form-text">@T["Matched to a student's registration number, otherwise to the username."]</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="@($"{key}-roleclaim")">@T["Role claim or attribute"]</label>
+                                    <input id="@($"{key}-roleclaim")" name="RoleClaim" class="form-control" maxlength="256" value="@s?.RoleClaim"
+                                           placeholder="@(isOidc ? "roles" : "urn:oid:1.3.6.1.4.1.5923.1.1.1.1")" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold" for="@($"{key}-rolemap")">@T["Role mapping"]</label>
+                                    <input id="@($"{key}-rolemap")" name="RoleMappings" class="form-control" maxlength="1000" value="@s?.RoleMappings"
+                                           placeholder="student=Student; faculty=Faculty; staff=Admin|Finance" />
+                                    <div class="form-text">@T["Identity provider value = EduSphere role, separated by semicolons. Roles: Student, Faculty, Admin, Finance, Parent."]</div>
+                                </div>
+
+                                <div class="col-12">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-enabled")" name="Enabled" value="true" @(s?.IsEnabled == true ? "checked" : "") />
                                         <label class="form-check-label" for="@($"{key}-enabled")">@T["Show this provider on the login page"]</label>
@@ -188,6 +210,26 @@ else
                                         <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-autolink")" name="AutoLinkByEmail" value="true" @(s?.AutoLinkByEmail == true ? "checked" : "") />
                                         <label class="form-check-label" for="@($"{key}-autolink")">@T["Link to the existing EduSphere account with the same verified email on first sign-in"]</label>
                                     </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-linkid")" name="LinkById" value="true" @(s?.LinkById == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-linkid")">@T["Link to the account with the same institution ID on first sign-in"]</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-rolematch")" name="RequireRoleMatch" value="true" @(s?.RequireRoleMatch == true ? "checked" : "") />
+                                        <label class="form-check-label" for="@($"{key}-rolematch")">@T["Refuse sign-in when the identity provider's role does not match the EduSphere account"]</label>
+                                    </div>
+                                    @if (!isOidc)
+                                    {
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-signreq")" name="SignAuthnRequests" value="true" @(s?.SignAuthnRequests == true ? "checked" : "") />
+                                            <label class="form-check-label" for="@($"{key}-signreq")">@T["Sign authentication requests (for identity providers that require it)"]</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-encrypted")" name="RequireEncryptedAssertions" value="true" @(s?.RequireEncryptedAssertions == true ? "checked" : "") />
+                                            <label class="form-check-label" for="@($"{key}-encrypted")">@T["Require encrypted assertions"]</label>
+                                        </div>
+                                        <div class="form-text">@T["The service-provider metadata contains EduSphere's certificate for signed requests and encrypted assertions. Download it again after turning these on."]</div>
+                                    }
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" role="switch" id="@($"{key}-mfa")" name="TrustIdpMfa" value="true" @(s?.TrustIdpMfa == true ? "checked" : "") />
                                         <label class="form-check-label" for="@($"{key}-mfa")">@T["Skip the EduSphere authenticator code when the identity provider already did multi-factor sign-in"]</label>

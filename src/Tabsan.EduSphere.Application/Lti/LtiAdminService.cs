@@ -146,5 +146,6 @@ public sealed class LtiAdminService
         => new(t.Id, t.Name, t.Description, t.ClientId, t.OidcInitiationUrl, t.TargetLinkUri, t.DeepLinkingUrl, t.RedirectUriList, t.JwksUrl,
             t.PublicKeyPem is not null, t.CustomParameters, t.PrivacyLevel.ToString(), t.AllowGradeService, t.AllowRosterService, t.IsActive,
             t.Deployments.OrderBy(d => d.Scope).ThenBy(d => d.CreatedAt)
-                .Select(d => new LtiDeploymentResponse(d.Id, d.DeploymentId, d.Scope.ToString(), d.ScopeId, d.IsActive)).ToList());
+                .Select(d => new LtiDeploymentResponse(d.Id, d.DeploymentId, d.Scope.ToString(), d.ScopeId, d.IsActive)).ToList(),
+            t.RegisteredDynamicallyAt);
 }

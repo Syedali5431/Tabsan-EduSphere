@@ -18,8 +18,13 @@ namespace Tabsan.EduSphere.API.Controllers;
 public sealed class LtiAdminController : ControllerBase
 {
     private readonly LtiAdminService _admin;
+    private readonly LtiDynamicRegistrationService _registration;
 
-    public LtiAdminController(LtiAdminService admin) => _admin = admin;
+    public LtiAdminController(LtiAdminService admin, LtiDynamicRegistrationService registration)
+    {
+        _admin = admin;
+        _registration = registration;
+    }
 
     [HttpGet("platform")]
     public IActionResult Platform() => Ok(_admin.PlatformInfo());
@@ -42,6 +47,11 @@ public sealed class LtiAdminController : ControllerBase
     [HttpPost("tools")]
     public async Task<IActionResult> Create([FromBody] SaveLtiToolRequest request, CancellationToken ct)
         => ToResult(await _admin.CreateAsync(request, UserId(), ct));
+
+    /// <summary>LTI Dynamic Registration: issues a registration token and the URL that opens the tool's registration page.</summary>
+    [HttpPost("tools/dynamic-registration")]
+    public async Task<IActionResult> StartDynamicRegistration([FromBody] StartLtiRegistrationRequest request, CancellationToken ct)
+        => ToResult(await _registration.StartAsync(request.RegistrationUrl, UserId(), ct));
 
     [HttpPut("tools/{toolId:guid}")]
     public async Task<IActionResult> Update(Guid toolId, [FromBody] SaveLtiToolRequest request, CancellationToken ct)
@@ -181,13 +191,32 @@ public sealed class LtiProtocolController : ControllerBase
     private readonly LtiTokenService _tokens;
     private readonly LtiAgsNrpsService _services;
     private readonly ILtiPlatformKeys _keys;
+    private readonly LtiDynamicRegistrationService _registration;
 
-    public LtiProtocolController(LtiLaunchService launch, LtiTokenService tokens, LtiAgsNrpsService services, ILtiPlatformKeys keys)
+    public LtiProtocolController(LtiLaunchService launch, LtiTokenService tokens, LtiAgsNrpsService services, ILtiPlatformKeys keys,
+        LtiDynamicRegistrationService registration)
     {
         _launch = launch;
         _tokens = tokens;
         _services = services;
         _keys = keys;
+        _registration = registration;
+    }
+
+    /// <summary>LTI Dynamic Registration: the platform's OpenID configuration (read by the tool during registration).</summary>
+    [HttpGet("openid-configuration")]
+    public IActionResult OpenIdConfiguration() => Content(_registration.OpenIdConfigurationJson(), "application/json");
+
+    /// <summary>LTI Dynamic Registration: the tool's client registration, authorised by the single-use registration token.</summary>
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(CancellationToken ct)
+    {
+        Response.Headers.CacheControl = "no-store";
+        var body = await ReadBodyAsync(ct);
+        var r = await _registration.RegisterAsync(Request.Headers.Authorization.ToString(), body, ct);
+        if (r.Ok) return Content(r.Value!, "application/json");
+        var i = r.Error!.IndexOf(':');
+        return StatusCode(r.Status, new { error = r.Error[..i], error_description = r.Error[(i + 1)..].Trim() });
     }
 
     [HttpGet("jwks")]
@@ -228,8 +257,8 @@ public sealed class LtiProtocolController : ControllerBase
 
     [HttpGet("ags/{offeringId:guid}/lineitems")]
     public Task<IActionResult> LineItems(Guid offeringId, [FromQuery(Name = "resource_link_id")] string? resourceLinkId, [FromQuery(Name = "resource_id")] string? resourceId,
-        [FromQuery] string? tag, [FromQuery] int? limit, CancellationToken ct)
-        => Serve(c => _services.ListLineItemsAsync(c, offeringId, resourceLinkId, resourceId, tag, limit, ct), LtiAgsNrpsService.LineItemContainerType, ct);
+        [FromQuery] string? tag, [FromQuery] int? limit, [FromQuery] int? page, CancellationToken ct)
+        => Serve(c => _services.ListLineItemsAsync(c, offeringId, resourceLinkId, resourceId, tag, limit, ct, page), LtiAgsNrpsService.LineItemContainerType, ct);
 
     [HttpPost("ags/{offeringId:guid}/lineitems")]
     public async Task<IActionResult> CreateLineItem(Guid offeringId, CancellationToken ct)
@@ -268,14 +297,14 @@ public sealed class LtiProtocolController : ControllerBase
     }
 
     [HttpGet("ags/{offeringId:guid}/lineitems/{lineItemId:guid}/results")]
-    public Task<IActionResult> Results(Guid offeringId, Guid lineItemId, [FromQuery(Name = "user_id")] string? userId, [FromQuery] int? limit, CancellationToken ct)
-        => Serve(c => _services.ResultsAsync(c, offeringId, lineItemId, userId, limit, ct), LtiAgsNrpsService.ResultContainerType, ct);
+    public Task<IActionResult> Results(Guid offeringId, Guid lineItemId, [FromQuery(Name = "user_id")] string? userId, [FromQuery] int? limit, [FromQuery] int? page, CancellationToken ct)
+        => Serve(c => _services.ResultsAsync(c, offeringId, lineItemId, userId, limit, ct, page), LtiAgsNrpsService.ResultContainerType, ct);
 
     // ── Names and Role Provisioning Services ────────────────────────────────
 
     [HttpGet("nrps/{offeringId:guid}/memberships")]
-    public Task<IActionResult> Memberships(Guid offeringId, [FromQuery] string? role, [FromQuery] int? limit, CancellationToken ct)
-        => Serve(c => _services.MembershipsAsync(c, offeringId, role, limit, ct), LtiAgsNrpsService.MembershipType, ct);
+    public Task<IActionResult> Memberships(Guid offeringId, [FromQuery] string? role, [FromQuery] int? limit, [FromQuery] int? page, CancellationToken ct)
+        => Serve(c => _services.MembershipsAsync(c, offeringId, role, limit, ct, page), LtiAgsNrpsService.MembershipType, ct);
 
     private async Task<IActionResult> Serve(Func<LtiServiceCaller, Task<LtiResult<JsonNode>>> action, string mediaType, CancellationToken ct)
     {
@@ -283,6 +312,7 @@ public sealed class LtiProtocolController : ControllerBase
         if (caller is null) return Unauthorized(new { error = "invalid_token" });
         var r = await action(caller);
         if (!r.Ok) return StatusCode(r.Status, new { error = r.Error });
+        if (r.NextUrl is not null) Response.Headers.Link = $"<{r.NextUrl}>; rel=\"next\"";
         return new ContentResult { StatusCode = r.Status, Content = r.Value!.ToJsonString(), ContentType = mediaType };
     }
 

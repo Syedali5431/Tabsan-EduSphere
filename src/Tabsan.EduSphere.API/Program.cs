@@ -371,7 +371,11 @@ builder.Services.AddDataProtection().SetApplicationName("Tabsan.EduSphere.API");
 builder.Services.AddScoped<ITwoFactorStateStore, TwoFactorStateStore>();
 // Plan M1 Stage M1.2 — OpenID Connect single sign-on.
 builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.IOidcClient, Tabsan.EduSphere.Infrastructure.Auth.OidcClient>(client => client.Timeout = TimeSpan.FromSeconds(15));
-// Plan M1 Stage M1.3 — SAML 2.0 (IdP metadata fetched over this client).
+// Plan M1 Stage M1.3 — SAML 2.0 (IdP metadata fetched over this client). The SP certificate signs AuthnRequests and
+// decrypts encrypted assertions when a provider asks for it.
+builder.Services.AddSingleton(sp => new Tabsan.EduSphere.Infrastructure.Auth.SamlServiceProviderCertificate(
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tabsan.EduSphere.Application.Auth.AuthSecurityOptions>>().Value.Sso.SpCertificateFile,
+    sp.GetService<ILogger<Tabsan.EduSphere.Infrastructure.Auth.SamlServiceProviderCertificate>>()));
 builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Interfaces.ISamlClient, Tabsan.EduSphere.Infrastructure.Auth.SamlClient>(client => client.Timeout = TimeSpan.FromSeconds(15));
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoRepository, Tabsan.EduSphere.Infrastructure.Repositories.SsoRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISsoSignInService, Tabsan.EduSphere.Application.Auth.SsoSignInService>();
@@ -497,6 +501,7 @@ builder.Services.AddHttpClient<Tabsan.EduSphere.Application.Lti.ILtiToolJwtValid
     .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
 builder.Services.AddScoped<Tabsan.EduSphere.Domain.Interfaces.ILtiRepository, Tabsan.EduSphere.Infrastructure.Repositories.LtiRepository>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lti.LtiAdminService>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Lti.LtiDynamicRegistrationService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lti.LtiGradeBridge>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lti.LtiLaunchService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lti.LtiTokenService>();

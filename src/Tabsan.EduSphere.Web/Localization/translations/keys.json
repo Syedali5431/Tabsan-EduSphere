@@ -1257,6 +1257,9 @@
   "Views/Portal/ReportAttendance.cshtml",
   "Views/Portal/ReportLowAttendance.cshtml"
  ],
+ "Attribute mapping": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Audit Logs": [
   "Views/Portal/AuditLogs.cshtml"
  ],
@@ -1331,6 +1334,9 @@
  ],
  "Back to EduSphere": [
   "Views/Lti/Error.cshtml"
+ ],
+ "Back to External Tools": [
+  "Views/Portal/LtiRegister.cshtml"
  ],
  "Back to List": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -1873,6 +1879,9 @@
  ],
  "Complete": [
   "Views/Portal/Fyp.cshtml"
+ ],
+ "Complete the steps on the tool's page below. When it finishes, the tool is added switched off: check what it shares and which services it may use, then turn it on.": [
+  "Views/Portal/LtiRegister.cshtml"
  ],
  "Complete when students finish": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
@@ -3570,6 +3579,9 @@
  "For school and college, saving grading applies the same configuration to all subjects in the selected scope.": [
   "Views/Portal/GradingConfig.cshtml"
  ],
+ "For tools that support LTI Dynamic Registration: paste the registration URL from the tool's set-up instructions. The tool reads EduSphere's details and registers itself; it is added switched off for you to review.": [
+  "Views/Portal/LtiTools.cshtml"
+ ],
  "Force Change Password": [
   "Views/Portal/ForceChangePassword.cshtml"
  ],
@@ -3912,6 +3924,9 @@
  "IdP metadata URL": [
   "Views/Portal/SsoSettings.cshtml"
  ],
+ "Identity provider value = EduSphere role, separated by semicolons. Roles: Student, Faculty, Admin, Finance, Parent.": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "If the portal is published behind a proxy or tunnel and these show an internal address, set": [
   "Views/Portal/SsoSettings.cshtml"
  ],
@@ -4073,6 +4088,9 @@
  ],
  "Institution Hub": [
   "Views/Shared/_Layout.cshtml"
+ ],
+ "Institution ID claim or attribute": [
+  "Views/Portal/SsoSettings.cshtml"
  ],
  "Institution Policy": [
   "Sidebar",
@@ -4366,6 +4384,9 @@
  "Link": [
   "Views/Portal/CourseMaterial.cshtml"
  ],
+ "Link to the account with the same institution ID on first sign-in": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Link to the existing EduSphere account with the same verified email on first sign-in": [
   "Views/Portal/SsoSettings.cshtml"
  ],
@@ -4648,6 +4669,9 @@
  ],
  "Mastery recalculated from the current grades.": [
   "Controllers"
+ ],
+ "Matched to a student's registration number, otherwise to the username.": [
+  "Views/Portal/SsoSettings.cshtml"
  ],
  "Matching text": [
   "Views (inline expressions)"
@@ -5828,6 +5852,9 @@
  "Optional. Uploading replaces the current file path. Allowed: DOC, DOCX, PPT, PPTX, PDF, TXT, XLS, XLSX, JPG, JPEG, PNG.": [
   "Views/Portal/CourseMaterial.cshtml"
  ],
+ "Optional. Use only claims or attributes the identity provider controls (people cannot edit them).": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Options": [
   "Views/Portal/AssignmentOptions.cshtml",
   "Views/Portal/Assignments.cshtml"
@@ -6622,6 +6649,9 @@
  "Redirect URIs": [
   "Views/Portal/LtiTools.cshtml"
  ],
+ "Refuse sign-in when the identity provider's role does not match the EduSphere account": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Reg #": [
   "Views/Portal/Gradebook.cshtml"
  ],
@@ -6659,11 +6689,20 @@
  "Register a tool": [
   "Views (inline expressions)"
  ],
+ "Register an external tool": [
+  "Views/Portal/LtiRegister.cshtml"
+ ],
  "Register another tool": [
   "Views/Portal/LtiTools.cshtml"
  ],
  "Register tool": [
   "Views (inline expressions)"
+ ],
+ "Register with the tool's registration URL": [
+  "Views/Portal/LtiTools.cshtml"
+ ],
+ "Registered by the tool — review, then turn on": [
+  "Views/Portal/LtiTools.cshtml"
  ],
  "Registered tools": [
   "Views/Portal/LtiTools.cshtml"
@@ -6671,6 +6710,9 @@
  "Registration No.": [
   "Views/Portal/GraduationEligibility.cshtml",
   "Views/Portal/UserImport.cshtml"
+ ],
+ "Registration URL": [
+  "Views/Portal/LtiTools.cshtml"
  ],
  "Registration:": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -6849,6 +6891,9 @@
  "Request failed (": [
   "wwwroot/js/submission-viewer.js"
  ],
+ "Require encrypted assertions": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Require single sign-on (turn off password login)": [
   "Views/Portal/SsoSettings.cshtml"
  ],
@@ -7025,6 +7070,12 @@
  "Role Access:": [
   "Views/Portal/ModuleSettings.cshtml",
   "Views/Portal/ReportSettings.cshtml"
+ ],
+ "Role claim or attribute": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
+ "Role mapping": [
+  "Views/Portal/SsoSettings.cshtml"
  ],
  "Role must be Admin, Faculty, Student, or Finance.": [
   "Controllers"
@@ -7912,6 +7963,9 @@
  "Sign Out": [
   "Views/Shared/_Layout.cshtml"
  ],
+ "Sign authentication requests (for identity providers that require it)": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "Sign in to your account": [
   "Views/Login/Index.cshtml"
  ],
@@ -8036,6 +8090,9 @@
  ],
  "Start quiz": [
   "Views (inline expressions)"
+ ],
+ "Start registration": [
+  "Views/Portal/LtiTools.cshtml"
  ],
  "Start signing with a new key? Tools fetch it from the JWKS URL automatically.": [
   "Views/Portal/LtiTools.cshtml"
@@ -8813,6 +8870,9 @@
  "The service teachers' live classes are created with. Teachers can always paste a meeting link instead.": [
   "Views/Portal/LiveClassSettings.cshtml"
  ],
+ "The service-provider metadata contains EduSphere's certificate for signed requests and encrypted assertions. Download it again after turning these on.": [
+  "Views/Portal/SsoSettings.cshtml"
+ ],
  "The settings were not saved.": [
   "Controllers"
  ],
@@ -9194,6 +9254,9 @@
  ],
  "Tool enabled.": [
   "Controllers"
+ ],
+ "Tool registration": [
+  "Views/Portal/LtiRegister.cshtml"
  ],
  "Tool's public key (PEM)": [
   "Views/Portal/LtiTools.cshtml"
@@ -9883,6 +9946,9 @@
  ],
  "Your groups for group assignments and group discussions.": [
   "Views/Portal/MyGroups.cshtml"
+ ],
+ "Your identity provider reports a role that does not match this EduSphere account. Contact your administrator.": [
+  "Controllers"
  ],
  "Your institution requires single sign-on. Use your organization's sign-in button below.": [
   "Controllers"

@@ -1,5 +1,12 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## Execution Update — 2026-10-24 (Plan M open items)
+### Module impact summary
+- **SSO**: attribute mapping and SAML security options on each provider card.
+- **External tools (LTI)**: Dynamic Registration on the External Tools page; paged class lists, line items and results.
+### Validation summary
+- Unit, integration and web tests; saLTIre checks; real push round trip on Chrome and Edge.
+
 ## Execution Update — 2026-10-24 (Plan M14: accessibility, scale hardening, public API)
 ### Module impact summary
 - **All portal modules**: accessible names, contrast and keyboard focus across 106 views (no behaviour change).

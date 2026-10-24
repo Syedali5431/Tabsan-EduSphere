@@ -228,16 +228,34 @@ public sealed class LtiAgsNrpsService
         return o;
     }
 
-    public async Task<LtiResult<JsonNode>> ListLineItemsAsync(LtiServiceCaller caller, Guid offeringId, string? resourceLinkId, string? resourceId, string? tag, int? limit, CancellationToken ct = default)
+    public async Task<LtiResult<JsonNode>> ListLineItemsAsync(LtiServiceCaller caller, Guid offeringId, string? resourceLinkId, string? resourceId, string? tag, int? limit,
+        CancellationToken ct = default, int? page = null)
     {
         var (tool, error, status) = await CheckAsync(caller, offeringId, [LtiConstants.ScopeLineItem, LtiConstants.ScopeLineItemReadOnly], ct);
         if (tool is null) return LtiResult<JsonNode>.Fail(status, error!);
-        var items = (await _repo.GetLineItemsAsync(tool.Id, offeringId, ct))
+        var filtered = (await _repo.GetLineItemsAsync(tool.Id, offeringId, ct))
             .Where(i => resourceLinkId is null || i.ResourceLinkId?.ToString() == resourceLinkId)
             .Where(i => resourceId is null || i.ResourceId == resourceId)
-            .Where(i => tag is null || i.Tag == tag)
-            .Take(Math.Clamp(limit ?? 100, 1, 500));
-        return LtiResult<JsonNode>.Success(new JsonArray(items.Select(i => (JsonNode)LineItemJson(offeringId, i)).ToArray()));
+            .Where(i => tag is null || i.Tag == tag);
+        var (items, next) = Page(filtered, limit, page, 100, 500, _options.LineItemsUrl(offeringId),
+            ("resource_link_id", resourceLinkId), ("resource_id", resourceId), ("tag", tag));
+        return LtiResult<JsonNode>.Success(new JsonArray(items.Select(i => (JsonNode)LineItemJson(offeringId, i)).ToArray())) with { NextUrl = next };
+    }
+
+    /// <summary>
+    /// One page of an already filtered container (LTI AGS/NRPS paging): <paramref name="limit"/> items from page <paramref name="page"/>
+    /// (1-based), and the URL of the next page when more remain — the same filters, limit and the following page number.
+    /// </summary>
+    public static (List<T> Items, string? NextUrl) Page<T>(IEnumerable<T> all, int? limit, int? page, int defaultLimit, int maxLimit, string url,
+        params (string Name, string? Value)[] filters)
+    {
+        var size = Math.Clamp(limit ?? defaultLimit, 1, maxLimit);
+        var number = Math.Max(page ?? 1, 1);
+        var slice = all.Skip((number - 1) * size).Take(size + 1).ToList();
+        if (slice.Count <= size) return (slice, null);
+        var query = filters.Where(f => !string.IsNullOrEmpty(f.Value)).Select(f => $"{f.Name}={Uri.EscapeDataString(f.Value!)}")
+            .Append($"limit={size}").Append($"page={number + 1}");
+        return (slice.Take(size).ToList(), url + "?" + string.Join("&", query));
     }
 
     public async Task<LtiResult<JsonNode>> GetLineItemAsync(LtiServiceCaller caller, Guid offeringId, Guid lineItemId, CancellationToken ct = default)
@@ -328,7 +346,8 @@ public sealed class LtiAgsNrpsService
         return LtiResult<bool>.Success(true, 204);
     }
 
-    public async Task<LtiResult<JsonNode>> ResultsAsync(LtiServiceCaller caller, Guid offeringId, Guid lineItemId, string? userId, int? limit, CancellationToken ct = default)
+    public async Task<LtiResult<JsonNode>> ResultsAsync(LtiServiceCaller caller, Guid offeringId, Guid lineItemId, string? userId, int? limit,
+        CancellationToken ct = default, int? page = null)
     {
         var (tool, error, status) = await CheckAsync(caller, offeringId, [LtiConstants.ScopeResultReadOnly], ct);
         if (tool is null) return LtiResult<JsonNode>.Fail(status, error!);
@@ -337,11 +356,14 @@ public sealed class LtiAgsNrpsService
 
         var members = (await _repo.GetOfferingMembersAsync(offeringId, ct)).Where(m => m.Person.StudentProfileId.HasValue)
             .ToDictionary(m => m.Person.StudentProfileId!.Value, m => m.Person.UserId);
+        var graded = (await _submissions.GetSubmissionsAsync(item.AssignmentId, false, ct))
+            .Where(s => s.MarksAwarded.HasValue && members.ContainsKey(s.StudentProfileId))
+            .Where(s => userId is null || userId == members[s.StudentProfileId].ToString());
+        var (submissions, next) = Page(graded, limit, page, 500, 1000, _options.LineItemUrl(offeringId, item.Id) + "/results", ("user_id", userId));
         var results = new JsonArray();
-        foreach (var s in (await _submissions.GetSubmissionsAsync(item.AssignmentId, false, ct)).Where(s => s.MarksAwarded.HasValue).Take(Math.Clamp(limit ?? 500, 1, 1000)))
+        foreach (var s in submissions)
         {
-            if (!members.TryGetValue(s.StudentProfileId, out var uid)) continue;
-            if (userId is not null && userId != uid.ToString()) continue;
+            var uid = members[s.StudentProfileId];
             var r = new JsonObject
             {
                 ["id"] = $"{_options.LineItemUrl(offeringId, item.Id)}/results/{uid}",
@@ -353,21 +375,25 @@ public sealed class LtiAgsNrpsService
             if (s.Feedback is not null) r["comment"] = s.Feedback;
             results.Add(r);
         }
-        return LtiResult<JsonNode>.Success(results);
+        return LtiResult<JsonNode>.Success(results) with { NextUrl = next };
     }
 
-    public async Task<LtiResult<JsonNode>> MembershipsAsync(LtiServiceCaller caller, Guid offeringId, string? role, int? limit, CancellationToken ct = default)
+    public async Task<LtiResult<JsonNode>> MembershipsAsync(LtiServiceCaller caller, Guid offeringId, string? role, int? limit,
+        CancellationToken ct = default, int? page = null)
     {
         var (tool, error, status) = await CheckAsync(caller, offeringId, [LtiConstants.ScopeMemberships], ct);
         if (tool is null) return LtiResult<JsonNode>.Fail(status, error!);
         var context = await _repo.GetOfferingContextAsync(offeringId, ct);
         if (context is null) return LtiResult<JsonNode>.Fail(404, "Course not found.");
 
+        // The role filter applies before paging, so every page holds only matching members.
+        var matching = (await _repo.GetOfferingMembersAsync(offeringId, ct))
+            .Select(m => (m.Person, Roles: LtiConstants.RolesFor(m.Person.Role, m.IsInstructor)))
+            .Where(m => role is null || m.Roles.Contains(role) || m.Roles.Any(r => r.EndsWith("#" + role, StringComparison.Ordinal)));
+        var (page1, next) = Page(matching, limit, page, 1000, 5000, _options.MembershipsUrl(offeringId), ("role", role));
         var members = new JsonArray();
-        foreach (var (person, isInstructor) in (await _repo.GetOfferingMembersAsync(offeringId, ct)).Take(Math.Clamp(limit ?? 1000, 1, 5000)))
+        foreach (var (person, roles) in page1)
         {
-            var roles = LtiConstants.RolesFor(person.Role, isInstructor);
-            if (role is not null && !roles.Contains(role) && !roles.Any(r => r.EndsWith("#" + role, StringComparison.Ordinal))) continue;
             var m = new JsonObject
             {
                 ["status"] = person.IsActive ? "Active" : "Inactive",
@@ -390,6 +416,6 @@ public sealed class LtiAgsNrpsService
             ["id"] = _options.MembershipsUrl(offeringId),
             ["context"] = new JsonObject { ["id"] = offeringId.ToString(), ["label"] = context.CourseCode, ["title"] = context.CourseTitle },
             ["members"] = members
-        });
+        }) with { NextUrl = next };
     }
 }

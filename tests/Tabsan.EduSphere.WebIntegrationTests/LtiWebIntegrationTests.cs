@@ -151,6 +151,7 @@ public class LtiWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
         var agsCall = api.Calls.Single(c => c.Path == $"/api/v1/lti/ags/{OfferingId}/lineitems");
         Assert.Equal("Bearer tool-access-token", agsCall.Authorization);
         Assert.Equal("?limit=5", agsCall.Query);
+        Assert.Contains("page=2>; rel=\"next\"", string.Join(",", items.Headers.GetValues("Link"))); // paging link relayed
 
         var denied = await client.GetAsync($"/lti/nrps/{OfferingId}/memberships");
         Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
@@ -232,6 +233,43 @@ public class LtiWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
         Assert.Contains("\"privacyLevel\":\"NameOnly\"", body);
         Assert.Contains("\"allowGradeService\":true", body);
         Assert.Contains("\"allowRosterService\":false", body);
+    }
+
+    [Fact]
+    public async Task DynamicRegistration_OpensTheToolsPage_AndRelaysTheToolsCalls()
+    {
+        var api = new FakeApi("Admin");
+        using var client = await SignedInClientAsync(api);
+        var html = await client.GetStringAsync("/Portal/LtiTools");
+        Assert.Contains("data-lti-dynamic-registration", html);
+        Assert.Contains("Registered by the tool", html); // the second (self-registered, switched off) tool
+
+        var started = await client.PostAsync("/Portal/StartLtiRegistration", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = Token(html), ["registrationUrl"] = " https://tool.test/register "
+        }));
+        var page = await started.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
+        Assert.Contains("src=\"https://tool.test/register?openid_configuration=", page);
+        Assert.Contains("data-tool-origin=\"https://tool.test\"", page);
+        Assert.Contains("lti-register.js", page);
+        Assert.Contains("\"registrationUrl\":\"https://tool.test/register\"", api.Calls.Single(c => c.Path == "/api/v1/lti/tools/dynamic-registration").Body);
+
+        // The tool's calls go through the portal address without a portal session.
+        using var tool = AnonymousClient(api);
+        var config = await tool.GetAsync("/lti/openid-configuration");
+        Assert.Equal("application/json", config.Content.Headers.ContentType!.MediaType);
+        Assert.Contains("registration_endpoint", await config.Content.ReadAsStringAsync());
+        using var register = new HttpRequestMessage(HttpMethod.Post, "/lti/register")
+        {
+            Content = new StringContent("{\"client_name\":\"X\"}", Encoding.UTF8, "application/json")
+        };
+        register.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "registration-token");
+        var registered = await tool.SendAsync(register);
+        Assert.Equal(HttpStatusCode.OK, registered.StatusCode);
+        var call = api.Calls.Single(c => c.Path == "/api/v1/lti/register");
+        Assert.Equal("Bearer registration-token", call.Authorization);
+        Assert.Equal("{\"client_name\":\"X\"}", call.Body);
     }
 
     [Fact]
@@ -366,6 +404,7 @@ public class LtiWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
             {
                 var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[]") };
                 response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.ims.lis.v2.lineitemcontainer+json");
+                response.Headers.TryAddWithoutValidation("Link", $"<https://platform.test/lti/ags/{OfferingId}/lineitems?limit=5&page=2>; rel=\"next\"");
                 return response;
             }
             if (path.EndsWith("/scores")) return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -385,7 +424,12 @@ public class LtiWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
                          "jwksUrl":"https://platform.test/lti/jwks","deepLinkReturnUrl":"https://platform.test/lti/deep-link-return",
                          "keys":[{"kid":"k1","createdAt":"2026-10-01T00:00:00Z","active":true}]}
                         """);
-            if (path == "/api/v1/lti/tools" && request.Method == HttpMethod.Get) return Json($"[{Tool}]");
+            if (path == "/api/v1/lti/tools/dynamic-registration")
+                return Json("""{"url":"https://tool.test/register?openid_configuration=https%3A%2F%2Fplatform.test%2Flti%2Fopenid-configuration&registration_token=t0k","toolOrigin":"https://tool.test"}""");
+            if (path == "/api/v1/lti/openid-configuration") return Json("""{"issuer":"https://platform.test","registration_endpoint":"https://platform.test/lti/register"}""");
+            if (path == "/api/v1/lti/register") return Json("""{"client_id":"edusphere-new"}""");
+            if (path == "/api/v1/lti/tools" && request.Method == HttpMethod.Get)
+                return Json($"[{Tool},{Tool.Replace(ToolId, "11111111-2222-3333-4444-555555555555").Replace("\"allowRosterService\":false,\"isActive\":true", "\"allowRosterService\":false,\"isActive\":false,\"registeredDynamicallyAt\":\"2026-10-24T00:00:00Z\"")}]");
             if (path.StartsWith("/api/v1/lti/tools")) return Json(Tool);
 
             return path.Contains("menu", StringComparison.OrdinalIgnoreCase) || path.Contains("notification", StringComparison.OrdinalIgnoreCase)

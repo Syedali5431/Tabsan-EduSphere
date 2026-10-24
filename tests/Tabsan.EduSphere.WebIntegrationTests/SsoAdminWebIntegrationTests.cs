@@ -77,6 +77,43 @@ public class SsoAdminWebIntegrationTests : IClassFixture<WebApplicationFactory<W
     }
 
     [Fact]
+    public async Task SaveForm_SendsAttributeMappingAndSamlSecurity()
+    {
+        var api = new FakeApi("SuperAdmin");
+        using var client = await SignedInClientAsync(api);
+        var page = await client.GetStringAsync("/Portal/SsoSettings");
+        Assert.Contains("name=\"RoleMappings\"", page);
+        Assert.Contains("name=\"SignAuthnRequests\"", page);
+        var token = Regex.Match(page, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"").Groups[1].Value;
+
+        await client.PostAsync("/Portal/SaveSsoSetting", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["Provider"] = "Saml",
+            ["DisplayName"] = "Sign in with your institution",
+            ["MetadataUrl"] = "https://idp.uni.edu/metadata.xml",
+            ["IdClaim"] = " urn:oid:2.16.840.1.113730.3.1.3 ",
+            ["LinkById"] = "true",
+            ["RoleClaim"] = "urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
+            ["RoleMappings"] = "student=Student; faculty=Faculty",
+            ["RequireRoleMatch"] = "true",
+            ["SignAuthnRequests"] = "true",
+            ["RequireEncryptedAssertions"] = "true"
+        }));
+
+        Assert.Equal("/api/v1/sso/settings/Saml", api.LastSavePath);
+        using var saved = JsonDocument.Parse(api.LastSaveBody!);
+        JsonElement Prop(string name) => saved.RootElement.EnumerateObject()
+            .First(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)).Value;
+        Assert.Equal("urn:oid:2.16.840.1.113730.3.1.3", Prop("idClaim").GetString());
+        Assert.True(Prop("linkById").GetBoolean());
+        Assert.Equal("student=Student; faculty=Faculty", Prop("roleMappings").GetString());
+        Assert.True(Prop("requireRoleMatch").GetBoolean());
+        Assert.True(Prop("signAuthnRequests").GetBoolean());
+        Assert.True(Prop("requireEncryptedAssertions").GetBoolean());
+    }
+
+    [Fact]
     public async Task SsoSettingsPage_IsSuperAdminOnly()
     {
         var api = new FakeApi("Student");

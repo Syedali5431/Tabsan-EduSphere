@@ -40,6 +40,22 @@ public sealed class SsoRepository : ISsoRepository
     public async Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default)
         => await _db.ExternalLogins.AddAsync(link, ct);
 
+    public async Task<IReadOnlyList<Guid>> FindUserIdsByInstitutionIdAsync(Guid? tenantId, string institutionId, CancellationToken ct = default)
+    {
+        var id = institutionId.Trim();
+        var students = await (
+                from p in _db.StudentProfiles.AsNoTracking()
+                join u in _db.Users.AsNoTracking() on p.UserId equals u.Id
+                where p.RegistrationNumber == id && (tenantId == null || u.TenantId == tenantId)
+                select p.UserId)
+            .ToListAsync(ct);
+        var users = await _db.Users.AsNoTracking()
+            .Where(u => u.Username == id && (tenantId == null || u.TenantId == tenantId))
+            .Select(u => u.Id)
+            .ToListAsync(ct);
+        return students.Concat(users).Distinct().ToList();
+    }
+
     public async Task<IReadOnlyList<SsoProviderSetting>> GetEnforcingSettingsAsync(Guid? tenantId, CancellationToken ct = default)
         => await _db.SsoProviderSettings.AsNoTracking()
             .Where(s => s.IsEnabled && s.EnforceSsoOnly && (s.TenantId == null || s.TenantId == tenantId))

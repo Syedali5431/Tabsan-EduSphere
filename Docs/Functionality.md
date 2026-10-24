@@ -1,5 +1,13 @@
 <!-- markdownlint-disable MD007 MD010 MD012 MD022 MD024 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update — Plan M open items: SSO attribute mapping, SAML signing/encryption, LTI Dynamic Registration, real-tool and push checks
+### Implementation sync
+- Single sign-on: per provider, an institution-ID claim/attribute links a first sign-in to the account with that registration number or username; a role claim/attribute with a value → role mapping can refuse sign-ins whose role does not match the account. SAML can sign authentication requests and require encrypted assertions with EduSphere's own service-provider certificate (published in the SP metadata).
+- External tools: tools register themselves from their registration URL (LTI Dynamic Registration 1.0) and start switched off for review; class lists, line items and results are paged with a next link.
+- Checks: saLTIre (public LTI test tool) passed strict verification of launches and deep linking and found no validation errors in the grade and class-list services (paging defect found and fixed); a real Web Push round trip through Google FCM (Chrome) and Windows push (Edge); LTI certification readiness report.
+### Validation sync
+- Unit, integration and web-integration tests for SSO mapping/SAML security, Dynamic Registration and paging.
+
 ## 2026-10-24 Update — Plan M Phase M14 Accessibility, scale hardening and the public API
 ### Implementation sync
 - Accessibility (WCAG 2.1 AA): every portal page is scanned with axe-core in Playwright (staff and student pages, login); 105 findings in 9 rules fixed to 0 — form fields named from their labels, icon buttons and close buttons named, labelled regions in the grading workspace, underlined links in text, stronger contrast on light panels, a visible 3 px keyboard focus ring. A keyboard walk covers the dashboard, quiz builder, grading workspace, question banks and course content. Accessibility Conformance Report (VPAT 2.5 structure) published.

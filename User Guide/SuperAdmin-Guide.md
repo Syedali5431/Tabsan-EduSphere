@@ -244,6 +244,8 @@ Configure Microsoft Entra ID, Google Workspace, other OpenID Connect or SAML 2.0
 
 Step-by-step provider setup, roll-out checklist and troubleshooting: [SSO Setup Guide](SSO-Setup-Guide.md).
 
+- **SAML service-provider certificate (October 2026):** EduSphere signs SAML requests and decrypts encrypted assertions with its own certificate, created on first use in `AuthSecurity:Sso:SpCertificateFile` (default `<app-data>/Tabsan/saml-sp-certificate.json`). Back it up and give every API server the same file; replacing it means downloading the SP metadata again and updating it at each SAML IdP. Attribute mapping and the SAML switches are described in the [SSO Setup Guide](SSO-Setup-Guide.md) §6.5 and §7.1.
+
 ### 9.11 Submission Files and Document Conversion (Plan M3, October 2026)
 
 - Assignment files are stored by the API in its media storage (`MediaStorage` section) and are only served to the student who submitted them and to staff of the same tenant/campus — never from a public folder. Files uploaded before Plan M3 stay at their old portal address until migrated.
@@ -266,6 +268,8 @@ Step-by-step provider setup, roll-out checklist and troubleshooting: [SSO Setup 
 - Choose the least personal data a tool needs (*Nothing / Name / Email / Name and email*), and allow grades or the class list only when the tool needs them. All registry changes are audited.
 
 Step-by-step registration, teacher workflow and troubleshooting: [LTI Tool Setup Guide](LTI-Tool-Setup-Guide.md).
+
+- **LTI Dynamic Registration (October 2026):** tools with a registration URL register themselves from External Tools and start switched off for review — see the [LTI Tool Setup Guide](LTI-Tool-Setup-Guide.md) §2.
 
 ### 9.14 Learning Outcomes & Mastery (Plan M6, October 2026)
 

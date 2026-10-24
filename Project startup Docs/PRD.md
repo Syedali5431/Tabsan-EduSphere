@@ -1,5 +1,8 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-10-24 — Product Requirements Synchronization (Plan M open items)
+- SSO attribute mapping (institution ID, role check), SAML signed requests and encrypted assertions, LTI Dynamic Registration and paged LTI services added (§26.3, §26.7); push verified through FCM and Windows push; LTI certification readiness documented. Remaining: physical phones, vendor-account tools, 1EdTech certification.
+
 ### 2026-10-24 — PRD consolidation (Plans K, L and M1–M14)
 - Added §26 with the product requirements of Plans K (degree/transcript Word templates), L (TOTP two-factor sign-in) and M1–M14 (Canvas-parity LMS, mobile app, localisation, accessibility, scale, public API), a coverage index for Plans A–M and the open external checks; updated §3 roles, §4 scope (native apps and automatic quiz grading are now in scope), §7 sign-in, §10, §12, §18, §20, §21, §23–§25 to match.
 
@@ -5952,6 +5955,8 @@ This section states the product requirements added by Plans K, L and M (October 
 - **FR-M1.3** Accounts link by an existing link, or — only when enabled — by a verified email of an active user in the same tenant; an email-domain allow-list applies to every SSO sign-in.
 - **FR-M1.4** "Enforce SSO only" blocks password sign-in for that tenant's users (SuperAdmin keeps password + 2FA as break-glass). Users see and unlink their linked sign-in accounts (never locking themselves out).
 - **FR-M1.5** SSO sign-ins pass through the same checks as password sign-in (active/lockout, 2FA, session risk, licence concurrency) and are audited with the method used.
+- **FR-M1.6** Attribute mapping per provider: an institution-ID claim/attribute links a first sign-in to the one active account with that registration number or username; a role claim/attribute with a value → role mapping can refuse sign-ins whose role does not match the account (no accounts are created).
+- **FR-M1.7** SAML: EduSphere's service-provider certificate is published for signing and encryption; AuthnRequests can be signed and encrypted assertions required, per provider.
 
 ### 26.4 Quiz engine (M2)
 - **FR-M2.1** Question banks (course/department/institution, shared or private) with tags, difficulty and archiving; Excel import/export; quizzes draw N random questions from a bank or copy them.
@@ -5972,13 +5977,15 @@ This section states the product requirements added by Plans K, L and M (October 
 ### 26.6 Installable app and web push (M4)
 - **FR-M4.1** The portal installs as a branded app (manifest with the institution's name and logo, shortcuts).
 - **FR-M4.2** Offline read-only copies of recently opened dashboard, timetable, announcements, course material and notifications pages and downloaded material files; copies are wiped on sign-out.
-- **FR-M4.3** Web Push to each subscribed device for every notification, with per-type preferences and device management; push endpoints are restricted to known push services; payloads carry no sensitive data.
+- **FR-M4.3** Web Push to each subscribed device for every notification, with per-type preferences and device management; push endpoints are restricted to known push services; payloads carry no sensitive data. Verified end to end through Google FCM (Chrome) and Windows push (Edge).
 
 ### 26.7 External tools — LTI 1.3 Advantage (M5)
 - **FR-M5.1** Administrators register LTI 1.3 tools and deployments (whole installation, department or course) on **External Tools**, with privacy level (names/emails) and grade/roster permissions; platform signing keys rotate from the page.
 - **FR-M5.2** Teachers place tools in courses (new tab or inside EduSphere) and choose content inside a tool (Deep Linking 2.0).
 - **FR-M5.3** Tools post grades through Assignment & Grade Services (line items become EduSphere assignments; scores become graded submissions and follow posting policies and the gradebook sync) and read rosters through NRPS within their privacy level.
 - **FR-M5.4** Launches are single-use and bound to the user; tool tokens are short-lived and stored hashed; redirect URIs exact; tool URLs https.
+- **FR-M5.5** LTI Dynamic Registration 1.0: tools register themselves from their registration URL (single-use token); they start switched off until an administrator reviews privacy and services.
+- **FR-M5.6** Class lists, line items and results are paged with `Link: rel="next"`; filters apply before paging. Checked against the saLTIre test tool (strict verification passed; no validation errors); certification readiness in `Docs/LTI-Certification-Readiness.md`.
 
 ### 26.8 Learning outcomes and mastery (M6)
 - **FR-M6.1** Outcomes at institution, program and course level with their own rating scales and mastery methods (highest, latest, average, decaying average, n-times mastery); course outcomes map to program outcomes; Excel import.
@@ -6040,9 +6047,9 @@ This section states the product requirements added by Plans K, L and M (October 
 Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS-Parity-Gap-Closure.md` (unit, integration, web-integration and Playwright tests per phase). Final sweep (2026-10-24): unit 597/597, integration 367/368 (1 long-standing skip), web-integration 93/93, contract 1/1 and the Plan M Playwright specs 41/41 (SSO, assignments, grading, localisation, live classes, LTI, module progress, outcomes, PWA, SCORM, similarity, accessibility).
 
 ### 26.19 Open items (need external systems or devices)
-- SSO: role-hint and student/staff-ID attribute mapping (deferred until user provisioning); a sign-in against a live institutional IdP.
-- PWA/mobile: install and push round trips on real Android/iOS devices; iOS build on a Mac; live FCM delivery.
-- LTI: Dynamic Registration (stretch); checks with real vendor tools (1EdTech reference tool, H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification.
+- SSO: a sign-in against a live institutional IdP.
+- PWA/mobile: install and push on physical Android/iOS phones (desktop push through FCM and Windows push verified); iOS build on a Mac; native-app push with the institution's Firebase project.
+- LTI: checks with vendor tools that need accounts (H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification (needs membership; readiness report done).
 - Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
 - Localisation: native-speaker review of Urdu and Arabic texts.
 - SCORM: commercial authoring-tool packages and multi-SCO sequencing.

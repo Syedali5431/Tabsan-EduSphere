@@ -77,7 +77,7 @@ public sealed class SsoController : ControllerBase
             SsoFailureReason.LoginRejected
                 => StatusCode(StatusCodes.Status403Forbidden, new { error, loginFailure = result.LoginFailure?.ToString() }),
 
-            SsoFailureReason.AccountNotLinked or SsoFailureReason.EmailDomainNotAllowed
+            SsoFailureReason.AccountNotLinked or SsoFailureReason.EmailDomainNotAllowed or SsoFailureReason.RoleNotAllowed
                 => StatusCode(StatusCodes.Status403Forbidden, new { error }),
 
             _ => BadRequest(new { error })

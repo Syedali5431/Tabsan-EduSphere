@@ -59,6 +59,22 @@ public partial class PortalController
         return View(model);
     }
 
+    /// <summary>LTI Dynamic Registration: opens the tool's registration page with the platform configuration and a one-time token.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> StartLtiRegistration(string? registrationUrl, CancellationToken ct)
+    {
+        if (RequireLtiAdmin() is { } denied) return denied;
+        var result = await _api.LtiSendAsync(HttpMethod.Post, "tools/dynamic-registration",
+            JsonSerializer.Serialize(new StartLtiRegistrationRequest(registrationUrl?.Trim() ?? ""), LtiJson), ct);
+        if (!result.Ok)
+        {
+            TempData["PortalMessage"] = result.Message ?? "The registration could not be started.";
+            return RedirectToAction(nameof(LtiTools));
+        }
+        ViewData["Title"] = "Register an external tool";
+        return View("LtiRegister", JsonSerializer.Deserialize<LtiRegistrationStart>(result.Body, LtiJson)!);
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveLtiTool(LtiToolFormModel form, CancellationToken ct)
     {

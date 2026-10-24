@@ -31,6 +31,9 @@ public sealed class LtiOptions
     public string TokenUrl => Base + "/lti/token";
     public string JwksUrl => Base + "/lti/jwks";
     public string DeepLinkReturnUrl => Base + "/lti/deep-link-return";
+    /// <summary>LTI Dynamic Registration: the platform's OpenID configuration and its registration endpoint.</summary>
+    public string OpenIdConfigurationUrl => Base + "/lti/openid-configuration";
+    public string RegistrationUrl => Base + "/lti/register";
     public string LineItemsUrl(Guid offeringId) => $"{Base}/lti/ags/{offeringId}/lineitems";
     public string LineItemUrl(Guid offeringId, Guid lineItemId) => $"{Base}/lti/ags/{offeringId}/lineitems/{lineItemId}";
     public string MembershipsUrl(Guid offeringId) => $"{Base}/lti/nrps/{offeringId}/memberships";
@@ -118,7 +121,13 @@ public sealed record LtiDeploymentResponse(Guid Id, string DeploymentId, string 
 
 public sealed record LtiToolResponse(Guid Id, string Name, string? Description, string ClientId, string OidcInitiationUrl, string TargetLinkUri,
     string? DeepLinkingUrl, IReadOnlyList<string> RedirectUris, string? JwksUrl, bool HasPublicKey, string? CustomParameters,
-    string PrivacyLevel, bool AllowGradeService, bool AllowRosterService, bool IsActive, IReadOnlyList<LtiDeploymentResponse> Deployments);
+    string PrivacyLevel, bool AllowGradeService, bool AllowRosterService, bool IsActive, IReadOnlyList<LtiDeploymentResponse> Deployments,
+    DateTime? RegisteredDynamicallyAt = null);
+
+/// <summary>LTI Dynamic Registration: where to open the tool's registration page, and its origin (for the close message).</summary>
+public sealed record LtiRegistrationStart(string Url, string ToolOrigin);
+
+public sealed record StartLtiRegistrationRequest(string RegistrationUrl);
 
 public sealed record SaveLtiToolRequest(string Name, string? Description, string OidcInitiationUrl, string TargetLinkUri, string? DeepLinkingUrl,
     IReadOnlyList<string> RedirectUris, string? JwksUrl, string? PublicKeyPem, string? CustomParameters, string PrivacyLevel,
@@ -156,6 +165,9 @@ public sealed record LtiServiceCaller(Guid ToolId, IReadOnlyCollection<string> S
 public sealed record LtiResult<T>(T? Value, int Status, string? Error)
 {
     public bool Ok => Status is >= 200 and < 300;
+
+    /// <summary>The next page of a paged container (sent as a <c>Link: &lt;…&gt;; rel="next"</c> header).</summary>
+    public string? NextUrl { get; init; }
     public static LtiResult<T> Success(T value, int status = 200) => new(value, status, null);
     public static LtiResult<T> Fail(int status, string error) => new(default, status, error);
 }

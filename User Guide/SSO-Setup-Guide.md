@@ -151,6 +151,19 @@ Register the EduSphere SP metadata with the IdP and release at least one stable 
 | Display name | `…/claims/displayname`, `urn:oid:2.16.840.1.113730.3.1.241`, `displayName`, `name` |
 | "Already did MFA" | AuthnContextClassRef REFEDS MFA / `multipleauthn` / two- or multi-factor classes, or Entra `authnmethodsreferences` |
 
+### 6.5 Signed requests and encrypted assertions
+
+Some identity providers require signed authentication requests or send encrypted assertions. EduSphere has its own
+service-provider certificate for both, created on first use (`AuthSecurity:Sso:SpCertificateFile`, default
+`<app-data>/Tabsan/saml-sp-certificate.json`; back it up and give every API server the same file). The SP metadata
+(**Download SP metadata**) always contains this certificate for signing and encryption, so an IdP that imports the metadata
+can encrypt assertions straight away — EduSphere decrypts them.
+
+* **Sign authentication requests** — turn on when the IdP requires signed AuthnRequests (the metadata then says so).
+* **Require encrypted assertions** — EduSphere refuses responses whose assertion is not encrypted.
+
+Download the metadata again after changing these switches and update it at the IdP.
+
 ---
 
 ## 7. Sign-in policies (per provider card)
@@ -164,6 +177,18 @@ Register the EduSphere SP metadata with the IdP and release at least one stable 
 | **Allowed email domains** | Sign-ins whose email is outside these domains are refused. Blank allows any domain. | Always set for Google and multi-domain setups. |
 
 **Turning on "Require single sign-on":** password sessions that started *before* the switch keep working until they expire. To cut over immediately, revoke sessions from Account Security.
+
+### 7.1 Attribute mapping (institution ID and role)
+
+Optional fields on each provider card. Use only claims or attributes the identity provider controls (people cannot edit them).
+
+| Field / switch | Effect | Examples |
+|---|---|---|
+| **Institution ID claim or attribute** + **Link … same institution ID on first sign-in** | A person without a link is matched to the one active account of the tenant whose **registration number** (students) or **username** equals the asserted value, and the link is saved. No match or several matches → not linked. | OIDC `employee_id` (Entra optional claim), SAML `urn:oid:2.16.840.1.113730.3.1.3` (employeeNumber) or `schacPersonalUniqueCode` |
+| **Role claim or attribute** + **Role mapping** | Translates the IdP's role values into EduSphere roles: `student=Student; faculty=Faculty; staff=Admin|Finance`. Values with a scope (`faculty@uni.edu`) also match on the part before "@". Roles: Student, Faculty, Admin, Finance, Parent. | OIDC `roles` (Entra app roles), SAML eduPersonAffiliation `urn:oid:1.3.6.1.4.1.5923.1.1.1.1` or eduPersonScopedAffiliation `…1.9` |
+| **Refuse sign-in when the identity provider's role does not match** | The sign-in is refused (and no new link is made) unless an asserted value maps to the account's EduSphere role. The person sees "Your identity provider reports a role that does not match this EduSphere account". | Turn on once the mapping covers every group that should sign in. |
+
+EduSphere never creates accounts from SSO; the mapping links and checks existing accounts only.
 
 ---
 

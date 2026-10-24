@@ -38,6 +38,12 @@ public sealed class SsoSettings
     /// path is /Login/SsoCallback is accepted (https, or http on localhost only).
     /// </summary>
     public string[] AllowedRedirectUris { get; init; } = [];
+
+    /// <summary>
+    /// SAML service-provider certificate (signs AuthnRequests, decrypts assertions); created on first use.
+    /// Default &lt;app-data&gt;/Tabsan/saml-sp-certificate.json. All API nodes must share it.
+    /// </summary>
+    public string? SpCertificateFile { get; init; }
 }
 
 public sealed class SessionRiskSettings

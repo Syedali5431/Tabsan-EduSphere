@@ -23,6 +23,9 @@ namespace Tabsan.EduSphere.Infrastructure.Auth;
 /// enforces success status, Destination, and that a signed bearer SubjectConfirmation carries
 /// our ACS as Recipient and our request ID as InResponseTo — IdP-initiated (unsolicited)
 /// responses are therefore rejected.
+///
+/// With the service-provider certificate (<see cref="SamlServiceProviderCertificate"/>) AuthnRequests can be signed for
+/// IdPs that require it, encrypted assertions are decrypted, and the metadata publishes the certificate for both uses.
 /// </summary>
 public sealed class SamlClient : ISamlClient
 {
@@ -53,13 +56,18 @@ public sealed class SamlClient : ISamlClient
     private const string EntraAuthMethodsAttribute = "http://schemas.microsoft.com/claims/authnmethodsreferences";
 
     private readonly HttpClient _http;
+    private readonly SamlServiceProviderCertificate? _spCertificate;
 
-    public SamlClient(HttpClient http) => _http = http;
+    public SamlClient(HttpClient http, SamlServiceProviderCertificate? spCertificate = null)
+    {
+        _http = http;
+        _spCertificate = spCertificate;
+    }
 
     // ── AuthnRequest (HTTP-Redirect) ─────────────────────────────────────────
 
     public async Task<SamlAuthnRequest> BuildAuthnRequestAsync(
-        string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default)
+        string idpMetadataUrl, SamlServiceProvider sp, string relayState, bool signRequest = false, CancellationToken ct = default)
     {
         var idp = await GetIdpAsync(idpMetadataUrl, forceRefresh: false, ct);
         var sso = idp.IdPSsoDescriptor.SingleSignOnServices?
@@ -68,6 +76,11 @@ public sealed class SamlClient : ISamlClient
 
         var config = CreateConfig(idp, sp);
         config.SingleSignOnDestination = sso.Location;
+        if (signRequest)
+        {
+            config.SigningCertificate = (_spCertificate ?? throw new SsoProtocolException("No SAML service-provider certificate is configured for signing.")).Certificate;
+            config.SignAuthnRequest = true;
+        }
 
         var request = new Saml2AuthnRequest(config)
         {
@@ -86,18 +99,21 @@ public sealed class SamlClient : ISamlClient
 
     public async Task<ExternalIdentity> ValidateResponseAsync(
         string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
-        CancellationToken ct = default)
+        bool requireEncryptedAssertion = false, CancellationToken ct = default)
     {
+        if (requireEncryptedAssertion && !HasEncryptedAssertion(samlResponse))
+            throw new SsoProtocolException("SAML assertion is not encrypted, but this provider requires encrypted assertions.");
+
         var idp = await GetIdpAsync(idpMetadataUrl, forceRefresh: false, ct);
         try
         {
-            return Validate(idp, sp, samlResponse, expectedRequestId);
+            return Validate(idp, sp, samlResponse, expectedRequestId, _spCertificate);
         }
         catch (InvalidSignatureException) when (!IsFresh(idpMetadataUrl))
         {
             // Signature did not match cached certificates — the IdP may have rolled its key.
             idp = await GetIdpAsync(idpMetadataUrl, forceRefresh: true, ct);
-            return Validate(idp, sp, samlResponse, expectedRequestId);
+            return Validate(idp, sp, samlResponse, expectedRequestId, _spCertificate);
         }
         catch (InvalidSignatureException ex)
         {
@@ -105,9 +121,12 @@ public sealed class SamlClient : ISamlClient
         }
     }
 
-    private static ExternalIdentity Validate(EntityDescriptor idp, SamlServiceProvider sp, string samlResponse, string expectedRequestId)
+    private static ExternalIdentity Validate(EntityDescriptor idp, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
+        SamlServiceProviderCertificate? spCertificate)
     {
         var config = CreateConfig(idp, sp);
+        if (spCertificate is not null)
+            config.DecryptionCertificates.Add(spCertificate.Certificate);
         var request = new SamlHttpRequest
         {
             Method = "POST",
@@ -188,6 +207,11 @@ public sealed class SamlClient : ISamlClient
             || v.Contains("TwoFactor", StringComparison.OrdinalIgnoreCase)
             || v.Contains("MultiFactor", StringComparison.OrdinalIgnoreCase));
 
+        // Every attribute (multi-valued ones such as eduPersonAffiliation keep all values) for ID / role mapping.
+        var attributes = claims.Claims
+            .GroupBy(c => c.Type, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.Select(c => c.Value).ToArray(), StringComparer.OrdinalIgnoreCase);
+
         // The IdP is the institution's own, configured by its administrator, so its email
         // assertions are treated as verified (the email-domain allow-list still applies).
         return new ExternalIdentity(
@@ -195,18 +219,38 @@ public sealed class SamlClient : ISamlClient
             Email: string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
             EmailVerified: !string.IsNullOrWhiteSpace(email),
             Name: First(NameAttributes),
-            MfaAsserted: mfa);
+            MfaAsserted: mfa,
+            Attributes: attributes);
+    }
+
+    /// <summary>True when the response carries an EncryptedAssertion and no plain Assertion (DTDs refused).</summary>
+    private static bool HasEncryptedAssertion(string samlResponse)
+    {
+        try
+        {
+            var bytes = Convert.FromBase64String(samlResponse);
+            var settings = new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Prohibit, XmlResolver = null };
+            using var reader = System.Xml.XmlReader.Create(new MemoryStream(bytes), settings);
+            var doc = new System.Xml.XmlDocument { XmlResolver = null };
+            doc.Load(reader);
+            const string ns = "urn:oasis:names:tc:SAML:2.0:assertion";
+            return doc.GetElementsByTagName("EncryptedAssertion", ns).Count > 0 && doc.GetElementsByTagName("Assertion", ns).Count == 0;
+        }
+        catch (Exception ex) when (ex is FormatException or System.Xml.XmlException)
+        {
+            throw new SsoProtocolException("SAML response is not valid base64 XML.", ex);
+        }
     }
 
     // ── SP metadata ──────────────────────────────────────────────────────────
 
-    public string BuildServiceProviderMetadata(SamlServiceProvider sp)
+    public string BuildServiceProviderMetadata(SamlServiceProvider sp, bool authnRequestsSigned = false)
     {
         var descriptor = new EntityDescriptor(new Saml2Configuration { Issuer = sp.EntityId }, signMetadata: false)
         {
             SPSsoDescriptor = new SPSsoDescriptor
             {
-                AuthnRequestsSigned = false,
+                AuthnRequestsSigned = authnRequestsSigned && _spCertificate is not null,
                 WantAssertionsSigned = true,
                 NameIDFormats = [NameIdentifierFormats.Persistent, NameIdentifierFormats.Email],
                 AssertionConsumerServices =
@@ -221,6 +265,14 @@ public sealed class SamlClient : ISamlClient
                 ]
             }
         };
+        if (_spCertificate is not null)
+        {
+            // One certificate for both uses: IdPs verify signed requests and encrypt assertions with it.
+            var publicCertificate = _spCertificate.PublicCertificate;
+            descriptor.SPSsoDescriptor.SigningCertificates = [publicCertificate];
+            descriptor.SPSsoDescriptor.EncryptionCertificates = [publicCertificate];
+            descriptor.SPSsoDescriptor.SetDefaultEncryptionMethods();
+        }
         return descriptor.ToXmlDocument().OuterXml;
     }
 

@@ -1,5 +1,12 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update — Development Plan Synchronization (Plan M open items)
+### Plan sync
+- M1 deferred item done (attribute mapping, SAML signing/encryption; back up `AuthSecurity:Sso:SpCertificateFile`). M5 Dynamic Registration done; saLTIre checks done (paging fix). M4 push verified on desktop browsers.
+- Open: physical phones (Android/iPhone), vendor-account LTI tools, 1EdTech certification (`Docs/LTI-Certification-Readiness.md`).
+### Validation sync
+- `SsoAttributeMappingTests`, `SsoSamlClientTests`, `SsoSignInTests`, `SsoProtocolIntegrationTests`, `LtiDynamicRegistrationTests`, `LtiPagingTests`, `LtiIntegrationTests`, `LtiWebIntegrationTests`, `SsoAdminWebIntegrationTests`.
+
 ## 2026-10-24 Update — Development Plan Synchronization (Plan M14)
 ### Plan sync
 - Plan M14 completed — Plan M (M1–M14) is complete apart from external checks (live IdP/vendor/device runs, LTI certification, 5,000-user staging run, live cloud storage, assistive-technology user testing).

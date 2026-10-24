@@ -20,8 +20,10 @@ namespace Tabsan.EduSphere.Application.Auth;
 /// the provider redirects back to the portal, which relays code + state to <see cref="CompleteAsync"/>.
 /// One-time state (nonce + PKCE verifier) and MFA tickets live in the distributed cache.
 ///
-/// Account resolution: existing link → else (if AutoLinkByEmail) a verified email matching an
-/// existing user of the same tenant → else refused. Users are never auto-created here.
+/// Account resolution: existing link → else (if LinkById) the one user of the tenant with the asserted
+/// institution ID → else (if AutoLinkByEmail) a verified email matching an existing user of the same tenant →
+/// else refused. Users are never auto-created here. With RequireRoleMatch the asserted role values must map to
+/// the account's EduSphere role, for existing links and before a new link is made.
 /// </summary>
 public sealed class SsoSignInService : ISsoSignInService
 {
@@ -135,7 +137,7 @@ public sealed class SsoSignInService : ISsoSignInService
         SamlAuthnRequest authn;
         try
         {
-            authn = await _saml.BuildAuthnRequestAsync(setting.MetadataUrl!, sp, state, ct);
+            authn = await _saml.BuildAuthnRequestAsync(setting.MetadataUrl!, sp, state, setting.SignAuthnRequests, ct);
         }
         catch (SsoProtocolException)
         {
@@ -188,7 +190,8 @@ public sealed class SsoSignInService : ISsoSignInService
         try
         {
             identity = await _saml.ValidateResponseAsync(setting.MetadataUrl!,
-                new SamlServiceProvider(pending.SpEntityId, pending.RedirectUri), request.SamlResponse, pending.Nonce, ct);
+                new SamlServiceProvider(pending.SpEntityId, pending.RedirectUri), request.SamlResponse, pending.Nonce,
+                setting.RequireEncryptedAssertions, ct);
         }
         catch (SsoProtocolException ex)
         {
@@ -203,8 +206,12 @@ public sealed class SsoSignInService : ISsoSignInService
         if (!IsAllowedRedirectUri(acsUrl, SamlAcsPath))
             return null;
 
-        var (tenantOk, _) = await ResolveTenantAsync(tenantCode, ct);
-        return tenantOk ? _saml.BuildServiceProviderMetadata(BuildServiceProvider(acsUrl, tenantCode)) : null;
+        var (tenantOk, tenantId) = await ResolveTenantAsync(tenantCode, ct);
+        if (!tenantOk)
+            return null;
+
+        var saml = await _repo.GetSettingAsync(tenantId, SsoProvider.Saml, ct);
+        return _saml.BuildServiceProviderMetadata(BuildServiceProvider(acsUrl, tenantCode), saml?.SignAuthnRequests == true);
     }
 
     /// <summary>Shared tail for OIDC and SAML: domain policy, account linking, then the standard login gates.</summary>
@@ -217,12 +224,21 @@ public sealed class SsoSignInService : ISsoSignInService
         var link = await _repo.FindLinkAsync(setting.TenantId, setting.Provider, identity.Subject, ct);
         if (link is null)
         {
-            link = await TryAutoLinkAsync(setting, identity, ipAddress, ct);
-            if (link is null)
+            var (candidate, method) = await FindLinkCandidateAsync(setting, identity, ct);
+            if (candidate is null)
                 return await FailAsync(SsoFailureReason.AccountNotLinked, setting.Provider, identity.Email, ipAddress, ct);
+            if (!RoleAllowed(setting, identity, candidate))
+                return await FailRoleAsync(setting, identity, candidate, ipAddress, ct);
+            link = await CreateLinkAsync(setting, identity, candidate, method, ipAddress, ct);
         }
         else
         {
+            if (setting.RequireRoleMatch)
+            {
+                var user = await _users.GetByIdAsync(link.UserId, ct);
+                if (user is null || !RoleAllowed(setting, identity, user))
+                    return await FailRoleAsync(setting, identity, user, ipAddress, ct);
+            }
             link.RecordLogin(identity.Email);
             await _repo.SaveChangesAsync(ct);
         }
@@ -272,27 +288,62 @@ public sealed class SsoSignInService : ISsoSignInService
 
     // ── Linking ──────────────────────────────────────────────────────────────
 
-    private async Task<ExternalLogin?> TryAutoLinkAsync(SsoProviderSetting setting, ExternalIdentity identity, string? ipAddress, CancellationToken ct)
+    /// <summary>
+    /// The account a first-time sign-in may be linked to: by institution ID (LinkById; exactly one active user of the
+    /// tenant), else by verified email (AutoLinkByEmail). Accounts already linked to another identity of the provider
+    /// are never re-linked silently.
+    /// </summary>
+    private async Task<(User? User, string Method)> FindLinkCandidateAsync(SsoProviderSetting setting, ExternalIdentity identity, CancellationToken ct)
     {
+        if (setting.LinkById
+            && identity.Values(setting.IdClaim).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) is { } institutionId)
+        {
+            var ids = await _repo.FindUserIdsByInstitutionIdAsync(setting.TenantId, institutionId, ct);
+            if (ids.Count == 1
+                && await _users.GetByIdAsync(ids[0], ct) is { IsActive: true } byId
+                && (setting.TenantId is null || byId.TenantId == setting.TenantId)
+                && !await _repo.UserHasLinkAsync(byId.Id, setting.Provider, ct))
+                return (byId, "auto_id");
+        }
+
         if (!setting.AutoLinkByEmail || string.IsNullOrWhiteSpace(identity.Email))
-            return null;
+            return (null, string.Empty);
 
         // Microsoft: authority is pinned to the institution's own directory (see SsoProviderSetting),
         // so its email claim is institution-controlled. Others must assert email_verified.
         var emailTrusted = identity.EmailVerified || setting.Provider == SsoProvider.Microsoft;
         if (!emailTrusted)
-            return null;
+            return (null, string.Empty);
 
         var user = await _users.GetByEmailAsync(identity.Email.Trim(), ct);
         if (user is null || !user.IsActive)
-            return null;
+            return (null, string.Empty);
 
         if (setting.TenantId is not null && user.TenantId != setting.TenantId)
-            return null;
+            return (null, string.Empty);
 
         if (await _repo.UserHasLinkAsync(user.Id, setting.Provider, ct))
-            return null; // already linked to a different external identity — never silently re-link
+            return (null, string.Empty); // already linked to a different external identity — never silently re-link
 
+        return (user, "auto_email");
+    }
+
+    /// <summary>With RequireRoleMatch an asserted role value must map to the account's EduSphere role.</summary>
+    private static bool RoleAllowed(SsoProviderSetting setting, ExternalIdentity identity, User user)
+        => !setting.RequireRoleMatch
+           || (user.Role?.Name is { } role
+               && setting.MapRoles(identity.Values(setting.RoleClaim)).Contains(role, StringComparer.OrdinalIgnoreCase));
+
+    private Task<SsoResult> FailRoleAsync(SsoProviderSetting setting, ExternalIdentity identity, User? user, string? ipAddress, CancellationToken ct)
+        => FailAsync(SsoFailureReason.RoleNotAllowed, setting.Provider, identity.Email, ipAddress, ct, new
+        {
+            asserted = identity.Values(setting.RoleClaim).Take(20).ToArray(),
+            mapped = setting.MapRoles(identity.Values(setting.RoleClaim)).ToArray(),
+            accountRole = user?.Role?.Name
+        });
+
+    private async Task<ExternalLogin> CreateLinkAsync(SsoProviderSetting setting, ExternalIdentity identity, User user, string method, string? ipAddress, CancellationToken ct)
+    {
         var link = new ExternalLogin(setting.TenantId, user.Id, setting.Provider, identity.Subject, identity.Email);
         link.RecordLogin(identity.Email);
         await _repo.AddLinkAsync(link, ct);
@@ -301,7 +352,7 @@ public sealed class SsoSignInService : ISsoSignInService
         await _audit.LogAsync(new AuditLog(
             "SsoAccountLinked", "User", user.Id.ToString(),
             actorUserId: user.Id,
-            newValuesJson: JsonSerializer.Serialize(new { provider = setting.Provider.ToString(), method = "auto_email" }),
+            newValuesJson: JsonSerializer.Serialize(new { provider = setting.Provider.ToString(), method }),
             ipAddress: ipAddress), ct);
 
         return link;
@@ -382,11 +433,11 @@ public sealed class SsoSignInService : ISsoSignInService
         => _cache.SetStringAsync(StateKeyPrefix + state, JsonSerializer.Serialize(pending),
             new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = StateTtl }, ct);
 
-    private async Task<SsoResult> FailAsync(SsoFailureReason reason, SsoProvider? provider, string? detail, string? ipAddress, CancellationToken ct)
+    private async Task<SsoResult> FailAsync(SsoFailureReason reason, SsoProvider? provider, string? detail, string? ipAddress, CancellationToken ct, object? extra = null)
     {
         await _audit.LogAsync(new AuditLog(
             "SsoLoginFailed", "User", entityId: null,
-            newValuesJson: JsonSerializer.Serialize(new { reason = reason.ToString(), provider = provider?.ToString(), detail }),
+            newValuesJson: JsonSerializer.Serialize(new { reason = reason.ToString(), provider = provider?.ToString(), detail, extra }),
             ipAddress: ipAddress), ct);
 
         // Plan M1.4: SSO failures appear in login activity next to password failures (security monitoring).

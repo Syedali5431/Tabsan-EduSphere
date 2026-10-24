@@ -42,6 +42,13 @@ Restart the API after changing these settings.
 
 Sign in → **System Settings → External Tools**.
 
+**Tools with a registration URL (LTI Dynamic Registration).** If the vendor's instructions give a *registration URL*,
+paste it under **Register with the tool's registration URL** and press **Start registration**. The tool's page opens inside
+EduSphere, reads EduSphere's details and registers itself; when it finishes you return to the tool list. The new tool is
+**switched off** and marked "Registered by the tool": check what it shares (privacy) and which services it may use
+(grades, class list), change them with **Edit** if needed, then **Turn on**. The registration link works once, for one
+hour. Otherwise register the tool by hand as below.
+
 1. **Values to give each tool** — send these to the tool vendor or enter them in the tool's admin screen:
 
    | EduSphere value | Usual name at the tool |
@@ -94,6 +101,7 @@ Students see the visible items on the course page and open them with **Open**.
 
 * Scores the tool sends become **graded submissions**, scaled to the item's points. They follow the assignment's posting policy (automatic or manual) and reach the gradebook like any assignment grade. The newest score from the tool wins; teachers can still re-grade in the grading workspace.
 * The class list a tool can read contains the course's teachers and enrolled students with their roles and, only as allowed, names and email addresses.
+* Long lists come in pages: a tool asking for a limited number gets a `Link: <…>; rel="next"` header pointing to the next page (class lists, line items and results).
 
 ---
 

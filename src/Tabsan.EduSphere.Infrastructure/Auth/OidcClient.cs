@@ -112,8 +112,21 @@ public sealed class OidcClient : IOidcClient
             Email: string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
             EmailVerified: IsTrue(claims, "email_verified"),
             Name: claims.TryGetValue("name", out var name) ? name as string : null,
-            MfaAsserted: HasMfaAmr(claims));
+            MfaAsserted: HasMfaAmr(claims),
+            Attributes: ToAttributes(claims));
     }
+
+    /// <summary>Every id_token claim as name → values (arrays such as Entra "roles" or "groups" become several values).</summary>
+    private static Dictionary<string, string[]> ToAttributes(IDictionary<string, object> claims)
+        => claims.ToDictionary(c => c.Key, c => (c.Value switch
+        {
+            null => [],
+            string s => [s],
+            JsonElement { ValueKind: JsonValueKind.Array } arr => arr.EnumerateArray().Select(x => x.ToString()).ToArray(),
+            JsonElement e => [e.ToString()],
+            IEnumerable<object> list => list.Select(x => x?.ToString() ?? string.Empty).ToArray(),
+            var v => [Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty]
+        }).Where(v => v.Length > 0).ToArray(), StringComparer.OrdinalIgnoreCase);
 
     private async Task<IDictionary<string, object>> ValidateIdTokenAsync(
         OidcProviderConfig provider, OpenIdConnectConfiguration discovery, string idToken, CancellationToken ct)

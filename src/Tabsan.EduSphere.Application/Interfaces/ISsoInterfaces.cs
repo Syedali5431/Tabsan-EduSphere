@@ -11,14 +11,23 @@ public sealed record OidcProviderConfig(string Authority, string ClientId, strin
 
 /// <summary>
 /// Identity asserted by a validated id_token (OIDC) or signed assertion (SAML).
-/// <see cref="Subject"/> is the provider's stable identifier for the person.
+/// <see cref="Subject"/> is the provider's stable identifier for the person; <see cref="Attributes"/> holds every
+/// claim/attribute (name → values) for the provider's institution-ID and role mapping.
 /// </summary>
 public sealed record ExternalIdentity(
     string Subject,
     string? Email,
     bool EmailVerified,
     string? Name,
-    bool MfaAsserted);
+    bool MfaAsserted,
+    IReadOnlyDictionary<string, string[]>? Attributes = null)
+{
+    /// <summary>Values of one claim/attribute (case-insensitive name); empty when absent.</summary>
+    public IReadOnlyList<string> Values(string? name)
+        => string.IsNullOrWhiteSpace(name) || Attributes is null
+            ? []
+            : Attributes.FirstOrDefault(a => string.Equals(a.Key, name.Trim(), StringComparison.OrdinalIgnoreCase)).Value ?? [];
+}
 
 /// <summary>Raised when an SSO protocol exchange or token/assertion validation fails. The message is safe to log, not to show.</summary>
 public sealed class SsoProtocolException : Exception
@@ -59,21 +68,28 @@ public sealed record SamlAuthnRequest(string RedirectUrl, string RequestId);
 /// <summary>SAML 2.0 service-provider protocol operations (HTTP-Redirect requests, HTTP-POST responses).</summary>
 public interface ISamlClient
 {
-    /// <summary>Builds an AuthnRequest for the IdP described by <paramref name="idpMetadataUrl"/>.</summary>
+    /// <summary>
+    /// Builds an AuthnRequest for the IdP described by <paramref name="idpMetadataUrl"/>, signed with the
+    /// service-provider certificate when <paramref name="signRequest"/> is set.
+    /// </summary>
     Task<SamlAuthnRequest> BuildAuthnRequestAsync(
-        string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default);
+        string idpMetadataUrl, SamlServiceProvider sp, string relayState, bool signRequest = false, CancellationToken ct = default);
 
     /// <summary>
     /// Validates a base64 SAMLResponse: IdP signature (certificates from metadata), issuer,
     /// audience, validity window, destination/recipient, success status and InResponseTo.
+    /// Encrypted assertions are decrypted with the service-provider certificate; with
+    /// <paramref name="requireEncryptedAssertion"/> an unencrypted assertion is refused.
     /// Throws <see cref="SsoProtocolException"/> on any failure.
     /// </summary>
     Task<ExternalIdentity> ValidateResponseAsync(
         string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
-        CancellationToken ct = default);
+        bool requireEncryptedAssertion = false, CancellationToken ct = default);
 
-    /// <summary>Service-provider metadata XML to register at the IdP.</summary>
-    string BuildServiceProviderMetadata(SamlServiceProvider sp);
+    /// <summary>
+    /// Service-provider metadata XML to register at the IdP (with the SP certificate for signing and encryption).
+    /// </summary>
+    string BuildServiceProviderMetadata(SamlServiceProvider sp, bool authnRequestsSigned = false);
 }
 
 /// <summary>Persistence for SSO provider settings and external login links.</summary>
@@ -85,6 +101,12 @@ public interface ISsoRepository
     Task<ExternalLogin?> FindLinkAsync(Guid? tenantId, SsoProvider provider, string externalSubjectId, CancellationToken ct = default);
     Task<bool> UserHasLinkAsync(Guid userId, SsoProvider provider, CancellationToken ct = default);
     Task AddLinkAsync(ExternalLogin link, CancellationToken ct = default);
+
+    /// <summary>
+    /// Users of <paramref name="tenantId"/> (null = any) whose institution ID is <paramref name="institutionId"/>:
+    /// students by registration number, everyone by username. Callers link only when exactly one matches.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> FindUserIdsByInstitutionIdAsync(Guid? tenantId, string institutionId, CancellationToken ct = default);
 
     /// <summary>Plan M1.4: enabled settings with EnforceSsoOnly that apply to a user of <paramref name="tenantId"/> (its own + installation-wide).</summary>
     Task<IReadOnlyList<SsoProviderSetting>> GetEnforcingSettingsAsync(Guid? tenantId, CancellationToken ct = default);

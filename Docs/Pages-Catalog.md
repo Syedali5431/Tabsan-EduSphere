@@ -1781,6 +1781,15 @@ xAPI credentials (secret shown once) and the latest statements.
 
 ---
 
+### Register an External Tool (M5, Dynamic Registration)
+**Route:** `POST /Portal/StartLtiRegistration` (from External Tools); the tool calls `GET /lti/openid-configuration` and `POST /lti/register`
+**View:** `Portal/LtiRegister.cshtml` (+ `js/lti-register.js`)
+**Access:** Admin, SuperAdmin
+
+The tool's registration page in a frame; returns to External Tools when the tool sends `org.imsglobal.lti.close`.
+
+---
+
 ### API Tokens (M14)
 **Route:** `/Portal/ApiTokens` (`POST /Portal/CreateApiToken`, `POST /Portal/RevokeApiToken`)
 **View:** `Portal/ApiTokens.cshtml`
@@ -1847,9 +1856,9 @@ The global error page displayed when an unhandled exception occurs. Shows a user
 | **Certificates** | 1 |
 | **Institution Policy** | 1 |
 | **Library Integration** | 1 |
-| **Plan M (M1–M14)** | 34 |
+| **Plan M (M1–M14)** | 35 |
 | **Error** | 1 |
-| **TOTAL** | **126 pages** |
+| **TOTAL** | **127 pages** |
 
 ---
 

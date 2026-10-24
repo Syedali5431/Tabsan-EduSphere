@@ -141,6 +141,28 @@ public class LtiIntegrationTests
         Assert.Contains(membership.GetProperty("members").EnumerateArray(),
             m => m.GetProperty("roles").EnumerateArray().Any(r => r.GetString()!.EndsWith("#Instructor")));
         Assert.Equal(HttpStatusCode.Unauthorized, (await _factory.CreateClient().GetAsync($"api/v1/lti/nrps/{seed.OfferingId}/memberships")).StatusCode);
+
+        // Paging (found with saLTIre): a limit gives a rel="next" link on the platform address until the last page;
+        // the role filter applies before paging.
+        var total = membership.GetProperty("members").GetArrayLength();
+        var seen = new HashSet<string>();
+        var next = $"api/v1/lti/nrps/{seed.OfferingId}/memberships?limit=1";
+        for (var pageCount = 0; next is not null; pageCount++)
+        {
+            Assert.True(pageCount < total, "the next links must end");
+            var pageResponse = await roster.GetAsync(next);
+            var pageMembers = (await pageResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("members");
+            Assert.Equal(1, pageMembers.GetArrayLength());
+            Assert.True(seen.Add(pageMembers[0].GetProperty("user_id").GetString()!));
+            next = pageResponse.Headers.TryGetValues("Link", out var linkHeader)
+                ? System.Text.RegularExpressions.Regex.Match(string.Join(",", linkHeader), "<" + Platform + "/lti/([^>]+)>; rel=\"next\"").Groups[1].Value is { Length: > 0 } nextPath ? "api/v1/lti/" + nextPath : null
+                : null;
+        }
+        Assert.Equal(total, seen.Count);
+        var instructors = await roster.GetAsync($"api/v1/lti/nrps/{seed.OfferingId}/memberships?role=Instructor&limit=1");
+        var instructorPage = (await instructors.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("members");
+        Assert.Equal(1, instructorPage.GetArrayLength());
+        Assert.Contains(instructorPage[0].GetProperty("roles").EnumerateArray(), r => r.GetString()!.EndsWith("#Instructor"));
     }
 
     [Fact]
@@ -219,6 +241,74 @@ public class LtiIntegrationTests
         Assert.True((await admin.PostAsync("api/v1/module/lti/deactivate", null)).IsSuccessStatusCode);
         try { Assert.Equal(HttpStatusCode.Forbidden, (await _factory.CreateClient().GetAsync("api/v1/lti/jwks")).StatusCode); }
         finally { await ActivateModuleAsync(); }
+    }
+
+    [Fact]
+    public async Task DynamicRegistration_ToolRegistersItself_SwitchedOffUntilReviewed()
+    {
+        await ActivateModuleAsync();
+        var admin = Client("SuperAdmin", Guid.NewGuid());
+        Assert.Equal(HttpStatusCode.Forbidden, (await Client("Faculty", Guid.NewGuid())
+            .PostAsJsonAsync("api/v1/lti/tools/dynamic-registration", new { registrationUrl = "https://tool.test/register" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin
+            .PostAsJsonAsync("api/v1/lti/tools/dynamic-registration", new { registrationUrl = "http://tool.test/register" })).StatusCode);
+
+        // 1) The administrator starts; the platform opens the tool's page with its configuration URL and a one-time token.
+        var start = await (await admin.PostAsJsonAsync("api/v1/lti/tools/dynamic-registration", new { registrationUrl = "https://tool.test/register" }))
+            .Content.ReadFromJsonAsync<JsonElement>();
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(start.GetProperty("url").GetString()!).Query);
+        Assert.Equal(Platform + "/lti/openid-configuration", query["openid_configuration"].ToString());
+        var token = query["registration_token"].ToString();
+
+        // 2) The tool reads the configuration without signing in …
+        var tool = _factory.CreateClient();
+        var config = await tool.GetFromJsonAsync<JsonElement>("api/v1/lti/openid-configuration");
+        Assert.Equal(Platform, config.GetProperty("issuer").GetString());
+        var registrationEndpoint = config.GetProperty("registration_endpoint").GetString()!;
+        Assert.Equal(Platform + "/lti/register", registrationEndpoint);
+
+        // 3) … and posts its registration with the token.
+        var name = "Self-registered tool " + Guid.NewGuid().ToString("N")[..6];
+        var registration = $$"""
+        {
+          "application_type": "web", "response_types": ["id_token"], "grant_types": ["implicit", "client_credentials"],
+          "initiate_login_uri": "https://tool.test/login", "redirect_uris": ["https://tool.test/launch"],
+          "client_name": "{{name}}", "jwks_uri": "https://tool.test/jwks", "token_endpoint_auth_method": "private_key_jwt",
+          "scope": "https://purl.imsglobal.org/spec/lti-ags/scope/score https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+          "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "tool.test", "target_link_uri": "https://tool.test/launch", "claims": ["iss", "sub", "name"],
+            "messages": [{ "type": "LtiDeepLinkingRequest" }]
+          }
+        }
+        """;
+        HttpRequestMessage Register(string bearer) => new(HttpMethod.Post, "api/v1/lti/register")
+        {
+            Content = new StringContent(registration, Encoding.UTF8, "application/json"),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", bearer) }
+        };
+        var response = await tool.SendAsync(Register(token));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var answer = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var clientId = answer.GetProperty("client_id").GetString();
+        var deploymentId = answer.GetProperty("https://purl.imsglobal.org/spec/lti-tool-configuration").GetProperty("deployment_id").GetString();
+
+        // The token works once.
+        var replay = await tool.SendAsync(Register(token));
+        Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
+        Assert.Contains("invalid_token", await replay.Content.ReadAsStringAsync());
+
+        // 4) The tool is listed, switched off for review, with what it asked for; the administrator turns it on.
+        var listed = (await admin.GetFromJsonAsync<JsonElement>("api/v1/lti/tools")).EnumerateArray()
+            .Single(t => t.GetProperty("clientId").GetString() == clientId);
+        Assert.Equal(name, listed.GetProperty("name").GetString());
+        Assert.False(listed.GetProperty("isActive").GetBoolean());
+        Assert.Equal(JsonValueKind.String, listed.GetProperty("registeredDynamicallyAt").ValueKind);
+        Assert.Equal("NameOnly", listed.GetProperty("privacyLevel").GetString());
+        Assert.True(listed.GetProperty("allowGradeService").GetBoolean());
+        Assert.False(listed.GetProperty("allowRosterService").GetBoolean());
+        Assert.Equal("https://tool.test/launch", listed.GetProperty("deepLinkingUrl").GetString());
+        Assert.Equal(deploymentId, listed.GetProperty("deployments")[0].GetProperty("deploymentId").GetString());
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.PostAsync($"api/v1/lti/tools/{listed.GetProperty("id").GetString()}/enable", null)).StatusCode);
     }
 
     // ═════════════════════════════════════════════════════════════════════════

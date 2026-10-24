@@ -99,7 +99,92 @@ public class SsoProtocolIntegrationTests
         Assert.Contains("TokenValidationFailed", await foreign.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task Saml_SignedRequest_EncryptedAssertion_LinksByInstitutionId_AndChecksTheRole()
+    {
+        const string employeeNumber = "urn:oid:2.16.840.1.113730.3.1.3";
+        const string affiliation = "urn:oid:1.3.6.1.4.1.5923.1.1.1.1";
+        var idp = new SamlIdp();
+        var tenantId = await EnsureTenantAsync();
+        await UpsertSettingAsync(tenantId, SsoProvider.Saml, s =>
+        {
+            s.ConfigureSaml(idp.MetadataUrl);
+            s.SetSamlSecurity(signAuthnRequests: true, requireEncryptedAssertions: true);
+            s.SetAttributeMapping(employeeNumber, linkById: true, affiliation, "student=Student", requireRoleMatch: true);
+        });
+        var institutionId = "EMP-" + Guid.NewGuid().ToString("N")[..6];
+        var userId = await SeedUserAsync(tenantId, institutionId, "Student");
+        var spCertificate = _factory.Services.GetRequiredService<SamlServiceProviderCertificate>();
+        _factory.Services.GetRequiredService<SwitchableSamlClient>().Inner = new SamlClient(new HttpClient(idp), spCertificate);
+        using var client = _factory.CreateClient();
+
+        // The SP metadata publishes the certificate and says requests are signed.
+        var metadata = await client.GetStringAsync($"api/v1/sso/saml/metadata?acs={Uri.EscapeDataString(Acs)}&tenant={TenantCode}");
+        Assert.Contains("AuthnRequestsSigned=\"true\"", metadata);
+        Assert.Contains(Convert.ToBase64String(spCertificate.PublicCertificate.RawData), metadata);
+
+        // 1) Signed request; encrypted assertion with the employee number links the account and signs in.
+        var (relayState, requestId, entityId, redirect) = await StartSignedSamlAsync(client);
+        Assert.Contains("Signature=", redirect);
+        var attributes = new Dictionary<string, string> { [employeeNumber] = institutionId, [affiliation] = "student" };
+        var ok = await client.PostAsJsonAsync("api/v1/sso/saml/complete", new
+        {
+            samlResponse = idp.Respond("enc-subject-" + institutionId, requestId, entityId, attributes, spCertificate.PublicCertificate),
+            relayState
+        });
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        Assert.Equal(userId, (await ok.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("userId").GetGuid());
+
+        // 2) The same assertion unencrypted is refused (this provider requires encryption).
+        var (relayState2, requestId2, _, _) = await StartSignedSamlAsync(client);
+        var plain = await client.PostAsJsonAsync("api/v1/sso/saml/complete",
+            new { samlResponse = idp.Respond("enc-subject-" + institutionId, requestId2, entityId, attributes), relayState = relayState2 });
+        Assert.Equal(HttpStatusCode.BadRequest, plain.StatusCode);
+        Assert.Contains("TokenValidationFailed", await plain.Content.ReadAsStringAsync());
+
+        // 3) The linked account asserting another affiliation is refused.
+        var (relayState3, requestId3, _, _) = await StartSignedSamlAsync(client);
+        var wrongRole = await client.PostAsJsonAsync("api/v1/sso/saml/complete", new
+        {
+            samlResponse = idp.Respond("enc-subject-" + institutionId, requestId3, entityId,
+                new Dictionary<string, string> { [employeeNumber] = institutionId, [affiliation] = "faculty" }, spCertificate.PublicCertificate),
+            relayState = relayState3
+        });
+        Assert.Equal(HttpStatusCode.Forbidden, wrongRole.StatusCode);
+        Assert.Contains("RoleNotAllowed", await wrongRole.Content.ReadAsStringAsync());
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static async Task<(string RelayState, string RequestId, string EntityId, string Redirect)> StartSignedSamlAsync(HttpClient client)
+    {
+        var start = await client.PostAsJsonAsync("api/v1/sso/start", new { provider = "Saml", redirectUri = Acs, tenantCode = TenantCode });
+        Assert.Equal(HttpStatusCode.OK, start.StatusCode);
+        var body = await start.Content.ReadFromJsonAsync<JsonElement>();
+        var redirect = body.GetProperty("authorizationUrl").GetString()!;
+        var xml = Inflate(QueryHelpers.ParseQuery(new Uri(redirect).Query)["SAMLRequest"].ToString());
+        var doc = System.Xml.Linq.XDocument.Parse(xml);
+        return (body.GetProperty("state").GetString()!, doc.Root!.Attribute("ID")!.Value,
+            doc.Root.Elements().First(e => e.Name.LocalName == "Issuer").Value, redirect);
+    }
+
+    private async Task<Guid> SeedUserAsync(Guid tenantId, string username, string roleName)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var role = await db.Roles.SingleAsync(r => r.Name == roleName);
+        var campus = await db.Campuses.FirstOrDefaultAsync(c => c.TenantId == tenantId);
+        if (campus is null)
+        {
+            campus = new Campus(tenantId, "PROTO-MAIN", "Protocol Test Campus");
+            db.Campuses.Add(campus);
+        }
+        var user = new User(username, "integration-hash", role.Id, email: $"{username.ToLowerInvariant()}@proto.test",
+            tenantId: tenantId, campusId: campus.Id);
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return user.Id;
+    }
 
     private static async Task<(string RelayState, string RequestId, string EntityId)> StartSamlAsync(HttpClient client)
     {
@@ -146,6 +231,8 @@ public class SsoProtocolIntegrationTests
             setting = new SsoProviderSetting(tenantId, provider, provider + " (protocol test)");
             db.SsoProviderSettings.Add(setting);
         }
+        setting.SetSamlSecurity(false, false);
+        setting.SetAttributeMapping(null, false, null, null, false);
         configure(setting);
         setting.SetPolicy(false, false, false, null);
         setting.Enable();
@@ -250,11 +337,17 @@ public class SsoProtocolIntegrationTests
         private string EntityId => _host + "/entity";
         public string MetadataUrl => _host + "/metadata";
 
-        public string Respond(string subject, string inResponseTo, string audience)
+        public string Respond(string subject, string inResponseTo, string audience,
+            Dictionary<string, string>? attributes = null, X509Certificate2? encryptFor = null)
         {
             var now = DateTime.UtcNow;
-            var config = new Saml2Configuration { Issuer = EntityId, SigningCertificate = _cert, AuthnResponseSignType = Saml2AuthnResponseSignTypes.SignAssertionAndResponse };
+            var config = new Saml2Configuration
+            {
+                Issuer = EntityId, SigningCertificate = _cert, AuthnResponseSignType = Saml2AuthnResponseSignTypes.SignAssertionAndResponse,
+                EncryptionCertificate = encryptFor
+            };
             var claims = new List<Claim> { new("urn:oid:0.9.2342.19200300.100.1.1", subject) };
+            claims.AddRange((attributes ?? new()).Select(a => new Claim(a.Key, a.Value)));
             var response = new Saml2AuthnResponse(config)
             {
                 InResponseTo = new Saml2Id(inResponseTo),

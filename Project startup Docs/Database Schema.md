@@ -1,5 +1,9 @@
 <!-- markdownlint-disable MD001 MD003 MD007 MD010 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+## 2026-10-24 Update - Plan M open items (Schema Posture)
+- Implementation: `sso_provider_settings` gains `IdClaim`, `LinkById`, `RoleClaim`, `RoleMappings`, `RequireRoleMatch`, `SignAuthnRequests`, `RequireEncryptedAssertions`; `lti_tools` gains `RegisteredDynamicallyAt`.
+- Validation: migrations `PlanMSsoAttributeMapping` and `PlanMLtiDynamicRegistration` applied to LocalDB; no pending model changes.
+
 ## 2026-10-24 Update - Plan M14 API tokens and index review (Schema Posture)
 - Implementation: new table `api_tokens` (user, name, hint, token hash unique, read-only, expiry, last used at/address, revoked at/by, created); indexes `IX_api_tokens_user`, `IX_incident_logs_assigned_to`, `IX_rooms_BuildingId` (created only where missing); seeded sidebar menu `api_tokens`.
 - Index review: no unindexed foreign keys remain; SQL Server missing-index statistics empty after the exam-day load run.

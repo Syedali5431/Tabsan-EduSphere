@@ -67,6 +67,37 @@ public class SsoProviderSetting : AuditableEntity
     /// </summary>
     public bool TrustIdpMfa { get; private set; }
 
+    // ── Attribute mapping ────────────────────────────────────────────────────
+
+    /// <summary>EduSphere roles an identity-provider role value can map to (SuperAdmin keeps password + 2FA sign-in).</summary>
+    public static readonly string[] MappableRoles = ["Student", "Faculty", "Admin", "Finance", "Parent"];
+
+    /// <summary>
+    /// Claim (OIDC) or attribute (SAML) carrying the person's institution ID: a student's registration number,
+    /// otherwise the EduSphere username (e.g. a staff employee number).
+    /// </summary>
+    public string? IdClaim { get; private set; }
+
+    /// <summary>When true a first-time sign-in is linked to the one active user of the tenant with that institution ID.</summary>
+    public bool LinkById { get; private set; }
+
+    /// <summary>Claim or attribute carrying role / affiliation values (e.g. eduPersonAffiliation, Entra app roles).</summary>
+    public string? RoleClaim { get; private set; }
+
+    /// <summary>Normalised "value=Role|Role; value=Role" pairs translating role values into EduSphere roles.</summary>
+    public string? RoleMappings { get; private set; }
+
+    /// <summary>When true a sign-in is refused unless an asserted role value maps to the account's EduSphere role.</summary>
+    public bool RequireRoleMatch { get; private set; }
+
+    // ── SAML security ────────────────────────────────────────────────────────
+
+    /// <summary>SAML: sign AuthnRequests with the service-provider certificate (for IdPs that require it).</summary>
+    public bool SignAuthnRequests { get; private set; }
+
+    /// <summary>SAML: refuse responses whose assertion is not encrypted to the service-provider certificate.</summary>
+    public bool RequireEncryptedAssertions { get; private set; }
+
     private SsoProviderSetting() { }
 
     public SsoProviderSetting(Guid? tenantId, SsoProvider provider, string displayName)
@@ -168,6 +199,95 @@ public class SsoProviderSetting : AuditableEntity
             .ToList();
         AllowedEmailDomains = domains.Count == 0 ? null : string.Join(',', domains);
         Touch();
+    }
+
+    /// <summary>
+    /// Sets the institution-ID and role attribute mapping. <paramref name="roleMappings"/> holds "value=Role" pairs
+    /// separated by ";", "," or new lines; several roles for one value are separated by "|".
+    /// </summary>
+    public void SetAttributeMapping(string? idClaim, bool linkById, string? roleClaim, string? roleMappings, bool requireRoleMatch)
+    {
+        var id = OptionalText(idClaim, 256, nameof(idClaim));
+        var role = OptionalText(roleClaim, 256, nameof(roleClaim));
+        if (linkById && id is null)
+            throw new ArgumentException("Enter the claim or attribute that carries the institution ID.", nameof(idClaim));
+
+        var mappings = ParseRoleMappings(roleMappings);
+        if (requireRoleMatch && (role is null || mappings.Count == 0))
+            throw new ArgumentException("Enter the role claim or attribute and at least one role mapping.", nameof(roleMappings));
+
+        var text = string.Join("; ", mappings.Select(m => m.Key + "=" + string.Join('|', m.Value)));
+        if (text.Length > 1000)
+            throw new ArgumentException("The role mapping is too long (1,000 characters at most).", nameof(roleMappings));
+
+        IdClaim = id;
+        LinkById = linkById;
+        RoleClaim = role;
+        RoleMappings = text.Length == 0 ? null : text;
+        RequireRoleMatch = requireRoleMatch;
+        Touch();
+    }
+
+    /// <summary>SAML only: signed AuthnRequests and required assertion encryption.</summary>
+    public void SetSamlSecurity(bool signAuthnRequests, bool requireEncryptedAssertions)
+    {
+        if (Provider != SsoProvider.Saml && (signAuthnRequests || requireEncryptedAssertions))
+            throw new InvalidOperationException($"{Provider} is not a SAML provider.");
+
+        SignAuthnRequests = signAuthnRequests;
+        RequireEncryptedAssertions = requireEncryptedAssertions;
+        Touch();
+    }
+
+    /// <summary>The role mapping as value → EduSphere roles (values compared case-insensitively).</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> GetRoleMappings() => ParseRoleMappings(RoleMappings);
+
+    /// <summary>
+    /// EduSphere roles for the asserted role values. Scoped values ("student@uni.edu", eduPersonScopedAffiliation)
+    /// also match on the part before "@".
+    /// </summary>
+    public IReadOnlyList<string> MapRoles(IEnumerable<string> assertedValues)
+    {
+        var mappings = GetRoleMappings();
+        var roles = new List<string>();
+        foreach (var raw in assertedValues)
+        {
+            var value = raw?.Trim() ?? string.Empty;
+            if (value.Length == 0) continue;
+            var at = value.IndexOf('@');
+            if (mappings.TryGetValue(value, out var mapped) || (at > 0 && mappings.TryGetValue(value[..at], out mapped)))
+                roles.AddRange(mapped);
+        }
+        return roles.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private static Dictionary<string, IReadOnlyList<string>> ParseRoleMappings(string? text)
+    {
+        var result = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in (text ?? string.Empty).Split([';', ',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var eq = pair.IndexOf('=');
+            var value = eq > 0 ? pair[..eq].Trim() : string.Empty;
+            if (value.Length == 0 || eq == pair.Length - 1)
+                throw new ArgumentException($"\"{pair}\" is not a role mapping. Use value=Role, e.g. student=Student.", "roleMappings");
+
+            var roles = new List<string>();
+            foreach (var name in pair[(eq + 1)..].Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var role = MappableRoles.FirstOrDefault(r => r.Equals(name, StringComparison.OrdinalIgnoreCase))
+                           ?? throw new ArgumentException($"\"{name}\" is not a role that can be mapped. Use {string.Join(", ", MappableRoles)}.", "roleMappings");
+                if (!roles.Contains(role)) roles.Add(role);
+            }
+            result[value] = result.TryGetValue(value, out var existing) ? existing.Union(roles).ToList() : roles;
+        }
+        return result;
+    }
+
+    private static string? OptionalText(string? value, int maxLength, string paramName)
+    {
+        var text = value?.Trim();
+        if (string.IsNullOrEmpty(text)) return null;
+        return text.Length <= maxLength ? text : throw new ArgumentException($"At most {maxLength} characters.", paramName);
     }
 
     /// <summary>Returns the allowed email domains as a list (empty = any domain).</summary>

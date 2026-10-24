@@ -186,19 +186,20 @@ public class SsoIntegrationTests
         public SamlServiceProvider? LastSp { get; private set; }
         public string? LastExpectedRequestId { get; private set; }
 
-        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, CancellationToken ct = default)
+        public Task<SamlAuthnRequest> BuildAuthnRequestAsync(string idpMetadataUrl, SamlServiceProvider sp, string relayState, bool signRequest = false, CancellationToken ct = default)
         {
             LastSp = sp;
             return Task.FromResult(new SamlAuthnRequest($"https://idp.test/sso?SAMLRequest=x&RelayState={relayState}", RequestId));
         }
 
-        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId, CancellationToken ct = default)
+        public Task<ExternalIdentity> ValidateResponseAsync(string idpMetadataUrl, SamlServiceProvider sp, string samlResponse, string expectedRequestId,
+            bool requireEncryptedAssertion = false, CancellationToken ct = default)
         {
             LastExpectedRequestId = expectedRequestId;
             return Identity is null ? throw new SsoProtocolException("no identity") : Task.FromResult(Identity);
         }
 
-        public string BuildServiceProviderMetadata(SamlServiceProvider sp) => "<md/>";
+        public string BuildServiceProviderMetadata(SamlServiceProvider sp, bool authnRequestsSigned = false) => "<md/>";
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
