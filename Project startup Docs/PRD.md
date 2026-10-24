@@ -5977,7 +5977,7 @@ This section states the product requirements added by Plans K, L and M (October 
 ### 26.6 Installable app and web push (M4)
 - **FR-M4.1** The portal installs as a branded app (manifest with the institution's name and logo, shortcuts).
 - **FR-M4.2** Offline read-only copies of recently opened dashboard, timetable, announcements, course material and notifications pages and downloaded material files; copies are wiped on sign-out.
-- **FR-M4.3** Web Push to each subscribed device for every notification, with per-type preferences and device management; push endpoints are restricted to known push services; payloads carry no sensitive data. Verified end to end through Google FCM (Chrome) and Windows push (Edge).
+- **FR-M4.3** Web Push to each subscribed device for every notification, with per-type preferences and device management; push endpoints are restricted to known push services; payloads carry no sensitive data. Verified end to end through Google FCM (Chrome) and Windows push (Edge), and in Chrome emulating an Android phone (installable with no Chrome installability errors, push received, offline reload).
 
 ### 26.7 External tools — LTI 1.3 Advantage (M5)
 - **FR-M5.1** Administrators register LTI 1.3 tools and deployments (whole installation, department or course) on **External Tools**, with privacy level (names/emails) and grade/roster permissions; platform signing keys rotate from the page.
@@ -6048,7 +6048,7 @@ Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS
 
 ### 26.19 Open items (need external systems or devices)
 - SSO: a sign-in against a live institutional IdP.
-- PWA/mobile: install and push on physical Android/iOS phones (desktop push through FCM and Windows push verified); iOS build on a Mac; native-app push with the institution's Firebase project.
+- PWA/mobile: a final check on physical Android/iOS phones (Android behaviour verified in Chrome's Android emulation; push through FCM and Windows push verified); iOS build on a Mac; native-app push with the institution's Firebase project.
 - LTI: checks with vendor tools that need accounts (H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification (needs membership; readiness report done).
 - Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
 - Localisation: native-speaker review of Urdu and Arabic texts.

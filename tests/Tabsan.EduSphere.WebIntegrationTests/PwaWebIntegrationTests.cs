@@ -83,6 +83,15 @@ public class PwaWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
         Assert.Contains("js/pwa.js", html);
         Assert.Contains("id=\"push-device-card\"", html);
 
+        // iPhone "Add to Home Screen" works the same from the sign-in page and the portal: an app named EduSphere with its icon.
+        var signInPage = await _baseFactory.WithWebHostBuilder(b => b.UseEnvironment("Testing")).CreateClient().GetStringAsync("/Login");
+        foreach (var page in new[] { html, signInPage })
+        {
+            Assert.Contains("<meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />", page);
+            Assert.Contains("<meta name=\"apple-mobile-web-app-title\" content=\"EduSphere\" />", page);
+            Assert.Contains("rel=\"apple-touch-icon\"", page);
+        }
+
         var summary = await client.GetStringAsync("/Portal/PushSummary");
         Assert.Contains("\"publicKey\"", summary);
 
