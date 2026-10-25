@@ -38,7 +38,11 @@
                                     · @(p.MaxAttempts == 0 ? T.Text("Unlimited attempts") : T.Format("{0} attempt(s)", p.MaxAttempts))
                                     @if (p.MasteryScore is { } mastery) { <text>· @T.Format("Pass mark {0}%", mastery.ToString("0.##"))</text> }
                                 </div>
-                                @if (p.PartCount > 1)
+                                @if (p.PartCount > 1 && p.Sequenced)
+                                {
+                                    <div class="small text-muted" data-scorm-sequenced>@T.Format("{0} parts — the package sets their order (SCORM 2004 sequencing).", p.PartCount)</div>
+                                }
+                                else if (p.PartCount > 1)
                                 {
                                     <div class="small text-muted">@T.Format("{0} parts — students move between them with the contents list beside the player.", p.PartCount)</div>
                                 }

@@ -150,16 +150,29 @@ public sealed class ScormController : ControllerBase
         return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { message = result.Error });
     }
 
-    /// <summary>The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.</summary>
+    /// <summary>Sequenced packages: a navigation request (Next, Previous, a part chosen in the contents, or a SCO's adl.nav.request).</summary>
+    [HttpPost("play/{token}/navigate")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Navigate(string token, [FromBody] ScormNavigateRequest request, CancellationToken ct)
+    {
+        var result = await _service.NavigateAsync(token, request, ct);
+        return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { message = result.Error });
+    }
+
+    /// <summary>
+    /// The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.
+    /// Parts of sequenced packages also name their attempt ("commit/{part}/{n}").
+    /// </summary>
     [HttpPost("play/{token}/commit")]
     [HttpPost("play/{token}/commit/{part}")]
+    [HttpPost("play/{token}/commit/{part}/{n:int}")]
     [AllowAnonymous]
     [RequestSizeLimit(4_500_000)]
-    public async Task<IActionResult> Commit(string token, string? part, [FromQuery] bool final, CancellationToken ct)
+    public async Task<IActionResult> Commit(string token, string? part, int? n, [FromQuery] bool final, CancellationToken ct)
     {
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync(ct);
-        var result = await _service.CommitAsync(token, body, final, ct, part);
+        var result = await _service.CommitAsync(token, body, final, ct, part, n);
         return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { result = false, errorCode = 101, message = result.Error });
     }
 

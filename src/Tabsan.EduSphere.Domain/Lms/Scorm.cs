@@ -40,8 +40,14 @@ public class ScormPackage : BaseEntity
     public bool IsRemoved { get; private set; }
     /// <summary>The parts of a multi-part package (JSON list of <see cref="ScormPart"/>, in manifest order); null for one part.</summary>
     public string? PartsJson { get; private set; }
+    /// <summary>SCORM 2004 sequencing (JSON <see cref="SeqTree"/>); null when the package has none and learners choose parts freely.</summary>
+    public string? SequencingJson { get; private set; }
+    /// <summary>How the package's structure was read: below <see cref="CurrentStructureVersion"/> it is read again from its manifest.</summary>
+    public int StructureVersion { get; private set; }
 
     public const int MaxParts = 200;
+    /// <summary>1 = parts (October 2026), 2 = parts with SCORM 2004 sequencing and SCORM 1.2 prerequisites.</summary>
+    public const int CurrentStructureVersion = 2;
 
     private ScormPackage() { }
 
@@ -113,14 +119,36 @@ public class ScormPackage : BaseEntity
 
     public bool IsMultiPart => PartsJson is { Length: > 0 };
 
+    /// <summary>Stores the package's SCORM 2004 sequencing (null: none) and marks the structure as read by the current rules.</summary>
+    public void SetSequencing(SeqTree? tree)
+    {
+        SequencingJson = tree is null ? null : JsonSerializer.Serialize(tree);
+        StructureVersion = CurrentStructureVersion;
+        Touch();
+    }
+
+    /// <summary>The activity tree of a sequenced package (null when the package has no sequencing).</summary>
+    public SeqTree? Sequencing => SequencingJson is { Length: > 0 } json ? JsonSerializer.Deserialize<SeqTree>(json) : null;
+
+    public bool IsSequenced => SequencingJson is { Length: > 0 };
+
+    /// <summary>Re-reads the structure of a package uploaded under older rules (its launch file and SCO count may change too).</summary>
+    public void UpgradeStructure(string launchPath, int scoCount, IReadOnlyList<ScormPart> parts, SeqTree? tree)
+    {
+        if (!string.IsNullOrWhiteSpace(launchPath)) LaunchPath = launchPath.Trim();
+        ScoCount = Math.Max(1, scoCount);
+        SetParts(parts);
+        SetSequencing(tree);
+    }
+
     public const string SinglePartId = "package";
 }
 
 /// <summary>
 /// One launchable part of a package (an item of the default organization): a SCO that talks to the runtime, or an asset
-/// (a plain page) that counts as done once opened.
+/// (a plain page) that counts as done once opened. SCORM 1.2 items may name prerequisites (adlcp:prerequisites, AICC script).
 /// </summary>
-public sealed record ScormPart(string Id, string Title, string LaunchPath, bool IsSco, decimal? MasteryScore);
+public sealed record ScormPart(string Id, string Title, string LaunchPath, bool IsSco, decimal? MasteryScore, string? Prerequisites = null);
 
 /// <summary>A learner's data for one part of a multi-part package (kept on the attempt).</summary>
 public sealed class ScormPartState
@@ -226,6 +254,16 @@ public class ScormAttempt : BaseEntity
     /// when a part failed, passed when every SCO passed), the score the average of the parts' scores, the time their sum.
     /// </summary>
     public void ApplyPart(IReadOnlyList<ScormPart> parts, string partId, ScormCommitValues v, string? cmiJson, bool finalCommit, DateTime now)
+        => RollUp(parts, StorePartData(parts, partId, v, cmiJson, finalCommit, now), now);
+
+    /// <summary>Sequenced packages: stores one part's commit; the sequencing rules work out the attempt's result (<see cref="SetSequencedResult"/>).</summary>
+    public void StorePart(IReadOnlyList<ScormPart> parts, string partId, ScormCommitValues v, string? cmiJson, bool finalCommit, DateTime now)
+    {
+        PartsStateJson = JsonSerializer.Serialize(StorePartData(parts, partId, v, cmiJson, finalCommit, now));
+        Touch();
+    }
+
+    private Dictionary<string, ScormPartState> StorePartData(IReadOnlyList<ScormPart> parts, string partId, ScormCommitValues v, string? cmiJson, bool finalCommit, DateTime now)
     {
         var states = PartStates();
         var state = states.GetValueOrDefault(partId) ?? new ScormPartState();
@@ -242,7 +280,67 @@ public class ScormAttempt : BaseEntity
         states[partId] = state;
         Location = Clip(v.Location, 1000);
         Exit = state.Exit;
-        RollUp(parts, states, now);
+        return states;
+    }
+
+    /// <summary>A new attempt on a part (sequencing delivered it again): it starts from fresh data; its time so far is kept.</summary>
+    public void ResetPart(string partId)
+    {
+        var states = PartStates();
+        states[partId] = new ScormPartState { TotalSeconds = states.GetValueOrDefault(partId)?.TotalSeconds ?? 0 };
+        PartsStateJson = JsonSerializer.Serialize(states);
+        Touch();
+    }
+
+    /// <summary>
+    /// A package that became multi-part (read again under newer rules): the data of an attempt made when only its first part
+    /// launched moves to that part, so the learner resumes where they were.
+    /// </summary>
+    public void AdoptSinglePartData(string partId)
+    {
+        if (PartsStateJson is { Length: > 0 } || CommitCount == 0) return;
+        PartsStateJson = JsonSerializer.Serialize(new Dictionary<string, ScormPartState>
+        {
+            [partId] = new()
+            {
+                CompletionStatus = CompletionStatus, SuccessStatus = SuccessStatus, ScorePercent = ScorePercent, TotalSeconds = TotalSeconds,
+                CommitCount = CommitCount, Exit = Exit, CmiJson = CmiJson, LastCommitAt = LastCommitAt
+            }
+        });
+        Touch();
+    }
+
+    /// <summary>SCORM 2004 sequencing state of this attempt (JSON <see cref="SeqState"/>).</summary>
+    public string? SequencingStateJson { get; private set; }
+
+    public SeqState SequencingState()
+        => SequencingStateJson is { Length: > 0 } json && JsonSerializer.Deserialize<SeqState>(json) is { } state ? state : new SeqState();
+
+    public void SetSequencingState(SeqState state)
+    {
+        SequencingStateJson = JsonSerializer.Serialize(state);
+        Touch();
+    }
+
+    /// <summary>
+    /// Sequenced packages: the attempt's result is the package's (root activity's) rolled-up status. It is finished once the
+    /// package is completed without being failed, or when the learner has left it for good (exit all, or the end of the content).
+    /// </summary>
+    public void SetSequencedResult(string completion, string success, decimal? scorePercent, bool ended, DateTime now)
+    {
+        CompletionStatus = Clip(completion, 20) ?? "unknown";
+        SuccessStatus = Clip(success, 20) ?? "unknown";
+        ScorePercent = scorePercent is { } p ? Math.Round(Math.Clamp(p, 0, 100), 2) : null;
+        ScoreRaw = ScorePercent;
+        ScoreMin = ScorePercent is null ? null : 0;
+        ScoreMax = ScorePercent is null ? null : 100;
+        ScoreScaled = ScorePercent / 100;
+        TotalSeconds = (int)Math.Min(int.MaxValue, PartStates().Values.Sum(s => (long)s.TotalSeconds));
+        CommitCount++;
+        LastCommitAt = now;
+        var done = (CompletionStatus == "completed" && SuccessStatus != "failed") || (ended && (CompletionStatus == "completed" || SuccessStatus is "passed" or "failed"));
+        if (FinishedAt is null && done) FinishedAt = now;
+        Touch();
     }
 
     /// <summary>An asset part (a plain page without the runtime) is done once the learner opens it.</summary>

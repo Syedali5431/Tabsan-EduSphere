@@ -1,4 +1,8 @@
 {
+ "\"{0}\" is not available yet.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
  "#{0} · Random questions from a bank": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
@@ -1709,6 +1713,18 @@
  ],
  "Choose a level first.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "Choose a part from the contents to begin.": [
+  "Views/ScormPlay/Ended.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
+ "Choose a part from the contents.": [
+  "Views/ScormPlay/Ended.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
+ "Choose a part of the package.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "Choose a program…": [
   "Views/Portal/OutcomeAttainment.cshtml"
@@ -3560,6 +3576,14 @@
  "Find active files and links published by your faculty.": [
   "Views/Portal/CourseMaterialStudent.cshtml"
  ],
+ "Finish \"{0}\" before choosing another part.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
+ "Finish the parts it depends on first.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
  "Finished": [
   "Views/Portal/QuizGrading.cshtml",
   "Views/Portal/ReportQuizzes.cshtml"
@@ -5021,6 +5045,9 @@
   "Views/Portal/Payments.cshtml",
   "Views/Portal/ScormPlay.cshtml"
  ],
+ "Next is not used in this part of the package; choose from the contents.": [
+  "wwwroot/js/scorm-page.js"
+ ],
  "Next student": [
   "Views/Portal/GradingWorkspace.cshtml"
  ],
@@ -5562,6 +5589,9 @@
  ],
  "Notes:": [
   "Views/Portal/StudyPlanDetail.cshtml"
+ ],
+ "Nothing is open.": [
+  "wwwroot/js/scorm-page.js"
  ],
  "Nothing saved yet — the built-in comparison is used.": [
   "Views (inline expressions)"
@@ -8724,6 +8754,9 @@
  "That did not work.": [
   "Controllers"
  ],
+ "That part is not in this package.": [
+  "wwwroot/js/scorm-page.js"
+ ],
  "The Development environment shouldn't be enabled for deployed applications.": [
   "Views/Shared/Error.cshtml"
  ],
@@ -8846,6 +8879,12 @@
  "The package could not be opened.": [
   "Controllers/PortalController.Scorm.cs"
  ],
+ "The package could not be reached. Try again.": [
+  "wwwroot/js/scorm-page.js"
+ ],
+ "The package does not go further than \"{0}\" here.": [
+  "wwwroot/js/scorm-page.js"
+ ],
  "The package has {0} SCOs; students start with the first one.": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
  ],
@@ -8960,6 +8999,9 @@
  "There is no group with room. Ask your teacher.": [
   "Views/Portal/MyGroups.cshtml"
  ],
+ "There is nothing before this.": [
+  "wwwroot/js/scorm-page.js"
+ ],
  "These controls affect": [
   "Views/Portal/SidebarSettings.cshtml"
  ],
@@ -9059,8 +9101,26 @@
  "This package is not available.": [
   "Controllers/PortalController.Scorm.cs"
  ],
+ "This package sets the order: Next opens what comes next, and parts open when the package allows.": [
+  "Views/Portal/ScormPlay.cshtml"
+ ],
  "This page is scaffolded and ready for feature implementation in the next step.": [
   "Views/Portal/Section.cshtml"
+ ],
+ "This part could not be opened just now. Reload the page to try again; your progress is saved.": [
+  "Views/ScormPlay/Unavailable.cshtml"
+ ],
+ "This part is not offered.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
+ "This part of the package only goes forward.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
+ "This part opens through the package's own order; use Next.": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "This program has no program outcomes yet. Add them on the": [
   "Views/Portal/OutcomeAttainment.cshtml"
@@ -9479,6 +9539,9 @@
  ],
  "Unknown": [
   "Views (inline expressions)"
+ ],
+ "Unknown navigation request.": [
+  "wwwroot/js/scorm-page.js"
  ],
  "Unlimited": [
   "Views/Portal/Quizzes.cshtml"
@@ -9912,8 +9975,16 @@
   "Views (inline expressions)",
   "Views/Portal/OutcomeMastery.cshtml"
  ],
+ "You have reached the end of this package.": [
+  "Views/ScormPlay/Ended.cshtml",
+  "wwwroot/js/scorm-page.js"
+ ],
  "You have reviewed this work — you can still change your review.": [
   "Views (inline expressions)"
+ ],
+ "You have used all attempts at \"{0}\".": [
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "You have used all your attempts.": [
   "Views/Portal/TakeQuiz.cshtml"
@@ -9984,6 +10055,9 @@
  "Your password": [
   "Views/Login/Index.cshtml"
  ],
+ "Your place is saved.": [
+  "wwwroot/js/scorm-page.js"
+ ],
  "Your profile details are unavailable right now.": [
   "Views/Portal/UserSettings.cshtml"
  ],
@@ -9992,6 +10066,9 @@
  ],
  "Your progress has been saved.": [
   "Views/Portal/ScormPlay.cshtml"
+ ],
+ "Your progress has been saved. Use Next or the contents to open the package again.": [
+  "Views/ScormPlay/Ended.cshtml"
  ],
  "Your provisional grade": [
   "wwwroot/js/grading-workspace.js"
@@ -10403,6 +10480,9 @@
   "Views/Portal/Announcements.cshtml"
  ],
  "{0} parts — students move between them with the contents list beside the player.": [
+  "Views/Shared/Components/ScormPackages/Default.cshtml"
+ ],
+ "{0} parts — the package sets their order (SCORM 2004 sequencing).": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
  ],
  "{0} prerequisite(s)": [

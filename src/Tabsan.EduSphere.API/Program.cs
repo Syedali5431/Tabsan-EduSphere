@@ -530,6 +530,7 @@ builder.Services.AddSingleton<Tabsan.EduSphere.Application.Lms.Scorm.IScormConte
             sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tabsan.EduSphere.Application.Lms.Scorm.ScormOptions>>(), builder.Environment.ContentRootPath));
 builder.Services.AddSingleton<Tabsan.EduSphere.Application.Lms.Scorm.IScormPlayTokens, Tabsan.EduSphere.API.Services.ScormPlayTokens>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lms.Scorm.ScormService>();
+builder.Services.AddHostedService<Tabsan.EduSphere.API.Services.ScormStructureUpgradeWorker>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Lms.Scorm.XapiService>();
 
 // ── Plan M8: late & missing policy, overrides, student groups, peer review ──

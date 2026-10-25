@@ -414,9 +414,11 @@ public class ScormTests
         public readonly List<XapiStatement> Statements = [];
         public Task<ScormPackage?> GetPackageAsync(Guid packageId, CancellationToken ct = default) => Task.FromResult<ScormPackage?>(null);
         public Task<IReadOnlyList<ScormPackage>> GetPackagesAsync(Guid offeringId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ScormPackage>>([]);
+        public Task<IReadOnlyList<ScormPackage>> GetPackagesBelowStructureVersionAsync(int version, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ScormPackage>>([]);
         public Task<IReadOnlyList<ScormAttempt>> GetAttemptsAsync(Guid packageId, Guid? studentProfileId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ScormAttempt>>([]);
         public Task<IReadOnlyList<ScormAttempt>> GetAttemptsForStudentAsync(IReadOnlyCollection<Guid> packageIds, Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ScormAttempt>>([]);
         public Task<ScormAttempt?> GetAttemptAsync(Guid attemptId, CancellationToken ct = default) => Task.FromResult<ScormAttempt?>(null);
+        public Task ReloadAsync(ScormAttempt attempt, CancellationToken ct = default) => Task.CompletedTask;
         public Task<bool> IsEnrolledAsync(Guid offeringId, Guid studentProfileId, CancellationToken ct = default) => Task.FromResult(false);
         public Task<ScormLearnerInfo?> GetLearnerAsync(Guid studentProfileId, CancellationToken ct = default) => Task.FromResult<ScormLearnerInfo?>(null);
         public Task<Guid?> GetStudentProfileIdAsync(Guid userId, CancellationToken ct = default) => Task.FromResult<Guid?>(null);

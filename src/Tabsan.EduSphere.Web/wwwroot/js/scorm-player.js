@@ -32,7 +32,27 @@
         if (window.parent && window.parent !== window) window.parent.postMessage({ type: type, part: config.part || null }, '*');
     }
 
-    api.on(is2004 ? 'Terminate' : 'LMSFinish', function () { tellPortal('scorm-finished'); });
+    // SCORM 2004 navigation: what the SCO asks for when it ends (adl.nav.request, e.g. "continue", "exitAll" or
+    // "{target=id}choice") goes to the portal page, which asks the package's sequencing what to open next.
+    var navRequest = null;
+    if (is2004) {
+        try {
+            if (config.nav) {
+                api.adl.nav.request_valid.continue = config.nav.continue ? 'true' : 'false';
+                api.adl.nav.request_valid.previous = config.nav.previous ? 'true' : 'false';
+            }
+        } catch (e) { /* older runtimes keep their defaults */ }
+        api.on('SetValue.adl.nav.request', function (element, value) { navRequest = value; });
+    }
+
+    api.on(is2004 ? 'Terminate' : 'LMSFinish', function () {
+        tellPortal('scorm-finished');
+        if (navRequest && navRequest !== '_none_' && window.parent && window.parent !== window) {
+            var m = /^\{target=([^}]+)\}(choice|jump)$/.exec(navRequest);
+            window.parent.postMessage({ type: 'scorm-nav', request: m ? 'choice' : navRequest, target: m ? m[1] : null, part: config.part || null }, '*');
+        }
+        navRequest = null;
+    });
     api.on(is2004 ? 'Commit' : 'LMSCommit', function () { tellPortal('scorm-committed'); });
 
     // The portal page asks for a last commit before the learner leaves with its Exit button.

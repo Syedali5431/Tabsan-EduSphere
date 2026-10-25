@@ -1,6 +1,9 @@
 /*
  * Plan M13 — the portal page around the SCORM player: shows "progress saved" when the package finishes, and asks the
  * player for a last commit before the Exit button leaves the page.
+ * Packages in parts have a contents list with Previous / Next. Without sequencing the page opens the part the learner
+ * picks (SCORM 1.2 prerequisites can keep parts locked). With SCORM 2004 sequencing the package decides: Next, Previous,
+ * a part from the list and the SCO's own navigation requests are sent to the server, which says what to open.
  */
 (function () {
     'use strict';
@@ -11,48 +14,119 @@
     var exit = page.querySelector('[data-scorm-exit]');
     var leaving = null;
 
-    // Multi-part packages: the contents list, Previous / Next, and each part's status after it commits.
     var partsBox = page.querySelector('[data-scorm-parts]');
     var playerUrl = partsBox ? partsBox.getAttribute('data-player-url') : null;
-    var items = partsBox ? Array.prototype.slice.call(partsBox.querySelectorAll('[data-part]')) : [];
-    var switching = null;
+    var sequenced = !!partsBox && partsBox.getAttribute('data-sequenced') === 'true';
+    var note = partsBox ? partsBox.querySelector('[data-scorm-nav-message]') : null;
+    var pending = null;   // what to do once the open part has saved
+    var busy = false;
     var statusText = { passed: t('Passed'), failed: t('Failed'), completed: t('Completed'), incomplete: t('In progress') };
     var statusClass = { passed: 'bg-success', completed: 'bg-success', failed: 'bg-danger', incomplete: 'bg-warning text-dark' };
 
-    function currentIndex() {
-        for (var i = 0; i < items.length; i++) if (items[i].classList.contains('active')) return i;
-        return 0;
+    function items() { return partsBox ? Array.prototype.slice.call(partsBox.querySelectorAll('[data-part]')) : []; }
+
+    function find(id) {
+        return partsBox.querySelector('[data-part="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
     }
 
-    function show(id) {
-        items.forEach(function (li) {
+    function say(text, value) {
+        if (!note) return;
+        note.textContent = text ? t(text).replace('{0}', value || '') : '';
+        note.classList.toggle('d-none', !text);
+    }
+
+    function mark(id) {
+        items().forEach(function (li) {
             var on = li.getAttribute('data-part') === id;
             li.classList.toggle('active', on);
             if (on) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
         });
-        if (finished) finished.classList.add('d-none');
-        frame.src = playerUrl + '?part=' + encodeURIComponent(id);
     }
 
-    // Save the part that is open, then open the next one.
-    function open(id) {
-        if (!frame || !id) return;
-        switching = id;
-        frame.contentWindow.postMessage({ type: 'scorm-exit' }, '*');
-        setTimeout(function () { if (switching) { var next = switching; switching = null; show(next); } }, 1500);
+    function load(id) {
+        if (id) mark(id);
+        if (finished) finished.classList.add('d-none');
+        frame.src = playerUrl + (id ? '?part=' + encodeURIComponent(id) : '');
+    }
+
+    // Statuses, scores and (sequenced or with prerequisites) which parts may be opened now.
+    function apply(parts) {
+        (parts || []).forEach(function (p) {
+            if (p.isHeading) return;
+            var li = find(p.id);
+            if (!li) return;
+            var badge = li.querySelector('[data-part-status]');
+            if (badge) {
+                badge.className = 'badge rounded-pill ' + (statusClass[p.status] || 'bg-secondary');
+                badge.textContent = (statusText[p.status] || t('Not started')) + (p.scorePercent != null ? ' · ' + Math.round(p.scorePercent * 10) / 10 + '%' : '');
+            }
+            var button = li.querySelector('[data-part-open]');
+            var available = p.available !== false;
+            li.setAttribute('data-available', available ? 'true' : 'false');
+            if (button) {
+                button.disabled = !available;
+                button.title = available || !p.reason ? '' : t(p.reason).replace('{0}', p.reasonArg || '');
+                button.textContent = (available ? '' : '🔒 ') + p.title;
+            }
+            if (p.isCurrent) mark(p.id);
+        });
     }
 
     function refresh() {
         if (!playerUrl) return;
-        fetch(playerUrl + 'parts', { credentials: 'omit', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).then(function (parts) {
-            (parts || []).forEach(function (p) {
-                var li = partsBox.querySelector('[data-part="' + (window.CSS && CSS.escape ? CSS.escape(p.id) : p.id) + '"]');
-                var badge = li && li.querySelector('[data-part-status]');
-                if (!badge) return;
-                badge.className = 'badge rounded-pill ' + (statusClass[p.status] || 'bg-secondary');
-                badge.textContent = (statusText[p.status] || t('Not started')) + (p.scorePercent != null ? ' · ' + Math.round(p.scorePercent * 10) / 10 + '%' : '');
-            });
-        }).catch(function () { /* the list keeps its last state */ });
+        fetch(playerUrl + 'parts', { credentials: 'omit', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).then(apply)
+            .catch(function () { /* the list keeps its last state */ });
+    }
+
+    // Save the part that is open, then carry on (Next/Previous/choice), or carry on at once if the player does not answer.
+    function afterSave(action) {
+        if (!frame) return;
+        pending = action;
+        frame.contentWindow.postMessage({ type: 'scorm-exit' }, '*');
+        setTimeout(function () { if (pending === action) { pending = null; action(); } }, 1500);
+    }
+
+    // Sequenced packages: the server's sequencing says what to open.
+    function navigate(request, target) {
+        if (busy) return;
+        busy = true;
+        say('');
+        fetch(playerUrl + 'navigate', {
+            method: 'POST', credentials: 'omit', cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request: request, target: target || null })
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); }).then(function (result) {
+            apply(result.parts);
+            if (result.partId) load(result.partId);
+            else if (result.ended) {
+                say(result.message, result.messageArg);
+                if (finished) finished.classList.remove('d-none');
+                load(null);
+            } else if (result.message) say(result.message, result.messageArg);
+        }).catch(function () {
+            say('The package could not be reached. Try again.');
+        }).then(function () { busy = false; });
+    }
+
+    function openPart(id) {
+        var li = find(id);
+        if (li && li.getAttribute('data-available') === 'false') {
+            var b = li.querySelector('[data-part-open]');
+            say(b && b.title ? b.title : 'Finish the parts it depends on first.');
+            return;
+        }
+        say('');
+        afterSave(function () { refresh(); load(id); });
+    }
+
+    function step(delta) {
+        if (sequenced) { afterSave(function () { navigate(delta > 0 ? 'continue' : 'previous'); }); return; }
+        var list = items();
+        var i = 0;
+        for (var k = 0; k < list.length; k++) if (list[k].classList.contains('active')) i = k;
+        var j = i + delta;
+        if (j < 0 || j >= list.length) return;
+        openPart(list[j].getAttribute('data-part'));
     }
 
     if (partsBox) {
@@ -60,30 +134,39 @@
         if (frame) frame.addEventListener('load', refresh);
         partsBox.addEventListener('click', function (e) {
             var button = e.target.closest('[data-part-open]');
-            if (button) open(button.getAttribute('data-part-open'));
+            if (!button || button.disabled) return;
+            var id = button.getAttribute('data-part-open');
+            if (sequenced) afterSave(function () { navigate('choice', id); }); else openPart(id);
         });
         var prev = partsBox.querySelector('[data-scorm-prev]');
         var next = partsBox.querySelector('[data-scorm-next]');
-        if (prev) prev.addEventListener('click', function () { var i = currentIndex(); if (i > 0) open(items[i - 1].getAttribute('data-part')); });
-        if (next) next.addEventListener('click', function () { var i = currentIndex(); if (i < items.length - 1) open(items[i + 1].getAttribute('data-part')); });
+        if (prev) prev.addEventListener('click', function () { step(-1); });
+        if (next) next.addEventListener('click', function () { step(1); });
     }
 
     window.addEventListener('message', function (event) {
         if (!frame || event.source !== frame.contentWindow || !event.data) return;
-        if (event.data.type === 'scorm-finished' && finished) finished.classList.remove('d-none');
-        if (event.data.type === 'scorm-committed' || event.data.type === 'scorm-finished') refresh();
-        if (event.data.type === 'scorm-exit-ready' && switching) {
-            var id = switching;
-            switching = null;
-            refresh();
-            show(id);
+        var type = event.data.type;
+        if (type === 'scorm-exit-ready' && pending) {
+            var action = pending;
+            pending = null;
+            action();
             return;
         }
-        if (event.data.type === 'scorm-exit-ready' && leaving) {
+        if (type === 'scorm-exit-ready' && leaving) {
             var target = leaving;
             leaving = null;
             window.location.href = target;
+            return;
         }
+        if (pending) return; // the open part is being replaced: its last messages do not count
+        if (type === 'scorm-finished' && finished) finished.classList.remove('d-none');
+        if (type === 'scorm-committed' || type === 'scorm-finished') refresh();
+        // A SCO asked to move on (or to leave) when it ended — only the part that is open now (not one being replaced).
+        var active = partsBox ? partsBox.querySelector('[data-part].active') : null;
+        var openId = active ? active.getAttribute('data-part') : null;
+        if (type === 'scorm-nav' && sequenced && event.data.request && (!event.data.part || !openId || event.data.part === openId))
+            navigate(event.data.request, event.data.target);
     });
 
     // Load the player only now, so its first messages (a short package can finish at once) are not missed.

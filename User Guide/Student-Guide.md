@@ -130,6 +130,8 @@ Install the EduSphere app from your institution's store link and sign in with yo
 
 Some courses contain interactive lessons (SCORM packages). Open one from the course page or its module and press **Start**. Your place is saved: **Continue** takes you back where you stopped. When you finish, the package can be opened again for **Review**; if your teacher allows more attempts, **Start a new attempt** — your best score counts. Use **Exit** on the player page to leave (your progress is saved first). A package in parts shows a contents list beside the lesson with each part's status; move between parts with it or with **Previous** / **Next** — the part you leave is saved first.
 
+Some packages set their own order ("This package sets the order" above the contents). Then **Next** opens whatever the package decides comes next, and parts with a padlock open only when the package allows — usually once you have passed the part before; point at a locked part to see why. A failed quiz may send you back to its lesson, and a test may allow only a set number of tries. When the package has nothing more to open, the player says "You have reached the end of this package" and your result is saved. If the player says a part could not be opened just now, reload the page — your progress is saved.
+
 ## 6. Quizzes
 
 Path: Sidebar > Quizzes

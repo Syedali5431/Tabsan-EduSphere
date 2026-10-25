@@ -403,6 +403,8 @@ module.exports = [
         intro: [
           'SCORM packages are interactive lessons exported from authoring tools such as Articulate Storyline or Rise, iSpring, Adobe Captivate or Lectora, as a SCORM 1.2 or SCORM 2004 zip file. EduSphere plays them inside the portal and records each learner\'s progress, status, score and time, and can send the best score to the gradebook.',
           'A package may have several parts (for example one lesson per topic, then a quiz). Students then see a contents list beside the lesson showing each part\'s status, and move between parts with it or with **Previous** and **Next**. The package is complete when every part is; its score is the average of the parts\' scores.',
+          'Some SCORM 2004 packages set their own order (**sequencing**). The package then decides which part opens next: it can keep parts locked (shown with a padlock) until earlier ones are passed, send a learner back to a lesson after a failed quiz, pick a random test, or allow only a set number of tries at a test. For such packages the player shows "This package sets the order" above the contents; **Next** and **Previous** ask the package what comes next, and the contents list opens only the parts the package allows (point at a locked part to see why). When there is nothing more to open, the player says "You have reached the end of this package". The package\'s own rules also decide whether it is completed or passed, and its score.',
+          'A SCORM 1.2 package can make a part depend on others (prerequisites): that part stays locked until they are done.',
         ],
         steps: [
           'Faculty: open **LMS Manage** for the course and, under **SCORM packages**, click **Upload a SCORM package**.',
@@ -411,11 +413,14 @@ module.exports = [
           'Students: open the package from the course page or its module and click **Start**. Your place is saved: **Continue** takes you back where you stopped. Use **Exit** on the player page to leave (your progress is saved first).',
           'When you finish, the package opens again for **Review**; if more attempts are allowed, **Start a new attempt** – your best score counts.',
         ],
-        figs: [['flow:scorm-student/1', 'A student\'s SCORM package page'], ['flow:scorm-student/2', 'A package in parts: contents list with each part\'s status'], ['flow:scorm-teacher/1', 'SCORM package report (Faculty)']],
+        figs: [['flow:scorm-student/1', 'A student\'s SCORM package page'], ['flow:scorm-student/2', 'A package in parts: contents list with each part\'s status'], ['flow:scorm-student/3', 'A package that sets its own order: locked parts open when the package allows'], ['flow:scorm-teacher/1', 'SCORM package report (Faculty)']],
         tips: [
           'Packages up to 500 MB are accepted by default. A package that links to content on other websites, or whose files are missing, is refused with an explanation.',
           'Packages run in an isolated area so their scripts cannot read portal pages or cookies.',
           'Pages in a package that do not report to the portal (assets) count as complete once opened. A package of such pages only has no score.',
+          'Packages uploaded before parts and sequencing were supported are read again automatically, so their parts and order rules apply without uploading them again; progress already made is kept.',
+          '**Preview** and **Review** open any part freely, whatever order the package sets.',
+          'If the player says a part could not be opened just now, reload the page – your progress is saved.',
         ],
       },
       {

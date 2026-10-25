@@ -38,9 +38,12 @@ public sealed class ScormPlayController : Controller
         if (!(Request.Path.Value ?? "").EndsWith('/')) return Redirect(Request.PathBase + Request.Path + "/" + Request.QueryString);
         Isolate(shell: true);
         using var response = await Client().GetAsync(ApiPath(token, string.IsNullOrEmpty(part) ? "" : "?part=" + Uri.EscapeDataString(part)), ct);
-        if (!response.IsSuccessStatusCode) return View("Expired");
+        if (response.StatusCode == HttpStatusCode.NotFound) return View("Expired");
+        if (!response.IsSuccessStatusCode) return View("Unavailable");
         var play = await response.Content.ReadFromJsonAsync<ScormPlayResponse>(Json, ct);
         if (play is null) return View("Expired");
+        // A sequenced package with nothing to open now (it has ended, or the learner has to choose).
+        if (play.LaunchPath.Length == 0) return View("Ended", new ScormEndedModel { Title = play.Title, Message = play.Message, MessageArg = play.MessageArg, Ended = play.Ended });
         return View("Shell", new ScormShellModel
         {
             Title = play.Title,
@@ -48,9 +51,15 @@ public sealed class ScormPlayController : Controller
             Mode = play.Mode,
             LaunchUrl = "content/" + LaunchUrl(play.LaunchPath),
             CmiJson = play.CmiJson,
-            // Multi-part packages: each part commits to its own address (the part is not in the query, which the runtime extends).
-            CommitUrl = play.Parts is { Count: > 1 } && play.PartId is { } partId ? "commit/" + Uri.EscapeDataString(partId) : "commit",
-            PartId = play.PartId
+            // Multi-part packages: each part commits to its own address (the part is not in the query, which the runtime extends);
+            // sequenced parts add their attempt number, so a late commit from a frame being replaced is ignored.
+            CommitUrl = play.PartId is { } partId && (play.Parts is { Count: > 1 } || play.Sequenced)
+                ? "commit/" + Uri.EscapeDataString(partId) + (play.Sequenced ? "/" + play.PartAttempt : "")
+                : "commit",
+            PartId = play.PartId,
+            Sequenced = play.Sequenced,
+            CanContinue = play.CanContinue,
+            CanPrevious = play.CanPrevious
         });
     }
 
@@ -77,17 +86,31 @@ public sealed class ScormPlayController : Controller
     /// <summary>The runtime's commit (JSON, or text/plain from sendBeacon) relayed to the API; answers { result, errorCode }.</summary>
     [HttpPost("commit")]
     [HttpPost("commit/{part}")]
+    [HttpPost("commit/{part}/{n:int}")]
     [IgnoreAntiforgeryToken]
     [RequestSizeLimit(4_500_000)]
-    public async Task<IActionResult> Commit(string token, string? part, [FromQuery] bool final, CancellationToken ct)
+    public async Task<IActionResult> Commit(string token, string? part, int? n, [FromQuery] bool final, CancellationToken ct)
     {
         Isolate(shell: false);
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync(ct);
-        var path = "/commit" + (string.IsNullOrEmpty(part) ? "" : "/" + Uri.EscapeDataString(part)) + (final ? "?final=true" : "");
+        var path = "/commit" + (string.IsNullOrEmpty(part) ? "" : "/" + Uri.EscapeDataString(part)) + (n is { } attempt ? "/" + attempt : "") + (final ? "?final=true" : "");
         using var response = await Client().PostAsync(ApiPath(token, path), new StringContent(body, Encoding.UTF8, "application/json"), ct);
         var answer = await response.Content.ReadAsStringAsync(ct);
         return new ContentResult { StatusCode = (int)response.StatusCode, Content = answer, ContentType = "application/json" };
+    }
+
+    /// <summary>Sequenced packages: a navigation request (Next, Previous, a part from the contents, or a SCO's request) relayed to the API.</summary>
+    [HttpPost("navigate")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> Navigate(string token, CancellationToken ct)
+    {
+        Isolate(shell: false);
+        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        var body = await reader.ReadToEndAsync(ct);
+        if (body.Length > 4000) return BadRequest();
+        using var response = await Client().PostAsync(ApiPath(token, "/navigate"), new StringContent(body, Encoding.UTF8, "application/json"), ct);
+        return new ContentResult { StatusCode = (int)response.StatusCode, Content = await response.Content.ReadAsStringAsync(ct), ContentType = "application/json" };
     }
 
     /// <summary>Multi-part packages: each part's status (the player page refreshes its contents list with it).</summary>

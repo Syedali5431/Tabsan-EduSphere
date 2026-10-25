@@ -35,6 +35,7 @@ async function demoIds() {
   const packages = await get('faculty.it1', `scorm/offerings/${out.offering}/packages`) ?? [];
   out.scormParts = packages.find(p => p.title.includes('course in parts'))?.id;
   out.scormLessons = packages.find(p => p.title.includes('lessons and quizzes'))?.id;
+  out.scormForced = packages.find(p => p.title.includes('Forced Order'))?.id;
   out.program = (await get('faculty.it1', 'outcomes/programs')).find(p => p.code === 'BSCS')?.id;
   return out;
 }
@@ -254,7 +255,9 @@ const flows = [
   ]),
   flow('scorm-student', 'bscs8s1', [
     { do: [s.go(i => `/Portal/Scorm/${i.scormLessons}`)], shot: 'package', caption: 'A student\'s SCORM package page: status, attempts and Start / Continue / Review.' },
-    { do: [s.click('Continue', { nav: true }), s.wait(4000)], shot: 'player', caption: 'A package in parts: the contents list shows each part\'s status; Previous and Next move between parts.' },
+    { do: [s.go(i => `/Portal/Scorm/${i.scormParts}`), s.click(/^(Continue|Start|Review)$/, { nav: true }), s.wait(4000)], shot: 'player', caption: 'A package in parts: the contents list shows each part\'s status; Previous and Next move between parts.' },
+    // Starts the Forced Order sample for bscs8s1 the first time it runs.
+    { do: [s.go(i => `/Portal/Scorm/${i.scormForced}`), s.click(/^(Continue|Start)$/, { nav: true }), s.wait(4000)], shot: 'sequenced', caption: 'A package that sets its own order (SCORM 2004 sequencing): parts stay locked until the package opens them, and Next asks the package what comes next.' },
   ]),
   flow('push', 'bscs8s1', [
     { do: [s.go('/Portal/Notifications'), s.scrollTo('this device')], shot: 'device', caption: 'Notifications: turn on notifications for this phone or computer, and choose which ones you get.' },

@@ -6032,7 +6032,9 @@ This section states the product requirements added by Plans K, L and M (October 
 - **FR-M13.2** Students launch packages from courses or modules; progress is saved and resumed; finished attempts reopen for review; the best score goes to the gradebook through the package's assignment and counts for module requirements.
 - **FR-M13.3** The player runs from sealed, time-limited links without the portal session and can be served from a separate content origin.
 - **FR-M13.4** Minimal xAPI 1.0.3 Learning Record Store (Basic credentials created by administrators, statement validation, voiding, queries).
-- **FR-M13.5** Packages in parts: every launchable item of the default organization is a part (up to 200) that the learner opens from a contents list (status per part, Previous/Next); each part keeps its own resume data; the attempt is complete when every part is, failed if a part failed, passed when every SCO passed (a package of pages only has no pass/fail), its score is the average of the parts' scores and its time their sum. SCORM 2004 sequencing rules are not applied (the learner chooses the part).
+- **FR-M13.5** Packages in parts: every launchable item of the default organization is a part (up to 200) that the learner opens from a contents list (status per part, Previous/Next); each part keeps its own resume data; the attempt is complete when every part is, failed if a part failed, passed when every SCO passed (a package of pages only has no pass/fail), its score is the average of the parts' scores and its time their sum.
+- **FR-M13.6** SCORM 2004 sequencing: when a package's manifest has sequencing rules, the package decides which part opens (start, Next, Previous, a part chosen from the contents, or the SCO's own navigation request) — pre-condition rules (skip, disabled, hidden from choice, stop forward traversal), choice/flow/forward-only control, post-condition and exit rules (retry, exit parent, exit all, continue, previous), attempt limits, randomized selection, rollup rules and global objectives; locked parts show why; the attempt's completion, success and score come from the package's rollup; staff preview and review open every part. SCORM 1.2 prerequisites lock parts until met.
+- **FR-M13.7** Packages uploaded before parts and sequencing were supported are read again automatically when the API starts; their attempts keep the progress already made.
 
 ### 26.16 Accessibility, scale and the public API (M14)
 - **FR-M14.1 Accessibility:** every portal page meets WCAG 2.1 AA in automated checks (axe-core on 142 staff/student pages and the login page; serious or critical findings fail the test run); keyboard operation without traps with a visible focus indicator; an Accessibility Conformance Report (VPAT 2.5 structure) is published with its known limitations.
@@ -6052,6 +6054,7 @@ This section states the product requirements added by Plans K, L and M (October 
 Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS-Parity-Gap-Closure.md` (unit, integration, web-integration and Playwright tests per phase). Final sweep (2026-10-24): unit 597/597, integration 367/368 (1 long-standing skip), web-integration 93/93, contract 1/1 and the Plan M Playwright specs 41/41 (SSO, assignments, grading, localisation, live classes, LTI, module progress, outcomes, PWA, SCORM, similarity, accessibility).
 
 - 2026-10-25: unit 638/638, integration 371/372 (1 long-standing skip), web-integration 98/98, contract 1/1, Plan M Playwright specs 41/41. Real-system checks: single sign-on against a Keycloak 26.8 identity provider over OIDC and SAML (ID and email linking, role refusal, signed requests, encrypted assertions — `User Guide/SSO-Setup-Guide.md` §9.1); Rustici *Golf Explained* SCORM 1.2/2004 packages (single SCO, 18 parts, 8 SCOs) played as a student with scores reaching the gradebook. User manual v1.5 (`User Guide/Tabsan-EduSphere-User-Manual.pdf`, 154 pages, 121 screenshots) documents every Plan M feature.
+- 2026-10-25 (SCORM sequencing): Tests: unit 658/658, integration 373/374 (1 long-standing skip), web-integration 100/100, contract 1/1, Plan M Playwright specs 41/41. Rustici sequencing samples (Forced Order, Simple Remediation, Random Test, Pre or Post Test) played as students in the running portal. User manual v1.6 (155 pages).
 
 ### 26.19 Open items (need external systems or devices)
 - SSO: a sign-in against an institution's own Entra ID / Google Workspace tenant (OIDC and SAML verified with Keycloak).
@@ -6059,7 +6062,7 @@ Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS
 - LTI: checks with vendor tools that need accounts (H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification (needs membership; readiness report done).
 - Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
 - Localisation: native-speaker review of Urdu and Arabic texts.
-- SCORM: packages exported by commercial authoring tools (Articulate, iSpring, Captivate) and SCORM 2004 sequencing rules (packages in parts are supported; the Rustici sample packages are verified).
+- SCORM: packages exported by commercial authoring tools (Articulate, iSpring, Captivate); packages in parts and SCORM 2004 sequencing are verified with the Rustici sample packages.
 - M14: the 5,000-user staging load run, a run against live Azure Blob/S3 accounts, and accessibility testing with assistive-technology users.
 
 ---

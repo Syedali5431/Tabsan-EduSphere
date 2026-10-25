@@ -73,6 +73,7 @@ public class Phase31Stage2SecurityHardeningTests
             // so content can run on a cookie-less content origin.
             "ScormController.Commit",
             "ScormController.Content",
+            "ScormController.Navigate",
             "ScormController.Parts",
             "ScormController.Play",
             // Plan M13.2: xAPI activity providers use HTTP Basic LRS credentials checked in the action ("about" is public by spec).

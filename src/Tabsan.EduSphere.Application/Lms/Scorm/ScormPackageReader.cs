@@ -10,11 +10,11 @@ namespace Tabsan.EduSphere.Application.Lms.Scorm;
 public sealed class ScormPackageException(string message) : Exception(message);
 
 /// <summary>
-/// What the manifest says: version, title, the SCO to launch first and its passing score, and every launchable part of the
-/// default organization in order (more than one for multi-part packages).
+/// What the manifest says: version, title, the SCO to launch first and its passing score, every launchable part of the
+/// default organization in order (more than one for multi-part packages), and its SCORM 2004 sequencing, if any.
 /// </summary>
 public sealed record ScormManifest(ScormVersion Version, string? Identifier, string? Title, string LaunchPath, decimal? MasteryScore, int ScoCount,
-    IReadOnlyList<ScormPart>? Parts = null);
+    IReadOnlyList<ScormPart>? Parts = null, SeqTree? Sequencing = null);
 
 /// <summary>A file to extract: its path in the package (after the base folder) and its zip entry.</summary>
 public sealed record ScormPackageEntry(string Path, ZipArchiveEntry Entry);
@@ -147,17 +147,24 @@ public static class ScormPackageReader
         if (launchable.Count > ScormPackage.MaxParts)
             throw new ScormPackageException($"The package has more than {ScormPackage.MaxParts} parts.");
         var ids = new HashSet<string>(StringComparer.Ordinal);
+        var partIds = new Dictionary<XElement, string>();
         var parts = launchable.Select((i, n) =>
         {
             var res = byId[Attr(i, "identifierref")!];
             var id = Attr(i, "identifier") is { Length: > 0 and <= 100 } given ? given : $"part-{n + 1}";
             while (!ids.Add(id)) id += "-" + (n + 1);
+            partIds[i] = id;
             var partTitle = Child(i, "title")?.Value.Trim() is { Length: > 0 } pt ? (pt.Length > 200 ? pt[..200] : pt) : $"Part {n + 1}";
-            return new ScormPart(id, partTitle, LaunchOf(root, resources, res, i), IsSco(res), MasteryScore(i, version));
+            // SCORM 1.2: adlcp:prerequisites (AICC script) decides when the learner may open the part.
+            var prerequisites = version == ScormVersion.Scorm12 && i.Elements().FirstOrDefault(e => e.Name.LocalName == "prerequisites")?.Value.Trim() is { Length: > 0 and <= 2000 } p ? p : null;
+            return new ScormPart(id, partTitle, LaunchOf(root, resources, res, i), IsSco(res), MasteryScore(i, version), prerequisites);
         }).ToList();
+        // SCORM 2004: the package's own sequencing decides what the learner may open and what comes next.
+        var sequencing = version == ScormVersion.Scorm2004 && organization is not null && parts.Count > 0
+            ? ScormSequencingReader.Read(organization, root, partIds) : null;
 
         var title = (organization is null ? null : Child(organization, "title")?.Value.Trim()) is { Length: > 0 } t ? t : null;
-        return new ScormManifest(version, Attr(root, "identifier"), title, launch, MasteryScore(item, version), Math.Max(1, scoItems.Count), parts);
+        return new ScormManifest(version, Attr(root, "identifier"), title, launch, MasteryScore(item, version), Math.Max(1, scoItems.Count), parts, sequencing);
     }
 
     /// <summary>A resource's launch path (xml:base applied, the item's parameters added), checked to stay inside the package.</summary>

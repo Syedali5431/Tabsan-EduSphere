@@ -31,10 +31,14 @@ public sealed record ScormUpdateRequest(string Title, int MaxAttempts, bool IsPu
 
 public sealed record ScormPackageResponse(Guid Id, Guid OfferingId, string Title, string Version, string LaunchPath, int FileCount, long SizeBytes,
     decimal? MasteryScore, int MaxAttempts, bool IsPublished, bool Graded, decimal MaxMarks, Guid? AssignmentId, DateTime CreatedAt,
-    int ScoCount, ScormLearnerSummary? Mine, int PartCount = 1);
+    int ScoCount, ScormLearnerSummary? Mine, int PartCount = 1, bool Sequenced = false);
 
-/// <summary>One part of a package for the player's contents list: its status for this attempt and its score.</summary>
-public sealed record ScormPartStatus(string Id, string Title, bool IsSco, string Status, decimal? ScorePercent);
+/// <summary>
+/// One line of the player's contents list: a part with its status for this attempt and its score, whether the learner may
+/// open it now (and why not), its depth, and — for sequenced packages — group headings and the part being worked on.
+/// </summary>
+public sealed record ScormPartStatus(string Id, string Title, bool IsSco, string Status, decimal? ScorePercent, bool Available = true,
+    string? Reason = null, int Depth = 0, bool IsHeading = false, bool IsCurrent = false, string? ReasonArg = null);
 
 /// <summary>A learner's state on a package (their attempts so far).</summary>
 public sealed record ScormLearnerSummary(int AttemptsUsed, string? Status, decimal? BestScorePercent, bool CanStartNew, DateTime? LastActivityAt);
@@ -42,11 +46,21 @@ public sealed record ScormLearnerSummary(int AttemptsUsed, string? Status, decim
 public sealed record ScormLaunchRequest(bool NewAttempt);
 
 public sealed record ScormLaunchResponse(string Token, Guid PackageId, string Title, string Version, string LaunchPath, int AttemptNumber, string Mode,
-    int AttemptsUsed, int MaxAttempts, IReadOnlyList<ScormPartStatus>? Parts = null);
+    int AttemptsUsed, int MaxAttempts, IReadOnlyList<ScormPartStatus>? Parts = null, bool Sequenced = false);
 
 /// <summary>What the player shell needs: the part (SCO) to load and the CMI data to start from; the parts for the contents list.</summary>
+/// For sequenced packages the package decides the part (Ended: nothing more to open), and whether Next/Previous apply.
 public sealed record ScormPlayResponse(Guid PackageId, string Title, string Version, string LaunchPath, string Mode, int AttemptNumber, string CmiJson,
-    string? PartId = null, string? PartTitle = null, bool IsSco = true, IReadOnlyList<ScormPartStatus>? Parts = null);
+    string? PartId = null, string? PartTitle = null, bool IsSco = true, IReadOnlyList<ScormPartStatus>? Parts = null, bool Sequenced = false,
+    bool Ended = false, string? Message = null, bool CanContinue = true, bool CanPrevious = true, IReadOnlyList<string>? HideLmsUi = null,
+    int PartAttempt = 0, string? MessageArg = null);
+
+/// <summary>A navigation request from the player page or from a SCO (continue, previous, choice, exit, exitAll, suspendAll…).</summary>
+public sealed record ScormNavigateRequest(string Request, string? Target);
+
+/// <summary>The part to open next (null: stay), whether the package has ended, a message for the learner, and the refreshed contents.</summary>
+public sealed record ScormNavigateResponse(string? PartId, bool Ended, string? Message, IReadOnlyList<ScormPartStatus> Parts, bool CanContinue, bool CanPrevious,
+    string? MessageArg = null);
 
 public sealed record ScormCommitResponse(bool Result, int ErrorCode);
 
@@ -90,9 +104,13 @@ public interface IScormRepository
 {
     Task<ScormPackage?> GetPackageAsync(Guid packageId, CancellationToken ct = default);
     Task<IReadOnlyList<ScormPackage>> GetPackagesAsync(Guid offeringId, CancellationToken ct = default);
+    /// <summary>Packages (not removed) whose structure was read under older rules.</summary>
+    Task<IReadOnlyList<ScormPackage>> GetPackagesBelowStructureVersionAsync(int version, CancellationToken ct = default);
     Task<IReadOnlyList<ScormAttempt>> GetAttemptsAsync(Guid packageId, Guid? studentProfileId, CancellationToken ct = default);
     Task<IReadOnlyList<ScormAttempt>> GetAttemptsForStudentAsync(IReadOnlyCollection<Guid> packageIds, Guid studentProfileId, CancellationToken ct = default);
     Task<ScormAttempt?> GetAttemptAsync(Guid attemptId, CancellationToken ct = default);
+    /// <summary>Reads an attempt again from the database (another request saved it first), dropping unsaved changes.</summary>
+    Task ReloadAsync(ScormAttempt attempt, CancellationToken ct = default);
     Task<bool> IsEnrolledAsync(Guid offeringId, Guid studentProfileId, CancellationToken ct = default);
     Task<ScormLearnerInfo?> GetLearnerAsync(Guid studentProfileId, CancellationToken ct = default);
     Task<Guid?> GetStudentProfileIdAsync(Guid userId, CancellationToken ct = default);

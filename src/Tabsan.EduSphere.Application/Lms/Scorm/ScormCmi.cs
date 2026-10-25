@@ -66,6 +66,25 @@ public static partial class ScormCmi
         }
     }
 
+    /// <summary>SCORM 2004 cmi.objectives (an array, or an object keyed by index): id, success, scaled score and completion of each.</summary>
+    public static IReadOnlyList<SeqObjectiveReport> Objectives(JsonObject cmi)
+    {
+        var list = new List<SeqObjectiveReport>();
+        var items = cmi["objectives"] switch
+        {
+            JsonArray array => array.OfType<JsonObject>(),
+            JsonObject obj => obj.Where(kv => int.TryParse(kv.Key, out _)).Select(kv => kv.Value).OfType<JsonObject>(),
+            _ => []
+        };
+        foreach (var o in items)
+        {
+            if (Text(o["id"]) is not { Length: > 0 } id) continue;
+            list.Add(new SeqObjectiveReport(id, Normalize(Text(o["success_status"]), ["passed", "failed", "unknown"]),
+                Number((o["score"] as JsonObject)?["scaled"]), Normalize(Text(o["completion_status"]), ["completed", "incomplete", "not attempted", "unknown"])));
+        }
+        return list;
+    }
+
     /// <summary>The CMI object a launch starts from. On resume the stored object is reused with the session values reset.</summary>
     public static string Initial(ScormVersion version, ScormAttempt attempt, string learnerId, string learnerName, decimal? masteryScore, bool review)
         => Initial(version, attempt.CmiJson, attempt.CommitCount, attempt.Exit, attempt.TotalSeconds, learnerId, learnerName, masteryScore, review);

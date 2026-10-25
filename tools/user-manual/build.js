@@ -217,7 +217,7 @@ const glossary = [
   const logoMark = await sharp(fs.readFileSync(LOGO_DIR + '/tabsan-mark.png')).resize({ width: 96 }).png().toBuffer();
   const hero = await loadImage(resolveImage('testadmin:Departments'));
   const today = '25 October 2026';
-  const VERSION = '1.5';
+  const VERSION = '1.6';
 
   const band = (children, padTop, padBottom) => new d.Table({
     width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [BODY_W],

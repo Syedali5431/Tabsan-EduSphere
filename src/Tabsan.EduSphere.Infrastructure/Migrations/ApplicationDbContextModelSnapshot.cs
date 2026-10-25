@@ -5170,6 +5170,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasPrecision(7, 6)
                         .HasColumnType("decimal(7,6)");
 
+                    b.Property<string>("SequencingStateJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
 
@@ -5260,8 +5263,14 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<int>("ScoCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("SequencingJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<long>("SizeBytes")
                         .HasColumnType("bigint");
+
+                    b.Property<int>("StructureVersion")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()

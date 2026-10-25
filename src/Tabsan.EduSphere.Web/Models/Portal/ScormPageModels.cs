@@ -12,9 +12,22 @@ public sealed class ScormShellModel
     public string Mode { get; set; } = "normal";
     public string LaunchUrl { get; set; } = "";
     public string CmiJson { get; set; } = "{}";
-    /// <summary>Where the runtime commits ("commit", or "commit/{part}" for a part of a multi-part package).</summary>
+    /// <summary>Where the runtime commits ("commit", "commit/{part}" for a part of a multi-part package, "commit/{part}/{attempt}" when sequenced).</summary>
     public string CommitUrl { get; set; } = "commit";
     public string? PartId { get; set; }
+    /// <summary>SCORM 2004 sequencing decides the parts: the SCO's navigation requests go to the page; Next / Previous validity for the SCO.</summary>
+    public bool Sequenced { get; set; }
+    public bool CanContinue { get; set; } = true;
+    public bool CanPrevious { get; set; } = true;
+}
+
+/// <summary>The player frame when a sequenced package has nothing to open (it has ended, or the learner has to choose a part).</summary>
+public sealed class ScormEndedModel
+{
+    public string Title { get; set; } = "";
+    public string? Message { get; set; }
+    public string? MessageArg { get; set; }
+    public bool Ended { get; set; }
 }
 
 /// <summary>"SCORM packages" card of a course: students' list, or the teacher's management.</summary>
@@ -47,6 +60,8 @@ public sealed class ScormPlayerPageModel
     public Guid? ModuleItemId { get; set; }
     /// <summary>The parts of a multi-part package (contents list); one entry for a one-part package.</summary>
     public List<ScormPartStatus> Parts { get; set; } = [];
+    /// <summary>The package's SCORM 2004 sequencing decides what opens (Next, Previous and the contents ask it).</summary>
+    public bool Sequenced { get; set; }
 }
 
 public sealed class ScormReportPageModel

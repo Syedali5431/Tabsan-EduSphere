@@ -21,6 +21,8 @@ internal sealed class ScormPackageConfiguration : IEntityTypeConfiguration<Scorm
         b.Property(x => x.MaxMarks).HasPrecision(7, 2);
         b.Property(x => x.PartsJson); // nvarchar(max): the parts of a multi-part package
         b.Ignore(x => x.Parts);
+        b.Property(x => x.SequencingJson); // nvarchar(max): the SCORM 2004 activity tree
+        b.Ignore(x => x.Sequencing);
         b.HasIndex(x => new { x.OfferingId, x.IsRemoved }).HasDatabaseName("IX_scorm_packages_offering");
     }
 }
@@ -44,6 +46,7 @@ internal sealed class ScormAttemptConfiguration : IEntityTypeConfiguration<Scorm
         b.Property(x => x.Exit).HasMaxLength(20);
         b.Property(x => x.CmiJson); // nvarchar(max), capped in the entity
         b.Property(x => x.PartsStateJson); // nvarchar(max): each part's data (multi-part packages)
+        b.Property(x => x.SequencingStateJson); // nvarchar(max): sequencing state (sequenced packages)
         b.HasIndex(x => new { x.PackageId, x.StudentProfileId, x.Number }).IsUnique().HasDatabaseName("IX_scorm_attempts_package_student_number");
         b.HasIndex(x => x.StudentProfileId).HasDatabaseName("IX_scorm_attempts_student");
     }

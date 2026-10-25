@@ -19,6 +19,9 @@ public sealed class ScormRepository : IScormRepository
     public async Task<IReadOnlyList<ScormPackage>> GetPackagesAsync(Guid offeringId, CancellationToken ct = default)
         => await _db.ScormPackages.Where(p => p.OfferingId == offeringId).OrderBy(p => p.CreatedAt).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<ScormPackage>> GetPackagesBelowStructureVersionAsync(int version, CancellationToken ct = default)
+        => await _db.ScormPackages.Where(p => !p.IsRemoved && p.StructureVersion < version).ToListAsync(ct);
+
     public async Task<IReadOnlyList<ScormAttempt>> GetAttemptsAsync(Guid packageId, Guid? studentProfileId, CancellationToken ct = default)
         => await _db.ScormAttempts.Where(a => a.PackageId == packageId && (studentProfileId == null || a.StudentProfileId == studentProfileId))
             .OrderBy(a => a.Number).ToListAsync(ct);
@@ -29,6 +32,8 @@ public sealed class ScormRepository : IScormRepository
 
     public Task<ScormAttempt?> GetAttemptAsync(Guid attemptId, CancellationToken ct = default)
         => _db.ScormAttempts.FirstOrDefaultAsync(a => a.Id == attemptId, ct);
+
+    public Task ReloadAsync(ScormAttempt attempt, CancellationToken ct = default) => _db.Entry(attempt).ReloadAsync(ct);
 
     public Task<bool> IsEnrolledAsync(Guid offeringId, Guid studentProfileId, CancellationToken ct = default)
         => _db.Enrollments.AnyAsync(e => e.CourseOfferingId == offeringId && e.StudentProfileId == studentProfileId && e.Status == EnrollmentStatus.Active, ct);

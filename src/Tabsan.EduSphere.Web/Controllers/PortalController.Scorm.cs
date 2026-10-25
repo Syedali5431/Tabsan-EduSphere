@@ -146,7 +146,8 @@ public partial class PortalController
             PlayerUrl = $"{origin}/scorm/play/{launch.Token}/",
             IsStaff = isStaff,
             ModuleItemId = moduleItem,
-            Parts = launch.Parts?.ToList() ?? []
+            Parts = launch.Parts?.ToList() ?? [],
+            Sequenced = launch.Sequenced
         });
     }
 

@@ -1,0 +1,23 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ScormEndedModel
+@{
+    Layout = null;
+    var message = Model.Message is { Length: > 0 } m ? T.Text(m).Replace("{0}", Model.MessageArg ?? "") : T.Text("Choose a part from the contents.");
+}
+<!DOCTYPE html>
+@* SCORM 2004 sequencing: shown in the player frame when the package has nothing to open now (it has ended, or a part has to be chosen). *@
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
+    <title>@Model.Title</title>
+    <style>body { font-family: system-ui, sans-serif; margin: 2rem; color: #333; } h1 { font-size: 1.1rem; }</style>
+</head>
+<body>
+    <h1>@Model.Title</h1>
+    <p data-scorm-ended="@(Model.Ended ? "true" : "false")">@message</p>
+    @if (Model.Ended)
+    {
+        <p>@T["Your progress has been saved. Use Next or the contents to open the package again."]</p>
+    }
+</body>
+</html>

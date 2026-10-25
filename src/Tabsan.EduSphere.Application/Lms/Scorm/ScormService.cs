@@ -84,6 +84,7 @@ public sealed class ScormService
                 contents.Files.Count, contents.TotalBytes, contents.Manifest.MasteryScore, actorUserId, contents.Manifest.ScoCount);
             package.SetMaxAttempts(r.MaxAttempts);
             package.SetParts(contents.Manifest.Parts ?? []);
+            package.SetSequencing(contents.Manifest.Sequencing);
 
             try
             {
@@ -228,7 +229,8 @@ public sealed class ScormService
 
         var token = _tokens.Issue(new ScormPlayClaims(attempt.Id, packageId, studentProfileId, review), TimeSpan.FromHours(Math.Clamp(_options.PlayTokenHours, 1, 48)));
         return ScormResult<ScormLaunchResponse>.Success(new ScormLaunchResponse(token, packageId, package.Title, VersionName(package.Version), package.LaunchPath,
-            attempt.Number, review ? "review" : "normal", attempts.Count, package.MaxAttempts, PartStatuses(package, attempt)));
+            attempt.Number, review ? "review" : "normal", attempts.Count, package.MaxAttempts,
+            PartStatuses(package, attempt, package.IsSequenced && !review ? Sequencer(package, attempt) : null), package.IsSequenced && !review));
     }
 
     /// <summary>A play link for staff to try a package: nothing is recorded (review mode, no attempt).</summary>
@@ -242,17 +244,52 @@ public sealed class ScormService
     }
 
     /// <summary>
-    /// The player shell's start data for a play link: the requested part of a multi-part package (else the first part not
-    /// done yet) with that part's saved data; an asset part counts as done once opened.
+    /// The player shell's start data for a play link. Sequenced packages (SCORM 2004 sequencing) open the part the package's
+    /// rules deliver — the one being worked on, or the first the flow reaches — and may have ended. Other multi-part
+    /// packages open the requested part (else the first one not done yet) unless its SCORM 1.2 prerequisites are not met.
+    /// Each part starts from its own saved data; an asset part counts as done once opened.
     /// </summary>
-    public async Task<ScormResult<ScormPlayResponse>> PlayAsync(string token, CancellationToken ct = default, string? partId = null)
+    public Task<ScormResult<ScormPlayResponse>> PlayAsync(string token, CancellationToken ct = default, string? partId = null)
+        => WithAttemptAsync(token, "This link has expired. Open the package again from the course.", t => PlayAsync(t, partId, ct), ct);
+
+    private async Task<ScormResult<ScormPlayResponse>> PlayAsync(OpenToken t, string? partId, CancellationToken ct)
     {
-        if (await OpenTokenAsync(token, ct) is not { } t) return ScormResult<ScormPlayResponse>.Fail(404, "This link has expired. Open the package again from the course.");
         var learner = t.Claims.AttemptId == Guid.Empty ? new ScormLearnerInfo(Guid.Empty, Guid.Empty, "Preview", "preview")
             : await _repo.GetLearnerAsync(t.Attempt.StudentProfileId, ct);
         var learnerId = learner?.RegistrationNumber ?? t.Attempt.StudentProfileId.ToString("N");
         var parts = t.Package.Parts;
-        var part = (partId is null ? null : parts.FirstOrDefault(p => p.Id == partId)) ?? FirstOpenPart(t.Package, t.Attempt);
+        var mode = t.Claims.Review ? "review" : "normal";
+
+        if (IsSequenced(t))
+        {
+            var seq = Sequencer(t);
+            // An ended package stays at its end until the learner starts it again (Next or a part in the contents).
+            var delivery = seq.State.Ended
+                ? new SeqDelivery(null, null, false, true, new SeqProblem("You have reached the end of this package."))
+                : seq.Start();
+            ScormPart? delivered = delivery.PartId is { } id ? parts.FirstOrDefault(p => p.Id == id) : null;
+            if (delivered is not null)
+            {
+                if (delivery.NewAttempt) t.Attempt.ResetPart(delivered.Id);
+                if (!delivered.IsSco) seq.Viewed(delivered.Id);
+            }
+            await SaveSequencingAsync(t, seq, ct);
+            var view = seq.View();
+            var statuses = PartStatuses(t.Package, t.Attempt, seq);
+            if (delivered is null)
+                return ScormResult<ScormPlayResponse>.Success(new ScormPlayResponse(t.Package.Id, t.Package.Title, VersionName(t.Package.Version), "", mode,
+                    t.Attempt.Number, "{}", null, null, true, statuses, true, delivery.Ended,
+                    delivery.Message?.Text ?? "Choose a part from the contents.", view.CanContinue, view.CanPrevious, view.HideLmsUi, 0, delivery.Message?.Arg));
+            var saved = t.Attempt.PartStates().GetValueOrDefault(delivered.Id);
+            var startCmi = ScormCmi.Initial(t.Package.Version, saved?.CmiJson, saved?.CommitCount ?? 0, saved?.Exit, saved?.TotalSeconds ?? 0, learnerId,
+                learner?.Name ?? "Learner", delivered.MasteryScore ?? t.Package.MasteryScore, false);
+            return ScormResult<ScormPlayResponse>.Success(new ScormPlayResponse(t.Package.Id, t.Package.Title, VersionName(t.Package.Version), delivered.LaunchPath,
+                mode, t.Attempt.Number, startCmi, delivered.Id, delivered.Title, delivered.IsSco, statuses, true, false, null, view.CanContinue,
+                view.CanPrevious, view.HideLmsUi, PartAttempt(seq, delivered.Id)));
+        }
+
+        var requested = partId is null ? null : parts.FirstOrDefault(p => p.Id == partId);
+        var part = requested is not null && (t.Claims.Review || PrerequisitesMet(t.Package, t.Attempt, requested)) ? requested : FirstOpenPart(t.Package, t.Attempt);
         string cmi;
         if (t.Package.IsMultiPart)
         {
@@ -269,23 +306,63 @@ public sealed class ScormService
         }
         else cmi = ScormCmi.Initial(t.Package.Version, t.Attempt, learnerId, learner?.Name ?? "Learner", t.Package.MasteryScore, t.Claims.Review);
         return ScormResult<ScormPlayResponse>.Success(new ScormPlayResponse(t.Package.Id, t.Package.Title, VersionName(t.Package.Version), part.LaunchPath,
-            t.Claims.Review ? "review" : "normal", t.Attempt.Number, cmi, part.Id, part.Title, part.IsSco, PartStatuses(t.Package, t.Attempt)));
+            mode, t.Attempt.Number, cmi, part.Id, part.Title, part.IsSco, PartStatuses(t.Package, t.Attempt)));
     }
 
     /// <summary>The parts and their status for a play link (the player refreshes its contents list after each commit).</summary>
     public async Task<ScormResult<IReadOnlyList<ScormPartStatus>>> PartsAsync(string token, CancellationToken ct = default)
         => await OpenTokenAsync(token, ct) is { } t
-            ? ScormResult<IReadOnlyList<ScormPartStatus>>.Success(PartStatuses(t.Package, t.Attempt))
+            ? ScormResult<IReadOnlyList<ScormPartStatus>>.Success(PartStatuses(t.Package, t.Attempt, IsSequenced(t) ? Sequencer(t) : null))
             : ScormResult<IReadOnlyList<ScormPartStatus>>.Fail(404, "This link has expired.");
 
-    /// <summary>Stores a commit from the runtime (of one part for multi-part packages). Review sessions are accepted but change nothing.</summary>
-    public async Task<ScormResult<ScormCommitResponse>> CommitAsync(string token, string body, bool finalCommit, CancellationToken ct = default, string? partId = null)
+    private static readonly HashSet<string> NavigationRequests = new(StringComparer.Ordinal)
     {
-        if (await OpenTokenAsync(token, ct) is not { } t) return ScormResult<ScormCommitResponse>.Fail(404, "This link has expired.");
+        "start", "resumeAll", "continue", "previous", "choice", "exit", "exitAll", "suspendAll", "abandon", "abandonAll"
+    };
+
+    /// <summary>
+    /// A navigation request for a sequenced package (from the player page's Next / Previous / contents list, or from a SCO's
+    /// adl.nav.request): the package's rules decide the part to open next. Other packages are navigated by the page itself.
+    /// </summary>
+    public Task<ScormResult<ScormNavigateResponse>> NavigateAsync(string token, ScormNavigateRequest request, CancellationToken ct = default)
+        => WithAttemptAsync(token, "This link has expired.", t => NavigateAsync(t, request, ct), ct);
+
+    private async Task<ScormResult<ScormNavigateResponse>> NavigateAsync(OpenToken t, ScormNavigateRequest request, CancellationToken ct)
+    {
+        if (!NavigationRequests.Contains(request.Request ?? "")) return ScormResult<ScormNavigateResponse>.Fail(400, "Unknown navigation request.");
+        if (!IsSequenced(t))
+            return ScormResult<ScormNavigateResponse>.Success(new ScormNavigateResponse(request.Request == "choice" ? request.Target : null, false, null,
+                PartStatuses(t.Package, t.Attempt), true, true));
+
+        var seq = Sequencer(t);
+        var delivery = seq.Navigate(request.Request!, request.Target);
+        if (delivery.PartId is { } partId)
+        {
+            if (delivery.NewAttempt) t.Attempt.ResetPart(partId);
+            if (t.Package.Parts.FirstOrDefault(p => p.Id == partId) is { IsSco: false }) seq.Viewed(partId);
+        }
+        await SaveSequencingAsync(t, seq, ct);
+        var view = seq.View();
+        return ScormResult<ScormNavigateResponse>.Success(new ScormNavigateResponse(delivery.PartId, delivery.Ended, delivery.Message?.Text,
+            PartStatuses(t.Package, t.Attempt, seq), view.CanContinue, view.CanPrevious, delivery.Message?.Arg));
+    }
+
+    /// <summary>
+    /// Stores a commit from the runtime (of one part for multi-part packages). Review sessions are accepted but change nothing.
+    /// Sequenced packages name the part's attempt: a late commit from an earlier attempt of the part (a frame being replaced) is ignored.
+    /// </summary>
+    public Task<ScormResult<ScormCommitResponse>> CommitAsync(string token, string body, bool finalCommit, CancellationToken ct = default, string? partId = null,
+        int? partAttempt = null)
+        => WithAttemptAsync(token, "This link has expired.", t => CommitAsync(t, body, finalCommit, partId, partAttempt, ct), ct);
+
+    private async Task<ScormResult<ScormCommitResponse>> CommitAsync(OpenToken t, string body, bool finalCommit, string? partId, int? partAttempt,
+        CancellationToken ct)
+    {
         if (body.Length > ScormAttempt.MaxCmiJsonLength * 2) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
         if (ScormCmi.CmiOf(body) is not { } cmi) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
         if (t.Claims.Review) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(true, 0));
-        var part = t.Package.IsMultiPart ? t.Package.Parts.FirstOrDefault(p => p.Id == partId) : null;
+        var sequenced = IsSequenced(t);
+        var part = t.Package.IsMultiPart ? t.Package.Parts.FirstOrDefault(p => p.Id == partId) : sequenced ? t.Package.Parts[0] : null;
         if (t.Package.IsMultiPart && part is null) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
 
         var wasFinished = t.Attempt.IsFinished;
@@ -299,13 +376,114 @@ public sealed class ScormService
             trimmed.Remove("interactions");
             stored = new JsonObject { ["cmi"] = trimmed }.ToJsonString();
         }
-        if (part is not null) t.Attempt.ApplyPart(t.Package.Parts, part.Id, values, stored, finalCommit, _now());
-        else t.Attempt.Apply(values, stored, finalCommit, _now());
-        await _repo.SaveChangesAsync(ct);
+        if (sequenced && part is not null)
+        {
+            var seq = Sequencer(t);
+            if (partAttempt is { } n && n != PartAttempt(seq, part.Id)) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(true, 0));
+            t.Attempt.StorePart(t.Package.Parts, part.Id, values, stored, finalCommit, _now());
+            seq.Report(part.Id, new SeqReport(values.CompletionStatus, values.SuccessStatus, values.ScoreScaled, ScormCmi.Objectives(cmi), values.Exit), finalCommit);
+            await SaveSequencingAsync(t, seq, ct, postGrade: false);
+        }
+        else
+        {
+            if (part is not null) t.Attempt.ApplyPart(t.Package.Parts, part.Id, values, stored, finalCommit, _now());
+            else t.Attempt.Apply(values, stored, finalCommit, _now());
+            await _repo.SaveChangesAsync(ct);
+        }
 
         if (t.Package.AssignmentId is not null && t.Attempt.IsFinished && (!wasFinished || previousBest != t.Attempt.ScorePercent))
             await TryPostBestScoreAsync(t.Package, t.Attempt.StudentProfileId, ct);
         return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(true, 0));
+    }
+
+    /// <summary>Sequencing applies to a learner's own attempt; staff preview and review mode open any part freely.</summary>
+    private static bool IsSequenced(OpenToken t) => t.Package.IsSequenced && !t.Claims.Review && t.Claims.AttemptId != Guid.Empty;
+
+    private static ScormSequencer Sequencer(OpenToken t) => Sequencer(t.Package, t.Attempt);
+
+    /// <summary>
+    /// The package's sequencing for an attempt; an attempt with progress but no sequencing state yet (made before the
+    /// upgrade) brings its parts' results in.
+    /// </summary>
+    private static ScormSequencer Sequencer(ScormPackage package, ScormAttempt attempt)
+    {
+        var seq = new ScormSequencer(package.Sequencing!, attempt.SequencingState());
+        if (attempt.SequencingStateJson is null)
+            foreach (var (partId, state) in attempt.PartStates())
+                seq.Adopt(partId, state.CompletionStatus, state.SuccessStatus, state.ScorePercent is { } p ? p / 100 : null);
+        return seq;
+    }
+
+    /// <summary>The attempt number of a part's activity (stale commits from an earlier attempt carry an older number).</summary>
+    private static int PartAttempt(ScormSequencer seq, string partId)
+        => seq.ActivityOfPart(partId) is { } a && seq.State.Activities.TryGetValue(a.Id, out var st) ? st.Attempts : 0;
+
+    /// <summary>Saves the sequencing state and the package's rolled-up result; posts the best score when the attempt is finished.</summary>
+    private async Task SaveSequencingAsync(OpenToken t, ScormSequencer seq, CancellationToken ct, bool postGrade = true)
+    {
+        var wasFinished = t.Attempt.IsFinished;
+        var previousBest = t.Attempt.ScorePercent;
+        var (completion, success, measure) = seq.Result();
+        var states = t.Attempt.PartStates().Values.Where(s => s.ScorePercent is not null).Select(s => s.ScorePercent!.Value).ToList();
+        decimal? percent = measure is { } m ? m * 100 : states.Count > 0 ? states.Average() : null;
+        t.Attempt.SetSequencingState(seq.State);
+        t.Attempt.SetSequencedResult(completion, success, percent, seq.State.Ended, _now());
+        await _repo.SaveChangesAsync(ct);
+        if (postGrade && t.Package.AssignmentId is not null && t.Attempt.IsFinished && (!wasFinished || previousBest != t.Attempt.ScorePercent))
+            await TryPostBestScoreAsync(t.Package, t.Attempt.StudentProfileId, ct);
+    }
+
+    /// <summary>SCORM 1.2 prerequisites of a part, from the other parts' lesson status in this attempt.</summary>
+    private static bool PrerequisitesMet(ScormPackage package, ScormAttempt attempt, ScormPart part)
+    {
+        if (part.Prerequisites is null) return true;
+        var states = attempt.PartStates();
+        var ids = package.Parts.Select(p => p.Id).ToHashSet(StringComparer.Ordinal);
+        return ScormPrerequisites.Met(part.Prerequisites, id => !ids.Contains(id) ? null
+            : states.GetValueOrDefault(id) is { } s ? (s.SuccessStatus is "passed" or "failed" ? s.SuccessStatus : s.CompletionStatus) : "not attempted");
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // Packages read under older rules
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Reads again the manifest of packages uploaded before the current structure rules (parts, SCORM 2004 sequencing, SCORM
+    /// 1.2 prerequisites), so they work as if uploaded today. Attempts made when only the first part launched keep their data
+    /// on that part. Returns how many packages were upgraded.
+    /// </summary>
+    public async Task<int> UpgradeStructuresAsync(CancellationToken ct = default)
+    {
+        var upgraded = 0;
+        foreach (var package in await _repo.GetPackagesBelowStructureVersionAsync(ScormPackage.CurrentStructureVersion, ct))
+        {
+            try
+            {
+                await using var stream = await _store.OpenAsync(package.Id, "imsmanifest.xml", ct);
+                if (stream is null)
+                {
+                    package.SetSequencing(null); // nothing to read: keep its parts, stop asking
+                    continue;
+                }
+                var manifest = ScormPackageReader.ParseManifest(ScormPackageReader.LoadManifest(stream));
+                var oldLaunch = package.LaunchPath;
+                var wasMultiPart = package.IsMultiPart;
+                package.UpgradeStructure(manifest.LaunchPath, manifest.ScoCount, manifest.Parts ?? [], manifest.Sequencing);
+                if (package.IsMultiPart && !wasMultiPart)
+                {
+                    var first = package.Parts.FirstOrDefault(p => p.LaunchPath == oldLaunch) ?? package.Parts[0];
+                    foreach (var attempt in await _repo.GetAttemptsAsync(package.Id, null, ct)) attempt.AdoptSinglePartData(first.Id);
+                }
+                upgraded++;
+            }
+            catch (Exception ex) when (ex is ScormPackageException or IOException or InvalidOperationException)
+            {
+                _logger?.LogWarning(ex, "SCORM package {PackageId} could not be read again.", package.Id);
+                package.SetSequencing(null);
+            }
+        }
+        await _repo.SaveChangesAsync(ct);
+        return upgraded;
     }
 
     private async Task TryPostBestScoreAsync(ScormPackage package, Guid studentProfileId, CancellationToken ct)
@@ -314,28 +492,43 @@ public sealed class ScormService
         catch (Exception ex) when (ex is not OperationCanceledException) { _logger?.LogWarning(ex, "SCORM score could not be posted to the gradebook."); }
     }
 
-    /// <summary>The first part not done yet in this attempt (the first part when all are done).</summary>
+    /// <summary>The first part not done yet whose prerequisites are met (the first part when all are done).</summary>
     private static ScormPart FirstOpenPart(ScormPackage package, ScormAttempt attempt)
     {
         var parts = package.Parts;
         if (!package.IsMultiPart) return parts[0];
         var states = attempt.PartStates();
-        return parts.FirstOrDefault(p => states.GetValueOrDefault(p.Id)?.IsDone != true) ?? parts[0];
+        return parts.FirstOrDefault(p => states.GetValueOrDefault(p.Id)?.IsDone != true && PrerequisitesMet(package, attempt, p))
+               ?? parts.FirstOrDefault(p => PrerequisitesMet(package, attempt, p)) ?? parts[0];
     }
 
-    /// <summary>Each part's status in an attempt (a one-part package reports the attempt itself).</summary>
-    private static IReadOnlyList<ScormPartStatus> PartStatuses(ScormPackage package, ScormAttempt? attempt)
+    /// <summary>
+    /// Each part's status in an attempt (a one-part package reports the attempt itself). With sequencing: the contents as the
+    /// package shows them (visible groups as headings, hidden parts left out) and whether each part may be chosen now; with
+    /// SCORM 1.2 prerequisites, whether they are met.
+    /// </summary>
+    private static IReadOnlyList<ScormPartStatus> PartStatuses(ScormPackage package, ScormAttempt? attempt, ScormSequencer? seq = null)
     {
         static string StatusOf(string completion, string success) => success is "passed" or "failed" ? success : completion;
+        var states = attempt?.PartStates() ?? new Dictionary<string, ScormPartState>();
+        ScormPartStatus Status(ScormPart p) => states.GetValueOrDefault(p.Id) is { } s
+            ? new ScormPartStatus(p.Id, p.Title, p.IsSco, StatusOf(s.CompletionStatus, s.SuccessStatus), s.ScorePercent)
+            : new ScormPartStatus(p.Id, p.Title, p.IsSco, "not attempted", null);
+        if (seq is not null)
+        {
+            var parts = package.Parts.ToDictionary(p => p.Id, StringComparer.Ordinal);
+            return seq.View().Items.Select(i => i.IsLeaf && i.PartId is { } partId && parts.TryGetValue(partId, out var p)
+                ? Status(p) with { Available = i.CanChoose, Reason = i.Reason?.Text, ReasonArg = i.Reason?.Arg, Depth = i.Depth, IsCurrent = i.IsCurrent }
+                : new ScormPartStatus(i.ActivityId, i.Title, false, "", null, false, null, i.Depth, IsHeading: true)).ToList();
+        }
         if (!package.IsMultiPart)
         {
             var only = package.Parts[0];
             return [new ScormPartStatus(only.Id, package.Title, true, attempt is null ? "not attempted" : StatusOf(attempt.CompletionStatus, attempt.SuccessStatus), attempt?.ScorePercent)];
         }
-        var states = attempt?.PartStates() ?? new Dictionary<string, ScormPartState>();
-        return package.Parts.Select(p => states.GetValueOrDefault(p.Id) is { } s
-            ? new ScormPartStatus(p.Id, p.Title, p.IsSco, StatusOf(s.CompletionStatus, s.SuccessStatus), s.ScorePercent)
-            : new ScormPartStatus(p.Id, p.Title, p.IsSco, "not attempted", null)).ToList();
+        return package.Parts.Select(p => attempt is not null && !PrerequisitesMet(package, attempt, p)
+            ? Status(p) with { Available = false, Reason = "Finish the parts it depends on first." }
+            : Status(p)).ToList();
     }
 
     /// <summary>A file of the package for a play link (null when the link or file is unknown).</summary>
@@ -356,6 +549,25 @@ public sealed class ScormService
     // ═════════════════════════════════════════════════════════════════════════
 
     private sealed record OpenToken(ScormPlayClaims Claims, ScormPackage Package, ScormAttempt Attempt);
+
+    /// <summary>
+    /// Opens a play link and runs a step on its attempt. When another request saved the attempt in between (the last commit
+    /// of the part being left arrives together with the opening of the next part), the attempt is read again and the step
+    /// repeated with what that request saved.
+    /// </summary>
+    private async Task<ScormResult<T>> WithAttemptAsync<T>(string token, string expired, Func<OpenToken, Task<ScormResult<T>>> step, CancellationToken ct)
+    {
+        for (var tries = 1; ; tries++)
+        {
+            if (await OpenTokenAsync(token, ct) is not { } t) return ScormResult<T>.Fail(404, expired);
+            try { return await step(t); }
+            catch (Exception ex) when (tries < 5 && t.Claims.AttemptId != Guid.Empty
+                                       && string.Equals(ex.GetType().Name, "DbUpdateConcurrencyException", StringComparison.Ordinal))
+            {
+                await _repo.ReloadAsync(t.Attempt, ct);
+            }
+        }
+    }
 
     private async Task<OpenToken?> OpenTokenAsync(string token, CancellationToken ct)
     {
@@ -412,7 +624,7 @@ public sealed class ScormService
 
     private static ScormPackageResponse ToResponse(ScormPackage p, ScormLearnerSummary? mine)
         => new(p.Id, p.OfferingId, p.Title, VersionName(p.Version), p.LaunchPath, p.FileCount, p.SizeBytes, p.MasteryScore, p.MaxAttempts, p.IsPublished,
-            p.AssignmentId is not null, p.MaxMarks, p.AssignmentId, p.CreatedAt, p.ScoCount, mine, p.Parts.Count);
+            p.AssignmentId is not null, p.MaxMarks, p.AssignmentId, p.CreatedAt, p.ScoCount, mine, p.Parts.Count, p.IsSequenced);
 
     public static string VersionName(ScormVersion v) => v == ScormVersion.Scorm2004 ? "SCORM 2004" : "SCORM 1.2";
 

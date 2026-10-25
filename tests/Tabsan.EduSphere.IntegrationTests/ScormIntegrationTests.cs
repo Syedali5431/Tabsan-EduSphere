@@ -319,6 +319,151 @@ public class ScormIntegrationTests
         Assert.Equal(3, preview.GetProperty("parts").GetArrayLength());
     }
 
+    // SCORM 2004 sequencing: B opens only once A is satisfied (a shared objective), like the "forced sequential" examples.
+    private const string SequencedManifest = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <manifest identifier="com.example.forced" version="1" xmlns="http://www.imsglobal.org/xsd/imscp_v1p1" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_v1p3"
+                  xmlns:imsss="http://www.imsglobal.org/xsd/imsss" xmlns:adlseq="http://www.adlnet.org/xsd/adlseq_v1p3">
+          <metadata><schema>ADL SCORM</schema><schemaversion>2004 3rd Edition</schemaversion></metadata>
+          <organizations default="o"><organization identifier="o" adlseq:objectivesGlobalToSystem="false"><title>Forced order</title>
+            <item identifier="a" identifierref="ra"><title>A</title>
+              <imsss:sequencing><imsss:objectives><imsss:primaryObjective objectiveID="a_sat"><imsss:mapInfo targetObjectiveID="g.a" writeSatisfiedStatus="true"/></imsss:primaryObjective></imsss:objectives>
+                <imsss:deliveryControls completionSetByContent="true" objectiveSetByContent="true"/></imsss:sequencing>
+            </item>
+            <item identifier="b" identifierref="rb"><title>B</title>
+              <imsss:sequencing>
+                <imsss:sequencingRules><imsss:preConditionRule><imsss:ruleConditions conditionCombination="any">
+                  <imsss:ruleCondition referencedObjective="prev" operator="not" condition="satisfied"/><imsss:ruleCondition referencedObjective="prev" operator="not" condition="objectiveStatusKnown"/>
+                </imsss:ruleConditions><imsss:ruleAction action="disabled"/></imsss:preConditionRule></imsss:sequencingRules>
+                <imsss:objectives><imsss:primaryObjective objectiveID="b_sat"/><imsss:objective objectiveID="prev"><imsss:mapInfo targetObjectiveID="g.a" readSatisfiedStatus="true"/></imsss:objective></imsss:objectives>
+                <imsss:deliveryControls completionSetByContent="true" objectiveSetByContent="true"/>
+              </imsss:sequencing>
+            </item>
+            <imsss:sequencing><imsss:controlMode choice="true" flow="true"/></imsss:sequencing>
+          </organization></organizations>
+          <resources>
+            <resource identifier="ra" type="webcontent" adlcp:scormType="sco" href="a.html"/>
+            <resource identifier="rb" type="webcontent" adlcp:scormType="sco" href="b.html"/>
+          </resources>
+        </manifest>
+        """;
+
+    private static StringContent Cmi2004(string completion, string success, decimal? scaled = null)
+        => new(JsonSerializer.Serialize(new { cmi = new { completion_status = completion, success_status = success, score = new { scaled }, exit = "" } }), Encoding.UTF8, "application/json");
+
+    [Fact]
+    public async Task SequencedPackage_DecidesWhatOpens_IgnoresStaleCommits_AndOlderPackagesAreReadAgain()
+    {
+        var seed = await SeedAsync();
+        var teacher = Client("Faculty", seed.TeacherUserId);
+        var student = Client("Student", seed.StudentUserId, seed.StudentProfileId);
+        var player = _factory.CreateClient();
+        var zip = Zip(("imsmanifest.xml", SequencedManifest), ("a.html", "A"), ("b.html", "B"));
+
+        var package = await (await teacher.PostAsync($"api/v1/scorm/offerings/{seed.OfferingId}/packages", Upload(zip))).Content.ReadFromJsonAsync<JsonElement>();
+        var packageId = package.GetProperty("id").GetGuid();
+        Assert.True(package.GetProperty("sequenced").GetBoolean());
+
+        var launch = await LaunchAsync(student, packageId);
+        Assert.True(launch.GetProperty("sequenced").GetBoolean());
+        var b = launch.GetProperty("parts").EnumerateArray().Single(p => p.GetProperty("id").GetString() == "b");
+        Assert.False(b.GetProperty("available").GetBoolean());
+        Assert.Equal(("\"{0}\" is not available yet.", "B"), (b.GetProperty("reason").GetString(), b.GetProperty("reasonArg").GetString()));
+        var token = launch.GetProperty("token").GetString()!;
+
+        async Task<JsonElement> Navigate(string request, string? target = null)
+            => await (await player.PostAsJsonAsync($"api/v1/scorm/play/{token}/navigate", new { request, target })).Content.ReadFromJsonAsync<JsonElement>();
+        static string? Part(JsonElement e) => e.TryGetProperty("partId", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+
+        // The package decides: A opens, and asking for B (by address or by choice) does not open it yet.
+        var play = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}?part=b");
+        Assert.Equal(("a", 1, true), (play.GetProperty("partId").GetString(), play.GetProperty("partAttempt").GetInt32(), play.GetProperty("sequenced").GetBoolean()));
+        var refused = await Navigate("choice", "b");
+        Assert.Null(Part(refused));
+        Assert.Equal("B", refused.GetProperty("messageArg").GetString());
+
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/a/1?final=true", Cmi2004("completed", "passed", 0.8m));
+        Assert.Equal("b", Part(await Navigate("continue")));
+        // Back to A: a new attempt on it; a late commit from A's first attempt is ignored.
+        var back = await Navigate("previous");
+        Assert.Equal("a", Part(back));
+        Assert.Equal("not attempted", back.GetProperty("parts").EnumerateArray().Single(p => p.GetProperty("id").GetString() == "a").GetProperty("status").GetString());
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/a/1?final=true", Cmi2004("completed", "failed", 0.1m));
+        Assert.Equal("not attempted", (await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}/parts")).EnumerateArray()
+            .Single(p => p.GetProperty("id").GetString() == "a").GetProperty("status").GetString());
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/a/2?final=true", Cmi2004("completed", "passed", 0.9m));
+        Assert.Equal("b", Part(await Navigate("continue")));
+        // B opened again after going back: this is its second attempt.
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/b/2?final=true", Cmi2004("completed", "passed", 0.7m));
+        var end = await Navigate("continue");
+        Assert.True(end.GetProperty("ended").GetBoolean());
+        Assert.Equal("You have reached the end of this package.", end.GetProperty("message").GetString());
+
+        var mine = (await student.GetFromJsonAsync<JsonElement>($"api/v1/scorm/packages/{packageId}/mine")).GetProperty("mine");
+        Assert.Equal(("passed", 80m), (mine.GetProperty("status").GetString(), mine.GetProperty("bestScorePercent").GetDecimal())); // measure: (0.9 + 0.7) / 2
+        var ended = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}");
+        Assert.Equal(("", true), (ended.GetProperty("launchPath").GetString(), ended.GetProperty("ended").GetBoolean()));
+
+        // A package uploaded under the older rules (no sequencing, one part) with an attempt in progress is read again.
+        var old = await (await teacher.PostAsync($"api/v1/scorm/offerings/{seed.OfferingId}/packages", Upload(zip, title: "Older upload"))).Content.ReadFromJsonAsync<JsonElement>();
+        var oldId = old.GetProperty("id").GetGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE scorm_packages SET SequencingJson = NULL, PartsJson = NULL, StructureVersion = 0 WHERE Id = {oldId}");
+        }
+        var oldLaunch = await LaunchAsync(student, oldId);
+        Assert.False(oldLaunch.GetProperty("sequenced").GetBoolean());
+        var oldToken = oldLaunch.GetProperty("token").GetString()!;
+        await player.PostAsync($"api/v1/scorm/play/{oldToken}/commit", Cmi2004("completed", "passed", 1m));
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<Tabsan.EduSphere.Application.Lms.Scorm.ScormService>();
+            Assert.True(await service.UpgradeStructuresAsync() >= 1);
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var upgraded = await db.ScormPackages.AsNoTracking().SingleAsync(p => p.Id == oldId);
+            Assert.True(upgraded.IsSequenced);
+            Assert.Equal(ScormPackage.CurrentStructureVersion, upgraded.StructureVersion);
+            Assert.Contains("\"a\"", (await db.ScormAttempts.AsNoTracking().SingleAsync(a => a.PackageId == oldId)).PartsStateJson);
+        }
+        // The attempt's earlier progress counts: A is passed, so B can be chosen straight away.
+        var relaunch = await LaunchAsync(student, oldId);
+        var relaunchToken = relaunch.GetProperty("token").GetString()!;
+        Assert.True(relaunch.GetProperty("parts").EnumerateArray().Single(p => p.GetProperty("id").GetString() == "b").GetProperty("available").GetBoolean());
+        Assert.Equal("b", Part(await (await player.PostAsJsonAsync($"api/v1/scorm/play/{relaunchToken}/navigate", new { request = "choice", target = "b" }))
+            .Content.ReadFromJsonAsync<JsonElement>()));
+    }
+
+    [Fact]
+    public async Task SequencedPackage_NextPartOpening_AndThePreviousPartsLastCommit_ArriveTogether_AndBothSucceed()
+    {
+        var seed = await SeedAsync();
+        var teacher = Client("Faculty", seed.TeacherUserId);
+        var student = Client("Student", seed.StudentUserId, seed.StudentProfileId);
+        var player = _factory.CreateClient();
+        var zip = Zip(("imsmanifest.xml", SequencedManifest), ("a.html", "A"), ("b.html", "B"));
+        var package = await (await teacher.PostAsync($"api/v1/scorm/offerings/{seed.OfferingId}/packages", Upload(zip))).Content.ReadFromJsonAsync<JsonElement>();
+        var token = (await LaunchAsync(student, package.GetProperty("id").GetGuid())).GetProperty("token").GetString()!;
+        await player.GetAsync($"api/v1/scorm/play/{token}");
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/a/1", Cmi2004("completed", "passed", 0.8m));
+        await player.PostAsJsonAsync($"api/v1/scorm/play/{token}/navigate", new { request = "continue" });
+
+        // Next replaced A with B: A's frame sends its last commit while B's frame opens (and starts committing).
+        for (var round = 0; round < 6; round++)
+        {
+            var responses = await Task.WhenAll(
+                player.GetAsync($"api/v1/scorm/play/{token}"),
+                player.PostAsync($"api/v1/scorm/play/{token}/commit/a/1?final=true", Cmi2004("completed", "passed", 0.8m)),
+                player.GetAsync($"api/v1/scorm/play/{token}"),
+                player.PostAsync($"api/v1/scorm/play/{token}/commit/b/1", Cmi2004("incomplete", "unknown")));
+            Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+            Assert.Equal("b", (await responses[0].Content.ReadFromJsonAsync<JsonElement>()).GetProperty("partId").GetString());
+        }
+        var parts = (await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}/parts")).EnumerateArray().ToList();
+        Assert.Equal(("passed", "incomplete"), (parts.Single(p => p.GetProperty("id").GetString() == "a").GetProperty("status").GetString(),
+            parts.Single(p => p.GetProperty("id").GetString() == "b").GetProperty("status").GetString()));
+    }
+
     [Fact]
     public async Task Packages_AreChecked_Scoped_Previewed_Hidden_AndRemoved()
     {

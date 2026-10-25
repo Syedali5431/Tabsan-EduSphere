@@ -27,6 +27,16 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
     public ScormWebIntegrationTests(WebApplicationFactory<WebEntryPointMarker> factory) => _baseFactory = factory;
 
     [Fact]
+    public async Task Teacher_SeesThatASequencedPackageSetsItsOwnOrder()
+    {
+        var api = new FakeApi("Faculty") { Sequenced = true };
+        using var client = await SignedInClientAsync(api);
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"/Portal/LmsManage?offeringId={OfferingId}"));
+        Assert.Contains("3 parts — the package sets their order (SCORM 2004 sequencing).", page);
+        Assert.DoesNotContain("students move between them", page);
+    }
+
+    [Fact]
     public async Task Teacher_UploadsEditsPreviewsAndRemovesPackages_OnTheContentPage()
     {
         var api = new FakeApi("Faculty");
@@ -132,6 +142,10 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
         Assert.Contains("no-store", shell.Headers.CacheControl!.ToString());
 
         Assert.Contains("This link has expired", await player.GetStringAsync("/scorm/play/expired/"));
+        // A passing server problem is not an expired link: the frame asks to reload instead.
+        var down = await player.GetStringAsync("/scorm/play/down/");
+        Assert.Contains("data-scorm-unavailable=\"true\"", down);
+        Assert.DoesNotContain("This link has expired", down);
 
         var content = await player.GetAsync("/scorm/play/tok-123/content/my%20course/index.html");
         Assert.Equal("text/html", content.Content.Headers.ContentType!.MediaType);
@@ -189,6 +203,44 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
         var parts = await shellClient.GetAsync("/scorm/play/tok-mp/parts");
         Assert.Contains("\"status\":\"passed\"", await parts.Content.ReadAsStringAsync());
         Assert.Contains("no-store", parts.Headers.CacheControl!.ToString());
+    }
+
+    [Fact]
+    public async Task SequencedPackage_ThePackageDecides_WhatOpens_AndCommitsNameThePartsAttempt()
+    {
+        var api = new FakeApi("Student") { Sequenced = true };
+        using var client = await SignedInClientAsync(api);
+        var page = await client.GetStringAsync($"/Portal/Scorm/{PackageId}");
+        var launch = await client.PostAsync("/Portal/LaunchScorm", Form(Token(page), ("packageId", PackageId), ("newAttempt", "false")));
+        var player = WebUtility.HtmlDecode(await client.GetStringAsync(launch.Headers.Location!.ToString()));
+        Assert.Contains("data-sequenced=\"true\"", player);
+        Assert.Contains("This package sets the order", player);
+        Assert.Contains("data-heading>Playing the game", player); // a visible group of the package
+        Assert.Contains("data-available=\"false\"", player);
+        Assert.Contains("title=\"\"Quiz\" is not available yet.\"", player);
+        // The package chooses the part: the frame opens the play link without one.
+        Assert.Contains("data-src=\"/scorm/play/tok-seq/\"", player);
+
+        using var shellClient = Client(api);
+        var shell = await shellClient.GetStringAsync("/scorm/play/tok-seq/");
+        Assert.Contains("\"commitUrl\":\"commit/lesson/3\"", shell);
+        Assert.Contains("\"sequenced\":true", shell);
+        Assert.Contains("\"previous\":false", shell);
+
+        var commit = await shellClient.PostAsync("/scorm/play/tok-seq/commit/lesson/3?final=true", new StringContent("{\"cmi\":{}}", Encoding.UTF8, "text/plain"));
+        Assert.Contains("\"result\":true", await commit.Content.ReadAsStringAsync());
+        Assert.Contains("POST /api/v1/scorm/play/tok-seq/commit/lesson/3", api.Writes);
+        Assert.Equal("?final=true", api.LastCommitQuery);
+
+        var navigate = await shellClient.PostAsync("/scorm/play/tok-seq/navigate", new StringContent("{\"request\":\"continue\"}", Encoding.UTF8, "application/json"));
+        Assert.Contains("\"partId\":\"quiz\"", await navigate.Content.ReadAsStringAsync());
+        Assert.Contains("\"request\":\"continue\"", api.Body("POST", "/api/v1/scorm/play/tok-seq/navigate"));
+
+        // Nothing to open (the package has ended): the frame says so instead of loading content.
+        var ended = await shellClient.GetStringAsync("/scorm/play/tok-end/");
+        Assert.Contains("data-scorm-ended=\"true\"", ended);
+        Assert.Contains("You have reached the end of this package.", ended);
+        Assert.DoesNotContain("scorm-player.js", ended);
     }
 
     [Fact]
@@ -263,6 +315,9 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
         public string? LastPlayQuery { get; private set; }
         /// <summary>The launch returns a package in parts (play link tok-mp).</summary>
         public bool MultiPart { get; init; }
+        /// <summary>The launch returns a sequenced package (play link tok-seq).</summary>
+        public bool Sequenced { get; init; }
+        private const string SequencedParts = """[{"id":"unit","title":"Playing the game","isSco":false,"status":"","scorePercent":null,"available":false,"depth":0,"isHeading":true},{"id":"lesson","title":"How to play","isSco":true,"status":"incomplete","scorePercent":null,"available":true,"depth":1,"isCurrent":true},{"id":"quiz","title":"Quiz","isSco":true,"status":"not attempted","scorePercent":null,"available":false,"reason":"\"{0}\" is not available yet.","reasonArg":"Quiz","depth":1}]""";
         private const string MultiPartParts = """[{"id":"lesson","title":"How to play","isSco":true,"status":"passed","scorePercent":90},{"id":"quiz","title":"Quiz","isSco":true,"status":"not attempted","scorePercent":null}]""";
 
         public IEnumerable<string> Writes => _writes.Select(w => $"{w.Method} {w.Path}");
@@ -278,11 +333,11 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
             return $"{B64("{\"alg\":\"none\"}")}.{B64(payload)}.sig";
         }
 
-        private static string Package(bool mine) => JsonSerializer.Serialize(new
+        private string Package(bool mine) => JsonSerializer.Serialize(new
         {
             id = PackageId, offeringId = OfferingId, title = "Fire safety", version = "SCORM 1.2", launchPath = "index.html", fileCount = 12, sizeBytes = 2_400_000,
             masteryScore = 80, maxAttempts = 3, isPublished = true, graded = true, maxMarks = 20, assignmentId = Guid.NewGuid(), createdAt = DateTime.UtcNow,
-            scoCount = 2,
+            scoCount = 2, partCount = Sequenced ? 3 : 1, sequenced = Sequenced,
             mine = mine ? new { attemptsUsed = 1, status = "incomplete", bestScorePercent = 85, canStartNew = true, lastActivityAt = DateTime.UtcNow } : null
         });
 
@@ -308,6 +363,8 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
             if (path == $"/api/v1/scorm/offerings/{OfferingId}/packages") return Json(Package(false), HttpStatusCode.Created);
             if (path == $"/api/v1/scorm/offerings/{OfferingId}/my-packages") return Json("[" + Package(true) + "]");
             if (path == $"/api/v1/scorm/packages/{PackageId}/mine") return Json(Package(true));
+            if (path == $"/api/v1/scorm/packages/{PackageId}/launch" && Sequenced)
+                return Json("""{"token":"tok-seq","packageId":"c1000000-0000-0000-0000-0000000000c1","title":"Golf","version":"SCORM 2004","launchPath":"lesson.html","attemptNumber":1,"mode":"normal","attemptsUsed":1,"maxAttempts":3,"sequenced":true,"parts":""" + SequencedParts + "}");
             if (path == $"/api/v1/scorm/packages/{PackageId}/launch" && MultiPart)
                 return Json("""{"token":"tok-mp","packageId":"c1000000-0000-0000-0000-0000000000c1","title":"Golf","version":"SCORM 1.2","launchPath":"lesson.html","attemptNumber":1,"mode":"normal","attemptsUsed":1,"maxAttempts":3,"parts":""" + MultiPartParts + "}");
             if (path == $"/api/v1/scorm/packages/{PackageId}/launch")
@@ -334,12 +391,29 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
                 }));
             }
             if (path == "/api/v1/scorm/play/tok-mp/parts") return Json(MultiPartParts);
+            if (path == "/api/v1/scorm/play/tok-seq")
+                return Json(JsonSerializer.Serialize(new
+                {
+                    packageId = PackageId, title = "Golf", version = "SCORM 2004", launchPath = "lesson.html", mode = "normal", attemptNumber = 1, cmiJson = "{}",
+                    partId = "lesson", partTitle = "How to play", isSco = true, parts = JsonSerializer.Deserialize<JsonElement>(SequencedParts),
+                    sequenced = true, canContinue = true, canPrevious = false, partAttempt = 3
+                }));
+            if (path == "/api/v1/scorm/play/tok-end")
+                return Json("""{"packageId":"c1000000-0000-0000-0000-0000000000c1","title":"Golf","version":"SCORM 2004","launchPath":"","mode":"normal","attemptNumber":1,"cmiJson":"{}","sequenced":true,"ended":true,"message":"You have reached the end of this package."}""");
+            if (path == "/api/v1/scorm/play/tok-seq/commit/lesson/3")
+            {
+                LastCommitQuery = uri.Query;
+                return Json("{\"result\":true,\"errorCode\":0}");
+            }
+            if (path == "/api/v1/scorm/play/tok-seq/navigate")
+                return Json("""{"partId":"quiz","ended":false,"parts":[],"canContinue":true,"canPrevious":true}""");
             if (path == "/api/v1/scorm/play/tok-mp/commit/quiz")
             {
                 LastCommitQuery = uri.Query;
                 return Json("{\"result\":true,\"errorCode\":0}");
             }
             if (path.StartsWith("/api/v1/scorm/play/expired")) return Json("{\"message\":\"This link has expired.\"}", HttpStatusCode.NotFound);
+            if (path == "/api/v1/scorm/play/down") return Json("{}", HttpStatusCode.InternalServerError);
             if (path == "/api/v1/scorm/play/tok-123/content/my%20course/index.html")
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<html>sco</html>", Encoding.UTF8, "text/html") };
             if (path == "/api/v1/scorm/play/tok-123/content/media/clip.mp4")

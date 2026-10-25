@@ -338,6 +338,8 @@ module.exports = [
             ['A quiz says the access code is needed or the network is not allowed.', 'Ask your teacher for the access code. Quizzes limited to campus networks can only be started from those networks.'],
             ['My quiz score shows as pending.', 'Some answers (essays, short answers or files) are marked by the teacher. The total appears when they are marked.'],
             ['A SCORM package does not save my progress.', 'Leave the package with Exit on the player page, not by closing the tab. If the package still starts from the beginning, tell your teacher; some packages do not save a resume point.'],
+            ['A part of a SCORM package is locked, or Next says it is not available yet.', 'The package sets its own order. Finish or pass the part that is open first; point at the locked part to see what it is waiting for.'],
+            ['The SCORM player says "You have reached the end of this package".', 'The package has nothing more to open and your result is saved. Open the package page to see it, and start a new attempt if more are allowed.'],
             ['I cannot join a live class.', 'Join opens 15 minutes before the start. If the class uses a meeting link, the link opens the meeting service in a new tab; allow pop-ups for the portal.'],
             ['An external tool shows a blank frame or "launch expired".', 'Go back to the course and click Open again. If the frame stays blank, ask your teacher to set the tool to open in a new tab.'],
             ['Notifications do not reach my phone.', 'Turn them on under Notifications > Notifications on this device and allow them when the browser asks. On iPhone, open EduSphere from its Home Screen icon. Signing out stops notifications on that device.'],
