@@ -86,6 +86,24 @@ public class ModuleProgressWebIntegrationTests : IClassFixture<WebApplicationFac
     }
 
     [Fact]
+    public async Task CourseContent_OpensWithACourseChooser_AndShowsTheChosenCourse()
+    {
+        var api = new FakeApi("Student");
+        using var client = await SignedInClientAsync(api);
+        var html = await client.GetStringAsync("/Portal/CourseLms");
+        Assert.Contains("href=\"/Portal/CourseLms\"", html); // the Course Content menu
+        Assert.Contains("data-course-chooser", html);
+        Assert.Contains("CS702 — Machine Learning (BSCS Semester 7)", WebUtility.HtmlDecode(html));
+        Assert.DoesNotContain("Dropped course", html);
+        Assert.Contains("Choose a course to see its modules.", html);
+        Assert.DoesNotContain(api.Calls, c => c.Path.Contains(Guid.Empty.ToString()));
+
+        var chosen = await client.GetStringAsync($"/Portal/CourseLms?offeringId={OfferingId}");
+        Assert.Contains($"value=\"{OfferingId}\" selected=\"selected\"", chosen);
+        Assert.Contains("data-course-progress=\"50\"", chosen);
+    }
+
+    [Fact]
     public async Task ModuleItem_RendersPages_LocksAndRedirects()
     {
         var api = new FakeApi("Student");
@@ -235,7 +253,9 @@ public class ModuleProgressWebIntegrationTests : IClassFixture<WebApplicationFac
                     username = "tester", mustChangePassword = false, mfaEnabled = false, ssoEnabled = false, sessionRiskLevel = "low"
                 }));
             if (path == "/api/v1/sidebar-menu/my-visible")
-                return Json("""[{"id":"00000000-0000-0000-0000-0000000000b2","key":"lms_manage","name":"LMS","purpose":"","parentId":null,"displayOrder":2,"isActive":true,"isSystemMenu":false,"roleAccesses":[],"subMenus":[]}]""");
+                return Json("""[{"id":"00000000-0000-0000-0000-0000000000b2","key":"lms_manage","name":"LMS","purpose":"","parentId":null,"displayOrder":2,"isActive":true,"isSystemMenu":false,"roleAccesses":[],"subMenus":[]},{"id":"00000000-0000-0000-0000-0000000000b4","key":"course_content","name":"Course Content","purpose":"","parentId":null,"displayOrder":3,"isActive":true,"isSystemMenu":false,"roleAccesses":[],"subMenus":[]}]""");
+            if (path == "/api/v1/enrollment/my-courses")
+                return Json($$"""[{"id":"{{Guid.NewGuid()}}","courseOfferingId":"{{OfferingId}}","courseTitle":"Machine Learning","courseCode":"CS702","semester":"BSCS Semester 7","status":"Active","enrolledAt":"2026-09-01T00:00:00Z"},{"id":"{{Guid.NewGuid()}}","courseOfferingId":"{{Guid.NewGuid()}}","courseTitle":"Dropped course","courseCode":"CS999","semester":"BSCS Semester 7","status":"Dropped","enrolledAt":"2026-09-01T00:00:00Z"}]""");
             if (path == $"/api/v1/lms/modules/{OfferingId}")
                 return Json($$"""[{"id":"{{Week1}}","offeringId":"{{OfferingId}}","title":"Week 1","weekNumber":1,"body":"Intro","isPublished":true,"videos":[{"id":"{{Guid.NewGuid()}}","moduleId":"{{Week1}}","title":"Lecture","embedUrl":"https://v.example/1"}]}]""");
             if (path == $"/api/v1/lms/offerings/{OfferingId}/structure") return Json(Structure);

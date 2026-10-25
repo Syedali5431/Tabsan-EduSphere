@@ -4,7 +4,7 @@ module.exports = [
     chapter: 'Academic Setup',
     intro: [
       'Academic setup follows the order shown in the Setup Flow menu: departments first, then programs, then courses and their offerings, and finally enrolments. Each level depends on the one before it: a program needs a department, an offering needs a course, and an enrolment needs an offering.',
-      'Students are created in User Import (Chapter 12) and then appear in the Students list.',
+      'Students are created in User Import (Chapter 14) and then appear in the Students list.',
     ],
     sections: [
       {
@@ -205,24 +205,26 @@ module.exports = [
 
   {
     chapter: 'Teaching and Learning',
-    intro: ['This chapter covers the pages teachers use every week and what students see on the other side: assignments, attendance, marks, quizzes, course content, discussions and announcements.'],
+    intro: ['This chapter covers the pages teachers use every week and what students see on the other side: assignments, attendance, marks, online course content (modules, live classes, external tools and SCORM packages), discussions and announcements. Quizzes and the detailed marking of assignments are in Chapter 8, and learning outcomes in Chapter 9.'],
     sections: [
       {
         title: 'Assignments', roles: 'SuperAdmin, Admin, Faculty, Student', index: ['Assignments'],
         intro: [
-          'Assignments are pieces of coursework set for an offering. Teachers create and publish them, students submit text and/or a file before the due date, and teachers grade each submission with marks and feedback.',
+          'Assignments are pieces of coursework set for an offering. Teachers create and publish them, students hand in text and/or files before the due date, and teachers mark each submission in the grading workspace with marks, a rubric, annotations and comments.',
         ],
         steps: [
           'Open **Assignments** and choose the department and offering.',
           'Faculty: create an assignment with a **Title**, **Description**, **Due Date** and **Max Marks**, then publish it so students can see it.',
-          'Students: open the assignment, type notes in **Text Submission** and/or choose a file in **Upload File**, and submit before the due date.',
-          'Faculty: open the assignment to review submissions. For each student enter **Marks Awarded** and **Feedback**, and save.',
+          'Faculty: click **Options** next to the assignment to set when work can be handed in, give individual students their own dates, make it group work, add peer review or switch on similarity checking (Chapter 8).',
+          'Students: open the assignment, type your answer and/or attach files, and hand in before the due date. If your teacher allows more than one attempt, each new hand-in is kept as a separate attempt.',
+          'Faculty: click **Grade** to open the grading workspace and mark each submission (Chapter 8).',
           'Tick **Show inactive assignments** to see assignments that have been retired.',
         ],
         fields: [
           ['Title / Description', 'What the students must do. Include any length, format or referencing requirements in the description.'],
-          ['Due Date', 'The deadline shown to students.'],
+          ['Due Date', 'The deadline shown to students. Students given their own dates see those instead.'],
           ['Max Marks', 'The highest mark available; used to calculate percentages and grades.'],
+          ['Submission settings', 'Under **Grade** > **Settings**: attempts allowed (0 = unlimited), accepted file types, maximum file size, when students see grades (as soon as they are saved, or only when you post them), anonymous grading and moderated grading.'],
         ],
         figs: [['flow:faculty-assignments/1', 'Assignments (Faculty)'], ['student:Assignments', 'Assignments (Student view)']],
         tables: [{
@@ -315,31 +317,106 @@ module.exports = [
         figs: [['testadmin:RubricManage', 'Rubric Management']],
       },
       {
-        title: 'Quizzes', roles: 'SuperAdmin, Faculty; Students take quizzes in View Quizzes', index: ['Quizzes'],
+        title: 'Course modules (LMS Manage)', roles: 'SuperAdmin, Admin, Faculty', index: ['LMS', 'Modules', 'Module items', 'Release conditions'],
         intro: [
-          'Quizzes are short assessments for an offering. Teachers create them with instructions, an optional time limit and a maximum number of attempts, then publish them. Students see published quizzes in **View Quizzes**, prepare their answers and upload them as a file before the last date.',
+          'LMS Manage builds a course\'s online content as **modules**, usually one per week or topic. A module has a title, a week number and an introduction, and holds **items** in the order students should follow them: text pages, web links, course materials, videos, assignments, quizzes, discussions, external tools, SCORM packages and headings.',
+          'Each item can have a **requirement** that completes it, and each module can have **release rules**: an opening date, prerequisites and "in order" progression. Students then always know what to do next, and teachers can see how far each student has got.',
         ],
-        steps: [
-          'Faculty: open **Quizzes** and choose the offering in **Select Course Offering**.',
-          'Create a quiz with a **Title**, **Instructions** (the questions or what to answer), **Time Limit (minutes)** and **Max Attempts**.',
-          'Click **Publish** when it is ready. Use **Deactivate** to close it early, or **Delete** to remove a quiz that was created by mistake.',
-          'Students: open **View Quizzes**, read the instructions, attach your answer file and click **Submit** before the last date.',
-        ],
-        figs: [['flow:faculty-quizzes/1', 'Quizzes (Faculty)'], ['student:ViewQuizzes', 'My Quizzes (Student)']],
-        tips: ['Tick **Include Inactive** to see closed quizzes. Students see their marks once the quiz is graded.'],
-      },
-      {
-        title: 'LMS Manage', roles: 'SuperAdmin, Admin, Faculty', index: ['LMS'],
-        intro: [
-          'LMS Manage builds online learning content for an offering, organised by week. Each module has a title, a week number and a body that can contain formatted text, links and embedded videos.',
-        ],
+        before: ['Create the assignments, quizzes and materials you want to add first; they can then be picked from lists.'],
         steps: [
           'Open **LMS Manage** and choose the offering.',
-          'Under **Add New Module**, enter the **Title** and **Week #**, and write the **Body** (HTML is allowed for headings, lists and links).',
-          'Click **Add Module**. Add videos to a module where needed.',
-          'Click **Publish** to make a module visible to students, or **Unpublish** to hide it again while you edit.',
+          'Under **Add New Module**, enter the **Title** and **Week #**, write the introduction, and click **Add Module**. Click **Publish** to make it visible to students (**Unpublish** hides it again while you edit).',
+          'Open the module\'s **Items** and use **Add an item** to add items in order. The form only asks for what each item type needs: **Text** for a page, a **Web address** for a link, or the assignment, quiz, discussion, tool or package to use. Click **Add item**.',
+          'For each item choose **To complete it, students must**: view it, mark it as done, submit it, score at least a percentage (**Minimum score (%)**, from a posted grade or the best quiz attempt) or post in it (discussions).',
+          'Under **Release and completion**, optionally set **Opens on (UTC, optional)**, tick **Students must work through items in order**, choose whether the module is complete when students finish **every item with a requirement** or **any one item with a requirement**, and tick the modules under **Open only after these modules are complete**. Click **Save release settings**.',
+          'Use the arrows to reorder items, **Edit** to change one (untick **Visible to students** to hide it) and **Remove** to delete it.',
         ],
-        figs: [['testadmin:LmsManage', 'LMS Manage']],
+        fields: [
+          ['Item', 'Header, Page, Web link, Course material, Video, Assignment, Quiz, Discussion, External tool or SCORM package.'],
+          ['Title', 'Leave empty to use the name of the assignment, quiz or other item you picked.'],
+          ['To complete it, students must', 'Nothing, view it, mark it as done, submit it, score at least a minimum percentage, or contribute (discussions). Headers cannot have a requirement.'],
+          ['Indent', 'Indents the item under the header above it, to show structure.'],
+          ['Opens on (UTC, optional)', 'The module stays locked until this date and time.'],
+          ['Open only after these modules are complete', 'Prerequisite modules. A module cannot depend on itself in a loop.'],
+          ['Students must work through items in order', 'Each item unlocks only when the required item before it is complete.'],
+        ],
+        figs: [['flow:modules-teacher/1', 'LMS Manage: modules, items, requirements and release rules'], ['flow:modules-teacher/2', 'External tools and SCORM packages on the same page']],
+        outcome: [
+          'Students see the module on their **Course Content** page with each item\'s requirement and status. Locked quizzes, assignments and tools cannot be started or handed in until the module opens.',
+          'Changing an item\'s requirement re-checks it for everyone. Once a requirement is met it stays met, so a later regrade never locks a student out.',
+        ],
+      },
+      {
+        title: 'Module progress', roles: 'SuperAdmin, Admin, Faculty', index: ['Module progress'],
+        intro: ['**Module Progress** (the **Student progress** link at the top of LMS Manage) lists every student in the course with their overall percentage and how many required items they have completed in each module. Click a student\'s name to see their item-by-item detail, including what is still to do and why an item is locked.'],
+        figs: [['flow:modules-teacher/3', 'Module Progress for a course']],
+        tips: ['Use it before a deadline to see who has not opened the week\'s material, and send them a reminder through Announcements or Discussion.'],
+      },
+      {
+        title: 'Course Content (students)', roles: 'Student', index: ['Course Content', 'Progress'],
+        intro: [
+          '**Course Content** shows a student\'s courses as modules, with their overall progress at the top. Choose the course in the **Course** box and click **Open**.',
+          'Each item shows a symbol: ✓ done, ○ still to do (with what is needed, for example "Submit" or "Score at least 60%"), and 🔒 locked, with the reason, such as "Complete Week 1 first" or an opening date.',
+        ],
+        steps: [
+          'Open **Course Content**, choose the course and click **Open**.',
+          'Work through the items in order. Click an item to open it; pages, links, files and videos open inside the portal, while assignments, quizzes, tools and packages open their own pages.',
+          'At the top of an item use **‹ Previous** and **Next ›** to move through the module, and **Mark as done** where the item asks for it.',
+        ],
+        figs: [['flow:modules-student/1', 'Course Content: progress, modules and item requirements'], ['flow:modules-student/2', 'An item open, with Previous and Next']],
+        tips: ['The course page also links to the course\'s Discussion, Announcements, Live classes and My groups.'],
+      },
+      {
+        title: 'Live classes', roles: 'SuperAdmin, Admin, Faculty, Student', index: ['Live classes', 'Online classes'],
+        intro: [
+          'Live Classes schedules online classes for a course. A class can use a meeting link the teacher pastes (Google Meet, Jitsi, any Zoom or Teams link), or the institution\'s connected service (BigBlueButton, Zoom or Microsoft Teams) creates the meeting automatically. Students are notified when a class is scheduled, moved or cancelled, and reminded 15 minutes before.',
+          'Joining through the portal can mark attendance: about 10 minutes after the class ends, students who joined (and stayed the minimum time, where the service reports it) are marked Present and the others Absent. Students who already have an attendance mark for that day keep it.',
+        ],
+        steps: [
+          'Faculty: open **Live Classes** and choose the course.',
+          'Under **Schedule a class**, enter the **Title**, the start date and time (UTC), the length in **Minutes**, an optional description and, if your institution has no meeting service, the **Meeting link**.',
+          'Tick **Mark attendance from who joined** and set the **Minimum minutes** if attendance should be recorded automatically, then click **Schedule**.',
+          'To schedule a whole term at once, use **From the timetable**: pick the course\'s timetable slot and the number of weeks; weeks already scheduled are skipped.',
+          'At class time click **Start / join** (you join as the host). **Attendance** shows who joined, and **Mark attendance now** records it immediately. **Edit** and **Cancel** notify the students; **Add to calendar** downloads a calendar file.',
+          'Students: open **Live Classes** (or the course page) and click **Join** from 15 minutes before the start. While a class is running, a **Live now** banner with **Join** appears on every page.',
+        ],
+        figs: [['flow:live-classes/1', 'Live Classes (Faculty): scheduled classes and the scheduling form'], ['flow:live-classes-student/1', 'Live Classes (Student)']],
+        tips: ['Recordings appear on the class when the meeting service provides one.', 'An Admin or SuperAdmin connects the meeting service in Live Class Settings (Chapter 16).'],
+      },
+      {
+        title: 'External tools (LTI) in a course', roles: 'SuperAdmin, Admin, Faculty, Student', index: ['External tools', 'LTI'],
+        intro: [
+          'External tools are other learning applications registered by your institution (Chapter 16), such as interactive content, video, coding or plagiarism tools. They open from the course without a second sign-in, using the LTI 1.3 standard, and graded tools send scores back to EduSphere.',
+        ],
+        steps: [
+          'Faculty: open **LMS Manage** for the course and find **External tools**.',
+          'Click **Add an external tool**, choose the tool, enter a **Title**, choose where it opens (**New tab** or **Inside EduSphere**) and, for a graded activity, the **Points**. A graded item creates an assignment that receives the tool\'s scores automatically.',
+          'Or click **Choose content from** the tool to pick content inside the tool itself (for example one activity); it is added to the course, with an assignment for anything the tool grades.',
+          'Use **Hide** / **Show** to control visibility, and **Grades** to open the grading workspace, where you can still adjust or post the grades.',
+          'Students: click **Open** on the item on the course page or in a module. You are signed in to the tool automatically.',
+        ],
+        figs: [['flow:modules-teacher/2', 'External tools and SCORM packages in LMS Manage']],
+        tips: ['If a tool shows a blank frame inside EduSphere, set it to open in a new tab.', 'If a tool says the launch has expired, go back to the course and click Open again.'],
+      },
+      {
+        title: 'SCORM packages', roles: 'SuperAdmin, Admin, Faculty, Student', index: ['SCORM', 'Interactive lessons'],
+        intro: [
+          'SCORM packages are interactive lessons exported from authoring tools such as Articulate Storyline or Rise, iSpring, Adobe Captivate or Lectora, as a SCORM 1.2 or SCORM 2004 zip file. EduSphere plays them inside the portal and records each learner\'s progress, status, score and time, and can send the best score to the gradebook.',
+          'A package may have several parts (for example one lesson per topic, then a quiz). Students then see a contents list beside the lesson showing each part\'s status, and move between parts with it or with **Previous** and **Next**. The package is complete when every part is; its score is the average of the parts\' scores.',
+        ],
+        steps: [
+          'Faculty: open **LMS Manage** for the course and, under **SCORM packages**, click **Upload a SCORM package**.',
+          'Choose the zip file, and set the allowed **attempts** (0 = unlimited), whether it is **Graded** (the best score goes to the gradebook, scaled to the marks you set) and whether students can see it. Click **Upload**.',
+          'Click **Preview** to try it yourself (nothing is recorded) and **Report** to see each student\'s attempts, status, best and last score and time. Add the package to a module with a requirement such as "Score at least 80%".',
+          'Students: open the package from the course page or its module and click **Start**. Your place is saved: **Continue** takes you back where you stopped. Use **Exit** on the player page to leave (your progress is saved first).',
+          'When you finish, the package opens again for **Review**; if more attempts are allowed, **Start a new attempt** – your best score counts.',
+        ],
+        figs: [['flow:scorm-student/1', 'A student\'s SCORM package page'], ['flow:scorm-student/2', 'A package in parts: contents list with each part\'s status'], ['flow:scorm-teacher/1', 'SCORM package report (Faculty)']],
+        tips: [
+          'Packages up to 500 MB are accepted by default. A package that links to content on other websites, or whose files are missing, is refused with an explanation.',
+          'Packages run in an isolated area so their scripts cannot read portal pages or cookies.',
+          'Pages in a package that do not report to the portal (assets) count as complete once opened. A package of such pages only has no score.',
+        ],
       },
       {
         title: 'Course Material', roles: 'SuperAdmin, Admin, Faculty, Student', index: ['Course Material'],

@@ -182,17 +182,30 @@ function accessMatrix() {
 
 const glossary = [
   ['CGPA', 'Cumulative Grade Point Average across all completed semesters.'],
+  ['Course outcome (CLO)', 'A learning outcome of one course, usually contributing to one or more program outcomes.'],
   ['Course offering', 'A course taught in a specific semester or class, usually by one faculty member. Students enrol in offerings.'],
   ['Degree rule', 'The credit and GPA requirements a University program must meet before a student can graduate.'],
+  ['External tool (LTI)', 'Another learning application opened from a course without a second sign-in, using the LTI 1.3 standard; it can send grades back.'],
   ['FYP', 'Final Year Project – the capstone project of a University program.'],
   ['Institution type', 'University, College or School. Departments, grading and progression follow the institution type.'],
+  ['Grading workspace', 'The page where teachers mark submissions one after another, with annotations, rubric, comments and similarity score.'],
   ['Level', 'A semester (University) or class (School and College) within a program.'],
   ['License (.tablic)', 'The encrypted, signed file that activates the portal and sets its expiry date.'],
-  ['Module', 'A feature area (for example Attendance or Reports) that SuperAdmin can activate or deactivate.'],
+  ['Live class', 'A scheduled online class with a join link; joining through the portal can record attendance.'],
+  ['Mastery', 'How well a student\'s graded work shows they can do what a learning outcome describes.'],
+  ['Module (course)', 'A unit of a course, usually a week or topic, holding items in order with completion requirements.'],
+  ['Module (feature)', 'A feature area (for example Attendance or Reports) that SuperAdmin can activate or deactivate.'],
+  ['Peer review', 'Students review a number of classmates\' submissions, usually anonymously, with a rubric or a score.'],
   ['Prerequisite', 'A course a student must pass before enrolling in another course.'],
+  ['Program outcome (PLO)', 'A learning outcome of an academic program, reported as program attainment for accreditation.'],
+  ['Question bank', 'A reusable pool of quiz questions from which quizzes can draw random questions.'],
   ['Read-only mode', 'The state in which the portal allows viewing but blocks changes, used when the license is not valid.'],
+  ['SCORM package', 'An interactive lesson exported from an authoring tool as a zip file, played in the portal with progress and score recorded.'],
+  ['Similarity score', 'The share of a submission that matches other work, from 0% to 100%.'],
+  ['Single sign-on (SSO)', 'Signing in with the institution\'s own account (Microsoft, Google, OpenID Connect or SAML 2.0) instead of an EduSphere password.'],
   ['Tenant', 'A separate institution in the installation with its own campuses, departments, users and data.'],
   ['Two-factor authentication (2FA)', 'A second sign-in step using a 6-digit code from an authenticator app.'],
+  ['xAPI', 'The Experience API: a standard way for learning activities to report what learners did to a Learning Record Store.'],
 ];
 
 // ── document ─────────────────────────────────────────────────────────────────
@@ -203,8 +216,8 @@ const glossary = [
   const logoFullMeta = await sharp(logoFull).metadata();
   const logoMark = await sharp(fs.readFileSync(LOGO_DIR + '/tabsan-mark.png')).resize({ width: 96 }).png().toBuffer();
   const hero = await loadImage(resolveImage('testadmin:Departments'));
-  const today = '12 October 2026';
-  const VERSION = '1.4';
+  const today = '25 October 2026';
+  const VERSION = '1.5';
 
   const band = (children, padTop, padBottom) => new d.Table({
     width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [BODY_W],
@@ -232,7 +245,7 @@ const glossary = [
 
   const docInfo = [
     new d.Paragraph({ heading: d.HeadingLevel.HEADING_1, pageBreakBefore: true, children: [new d.TextRun('About This Manual')] }),
-    para('This manual describes Tabsan EduSphere as installed from the main branch on 10 October 2026. Screenshots were captured from the live application using the demonstration data set.'),
+    para('This manual describes Tabsan EduSphere as installed from the main branch on 25 October 2026, including single sign-on, the online learning features (course modules, quizzes and question banks, the grading workspace, peer review, similarity checking, learning outcomes, live classes, external tools and SCORM packages), languages, phone notifications and the integration settings. Screenshots were captured from the live application using the demonstration data set.'),
     dataTable(['Item', 'Detail'], [
       ['Product', 'Tabsan EduSphere Campus Portal'],
       ['Document', 'User Manual'],

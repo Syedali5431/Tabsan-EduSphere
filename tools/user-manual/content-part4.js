@@ -1,4 +1,4 @@
-// Chapters 12-14: users and communication, SuperAdmin administration, troubleshooting.
+// Chapters 14-17: users and communication, SuperAdmin administration, integrations and platform settings, troubleshooting.
 const ALL = 'SuperAdmin, Admin, Faculty, Student, Finance';
 
 module.exports = [
@@ -67,12 +67,36 @@ module.exports = [
         notes: [['important', 'If you lose your phone and your recovery codes, an administrator must reset two-factor authentication for you.']],
       },
       {
+        title: 'Linked sign-in accounts', roles: ALL, index: ['Linked accounts', 'Single sign-on'],
+        intro: [
+          'When your institution uses single sign-on, the **Two-Factor Authentication** page also shows **Linked sign-in accounts**: the institution accounts (for example Microsoft, Google or SAML) linked to your EduSphere account, with the email and the date each was linked.',
+          'Click **Unlink** to remove a link, for example after changing institution accounts. You can link it again by signing in with the provider\'s button. Administrators can see and remove the links of the users they manage.',
+        ],
+        figs: [['flow:linked-accounts/1', 'Linked sign-in accounts']],
+        notes: [['note', 'If your institution requires single sign-on, unlinking your only account may stop you signing in. Ask your administrator first.']],
+      },
+      {
         title: 'Notifications', roles: ALL, index: ['Notifications'],
         intro: [
-          'The notification inbox collects messages from the portal, such as new announcements, published results, graduation decisions and replies to your helpdesk tickets. A green dot on the **Notifications** button means you have unread items.',
-          'Click a notification to mark it as read, or click **Mark All Read** to clear the indicator.',
+          'The notification inbox collects messages from the portal, such as new announcements, published results, new assignments and quizzes, live classes being scheduled or moved, graduation decisions and replies to your helpdesk tickets. Each shows when it was sent and its type. A green dot on the **Notifications** button means you have unread items.',
+          'Click **Mark read** on a notification, or **Mark All Read** to clear the indicator.',
+          'At the top, **Notifications on this device** turns on notifications for the phone or computer you are using and lets you choose which kinds you receive there (see Chapter 3).',
         ],
-        figs: [['testadmin:Notifications', 'Notifications inbox']],
+        figs: [['flow:push/1', 'Notifications: this device and the inbox']],
+      },
+      {
+        title: 'API Tokens', roles: 'SuperAdmin, Admin', index: ['API tokens', 'Integrations'],
+        intro: [
+          'Other systems, such as a student information system, a reporting tool or a script, can call the EduSphere REST API with a personal access token. A token acts as you, with your role and access, so give each integration its own token.',
+        ],
+        steps: [
+          'Open **API Tokens**.',
+          'Under **New token**, enter a **Name** (for example "Nightly SIS sync"), how many days it is **Valid for** (up to 365) and whether it is **Read only**, and click **Create token**.',
+          'Copy the token straight away and store it in the other system. It is shown only once; EduSphere keeps only a fingerprint of it.',
+          'Click **Revoke** when a token is no longer used, or if it may have been seen by someone else.',
+        ],
+        figs: [['flow:admin-integrations/4', 'API Tokens: your tokens and, for administrators, everyone\'s']],
+        tips: ['Administrators see every user\'s tokens under **All tokens** and can revoke any of them.', 'Developers find the API reference on the API\'s /swagger page and in Docs/Public-API.md.'],
       },
       {
         title: 'Helpdesk', roles: ALL, index: ['Helpdesk', 'Support tickets'],
@@ -140,7 +164,7 @@ module.exports = [
         ],
         figs: [['superadmin:AdminUsers', 'Admin Users']],
       },
-      { title: 'Module Composition', roles: 'SuperAdmin', index: ['Modules'], intro: ['Module Composition shows the module registry (17 modules, such as Attendance, Results, Reports and FYP), whether each is active, whether your role can use it, and the dashboard widgets for your role. Deactivate a module to hide its features for everyone. Modules allowed by the license are activated automatically when the license is uploaded.'], figs: [['superadmin:ModuleComposition', 'Module Composition']] },
+      { title: 'Module Composition', roles: 'SuperAdmin', index: ['Modules'], intro: ['Module Composition shows the module registry (22 modules, such as Attendance, Results, Reports, FYP, Single Sign-On, Learning Outcomes & Mastery, Live Classes and Similarity Checking), whether each is active, whether your role can use it, and the dashboard widgets for your role. Deactivate a module to hide its features for everyone. Modules allowed by the license are activated automatically when the license is uploaded.'], figs: [['superadmin:ModuleComposition', 'Module Composition']] },
       { title: 'Sidebar Settings', roles: 'SuperAdmin', index: ['Sidebar Settings'], intro: ['Sidebar Settings controls which menu items Admin, Faculty and Student users see. Each row is a menu with its purpose and a switch for each role. SuperAdmin always keeps full access, and menus marked System cannot be switched off. Appendix A shows the default settings.'], figs: [['superadmin:SidebarSettings', 'Sidebar Settings']] },
       { title: 'Report Settings', roles: 'SuperAdmin', index: ['Report Settings'], intro: ['Report Settings lists the report definitions (nine by default). Here you can create a new definition, switch a report on or off, and choose which roles may run it. Report Center then shows each user only the reports allowed for their role.'], figs: [['superadmin:ReportSettings', 'Report Settings']] },
       {
@@ -188,6 +212,103 @@ module.exports = [
   },
 
   {
+    chapter: 'Integrations and Platform Settings',
+    intro: [
+      'The pages in this chapter connect EduSphere to other systems and set platform-wide options. They are under **Settings Related** in the sidebar and are available to SuperAdmin by default; a SuperAdmin can give Admins access to some of them in Sidebar Settings. Most need the matching module to be licensed and active in Module Composition.',
+      'Secrets entered on these pages (client secrets, API keys, shared secrets) are stored encrypted and never shown again. Every change is recorded in the audit log.',
+    ],
+    sections: [
+      {
+        title: 'Single Sign-On', roles: 'SuperAdmin', index: ['Single sign-on', 'SSO', 'SAML', 'OpenID Connect'],
+        intro: [
+          'Single Sign-On lets people sign in with their institution account through Microsoft Entra ID, Google Workspace, any other OpenID Connect identity provider, or a SAML 2.0 identity provider (for example ADFS, Shibboleth, Okta or Keycloak). Users are matched to existing EduSphere accounts; no new accounts are created.',
+          'Providers can be installation-wide (shown on the normal sign-in page) or for one tenant (shown on the sign-in address ending in ?tenant= and the tenant code). Use **Tenant code** and **Switch** at the top of the page to choose which one you are configuring.',
+        ],
+        before: [
+          'Register EduSphere at the identity provider with the values shown under **Values to register at your identity provider**: the OpenID Connect redirect URI, or for SAML the entity ID (audience), the ACS URL and the SP metadata (**Download SP metadata**).',
+          'Note the client ID and client secret (OpenID Connect) or the IdP metadata URL (SAML).',
+        ],
+        steps: [
+          'Open **Single Sign-On** and expand the provider: **Microsoft Entra ID**, **Google Workspace**, **Other OpenID Connect IdP** or **SAML 2.0 IdP**.',
+          'Enter the **Button label**, then for OpenID Connect the **Client ID**, the client secret and the authority (issuer) address, or for SAML the **IdP metadata URL**.',
+          'Choose how first-time sign-ins are linked: by **verified email**, and/or by **institution ID** (the claim or attribute carrying a student\'s registration number or a staff member\'s username).',
+          'Optionally enter the claim or attribute carrying roles or affiliation and the **role mappings** (for example student=Student; faculty=Faculty; staff=Admin|Finance), and tick **Refuse sign-in when the identity provider\'s role does not match**.',
+          'For SAML, optionally tick **Sign authentication requests** and **Require encrypted assertions** (then download the SP metadata again and update it at the identity provider).',
+          'Optionally limit the **allowed email domains**, trust the provider\'s multi-factor sign-in, or **Require single sign-on** (password sign-in off for that scope; SuperAdmins always keep password sign-in).',
+          'Tick **Show this provider on the login page**, click **Save**, then **Test connection**. Finally, sign in once with a test account to confirm the details.',
+        ],
+        figs: [['flow:sso-settings/1', 'Single Sign-On: values to register and the providers'], ['flow:sso-settings/2', 'A SAML 2.0 provider with attribute mapping, role check, signing and encryption']],
+        outcome: ['The sign-in page shows the provider\'s button (Chapter 3). Sign-ins, links and refusals are recorded in the audit log with the reason, which helps when a user reports a problem.'],
+        notes: [['note', 'The SSO Setup Guide in the User Guide folder has step-by-step instructions for each provider, a roll-out checklist and troubleshooting.']],
+      },
+      {
+        title: 'External Tools (LTI 1.3)', roles: 'SuperAdmin (Admins when granted)', index: ['External tools', 'LTI', 'Dynamic registration'],
+        intro: [
+          'External Tools registers learning tools that support LTI 1.3 / LTI Advantage, so teachers can add them to courses (Chapter 7). Tools can receive the class list (Names and Role Provisioning) and send grades back (Assignment and Grade Services).',
+        ],
+        steps: [
+          'Open **External Tools**. The top of the page shows the values to give the tool vendor: issuer, client ID, deployment ID, the platform\'s keys (JWKS), authorization and token addresses.',
+          'If the tool offers a registration URL, paste it under **Register with the tool\'s registration URL** and click **Start registration**; the tool registers itself and starts switched off for your review.',
+          'Otherwise, under **Register a tool**, enter its name, login initiation URL, target link URI, redirect URIs, deep-linking URL and keys (JWKS URL or public key), and choose what personal data it may receive and whether it may use grades and the class list. Click **Save**.',
+          'Add **deployments** to limit a tool to a department or a course, and use **Turn on** / **Turn off** to make it available.',
+        ],
+        figs: [['flow:lti-tools/1', 'External Tools: platform details and registered tools']],
+        tips: ['Choose the least personal data a tool needs (Nothing, Name, Email, or Name and email).', 'Only a SuperAdmin can rotate the platform\'s signing key; the previous key stays published for a while so tools keep working.', 'Step-by-step instructions are in the LTI Tool Setup Guide.'],
+      },
+      {
+        title: 'Similarity Checking', roles: 'SuperAdmin (Admins when granted)', index: ['Similarity settings', 'Copyleaks'],
+        intro: [
+          'Similarity Checking chooses the checker used when teachers switch on similarity checks for an assignment (Chapter 8). The **built-in comparison** needs no account and compares work with the same assignment, every assignment of the course, or the whole institution. **Copyleaks** also checks web pages and publications.',
+        ],
+        steps: [
+          'Open **Similarity Checking**, choose the provider and, for the built-in checker, what work to compare with.',
+          'For Copyleaks, enter the account email and API key, optionally tick **Sandbox**, and click **Test connection**.',
+          'Click **Save**. A SuperAdmin can also set the **installation default** for institutions without their own settings.',
+        ],
+        figs: [['flow:admin-integrations/2', 'Similarity Checking settings']],
+      },
+      {
+        title: 'Live Class Settings', roles: 'SuperAdmin (Admins when granted)', index: ['Live class settings', 'BigBlueButton', 'Zoom', 'Teams'],
+        intro: ['Live Class Settings chooses how live classes (Chapter 7) are held.'],
+        bullets: [
+          '**Meeting links only** – teachers paste a link for each class; nothing to connect.',
+          '**BigBlueButton** – the API address and the shared secret of your BigBlueButton server.',
+          '**Zoom** – a Server-to-Server OAuth app: account ID, client ID and client secret. Zoom reports how long each participant stayed, for attendance.',
+          '**Microsoft Teams** – an Entra app (tenant ID, client ID and secret) with permission to create online meetings, and the organiser\'s user ID.',
+          'Set how many minutes before the start students may join, click **Save**, then **Test connection**.',
+        ],
+        figs: [['flow:admin-integrations/1', 'Live Class Settings']],
+      },
+      {
+        title: 'Language & Translations', roles: 'SuperAdmin', index: ['Translations', 'Default language'],
+        intro: [
+          'Language & Translations sets the default language (English, Urdu, Arabic, or the browser\'s language) used for people who have not chosen one, on the sign-in page and for emails to them. Everyone can still switch languages from the top bar.',
+          'It also shows how many texts are translated for each language, and lets your institution improve the translations.',
+        ],
+        steps: [
+          'Choose the **Default language** and click **Save**.',
+          'Click **Export to Excel**. The workbook has one row per English text with an Urdu and an Arabic column (and where each text is used).',
+          'A translator fills in or corrects the language columns, keeping placeholders such as {0} and {1} unchanged.',
+          'Choose the workbook under **Translated workbook (.xlsx)** and click **Import**. Only changed texts are stored, and the portal uses them at once.',
+        ],
+        figs: [['flow:language-settings/1', 'Language & Translations']],
+      },
+      {
+        title: 'Learning Record Store (xAPI)', roles: 'SuperAdmin (Admins when granted)', index: ['xAPI', 'Learning Record Store'],
+        intro: [
+          'EduSphere includes a Learning Record Store for xAPI (Experience API). Activities and authoring tools that report xAPI statements, for example courses published from Articulate Rise or Storyline with xAPI tracking, can send their records to EduSphere.',
+        ],
+        steps: [
+          'Open **Learning Record Store**.',
+          'Create credentials for each activity provider: enter a name and, optionally, the course its statements belong to. The key and secret are shown once; enter them, with the endpoint shown on the page, in the activity.',
+          'Switch credentials off to stop an activity from sending statements. The latest statements received are listed at the bottom of the page.',
+        ],
+        figs: [['flow:admin-integrations/3', 'Learning Record Store: credentials and recent statements']],
+      },
+    ],
+  },
+
+  {
     chapter: 'Troubleshooting and FAQ',
     sections: [
       {
@@ -200,6 +321,27 @@ module.exports = [
             ['I was signed out unexpectedly.', 'Sessions end after a period of inactivity. Sign in again; save your work regularly on long forms.'],
             ['I lost my authenticator device.', 'Use one of your recovery codes to sign in, or ask an administrator to reset two-factor authentication.'],
             ['A new student cannot see their courses.', 'Check that the student was created with a Program (so a student profile exists) and has been enrolled in the term\'s offerings.'],
+            ['"This account is not linked to an EduSphere user" after single sign-on.', 'EduSphere could not match the institution account by verified email or institution ID. Sign in once with your username and password, or ask an administrator to check your email or registration number, or the provider\'s linking options.'],
+            ['"Your identity provider reports a role that does not match this EduSphere account".', 'The provider\'s role or affiliation for you does not map to your EduSphere role. An administrator can check the role mappings in Single Sign-On; the audit log shows the values the provider sent.'],
+            ['Single sign-on fails with a general message.', 'An administrator should check the audit log (SsoLoginFailed) for the reason, for example an expired certificate, an unencrypted assertion when encryption is required, or a wrong client secret, and use Test connection on the Single Sign-On page.'],
+            ['The SSO button does not appear on the sign-in page.', 'Tenant providers appear only on the sign-in address ending in ?tenant= and your tenant code. Check also that the provider is switched on.'],
+          ],
+        },
+      },
+      {
+        title: 'Online learning',
+        table: {
+          head: ['Problem', 'What to do'], widths: [3300, 6000],
+          rows: [
+            ['A module or item shows a lock.', 'The lock shows why: an opening date, a module that must be completed first, or an earlier item in an "in order" module. Complete what it asks, or ask your teacher.'],
+            ['I cannot find my course modules.', 'Open Course Content, choose the course in the Course box and click Open. Only published modules and items appear.'],
+            ['A quiz says the access code is needed or the network is not allowed.', 'Ask your teacher for the access code. Quizzes limited to campus networks can only be started from those networks.'],
+            ['My quiz score shows as pending.', 'Some answers (essays, short answers or files) are marked by the teacher. The total appears when they are marked.'],
+            ['A SCORM package does not save my progress.', 'Leave the package with Exit on the player page, not by closing the tab. If the package still starts from the beginning, tell your teacher; some packages do not save a resume point.'],
+            ['I cannot join a live class.', 'Join opens 15 minutes before the start. If the class uses a meeting link, the link opens the meeting service in a new tab; allow pop-ups for the portal.'],
+            ['An external tool shows a blank frame or "launch expired".', 'Go back to the course and click Open again. If the frame stays blank, ask your teacher to set the tool to open in a new tab.'],
+            ['Notifications do not reach my phone.', 'Turn them on under Notifications > Notifications on this device and allow them when the browser asks. On iPhone, open EduSphere from its Home Screen icon. Signing out stops notifications on that device.'],
+            ['Similarity score is 0% for the first submissions.', 'There was nothing to compare with yet. Use Check again in the grading workspace after other students have handed in.'],
           ],
         },
       },

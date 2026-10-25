@@ -228,6 +228,97 @@ public class ScormIntegrationTests
         Assert.Equal(HttpStatusCode.Conflict, (await student.PostAsync($"api/v1/assignment/{assignmentId}/submissions", handIn)).StatusCode);
     }
 
+    // A course in parts (like the Golf Explained "one file per SCO" samples): a group with a lesson and notes, then a quiz.
+    private const string MultiPartManifest = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <manifest identifier="com.example.golf" version="1" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+          <metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata>
+          <organizations default="o"><organization identifier="o"><title>Golf explained</title>
+            <item identifier="unit"><title>Playing the game</title>
+              <item identifier="lesson" identifierref="r1" parameters="?page=1"><title>How to play</title></item>
+              <item identifier="notes" identifierref="r2"><title>Notes</title></item>
+            </item>
+            <item identifier="quiz" identifierref="r3"><title>Quiz</title><adlcp:masteryscore>80</adlcp:masteryscore></item>
+          </organization></organizations>
+          <resources>
+            <resource identifier="r1" type="webcontent" adlcp:scormtype="sco" href="lesson.html"/>
+            <resource identifier="r2" type="webcontent" adlcp:scormtype="asset" href="notes.html"/>
+            <resource identifier="r3" type="webcontent" adlcp:scormtype="sco" href="quiz.html"/>
+          </resources>
+        </manifest>
+        """;
+
+    [Fact]
+    public async Task MultiPartPackage_OpensEachPart_SavesEachPartsData_AndRollsThePartsUp()
+    {
+        var seed = await SeedAsync();
+        var teacher = Client("Faculty", seed.TeacherUserId);
+        var student = Client("Student", seed.StudentUserId, seed.StudentProfileId);
+        var player = _factory.CreateClient();
+        var zip = Zip(("imsmanifest.xml", MultiPartManifest), ("lesson.html", "Lesson"), ("notes.html", "Notes"), ("quiz.html", "Quiz"));
+
+        var package = await (await teacher.PostAsync($"api/v1/scorm/offerings/{seed.OfferingId}/packages", Upload(zip))).Content.ReadFromJsonAsync<JsonElement>();
+        var packageId = package.GetProperty("id").GetGuid();
+        var assignmentId = package.GetProperty("assignmentId").GetGuid();
+        Assert.Equal((3, 2), (package.GetProperty("partCount").GetInt32(), package.GetProperty("scoCount").GetInt32()));
+
+        var launch = await LaunchAsync(student, packageId);
+        var token = launch.GetProperty("token").GetString()!;
+        var parts = launch.GetProperty("parts").EnumerateArray().ToList();
+        Assert.Equal(["How to play", "Notes", "Quiz"], parts.Select(p => p.GetProperty("title").GetString()));
+        Assert.All(parts, p => Assert.Equal("not attempted", p.GetProperty("status").GetString()));
+
+        // Without a part the player starts at the first part not done yet.
+        var first = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}");
+        Assert.Equal(("lesson", "lesson.html?page=1", true), (first.GetProperty("partId").GetString(), first.GetProperty("launchPath").GetString(), first.GetProperty("isSco").GetBoolean()));
+
+        // A part's commit goes to that part; a commit that names no part (or an unknown one) is refused.
+        var progress = Cmi(new { core = new { lesson_status = "incomplete", lesson_location = "p3", exit = "suspend" }, suspend_data = "lesson=3" });
+        Assert.True((await (await player.PostAsync($"api/v1/scorm/play/{token}/commit/lesson", progress)).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("result").GetBoolean());
+        foreach (var wrong in new[] { "commit", "commit/nope" })
+        {
+            var refused = await (await player.PostAsync($"api/v1/scorm/play/{token}/{wrong}", Cmi(new { core = new { lesson_status = "passed" } }))).Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal((false, 101), (refused.GetProperty("result").GetBoolean(), refused.GetProperty("errorCode").GetInt32()));
+        }
+
+        // Opening the notes (an asset: no runtime) counts as done; reopening the lesson resumes it.
+        var notes = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}?part=notes");
+        Assert.Equal(("notes.html", false), (notes.GetProperty("launchPath").GetString(), notes.GetProperty("isSco").GetBoolean()));
+        var lesson = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}?part=lesson");
+        var lessonCmi = JsonDocument.Parse(lesson.GetProperty("cmiJson").GetString()!).RootElement;
+        Assert.Equal(("resume", "lesson=3"), (lessonCmi.GetProperty("core").GetProperty("entry").GetString(), lessonCmi.GetProperty("suspend_data").GetString()));
+        // Each part starts from its own data: the quiz is new, with its own passing score.
+        var quiz = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}?part=quiz");
+        var quizCmi = JsonDocument.Parse(quiz.GetProperty("cmiJson").GetString()!).RootElement;
+        Assert.Equal(("ab-initio", "80"), (quizCmi.GetProperty("core").GetProperty("entry").GetString(), quizCmi.GetProperty("student_data").GetProperty("mastery_score").GetString()));
+
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/lesson?final=true", Cmi(new { core = new { lesson_status = "passed", score = new { raw = "90" }, session_time = "00:04:00" } }));
+        var mid = (await student.GetFromJsonAsync<JsonElement>($"api/v1/scorm/packages/{packageId}/mine")).GetProperty("mine");
+        Assert.Equal("incomplete", mid.GetProperty("status").GetString()); // the quiz is still open
+        await player.PostAsync($"api/v1/scorm/play/{token}/commit/quiz?final=true", Cmi(new { core = new { lesson_status = "completed", score = new { raw = "70" }, session_time = "00:06:00" } }));
+
+        // Every part done: failed (the quiz needs 80), the score the average of the parts, the time their sum.
+        var statuses = await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{token}/parts");
+        Assert.Equal(["passed", "completed", "failed"], statuses.EnumerateArray().Select(p => p.GetProperty("status").GetString()));
+        var summary = (await student.GetFromJsonAsync<JsonElement>($"api/v1/scorm/packages/{packageId}/mine")).GetProperty("mine");
+        Assert.Equal(("failed", 80m), (summary.GetProperty("status").GetString(), summary.GetProperty("bestScorePercent").GetDecimal()));
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var attempt = await db.ScormAttempts.AsNoTracking().SingleAsync(a => a.PackageId == packageId);
+            Assert.Equal(600, attempt.TotalSeconds);
+            Assert.NotNull(attempt.FinishedAt);
+            Assert.Equal(16m, (await db.AssignmentSubmissions.AsNoTracking().SingleAsync(s => s.AssignmentId == assignmentId && s.StudentProfileId == seed.StudentProfileId)).MarksAwarded);
+        }
+
+        // The finished attempt reopens in review at the first part; staff preview lists the parts too.
+        var review = await LaunchAsync(student, packageId);
+        Assert.Equal("review", review.GetProperty("mode").GetString());
+        Assert.Equal("lesson", (await player.GetFromJsonAsync<JsonElement>($"api/v1/scorm/play/{review.GetProperty("token").GetString()}")).GetProperty("partId").GetString());
+        var preview = await (await teacher.PostAsJsonAsync($"api/v1/scorm/packages/{packageId}/preview", new { })).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(3, preview.GetProperty("parts").GetArrayLength());
+    }
+
     [Fact]
     public async Task Packages_AreChecked_Scoped_Previewed_Hidden_AndRemoved()
     {

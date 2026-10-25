@@ -2750,6 +2750,8 @@ public class CourseLmsPageModel
     public bool               IsConnected   { get; set; }
     /// <summary>Plan M7: the student's modules with items, progress and locks (null for staff or when unavailable).</summary>
     public Tabsan.EduSphere.Application.Lms.StudentModulesResponse? Progress { get; set; }
+    /// <summary>The student's courses, for choosing which course to open.</summary>
+    public List<MyEnrollmentItem> Courses { get; set; } = new();
 }
 
 public class LmsManagePageModel

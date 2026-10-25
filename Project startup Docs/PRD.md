@@ -1,5 +1,8 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-10-25 — Product Requirements Synchronization (SCORM parts, Course Content, real IdP check, user manual v1.5)
+- SCORM packages with several parts show a contents list with each part's status and Previous/Next; each part keeps its own progress and the package rolls up from its parts (§26.15, FR-M13.5). Students open their course modules from a **Course Content** menu with a course chooser (FR-M7.4). Single sign-on was checked against a real identity provider (Keycloak, OIDC and SAML) and the illustrated user manual now covers every Plan M feature (§26.18). Fixed: quiz essay grading with bank-drawn questions, notification dates and mark-read in the portal.
+
 ### 2026-10-24 — Product Requirements Synchronization (Plan M open items)
 - SSO attribute mapping (institution ID, role check), SAML signed requests and encrypted assertions, LTI Dynamic Registration and paged LTI services added (§26.3, §26.7); push verified through FCM and Windows push; LTI certification readiness documented. Remaining: physical phones, vendor-account tools, 1EdTech certification.
 
@@ -5996,6 +5999,7 @@ This section states the product requirements added by Plans K, L and M (October 
 - **FR-M7.1** Modules are ordered lists of items (header, page, video, material, assignment, quiz, discussion, external tool, link, SCORM package) with indentation and publishing.
 - **FR-M7.2** One completion requirement per item (view, mark done, submit, score at least, contribute); progress is computed from live data and shown to students and teachers (per-student progress report).
 - **FR-M7.3** Release conditions: prerequisite modules, unlock dates, sequential order; locked items show the reason and the API refuses quizzes, submissions and tool launches that are only in locked places.
+- **FR-M7.4** Students reach their courses' modules from the **Course Content** menu, choosing the course from their current enrolments (dropped, withdrawn and waitlisted courses are not offered).
 
 ### 26.10 Assignment policies, groups and peer review (M8)
 - **FR-M8.1** Course late policy (deduction per hour/day with a floor; teacher can waive per submission) and missing-work grade; assignment availability window and late cut-off.
@@ -6028,6 +6032,7 @@ This section states the product requirements added by Plans K, L and M (October 
 - **FR-M13.2** Students launch packages from courses or modules; progress is saved and resumed; finished attempts reopen for review; the best score goes to the gradebook through the package's assignment and counts for module requirements.
 - **FR-M13.3** The player runs from sealed, time-limited links without the portal session and can be served from a separate content origin.
 - **FR-M13.4** Minimal xAPI 1.0.3 Learning Record Store (Basic credentials created by administrators, statement validation, voiding, queries).
+- **FR-M13.5** Packages in parts: every launchable item of the default organization is a part (up to 200) that the learner opens from a contents list (status per part, Previous/Next); each part keeps its own resume data; the attempt is complete when every part is, failed if a part failed, passed when every SCO passed (a package of pages only has no pass/fail), its score is the average of the parts' scores and its time their sum. SCORM 2004 sequencing rules are not applied (the learner chooses the part).
 
 ### 26.16 Accessibility, scale and the public API (M14)
 - **FR-M14.1 Accessibility:** every portal page meets WCAG 2.1 AA in automated checks (axe-core on 142 staff/student pages and the login page; serious or critical findings fail the test run); keyboard operation without traps with a visible focus indicator; an Accessibility Conformance Report (VPAT 2.5 structure) is published with its known limitations.
@@ -6046,13 +6051,15 @@ This section states the product requirements added by Plans K, L and M (October 
 ### 26.18 Acceptance evidence
 Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS-Parity-Gap-Closure.md` (unit, integration, web-integration and Playwright tests per phase). Final sweep (2026-10-24): unit 597/597, integration 367/368 (1 long-standing skip), web-integration 93/93, contract 1/1 and the Plan M Playwright specs 41/41 (SSO, assignments, grading, localisation, live classes, LTI, module progress, outcomes, PWA, SCORM, similarity, accessibility).
 
+- 2026-10-25: unit 638/638, integration 371/372 (1 long-standing skip), web-integration 98/98, contract 1/1, Plan M Playwright specs 41/41. Real-system checks: single sign-on against a Keycloak 26.8 identity provider over OIDC and SAML (ID and email linking, role refusal, signed requests, encrypted assertions — `User Guide/SSO-Setup-Guide.md` §9.1); Rustici *Golf Explained* SCORM 1.2/2004 packages (single SCO, 18 parts, 8 SCOs) played as a student with scores reaching the gradebook. User manual v1.5 (`User Guide/Tabsan-EduSphere-User-Manual.pdf`, 154 pages, 121 screenshots) documents every Plan M feature.
+
 ### 26.19 Open items (need external systems or devices)
-- SSO: a sign-in against a live institutional IdP.
+- SSO: a sign-in against an institution's own Entra ID / Google Workspace tenant (OIDC and SAML verified with Keycloak).
 - PWA/mobile: a final check on physical Android/iOS phones (Android behaviour verified in Chrome's Android emulation; push through FCM and Windows push verified); iOS build on a Mac; native-app push with the institution's Firebase project.
 - LTI: checks with vendor tools that need accounts (H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification (needs membership; readiness report done).
 - Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
 - Localisation: native-speaker review of Urdu and Arabic texts.
-- SCORM: commercial authoring-tool packages and multi-SCO sequencing.
+- SCORM: packages exported by commercial authoring tools (Articulate, iSpring, Captivate) and SCORM 2004 sequencing rules (packages in parts are supported; the Rustici sample packages are verified).
 - M14: the 5,000-user staging load run, a run against live Azure Blob/S3 accounts, and accessibility testing with assistive-technology users.
 
 ---

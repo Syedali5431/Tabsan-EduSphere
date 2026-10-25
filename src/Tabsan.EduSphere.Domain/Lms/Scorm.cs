@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Tabsan.EduSphere.Domain.Common;
 
 namespace Tabsan.EduSphere.Domain.Lms;
@@ -37,6 +38,10 @@ public class ScormPackage : BaseEntity
     public Guid CreatedByUserId { get; private set; }
     /// <summary>Removed packages keep their attempts (and grades) but are no longer shown or launched.</summary>
     public bool IsRemoved { get; private set; }
+    /// <summary>The parts of a multi-part package (JSON list of <see cref="ScormPart"/>, in manifest order); null for one part.</summary>
+    public string? PartsJson { get; private set; }
+
+    public const int MaxParts = 200;
 
     private ScormPackage() { }
 
@@ -92,6 +97,44 @@ public class ScormPackage : BaseEntity
     public void Remove() { IsRemoved = true; IsPublished = false; Touch(); }
 
     public bool AllowsAnotherAttempt(int attemptsUsed) => MaxAttempts == 0 || attemptsUsed < MaxAttempts;
+
+    /// <summary>Stores the package's parts (more than one: the learner moves between them in the player).</summary>
+    public void SetParts(IReadOnlyList<ScormPart> parts)
+    {
+        if (parts.Count > MaxParts) throw new ArgumentException($"The package has more than {MaxParts} parts.", nameof(parts));
+        PartsJson = parts.Count > 1 ? JsonSerializer.Serialize(parts) : null;
+        Touch();
+    }
+
+    /// <summary>The parts in manifest order; a one-part package is its launch file.</summary>
+    public IReadOnlyList<ScormPart> Parts => PartsJson is { Length: > 0 } json && JsonSerializer.Deserialize<List<ScormPart>>(json) is { Count: > 0 } list
+        ? list
+        : [new ScormPart(SinglePartId, Title, LaunchPath, true, MasteryScore)];
+
+    public bool IsMultiPart => PartsJson is { Length: > 0 };
+
+    public const string SinglePartId = "package";
+}
+
+/// <summary>
+/// One launchable part of a package (an item of the default organization): a SCO that talks to the runtime, or an asset
+/// (a plain page) that counts as done once opened.
+/// </summary>
+public sealed record ScormPart(string Id, string Title, string LaunchPath, bool IsSco, decimal? MasteryScore);
+
+/// <summary>A learner's data for one part of a multi-part package (kept on the attempt).</summary>
+public sealed class ScormPartState
+{
+    public string CompletionStatus { get; set; } = "not attempted";
+    public string SuccessStatus { get; set; } = "unknown";
+    public decimal? ScorePercent { get; set; }
+    public int TotalSeconds { get; set; }
+    public int CommitCount { get; set; }
+    public string? Exit { get; set; }
+    public string? CmiJson { get; set; }
+    public DateTime? LastCommitAt { get; set; }
+
+    public bool IsDone => CompletionStatus == "completed" || SuccessStatus is "passed" or "failed";
 }
 
 /// <summary>What a SCO reported in one commit, already read from the version's data model (see ScormCmi in the application layer).</summary>
@@ -137,6 +180,8 @@ public class ScormAttempt : BaseEntity
     public DateTime? LastCommitAt { get; private set; }
     /// <summary>First time the attempt was completed, passed or failed.</summary>
     public DateTime? FinishedAt { get; private set; }
+    /// <summary>Multi-part packages: each part's data (JSON object part id → <see cref="ScormPartState"/>); the attempt's own values are the roll-up.</summary>
+    public string? PartsStateJson { get; private set; }
 
     private ScormAttempt() { }
 
@@ -168,6 +213,69 @@ public class ScormAttempt : BaseEntity
         CommitCount++;
         LastCommitAt = now;
         if (FinishedAt is null && (CompletionStatus == "completed" || SuccessStatus is "passed" or "failed")) FinishedAt = now;
+        Touch();
+    }
+
+    /// <summary>Each part's data (multi-part packages).</summary>
+    public Dictionary<string, ScormPartState> PartStates()
+        => PartsStateJson is { Length: > 0 } json && JsonSerializer.Deserialize<Dictionary<string, ScormPartState>>(json) is { } states
+            ? states : new Dictionary<string, ScormPartState>();
+
+    /// <summary>
+    /// Stores a commit of one part of a multi-part package and rolls the parts up: completed when every part is done (failed
+    /// when a part failed, passed when every SCO passed), the score the average of the parts' scores, the time their sum.
+    /// </summary>
+    public void ApplyPart(IReadOnlyList<ScormPart> parts, string partId, ScormCommitValues v, string? cmiJson, bool finalCommit, DateTime now)
+    {
+        var states = PartStates();
+        var state = states.GetValueOrDefault(partId) ?? new ScormPartState();
+        state.CompletionStatus = Clip(v.CompletionStatus, 20) ?? "unknown";
+        state.SuccessStatus = Clip(v.SuccessStatus, 20) ?? "unknown";
+        state.ScorePercent = Percent(v) ?? state.ScorePercent;
+        state.Exit = Clip(v.Exit, 20);
+        // The parts share the attempt's room for saved data (each part keeps at least twice the largest suspend data).
+        var cmiLimit = Math.Max(MaxSuspendDataLength * 2, MaxCmiJsonLength / Math.Max(1, parts.Count));
+        if (cmiJson is not null) state.CmiJson = cmiJson.Length <= cmiLimit ? cmiJson : null;
+        if (finalCommit && v.SessionSeconds > 0) state.TotalSeconds = (int)Math.Min(int.MaxValue, (long)state.TotalSeconds + v.SessionSeconds);
+        state.CommitCount++;
+        state.LastCommitAt = now;
+        states[partId] = state;
+        Location = Clip(v.Location, 1000);
+        Exit = state.Exit;
+        RollUp(parts, states, now);
+    }
+
+    /// <summary>An asset part (a plain page without the runtime) is done once the learner opens it.</summary>
+    public void MarkPartViewed(IReadOnlyList<ScormPart> parts, string partId, DateTime now)
+    {
+        var states = PartStates();
+        if (states.TryGetValue(partId, out var existing) && existing.IsDone) return;
+        states[partId] = new ScormPartState { CompletionStatus = "completed", CommitCount = 1, LastCommitAt = now };
+        RollUp(parts, states, now);
+    }
+
+    private void RollUp(IReadOnlyList<ScormPart> parts, Dictionary<string, ScormPartState> states, DateTime now)
+    {
+        PartsStateJson = JsonSerializer.Serialize(states);
+        var ofParts = parts.Select(p => (Part: p, State: states.GetValueOrDefault(p.Id))).ToList();
+        var allDone = ofParts.All(x => x.State?.IsDone == true);
+        CompletionStatus = allDone ? "completed" : ofParts.Any(x => x.State is not null) ? "incomplete" : "not attempted";
+        // A package of pages only (no SCOs) is completed by opening them; it has nothing to pass.
+        var scoParts = ofParts.Where(x => x.Part.IsSco).ToList();
+        SuccessStatus = !allDone ? "unknown"
+            : ofParts.Any(x => x.State!.SuccessStatus == "failed") ? "failed"
+            : scoParts.Count > 0 && scoParts.All(x => x.State!.SuccessStatus == "passed") ? "passed"
+            : "unknown";
+        var scores = ofParts.Where(x => x.State?.ScorePercent is not null).Select(x => x.State!.ScorePercent!.Value).ToList();
+        ScorePercent = scores.Count > 0 ? Math.Round(scores.Average(), 2) : null;
+        ScoreRaw = ScorePercent;
+        ScoreMin = ScorePercent is null ? null : 0;
+        ScoreMax = ScorePercent is null ? null : 100;
+        ScoreScaled = ScorePercent / 100;
+        TotalSeconds = (int)Math.Min(int.MaxValue, ofParts.Sum(x => (long)(x.State?.TotalSeconds ?? 0)));
+        CommitCount++;
+        LastCommitAt = now;
+        if (FinishedAt is null && allDone) FinishedAt = now;
         Touch();
     }
 

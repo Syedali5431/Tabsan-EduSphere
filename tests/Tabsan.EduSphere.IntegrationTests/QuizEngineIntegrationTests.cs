@@ -204,6 +204,35 @@ public class QuizEngineIntegrationTests
         Assert.Equal(0, import.GetProperty("errors").GetArrayLength());
     }
 
+    [Fact]
+    public async Task EssayGrading_InAQuizThatDrawsFromABank_CompletesTheTotal()
+    {
+        var offeringId = await SeedOfferingAsync();
+        using var faculty = Client("Faculty");
+        var bankId = (await (await faculty.PostAsJsonAsync("api/v1/quiz/banks", new { title = "Pool", courseOfferingId = offeringId, isShared = false }))
+            .Content.ReadFromJsonAsync<JsonElement>()).GetProperty("bankId").GetGuid();
+        await faculty.PostAsJsonAsync($"api/v1/quiz/banks/{bankId}/questions", new { text = "What is 2 + 2?", type = "Numeric", marks = 1, configJson = """{"answer":4}""" });
+        var quizId = await CreateQuizAsync(faculty, offeringId);
+        await AddAsync(faculty, quizId, "Explain your method.", "Essay", 5, 1);
+        (await faculty.PostAsJsonAsync($"api/v1/quiz/{quizId}/groups",
+            new { questionBankId = bankId, title = "One sum", pickCount = 1, marksPerQuestion = 2, orderIndex = 2, tagFilter = (string?)null })).EnsureSuccessStatusCode();
+        (await faculty.PostAsync($"api/v1/quiz/{quizId}/publish", null)).EnsureSuccessStatusCode();
+
+        using var student = Client("Student", Guid.NewGuid());
+        var attemptId = (await StartAsync(student, quizId)).GetProperty("attemptId").GetGuid();
+        var paper = await student.GetFromJsonAsync<JsonElement>($"api/v1/quiz/attempt/{attemptId}/paper");
+        var answers = paper.GetProperty("questions").EnumerateArray().Select(q => q.GetProperty("type").GetString() == "Essay"
+            ? (object)new { quizQuestionId = q.GetProperty("questionId").GetGuid(), textResponse = "I added them." }
+            : new { quizQuestionId = q.GetProperty("questionId").GetGuid(), responseJson = """{"value":"4"}""" }).ToList();
+        (await student.PostAsJsonAsync("api/v1/quiz/attempt/submit", new { attemptId, answers })).EnsureSuccessStatusCode();
+
+        // The bank question is not one of the quiz's own; grading the essay must still total the attempt.
+        var essay = (await faculty.GetFromJsonAsync<JsonElement>($"api/v1/quiz/{quizId}/grading-queue")).EnumerateArray().Single();
+        Assert.Equal(HttpStatusCode.NoContent, (await faculty.PostAsJsonAsync("api/v1/quiz/attempt/grade-answer",
+            new { answerId = essay.GetProperty("answerId").GetGuid(), marksAwarded = 4, feedback = "Good" })).StatusCode);
+        Assert.Equal(6m, (await student.GetFromJsonAsync<JsonElement>($"api/v1/quiz/attempt/{attemptId}/review")).GetProperty("totalScore").GetDecimal());
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // Access code, IP allow-list, locking, accommodations, overrides, timing, review
     // ═════════════════════════════════════════════════════════════════════════

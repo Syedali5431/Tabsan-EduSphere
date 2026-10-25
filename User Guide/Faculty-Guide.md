@@ -332,7 +332,7 @@ In the EduSphere app open a course to **Take attendance** (tap each student to s
 
 ## 10.10 SCORM Packages (Plan M13)
 
-On a course's **Manage Course Content** page, open **SCORM packages › Upload a SCORM package** and choose the zip exported from your authoring tool (Articulate, iSpring, Captivate, …; SCORM 1.2 or 2004). Set the allowed attempts (0 = unlimited), whether it is **Graded** (the best score goes to the gradebook, scaled to the marks you set) and whether students can see it. Use **Preview** to try it (nothing is recorded), **Report** to see each student's attempts, status, best and last score and time, and add the package to a module with a requirement such as "Score at least 80%". Packages with several SCOs start with the first one.
+On a course's **Manage Course Content** page, open **SCORM packages › Upload a SCORM package** and choose the zip exported from your authoring tool (Articulate, iSpring, Captivate, …; SCORM 1.2 or 2004). Set the allowed attempts (0 = unlimited), whether it is **Graded** (the best score goes to the gradebook, scaled to the marks you set) and whether students can see it. Use **Preview** to try it (nothing is recorded), **Report** to see each student's attempts, status, best and last score and time, and add the package to a module with a requirement such as "Score at least 80%". A package in parts (several SCOs or pages, such as one lesson per topic and a quiz) shows students a contents list with each part's status and **Previous** / **Next**; each part keeps its own progress, the package is complete when every part is, and its score is the average of the parts' scores (packages uploaded before October 2026 start with the first part until uploaded again).
 
 ## 11. Theme and Accessibility
 

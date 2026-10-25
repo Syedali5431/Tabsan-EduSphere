@@ -2461,12 +2461,12 @@ public partial class EduApiClient : IEduApiClient
         var raw = await GetAsync<List<NotificationApiDto>>("api/v1/notification/inbox", ct) ?? new();
         return raw.Select(n => new NotificationItem
         {
-            Id               = n.Id,
+            Id               = n.NotificationId,
             Title            = n.Title ?? "",
             Body             = n.Body,
-            NotificationType = n.NotificationType ?? "",
+            NotificationType = n.Type ?? "",
             IsRead           = n.IsRead,
-            CreatedAt        = n.CreatedAt
+            CreatedAt        = n.SentAt
         }).ToList();
     }
 
@@ -2482,14 +2482,15 @@ public partial class EduApiClient : IEduApiClient
     public Task MarkAllNotificationsReadAsync(CancellationToken ct)
         => PostAsync<object, object>("api/v1/notification/read-all", new { }, ct);
 
+    // Mirrors the API's NotificationResponse (notificationId, type, sentAt).
     private sealed class NotificationApiDto
     {
-        public Guid     Id               { get; set; }
-        public string?  Title            { get; set; }
-        public string?  Body             { get; set; }
-        public string?  NotificationType { get; set; }
-        public bool     IsRead           { get; set; }
-        public DateTime CreatedAt        { get; set; }
+        public Guid     NotificationId { get; set; }
+        public string?  Title          { get; set; }
+        public string?  Body           { get; set; }
+        public string?  Type           { get; set; }
+        public bool     IsRead         { get; set; }
+        public DateTime SentAt         { get; set; }
     }
 
     private sealed class BadgeDto { public int UnreadCount { get; set; } }

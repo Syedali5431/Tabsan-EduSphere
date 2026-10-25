@@ -83,6 +83,7 @@ public sealed class ScormService
             var package = new ScormPackage(offeringId, title, contents.Manifest.Version, contents.Manifest.Identifier, contents.Manifest.LaunchPath,
                 contents.Files.Count, contents.TotalBytes, contents.Manifest.MasteryScore, actorUserId, contents.Manifest.ScoCount);
             package.SetMaxAttempts(r.MaxAttempts);
+            package.SetParts(contents.Manifest.Parts ?? []);
 
             try
             {
@@ -227,7 +228,7 @@ public sealed class ScormService
 
         var token = _tokens.Issue(new ScormPlayClaims(attempt.Id, packageId, studentProfileId, review), TimeSpan.FromHours(Math.Clamp(_options.PlayTokenHours, 1, 48)));
         return ScormResult<ScormLaunchResponse>.Success(new ScormLaunchResponse(token, packageId, package.Title, VersionName(package.Version), package.LaunchPath,
-            attempt.Number, review ? "review" : "normal", attempts.Count, package.MaxAttempts));
+            attempt.Number, review ? "review" : "normal", attempts.Count, package.MaxAttempts, PartStatuses(package, attempt)));
     }
 
     /// <summary>A play link for staff to try a package: nothing is recorded (review mode, no attempt).</summary>
@@ -237,32 +238,59 @@ public sealed class ScormService
         if (package is null || package.IsRemoved) return ScormResult<ScormLaunchResponse>.Fail(404, "Package not found.");
         var token = _tokens.Issue(new ScormPlayClaims(Guid.Empty, packageId, Guid.Empty, true), TimeSpan.FromHours(2));
         return ScormResult<ScormLaunchResponse>.Success(new ScormLaunchResponse(token, packageId, package.Title, VersionName(package.Version), package.LaunchPath,
-            0, "preview", 0, package.MaxAttempts));
+            0, "preview", 0, package.MaxAttempts, PartStatuses(package, null)));
     }
 
-    /// <summary>The player shell's start data for a play link.</summary>
-    public async Task<ScormResult<ScormPlayResponse>> PlayAsync(string token, CancellationToken ct = default)
+    /// <summary>
+    /// The player shell's start data for a play link: the requested part of a multi-part package (else the first part not
+    /// done yet) with that part's saved data; an asset part counts as done once opened.
+    /// </summary>
+    public async Task<ScormResult<ScormPlayResponse>> PlayAsync(string token, CancellationToken ct = default, string? partId = null)
     {
         if (await OpenTokenAsync(token, ct) is not { } t) return ScormResult<ScormPlayResponse>.Fail(404, "This link has expired. Open the package again from the course.");
         var learner = t.Claims.AttemptId == Guid.Empty ? new ScormLearnerInfo(Guid.Empty, Guid.Empty, "Preview", "preview")
             : await _repo.GetLearnerAsync(t.Attempt.StudentProfileId, ct);
-        var cmi = ScormCmi.Initial(t.Package.Version, t.Attempt, learner?.RegistrationNumber ?? t.Attempt.StudentProfileId.ToString("N"),
-            learner?.Name ?? "Learner", t.Package.MasteryScore, t.Claims.Review);
-        return ScormResult<ScormPlayResponse>.Success(new ScormPlayResponse(t.Package.Id, t.Package.Title, VersionName(t.Package.Version), t.Package.LaunchPath,
-            t.Claims.Review ? "review" : "normal", t.Attempt.Number, cmi));
+        var learnerId = learner?.RegistrationNumber ?? t.Attempt.StudentProfileId.ToString("N");
+        var parts = t.Package.Parts;
+        var part = (partId is null ? null : parts.FirstOrDefault(p => p.Id == partId)) ?? FirstOpenPart(t.Package, t.Attempt);
+        string cmi;
+        if (t.Package.IsMultiPart)
+        {
+            if (!part.IsSco && !t.Claims.Review && t.Claims.AttemptId != Guid.Empty)
+            {
+                var wasFinished = t.Attempt.IsFinished;
+                t.Attempt.MarkPartViewed(parts, part.Id, _now());
+                await _repo.SaveChangesAsync(ct);
+                if (t.Package.AssignmentId is not null && t.Attempt.IsFinished && !wasFinished) await TryPostBestScoreAsync(t.Package, t.Attempt.StudentProfileId, ct);
+            }
+            var state = t.Attempt.PartStates().GetValueOrDefault(part.Id);
+            cmi = ScormCmi.Initial(t.Package.Version, state?.CmiJson, state?.CommitCount ?? 0, state?.Exit, state?.TotalSeconds ?? 0, learnerId,
+                learner?.Name ?? "Learner", part.MasteryScore ?? t.Package.MasteryScore, t.Claims.Review);
+        }
+        else cmi = ScormCmi.Initial(t.Package.Version, t.Attempt, learnerId, learner?.Name ?? "Learner", t.Package.MasteryScore, t.Claims.Review);
+        return ScormResult<ScormPlayResponse>.Success(new ScormPlayResponse(t.Package.Id, t.Package.Title, VersionName(t.Package.Version), part.LaunchPath,
+            t.Claims.Review ? "review" : "normal", t.Attempt.Number, cmi, part.Id, part.Title, part.IsSco, PartStatuses(t.Package, t.Attempt)));
     }
 
-    /// <summary>Stores a commit from the runtime. Review sessions are accepted but change nothing.</summary>
-    public async Task<ScormResult<ScormCommitResponse>> CommitAsync(string token, string body, bool finalCommit, CancellationToken ct = default)
+    /// <summary>The parts and their status for a play link (the player refreshes its contents list after each commit).</summary>
+    public async Task<ScormResult<IReadOnlyList<ScormPartStatus>>> PartsAsync(string token, CancellationToken ct = default)
+        => await OpenTokenAsync(token, ct) is { } t
+            ? ScormResult<IReadOnlyList<ScormPartStatus>>.Success(PartStatuses(t.Package, t.Attempt))
+            : ScormResult<IReadOnlyList<ScormPartStatus>>.Fail(404, "This link has expired.");
+
+    /// <summary>Stores a commit from the runtime (of one part for multi-part packages). Review sessions are accepted but change nothing.</summary>
+    public async Task<ScormResult<ScormCommitResponse>> CommitAsync(string token, string body, bool finalCommit, CancellationToken ct = default, string? partId = null)
     {
         if (await OpenTokenAsync(token, ct) is not { } t) return ScormResult<ScormCommitResponse>.Fail(404, "This link has expired.");
         if (body.Length > ScormAttempt.MaxCmiJsonLength * 2) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
         if (ScormCmi.CmiOf(body) is not { } cmi) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
         if (t.Claims.Review) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(true, 0));
+        var part = t.Package.IsMultiPart ? t.Package.Parts.FirstOrDefault(p => p.Id == partId) : null;
+        if (t.Package.IsMultiPart && part is null) return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(false, 101));
 
         var wasFinished = t.Attempt.IsFinished;
         var previousBest = t.Attempt.ScorePercent;
-        var values = ScormCmi.Read(t.Package.Version, cmi, t.Package.MasteryScore);
+        var values = ScormCmi.Read(t.Package.Version, cmi, part?.MasteryScore ?? t.Package.MasteryScore);
         var stored = new JsonObject { ["cmi"] = cmi.DeepClone() }.ToJsonString();
         if (stored.Length > ScormAttempt.MaxCmiJsonLength && cmi["interactions"] is not null)
         {
@@ -271,15 +299,43 @@ public sealed class ScormService
             trimmed.Remove("interactions");
             stored = new JsonObject { ["cmi"] = trimmed }.ToJsonString();
         }
-        t.Attempt.Apply(values, stored, finalCommit, _now());
+        if (part is not null) t.Attempt.ApplyPart(t.Package.Parts, part.Id, values, stored, finalCommit, _now());
+        else t.Attempt.Apply(values, stored, finalCommit, _now());
         await _repo.SaveChangesAsync(ct);
 
         if (t.Package.AssignmentId is not null && t.Attempt.IsFinished && (!wasFinished || previousBest != t.Attempt.ScorePercent))
-        {
-            try { await PostBestScoreAsync(t.Package, t.Attempt.StudentProfileId, ct); }
-            catch (Exception ex) when (ex is not OperationCanceledException) { _logger?.LogWarning(ex, "SCORM score could not be posted to the gradebook."); }
-        }
+            await TryPostBestScoreAsync(t.Package, t.Attempt.StudentProfileId, ct);
         return ScormResult<ScormCommitResponse>.Success(new ScormCommitResponse(true, 0));
+    }
+
+    private async Task TryPostBestScoreAsync(ScormPackage package, Guid studentProfileId, CancellationToken ct)
+    {
+        try { await PostBestScoreAsync(package, studentProfileId, ct); }
+        catch (Exception ex) when (ex is not OperationCanceledException) { _logger?.LogWarning(ex, "SCORM score could not be posted to the gradebook."); }
+    }
+
+    /// <summary>The first part not done yet in this attempt (the first part when all are done).</summary>
+    private static ScormPart FirstOpenPart(ScormPackage package, ScormAttempt attempt)
+    {
+        var parts = package.Parts;
+        if (!package.IsMultiPart) return parts[0];
+        var states = attempt.PartStates();
+        return parts.FirstOrDefault(p => states.GetValueOrDefault(p.Id)?.IsDone != true) ?? parts[0];
+    }
+
+    /// <summary>Each part's status in an attempt (a one-part package reports the attempt itself).</summary>
+    private static IReadOnlyList<ScormPartStatus> PartStatuses(ScormPackage package, ScormAttempt? attempt)
+    {
+        static string StatusOf(string completion, string success) => success is "passed" or "failed" ? success : completion;
+        if (!package.IsMultiPart)
+        {
+            var only = package.Parts[0];
+            return [new ScormPartStatus(only.Id, package.Title, true, attempt is null ? "not attempted" : StatusOf(attempt.CompletionStatus, attempt.SuccessStatus), attempt?.ScorePercent)];
+        }
+        var states = attempt?.PartStates() ?? new Dictionary<string, ScormPartState>();
+        return package.Parts.Select(p => states.GetValueOrDefault(p.Id) is { } s
+            ? new ScormPartStatus(p.Id, p.Title, p.IsSco, StatusOf(s.CompletionStatus, s.SuccessStatus), s.ScorePercent)
+            : new ScormPartStatus(p.Id, p.Title, p.IsSco, "not attempted", null)).ToList();
     }
 
     /// <summary>A file of the package for a play link (null when the link or file is unknown).</summary>
@@ -356,7 +412,7 @@ public sealed class ScormService
 
     private static ScormPackageResponse ToResponse(ScormPackage p, ScormLearnerSummary? mine)
         => new(p.Id, p.OfferingId, p.Title, VersionName(p.Version), p.LaunchPath, p.FileCount, p.SizeBytes, p.MasteryScore, p.MaxAttempts, p.IsPublished,
-            p.AssignmentId is not null, p.MaxMarks, p.AssignmentId, p.CreatedAt, p.ScoCount, mine);
+            p.AssignmentId is not null, p.MaxMarks, p.AssignmentId, p.CreatedAt, p.ScoCount, mine, p.Parts.Count);
 
     public static string VersionName(ScormVersion v) => v == ScormVersion.Scorm2004 ? "SCORM 2004" : "SCORM 1.2";
 

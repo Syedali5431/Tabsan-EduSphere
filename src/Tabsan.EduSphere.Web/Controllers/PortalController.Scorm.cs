@@ -145,7 +145,8 @@ public partial class PortalController
             AttemptNumber = launch.AttemptNumber,
             PlayerUrl = $"{origin}/scorm/play/{launch.Token}/",
             IsStaff = isStaff,
-            ModuleItemId = moduleItem
+            ModuleItemId = moduleItem,
+            Parts = launch.Parts?.ToList() ?? []
         });
     }
 

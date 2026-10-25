@@ -33,11 +33,11 @@ public sealed class ScormPlayController : Controller
 
     /// <summary>The shell. Always served with a trailing slash so the package's relative links stay under the play link.</summary>
     [HttpGet("")]
-    public async Task<IActionResult> Shell(string token, CancellationToken ct)
+    public async Task<IActionResult> Shell(string token, [FromQuery] string? part, CancellationToken ct)
     {
-        if (!(Request.Path.Value ?? "").EndsWith('/')) return Redirect(Request.PathBase + Request.Path + "/");
+        if (!(Request.Path.Value ?? "").EndsWith('/')) return Redirect(Request.PathBase + Request.Path + "/" + Request.QueryString);
         Isolate(shell: true);
-        using var response = await Client().GetAsync(ApiPath(token, ""), ct);
+        using var response = await Client().GetAsync(ApiPath(token, string.IsNullOrEmpty(part) ? "" : "?part=" + Uri.EscapeDataString(part)), ct);
         if (!response.IsSuccessStatusCode) return View("Expired");
         var play = await response.Content.ReadFromJsonAsync<ScormPlayResponse>(Json, ct);
         if (play is null) return View("Expired");
@@ -47,7 +47,10 @@ public sealed class ScormPlayController : Controller
             Version = play.Version,
             Mode = play.Mode,
             LaunchUrl = "content/" + LaunchUrl(play.LaunchPath),
-            CmiJson = play.CmiJson
+            CmiJson = play.CmiJson,
+            // Multi-part packages: each part commits to its own address (the part is not in the query, which the runtime extends).
+            CommitUrl = play.Parts is { Count: > 1 } && play.PartId is { } partId ? "commit/" + Uri.EscapeDataString(partId) : "commit",
+            PartId = play.PartId
         });
     }
 
@@ -73,17 +76,28 @@ public sealed class ScormPlayController : Controller
 
     /// <summary>The runtime's commit (JSON, or text/plain from sendBeacon) relayed to the API; answers { result, errorCode }.</summary>
     [HttpPost("commit")]
+    [HttpPost("commit/{part}")]
     [IgnoreAntiforgeryToken]
     [RequestSizeLimit(4_500_000)]
-    public async Task<IActionResult> Commit(string token, [FromQuery] bool final, CancellationToken ct)
+    public async Task<IActionResult> Commit(string token, string? part, [FromQuery] bool final, CancellationToken ct)
     {
         Isolate(shell: false);
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync(ct);
-        using var response = await Client().PostAsync(ApiPath(token, "/commit" + (final ? "?final=true" : "")),
-            new StringContent(body, Encoding.UTF8, "application/json"), ct);
+        var path = "/commit" + (string.IsNullOrEmpty(part) ? "" : "/" + Uri.EscapeDataString(part)) + (final ? "?final=true" : "");
+        using var response = await Client().PostAsync(ApiPath(token, path), new StringContent(body, Encoding.UTF8, "application/json"), ct);
         var answer = await response.Content.ReadAsStringAsync(ct);
         return new ContentResult { StatusCode = (int)response.StatusCode, Content = answer, ContentType = "application/json" };
+    }
+
+    /// <summary>Multi-part packages: each part's status (the player page refreshes its contents list with it).</summary>
+    [HttpGet("parts")]
+    public async Task<IActionResult> Parts(string token, CancellationToken ct)
+    {
+        Isolate(shell: false);
+        Response.Headers.CacheControl = "no-store";
+        using var response = await Client().GetAsync(ApiPath(token, "/parts"), ct);
+        return new ContentResult { StatusCode = (int)response.StatusCode, Content = await response.Content.ReadAsStringAsync(ct), ContentType = "application/json" };
     }
 
     // ── pieces ──

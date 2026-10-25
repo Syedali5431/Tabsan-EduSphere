@@ -135,21 +135,31 @@ public sealed class ScormController : ControllerBase
 
     [HttpGet("play/{token}")]
     [AllowAnonymous]
-    public async Task<IActionResult> Play(string token, CancellationToken ct)
+    public async Task<IActionResult> Play(string token, [FromQuery] string? part, CancellationToken ct)
     {
-        var result = await _service.PlayAsync(token, ct);
+        var result = await _service.PlayAsync(token, ct, part);
+        return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { message = result.Error });
+    }
+
+    /// <summary>Multi-part packages: each part's status for the player's contents list.</summary>
+    [HttpGet("play/{token}/parts")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Parts(string token, CancellationToken ct)
+    {
+        var result = await _service.PartsAsync(token, ct);
         return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { message = result.Error });
     }
 
     /// <summary>The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.</summary>
     [HttpPost("play/{token}/commit")]
+    [HttpPost("play/{token}/commit/{part}")]
     [AllowAnonymous]
     [RequestSizeLimit(4_500_000)]
-    public async Task<IActionResult> Commit(string token, [FromQuery] bool final, CancellationToken ct)
+    public async Task<IActionResult> Commit(string token, string? part, [FromQuery] bool final, CancellationToken ct)
     {
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync(ct);
-        var result = await _service.CommitAsync(token, body, final, ct);
+        var result = await _service.CommitAsync(token, body, final, ct, part);
         return result.Ok ? Ok(result.Value) : StatusCode(result.Status, new { result = false, errorCode = 101, message = result.Error });
     }
 

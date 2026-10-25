@@ -88,8 +88,11 @@ for (const item of sidebar) {
   try {
     const resp = await page.goto(BASE + item.href, { timeout: 60000 });
     const name = `${String(i++).padStart(3, '0')}-${item.action}`;
+    // A taller window (not a full-page capture) keeps the fixed sidebar and floating buttons where they belong.
     const h = await page.evaluate(() => document.documentElement.scrollHeight);
-    const file = await shot(name, { fullPage: true, clip: { x: 0, y: 0, width: 1440, height: Math.min(Math.max(h, 900), 1700) } });
+    await page.setViewportSize({ width: 1440, height: Math.min(Math.max(h, 900), 1700) });
+    const file = await shot(name);
+    await page.setViewportSize({ width: 1440, height: 900 });
     const info = await describe();
     meta.pages.push({ ...item, status: resp?.status(), finalUrl: page.url().replace(BASE, ''), file, info });
   } catch (e) {

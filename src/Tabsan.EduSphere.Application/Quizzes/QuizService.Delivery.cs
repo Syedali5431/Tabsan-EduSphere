@@ -312,7 +312,10 @@ public sealed partial class QuizService
     private static void RecomputeTotal(QuizAttempt attempt)
     {
         if (attempt.Status == AttemptStatus.InProgress) return;
-        var questionIds = DeliveredItems(attempt).Select(i => i.Question.Id).ToHashSet();
+        // By id: grading loads the attempt's items without their questions (questions drawn from a bank are not the quiz's own).
+        var questionIds = attempt.Items.Count > 0
+            ? attempt.Items.Select(i => i.QuizQuestionId).ToHashSet()
+            : attempt.Quiz.Questions.Select(q => q.Id).ToHashSet(); // attempts started before Plan M2
         var answers = attempt.Answers.Where(a => questionIds.Contains(a.QuizQuestionId)).ToList();
         if (answers.Any(a => !a.MarksAwarded.HasValue))
             attempt.ClearScore();

@@ -18,8 +18,53 @@
     <div class="border border-success rounded bg-success-subtle text-success-emphasis px-3 py-2 mb-2 d-none" data-scorm-finished role="status">
         @T["Your progress has been saved."] <a href="@back">@T["Back to the package"]</a>
     </div>
-    <iframe class="scorm-frame" data-src="@Model.PlayerUrl" title="@Model.Title" allow="fullscreen; autoplay"></iframe>
+    @if (Model.Parts.Count > 1)
+    {
+        var first = Model.Parts.FirstOrDefault(p => p.Status is not ("completed" or "passed" or "failed")) ?? Model.Parts[0];
+        <div class="row g-2" data-scorm-parts data-player-url="@Model.PlayerUrl">
+            <nav class="col-lg-3" aria-label="@T["Parts of this package"]">
+                <div class="d-flex gap-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" data-scorm-prev>@T["Previous"]</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-scorm-next>@T["Next"]</button>
+                </div>
+                <ol class="list-group list-group-numbered small scorm-parts">
+                    @foreach (var part in Model.Parts)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-start gap-2 @(part.Id == first.Id ? "active" : "")" data-part="@part.Id" aria-current="@(part.Id == first.Id ? "step" : null)">
+                            <button type="button" class="btn btn-link p-0 text-start flex-grow-1 text-reset text-decoration-none" data-part-open="@part.Id">@part.Title</button>
+                            <span class="badge rounded-pill @(PartBadge(part.Status))" data-part-status>@T.Text(PartStatusText(part.Status))@(part.ScorePercent is { } s ? $" · {s:0.#}%" : "")</span>
+                        </li>
+                    }
+                </ol>
+            </nav>
+            <div class="col-lg-9">
+                <iframe class="scorm-frame" data-src="@(Model.PlayerUrl + "?part=" + Uri.EscapeDataString(first.Id))" title="@Model.Title" allow="fullscreen; autoplay"></iframe>
+            </div>
+        </div>
+    }
+    else
+    {
+        <iframe class="scorm-frame" data-src="@Model.PlayerUrl" title="@Model.Title" allow="fullscreen; autoplay"></iframe>
+    }
 </div>
+@functions {
+    private static string PartBadge(string status) => status switch
+    {
+        "passed" or "completed" => "bg-success",
+        "failed" => "bg-danger",
+        "incomplete" => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+
+    private static string PartStatusText(string status) => status switch
+    {
+        "passed" => "Passed",
+        "failed" => "Failed",
+        "completed" => "Completed",
+        "incomplete" => "In progress",
+        _ => "Not started"
+    };
+}
 @section Scripts {
     <script src="~/js/scorm-page.js" asp-append-version="true"></script>
 }

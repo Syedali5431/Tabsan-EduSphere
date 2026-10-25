@@ -425,6 +425,7 @@ public static class DatabaseSeeder
         var outcomesMenu     = await Upsert("outcomes",          "Learning Outcomes",  "Course and program outcomes, mastery gradebook and attainment reports", 41);
         var myOutcomes       = await Upsert("my_outcomes",       "My Outcomes",        "Your mastery of course learning outcomes", 42);
         var liveClasses      = await Upsert("live_classes",      "Live Classes",       "Scheduled online classes: join, recordings and attendance (Plan M10)", 43);
+        var courseContent    = await Upsert("course_content",    "Course Content",     "Your courses' modules, what each item needs and your progress (Plan M7)", 44);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
         var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
@@ -652,6 +653,10 @@ public static class DatabaseSeeder
         EnsureRoleAccess(liveClasses.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(liveClasses.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(liveClasses.Id, "Student", isAllowed: true);
+        // Plan M7: students open their course modules (teachers use LMS Manage).
+        EnsureRoleAccess(courseContent.Id, "Admin",   isAllowed: false);
+        EnsureRoleAccess(courseContent.Id, "Faculty", isAllowed: false);
+        EnsureRoleAccess(courseContent.Id, "Student", isAllowed: true);
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
@@ -790,6 +795,7 @@ public static class DatabaseSeeder
         EnsureRoleAccess(outcomesMenu.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(myOutcomes.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(liveClasses.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(courseContent.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(prerequisites.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(gradebook.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(rubricManage.Id, "Finance", isAllowed: false);

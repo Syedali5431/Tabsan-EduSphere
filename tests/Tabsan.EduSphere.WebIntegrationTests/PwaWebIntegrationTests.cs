@@ -107,6 +107,26 @@ public class PwaWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
         Assert.Equal(HttpStatusCode.BadRequest, noToken.StatusCode);
     }
 
+    [Fact]
+    public async Task NotificationInbox_ShowsTheSentDateAndType_AndMarksTheRightNotificationRead()
+    {
+        var api = new FakeApi();
+        using var client = await SignedInClientAsync(api);
+        var html = await client.GetStringAsync("/Portal/Notifications");
+        Assert.Contains("Live class: Week 1", html);
+        Assert.Contains("09 Oct 2026, 17:32", html); // the API's sentAt, not an empty date
+        Assert.DoesNotContain("0001", html);
+        Assert.Contains(">Announcement</span>", html);
+        Assert.Contains($"name=\"id\" value=\"{FakeApi.NotificationId}\"", html);
+
+        var read = await client.PostAsync("/Portal/MarkNotificationRead", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = Token(html), ["id"] = FakeApi.NotificationId
+        }));
+        Assert.Equal(HttpStatusCode.Redirect, read.StatusCode);
+        Assert.Equal($"POST /api/v1/notification/{FakeApi.NotificationId}/read", api.LastNotificationWrite);
+    }
+
     // ── harness ──────────────────────────────────────────────────────────────
 
     private static string Token(string html)
@@ -138,7 +158,9 @@ public class PwaWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
     private sealed class FakeApi : HttpMessageHandler
     {
         public const string Base = "https://api.test";
+        public const string NotificationId = "5a080752-5ad8-46dc-88f0-1ca18d98e42b";
         public string? LastWrite { get; private set; }
+        public string? LastNotificationWrite { get; private set; }
 
         private static string Jwt()
         {
@@ -154,6 +176,10 @@ public class PwaWebIntegrationTests : IClassFixture<WebApplicationFactory<WebEnt
         {
             var path = request.RequestUri!.AbsolutePath;
             if (request.Method != HttpMethod.Get && path.StartsWith("/api/v1/push")) LastWrite = $"{request.Method} {path}";
+            if (request.Method != HttpMethod.Get && path.StartsWith("/api/v1/notification")) LastNotificationWrite = $"{request.Method} {path}";
+            // The inbox as the API sends it (NotificationResponse).
+            if (path == "/api/v1/notification/inbox")
+                return Task.FromResult(Json($$"""[{"notificationId":"{{NotificationId}}","title":"Live class: Week 1","body":"CS702 Mon 26 Oct","type":"Announcement","isSystemGenerated":true,"sentAt":"2026-10-09T17:32:28.94","isRead":false,"readAt":null}]"""));
 
             if (path == "/api/v1/auth/login")
                 return Task.FromResult(Json(JsonSerializer.Serialize(new

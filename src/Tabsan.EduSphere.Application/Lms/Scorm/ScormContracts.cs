@@ -31,7 +31,10 @@ public sealed record ScormUpdateRequest(string Title, int MaxAttempts, bool IsPu
 
 public sealed record ScormPackageResponse(Guid Id, Guid OfferingId, string Title, string Version, string LaunchPath, int FileCount, long SizeBytes,
     decimal? MasteryScore, int MaxAttempts, bool IsPublished, bool Graded, decimal MaxMarks, Guid? AssignmentId, DateTime CreatedAt,
-    int ScoCount, ScormLearnerSummary? Mine);
+    int ScoCount, ScormLearnerSummary? Mine, int PartCount = 1);
+
+/// <summary>One part of a package for the player's contents list: its status for this attempt and its score.</summary>
+public sealed record ScormPartStatus(string Id, string Title, bool IsSco, string Status, decimal? ScorePercent);
 
 /// <summary>A learner's state on a package (their attempts so far).</summary>
 public sealed record ScormLearnerSummary(int AttemptsUsed, string? Status, decimal? BestScorePercent, bool CanStartNew, DateTime? LastActivityAt);
@@ -39,10 +42,11 @@ public sealed record ScormLearnerSummary(int AttemptsUsed, string? Status, decim
 public sealed record ScormLaunchRequest(bool NewAttempt);
 
 public sealed record ScormLaunchResponse(string Token, Guid PackageId, string Title, string Version, string LaunchPath, int AttemptNumber, string Mode,
-    int AttemptsUsed, int MaxAttempts);
+    int AttemptsUsed, int MaxAttempts, IReadOnlyList<ScormPartStatus>? Parts = null);
 
-/// <summary>What the player shell needs: the SCO to load and the CMI data to start from.</summary>
-public sealed record ScormPlayResponse(Guid PackageId, string Title, string Version, string LaunchPath, string Mode, int AttemptNumber, string CmiJson);
+/// <summary>What the player shell needs: the part (SCO) to load and the CMI data to start from; the parts for the contents list.</summary>
+public sealed record ScormPlayResponse(Guid PackageId, string Title, string Version, string LaunchPath, string Mode, int AttemptNumber, string CmiJson,
+    string? PartId = null, string? PartTitle = null, bool IsSco = true, IReadOnlyList<ScormPartStatus>? Parts = null);
 
 public sealed record ScormCommitResponse(bool Result, int ErrorCode);
 

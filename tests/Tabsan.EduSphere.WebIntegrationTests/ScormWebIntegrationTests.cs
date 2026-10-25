@@ -157,6 +157,41 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
     }
 
     [Fact]
+    public async Task MultiPartPackage_ListsItsParts_AndEachPartCommitsToItsOwnAddress()
+    {
+        var api = new FakeApi("Student") { MultiPart = true };
+        using var client = await SignedInClientAsync(api);
+        var page = await client.GetStringAsync($"/Portal/Scorm/{PackageId}");
+        var launch = await client.PostAsync("/Portal/LaunchScorm", Form(Token(page), ("packageId", PackageId), ("newAttempt", "false")));
+        var player = await client.GetStringAsync(launch.Headers.Location!.ToString());
+        Assert.Contains("data-scorm-parts", player);
+        Assert.Contains("data-scorm-prev", player);
+        Assert.Contains("data-scorm-next", player);
+        Assert.Contains("data-part=\"lesson\"", player);
+        Assert.Contains("90%", player);
+        // The player opens at the first part not done yet.
+        Assert.Contains("data-src=\"/scorm/play/tok-mp/?part=quiz\"", player);
+
+        using var shellClient = Client(api);
+        var bare = await shellClient.GetAsync("/scorm/play/tok-mp?part=quiz");
+        Assert.Equal("/scorm/play/tok-mp/?part=quiz", bare.Headers.Location!.ToString());
+        var shell = await shellClient.GetStringAsync("/scorm/play/tok-mp/?part=quiz");
+        Assert.Equal("?part=quiz", api.LastPlayQuery);
+        Assert.Contains("\"launchUrl\":\"content/quiz.html\"", shell);
+        Assert.Contains("\"commitUrl\":\"commit/quiz\"", shell);
+        Assert.Contains("\"part\":\"quiz\"", shell);
+
+        var commit = await shellClient.PostAsync("/scorm/play/tok-mp/commit/quiz?final=true", new StringContent("{\"cmi\":{}}", Encoding.UTF8, "text/plain"));
+        Assert.Contains("\"result\":true", await commit.Content.ReadAsStringAsync());
+        Assert.Contains("POST /api/v1/scorm/play/tok-mp/commit/quiz", api.Writes);
+        Assert.Equal("?final=true", api.LastCommitQuery);
+
+        var parts = await shellClient.GetAsync("/scorm/play/tok-mp/parts");
+        Assert.Contains("\"status\":\"passed\"", await parts.Content.ReadAsStringAsync());
+        Assert.Contains("no-store", parts.Headers.CacheControl!.ToString());
+    }
+
+    [Fact]
     public async Task Admin_CreatesLrsCredentials_SeesTheSecretOnce_AndSwitchesThemOff()
     {
         var api = new FakeApi("Admin");
@@ -225,6 +260,10 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
         public readonly List<string> Reads = new();
         public string? LastRange { get; private set; }
         public string? LastCommitQuery { get; private set; }
+        public string? LastPlayQuery { get; private set; }
+        /// <summary>The launch returns a package in parts (play link tok-mp).</summary>
+        public bool MultiPart { get; init; }
+        private const string MultiPartParts = """[{"id":"lesson","title":"How to play","isSco":true,"status":"passed","scorePercent":90},{"id":"quiz","title":"Quiz","isSco":true,"status":"not attempted","scorePercent":null}]""";
 
         public IEnumerable<string> Writes => _writes.Select(w => $"{w.Method} {w.Path}");
         public string Body(string method, string path) => _writes.Last(w => w.Method == method && w.Path == path).Body;
@@ -269,6 +308,8 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
             if (path == $"/api/v1/scorm/offerings/{OfferingId}/packages") return Json(Package(false), HttpStatusCode.Created);
             if (path == $"/api/v1/scorm/offerings/{OfferingId}/my-packages") return Json("[" + Package(true) + "]");
             if (path == $"/api/v1/scorm/packages/{PackageId}/mine") return Json(Package(true));
+            if (path == $"/api/v1/scorm/packages/{PackageId}/launch" && MultiPart)
+                return Json("""{"token":"tok-mp","packageId":"c1000000-0000-0000-0000-0000000000c1","title":"Golf","version":"SCORM 1.2","launchPath":"lesson.html","attemptNumber":1,"mode":"normal","attemptsUsed":1,"maxAttempts":3,"parts":""" + MultiPartParts + "}");
             if (path == $"/api/v1/scorm/packages/{PackageId}/launch")
                 return Json("""{"token":"tok-123","packageId":"c1000000-0000-0000-0000-0000000000c1","title":"Fire safety","version":"SCORM 1.2","launchPath":"index.html","attemptNumber":2,"mode":"normal","attemptsUsed":2,"maxAttempts":3}""");
             if (path == $"/api/v1/scorm/packages/{PackageId}/preview")
@@ -283,6 +324,21 @@ public class ScormWebIntegrationTests : IClassFixture<WebApplicationFactory<WebE
                     packageId = PackageId, title = "Fire safety", version = "SCORM 1.2", launchPath = "my course/index.html?x=1", mode = "normal", attemptNumber = 2,
                     cmiJson = "{\"core\":{\"student_id\":\"R-1\",\"student_name\":\"<script>alert(1)</script>\"}}"
                 }));
+            if (path == "/api/v1/scorm/play/tok-mp")
+            {
+                LastPlayQuery = uri.Query;
+                return Json(JsonSerializer.Serialize(new
+                {
+                    packageId = PackageId, title = "Golf", version = "SCORM 1.2", launchPath = "quiz.html", mode = "normal", attemptNumber = 1, cmiJson = "{}",
+                    partId = "quiz", partTitle = "Quiz", isSco = true, parts = JsonSerializer.Deserialize<JsonElement>(MultiPartParts)
+                }));
+            }
+            if (path == "/api/v1/scorm/play/tok-mp/parts") return Json(MultiPartParts);
+            if (path == "/api/v1/scorm/play/tok-mp/commit/quiz")
+            {
+                LastCommitQuery = uri.Query;
+                return Json("{\"result\":true,\"errorCode\":0}");
+            }
             if (path.StartsWith("/api/v1/scorm/play/expired")) return Json("{\"message\":\"This link has expired.\"}", HttpStatusCode.NotFound);
             if (path == "/api/v1/scorm/play/tok-123/content/my%20course/index.html")
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<html>sco</html>", Encoding.UTF8, "text/html") };

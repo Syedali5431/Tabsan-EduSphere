@@ -12,6 +12,9 @@ public sealed class ScormShellModel
     public string Mode { get; set; } = "normal";
     public string LaunchUrl { get; set; } = "";
     public string CmiJson { get; set; } = "{}";
+    /// <summary>Where the runtime commits ("commit", or "commit/{part}" for a part of a multi-part package).</summary>
+    public string CommitUrl { get; set; } = "commit";
+    public string? PartId { get; set; }
 }
 
 /// <summary>"SCORM packages" card of a course: students' list, or the teacher's management.</summary>
@@ -42,6 +45,8 @@ public sealed class ScormPlayerPageModel
     public string PlayerUrl { get; set; } = "";
     public bool IsStaff { get; set; }
     public Guid? ModuleItemId { get; set; }
+    /// <summary>The parts of a multi-part package (contents list); one entry for a one-part package.</summary>
+    public List<ScormPartStatus> Parts { get; set; } = [];
 }
 
 public sealed class ScormReportPageModel

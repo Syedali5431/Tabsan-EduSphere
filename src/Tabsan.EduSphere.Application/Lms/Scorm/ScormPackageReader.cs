@@ -9,8 +9,12 @@ namespace Tabsan.EduSphere.Application.Lms.Scorm;
 /// <summary>A package that cannot be used; the message is shown to the teacher.</summary>
 public sealed class ScormPackageException(string message) : Exception(message);
 
-/// <summary>What the manifest says: version, title, the SCO to launch and its passing score.</summary>
-public sealed record ScormManifest(ScormVersion Version, string? Identifier, string? Title, string LaunchPath, decimal? MasteryScore, int ScoCount);
+/// <summary>
+/// What the manifest says: version, title, the SCO to launch first and its passing score, and every launchable part of the
+/// default organization in order (more than one for multi-part packages).
+/// </summary>
+public sealed record ScormManifest(ScormVersion Version, string? Identifier, string? Title, string LaunchPath, decimal? MasteryScore, int ScoCount,
+    IReadOnlyList<ScormPart>? Parts = null);
 
 /// <summary>A file to extract: its path in the package (after the base folder) and its zip entry.</summary>
 public sealed record ScormPackageEntry(string Path, ZipArchiveEntry Entry);
@@ -69,9 +73,12 @@ public static class ScormPackageReader
             document = LoadManifest(stream);
         var parsed = ParseManifest(document);
 
-        var launchFile = Uri.UnescapeDataString(parsed.LaunchPath.Split('?', '#')[0]);
-        if (!contents.Any(f => f.Path.Equals(launchFile, StringComparison.Ordinal)))
-            throw new ScormPackageException($"The manifest launches \"{launchFile}\", which is not in the package.");
+        foreach (var launchPath in (parsed.Parts ?? []).Select(p => p.LaunchPath).Prepend(parsed.LaunchPath).Distinct())
+        {
+            var launchFile = Uri.UnescapeDataString(launchPath.Split('?', '#')[0]);
+            if (!contents.Any(f => f.Path.Equals(launchFile, StringComparison.Ordinal)))
+                throw new ScormPackageException($"The manifest launches \"{launchFile}\", which is not in the package.");
+        }
         return new ScormPackageContents(parsed, contents, contents.Sum(f => f.Entry.Length));
     }
 
@@ -134,17 +141,35 @@ public static class ScormPackageReader
         else resource = resourceList.FirstOrDefault(r => IsSco(r) && Attr(r, "href") is not null)
                         ?? resourceList.FirstOrDefault(r => Attr(r, "href") is not null)
                         ?? throw new ScormPackageException("imsmanifest.xml does not say which file to launch.");
+        var launch = LaunchOf(root, resources, resource, item);
 
+        // Every launchable item is a part the learner can open (items without a resource only group others).
+        if (launchable.Count > ScormPackage.MaxParts)
+            throw new ScormPackageException($"The package has more than {ScormPackage.MaxParts} parts.");
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        var parts = launchable.Select((i, n) =>
+        {
+            var res = byId[Attr(i, "identifierref")!];
+            var id = Attr(i, "identifier") is { Length: > 0 and <= 100 } given ? given : $"part-{n + 1}";
+            while (!ids.Add(id)) id += "-" + (n + 1);
+            var partTitle = Child(i, "title")?.Value.Trim() is { Length: > 0 } pt ? (pt.Length > 200 ? pt[..200] : pt) : $"Part {n + 1}";
+            return new ScormPart(id, partTitle, LaunchOf(root, resources, res, i), IsSco(res), MasteryScore(i, version));
+        }).ToList();
+
+        var title = (organization is null ? null : Child(organization, "title")?.Value.Trim()) is { Length: > 0 } t ? t : null;
+        return new ScormManifest(version, Attr(root, "identifier"), title, launch, MasteryScore(item, version), Math.Max(1, scoItems.Count), parts);
+    }
+
+    /// <summary>A resource's launch path (xml:base applied, the item's parameters added), checked to stay inside the package.</summary>
+    private static string LaunchOf(XElement root, XElement resources, XElement resource, XElement? item)
+    {
         var href = Attr(resource, "href")!.Trim();
         if (Uri.TryCreate(href, UriKind.Absolute, out var absolute) && absolute.Scheme is "http" or "https" or "ftp" or "file" or "javascript" or "data")
             throw new ScormPackageException("The package launches content from another website. Upload a package that contains its own files.");
         var launch = CombineBase(XmlBase(root), XmlBase(resources), XmlBase(resource), href);
         if (item is not null && Attr(item, "parameters") is { Length: > 0 } parameters) launch = AppendParameters(launch, parameters.Trim());
-        // The launch file itself must stay inside the package.
         NormalizeEntryPath(Uri.UnescapeDataString(launch.Split('?', '#')[0]));
-
-        var title = (organization is null ? null : Child(organization, "title")?.Value.Trim()) is { Length: > 0 } t ? t : null;
-        return new ScormManifest(version, Attr(root, "identifier"), title, launch, MasteryScore(item, version), Math.Max(1, scoItems.Count));
+        return launch;
     }
 
     private static ScormVersion DetectVersion(XElement root)

@@ -11663,6 +11663,19 @@ public partial class PortalController : Controller
         {
             var identity = _api.GetSessionIdentity();
             bool isStudent = identity?.IsStudent == true;
+            // The student's courses for the course chooser (the Course Content menu opens this page without a course).
+            // Without the list the chosen course still shows.
+            if (isStudent)
+            {
+                try
+                {
+                    model.Courses = (await _api.GetMyEnrollmentsAsync(ct))
+                        .Where(e => e.Status is not ("Dropped" or "Withdrawn" or "Waitlisted"))
+                        .OrderBy(e => e.CourseCode).ThenBy(e => e.SemesterName).ToList();
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException) { }
+            }
+            if (offeringId == Guid.Empty) return View(model);
             var modules = await _api.GetLmsModulesAsync(offeringId, isStudent, ct);
             model.Modules = modules.Select(m => new LmsModuleItem
             {

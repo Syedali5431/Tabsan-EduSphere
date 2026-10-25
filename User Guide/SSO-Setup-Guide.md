@@ -210,6 +210,27 @@ EduSphere never creates accounts from SSO; the mapping links and checks existing
 6. When enough users have linked, turn on **Require single sign-on** (confirm the prompt).
 7. Put a reminder in the calendar for the **client secret / SAML certificate expiry**.
 
+### 9.1 Trying it with a local test identity provider (Keycloak)
+
+Before connecting the institution's real directory you can rehearse everything with [Keycloak](https://www.keycloak.org) on the EduSphere server or a laptop (free; needs Java 21). This is how sign-on was checked on 25 October 2026.
+
+1. Run Keycloak over https on localhost, reusing the trusted .NET development certificate: `dotnet dev-certs https -ep localhost.pem --format PEM --no-password`, then `kc.bat start-dev --https-port=8443 --https-certificate-file=localhost.pem --https-certificate-key-file=localhost.key --hostname=https://localhost:8443`. EduSphere requires https for the authority and the SAML metadata; `localhost` is accepted.
+2. In a new realm, add realm roles (`student`, `faculty`, `staff`), allow unmanaged user attributes (Realm settings › User profile) and create test users with an email, an `employeeNumber` attribute (registration number or staff username) and a role.
+3. **OpenID Connect:** a confidential client with redirect URI `<portal>/Login/SsoCallback` and PKCE S256, plus two mappers: user attribute `employeeNumber` → claim `institution_id`, and realm roles → multivalued claim `roles`. In EduSphere: *Other OpenID Connect IdP*, authority `https://localhost:8443/realms/<realm>`, client ID and secret, institution ID claim `institution_id`, role claim `roles`, role mappings `student=Student; faculty=Faculty; staff=Admin|Finance`.
+4. **SAML:** Clients › Import client, and paste the SP metadata from **Download SP metadata** (it carries the entity ID, ACS URL and certificate). Set the NameID format to persistent and add mappers for `email`, `employeeNumber` and the role list (`Role`, not single). In EduSphere: *SAML 2.0 IdP*, metadata URL `https://localhost:8443/realms/<realm>/protocol/saml/descriptor`, institution ID attribute `employeeNumber`, role attribute `Role`.
+
+Results of the 25 October 2026 check (EduSphere tenant `TABSAN-UNI`, Keycloak 26.8):
+
+| Case | OIDC | SAML |
+|---|---|---|
+| User whose `employeeNumber` is a staff username (faculty.it1) | Signed in, linked by institution ID | Same |
+| Student with a different email, linked by registration number (BSCS-8-01) | Signed in, linked by institution ID | Same |
+| User with no institution ID, matched by verified email (testadmin) | Signed in, linked by email | Same |
+| User whose Keycloak role (`student`) does not match the EduSphere role (Finance), with *Refuse … role does not match* on | Refused: "Your identity provider reports a role that does not match …" | Same |
+| SAML with **Sign authentication requests** on and Keycloak requiring signed requests; **Require encrypted assertions** on and Keycloak encrypting | — | Signed in |
+| Keycloak stops encrypting while EduSphere requires encryption | — | Refused; audit `SsoLoginFailed`: "SAML assertion is not encrypted, but this provider requires encrypted assertions." |
+| EduSphere stops signing while Keycloak requires signed requests | — | Keycloak refuses the request |
+
 ---
 
 ## 10. Troubleshooting

@@ -1695,6 +1695,9 @@
  "Choose a bank to see and edit its questions.": [
   "Views/Portal/QuestionBanks.cshtml"
  ],
+ "Choose a course to see its modules.": [
+  "Views/Portal/CourseLms.cshtml"
+ ],
  "Choose a department and {0}, tick the courses and the students, then enroll them all at once.": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -1739,6 +1742,7 @@
  ],
  "Choose…": [
   "Views/Portal/AssignmentOptions.cshtml",
+  "Views/Portal/CourseLms.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
@@ -1887,7 +1891,9 @@
   "Views/Portal/_ModuleItemsEditor.cshtml"
  ],
  "Completed": [
-  "Views/Portal/Quizzes.cshtml"
+  "Views/Portal/Quizzes.cshtml",
+  "Views/Portal/ScormPlay.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "Completed Courses": [
   "Views/Portal/DegreeAudit.cshtml"
@@ -2089,6 +2095,7 @@
   "Views/Portal/AssignmentPolicies.cshtml",
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/Attendance.cshtml",
+  "Views/Portal/CourseLms.cshtml",
   "Views/Portal/Courses.cshtml",
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/GenerateCertificates.cshtml",
@@ -3432,9 +3439,11 @@
  ],
  "Failed": [
   "Views/Portal/Scorm.cshtml",
+  "Views/Portal/ScormPlay.cshtml",
   "Views/Portal/ScormReport.cshtml",
   "Views/Portal/XapiSettings.cshtml",
-  "Views/Shared/Components/ScormPackages/Default.cshtml"
+  "Views/Shared/Components/ScormPackages/Default.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "Failed to load courses for Result Calculation filter endpoint.": [
   "Controllers"
@@ -3999,8 +4008,10 @@
  ],
  "In progress": [
   "Views/Portal/Scorm.cshtml",
+  "Views/Portal/ScormPlay.cshtml",
   "Views/Portal/ScormReport.cshtml",
-  "Views/Shared/Components/ScormPackages/Default.cshtml"
+  "Views/Shared/Components/ScormPackages/Default.cshtml",
+  "wwwroot/js/scorm-page.js"
  ],
  "In the source": [
   "Views/Portal/SimilarityReport.cshtml"
@@ -5007,7 +5018,8 @@
   "Views/Portal/GraduationApplications.cshtml",
   "Views/Portal/GraduationApply.cshtml",
   "Views/Portal/Helpdesk.cshtml",
-  "Views/Portal/Payments.cshtml"
+  "Views/Portal/Payments.cshtml",
+  "Views/Portal/ScormPlay.cshtml"
  ],
  "Next student": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -5519,7 +5531,8 @@
   "Views/Portal/OutcomeAttainment.cshtml"
  ],
  "Not started": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "wwwroot/js/scorm-page.js"
  ],
  "Not tied to a course": [
   "Views/Portal/QuestionBanks.cshtml"
@@ -5741,6 +5754,7 @@
  "Open": [
   "Views (inline expressions)",
   "Views/Portal/Assignments.cshtml",
+  "Views/Portal/CourseLms.cshtml",
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/QuizGrading.cshtml",
   "Views/Shared/Components/ExternalTools/Default.cshtml"
@@ -5941,6 +5955,9 @@
  "Part of (optional)": [
   "Views/Portal/Outcomes.cshtml"
  ],
+ "Parts of this package": [
+  "Views/Portal/ScormPlay.cshtml"
+ ],
  "Pass Threshold": [
   "Views/Portal/GradingConfig.cshtml"
  ],
@@ -5954,7 +5971,8 @@
   "Views/Shared/Components/ScormPackages/Default.cshtml"
  ],
  "Passed": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "wwwroot/js/scorm-page.js"
  ],
  "Password": [
   "Views/Login/Index.cshtml",
@@ -6205,7 +6223,8 @@
   "Views/Portal/GraduationApplications.cshtml",
   "Views/Portal/GraduationApply.cshtml",
   "Views/Portal/Helpdesk.cshtml",
-  "Views/Portal/Payments.cshtml"
+  "Views/Portal/Payments.cshtml",
+  "Views/Portal/ScormPlay.cshtml"
  ],
  "Previous student": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -9862,6 +9881,9 @@
  "You are not allowed to approve this application at its current stage.": [
   "Controllers"
  ],
+ "You are not enrolled in any course yet.": [
+  "Views/Portal/CourseLms.cshtml"
+ ],
  "You are not enrolled in any course.": [
   "Views (inline expressions)"
  ],
@@ -10379,6 +10401,9 @@
  ],
  "{0} offerings": [
   "Views/Portal/Announcements.cshtml"
+ ],
+ "{0} parts — students move between them with the contents list beside the player.": [
+  "Views/Shared/Components/ScormPackages/Default.cshtml"
  ],
  "{0} prerequisite(s)": [
   "Views/Portal/Prerequisites.cshtml"

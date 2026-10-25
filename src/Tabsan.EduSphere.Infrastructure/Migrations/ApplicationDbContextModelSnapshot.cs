@@ -5142,6 +5142,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.Property<Guid>("PackageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("PartsStateJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -5245,6 +5248,9 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                     b.Property<Guid>("OfferingId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PartsJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

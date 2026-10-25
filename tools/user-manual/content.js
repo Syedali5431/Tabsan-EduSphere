@@ -2,6 +2,7 @@
 module.exports = [
   ...require('./content-part1'),
   ...require('./content-part2'),
+  ...require('./content-part5'),
   ...require('./content-part3'),
   ...require('./content-part4'),
 ];

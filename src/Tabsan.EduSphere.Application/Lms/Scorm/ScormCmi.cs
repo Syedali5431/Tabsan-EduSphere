@@ -68,10 +68,15 @@ public static partial class ScormCmi
 
     /// <summary>The CMI object a launch starts from. On resume the stored object is reused with the session values reset.</summary>
     public static string Initial(ScormVersion version, ScormAttempt attempt, string learnerId, string learnerName, decimal? masteryScore, bool review)
+        => Initial(version, attempt.CmiJson, attempt.CommitCount, attempt.Exit, attempt.TotalSeconds, learnerId, learnerName, masteryScore, review);
+
+    /// <summary>The CMI object a launch starts from, from saved data (an attempt, or one part of a multi-part package).</summary>
+    public static string Initial(ScormVersion version, string? savedCmiJson, int commitCount, string? exit, int totalSeconds, string learnerId,
+        string learnerName, decimal? masteryScore, bool review)
     {
-        var resumable = attempt.CmiJson is { Length: > 0 } stored && CmiOf(stored) is { } o ? Clean(o) : new JsonObject();
-        var resuming = attempt.CommitCount > 0;
-        var entry = !resuming ? "ab-initio" : string.Equals(attempt.Exit, "suspend", StringComparison.OrdinalIgnoreCase) ? "resume" : "";
+        var resumable = savedCmiJson is { Length: > 0 } stored && CmiOf(stored) is { } o ? Clean(o) : new JsonObject();
+        var resuming = commitCount > 0;
+        var entry = !resuming ? "ab-initio" : string.Equals(exit, "suspend", StringComparison.OrdinalIgnoreCase) ? "resume" : "";
         if (version == ScormVersion.Scorm12)
         {
             var core = resumable["core"] as JsonObject ?? new JsonObject();
@@ -83,7 +88,7 @@ public static partial class ScormCmi
             core["credit"] = review ? "no-credit" : "credit";
             core["lesson_mode"] = review ? "review" : "normal";
             core["entry"] = entry;
-            core["total_time"] = Format12(attempt.TotalSeconds);
+            core["total_time"] = Format12(totalSeconds);
             if (!resuming) core["lesson_status"] = "not attempted";
             if (masteryScore is { } mastery)
             {
@@ -101,7 +106,7 @@ public static partial class ScormCmi
             resumable["credit"] = review ? "no-credit" : "credit";
             resumable["mode"] = review ? "review" : "normal";
             resumable["entry"] = entry;
-            resumable["total_time"] = Format2004(attempt.TotalSeconds);
+            resumable["total_time"] = Format2004(totalSeconds);
             if (masteryScore is { } mastery) resumable["scaled_passing_score"] = (mastery / 100).ToString("0.####", CultureInfo.InvariantCulture);
         }
         return resumable.ToJsonString();

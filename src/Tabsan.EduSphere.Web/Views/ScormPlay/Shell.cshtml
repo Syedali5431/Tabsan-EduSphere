@@ -1,7 +1,8 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ScormShellModel
 @{
     Layout = null;
-    var config = System.Text.Json.JsonSerializer.Serialize(new { version = Model.Version, mode = Model.Mode, launchUrl = Model.LaunchUrl, cmi = Model.CmiJson });
+    var config = System.Text.Json.JsonSerializer.Serialize(new { version = Model.Version, mode = Model.Mode, launchUrl = Model.LaunchUrl, cmi = Model.CmiJson,
+        commitUrl = Model.CommitUrl, part = Model.PartId });
 }
 <!DOCTYPE html>
 @* Plan M13 — the SCORM player shell: the runtime (window.API / window.API_1484_11) here, the package in the frame below. *@

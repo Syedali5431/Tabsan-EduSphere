@@ -300,6 +300,112 @@ public class ScormTests
         Assert.False(p.IsPublished);
     }
 
+    // ── packages in parts ──────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void MultiPartPackages_ListEveryLaunchableItem_InOrder_WithTheirOwnLaunchAndPassingScore()
+    {
+        // Like the Golf Explained "one file per SCO" sample: groups of items, quiz items with parameters and a mastery score.
+        const string manifest = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <manifest identifier="golf" version="1" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+              <organizations default="o"><organization identifier="o"><title>Golf</title>
+                <item identifier="playing_item"><title>Playing the Game</title>
+                  <item identifier="playing_par_item" identifierref="par"><title>Par</title></item>
+                  <item identifier="playing_quiz_item" identifierref="quiz" parameters="?questions=Playing"><title>Playing Golf Quiz</title><adlcp:masteryscore>70</adlcp:masteryscore></item>
+                </item>
+                <item identifier="etiquette_item"><title>Etiquette</title>
+                  <item identifier="etiquette_quiz_item" identifierref="quiz" parameters="?questions=Etiquette"><title></title></item>
+                </item>
+              </organization></organizations>
+              <resources>
+                <resource identifier="par" type="webcontent" adlcp:scormtype="sco" href="Playing/Par.html"/>
+                <resource identifier="quiz" type="webcontent" adlcp:scormtype="sco" href="shared/assessmenttemplate.html"/>
+              </resources>
+            </manifest>
+            """;
+        var m = Read(Zip(("imsmanifest.xml", manifest), ("Playing/Par.html", "p"), ("shared/assessmenttemplate.html", "q"))).Manifest;
+        Assert.Equal(3, m.Parts!.Count);
+        Assert.Equal(["playing_par_item", "playing_quiz_item", "etiquette_quiz_item"], m.Parts.Select(p => p.Id));
+        Assert.Equal(["Par", "Playing Golf Quiz", "Part 3"], m.Parts.Select(p => p.Title));
+        Assert.Equal("shared/assessmenttemplate.html?questions=Etiquette", m.Parts[2].LaunchPath);
+        Assert.Equal((null, 70m), (m.Parts[0].MasteryScore, m.Parts[1].MasteryScore));
+        Assert.All(m.Parts, p => Assert.True(p.IsSco));
+        Assert.Equal("Playing/Par.html", m.LaunchPath); // the first SCO, as before
+
+        // SCORM 2004 with an asset: both are parts; the asset is not a SCO.
+        var m2004 = Read(Zip(("imsmanifest.xml", Manifest2004()), ("units/content/start.html", "s"), ("notes.html", "n"))).Manifest;
+        Assert.Equal([("a", false), ("s", true)], m2004.Parts!.Select(p => (p.Id, p.IsSco)));
+
+        // Every part's file has to be in the package.
+        Assert.Contains("not in the package", Assert.Throws<ScormPackageException>(() => Read(Zip(("imsmanifest.xml", manifest), ("Playing/Par.html", "p")))).Message);
+    }
+
+    [Fact]
+    public void Packages_StoreTheirParts_OnlyWhenThereIsMoreThanOne()
+    {
+        var p = new ScormPackage(Guid.NewGuid(), "Golf", ScormVersion.Scorm12, "id", "a.html", 3, 1000, 80, Guid.NewGuid());
+        Assert.False(p.IsMultiPart);
+        var only = Assert.Single(p.Parts);
+        Assert.Equal((ScormPackage.SinglePartId, "a.html", 80m), (only.Id, only.LaunchPath, only.MasteryScore));
+
+        p.SetParts([new ScormPart("x", "X", "a.html", true, null)]);
+        Assert.Null(p.PartsJson);
+        p.SetParts([new ScormPart("x", "X", "a.html", true, null), new ScormPart("y", "Y", "b.html", false, null)]);
+        Assert.True(p.IsMultiPart);
+        Assert.Equal(["x", "y"], p.Parts.Select(x => x.Id));
+        Assert.Throws<ArgumentException>(() => p.SetParts(Enumerable.Range(0, ScormPackage.MaxParts + 1).Select(i => new ScormPart($"p{i}", "P", "a.html", true, null)).ToList()));
+    }
+
+    [Fact]
+    public void PartCommits_RollUp_IntoTheAttempt()
+    {
+        var parts = new List<ScormPart> { new("lesson", "Lesson", "l.html", true, null), new("notes", "Notes", "n.html", false, null), new("quiz", "Quiz", "q.html", true, 80) };
+        var now = new DateTime(2026, 10, 25, 9, 0, 0, DateTimeKind.Utc);
+        var a = new ScormAttempt(Guid.NewGuid(), Guid.NewGuid(), 1, now);
+        var values = new ScormCommitValues("incomplete", "unknown", null, null, null, null, "p2", "s", "suspend", 300);
+
+        a.ApplyPart(parts, "lesson", values, """{"cmi":{"suspend_data":"s"}}""", finalCommit: true, now);
+        Assert.Equal(("incomplete", "unknown", 300), (a.CompletionStatus, a.SuccessStatus, a.TotalSeconds));
+        Assert.Equal("""{"cmi":{"suspend_data":"s"}}""", a.PartStates()["lesson"].CmiJson);
+        Assert.Null(a.CmiJson); // each part keeps its own data
+
+        a.ApplyPart(parts, "lesson", values with { CompletionStatus = "completed", SuccessStatus = "passed", ScoreRaw = 90, SessionSeconds = 60 }, null, finalCommit: true, now);
+        a.MarkPartViewed(parts, "notes", now);
+        Assert.False(a.IsFinished);
+        a.ApplyPart(parts, "quiz", values with { CompletionStatus = "completed", SuccessStatus = "failed", ScoreRaw = 70, SessionSeconds = 240 }, null, finalCommit: true, now.AddMinutes(5));
+        Assert.Equal(("completed", "failed", 80m, 600), (a.CompletionStatus, a.SuccessStatus, a.ScorePercent!.Value, a.TotalSeconds));
+        Assert.Equal(now.AddMinutes(5), a.FinishedAt);
+        Assert.Equal(0.8m, a.ScoreScaled);
+
+        // Passing the quiz later passes the attempt (every SCO passed; the asset only needs opening).
+        a.ApplyPart(parts, "quiz", values with { CompletionStatus = "completed", SuccessStatus = "passed", ScoreRaw = 100, SessionSeconds = 0 }, null, finalCommit: false, now.AddMinutes(9));
+        Assert.Equal(("passed", 95m), (a.SuccessStatus, a.ScorePercent!.Value));
+        Assert.Equal(now.AddMinutes(5), a.FinishedAt); // the first finish counts
+
+        // Pages only (like the Golf "one file per SCO" sample, whose resources are all assets): completed, nothing passed.
+        var pages = new List<ScormPart> { new("p1", "One", "1.html", false, null), new("p2", "Two", "2.html", false, null) };
+        var b = new ScormAttempt(Guid.NewGuid(), Guid.NewGuid(), 1, now);
+        b.MarkPartViewed(pages, "p1", now);
+        Assert.Equal(("incomplete", "unknown"), (b.CompletionStatus, b.SuccessStatus));
+        b.MarkPartViewed(pages, "p2", now);
+        Assert.Equal(("completed", "unknown", true), (b.CompletionStatus, b.SuccessStatus, b.IsFinished));
+        Assert.Null(b.ScorePercent);
+    }
+
+    [Fact]
+    public void APartsLaunch_StartsFromThatPartsOwnData()
+    {
+        var fresh = JsonNode.Parse(ScormCmi.Initial(ScormVersion.Scorm12, null, 0, null, 0, "S-1", "Ali Khan", 80, review: false))!;
+        Assert.Equal("ab-initio", fresh["core"]!["entry"]!.GetValue<string>());
+        Assert.Equal("80", fresh["student_data"]!["mastery_score"]!.GetValue<string>());
+
+        var saved = """{"cmi":{"core":{"lesson_status":"incomplete","lesson_location":"p3"},"suspend_data":"abc"}}""";
+        var resume = JsonNode.Parse(ScormCmi.Initial(ScormVersion.Scorm12, saved, 2, "suspend", 600, "S-1", "Ali Khan", null, review: false))!;
+        Assert.Equal(("resume", "abc", "0000:10:00.00"), (resume["core"]!["entry"]!.GetValue<string>(), resume["suspend_data"]!.GetValue<string>(),
+            resume["core"]!["total_time"]!.GetValue<string>()));
+    }
+
     // ── xAPI ───────────────────────────────────────────────────────────────────────────────────
 
     private sealed class Repo : IScormRepository

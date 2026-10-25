@@ -10,7 +10,7 @@
     var settings = {
         autocommit: true,
         autocommitSeconds: 15,
-        lmsCommitUrl: 'commit',
+        lmsCommitUrl: config.commitUrl || 'commit',
         dataCommitFormat: 'json',
         terminateCommitParam: 'final',
         logLevel: 4
@@ -29,7 +29,7 @@
     }
 
     function tellPortal(type) {
-        if (window.parent && window.parent !== window) window.parent.postMessage({ type: type }, '*');
+        if (window.parent && window.parent !== window) window.parent.postMessage({ type: type, part: config.part || null }, '*');
     }
 
     api.on(is2004 ? 'Terminate' : 'LMSFinish', function () { tellPortal('scorm-finished'); });

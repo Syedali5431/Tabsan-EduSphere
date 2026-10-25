@@ -13,6 +13,28 @@
     return;
 }
 
+@if (Model.Courses.Count > 0)
+{
+    <form method="get" class="d-flex flex-wrap align-items-end gap-2 mb-3" data-course-chooser>
+        <div>
+            <label class="form-label small fw-semibold mb-1" for="course-choice">@T["Course"]</label>
+            <select id="course-choice" name="offeringId" class="form-select form-select-sm">
+                @if (Model.OfferingId == Guid.Empty) { <option value="">@T["Choose…"]</option> }
+                @foreach (var c in Model.Courses)
+                {
+                    <option value="@c.CourseOfferingId" selected="@(c.CourseOfferingId == Model.OfferingId)">@c.CourseCode — @c.CourseTitle (@c.SemesterName)</option>
+                }
+            </select>
+        </div>
+        <button class="btn btn-sm btn-primary">@T["Open"]</button>
+    </form>
+}
+@if (Model.OfferingId == Guid.Empty)
+{
+    <div class="border rounded p-3 bg-light" role="status">@(Model.Courses.Count > 0 ? T.Text("Choose a course to see its modules.") : T.Text("You are not enrolled in any course yet."))</div>
+    return;
+}
+
 @if (Model.Progress is { } progress)
 {
     @* Plan M7 — modules as ordered items with progress, requirements and locks. *@

@@ -128,7 +128,7 @@ Install the EduSphere app from your institution's store link and sign in with yo
 
 ## 5.6 SCORM Packages (Plan M13)
 
-Some courses contain interactive lessons (SCORM packages). Open one from the course page or its module and press **Start**. Your place is saved: **Continue** takes you back where you stopped. When you finish, the package can be opened again for **Review**; if your teacher allows more attempts, **Start a new attempt** — your best score counts. Use **Exit** on the player page to leave (your progress is saved first).
+Some courses contain interactive lessons (SCORM packages). Open one from the course page or its module and press **Start**. Your place is saved: **Continue** takes you back where you stopped. When you finish, the package can be opened again for **Review**; if your teacher allows more attempts, **Start a new attempt** — your best score counts. Use **Exit** on the player page to leave (your progress is saved first). A package in parts shows a contents list beside the lesson with each part's status; move between parts with it or with **Previous** / **Next** — the part you leave is saved first.
 
 ## 6. Quizzes
 
@@ -207,7 +207,7 @@ Action recommendation: open notifications daily and mark read after action.
 
 ### 9.5 Course modules and your progress
 
-- **Course Content** shows your progress in the course and in each module. Open items from the list; ✓ means done, ○ means still to do (with what is needed), 🔒 means locked (with why — for example *Complete “Week 1” first* or an opening date).
+- Open **Course Content** in the sidebar, choose the course and press **Open**. The page shows your progress in the course and in each module. Open items from the list; ✓ means done, ○ means still to do (with what is needed), 🔒 means locked (with why — for example *Complete “Week 1” first* or an opening date).
 - Use **Next ›** and **‹ Previous** at the top of an item to move through the module, and **Mark as done** where an item asks for it.
 
 ## 10. FYP Module
