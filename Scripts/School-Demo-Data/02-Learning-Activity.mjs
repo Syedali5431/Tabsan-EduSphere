@@ -11,7 +11,8 @@
 //                      installation has an LTI tool
 //   Every campus       helpdesk tickets (open, in progress and resolved), an API token for the campus admin
 //   The school system  result components (Quiz 20%, Midterm 30%, Final 50%) and grade points for School, live classes
-//                      by meeting link, a learning record store credential, the Science / Commerce / Arts streams
+//                      by meeting link, a learning record store credential, the Science / Commerce / Arts streams,
+//                      a sample privacy notice when none is set
 //
 // usage:  node 02-Learning-Activity.mjs [apiBaseUrl] [campusCode]     (default http://localhost:5181/api/v1, all campuses)
 // Safe to re-run: what already exists (found by title) is left as it is.
@@ -196,6 +197,20 @@ await attempt('xAPI credential', async () => {
   if (creds.some(c => c.name === 'Interactive lessons (xAPI)')) return;
   await post(SA, 'xapi/credentials', { name: 'Interactive lessons (xAPI)', offeringId: null });
   count('xAPI credentials');
+});
+
+// A sample privacy notice for the portal's Privacy page, when none is set (the other branding values are kept).
+await attempt('privacy notice', async () => {
+  const branding = await get(SA, 'portal-settings');
+  if (branding.privacyPolicyContent?.trim() || branding.privacyPolicyUrl?.trim()) return;
+  await post(SA, 'portal-settings', { ...branding, privacyPolicyContent: [
+    'This is a sample privacy notice for the demo schools. Replace it with your institution\'s own policy on Dashboard Settings before real use.',
+    'What the school keeps: names, class, registration number, contact details, attendance, marks, fee records and the work students hand in.',
+    'Why: to teach classes, report progress to students and parents, collect fees and keep students safe.',
+    'Who can see it: the student, their parents or guardians, their teachers and the school\'s staff, each only for the classes and records they look after.',
+    'How long: while the student is at the school, and afterwards for as long as the law requires.',
+    'Your rights: students and parents can ask the school office to see or correct their records.'].join('\n\n') });
+  count('privacy notice');
 });
 
 // Streams for Class 9 and 10 (the portal shows these students the subjects of their stream).
