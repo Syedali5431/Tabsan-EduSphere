@@ -7,8 +7,10 @@
 --   * One department per campus: code <campus code>-SCH, e.g. TMS-GUL-SCH
 --   * One programme per department: code <campus code>-CLS, Class 1 to 10
 --   * The classes "Class 1" … "Class 10" are added if the database has none yet
---   * School is switched on in the institution policy if it is off (College and
---     University stay as they are; the portal hides them while they have no departments)
+--   * School is switched on in the institution policy if it is off. On a database where
+--     College or University has never been set (a new one), they are switched on too, so
+--     their first departments can be added later and they appear by themselves; until
+--     then the portal hides them. A choice already made on Institution Policy is kept.
 --
 -- Run against [Tabsan-EduSphere] after 01. Keep @Schools in step with 01. Safe to re-run:
 -- departments are keyed on (school, campus, code), programmes on their code.
@@ -75,6 +77,14 @@ IF EXISTS (SELECT 1 FROM portal_settings WHERE [Key] = N'institution_include_sch
 ELSE
     INSERT INTO portal_settings (Id, [Key], [Value], CreatedAt) VALUES (NEWID(), N'institution_include_school', N'true', @Now);
 PRINT CONCAT(N'School enabled in the institution policy (rows changed: ', @@ROWCOUNT, N'). The API reads the policy every 10 minutes; restart it to apply at once.');
+
+-- College and University: allowed unless a choice has been made (a new database has no setting, which means
+-- College off), so adding their first department later is accepted and shows them without changing the policy.
+INSERT INTO portal_settings (Id, [Key], [Value], CreatedAt)
+SELECT NEWID(), k.[Key], N'true', @Now
+FROM (VALUES (N'institution_include_college'), (N'institution_include_university')) k([Key])
+WHERE NOT EXISTS (SELECT 1 FROM portal_settings p WHERE p.[Key] = k.[Key]);
+PRINT CONCAT(N'College/University policy settings added (only where none existed): ', @@ROWCOUNT);
 
 COMMIT TRANSACTION;
 

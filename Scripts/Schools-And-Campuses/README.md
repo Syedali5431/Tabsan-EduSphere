@@ -9,7 +9,7 @@ In EduSphere a **school is a tenant**, each **campus** belongs to one school, an
 | # | Script | What it does |
 |---|--------|--------------|
 | 1 | `01-Add-Schools-And-Campuses.sql` | Adds the schools (tenants) and campuses listed at its top. |
-| 2 | `02-Add-School-Sections.sql` | Gives every campus of those schools a School section (`<campus>-SCH`) with a Class 1 to 10 programme (`<campus>-CLS`), adds the classes *Class 1 … Class 10* if the database has none, and switches School on in the institution policy if it is off. |
+| 2 | `02-Add-School-Sections.sql` | Gives every campus of those schools a School section (`<campus>-SCH`) with a Class 1 to 10 programme (`<campus>-CLS`), adds the classes *Class 1 … Class 10* if the database has none, and switches School on in the institution policy (College and University too on a database that has no setting for them yet, e.g. a new one; a choice already made on Institution Policy is kept). |
 | 3 | `03-Check-Institution-Types.sql` | Read-only: which institution types the portal shows and why, the departments that keep College or University visible, and the schools with their campuses. |
 
 Run them against `Tabsan-EduSphere` after `02-Seed-Core.sql` (see `../README-SCRIPT-EXECUTION-ORDER.md`). All three are safe to re-run: existing schools, campuses, sections and programmes are left unchanged.
