@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mathematics practice</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 24px; background: #f4f7fb; color: #1d2a3a; }
+  main { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  h1 { font-size: 1.5rem; margin-top: 0; }
+  ol { padding-left: 1.4rem; }
+  li { margin: 10px 0; }
+  input { width: 90px; padding: 6px; font-size: 1rem; margin-left: 8px; }
+  input.right { border: 2px solid #2e7d32; } input.wrong { border: 2px solid #c62828; }
+  button { margin-top: 16px; padding: 10px 20px; font-size: 1rem; border: 0; border-radius: 8px; background: #1565c0; color: #fff; cursor: pointer; }
+  #result { margin-top: 16px; font-weight: bold; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mathematics practice</h1>
+  <p>Work out each answer and type it in the box. You need 6 out of 10 to pass. Your score is saved to your course.</p>
+  <ol id="questions"></ol>
+  <button id="check" type="button">Check my answers</button>
+  <p id="result" role="status"></p>
+</main>
+<script>
+  // SCORM 1.2: find the LMS's API object in a parent or opener window.
+  function findApi(win) {
+    for (var i = 0; win && i < 10; i++) { if (win.API) return win.API; if (win.parent === win) break; win = win.parent; }
+    return null;
+  }
+  var api = findApi(window) || (window.opener && findApi(window.opener));
+  if (api) { api.LMSInitialize(''); api.LMSSetValue('cmi.core.lesson_status', 'incomplete'); }
+
+  // Ten questions: multiplication, addition, subtraction and a little division.
+  var qs = [];
+  for (var i = 0; i < 10; i++) {
+    var a = 3 + ((i * 7) % 9), b = 2 + ((i * 5) % 8), kind = i % 4;
+    if (kind === 0) qs.push([a + ' × ' + b, a * b]);
+    else if (kind === 1) qs.push([a * 6 + ' + ' + b * 4, a * 6 + b * 4]);
+    else if (kind === 2) qs.push([a * 9 + ' − ' + b * 3, a * 9 - b * 3]);
+    else qs.push([a * b + ' ÷ ' + b, a]);
+  }
+  var list = document.getElementById('questions');
+  qs.forEach(function (q, i) {
+    var li = document.createElement('li');
+    li.innerHTML = '<label for="q' + i + '">' + q[0] + ' =</label><input id="q' + i + '" inputmode="numeric" autocomplete="off">';
+    list.appendChild(li);
+  });
+
+  document.getElementById('check').onclick = function () {
+    var right = 0;
+    qs.forEach(function (q, i) {
+      var box = document.getElementById('q' + i), ok = Number(box.value.trim()) === q[1] && box.value.trim() !== '';
+      box.className = ok ? 'right' : 'wrong';
+      if (ok) right++;
+    });
+    var score = right * 10;
+    document.getElementById('result').textContent = 'You got ' + right + ' out of 10 (' + score + '%). ' + (score >= 60 ? 'Well done!' : 'Have another go.');
+    if (api) {
+      api.LMSSetValue('cmi.core.score.min', '0');
+      api.LMSSetValue('cmi.core.score.max', '100');
+      api.LMSSetValue('cmi.core.score.raw', String(score));
+      api.LMSSetValue('cmi.core.lesson_status', score >= 60 ? 'passed' : 'failed');
+      api.LMSCommit('');
+    }
+  };
+  window.addEventListener('beforeunload', function () { if (api) api.LMSFinish(''); });
+</script>
+</body>
+</html>

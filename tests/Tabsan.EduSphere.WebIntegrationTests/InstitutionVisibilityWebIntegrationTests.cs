@@ -60,6 +60,17 @@ public class InstitutionVisibilityWebIntegrationTests : IClassFixture<WebApplica
     }
 
     [Fact]
+    public async Task SchoolOnly_Payments_AsksTheApiForSchoolReceipts()
+    {
+        var api = new FakeApi { School = true, College = false, University = false };
+        using var client = await SignedInClientAsync(api);
+
+        var payments = await client.GetStringAsync("/Portal/Payments");
+        Assert.Equal(["", "1"], Options(payments, "institutionType").Select(o => o.Value)); // "All" and School
+        Assert.Contains(api.Queries("/api/v1/payments"), q => q.Contains("institutionType=1")); // School, not University (0)
+    }
+
+    [Fact]
     public async Task EveryTypeShown_NothingIsHidden()
     {
         var api = new FakeApi { School = true, College = true, University = true };

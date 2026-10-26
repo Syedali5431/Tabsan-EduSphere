@@ -571,27 +571,6 @@ public partial class PortalController : Controller
         return options;
     }
 
-    private static List<CertificateInstitutionOption> BuildLicensedPaymentsInstitutionOptions(PortalCapabilityMatrixApiModel? matrix)
-    {
-        // Payments data in this deployment uses legacy values: 0=School, 1=College, 2=University.
-        var options = new List<CertificateInstitutionOption>();
-        var includeUniversity = matrix?.IncludeUniversity ?? true;
-        var includeSchool = matrix?.IncludeSchool ?? true;
-        var includeCollege = matrix?.IncludeCollege ?? true;
-
-        if (includeUniversity)
-            options.Add(new CertificateInstitutionOption { Value = 2, Label = "University" });
-        if (includeSchool)
-            options.Add(new CertificateInstitutionOption { Value = 0, Label = "School" });
-        if (includeCollege)
-            options.Add(new CertificateInstitutionOption { Value = 1, Label = "College" });
-
-        if (options.Count == 0)
-            options.Add(new CertificateInstitutionOption { Value = 2, Label = "University" });
-
-        return options;
-    }
-
     private static int? ResolveLicensedInstitutionSelection(
         int? requestedInstitutionType,
         SessionIdentity? identity,
@@ -8261,7 +8240,8 @@ public partial class PortalController : Controller
                 if (canManagePayments)
                 {
                     var capabilityMatrix = await _api.GetPortalCapabilityMatrixAsync(ct);
-                    model.AvailableInstitutionTypes = BuildLicensedPaymentsInstitutionOptions(capabilityMatrix);
+                    // The API filters receipts by the department's InstitutionType (University 0, School 1, College 2).
+                    model.AvailableInstitutionTypes = BuildLicensedInstitutionOptions(capabilityMatrix);
                     model.SelectedInstitutionType = ResolveLicensedInstitutionSelection(model.SelectedInstitutionType, identity, model.AvailableInstitutionTypes);
                 }
 
