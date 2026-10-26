@@ -3927,6 +3927,9 @@
  "Hidden from students.": [
   "Controllers"
  ],
+ "Hidden until their first department is added: {0}. The portal shows only the enabled institution types that have departments.": [
+  "Views/Portal/InstitutionPolicy.cshtml"
+ ],
  "Hide": [
   "Views (inline expressions)"
  ],

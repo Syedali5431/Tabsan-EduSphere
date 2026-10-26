@@ -1,4 +1,5 @@
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Enums;
 
 namespace Tabsan.EduSphere.Domain.Interfaces;
 
@@ -10,6 +11,12 @@ public interface IDepartmentRepository
 
     /// <summary>Returns the department with the given ID, or null.</summary>
     Task<Department?> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// The institution types of the installation's active departments, across every tenant and campus (not limited
+    /// to the caller's scope): which kinds of institution have data at all.
+    /// </summary>
+    Task<IReadOnlyList<InstitutionType>> GetInstitutionTypesInUseAsync(CancellationToken ct = default);
 
     /// <summary>Returns true when the uppercase code is already in use.</summary>
     Task<bool> CodeExistsAsync(string code, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default);

@@ -22,7 +22,7 @@ public sealed class PortalCapabilitiesController : ControllerBase
     [HttpGet("matrix")]
     public async Task<IActionResult> GetMatrix(CancellationToken ct)
     {
-        var policy = HttpContext.GetInstitutionPolicy();
+        var policy = HttpContext.GetInstitutionVisibility();
         var matrix = await _service.GetMatrixAsync(policy, ct);
         return Ok(matrix);
     }

@@ -2095,12 +2095,9 @@ public partial class PortalController : Controller
 
     public async Task<IActionResult> ResultCalculation(int? selectedInstitutionType, CancellationToken ct)
     {
-        var resolvedInstitutionType = selectedInstitutionType switch
-        {
-            1 => 1, // School
-            2 => 2, // College
-            _ => 0  // University
-        };
+        // Without a choice: University, or the first institution type the portal shows (School in a School-only installation).
+        var shownTypes = await _api.GetVisibleInstitutionTypesAsync(HttpContext, ct);
+        var resolvedInstitutionType = shownTypes.Resolve(selectedInstitutionType is 0 or 1 or 2 ? selectedInstitutionType : null);
 
         var model = new ResultCalculationSettingsPageModel
         {
@@ -3428,7 +3425,9 @@ public partial class PortalController : Controller
                 var session = _api.GetSessionIdentity();
                 model.CanManageInstitutionSections = session?.IsSuperAdmin == true;
                 model.CanSelectTenantCampus = session?.IsSuperAdmin == true;
-                model.SelectedInstitutionType = ResolveReportInstitutionType(institutionType) ?? 0;
+                // Without a choice: University, or the first institution type the portal shows.
+                model.SelectedInstitutionType = ResolveReportInstitutionType(institutionType)
+                    ?? (await _api.GetVisibleInstitutionTypesAsync(HttpContext, ct)).Resolve(null);
                 model.IsUniversitySelected = IsUniversityGradingInstitutionType(model.SelectedInstitutionType);
                 model.SelectedTenantId = tenantId;
                 model.SelectedCampusId = campusId;
@@ -8930,7 +8929,8 @@ public partial class PortalController : Controller
                 model.Reports = model.Reports.Where(r => !paymentKeys.Contains(r.Key)).ToList();
             }
 
-            // Phase 5: Filter out University-only reports when license excludes University.
+            // Phase 5: Filter out University-only reports when University is not shown (excluded by the license, or no
+            // University departments exist yet).
             if (identity is not null)
             {
                 var licensedTypes = await ResolveLicensedInstitutionTypesAsync(ct);
@@ -8940,7 +8940,8 @@ public partial class PortalController : Controller
                     var universityOnlyKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                     {
                         "fyp_status", "fyp-status",
-                        "gpa_report"
+                        "gpa_report",
+                        "degree_certificate"
                     };
                     model.Reports = model.Reports
                         .Where(r => !universityOnlyKeys.Contains(r.Key))

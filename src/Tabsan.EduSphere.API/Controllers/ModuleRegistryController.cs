@@ -25,7 +25,7 @@ public sealed class ModuleRegistryController : ControllerBase
     {
         var role   = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
                      ?? User.FindFirst("role")?.Value ?? "";
-        var policy = HttpContext.GetInstitutionPolicy();
+        var policy = HttpContext.GetInstitutionVisibility();
 
         var results = await _registry.GetVisibleModulesAsync(role, policy, ct);
 

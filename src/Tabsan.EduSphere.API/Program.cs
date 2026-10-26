@@ -702,6 +702,7 @@ builder.Services.AddScoped<Tabsan.EduSphere.API.Services.DegreeTranscriptGenerat
 builder.Services.AddScoped<Tabsan.EduSphere.API.Services.DegreeTranscriptGeneration.DocumentGenerationService>();
 // ── Phase 23: Core Policy Foundation ────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IInstitutionPolicyService, Tabsan.EduSphere.Application.Services.InstitutionPolicyService>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IInstitutionVisibilityService, Tabsan.EduSphere.Application.Services.InstitutionVisibilityService>();
 // ── Phase 24: Dynamic Module and UI Composition ───────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IModuleRegistryService, Tabsan.EduSphere.Application.Modules.ModuleRegistryService>();
 builder.Services.AddSingleton<Tabsan.EduSphere.Application.Interfaces.ILabelService, Tabsan.EduSphere.Application.Services.LabelService>();

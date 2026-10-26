@@ -1,5 +1,7 @@
 @model Tabsan.EduSphere.Web.Models.Portal.UserImportPageModel
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
+    var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
     ViewData["Title"] = T.Text("User Import");
 }
 
@@ -139,9 +141,9 @@
                                 <label class="form-label">@T["Institution Type"]</label>
                                 <select aria-label="@T["Institution Type"]" class="form-select" name="InstitutionType">
                                     <option value="">@T["— Optional —"]</option>
-                                    <option value="University" selected="@(Model.SingleUserForm.InstitutionType == "University")">@T["University"]</option>
-                                    <option value="School" selected="@(Model.SingleUserForm.InstitutionType == "School")">@T["School"]</option>
-                                    <option value="College" selected="@(Model.SingleUserForm.InstitutionType == "College")">@T["College"]</option>
+                                    @if (shownTypes.University) { <option value="University" selected="@(Model.SingleUserForm.InstitutionType == "University")">@T["University"]</option> }
+                                    @if (shownTypes.School) { <option value="School" selected="@(Model.SingleUserForm.InstitutionType == "School")">@T["School"]</option> }
+                                    @if (shownTypes.College) { <option value="College" selected="@(Model.SingleUserForm.InstitutionType == "College")">@T["College"]</option> }
                                 </select>
                             </div>
                             <div class="col-md-4">

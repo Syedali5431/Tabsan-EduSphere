@@ -26,6 +26,7 @@ public class DepartmentController : ControllerBase
     private readonly IUserRepository _users;
     private readonly IAuditService _audit;
     private readonly IInstitutionPolicyService _institutionPolicyService;
+    private readonly IInstitutionVisibilityService? _institutionVisibility;
     private readonly IAccessScopeResolver _accessScope;
     private readonly ApplicationDbContext _db;
 
@@ -37,7 +38,8 @@ public class DepartmentController : ControllerBase
         IAuditService audit,
         IInstitutionPolicyService institutionPolicyService,
         IAccessScopeResolver accessScope,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        IInstitutionVisibilityService? institutionVisibility = null)
     {
         _deptRepo = deptRepo;
         _facultyAssignments = facultyAssignments;
@@ -47,6 +49,7 @@ public class DepartmentController : ControllerBase
         _institutionPolicyService = institutionPolicyService;
         _accessScope = accessScope;
         _db = db;
+        _institutionVisibility = institutionVisibility;
     }
 
     // ── GET /api/v1/department ─────────────────────────────────────────────────
@@ -127,6 +130,7 @@ public class DepartmentController : ControllerBase
         dept.SetTenantCampus(scope.TenantId, scope.CampusId);
         await _deptRepo.AddAsync(dept, ct);
         await _deptRepo.SaveChangesAsync(ct);
+        _institutionVisibility?.InvalidateCache(); // a first College/University department makes that type visible
 
         // Admins only see departments assigned to them, so a department an Admin creates is
         // assigned to that Admin straight away; otherwise it vanishes from their own lists.
@@ -197,6 +201,7 @@ public class DepartmentController : ControllerBase
         dept.Deactivate();
         _deptRepo.Update(dept);
         await _deptRepo.SaveChangesAsync(ct);
+        _institutionVisibility?.InvalidateCache();
         return NoContent();
     }
 
@@ -218,6 +223,7 @@ public class DepartmentController : ControllerBase
         dept.Activate();
         _deptRepo.Update(dept);
         await _deptRepo.SaveChangesAsync(ct);
+        _institutionVisibility?.InvalidateCache();
         return NoContent();
     }
 

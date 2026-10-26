@@ -15,6 +15,7 @@
 | 8 *(optional)* | `student-journey-class1-10.sql` | Certificate-demo student lifecycle: Class 1-10 with results, attendance, assignments for `col11s6`, under its own isolated department |
 | 9 *(optional)* | `08-Create-Test-Admin-User.sql` | Creates testing account `testadmin` (Admin in University tenant, all its departments, no SuperAdmin rights) |
 | 10 *(recommended)* | `09-Institution-Dummy-Data.sql` | Balanced School / College / University demo data (new departments, programs, courses, offerings, teachers, 120 students with enrollments, results, attendance and fee receipts, plus 30 newly admitted students not yet enrolled for trying bulk enrollment) plus institution consistency fixes and re-opening of the demo terms so enrollment works. Re-runnable |
+| 11 *(optional)* | `Schools-And-Campuses/` | Adds several schools and campuses (School sections, Class 1 to 10) for a School-only installation; the portal then hides College and University until they have departments. See `Schools-And-Campuses/README.md` |
 
 There is no `09-Restructure-Sidebar-Menu.sql` (the only 09 script is `09-Institution-Dummy-Data.sql`) or `Seed-Core-Clean.sql` in this folder — earlier revisions of this README referenced scripts that were since renamed or removed; `07-Fix-Sidebar-Role-Visibility.sql` is the script that actually ships.
 

@@ -44,7 +44,7 @@ public sealed class DashboardCompositionController : ControllerBase
     {
         var role   = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
                      ?? User.FindFirst("role")?.Value ?? "";
-        var policy = HttpContext.GetInstitutionPolicy();
+        var policy = HttpContext.GetInstitutionVisibility();
         var widgets = _composer.GetWidgets(role, policy);
 
         return Ok(widgets.Select(w => new
@@ -65,7 +65,7 @@ public sealed class DashboardCompositionController : ControllerBase
     {
         var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
                    ?? User.FindFirst("role")?.Value ?? "";
-        var policy = HttpContext.GetInstitutionPolicy();
+        var policy = HttpContext.GetInstitutionVisibility();
 
         var cacheKey = $"dashboard:context:{role.ToLowerInvariant()}:{policy.IncludeSchool}:{policy.IncludeCollege}:{policy.IncludeUniversity}";
         var cached = await _distributedCache.GetStringAsync(cacheKey, ct);

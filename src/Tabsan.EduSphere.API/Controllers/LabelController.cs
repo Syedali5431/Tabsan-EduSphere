@@ -22,7 +22,7 @@ public sealed class LabelController : ControllerBase
     [HttpGet]
     public IActionResult GetVocabulary()
     {
-        var policy = HttpContext.GetInstitutionPolicy();
+        var policy = HttpContext.GetInstitutionVisibility();
         var vocab  = _labels.GetVocabulary(policy);
 
         return Ok(new

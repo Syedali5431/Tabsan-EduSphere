@@ -27,6 +27,10 @@ public sealed class InstitutionContextMiddleware
             context.Items[InstitutionContextKeys.PolicyKey] = snapshot;
         }
 
+        // What the portal displays: the policy narrowed to the institution types that have data.
+        if (context.RequestServices.GetService<IInstitutionVisibilityService>() is { } visibilityService)
+            context.Items[InstitutionContextKeys.VisibilityKey] = await visibilityService.GetVisibilityAsync(context.RequestAborted);
+
         await _next(context);
     }
 }
@@ -46,4 +50,16 @@ public static class InstitutionContextKeys
         => context.Items.TryGetValue(PolicyKey, out var value) && value is InstitutionPolicySnapshot snapshot
             ? snapshot
             : InstitutionPolicySnapshot.Default;
+
+    /// <summary>Key under which the institution types to display (<see cref="IInstitutionVisibilityService"/>) are stored.</summary>
+    public const string VisibilityKey = "InstitutionVisibility";
+
+    /// <summary>
+    /// The institution types the portal displays: the policy narrowed to the types that have data. Menus, modules,
+    /// labels, dashboards and filters use this; validation keeps using <see cref="GetInstitutionPolicy"/>.
+    /// </summary>
+    public static InstitutionPolicySnapshot GetInstitutionVisibility(this HttpContext context)
+        => context.Items.TryGetValue(VisibilityKey, out var value) && value is InstitutionPolicySnapshot snapshot
+            ? snapshot
+            : context.GetInstitutionPolicy();
 }

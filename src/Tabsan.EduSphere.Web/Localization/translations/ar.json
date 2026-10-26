@@ -1099,6 +1099,7 @@
   "Helpdesk pagination": "ترقيم صفحات مكتب المساعدة",
   "Hidden": "مخفي",
   "Hidden from students.": "مخفي عن الطلاب.",
+  "Hidden until their first department is added: {0}. The portal shows only the enabled institution types that have departments.": "مخفي حتى إضافة أول قسم: {0}. تعرض البوابة أنواع المؤسسات المفعّلة التي لديها أقسام فقط.",
   "Hide": "إخفاء",
   "Hide every posted grade from students again?": "إخفاء كل الدرجات المنشورة عن الطلاب مجددًا؟",
   "Hide grades": "إخفاء الدرجات",

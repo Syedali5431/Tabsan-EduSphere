@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tabsan.EduSphere.Application.Interfaces;
 using Tabsan.EduSphere.Domain.Academic;
+using Tabsan.EduSphere.Domain.Enums;
 using Tabsan.EduSphere.Domain.Interfaces;
 using Tabsan.EduSphere.Infrastructure.Persistence;
 
@@ -56,6 +57,10 @@ public class DepartmentRepository : IDepartmentRepository
     public Task<Department?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => ApplyTenantCampusScope(_db.Departments)
             .FirstOrDefaultAsync(d => d.Id == id, ct);
+
+    /// <summary>The institution types of active departments across the installation (deliberately not scoped to the caller).</summary>
+    public async Task<IReadOnlyList<InstitutionType>> GetInstitutionTypesInUseAsync(CancellationToken ct = default)
+        => await _db.Departments.AsNoTracking().Where(d => d.IsActive).Select(d => d.InstitutionType).Distinct().ToListAsync(ct);
 
     /// <summary>Returns true when the code is already in use (case-insensitive).</summary>
     public Task<bool> CodeExistsAsync(string code, Guid? tenantId = null, Guid? campusId = null, CancellationToken ct = default)

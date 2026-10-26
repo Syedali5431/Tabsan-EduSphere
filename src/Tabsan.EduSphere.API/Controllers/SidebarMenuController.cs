@@ -20,7 +20,7 @@ public class SidebarMenuController : ControllerBase
 {
     private readonly ISidebarMenuService _service;
     private readonly IModuleEntitlementResolver _moduleEntitlement;
-    private readonly IInstitutionPolicyService _institutionPolicy;
+    private readonly IInstitutionVisibilityService _institutionVisibility;
     private readonly IPermissionService _permissions;
 
     private static readonly HashSet<string> UniversityOnlyMenuKeys =
@@ -86,12 +86,12 @@ public class SidebarMenuController : ControllerBase
     public SidebarMenuController(
         ISidebarMenuService service,
         IModuleEntitlementResolver moduleEntitlement,
-        IInstitutionPolicyService institutionPolicy,
+        IInstitutionVisibilityService institutionVisibility,
         IPermissionService permissions)
     {
         _service = service;
         _moduleEntitlement = moduleEntitlement;
-        _institutionPolicy = institutionPolicy;
+        _institutionVisibility = institutionVisibility;
         _permissions = permissions;
     }
 
@@ -105,7 +105,8 @@ public class SidebarMenuController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetVisibleForCurrentUser(CancellationToken ct)
     {
-        var policy = await _institutionPolicy.GetPolicyAsync(ct);
+        // Menus of institution types without data (e.g. University menus in a School-only installation) are hidden.
+        var policy = await _institutionVisibility.GetVisibilityAsync(ct);
 
         var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role") ?? string.Empty;
 

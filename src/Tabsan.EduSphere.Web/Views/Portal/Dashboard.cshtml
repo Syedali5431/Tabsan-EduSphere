@@ -1,6 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ApiConnectionModel
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
     ViewData["Title"] = T.Text("Dashboard");
+    var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
+    var shownTypeNames = string.Join(" / ", new[] { (shownTypes.School, "School"), (shownTypes.College, "College"), (shownTypes.University, "University") }.Where(t => t.Item1).Select(t => T.Text(t.Item2)));
 }
 
 @if (TempData["PortalMessage"] is string msg && !string.IsNullOrWhiteSpace(msg))
@@ -31,7 +34,7 @@
                 </article>
                 <article class="dashboard-stat-card">
                     <span class="dashboard-stat-label">@T["Deployment fit"]</span>
-                    <strong class="dashboard-stat-value">@T["School / College / University"]</strong>
+                    <strong class="dashboard-stat-value">@(shownTypes.School && shownTypes.College && shownTypes.University ? T.Text("School / College / University") : shownTypeNames)</strong>
                     <span class="dashboard-stat-meta">@T["Single premium visual system"]</span>
                 </article>
                 <article class="dashboard-stat-card">
@@ -51,10 +54,15 @@
                 <div>
                     <span class="section-kicker">@T["Academic readability"]</span>
                     <h2 class="h5 mb-1">@T["Mode quick guide"]</h2>
-                    <p class="text-muted mb-0">@T["Use this as a quick visual reference while switching between School, College, and University operational flows."]</p>
+                    @if (shownTypes.Types.Count > 1)
+                    {
+                        <p class="text-muted mb-0">@T["Use this as a quick visual reference while switching between School, College, and University operational flows."]</p>
+                    }
                 </div>
             </div>
             <div class="row g-3">
+                @if (shownTypes.School)
+                {
                 <div class="col-12 col-lg-4">
                     <article class="dashboard-stat-card h-100">
                         <span class="dashboard-stat-label">@T["School mode"]</span>
@@ -62,6 +70,9 @@
                         <span class="dashboard-stat-meta">@T["Class-period labels and final-marks-friendly result flow"]</span>
                     </article>
                 </div>
+                }
+                @if (shownTypes.College)
+                {
                 <div class="col-12 col-lg-4">
                     <article class="dashboard-stat-card h-100">
                         <span class="dashboard-stat-label">@T["College mode"]</span>
@@ -69,6 +80,9 @@
                         <span class="dashboard-stat-meta">@T["Class-based progression with simplified aggregation semantics"]</span>
                     </article>
                 </div>
+                }
+                @if (shownTypes.University)
+                {
                 <div class="col-12 col-lg-4">
                     <article class="dashboard-stat-card h-100">
                         <span class="dashboard-stat-label">@T["University mode"]</span>
@@ -76,6 +90,7 @@
                         <span class="dashboard-stat-meta">@T["GPA/CGPA path retained with semester/year flexibility"]</span>
                     </article>
                 </div>
+                }
             </div>
         </div>
     </div>

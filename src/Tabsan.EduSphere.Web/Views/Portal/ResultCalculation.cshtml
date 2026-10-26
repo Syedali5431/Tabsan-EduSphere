@@ -1,5 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.ResultCalculationSettingsPageModel
-@{ ViewData["Title"] = T.Text("Result Calculation"); }
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
+@{
+    ViewData["Title"] = T.Text("Result Calculation");
+    var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
+}
 
 @if (!string.IsNullOrWhiteSpace(TempData["Message"]?.ToString()))
 {
@@ -23,9 +27,18 @@ else
                 <div class="col-md-4">
                     <label class="form-label" for="selectedInstitutionType">@T["Institute"]</label>
                     <select id="selectedInstitutionType" name="selectedInstitutionType" class="form-select" onchange="this.form.submit()">
-                        <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">@T["University"]</option>
-                        <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">@T["School"]</option>
-                        <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">@T["College"]</option>
+                        @if (shownTypes.University)
+                        {
+                            <option value="0" selected="@(Model.SelectedInstitutionType == 0 ? "selected" : null)">@T["University"]</option>
+                        }
+                        @if (shownTypes.School)
+                        {
+                            <option value="1" selected="@(Model.SelectedInstitutionType == 1 ? "selected" : null)">@T["School"]</option>
+                        }
+                        @if (shownTypes.College)
+                        {
+                            <option value="2" selected="@(Model.SelectedInstitutionType == 2 ? "selected" : null)">@T["College"]</option>
+                        }
                     </select>
                 </div>
                 <div class="col-md-8">

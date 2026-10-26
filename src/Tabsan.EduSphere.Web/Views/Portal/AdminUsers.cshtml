@@ -1,5 +1,9 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AdminUsersPageModel
-@{ ViewData["Title"] = T.Text("Admin Users"); }
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
+@{
+    ViewData["Title"] = T.Text("Admin Users");
+    var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
+}
 
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
@@ -86,9 +90,9 @@ else
                         <label class="form-label">@T["Institution Type (optional)"]</label>
                         <select aria-label="@T["Institution Type (optional)"]" name="institutionType" class="form-select">
                             <option value="">@T["Use Global Policy"]</option>
-                            <option value="1">@T["School"]</option>
-                            <option value="2">@T["College"]</option>
-                            <option value="0">@T["University"]</option>
+                            @if (shownTypes.School) { <option value="1">@T["School"]</option> }
+                            @if (shownTypes.College) { <option value="2">@T["College"]</option> }
+                            @if (shownTypes.University) { <option value="0">@T["University"]</option> }
                         </select>
                     </div>
                 </div>

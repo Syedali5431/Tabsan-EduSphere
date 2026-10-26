@@ -1,4 +1,5 @@
 @model InstitutionPolicyPageModel
+@inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
 @{
     ViewData["Title"] = T.Text("Institution Policy");
 }
@@ -34,6 +35,18 @@
             @T["At least one type must remain enabled."]
             @T["Changes take effect immediately for all users."]
         </p>
+        @{
+            // The portal shows an enabled type only once it has departments (a School-only installation shows no College or University menus).
+            var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
+            var enabledWithoutData = new[] { (Model.IncludeUniversity && !shownTypes.University, "University"), (Model.IncludeSchool && !shownTypes.School, "School"), (Model.IncludeCollege && !shownTypes.College, "College") }
+                .Where(t => t.Item1).Select(t => T.Text(t.Item2)).ToList();
+        }
+        @if (enabledWithoutData.Count > 0)
+        {
+            <div class="alert alert-info small" data-institution-hidden>
+                <i class="bi bi-eye-slash me-1"></i>@T.Format("Hidden until their first department is added: {0}. The portal shows only the enabled institution types that have departments.", string.Join(", ", enabledWithoutData))
+            </div>
+        }
 
         <form asp-action="InstitutionPolicy" method="post">
             @Html.AntiForgeryToken()

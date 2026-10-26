@@ -1,5 +1,6 @@
 @* Institute filter (School / College / University) for a GET filter form.
-   Shown only when the signed-in user can see departments of more than one institution type.
+   Shown only when the signed-in user can see departments of more than one institution type that the portal
+   shows (the policy's types with active departments, see Services/InstitutionVisibility.cs).
    The choice travels as ?institutionType= and EduApiClient limits every department, program,
    course, offering and student lookup on the page to it. *@
 @inject Tabsan.EduSphere.Web.Services.IEduApiClient EduApi
@@ -12,6 +13,9 @@
         catch { available = new List<int>(); }
         Context.Items[cacheKey] = available;
     }
+    // Only the institution types the portal shows (a School-only installation has no Institute filter).
+    var shownTypes = await Tabsan.EduSphere.Web.Services.InstitutionVisibilityExtensions.GetVisibleInstitutionTypesAsync(EduApi, Context, CancellationToken.None);
+    available = available.Where(shownTypes.Shows).ToList();
     var selected = EduApi.PageInstitutionType;
     var labels = new Dictionary<int, string> { [0] = "University", [1] = "School", [2] = "College" };
     var columnClass = ViewData["InstitutionFilterColumnClass"] as string ?? "col-md-2";
