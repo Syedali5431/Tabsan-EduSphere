@@ -19,24 +19,25 @@ public sealed class MobileQueries : IMobileQueries
 
     public MobileQueries(ApplicationDbContext db) => _db = db;
 
-    public async Task<MobileHomeResponse> HomeAsync(Guid userId, string role, CancellationToken ct = default)
+    public async Task<MobileHomeResponse> HomeAsync(Guid userId, string role, int? dayOfWeek = null, CancellationToken ct = default)
     {
         var user = await _db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.FullName, u.Username }).FirstOrDefaultAsync(ct);
         var unread = await _db.NotificationRecipients.CountAsync(r => r.RecipientUserId == userId && !r.IsRead, ct);
-        var today = (int)DateTime.UtcNow.DayOfWeek;
+        var today = dayOfWeek is >= 0 and <= 6 ? dayOfWeek.Value : (int)DateTime.UtcNow.DayOfWeek;
         var name = user?.FullName ?? user?.Username;
 
         if (string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase))
         {
             var profile = await _db.StudentProfiles.AsNoTracking().Where(p => p.UserId == userId)
-                .Select(p => new { p.Id, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa }).FirstOrDefaultAsync(ct);
+                .Select(p => new { p.Id, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa, p.Department.InstitutionType }).FirstOrDefaultAsync(ct);
             if (profile is null) return Empty(role, name, unread);
             var offerings = await ActiveOfferingsAsync(profile.Id, ct);
             var timetable = (await StudentTimetableAsync(offerings, ct)).Where(c => c.DayOfWeek == today).ToList();
             var due = await StudentDueAsync(profile.Id, offerings, ct);
             var announcements = await AnnouncementsAsync(offerings.Select(o => o.OfferingId).ToList(), ct);
             var summary = new MobileStudentSummary(profile.Id, profile.RegistrationNumber, profile.ProgramName,
-                await AttendancePercentAsync(profile.Id, ct), profile.Cgpa, offerings.Count, await OutstandingFeesAsync(profile.Id, ct));
+                await AttendancePercentAsync(profile.Id, ct), GpaOrNull(profile.InstitutionType, profile.Cgpa), offerings.Count,
+                await OutstandingFeesAsync(profile.Id, ct), await AveragePercentAsync(profile.Id, ct));
             return new MobileHomeResponse("Student", name, unread, timetable, due, announcements, summary, null, null);
         }
 
@@ -85,15 +86,16 @@ public sealed class MobileQueries : IMobileQueries
     {
         var children = await _db.ParentStudentLinks.AsNoTracking()
             .Where(l => l.ParentUserId == parentUserId && l.IsActive)
-            .Join(_db.StudentProfiles, l => l.StudentProfileId, p => p.Id, (l, p) => new { p.Id, p.UserId, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa })
+            .Join(_db.StudentProfiles, l => l.StudentProfileId, p => p.Id,
+                (l, p) => new { p.Id, p.UserId, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa, p.Department.InstitutionType })
             .ToListAsync(ct);
         var result = new List<MobileChildSummary>();
         foreach (var c in children)
         {
             var name = await _db.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName ?? u.Username).FirstOrDefaultAsync(ct) ?? c.RegistrationNumber;
             var published = await _db.Results.CountAsync(r => r.StudentProfileId == c.Id && r.IsPublished, ct);
-            result.Add(new MobileChildSummary(c.Id, name, c.RegistrationNumber, c.ProgramName, await AttendancePercentAsync(c.Id, ct), c.Cgpa,
-                await OutstandingFeesAsync(c.Id, ct), published));
+            result.Add(new MobileChildSummary(c.Id, name, c.RegistrationNumber, c.ProgramName, await AttendancePercentAsync(c.Id, ct),
+                GpaOrNull(c.InstitutionType, c.Cgpa), await OutstandingFeesAsync(c.Id, ct), published, await AveragePercentAsync(c.Id, ct)));
         }
         return result.OrderBy(c => c.Name).ToList();
     }
@@ -140,7 +142,8 @@ public sealed class MobileQueries : IMobileQueries
             {
                 a.Id, a.Title, a.Description, a.DueDate, a.MaxMarks,
                 Mine = _db.AssignmentSubmissions.Where(s => s.AssignmentId == a.Id && s.StudentProfileId == profileId && !s.IsMissing)
-                    .Select(s => new { s.MarksAwarded, s.Feedback, s.Status, s.PostedAt }).FirstOrDefault()
+                    .Select(s => new { s.MarksAwarded, s.Feedback, s.Status, s.PostedAt }).FirstOrDefault(),
+                ToGrade = isTeacher ? _db.AssignmentSubmissions.Count(s => s.AssignmentId == a.Id && s.Status == SubmissionStatus.Submitted && s.MarksAwarded == null) : 0
             })
             .ToListAsync(ct);
         var quizzes = await _db.Quizzes.AsNoTracking()
@@ -154,7 +157,8 @@ public sealed class MobileQueries : IMobileQueries
             .ToListAsync(ct);
         return new MobileCourseResponse(course, materials,
             assignments.Select(a => new MobileAssignment(a.Id, a.Title, a.Description, a.DueDate, a.MaxMarks, a.Mine is not null,
-                a.Mine?.PostedAt != null ? a.Mine.MarksAwarded : null, a.Mine?.PostedAt != null ? a.Mine.Feedback : null, a.Mine?.Status.ToString())).ToList(),
+                a.Mine?.PostedAt != null ? a.Mine.MarksAwarded : null, a.Mine?.PostedAt != null ? a.Mine.Feedback : null, a.Mine?.Status.ToString(),
+                a.ToGrade)).ToList(),
             quizzes.Select(q => new MobileQuiz(q.Id, q.Title, q.AvailableFrom, q.AvailableUntil, q.TimeLimitMinutes, q.Used, q.MaxAttempts)).ToList(),
             await AnnouncementsAsync([offeringId], ct), isTeacher);
     }
@@ -210,6 +214,13 @@ public sealed class MobileQueries : IMobileQueries
                     r.Total == 0 ? null : Math.Round(100m * attended / r.Total, 1), r.Last);
             })
             .OrderBy(r => r.Percent ?? 100).ToList();
+    }
+
+    public async Task<IReadOnlyList<MobileAnnouncement>?> StudentAnnouncementsAsync(Guid userId, string role, Guid? studentProfileId, CancellationToken ct = default)
+    {
+        if (await AllowedStudentAsync(userId, role, studentProfileId, ct) is not { } profileId) return null;
+        var offerings = await ActiveOfferingsAsync(profileId, ct);
+        return await AnnouncementsAsync(offerings.Select(o => o.OfferingId).ToList(), ct, take: 20);
     }
 
     /// <summary>The student's own profile, or a parent's actively linked child; null otherwise.</summary>
@@ -308,14 +319,14 @@ public sealed class MobileQueries : IMobileQueries
             .OrderBy(d => d.Done).ThenBy(d => d.DueAt).Take(20).ToList();
     }
 
-    private async Task<IReadOnlyList<MobileAnnouncement>> AnnouncementsAsync(IReadOnlyCollection<Guid> offeringIds, CancellationToken ct)
+    private async Task<IReadOnlyList<MobileAnnouncement>> AnnouncementsAsync(IReadOnlyCollection<Guid> offeringIds, CancellationToken ct, int take = 5)
     {
         if (offeringIds.Count == 0) return [];
         var ids = offeringIds.ToList();
         var titles = await CourseTitlesAsync(ids, ct);
         var rows = await _db.CourseAnnouncements.AsNoTracking()
             .Where(a => a.OfferingId != null && ids.Contains(a.OfferingId.Value))
-            .OrderByDescending(a => a.PostedAt).Take(5)
+            .OrderByDescending(a => a.PostedAt).Take(take)
             .Select(a => new { a.Id, a.Title, a.Body, a.PostedAt, a.OfferingId })
             .ToListAsync(ct);
         return rows.Select(a => new MobileAnnouncement(a.Id, a.Title, a.Body.Length > 280 ? a.Body[..279] + "…" : a.Body, a.PostedAt,
@@ -335,6 +346,28 @@ public sealed class MobileQueries : IMobileQueries
             .FirstOrDefaultAsync(ct);
         return counts is null || counts.Total == 0 ? null : Math.Round(100m * counts.Attended / counts.Total, 1);
     }
+
+    /// <summary>GPA/CGPA is a University measure; School and College standing is a percentage (see <see cref="AveragePercentAsync"/>).</summary>
+    private static decimal? GpaOrNull(InstitutionType type, decimal? cgpa) => type == InstitutionType.University ? cgpa : null;
+
+    /// <summary>
+    /// Published marks over the published maximum marks, in percent (null without results). The "Total" rows the result
+    /// calculation keeps per course repeat their components, so they only count when a course has nothing else.
+    /// </summary>
+    private async Task<decimal?> AveragePercentAsync(Guid studentProfileId, CancellationToken ct)
+    {
+        var rows = await _db.Results.AsNoTracking()
+            .Where(r => r.StudentProfileId == studentProfileId && r.IsPublished && r.MaxMarks > 0)
+            .Select(r => new { r.CourseOfferingId, r.ResultType, r.MarksObtained, r.MaxMarks })
+            .ToListAsync(ct);
+        var counted = rows.GroupBy(r => r.CourseOfferingId)
+            .SelectMany(g => g.Any(r => !IsTotal(r.ResultType)) ? g.Where(r => !IsTotal(r.ResultType)) : g)
+            .ToList();
+        var max = counted.Sum(r => r.MaxMarks);
+        return max == 0 ? null : Math.Round(100m * counted.Sum(r => r.MarksObtained) / max, 1);
+    }
+
+    private static bool IsTotal(string? resultType) => string.Equals(resultType, "Total", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Unpaid fee receipts (pending or proof submitted).</summary>
     private async Task<decimal?> OutstandingFeesAsync(Guid studentProfileId, CancellationToken ct)

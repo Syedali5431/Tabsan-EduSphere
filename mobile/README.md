@@ -4,9 +4,9 @@ One app for **students, teachers and parents** (Android and iOS, .NET MAUI). The
 
 | Role | Tabs and screens |
 |---|---|
-| Student | Home (today's classes, due work, announcements, attendance %, fees due) · Timetable · Courses (materials, assignments with hand-in by camera or file, quizzes — opened in the portal, announcements, discussions) · Results (results, attendance per course, report cards) · Notifications · Settings |
+| Student | Home (today's classes, due work, announcements, attendance %, average marks — CGPA for University students, fees due) · Timetable · Courses (materials, assignments with hand-in by camera or file, quizzes — opened in the portal, announcements, discussions) · Results (results, attendance per course, report cards) · Notifications · Settings |
 | Teacher | Home (classes today, courses, work to grade) · Timetable · Courses (take attendance, grade submissions, post announcements, discussions with the class) · Notifications · Settings |
-| Parent | Home (children at a glance) · My children (results, attendance, report cards, fees, CGPA, announcements per child) · Notifications · Settings |
+| Parent | Home (children at a glance) · My children (results, attendance, report cards, fees, average marks (CGPA for University students), announcements per child) · Notifications · Settings |
 
 Sign-in: username + password (+ authenticator code when 2FA is on), or the institution's single sign-on in the system
 browser. Language: English, Urdu or Arabic (right to left), chosen in Settings; the API answers in the same language.
@@ -38,7 +38,20 @@ On Windows the Android SDK and JDK paths may have to be given:
 `-p:MobileTargets=net9.0-windows10.0.19041.0` builds a Windows desktop version for quick UI checks during development.
 
 Development against a local API: build with `-p:ApiBaseUrl=https://10.0.2.2:7061` (Android emulator → host) and trust the
-development certificate on the device, or use the public test link.
+development certificate on the device, or use the public test link. Debug builds also accept plain http, e.g. the API on
+`http://localhost:5181` from the emulator:
+
+```bash
+dotnet build Tabsan.EduSphere.Mobile/Tabsan.EduSphere.Mobile.csproj -c Debug -p:MobileTargets=net9.0-android -p:RuntimeIdentifier=android-x64 -p:EmbedAssembliesIntoApk=true -p:AndroidPackageFormat=apk -p:ApiBaseUrl=http://10.0.2.2:5181
+```
+
+Release builds stay https only. The Android emulator needs hardware acceleration on Windows (the Android Emulator Hypervisor
+Driver, or Windows Hypervisor Platform); without it the image does not boot. `-p:MobileTargets=net9.0-windows10.0.19041.0
+-p:ApiBaseUrl=http://localhost:5181` runs the same screens as a Windows window for a quick check.
+
+Parents: the **Parent** role is seeded at API start-up. Create parent accounts with the user import (role `Parent`), link them
+to School students with `PUT api/v1/parent-portal/links` (admin), and they sign in to the app; imported accounts choose their
+own password at the first sign-in, as in the portal.
 
 ## White-label builds (one app per institution, premium licence)
 
@@ -55,8 +68,14 @@ $env:EDUSPHERE_KEYSTORE_PASS = '…'   # upload keystore password (never in the 
   application id, the icon/splash colour and the Android sign-in intent filter.
 - **The institution's servers must match the scheme**: `Mobile:AppRedirectUri = "cityuni://sso"` in the API's and the
   portal's `appsettings.json` (the API tells the app; the portal redirects to it).
-- Icons: replace `Resources/AppIcon/appicon.svg` / `appiconfg.svg` and `Resources/Splash/splash.svg` with the institution's
-  artwork before building (keep the file names).
+- Logo: the standard build carries the Tabsan logo (from the portal's `wwwroot/images`): `Resources/AppIcon/appicon.svg`
+  (icon background) and `appiconfg.png` (the emblem inside the middle two thirds), `Resources/Splash/splash.png`, and
+  `Resources/Images/tabsan_wordmark.png` / `tabsan_mark.png` (sign-in screen, banners, Settings). Replace them with the
+  institution's artwork before building (keep the file names).
+- Look: navy and teal (the portal's colours); `-Color` sets the title bar, banners, icon background and splash colour.
+  The shared screen parts (cards, banner, chips, framed fields) are in `Pages/Ui.cs`.
+- Connecting the app to an institution's portal, step by step with screenshots: `User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.pdf`
+  (built by `tools/user-manual/mobile-guide`).
 
 ## Push notifications
 

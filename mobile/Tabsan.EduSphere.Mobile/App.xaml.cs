@@ -13,6 +13,7 @@ public partial class App : Application
 	private readonly IServiceProvider _services;
 	private readonly EduSphereClient _client;
 	private readonly CrashReporter _crashes;
+	private Window? _window;
 
 	public App(IServiceProvider services, EduSphereClient client, CrashReporter crashes)
 	{
@@ -57,12 +58,18 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		var window = new Window(new ContentPage { Content = new ActivityIndicator { IsRunning = true, VerticalOptions = LayoutOptions.Center } });
-		_ = StartAsync(window);
-		return window;
+		// Same as the splash screen (the Tabsan mark on the brand colour) while the saved session is read.
+		var starting = new VerticalStackLayout
+		{
+			Spacing = 24, VerticalOptions = LayoutOptions.Center,
+			Children = { new Image { Source = "tabsan_mark.png", HeightRequest = 96 }, new ActivityIndicator { IsRunning = true, Color = Colors.White } }
+		};
+		_window = new Window(new ContentPage { BackgroundColor = Ui.Brand, Content = starting });
+		_ = StartAsync();
+		return _window;
 	}
 
-	private async Task StartAsync(Window window)
+	private async Task StartAsync()
 	{
 		if (await _client.RestoreAsync()) ShowApp();
 		else ShowSignIn();
@@ -103,6 +110,8 @@ public partial class App : Application
 	private void SetRoot(Page page)
 	{
 		page.FlowDirection = AppText.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-		if (Windows.Count > 0) Windows[0].Page = page;
+		// The window made in CreateWindow, not Windows[0]: when reading the saved session finishes at once (the iOS keychain,
+		// Windows), the first page is set before MAUI has added that window to Windows, and the app stayed on the spinner.
+		if ((_window ?? Windows.FirstOrDefault()) is { } window) window.Page = page;
 	}
 }

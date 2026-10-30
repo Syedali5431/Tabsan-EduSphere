@@ -20,7 +20,7 @@ param(
     [Parameter(Mandatory)] [string] $AppName,
     [Parameter(Mandatory)] [ValidatePattern('^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$')] [string] $AppId,
     [Parameter(Mandatory)] [ValidatePattern('^https://')] [string] $ApiBaseUrl,
-    [ValidatePattern('^#[0-9A-Fa-f]{6}$')] [string] $Color = '#0D3B66',
+    [ValidatePattern('^#[0-9A-Fa-f]{6}$')] [string] $Color = '#0F2A4A',
     [ValidatePattern('^[a-z][a-z0-9.+-]{1,31}$')] [string] $Scheme = 'edusphere',
     [Parameter(Mandatory)] [ValidatePattern('^\d+\.\d+\.\d+$')] [string] $Version,
     [Parameter(Mandatory)] [ValidateRange(1, 2100000000)] [int] $Build,

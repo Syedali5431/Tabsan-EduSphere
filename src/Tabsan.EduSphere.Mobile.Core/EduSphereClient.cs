@@ -16,7 +16,7 @@ public interface ISecureStore
 }
 
 /// <summary>Outcome of a sign-in attempt.</summary>
-public enum SignInStatus { Success, MfaRequired, InvalidMfaCode, SsoRequired, InvalidCredentials, Blocked, UpdateRequired, Failed }
+public enum SignInStatus { Success, MfaRequired, InvalidMfaCode, SsoRequired, InvalidCredentials, Blocked, UpdateRequired, Failed, PasswordChangeRequired }
 
 public sealed record SignInResult(SignInStatus Status, string? Message = null, Session? Session = null);
 
@@ -93,7 +93,14 @@ public sealed class EduSphereClient
         using var request = Request(HttpMethod.Post, "api/v1/auth/login", new { username, password, mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim() }, anonymous: true);
         using var response = await _http.SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
-        if (response.IsSuccessStatusCode) return new SignInResult(SignInStatus.Success, Session: await SaveSessionAsync(body));
+        if (response.IsSuccessStatusCode)
+        {
+            // Imported accounts start with a temporary password (their username): the portal makes them change it first,
+            // so the app does too, and keeps the session on the device only after the change.
+            var mustChange = JsonSerializer.Deserialize<LoginApiResponse>(body, Json)?.MustChangePassword == true;
+            var session = await SaveSessionAsync(body, persist: !mustChange);
+            return new SignInResult(mustChange && session is not null ? SignInStatus.PasswordChangeRequired : SignInStatus.Success, Session: session);
+        }
         var (error, message) = ReadError(body);
         return (response.StatusCode, error) switch
         {
@@ -144,12 +151,16 @@ public sealed class EduSphereClient
         await ForgetSessionAsync();
     }
 
-    private async Task<Session?> SaveSessionAsync(string body)
+    /// <summary>Sets the user's own password in place of the temporary one (the API checks its password policy).</summary>
+    public Task ChangeTemporaryPasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
+        => SendAsync<object>(HttpMethod.Post, "api/v1/auth/force-change-password", new { currentPassword, newPassword }, false, ct);
+
+    private async Task<Session?> SaveSessionAsync(string body, bool persist = true)
     {
         var login = JsonSerializer.Deserialize<LoginApiResponse>(body, Json);
         if (login is null || string.IsNullOrEmpty(login.AccessToken)) return null;
         _session = new Session(login.AccessToken, login.RefreshToken, login.AccessTokenExpiry, login.Role, login.UserId, login.Username);
-        await _store.SetAsync(SessionKey, JsonSerializer.Serialize(_session, Json));
+        if (persist) await _store.SetAsync(SessionKey, JsonSerializer.Serialize(_session, Json));
         return _session;
     }
 
@@ -192,7 +203,9 @@ public sealed class EduSphereClient
 
     // ── data ───────────────────────────────────────────────────────────────────────────────────
 
-    public Task<HomeData?> GetHomeAsync(CancellationToken ct = default) => GetAsync<HomeData>("api/v1/mobile/home", ct);
+    /// <summary>The home screen; "today's classes" are for the phone's day (timetables hold the school's local times).</summary>
+    public Task<HomeData?> GetHomeAsync(DayOfWeek? today = null, CancellationToken ct = default)
+        => GetAsync<HomeData>($"api/v1/mobile/home?day={(int)(today ?? DateTime.Now.DayOfWeek)}", ct);
     public async Task<List<ClassSlot>> GetTimetableAsync(CancellationToken ct = default) => await GetAsync<List<ClassSlot>>("api/v1/mobile/timetable", ct) ?? [];
     public async Task<List<CourseSummary>> GetCoursesAsync(CancellationToken ct = default) => await GetAsync<List<CourseSummary>>("api/v1/mobile/courses", ct) ?? [];
     public Task<CourseDetail?> GetCourseAsync(Guid offeringId, CancellationToken ct = default) => GetAsync<CourseDetail>($"api/v1/mobile/courses/{offeringId}", ct);
@@ -211,8 +224,9 @@ public sealed class EduSphereClient
 
     private static string Child(Guid? id) => id is { } v ? $"?studentProfileId={v}" : "";
 
+    /// <summary>A linked child's course announcements (the parent-portal route needs a tenant scope that parent accounts lack).</summary>
     public async Task<List<AnnouncementItem>> GetChildAnnouncementsAsync(Guid studentProfileId, CancellationToken ct = default)
-        => await GetAsync<List<AnnouncementItem>>($"api/v1/parent-portal/me/students/{studentProfileId}/announcements", ct) ?? [];
+        => await GetAsync<List<AnnouncementItem>>("api/v1/mobile/announcements" + Child(studentProfileId), ct) ?? [];
     public async Task<List<NotificationItem>> GetNotificationsAsync(int page = 0, int pageSize = 20, CancellationToken ct = default)
         => await GetAsync<List<NotificationItem>>($"api/v1/notification/inbox?page={page}&pageSize={pageSize}", ct) ?? [];
     public Task MarkNotificationReadAsync(Guid id, CancellationToken ct = default) => SendAsync<object>(HttpMethod.Post, $"api/v1/notification/{id}/read", null, false, ct);

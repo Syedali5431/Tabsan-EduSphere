@@ -51,13 +51,17 @@ public sealed class MobileController : ControllerBase
             : StatusCode(StatusCodes.Status403Forbidden, new { error = result.FailureReason?.ToString(), message = "Your EduSphere account is inactive or locked. Contact your administrator." });
     }
 
-    /// <summary>The home screen for the signed-in role (today's classes, what is due, announcements, summaries).</summary>
+    /// <summary>
+    /// The home screen for the signed-in role (today's classes, what is due, announcements, summaries).
+    /// <paramref name="day"/>: today on the phone, 0 Sunday … 6 Saturday (without it, today in UTC).
+    /// </summary>
     [HttpGet("home")]
-    public async Task<IActionResult> Home([FromHeader(Name = "X-App-Version")] string? appVersion, CancellationToken ct)
+    public async Task<IActionResult> Home([FromHeader(Name = "X-App-Version")] string? appVersion, [FromQuery] int? day, CancellationToken ct)
     {
         if (appVersion is not null && !_mobile.IsSupportedVersion(appVersion))
             return StatusCode(StatusCodes.Status426UpgradeRequired, new { error = "UPDATE_REQUIRED", message = "Please update the EduSphere app to continue." });
-        return Ok(await _queries.HomeAsync(UserId(), Role(), ct));
+        if (day is < 0 or > 6) return BadRequest(new { message = "day must be 0 (Sunday) to 6 (Saturday)." });
+        return Ok(await _queries.HomeAsync(UserId(), Role(), day, ct));
     }
 
     /// <summary>The week's classes: a student's enrolled courses, or the classes a teacher teaches.</summary>
@@ -88,7 +92,12 @@ public sealed class MobileController : ControllerBase
     public async Task<IActionResult> ReportCards([FromQuery] Guid? studentProfileId, CancellationToken ct)
         => await _queries.ReportCardsAsync(UserId(), Role(), studentProfileId, ct) is { } rows ? Ok(rows) : StatusCode(StatusCodes.Status403Forbidden, new { message = "You cannot see this student's report cards." });
 
-    /// <summary>A parent's linked children with attendance, CGPA, fees and results at a glance.</summary>
+    /// <summary>Announcements of the student's courses, newest first (students: own; parents: ?studentProfileId= of a linked child).</summary>
+    [HttpGet("announcements")]
+    public async Task<IActionResult> Announcements([FromQuery] Guid? studentProfileId, CancellationToken ct)
+        => await _queries.StudentAnnouncementsAsync(UserId(), Role(), studentProfileId, ct) is { } rows ? Ok(rows) : StatusCode(StatusCodes.Status403Forbidden, new { message = "You cannot see this student's announcements." });
+
+    /// <summary>A parent's linked children with attendance, CGPA (University) or average marks, fees and results at a glance.</summary>
     [HttpGet("children")]
     [Authorize(Roles = "Parent")]
     public async Task<IActionResult> Children(CancellationToken ct) => Ok(await _queries.ChildrenAsync(UserId(), ct));

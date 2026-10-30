@@ -2604,10 +2604,10 @@ public partial class PortalController : Controller
         }
 
         var validRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { "Admin", "Faculty", "Student", "Finance" };
+            { "Admin", "Faculty", "Student", "Finance", "Parent" };
         if (!validRoles.Contains(form.Role))
         {
-            model.Message = "Role must be Admin, Faculty, Student, or Finance.";
+            model.Message = "Role must be Admin, Faculty, Student, Finance, or Parent.";
             return View("UserImport", model);
         }
 

@@ -40,6 +40,9 @@ public sealed class SignInViewModel : PageViewModel
     private string _password = "";
     private string _mfaCode = "";
     private bool _needsMfa;
+    private bool _needsNewPassword;
+    private string _newPassword = "";
+    private string _confirmPassword = "";
     private MobileConfig? _config;
     private VersionPolicy.State _version;
 
@@ -57,6 +60,10 @@ public sealed class SignInViewModel : PageViewModel
     public string Password { get => _password; set => Set(ref _password, value); }
     public string MfaCode { get => _mfaCode; set => Set(ref _mfaCode, value); }
     public bool NeedsMfa { get => _needsMfa; private set => Set(ref _needsMfa, value); }
+    /// <summary>The account still has its temporary password (imported accounts): a new one is chosen before the app opens.</summary>
+    public bool NeedsNewPassword { get => _needsNewPassword; private set => Set(ref _needsNewPassword, value); }
+    public string NewPassword { get => _newPassword; set => Set(ref _newPassword, value); }
+    public string ConfirmPassword { get => _confirmPassword; set => Set(ref _confirmPassword, value); }
     public MobileConfig? Config { get => _config; private set => Set(ref _config, value); }
     public VersionPolicy.State VersionState { get => _version; private set => Set(ref _version, value); }
     public ObservableCollection<SsoProvider> Providers { get; } = [];
@@ -81,9 +88,27 @@ public sealed class SignInViewModel : PageViewModel
     {
         if (VersionState == VersionPolicy.State.UpdateRequired) { Error = AppText.Get("UpdateRequired"); return; }
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password)) { Error = AppText.Get("WrongCredentials"); return; }
+        if (NeedsNewPassword) { await ChangePasswordAsync(); return; }
         SignInResult? result = null;
         await RunAsync(async () => result = await _client.SignInAsync(Username.Trim(), Password, NeedsMfa ? MfaCode : null));
         if (result is null) return;
+        Handle(result);
+    }
+
+    /// <summary>Replaces the temporary password, then signs in with the new one (fresh tokens after the change).</summary>
+    private async Task ChangePasswordAsync()
+    {
+        if (string.IsNullOrEmpty(NewPassword) || NewPassword != ConfirmPassword) { Error = AppText.Get("PasswordsDiffer"); return; }
+        SignInResult? result = null;
+        await RunAsync(async () =>
+        {
+            await _client.ChangeTemporaryPasswordAsync(Password, NewPassword);
+            result = await _client.SignInAsync(Username.Trim(), NewPassword, NeedsMfa ? MfaCode : null);
+        });
+        if (result is null) return;
+        NeedsNewPassword = false;
+        Password = NewPassword;
+        NewPassword = ConfirmPassword = "";
         Handle(result);
     }
 
@@ -113,6 +138,10 @@ public sealed class SignInViewModel : PageViewModel
             case SignInStatus.MfaRequired:
                 NeedsMfa = true;
                 Error = AppText.Get("EnterAuthenticatorCode");
+                break;
+            case SignInStatus.PasswordChangeRequired:
+                NeedsNewPassword = true;
+                Notice = AppText.Get("ChooseNewPassword");
                 break;
             case SignInStatus.InvalidMfaCode:
                 Error = result.Message ?? AppText.Get("EnterAuthenticatorCode");
@@ -153,9 +182,26 @@ public sealed class HomeViewModel : PageViewModel
 
     public Task LoadAsync() => RunAsync(async () => Home = await _client.GetHomeAsync());
 
-    /// <summary>"Overdue" for open work past its date, otherwise the due date.</summary>
+    /// <summary>"Overdue" for open work past its date, otherwise the due date (a live class shows its start, even once begun).</summary>
     public static string DueLabel(DueItem item, DateTime now)
-        => item.Done ? AppText.Get("Done") : item.DueAt < now ? AppText.Get("Overdue") : item.DueAt.ToLocalTime().ToString("ddd d MMM HH:mm");
+        => item.Done ? AppText.Get("Done")
+           : item.DueAt < now && item.Kind != "LiveClass" ? AppText.Get("Overdue")
+           : ShortDate(item.DueAt, now);
+
+    /// <summary>A UTC date in the phone's time ("Sat 7 Nov 17:00"), with the year when it is not this year's.</summary>
+    public static string ShortDate(DateTime utc, DateTime now)
+    {
+        var local = utc.ToLocalTime();
+        return local.ToString(local.Year == now.ToLocalTime().Year ? "ddd d MMM HH:mm" : "d MMM yyyy HH:mm");
+    }
+
+    /// <summary>
+    /// A student's standing: CGPA for University students, otherwise the average of published marks (the API sends CGPA
+    /// only for University students; schools and colleges report percentages).
+    /// </summary>
+    public static (string Label, string Value) Standing(decimal? cgpa, decimal? averagePercent)
+        => cgpa is { } g ? (AppText.Get("Cgpa"), g.ToString("0.00"))
+           : (AppText.Get("Average"), averagePercent is { } p ? $"{p:0.#}%" : "—");
 }
 
 public sealed class TimetableViewModel : PageViewModel
@@ -179,11 +225,15 @@ public sealed class TimetableViewModel : PageViewModel
         foreach (var day in Group(slots, (int)DateTime.Now.DayOfWeek)) Days.Add(day);
     });
 
-    public static IReadOnlyList<TimetableDay> Group(IEnumerable<ClassSlot> slots, int today)
+    public static IReadOnlyList<TimetableDay> Group(IEnumerable<ClassSlot> slots, int today, string? language = null)
         => slots.GroupBy(s => s.DayOfWeek)
             .OrderBy(g => (g.Key - today + 7) % 7)
-            .Select(g => new TimetableDay(g.First().Day, g.Key == today, g.OrderBy(s => s.Start, StringComparer.Ordinal).ToList()))
+            .Select(g => new TimetableDay(DayName(g.Key, language) ?? g.First().Day, g.Key == today, g.OrderBy(s => s.Start, StringComparer.Ordinal).ToList()))
             .ToList();
+
+    /// <summary>The day in the app's language (the API names days in English); null for a number that is not a day.</summary>
+    public static string? DayName(int dayOfWeek, string? language = null)
+        => dayOfWeek is >= 0 and <= 6 ? AppText.Get(((DayOfWeek)dayOfWeek).ToString(), language ?? AppText.Language) : null;
 }
 
 public sealed record TimetableDay(string Day, bool IsToday, IReadOnlyList<ClassSlot> Classes);
@@ -248,6 +298,12 @@ public sealed class CourseViewModel : PageViewModel
     /// <summary>Quizzes are taken in the portal (timer, access codes, lockdown and review rules live there).</summary>
     public Task OpenQuizAsync(CourseQuiz quiz)
         => _portalBaseUrl() is { } portal ? _launcher.OpenAsync(new Uri($"{portal.TrimEnd('/')}/Portal/TakeQuiz?quizId={quiz.Id}")) : Task.CompletedTask;
+
+    /// <summary>What an assignment card says: teachers see how much waits to be graded, students their own work's state.</summary>
+    public static string AssignmentState(CourseAssignment a, bool isTeacher)
+        => isTeacher
+            ? a.ToGrade switch { null => AppText.Get("ToGrade"), 0 => AppText.Get("NothingToGrade"), var n => string.Format(AppText.Get("ToGradeCount"), n) }
+            : a.Marks is { } m ? $"{AppText.Get("Marks")}: {m:0.##}/{a.MaxMarks:0.##}" : a.Submitted ? AppText.Get("NotGradedYet") : AppText.Get("HandIn");
 }
 
 public sealed class SubmitAssignmentViewModel : PageViewModel
@@ -466,13 +522,17 @@ public sealed class GradingViewModel : PageViewModel
     public ObservableCollection<GradeEntry> Submissions { get; } = [];
     public AsyncCommand SaveCommand { get; }
 
-    public Task LoadAsync(CourseAssignment assignment) => RunAsync(async () =>
+    /// <summary>Ungraded work first, then by name. The submissions list names no one, so names come from the class roster.</summary>
+    public Task LoadAsync(CourseAssignment assignment, Guid offeringId) => RunAsync(async () =>
     {
         Assignment = assignment;
         var rows = await _client.GetSubmissionsAsync(assignment.Id);
+        var roster = (await _client.GetRosterAsync(offeringId)).GroupBy(s => s.StudentProfileId).ToDictionary(g => g.Key, g => g.First());
+        string NameOf(SubmissionItem s) => s.StudentName
+            ?? (roster.TryGetValue(s.StudentProfileId, out var r) ? r.StudentName ?? r.RegistrationNumber : null) ?? "";
         Submissions.Clear();
-        foreach (var s in rows.OrderBy(s => s.MarksAwarded.HasValue).ThenBy(s => s.StudentName))
-            Submissions.Add(new GradeEntry(s.Key, s.StudentName ?? "", s.SubmittedAt, s.MarksAwarded, s.Feedback, assignment.MaxMarks));
+        foreach (var s in rows.OrderBy(s => s.MarksAwarded.HasValue).ThenBy(NameOf, StringComparer.CurrentCulture))
+            Submissions.Add(new GradeEntry(s.Key, NameOf(s), s.SubmittedAt, s.MarksAwarded, s.Feedback, assignment.MaxMarks) { Answer = s.TextContent });
     });
 
     public async Task SaveAsync(GradeEntry entry)
@@ -496,6 +556,8 @@ public sealed class GradeEntry(Guid submissionId, string student, DateTime? subm
     public string Student { get; } = student;
     public DateTime? SubmittedAt { get; } = submittedAt;
     public decimal MaxMarks { get; } = maxMarks;
+    /// <summary>The student's typed answer, if any (files open in the portal's grading workspace).</summary>
+    public string? Answer { get; init; }
     public decimal? Marks { get => _marks; set { if (Set(ref _marks, value)) Saved = false; } }
     public string? Feedback { get => _feedback; set { if (Set(ref _feedback, value)) Saved = false; } }
     public bool Saved { get => _saved; set => Set(ref _saved, value); }

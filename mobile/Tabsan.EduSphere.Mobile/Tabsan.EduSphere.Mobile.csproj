@@ -12,7 +12,7 @@
 		<AppName Condition="'$(AppName)' == ''">EduSphere</AppName>
 		<AppId Condition="'$(AppId)' == ''">com.tabsan.edusphere</AppId>
 		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">https://localhost:7061</ApiBaseUrl>
-		<AppColor Condition="'$(AppColor)' == ''">#0D3B66</AppColor>
+		<AppColor Condition="'$(AppColor)' == ''">#0F2A4A</AppColor>
 		<AppScheme Condition="'$(AppScheme)' == ''">edusphere</AppScheme>
 		<!-- Semantic version shown to users and checked against the API's minimum version; ApplicationVersion must grow with every store release. -->
 		<AppVersion Condition="'$(AppVersion)' == ''">1.0.0</AppVersion>
@@ -46,9 +46,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="$(AppColor)" />
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="$(AppColor)" BaseSize="128,128" />
+		<!-- Tabsan logo (from the portal's wwwroot/images); white-label builds replace these files, keeping the names. -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.png" Color="$(AppColor)" />
+		<MauiSplashScreen Include="Resources\Splash\splash.png" Color="$(AppColor)" BaseSize="150,115" />
 		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\tabsan_mark.png" BaseSize="96,74" />
+		<MauiImage Update="Resources\Images\tabsan_wordmark.png" BaseSize="240,60" />
 		<MauiFont Include="Resources\Fonts\*" />
 		<MauiAsset Include="Resources\Raw\**" Exclude="Resources\Raw\whitelabel.json" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>

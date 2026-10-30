@@ -393,6 +393,142 @@ public class MobileAppTests
         Assert.Equal("Overdue", HomeViewModel.DueLabel(new DueItem { DueAt = DateTime.UtcNow.AddHours(-1) }, DateTime.UtcNow));
     }
 
+    // ── what School users see (checked against the School-only demo data) ─────────────────────
+
+    [Fact]
+    public async Task Home_IsForThePhonesDay_NotTheServersUtcDay()
+    {
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login())
+           .On("GET /api/v1/mobile/home", HttpStatusCode.OK, """{"role":"Student","student":{"averagePercent":69.5}}""");
+        await client.SignInAsync("ann", "pw");
+        var home = await client.GetHomeAsync(DayOfWeek.Tuesday);
+        Assert.Equal("?day=2", api.Calls.Last().Request.RequestUri!.Query);
+        Assert.Null(home!.Student!.Cgpa);
+        Assert.Equal(69.5m, home.Student.AveragePercent);
+
+        await new HomeViewModel(client).LoadAsync();
+        Assert.Equal($"?day={(int)DateTime.Now.DayOfWeek}", api.Calls.Last().Request.RequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task ImportedAccounts_ChooseTheirOwnPassword_BeforeTheAppOpens()
+    {
+        var (client, api, store) = Client();
+        var temporary = JsonSerializer.Serialize(new
+        {
+            accessToken = "t1", refreshToken = "r1", accessTokenExpiry = DateTime.UtcNow.AddMinutes(15), role = "Parent", userId = Guid.NewGuid(),
+            username = "sadia", mustChangePassword = true
+        });
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, temporary)
+           .On("POST /api/v1/auth/login", HttpStatusCode.OK, Login("a2", "r2", "Parent"))
+           .On("POST /api/v1/auth/force-change-password", HttpStatusCode.NoContent, "");
+        var vm = new SignInViewModel(client, new NoBrowser(), Settings) { Username = "sadia", Password = "sadia" };
+        Session? signedIn = null;
+        vm.SignedIn += (_, s) => signedIn = s;
+
+        await vm.SignInAsync();
+        Assert.True(vm.NeedsNewPassword);
+        Assert.Null(signedIn);
+        Assert.Empty(store.Values); // nothing is kept on the phone while the password is still the temporary one
+
+        vm.NewPassword = "Garden#Path42";
+        vm.ConfirmPassword = "Garden#Path24";
+        await vm.SignInAsync();
+        Assert.Equal(AppText.Get("PasswordsDiffer"), vm.Error);
+        Assert.DoesNotContain(api.Calls, c => c.Key.Contains("force-change"));
+
+        vm.ConfirmPassword = "Garden#Path42";
+        await vm.SignInAsync();
+        var change = api.Calls.Single(c => c.Key == "POST /api/v1/auth/force-change-password");
+        Assert.Contains("\"currentPassword\":\"sadia\"", change.Body);
+        Assert.Equal("Bearer t1", change.Request.Headers.Authorization!.ToString());
+        Assert.Contains("\"password\":\"Garden#Path42\"", api.Calls.Last(c => c.Key == "POST /api/v1/auth/login").Body);
+        Assert.Equal("a2", signedIn!.AccessToken);
+        Assert.False(vm.NeedsNewPassword);
+        Assert.NotEmpty(store.Values);
+    }
+
+    [Fact]
+    public async Task Grading_NamesStudentsFromTheRoster_AndShowsTheirAnswers()
+    {
+        var (client, api, _) = Client();
+        var (offering, assignment, hira, bilal) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Faculty"))
+           .On($"GET /api/v1/assignment/{assignment}/submissions", HttpStatusCode.OK,
+               $$"""[{"submissionId":"{{Guid.NewGuid()}}","studentProfileId":"{{hira}}","textContent":"Q1 = 12","marksAwarded":18},{"submissionId":"{{Guid.NewGuid()}}","studentProfileId":"{{bilal}}","textContent":"Q1 = 11"}]""")
+           .On($"GET /api/v1/enrollment/roster/{offering}", HttpStatusCode.OK,
+               $$"""[{"studentProfileId":"{{hira}}","studentName":"Hira Qureshi","registrationNumber":"TMS-GUL-09-03"},{"studentProfileId":"{{bilal}}","studentName":"Bilal Raza"}]""");
+        await client.SignInAsync("ali", "pw");
+        var vm = new GradingViewModel(client);
+        await vm.LoadAsync(new CourseAssignment { Id = assignment, MaxMarks = 20 }, offering);
+        Assert.Equal(["Bilal Raza", "Hira Qureshi"], vm.Submissions.Select(s => s.Student)); // work to grade first
+        Assert.Equal(["Q1 = 11", "Q1 = 12"], vm.Submissions.Select(s => s.Answer));
+    }
+
+    [Fact]
+    public async Task ChildAnnouncements_ComeFromTheMobileApi()
+    {
+        var (client, api, _) = Client();
+        var child = Guid.NewGuid();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Parent"))
+           .On("GET /api/v1/mobile/announcements", HttpStatusCode.OK, """[{"title":"Sports day","body":"Friday","courseTitle":"Class 3"}]""");
+        await client.SignInAsync("sadia", "pw");
+        var items = await client.GetChildAnnouncementsAsync(child);
+        Assert.Equal("Sports day", items.Single().Title);
+        Assert.Equal($"?studentProfileId={child}", api.Calls.Last().Request.RequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task Notifications_ShowWhenTheyWereSent()
+    {
+        // The inbox API sends "sentAt"; the redesigned list shows it under each notification (it showed 1 Jan 0001).
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login())
+           .On("GET /api/v1/notification/inbox", HttpStatusCode.OK,
+               """[{"notificationId":"6f1c0a6e-1111-4d5e-9e0e-0a1b2c3d4e5f","title":"Results published","body":"Midterm","sentAt":"2026-10-30T10:04:00Z","isRead":false}]""");
+        await client.SignInAsync("ann", "pw");
+        var item = (await client.GetNotificationsAsync()).Single();
+        Assert.Equal(new DateTime(2026, 10, 30, 10, 4, 0, DateTimeKind.Utc), item.When.ToUniversalTime());
+    }
+
+    [Fact]
+    public void SchoolStudents_SeeTheirAverage_UniversityStudentsTheirCgpa()
+    {
+        Assert.Equal(("CGPA", 3.4m.ToString("0.00")), HomeViewModel.Standing(3.4m, 81m));
+        Assert.Equal(("Average", $"{69.5m:0.#}%"), HomeViewModel.Standing(null, 69.5m));
+        Assert.Equal(("Average", "—"), HomeViewModel.Standing(null, null));
+    }
+
+    [Fact]
+    public void TimetableDays_AreNamedInTheAppsLanguage()
+    {
+        var slots = new[] { new ClassSlot { DayOfWeek = 2, Day = "Tuesday", Start = "08:00", Subject = "Urdu" } };
+        Assert.Equal("منگل", TimetableViewModel.Group(slots, today: 2, language: "ur").Single().Day);
+        Assert.Equal("الثلاثاء", TimetableViewModel.Group(slots, today: 2, language: "ar").Single().Day);
+        Assert.Equal("Tuesday", TimetableViewModel.Group(slots, today: 2, language: "en").Single().Day);
+        Assert.Equal("Odd", TimetableViewModel.Group([new ClassSlot { DayOfWeek = 9, Day = "Odd" }], today: 2, language: "ur").Single().Day);
+    }
+
+    [Fact]
+    public void Teachers_SeeWhatIsLeftToGrade_AndLiveClassesAreNeverOverdue()
+    {
+        Assert.Equal("3 to grade", CourseViewModel.AssignmentState(new CourseAssignment { ToGrade = 3 }, isTeacher: true));
+        Assert.Equal("Nothing to grade", CourseViewModel.AssignmentState(new CourseAssignment { ToGrade = 0 }, isTeacher: true));
+        Assert.Equal("To grade", CourseViewModel.AssignmentState(new CourseAssignment(), isTeacher: true)); // an API without the count
+        Assert.Equal("Not graded yet", CourseViewModel.AssignmentState(new CourseAssignment { Submitted = true, ToGrade = 0 }, isTeacher: false));
+        Assert.Equal("Hand in", CourseViewModel.AssignmentState(new CourseAssignment(), isTeacher: false));
+
+        Assert.Equal("TMS-GUL-MTH09 · Room 9 · Main Block", new ClassSlot { CourseCode = "TMS-GUL-MTH09", Room = "Room 9", Building = "Main Block" }.Details);
+        var now = new DateTime(2026, 10, 27, 0, 0, 0, DateTimeKind.Utc);
+        Assert.Contains("2027", HomeViewModel.ShortDate(new DateTime(2027, 10, 26, 13, 1, 0, DateTimeKind.Utc), now)); // not "Wed 27 Oct"
+        Assert.DoesNotContain("2026", HomeViewModel.ShortDate(new DateTime(2026, 11, 7, 12, 0, 0, DateTimeKind.Utc), now));
+
+        var started = new DueItem { Kind = "LiveClass", DueAt = DateTime.UtcNow.AddMinutes(-20) };
+        Assert.Equal(started.DueAt.ToLocalTime().ToString("ddd d MMM HH:mm"), HomeViewModel.DueLabel(started, DateTime.UtcNow));
+        Assert.Equal("Overdue", HomeViewModel.DueLabel(new DueItem { Kind = "Assignment", DueAt = started.DueAt }, DateTime.UtcNow));
+    }
+
     // ── server: hand-off, devices, crash reports, push ─────────────────────────────────────────
 
     private sealed class Repo : IMobileRepository

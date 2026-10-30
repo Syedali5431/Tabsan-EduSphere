@@ -69,6 +69,7 @@ public class MobileIntegrationTests
         var student = new User($"mb_s_{suffix}", "integration-hash", studentRole.Id, $"mb_s_{suffix}@tabsan.local");
         student.UpdateFullName($"Student {suffix}");
         var profile = new StudentProfile(student.Id, $"MB-1-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
+        profile.UpdateAcademicStanding(3.4m, 3.4m);
         var outsider = new User($"mb_o_{suffix}", "integration-hash", studentRole.Id, $"mb_o_{suffix}@tabsan.local");
         var outsiderProfile = new StudentProfile(outsider.Id, $"MB-2-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
         var parent = new User($"mb_p_{suffix}", "integration-hash", facultyRole.Id, $"mb_p_{suffix}@tabsan.local");
@@ -148,6 +149,8 @@ public class MobileIntegrationTests
         var summary = home.GetProperty("student");
         Assert.Equal(50m, summary.GetProperty("attendancePercent").GetDecimal());
         Assert.Equal(12500m, summary.GetProperty("outstandingFees").GetDecimal());
+        Assert.Equal(3.4m, summary.GetProperty("cgpa").GetDecimal()); // University students keep their CGPA
+        Assert.Equal(80m, summary.GetProperty("averagePercent").GetDecimal());
 
         var timetable = await student.GetFromJsonAsync<JsonElement>("api/v1/mobile/timetable");
         Assert.Contains(timetable.EnumerateArray(), c => c.GetProperty("offeringId").GetGuid() == seed.OfferingId);
@@ -210,6 +213,88 @@ public class MobileIntegrationTests
         Assert.Equal(HttpStatusCode.Forbidden, (await teacher.GetAsync($"api/v1/mobile/report-cards?studentProfileId={seed.StudentProfileId}")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await parent.GetAsync($"api/v1/mobile/results?studentProfileId={seed.OutsiderProfileId}")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await Client("Parent", Guid.NewGuid()).GetAsync($"api/v1/mobile/attendance?studentProfileId={seed.StudentProfileId}")).StatusCode);
+    }
+
+    /// <summary>
+    /// What the School-only demo data showed on a phone: a "CGPA" for school children, Monday's classes on a Tuesday morning
+    /// east of UTC, "To grade" on assignments nobody had handed in, and no way to have a parent account at all.
+    /// </summary>
+    [Fact]
+    public async Task School_AverageNotCgpa_TodayFromThePhone_WorkToGrade_AndARealParent()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var utcDay = (int)DateTime.UtcNow.DayOfWeek;
+        var phoneDay = (utcDay + 1) % 7;
+        Guid teacherId, studentId, profileId, parentId, offeringId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var parentRole = db.Roles.FirstOrDefault(r => r.Name == "Parent");
+            Assert.NotNull(parentRole); // seeded at start-up: parent links (and the app's parent tabs) need it
+            var tenant = new Tenant($"SCT{suffix}", $"School Tenant {suffix}");
+            var campus = new Campus(tenant.Id, $"SCK{suffix}", $"School Campus {suffix}");
+            var department = new Department($"School Dept {suffix}", $"SCD{suffix}", InstitutionType.School);
+            department.SetTenantCampus(tenant.Id, campus.Id);
+            var program = new AcademicProgram($"Class 1 to 10 {suffix}", $"SCP{suffix}", department.Id, 10);
+            var semester = new Semester($"Class 9 {suffix}", DateTime.UtcNow.Date.AddDays(-30), DateTime.UtcNow.Date.AddDays(200));
+            var course = new Course($"Mathematics {suffix}", $"SC{suffix}".ToUpperInvariant(), 3, department.Id);
+            var teacher = new User($"sc_t_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Faculty").Id, $"sc_t_{suffix}@tabsan.local");
+            var offering = new CourseOffering(course.Id, semester.Id, 40, teacher.Id);
+            offering.SetInstitutionScope(InstitutionType.School, tenant.Id, campus.Id);
+            var timetable = new Timetable(department.Id, program.Id, semester.Id, 9, DateTime.UtcNow.Date);
+            timetable.Publish();
+            var student = new User($"sc_s_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Student").Id, $"sc_s_{suffix}@tabsan.local");
+            var profile = new StudentProfile(student.Id, $"SC-9-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
+            profile.UpdateAcademicStanding(3.2m, 3.2m); // a GPA must not reach School users
+            var parent = new User($"sc_p_{suffix}", "integration-hash", parentRole.Id, $"sc_p_{suffix}@tabsan.local");
+            var handedIn = new Assignment(offering.Id, "Exercise 2.1", "Questions 1-10.", DateTime.UtcNow.AddDays(2), 20);
+            var notYet = new Assignment(offering.Id, "Word problems", null, DateTime.UtcNow.AddDays(9), 20);
+            handedIn.Publish();
+            notYet.Publish();
+            // Components 36/50 and 15/20; the "Total" row repeats them and must not be counted twice: 51/70 = 72.9 %.
+            var results = new[] { new Result(profile.Id, offering.Id, "Midterm", 36, 50), new Result(profile.Id, offering.Id, "Quiz", 15, 20), new Result(profile.Id, offering.Id, "Total", 51, 70) };
+            foreach (var r in results) r.Publish(teacher.Id);
+            db.AddRange(tenant, campus, department, program, semester, course, teacher, offering, timetable, student, profile, parent, handedIn, notYet,
+                new TimetableEntry(timetable.Id, utcDay, new TimeOnly(9, 0), new TimeOnly(9, 40), "Mathematics", course.Id, teacher.Id),
+                new TimetableEntry(timetable.Id, phoneDay, new TimeOnly(8, 0), new TimeOnly(8, 40), "Mathematics", course.Id, teacher.Id),
+                new Enrollment(profile.Id, offering.Id), new AssignmentSubmission(handedIn.Id, profile.Id, null, "My answers"),
+                new CourseAnnouncement(offering.Id, teacher.Id, "Sports day", "Friday, after the second break."));
+            db.AddRange(results);
+            await db.SaveChangesAsync();
+            (teacherId, studentId, profileId, parentId, offeringId) = (teacher.Id, student.Id, profile.Id, parent.Id, offering.Id);
+        }
+
+        var app = Client("Student", studentId, profileId);
+        var home = await app.GetFromJsonAsync<JsonElement>($"api/v1/mobile/home?day={phoneDay}");
+        var summary = home.GetProperty("student");
+        Assert.False(summary.TryGetProperty("cgpa", out _));
+        Assert.Equal(72.9m, summary.GetProperty("averagePercent").GetDecimal());
+        Assert.Equal(["08:00"], home.GetProperty("today").EnumerateArray().Select(c => c.GetProperty("start").GetString()));
+        var olderApp = await app.GetFromJsonAsync<JsonElement>("api/v1/mobile/home"); // no day: today in UTC, as before
+        Assert.Equal(["09:00"], olderApp.GetProperty("today").EnumerateArray().Select(c => c.GetProperty("start").GetString()));
+        Assert.Equal(HttpStatusCode.BadRequest, (await app.GetAsync("api/v1/mobile/home?day=7")).StatusCode);
+
+        var teacherView = await Client("Faculty", teacherId).GetFromJsonAsync<JsonElement>($"api/v1/mobile/courses/{offeringId}");
+        var toGrade = teacherView.GetProperty("assignments").EnumerateArray().ToDictionary(a => a.GetProperty("title").GetString()!, a => a.GetProperty("toGrade").GetInt32());
+        Assert.Equal((1, 0), (toGrade["Exercise 2.1"], toGrade["Word problems"]));
+        var studentView = await app.GetFromJsonAsync<JsonElement>($"api/v1/mobile/courses/{offeringId}");
+        Assert.All(studentView.GetProperty("assignments").EnumerateArray(), a => Assert.Equal(0, a.GetProperty("toGrade").GetInt32()));
+
+        // A Parent-role account is linked through the admin API (which insists on the role and on a School student).
+        var link = await Client("SuperAdmin", Guid.NewGuid()).PutAsJsonAsync("api/v1/parent-portal/links",
+            new { parentUserId = parentId, studentProfileId = profileId, relationship = "Mother" });
+        Assert.Equal(HttpStatusCode.OK, link.StatusCode);
+        var parentApp = Client("Parent", parentId);
+        var child = (await parentApp.GetFromJsonAsync<JsonElement>("api/v1/mobile/children")).EnumerateArray().Single();
+        Assert.False(child.TryGetProperty("cgpa", out _));
+        Assert.Equal(72.9m, child.GetProperty("averagePercent").GetDecimal());
+
+        // The child's announcements: parent accounts have no tenant scope, which the parent-portal route insists on.
+        var announcements = await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/announcements?studentProfileId={profileId}");
+        Assert.Equal("Sports day", announcements.EnumerateArray().Single().GetProperty("title").GetString());
+        Assert.Equal("Sports day", (await app.GetFromJsonAsync<JsonElement>("api/v1/mobile/announcements")).EnumerateArray().Single().GetProperty("title").GetString());
+        Assert.Equal(HttpStatusCode.Forbidden, (await parentApp.GetAsync("api/v1/mobile/announcements")).StatusCode); // a parent names the child
+        Assert.Equal(HttpStatusCode.Forbidden, (await Client("Parent", Guid.NewGuid()).GetAsync($"api/v1/mobile/announcements?studentProfileId={profileId}")).StatusCode);
     }
 
     [Fact]

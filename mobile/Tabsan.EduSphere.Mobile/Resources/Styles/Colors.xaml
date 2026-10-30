@@ -1,32 +1,43 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
-<ResourceDictionary 
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
+    <!-- Tabsan colours: the portal's navy and teal (also in the user manuals). Android: Platforms\Android\Resources\values\colors.xml.
+         Pages built in code use the same values from Pages/Theme.cs. -->
 
-    <Color x:Key="Primary">#0D3B66</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <Color x:Key="Primary">#0F2A4A</Color>
+    <Color x:Key="PrimaryDark">#1590A8</Color>
+    <Color x:Key="PrimaryDarkText">#FFFFFF</Color>
+    <Color x:Key="Secondary">#E3F3F7</Color>
+    <Color x:Key="SecondaryDarkText">#E5EDF7</Color>
+    <Color x:Key="Tertiary">#2F80C8</Color>
+    <Color x:Key="Accent">#1590A8</Color>
+
+    <Color x:Key="PageLight">#F3F6FA</Color>
+    <Color x:Key="PageDark">#0B1220</Color>
+    <Color x:Key="SurfaceLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceDark">#131C2E</Color>
+    <Color x:Key="InkLight">#1F2937</Color>
+    <Color x:Key="InkDark">#E5EDF7</Color>
+    <Color x:Key="MutedLight">#64748B</Color>
+    <Color x:Key="MutedDark">#A9B6C8</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
-    <Color x:Key="Magenta">#D600AA</Color>
-    <Color x:Key="MidnightBlue">#190649</Color>
-    <Color x:Key="OffBlack">#1f1f1f</Color>
+    <Color x:Key="Magenta">#1590A8</Color>
+    <Color x:Key="MidnightBlue">#0F2A4A</Color>
+    <Color x:Key="OffBlack">#0B1220</Color>
 
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray300">#ACACAC</Color>
-    <Color x:Key="Gray400">#919191</Color>
-    <Color x:Key="Gray500">#6E6E6E</Color>
-    <Color x:Key="Gray600">#404040</Color>
-    <Color x:Key="Gray900">#212121</Color>
-    <Color x:Key="Gray950">#141414</Color>
+    <Color x:Key="Gray100">#E2E8F0</Color>
+    <Color x:Key="Gray200">#CBD5E1</Color>
+    <Color x:Key="Gray300">#94A3B8</Color>
+    <Color x:Key="Gray400">#7C8BA1</Color>
+    <Color x:Key="Gray500">#64748B</Color>
+    <Color x:Key="Gray600">#334155</Color>
+    <Color x:Key="Gray900">#1F2937</Color>
+    <Color x:Key="Gray950">#131C2E</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>

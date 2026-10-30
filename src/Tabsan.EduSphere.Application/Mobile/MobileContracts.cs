@@ -64,13 +64,18 @@ public sealed record MobileDue(string Kind, Guid Id, Guid OfferingId, string Tit
 
 public sealed record MobileAnnouncement(Guid Id, string Title, string Body, DateTime PostedAt, string? CourseTitle);
 
+/// <summary>
+/// Cgpa only for University students (GPA/CGPA is a University measure); School and College students get AveragePercent,
+/// their published marks over the maximum marks.
+/// </summary>
 public sealed record MobileStudentSummary(Guid StudentProfileId, string? RegistrationNumber, string? ProgramName,
-    decimal? AttendancePercent, decimal? Cgpa, int Courses, decimal? OutstandingFees);
+    decimal? AttendancePercent, decimal? Cgpa, int Courses, decimal? OutstandingFees, decimal? AveragePercent = null);
 
 public sealed record MobileTeacherSummary(int Courses, int SubmissionsToGrade, int ClassesToday);
 
+/// <summary>Cgpa and AveragePercent as in <see cref="MobileStudentSummary"/>.</summary>
 public sealed record MobileChildSummary(Guid StudentProfileId, string Name, string? RegistrationNumber, string? ProgramName,
-    decimal? AttendancePercent, decimal? Cgpa, decimal? OutstandingFees, int PublishedResults);
+    decimal? AttendancePercent, decimal? Cgpa, decimal? OutstandingFees, int PublishedResults, decimal? AveragePercent = null);
 
 /// <summary>The home screen in one call, by role.</summary>
 public sealed record MobileHomeResponse(
@@ -114,8 +119,9 @@ public sealed record MobileCourse(Guid OfferingId, string CourseCode, string Cou
 
 public sealed record MobileMaterial(Guid Id, string Title, string? Description, string Type, string? LinkUrl, bool HasFile);
 
+/// <summary>ToGrade: for the course's teacher, the handed-in submissions without marks yet (0 for students).</summary>
 public sealed record MobileAssignment(Guid Id, string Title, string? Description, DateTime DueDate, decimal MaxMarks, bool Submitted,
-    decimal? Marks, string? Feedback, string? Status);
+    decimal? Marks, string? Feedback, string? Status, int ToGrade = 0);
 
 public sealed record MobileQuiz(Guid Id, string Title, DateTime? AvailableFrom, DateTime? AvailableUntil, int? TimeLimitMinutes, int AttemptsUsed, int MaxAttempts);
 
@@ -147,12 +153,22 @@ public interface IMobileQueries
     /// <summary>Attendance per course of the student (or of a parent's linked child); null when not allowed.</summary>
     Task<IReadOnlyList<MobileAttendanceCourse>?> AttendanceAsync(Guid userId, string role, Guid? studentProfileId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Announcements of the student's courses (or of a parent's linked child), newest first; null when not allowed. Parents
+    /// have no tenant scope of their own, so this does not go through the portal's tenant-scoped announcement service.
+    /// </summary>
+    Task<IReadOnlyList<MobileAnnouncement>?> StudentAnnouncementsAsync(Guid userId, string role, Guid? studentProfileId, CancellationToken ct = default);
+
     Task<IReadOnlyList<MobileCourse>> CoursesAsync(Guid userId, string role, CancellationToken ct = default);
 
     /// <summary>Null when the user neither studies nor teaches this course.</summary>
     Task<MobileCourseResponse?> CourseAsync(Guid userId, string role, Guid offeringId, CancellationToken ct = default);
 
-    Task<MobileHomeResponse> HomeAsync(Guid userId, string role, CancellationToken ct = default);
+    /// <summary>
+    /// <paramref name="dayOfWeek"/> is today on the phone (0 Sunday … 6 Saturday): timetables hold the school's local times,
+    /// so "today's classes" follow the user's day, not the server's UTC day (used when the app does not send it).
+    /// </summary>
+    Task<MobileHomeResponse> HomeAsync(Guid userId, string role, int? dayOfWeek = null, CancellationToken ct = default);
     Task<IReadOnlyList<MobileClass>> TimetableAsync(Guid userId, string role, CancellationToken ct = default);
     Task<IReadOnlyList<MobileChildSummary>> ChildrenAsync(Guid parentUserId, CancellationToken ct = default);
 }

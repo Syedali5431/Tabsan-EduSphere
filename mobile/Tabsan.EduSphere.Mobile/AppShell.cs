@@ -35,13 +35,17 @@ public sealed class AppShell : Shell
 		if (state.IsParent)
 			tabs.Items.Add(Tab("Children", new ChildrenPage(new ChildrenViewModel(client), client)));
 		tabs.Items.Add(Tab("Notifications", new NotificationsPage(new NotificationsViewModel(client))));
-		tabs.Items.Add(Tab("Settings", new SettingsPage(new SettingsViewModel(client, services.GetRequiredService<IPushTokenProvider>(), settings))));
+		tabs.Items.Add(Tab("Settings", new SettingsPage(new SettingsViewModel(client, services.GetRequiredService<IPushTokenProvider>(), settings),
+			client.Session?.Username, client.Session?.Role, settings.ApiBaseUrl)));
 		Items.Add(tabs);
+		Shell.SetBackgroundColor(this, Ui.Brand); // the institution's colour in the title bar
 		FlowDirection = AppText.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 	}
 
 	/// <summary>Whether the signed-in role has this tab (routes are the tab keys in lower case).</summary>
 	public bool HasRoute(string route) => Items.SelectMany(i => i.Items).SelectMany(s => s.Items).Any(c => c.Route == route);
 
-	private static ShellContent Tab(string key, Page page) => new() { Title = AppText.Get(key), Route = key.ToLowerInvariant(), Content = page };
+	/// <summary>A tab with its icon (Resources/Images/tab_&lt;key&gt;.svg).</summary>
+	private static ShellContent Tab(string key, Page page)
+		=> new() { Title = AppText.Get(key), Route = key.ToLowerInvariant(), Content = page, Icon = $"tab_{key.ToLowerInvariant()}.png" };
 }

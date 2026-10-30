@@ -80,7 +80,7 @@
                             <li>@T["Required columns:"] <strong>@T["Username, Email, Role"]</strong></li>
                             <li>@T["Optional columns:"] <strong>@T["FullName, DepartmentId, InstitutionType, MobileNumber, CampusAssignments"]</strong>@T["; for students also"] <strong>@T["ProgramId"]</strong> @T["(with DepartmentId) and"] <strong>@T["RegistrationNumber"]</strong> @T["to create the student profile"]</li>
                             <li>@T["Accepted file type:"] <strong>.csv</strong> @T["only"]</li>
-                            <li>@T["Role values:"] <strong>@T["Admin"]</strong>, <strong>@T["Faculty"]</strong>, <strong>@T["Student"]</strong>, <strong>@T["Finance"]</strong></li>
+                            <li>@T["Role values:"] <strong>@T["Admin"]</strong>, <strong>@T["Faculty"]</strong>, <strong>@T["Student"]</strong>, <strong>@T["Finance"]</strong>, <strong>@T["Parent"]</strong></li>
                             <li>@T["If you provide"] <strong>@T["DepartmentId"]</strong>@T[", use valid IDs from your current database."]</li>
                             <li>@T["If you provide"] <strong>@T["CampusAssignments"]</strong>@T[", use pipe-separated campus GUIDs (example:"] <strong>@T["guid1|guid2"]</strong>).</li>
                             <li>@T["Imported accounts use Username as temporary password and must change it at first login."]</li>
@@ -135,6 +135,7 @@
                                     <option value="Faculty" selected="@(Model.SingleUserForm.Role == "Faculty")">@T["Faculty"]</option>
                                     <option value="Student" selected="@(Model.SingleUserForm.Role == "Student")">@T["Student"]</option>
                                     <option value="Finance" selected="@(Model.SingleUserForm.Role == "Finance")">@T["Finance"]</option>
+                                    <option value="Parent" selected="@(Model.SingleUserForm.Role == "Parent")">@T["Parent"]</option>
                                 </select>
                             </div>
                             <div class="col-md-4">

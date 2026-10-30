@@ -65,6 +65,8 @@ public sealed class ClassSlot
     public string? Teacher { get; set; }
     public Guid? OfferingId { get; set; }
     public string Where => string.Join(" · ", new[] { Room, Building }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    /// <summary>Course code and place: a teacher's day lists the same subject for several classes, told apart by the course.</summary>
+    public string Details => string.Join(" · ", new[] { CourseCode, Where }.Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 
 public sealed class DueItem
@@ -95,9 +97,12 @@ public sealed class StudentSummary
     public string? RegistrationNumber { get; set; }
     public string? ProgramName { get; set; }
     public decimal? AttendancePercent { get; set; }
+    /// <summary>University students only (GPA/CGPA is a University measure).</summary>
     public decimal? Cgpa { get; set; }
     public int Courses { get; set; }
     public decimal? OutstandingFees { get; set; }
+    /// <summary>Published marks over maximum marks, in percent: how School and College students stand.</summary>
+    public decimal? AveragePercent { get; set; }
 }
 
 public sealed class TeacherSummary
@@ -117,6 +122,7 @@ public sealed class ChildSummary
     public decimal? Cgpa { get; set; }
     public decimal? OutstandingFees { get; set; }
     public int PublishedResults { get; set; }
+    public decimal? AveragePercent { get; set; }
 }
 
 public sealed class HomeData
@@ -160,6 +166,7 @@ public sealed class SubmissionItem
     public string? AssignmentTitle { get; set; }
     public Guid StudentProfileId { get; set; }
     public string? StudentName { get; set; }
+    public string? TextContent { get; set; }
     public DateTime? SubmittedAt { get; set; }
     public decimal? MarksAwarded { get; set; }
     public string? Feedback { get; set; }
@@ -203,6 +210,9 @@ public sealed class NotificationItem
     public string Body { get; set; } = "";
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
+    /// <summary>When it was sent (the inbox API's "sentAt").</summary>
+    public DateTime SentAt { get; set; }
+    public DateTime When => SentAt != default ? SentAt : CreatedAt;
     public Guid Key => NotificationId != Guid.Empty ? NotificationId : Id;
 }
 
@@ -258,6 +268,8 @@ public sealed class CourseAssignment
     public decimal? Marks { get; set; }
     public string? Feedback { get; set; }
     public string? Status { get; set; }
+    /// <summary>Teachers: handed-in work without marks yet (null from an API that does not count it).</summary>
+    public int? ToGrade { get; set; }
 }
 
 public sealed class CourseQuiz

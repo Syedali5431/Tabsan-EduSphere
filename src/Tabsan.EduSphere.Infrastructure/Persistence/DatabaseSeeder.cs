@@ -230,6 +230,8 @@ public static class DatabaseSeeder
             new Role("Faculty",    "Teaches courses and manages academic content.",              isSystemRole: true),
             new Role("Student",    "Enrolled student — accesses course and academic content.",  isSystemRole: true),
             new Role("Finance",    "Handles payment operations, payment tracking, and finance reporting.", isSystemRole: true),
+            // Parent-student links (api/v1/parent-portal/links) require this role; parents follow School children in the mobile app.
+            new Role("Parent",     "Parent or guardian of a School student — follows results, attendance, fees and announcements.", isSystemRole: true),
         };
 
         foreach (var role in seed)

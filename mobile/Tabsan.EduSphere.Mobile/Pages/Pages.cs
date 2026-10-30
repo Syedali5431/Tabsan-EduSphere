@@ -1,74 +1,10 @@
-using System.Globalization;
+using Microsoft.Maui.Controls.Shapes;
 using Tabsan.EduSphere.Mobile.Core;
 
 namespace Tabsan.EduSphere.Mobile.Pages;
 
 // Plan M12 — the app's screens, built in C# and bound to the view models in Tabsan.EduSphere.Mobile.Core.
-
-internal static class Ui
-{
-	public static string T(string key) => AppText.Get(key);
-
-	public static Label Heading(string text) => new() { Text = text, FontSize = 20, FontAttributes = FontAttributes.Bold, Margin = new Thickness(0, 12, 0, 4) };
-
-	public static Label Small(string? text = null) => new() { Text = text, FontSize = 13, TextColor = Colors.Gray };
-
-	public static Label Status(PageViewModel vm)
-	{
-		var label = new Label { TextColor = Colors.Firebrick, FontSize = 14 };
-		label.SetBinding(Label.TextProperty, nameof(PageViewModel.Error));
-		label.SetBinding(VisualElement.IsVisibleProperty, nameof(PageViewModel.Error), converter: new NotEmpty());
-		return label;
-	}
-
-	public static Label Notice()
-	{
-		var label = new Label { TextColor = Colors.SeaGreen, FontSize = 14 };
-		label.SetBinding(Label.TextProperty, nameof(PageViewModel.Notice));
-		label.SetBinding(VisualElement.IsVisibleProperty, nameof(PageViewModel.Notice), converter: new NotEmpty());
-		return label;
-	}
-
-	public static ActivityIndicator Busy()
-	{
-		var busy = new ActivityIndicator();
-		busy.SetBinding(ActivityIndicator.IsRunningProperty, nameof(PageViewModel.IsBusy));
-		busy.SetBinding(VisualElement.IsVisibleProperty, nameof(PageViewModel.IsBusy));
-		return busy;
-	}
-
-	public static Border Card(View content) => new()
-	{
-		Content = content, Padding = 12, Margin = new Thickness(0, 4),
-		StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }, Stroke = Colors.LightGray
-	};
-
-	public static ContentPage Page(string title, PageViewModel vm, params View[] children)
-	{
-		var stack = new VerticalStackLayout { Padding = 16, Spacing = 8 };
-		stack.Add(Busy());
-		stack.Add(Status(vm));
-		stack.Add(Notice());
-		foreach (var c in children) stack.Add(c);
-		return new ContentPage { Title = title, BindingContext = vm, Content = new ScrollView { Content = stack } };
-	}
-
-	public static string Date(DateTime? d) => d is { } v ? v.ToLocalTime().ToString("ddd d MMM HH:mm", CultureInfo.CurrentCulture) : "";
-
-	public static void ApplyDirection(Page page) => page.FlowDirection = AppText.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-}
-
-internal sealed class BoldWhenTrue : IValueConverter
-{
-	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is true ? FontAttributes.Bold : FontAttributes.None;
-	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
-}
-
-internal sealed class NotEmpty : IValueConverter
-{
-	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is string s && s.Length > 0;
-	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
-}
+// The shared look (colours, cards, banner, chips, fields) is in Ui.cs.
 
 // ── sign-in ───────────────────────────────────────────────────────────────────────────────────
 
@@ -83,30 +19,66 @@ public sealed class SignInPage : ContentPage
 		_vm = vm;
 		BindingContext = vm;
 		Title = label.AppName;
+		NavigationPage.SetHasNavigationBar(this, false);
 		vm.SignedIn += (_, _) => SignedIn?.Invoke(this, EventArgs.Empty);
 
-		var institution = new Label { FontSize = 24, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+		// Top: the Tabsan logo, the institution and what the app is for.
+		var institution = Ui.OnBanner(null, 22, bold: true);
+		institution.HorizontalTextAlignment = TextAlignment.Center;
 		institution.SetBinding(Label.TextProperty, new Binding("Config.InstitutionName") { FallbackValue = label.AppName, TargetNullValue = label.AppName });
-		var username = new Entry { Placeholder = Ui.T("Username"), Keyboard = Keyboard.Email, AutomationId = "username" };
+		var tagline = Ui.OnBanner(Ui.T("AppTagline"), 14, opacity: 0.85);
+		tagline.HorizontalTextAlignment = TextAlignment.Center;
+		var header = new Border
+		{
+			StrokeThickness = 0, Background = Ui.BannerBrush(), Padding = new Thickness(24, 56, 24, 76),
+			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(0, 0, 32, 32) },
+			Content = new VerticalStackLayout
+			{
+				Spacing = 10,
+				Children = { new Image { Source = "tabsan_wordmark.png", HeightRequest = 60, Aspect = Aspect.AspectFit, Margin = new Thickness(0, 0, 0, 10) }, institution, tagline }
+			}
+		};
+
+		// No suggestions or spell-check: keyboards must not change a username (Samsung added a space after the dot in "tmsgul.c9s1").
+		var username = new Entry { Placeholder = Ui.T("Username"), Keyboard = Keyboard.Email, IsTextPredictionEnabled = false, IsSpellCheckEnabled = false, AutomationId = "username" };
 		username.SetBinding(Entry.TextProperty, nameof(SignInViewModel.Username));
 		var password = new Entry { Placeholder = Ui.T("Password"), IsPassword = true, AutomationId = "password" };
 		password.SetBinding(Entry.TextProperty, nameof(SignInViewModel.Password));
 		var mfa = new Entry { Placeholder = Ui.T("AuthenticatorCode"), Keyboard = Keyboard.Numeric };
 		mfa.SetBinding(Entry.TextProperty, nameof(SignInViewModel.MfaCode));
-		mfa.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsMfa));
-		var signIn = new Button { Text = Ui.T("SignIn"), AutomationId = "signin" };
+		var mfaField = Ui.Field(mfa);
+		mfaField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsMfa));
+		var newPassword = new Entry { Placeholder = Ui.T("NewPassword"), IsPassword = true, AutomationId = "newpassword" };
+		newPassword.SetBinding(Entry.TextProperty, nameof(SignInViewModel.NewPassword));
+		var newPasswordField = Ui.Field(newPassword);
+		newPasswordField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsNewPassword));
+		var confirmPassword = new Entry { Placeholder = Ui.T("ConfirmPassword"), IsPassword = true, AutomationId = "confirmpassword" };
+		confirmPassword.SetBinding(Entry.TextProperty, nameof(SignInViewModel.ConfirmPassword));
+		var confirmField = Ui.Field(confirmPassword);
+		confirmField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsNewPassword));
+		var signIn = Ui.Primary(Ui.T("SignIn"));
+		signIn.AutomationId = "signin";
+		signIn.Margin = new Thickness(0, 6, 0, 0);
 		signIn.SetBinding(Button.CommandProperty, nameof(SignInViewModel.SignInCommand));
-		var providers = new VerticalStackLayout { Spacing = 6 };
+
+		// The institution's single sign-on buttons, under an "or" line when there are any.
+		var or = Ui.Small(Ui.T("Or"));
+		or.HorizontalTextAlignment = TextAlignment.Center;
+		var providers = new VerticalStackLayout { Spacing = 8 };
 		BindableLayout.SetItemsSource(providers, vm.Providers);
 		BindableLayout.SetItemTemplate(providers, new DataTemplate(() =>
 		{
-			var b = new Button { BackgroundColor = Colors.White, TextColor = Colors.Black, BorderColor = Colors.LightGray, BorderWidth = 1 };
+			var b = Ui.Secondary("");
 			b.SetBinding(Button.TextProperty, nameof(SsoProvider.DisplayName), stringFormat: Ui.T("SignInWith"));
 			b.SetBinding(Button.CommandParameterProperty, nameof(SsoProvider.Provider));
 			b.Command = vm.SingleSignOnCommand;
 			return b;
 		}));
-		var update = new Button { Text = Ui.T("Update"), IsVisible = false };
+		or.IsVisible = vm.Providers.Count > 0;
+		vm.Providers.CollectionChanged += (_, _) => or.IsVisible = vm.Providers.Count > 0;
+
+		var update = Ui.Secondary(Ui.T("Update"));
+		update.IsVisible = false;
 		update.Clicked += async (_, _) =>
 		{
 			var url = DeviceInfo.Platform == DevicePlatform.iOS ? vm.Config?.IosStoreUrl : vm.Config?.AndroidStoreUrl;
@@ -114,14 +86,24 @@ public sealed class SignInPage : ContentPage
 		};
 		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SignInViewModel.VersionState)) update.IsVisible = vm.VersionState != VersionPolicy.State.Current; };
 
-		Content = new ScrollView
+		var form = Ui.Card(new VerticalStackLayout
 		{
-			Content = new VerticalStackLayout
+			Spacing = 12,
+			Children =
 			{
-				Padding = new Thickness(24, 48), Spacing = 12,
-				Children = { institution, Ui.Busy(), Ui.Status(vm), username, password, mfa, signIn, providers, update }
+				Ui.Title(Ui.T("SignInTitle"), 20), Ui.Small(Ui.T("SignInHint")), Ui.Busy(), Ui.Status(vm), Ui.Notice(),
+				Ui.Field(username), Ui.Field(password), mfaField, newPasswordField, confirmField, signIn, or, providers, update
 			}
+		}, padding: 20);
+		form.Margin = new Thickness(18, -48, 18, 0);
+
+		var footer = new HorizontalStackLayout
+		{
+			Spacing = 8, HorizontalOptions = LayoutOptions.Center, Margin = new Thickness(0, 22, 0, 28),
+			Children = { new Image { Source = "tabsan_mark.png", HeightRequest = 20 }, Ui.Small($"{Ui.T("PoweredBy")} · {label.AppVersion}") }
 		};
+
+		Content = new ScrollView { Content = new VerticalStackLayout { Children = { header, form, footer } } };
 		Ui.ApplyDirection(this);
 	}
 
@@ -137,7 +119,7 @@ public sealed class SignInPage : ContentPage
 public sealed class HomePage : ContentPage
 {
 	private readonly HomeViewModel _vm;
-	private readonly VerticalStackLayout _body = new() { Padding = 16, Spacing = 8 };
+	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(16, 12, 16, 24), Spacing = 8 };
 	private readonly EduSphereClient _client;
 	private readonly ILauncherService _launcher;
 	private readonly IPickers _pickers;
@@ -170,39 +152,41 @@ public sealed class HomePage : ContentPage
 	{
 		_body.Clear();
 		_body.Add(Ui.Status(_vm));
-		_body.Add(Ui.Heading(_vm.Greeting));
 		var home = _vm.Home;
+		var greeting = new VerticalStackLayout
+		{
+			Spacing = 4,
+			Children = { Ui.OnBanner(_vm.Greeting, 22, bold: true), Ui.OnBanner($"{Ui.RoleName(_client.Session?.Role)} · {Ui.Today()}", 14, opacity: 0.85) }
+		};
+		if (home is { UnreadNotifications: > 0 } h)
+		{
+			var unread = Ui.Chip(string.Format(Ui.T("Unread"), h.UnreadNotifications), Colors.White, onBanner: true);
+			unread.Margin = new Thickness(0, 8, 0, 0);
+			greeting.Add(unread);
+		}
+		_body.Add(Ui.Banner(greeting));
 		if (home is null) return;
+
 		if (home.Student is { } s)
 		{
-			_body.Add(Ui.Card(new HorizontalStackLayout
-			{
-				Spacing = 24,
-				Children =
-				{
-					Stat(Ui.T("AttendanceRate"), s.AttendancePercent is { } a ? $"{a:0.#}%" : "—"),
-					Stat(Ui.T("Cgpa"), s.Cgpa?.ToString("0.00") ?? "—"),
-					Stat(Ui.T("Fees"), s.OutstandingFees is > 0 ? s.OutstandingFees.Value.ToString("N0") : "0")
-				}
-			}));
+			var (standing, standingValue) = HomeViewModel.Standing(s.Cgpa, s.AveragePercent);
+			var fees = s.OutstandingFees is > 0 ? s.OutstandingFees.Value : 0;
+			_body.Add(Ui.Stats(
+				Ui.Stat(Ui.T("AttendanceRate"), s.AttendancePercent is { } a ? $"{a:0.#}%" : "—", Ui.PercentColor(s.AttendancePercent)),
+				Ui.Stat(standing, standingValue, Ui.Sky),
+				Ui.Stat(Ui.T("Fees"), fees.ToString("N0"), fees > 0 ? Ui.Bad : Ui.Good)));
 		}
 		if (home.Teacher is { } t)
-			_body.Add(Ui.Card(new HorizontalStackLayout { Spacing = 24, Children = { Stat(Ui.T("Courses"), t.Courses.ToString()), Stat(Ui.T("ToGrade"), t.SubmissionsToGrade.ToString()) } }));
+			_body.Add(Ui.Stats(
+				Ui.Stat(Ui.T("Courses"), t.Courses.ToString(), Ui.Sky),
+				Ui.Stat(Ui.T("ToGrade"), t.SubmissionsToGrade.ToString(), t.SubmissionsToGrade > 0 ? Ui.Warn : Ui.Good)));
 
 		if (home.Children is { Count: > 0 } children)
 		{
 			_body.Add(Ui.Heading(Ui.T("Children")));
 			foreach (var c in children)
 			{
-				var card = Ui.Card(new VerticalStackLayout
-				{
-					Children =
-					{
-						new Label { Text = c.Name, FontAttributes = FontAttributes.Bold },
-						Ui.Small($"{c.RegistrationNumber} · {c.ProgramName}"),
-						Ui.Small($"{Ui.T("AttendanceRate")}: {(c.AttendancePercent is { } p ? $"{p:0.#}%" : "—")} · {Ui.T("Cgpa")}: {c.Cgpa:0.00} · {Ui.T("Fees")}: {c.OutstandingFees:N0}")
-					}
-				});
+				var card = ChildCard(c);
 				var tap = new TapGestureRecognizer();
 				tap.Tapped += async (_, _) => await Navigation.PushAsync(new ChildPage(new ChildViewModel(_client), c));
 				card.GestureRecognizers.Add(tap);
@@ -213,17 +197,16 @@ public sealed class HomePage : ContentPage
 		if (!_vm.IsParent)
 		{
 			_body.Add(Ui.Heading(Ui.T("Today")));
-			if (home.Today.Count == 0) _body.Add(Ui.Small(Ui.T("NoClassesToday")));
-			foreach (var c in home.Today)
-				_body.Add(Ui.Card(new VerticalStackLayout { Children = { new Label { Text = $"{c.Start}–{c.End}  {c.Subject}", FontAttributes = FontAttributes.Bold }, Ui.Small(c.Where) } }));
+			if (home.Today.Count == 0) _body.Add(Ui.Empty(Ui.T("NoClassesToday")));
+			foreach (var c in home.Today) _body.Add(Ui.ClassCard(c));
+
 			_body.Add(Ui.Heading(Ui.T("Due")));
-			if (home.Due.Count == 0) _body.Add(Ui.Small(Ui.T("NothingDue")));
+			if (home.Due.Count == 0) _body.Add(Ui.Empty(Ui.T("NothingDue")));
 			foreach (var d in home.Due)
 			{
-				var card = Ui.Card(new VerticalStackLayout
-				{
-					Children = { new Label { Text = d.Title, FontAttributes = FontAttributes.Bold }, Ui.Small($"{d.CourseTitle} · {HomeViewModel.DueLabel(d, DateTime.UtcNow)}") }
-				});
+				var label = HomeViewModel.DueLabel(d, DateTime.UtcNow);
+				var color = d.Done ? Ui.Good : label == Ui.T("Overdue") ? Ui.Bad : Ui.Accent;
+				var card = Ui.Card(Ui.Row(null, Ui.Lines(Ui.Title(d.Title), Ui.Small(d.CourseTitle)), Ui.Chip(label, color)));
 				var tap = new TapGestureRecognizer();
 				tap.Tapped += async (_, _) => await OpenCourseAsync(d.OfferingId);
 				card.GestureRecognizers.Add(tap);
@@ -234,16 +217,32 @@ public sealed class HomePage : ContentPage
 		if (home.Announcements.Count > 0)
 		{
 			_body.Add(Ui.Heading(Ui.T("Announcements")));
-			foreach (var a in home.Announcements)
-				_body.Add(Ui.Card(new VerticalStackLayout { Children = { new Label { Text = a.Title, FontAttributes = FontAttributes.Bold }, Ui.Small($"{a.CourseTitle} · {Ui.Date(a.PostedAt)}"), new Label { Text = a.Body } } }));
+			foreach (var a in home.Announcements) _body.Add(Ui.AnnouncementCard(a, withCourse: true));
 		}
+	}
+
+	/// <summary>A child at a glance: name, class, and attendance, marks and fees as chips.</summary>
+	internal static Border ChildCard(ChildSummary c)
+	{
+		var (standing, standingValue) = HomeViewModel.Standing(c.Cgpa, c.AveragePercent);
+		var fees = c.OutstandingFees ?? 0;
+		var chips = new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Margin = new Thickness(0, 6, 0, 0) };
+		foreach (var chip in new[]
+		{
+			Ui.Chip($"{Ui.T("AttendanceRate")} {(c.AttendancePercent is { } p ? $"{p:0.#}%" : "—")}", Ui.PercentColor(c.AttendancePercent)),
+			Ui.Chip($"{standing} {standingValue}", Ui.Sky),
+			Ui.Chip($"{Ui.T("Fees")} {fees:N0}", fees > 0 ? Ui.Bad : Ui.Good)
+		})
+		{
+			chip.Margin = new Thickness(0, 0, 6, 6);
+			chips.Add(chip);
+		}
+		var details = Ui.Lines(Ui.Title(c.Name), Ui.Small(string.Join(" · ", new[] { c.RegistrationNumber, c.ProgramName }.Where(x => !string.IsNullOrWhiteSpace(x)))), chips);
+		return Ui.Card(Ui.Row(Ui.Avatar(c.Name, Ui.Accent), details, Ui.Chevron()));
 	}
 
 	private Task OpenCourseAsync(Guid offeringId)
 		=> Navigation.PushAsync(new CoursePage(new CourseViewModel(_client, _launcher, _portal), offeringId, _client, _pickers));
-
-	private static View Stat(string label, string value)
-		=> new VerticalStackLayout { Children = { new Label { Text = value, FontSize = 20, FontAttributes = FontAttributes.Bold }, Ui.Small(label) } };
 }
 
 // ── timetable ─────────────────────────────────────────────────────────────────────────────────
@@ -262,24 +261,29 @@ public sealed class TimetablePage : ContentPage
 			ItemsSource = vm.Days,
 			ItemTemplate = new DataTemplate(() =>
 			{
-				var day = new Label { FontAttributes = FontAttributes.Bold, FontSize = 18, Margin = new Thickness(0, 12, 0, 4) };
+				var day = Ui.Heading("");
+				day.Margin = new Thickness(0);
 				day.SetBinding(Label.TextProperty, nameof(TimetableDay.Day));
-				var classes = new VerticalStackLayout { Spacing = 4 };
+				var today = Ui.Chip(Ui.T("Today"), Ui.Accent);
+				today.SetBinding(IsVisibleProperty, nameof(TimetableDay.IsToday));
+				var header = new HorizontalStackLayout { Spacing = 10, Margin = new Thickness(2, 18, 2, 4), Children = { day, today } };
+				var classes = new VerticalStackLayout { Spacing = 0 };
 				classes.SetBinding(BindableLayout.ItemsSourceProperty, nameof(TimetableDay.Classes));
 				BindableLayout.SetItemTemplate(classes, new DataTemplate(() =>
 				{
-					var title = new Label { FontAttributes = FontAttributes.Bold };
-					title.SetBinding(Label.TextProperty, new MultiBinding
-					{
-						Bindings = { new Binding(nameof(ClassSlot.Start)), new Binding(nameof(ClassSlot.End)), new Binding(nameof(ClassSlot.Subject)) },
-						StringFormat = "{0}–{1}  {2}"
-					});
-					var where = Ui.Small();
-					where.SetBinding(Label.TextProperty, nameof(ClassSlot.Where));
-					return Ui.Card(new VerticalStackLayout { Children = { title, where } });
+					var start = new Label();
+					start.SetBinding(Label.TextProperty, nameof(ClassSlot.Start));
+					var end = Ui.Small();
+					end.SetBinding(Label.TextProperty, nameof(ClassSlot.End));
+					var subject = Ui.Title();
+					subject.SetBinding(Label.TextProperty, nameof(ClassSlot.Subject));
+					var details = Ui.Small();
+					details.SetBinding(Label.TextProperty, nameof(ClassSlot.Details));
+					return Ui.ClassCard(start, end, subject, details);
 				}));
-				return new VerticalStackLayout { Padding = new Thickness(16, 0), Children = { day, classes } };
-			})
+				return new VerticalStackLayout { Padding = new Thickness(16, 0), Children = { header, classes } };
+			}),
+			Footer = new ContentView { HeightRequest = 24 }
 		};
 		Content = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) }, Children = { Ui.Status(vm), list } };
 		Grid.SetRow(list, 1);
@@ -308,13 +312,18 @@ public sealed class CoursesPage : ContentPage
 		{
 			ItemsSource = vm.Courses,
 			SelectionMode = SelectionMode.Single,
+			Header = new ContentView { HeightRequest = 8 },
 			ItemTemplate = new DataTemplate(() =>
 			{
-				var title = new Label { FontAttributes = FontAttributes.Bold };
-				title.SetBinding(Label.TextProperty, nameof(CourseSummary.Title));
-				var sub = Ui.Small();
-				sub.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(CourseSummary.SemesterName)), new Binding(nameof(CourseSummary.Teacher)) }, StringFormat = "{0} · {1}" });
-				return new ContentView { Padding = new Thickness(16, 4), Content = Ui.Card(new VerticalStackLayout { Children = { title, sub } }) };
+				var initials = new Label();
+				initials.SetBinding(Label.TextProperty, nameof(CourseSummary.CourseTitle), converter: new InitialsOf());
+				var title = Ui.Title();
+				title.SetBinding(Label.TextProperty, nameof(CourseSummary.CourseTitle));
+				var code = Ui.Small();
+				code.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(CourseSummary.CourseCode)), new Binding(nameof(CourseSummary.SemesterName)) }, StringFormat = "{0} · {1}" });
+				var teacher = Ui.Small();
+				teacher.SetBinding(Label.TextProperty, nameof(CourseSummary.Teacher));
+				return new ContentView { Padding = new Thickness(16, 0), Content = Ui.Card(Ui.Row(Ui.Avatar(initials, Ui.Sky), Ui.Lines(title, code, teacher), Ui.Chevron())) };
 			})
 		};
 		list.SelectionChanged += async (_, e) =>
@@ -344,7 +353,7 @@ public sealed class CoursePage : ContentPage
 	private readonly Guid _offeringId;
 	private readonly EduSphereClient _client;
 	private readonly IPickers _pickers;
-	private readonly VerticalStackLayout _body = new() { Padding = 16, Spacing = 8 };
+	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(16, 12, 16, 24), Spacing = 8 };
 
 	public CoursePage(CourseViewModel vm, Guid offeringId, EduSphereClient client, IPickers pickers)
 	{
@@ -371,39 +380,50 @@ public sealed class CoursePage : ContentPage
 		var d = _vm.Detail;
 		if (d is null) return;
 		Title = d.Course.Title;
-		_body.Add(Ui.Heading(d.Course.Title));
+		var sub = string.Join(" · ", new[] { d.Course.CourseCode, d.Course.SemesterName, d.Course.Teacher }.Where(x => !string.IsNullOrWhiteSpace(x)));
+		_body.Add(Ui.Banner(new VerticalStackLayout { Spacing = 4, Children = { Ui.OnBanner(d.Course.CourseTitle, 20, bold: true), Ui.OnBanner(sub, 13, opacity: 0.85) } }));
+
+		var actions = new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap };
+		void Action(Button b, Func<Task> open)
+		{
+			b.Margin = new Thickness(0, 0, 8, 8);
+			b.Clicked += async (_, _) => await open();
+			actions.Add(b);
+		}
 		if (d.IsTeacher)
 		{
-			var take = new Button { Text = Ui.T("TakeAttendance") };
-			take.Clicked += async (_, _) => await Navigation.PushAsync(new TakeAttendancePage(new TakeAttendanceViewModel(_client), _offeringId));
-			var post = new Button { Text = Ui.T("NewAnnouncement") };
-			post.Clicked += async (_, _) => await Navigation.PushAsync(new AnnouncementPage(new AnnouncementViewModel(_client) { OfferingId = _offeringId }));
-			_body.Add(new HorizontalStackLayout { Spacing = 8, Children = { take, post } });
+			Action(Ui.Primary(Ui.T("TakeAttendance")), () => Navigation.PushAsync(new TakeAttendancePage(new TakeAttendanceViewModel(_client), _offeringId)));
+			Action(Ui.Secondary(Ui.T("NewAnnouncement")), () => Navigation.PushAsync(new AnnouncementPage(new AnnouncementViewModel(_client) { OfferingId = _offeringId })));
 		}
-		var talk = new Button { Text = Ui.T("Discussions") };
-		talk.Clicked += async (_, _) => await Navigation.PushAsync(new DiscussionsPage(new DiscussionsViewModel(_client), _offeringId, _client));
-		_body.Add(talk);
+		Action(Ui.Secondary(Ui.T("Discussions")), () => Navigation.PushAsync(new DiscussionsPage(new DiscussionsViewModel(_client), _offeringId, _client)));
+		_body.Add(actions);
 
-		_body.Add(Ui.Heading(Ui.T("Assignments")));
+		if (d.Assignments.Count > 0) _body.Add(Ui.Heading(Ui.T("Assignments")));
 		foreach (var a in d.Assignments)
 		{
-			var state = d.IsTeacher ? Ui.T("ToGrade") : a.Marks is { } m ? $"{Ui.T("Marks")}: {m:0.##}/{a.MaxMarks:0.##}" : a.Submitted ? Ui.T("NotGradedYet") : Ui.T("HandIn");
-			var card = Ui.Card(new VerticalStackLayout { Children = { new Label { Text = a.Title, FontAttributes = FontAttributes.Bold }, Ui.Small($"{Ui.T("Due")}: {Ui.Date(a.DueDate)} · {state}") } });
+			var state = CourseViewModel.AssignmentState(a, d.IsTeacher);
+			var color = d.IsTeacher ? (a.ToGrade is > 0 ? Ui.Warn : Ui.Good)
+				: a.Marks is not null ? Ui.Good : a.Submitted ? Ui.Sky : a.DueDate < DateTime.UtcNow ? Ui.Bad : Ui.Accent;
+			var card = Ui.Card(Ui.Row(null, Ui.Lines(Ui.Title(a.Title), Ui.Small($"{Ui.T("Due")}: {Ui.Date(a.DueDate)}")), Ui.Chip(state, color)));
 			var tap = new TapGestureRecognizer();
 			tap.Tapped += async (_, _) =>
 			{
-				if (d.IsTeacher) await Navigation.PushAsync(new GradingPage(new GradingViewModel(_client), a));
+				if (d.IsTeacher) await Navigation.PushAsync(new GradingPage(new GradingViewModel(_client), a, _offeringId));
 				else await Navigation.PushAsync(new SubmitPage(new SubmitAssignmentViewModel(_client, _pickers) { Assignment = a }));
 			};
 			card.GestureRecognizers.Add(tap);
 			_body.Add(card);
 		}
 
-		_body.Add(Ui.Heading(Ui.T("Materials")));
+		if (d.Materials.Count > 0) _body.Add(Ui.Heading(Ui.T("Materials")));
 		foreach (var m in d.Materials)
 		{
-			var open = new Button { Text = $"{m.Title}", Command = _vm.OpenMaterialCommand, CommandParameter = m, HorizontalOptions = LayoutOptions.Fill };
-			_body.Add(open);
+			var open = Ui.Small(Ui.T("Open"));
+			open.TextColor = Ui.Accent;
+			open.FontFamily = "OpenSansSemibold";
+			var card = Ui.Card(Ui.Row(Ui.Avatar(new Label { Text = string.IsNullOrWhiteSpace(m.Type) ? "•" : m.Type[..1].ToUpperInvariant() }, Ui.Accent, 36), Ui.Lines(Ui.Title(m.Title), Ui.Small(m.Description)), open), padding: 12);
+			card.GestureRecognizers.Add(new TapGestureRecognizer { Command = _vm.OpenMaterialCommand, CommandParameter = m });
+			_body.Add(card);
 		}
 
 		if (d.Quizzes.Count > 0)
@@ -411,14 +431,17 @@ public sealed class CoursePage : ContentPage
 			_body.Add(Ui.Heading(Ui.T("Quizzes")));
 			_body.Add(Ui.Small(Ui.T("QuizInPortal")));
 			foreach (var q in d.Quizzes)
-				_body.Add(new Button { Text = $"{q.Title} ({q.AttemptsUsed}/{q.MaxAttempts})", Command = _vm.OpenQuizCommand, CommandParameter = q });
+			{
+				var card = Ui.Card(Ui.Row(null, Ui.Title(q.Title), Ui.Chip($"{q.AttemptsUsed}/{q.MaxAttempts}", Ui.Sky)));
+				card.GestureRecognizers.Add(new TapGestureRecognizer { Command = _vm.OpenQuizCommand, CommandParameter = q });
+				_body.Add(card);
+			}
 		}
 
 		if (d.Announcements.Count > 0)
 		{
 			_body.Add(Ui.Heading(Ui.T("Announcements")));
-			foreach (var a in d.Announcements)
-				_body.Add(Ui.Card(new VerticalStackLayout { Children = { new Label { Text = a.Title, FontAttributes = FontAttributes.Bold }, Ui.Small(Ui.Date(a.PostedAt)), new Label { Text = a.Body } } }));
+			foreach (var a in d.Announcements) _body.Add(Ui.AnnouncementCard(a, withCourse: false));
 		}
 	}
 }
@@ -429,23 +452,33 @@ public sealed class SubmitPage : ContentPage
 	{
 		BindingContext = vm;
 		Title = vm.Assignment?.Title ?? Ui.T("HandIn");
-		var text = new Editor { Placeholder = Ui.T("YourAnswer"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 120 };
+		var text = new Editor { Placeholder = Ui.T("YourAnswer"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 140 };
 		text.SetBinding(Editor.TextProperty, nameof(SubmitAssignmentViewModel.Text));
-		var files = new VerticalStackLayout();
+		var files = new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap };
 		BindableLayout.SetItemsSource(files, vm.Files);
 		BindableLayout.SetItemTemplate(files, new DataTemplate(() =>
 		{
-			var l = Ui.Small();
-			l.SetBinding(Label.TextProperty, nameof(UploadFile.FileName));
-			return l;
+			var chip = Ui.Chip("", Ui.Sky);
+			chip.Margin = new Thickness(0, 0, 6, 6);
+			((Label)chip.Content!).SetBinding(Label.TextProperty, nameof(UploadFile.FileName));
+			return chip;
 		}));
 		vm.Submitted += async (_, _) => await Navigation.PopAsync();
+		var photo = Ui.Secondary(Ui.T("TakePhoto"));
+		photo.Command = vm.TakePhotoCommand;
+		var file = Ui.Secondary(Ui.T("AddFile"));
+		file.Command = vm.AddFilesCommand;
+		var handIn = Ui.Primary(Ui.T("HandIn"));
+		handIn.Command = vm.SubmitCommand;
+		var details = Ui.Lines(Ui.Title(vm.Assignment?.Title), Ui.Body(vm.Assignment?.Description));
+		if (vm.Assignment is { } a) details.Add(Ui.Chip($"{Ui.T("Due")}: {Ui.Date(a.DueDate)}", Ui.Accent));
+		var about = Ui.Card(details);
 		var page = Ui.Page(Title, vm,
-			new Label { Text = vm.Assignment?.Description },
-			text,
-			new HorizontalStackLayout { Spacing = 8, Children = { new Button { Text = Ui.T("TakePhoto"), Command = vm.TakePhotoCommand }, new Button { Text = Ui.T("AddFile"), Command = vm.AddFilesCommand } } },
+			about,
+			Ui.Field(text),
+			Ui.Stats(photo, file),
 			files,
-			new Button { Text = Ui.T("HandIn"), Command = vm.SubmitCommand });
+			handIn);
 		Content = page.Content;
 		Ui.ApplyDirection(this);
 	}
@@ -464,21 +497,24 @@ public sealed class DiscussionsPage : ContentPage
 		_offeringId = offeringId;
 		BindingContext = vm;
 		Title = Ui.T("Discussions");
-		var list = new VerticalStackLayout { Spacing = 4 };
+		var list = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(list, vm.Threads);
-		BindableLayout.SetEmptyView(list, Ui.Small(Ui.T("NoDiscussions")));
+		BindableLayout.SetEmptyView(list, Ui.Empty(Ui.T("NoDiscussions")));
 		BindableLayout.SetItemTemplate(list, new DataTemplate(() =>
 		{
-			var title = new Label { FontAttributes = FontAttributes.Bold };
+			var initials = new Label();
+			initials.SetBinding(Label.TextProperty, nameof(DiscussionThread.AuthorName), converter: new InitialsOf());
+			var title = Ui.Title();
 			title.SetBinding(Label.TextProperty, nameof(DiscussionThread.Title));
-			title.SetBinding(Label.FontAttributesProperty, nameof(DiscussionThread.IsPinned), converter: new BoldWhenTrue());
 			var meta = Ui.Small();
 			meta.SetBinding(Label.TextProperty, new MultiBinding
 			{
 				Bindings = { new Binding(nameof(DiscussionThread.AuthorName)), new Binding(nameof(DiscussionThread.ReplyCount)) },
 				StringFormat = "{0} · " + Ui.T("Replies").Replace("{0}", "{1}")
 			});
-			var card = Ui.Card(new VerticalStackLayout { Children = { title, meta } });
+			var pinned = Ui.Chip(Ui.T("Pinned"), Ui.Warn);
+			pinned.SetBinding(IsVisibleProperty, nameof(DiscussionThread.IsPinned));
+			var card = Ui.Card(Ui.Row(Ui.Avatar(initials, Ui.Sky, 38), Ui.Lines(title, meta), pinned));
 			var tap = new TapGestureRecognizer();
 			tap.Tapped += async (s, _) =>
 			{
@@ -492,9 +528,11 @@ public sealed class DiscussionsPage : ContentPage
 		newTitle.SetBinding(Entry.TextProperty, nameof(DiscussionsViewModel.Title));
 		var newMessage = new Editor { Placeholder = Ui.T("Message"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 100 };
 		newMessage.SetBinding(Editor.TextProperty, nameof(DiscussionsViewModel.Message));
+		var start = Ui.Primary(Ui.T("Start"));
+		start.Command = vm.StartCommand;
 		vm.Started += async (_, thread) => await Navigation.PushAsync(new DiscussionPage(new DiscussionViewModel(client), thread.Id));
-		Content = Ui.Page(Title, vm, list, Ui.Heading(Ui.T("NewDiscussion")), newTitle, newMessage,
-			new Button { Text = Ui.T("Start"), Command = vm.StartCommand }).Content;
+		var compose = Ui.Card(new VerticalStackLayout { Spacing = 10, Children = { Ui.Title(Ui.T("NewDiscussion")), Ui.Field(newTitle), Ui.Field(newMessage), start } }, padding: 16);
+		Content = Ui.Page(Title, vm, list, compose).Content;
 		Ui.ApplyDirection(this);
 	}
 
@@ -516,26 +554,31 @@ public sealed class DiscussionPage : ContentPage
 		_threadId = threadId;
 		BindingContext = vm;
 		Title = Ui.T("Discussions");
-		var messages = new VerticalStackLayout { Spacing = 4 };
+		var messages = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(messages, vm.Messages);
 		BindableLayout.SetItemTemplate(messages, new DataTemplate(() =>
 		{
-			var who = new Label { FontAttributes = FontAttributes.Bold };
+			var initials = new Label();
+			initials.SetBinding(Label.TextProperty, nameof(DiscussionReply.AuthorName), converter: new InitialsOf());
+			var who = Ui.Title(size: 14);
 			who.SetBinding(Label.TextProperty, nameof(DiscussionReply.AuthorName));
 			var when = Ui.Small();
-			when.SetBinding(Label.TextProperty, nameof(DiscussionReply.CreatedAt), stringFormat: "{0:g}");
-			var body = new Label();
+			when.SetBinding(Label.TextProperty, nameof(DiscussionReply.CreatedAt), converter: new ShortLocalDate());
+			var body = Ui.Body();
 			body.SetBinding(Label.TextProperty, nameof(DiscussionReply.Body));
-			return Ui.Card(new VerticalStackLayout { Children = { who, when, body } });
+			var avatar = Ui.Avatar(initials, Ui.Accent, 34);
+			avatar.VerticalOptions = LayoutOptions.Start;
+			return Ui.Card(Ui.Row(avatar, Ui.Lines(who, when, body)), padding: 12);
 		}));
-		var heading = Ui.Heading("");
+		var heading = Ui.Title(size: 19);
 		heading.SetBinding(Label.TextProperty, $"{nameof(DiscussionViewModel.Thread)}.{nameof(DiscussionThread.Title)}");
 		var reply = new Editor { Placeholder = Ui.T("WriteReply"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 80 };
 		reply.SetBinding(Editor.TextProperty, nameof(DiscussionViewModel.Reply));
-		var send = new Button { Text = Ui.T("Send"), Command = vm.ReplyCommand };
-		var replyBox = new VerticalStackLayout { Spacing = 6, Children = { reply, send } };
+		var send = Ui.Primary(Ui.T("Send"));
+		send.Command = vm.ReplyCommand;
+		var replyBox = Ui.Card(new VerticalStackLayout { Spacing = 10, Children = { Ui.Field(reply), send } }, padding: 14);
 		replyBox.SetBinding(VisualElement.IsVisibleProperty, nameof(DiscussionViewModel.CanReply));
-		var closed = Ui.Small(Ui.T("DiscussionClosed"));
+		var closed = Ui.Empty(Ui.T("DiscussionClosed"));
 		closed.SetBinding(VisualElement.IsVisibleProperty, nameof(DiscussionViewModel.CanReply), converter: new Not());
 		Content = Ui.Page(Title, vm, heading, messages, replyBox, closed).Content;
 		Ui.ApplyDirection(this);
@@ -545,12 +588,6 @@ public sealed class DiscussionPage : ContentPage
 	{
 		base.OnAppearing();
 		await _vm.LoadAsync(_threadId);
-	}
-
-	private sealed class Not : IValueConverter
-	{
-		public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
-		public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 	}
 }
 
@@ -569,21 +606,25 @@ public sealed class TakeAttendancePage : ContentPage
 		Title = Ui.T("TakeAttendance");
 		var date = new DatePicker();
 		date.SetBinding(DatePicker.DateProperty, nameof(TakeAttendanceViewModel.Date));
-		var students = new VerticalStackLayout { Spacing = 4 };
+		var students = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(students, vm.Students);
 		BindableLayout.SetItemTemplate(students, new DataTemplate(() =>
 		{
-			var name = new Label { VerticalOptions = LayoutOptions.Center };
+			var initials = new Label();
+			initials.SetBinding(Label.TextProperty, nameof(AttendanceMark.Name), converter: new InitialsOf());
+			var name = Ui.Title(size: 14);
 			name.SetBinding(Label.TextProperty, nameof(AttendanceMark.Name));
-			var status = new Button { WidthRequest = 120 };
+			var number = Ui.Small();
+			number.SetBinding(Label.TextProperty, nameof(AttendanceMark.RegistrationNumber));
+			var status = new Button { WidthRequest = 112, Padding = new Thickness(8, 6), MinimumHeightRequest = 40, FontSize = 13 };
 			status.SetBinding(Button.TextProperty, nameof(AttendanceMark.StatusText));
+			status.SetBinding(VisualElement.BackgroundColorProperty, nameof(AttendanceMark.Status), converter: new AttendanceColor());
 			status.Clicked += (s, _) => ((s as Button)?.BindingContext as AttendanceMark)?.Next();
-			var grid = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
-			grid.Add(name, 0);
-			grid.Add(status, 1);
-			return Ui.Card(grid);
+			return Ui.Card(Ui.Row(Ui.Avatar(initials, Ui.Sky, 36), Ui.Lines(name, number), status), padding: 10);
 		}));
-		Content = Ui.Page(Title, vm, date, students, new Button { Text = Ui.T("Save"), Command = vm.SaveCommand }).Content;
+		var save = Ui.Primary(Ui.T("Save"));
+		save.Command = vm.SaveCommand;
+		Content = Ui.Page(Title, vm, Ui.Field(date), students, save).Content;
 		Ui.ApplyDirection(this);
 	}
 
@@ -592,32 +633,51 @@ public sealed class TakeAttendancePage : ContentPage
 		base.OnAppearing();
 		if (_vm.Students.Count == 0) await _vm.LoadAsync(_offeringId);
 	}
+
+	/// <summary>Present green, absent red, late amber, excused blue.</summary>
+	private sealed class AttendanceColor : IValueConverter
+	{
+		public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+			=> value switch { 2 => Ui.Bad, 3 => Ui.Warn, 4 => Ui.Sky, _ => Ui.Good };
+		public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) => throw new NotSupportedException();
+	}
 }
 
 public sealed class GradingPage : ContentPage
 {
 	private readonly GradingViewModel _vm;
 	private readonly CourseAssignment _assignment;
+	private readonly Guid _offeringId;
 
-	public GradingPage(GradingViewModel vm, CourseAssignment assignment)
+	public GradingPage(GradingViewModel vm, CourseAssignment assignment, Guid offeringId)
 	{
 		_vm = vm;
 		_assignment = assignment;
+		_offeringId = offeringId;
 		BindingContext = vm;
 		Title = assignment.Title;
-		var list = new VerticalStackLayout { Spacing = 6 };
+		var list = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(list, vm.Submissions);
 		BindableLayout.SetItemTemplate(list, new DataTemplate(() =>
 		{
-			var who = new Label { FontAttributes = FontAttributes.Bold };
+			var initials = new Label();
+			initials.SetBinding(Label.TextProperty, nameof(GradeEntry.Student), converter: new InitialsOf());
+			var who = Ui.Title();
 			who.SetBinding(Label.TextProperty, nameof(GradeEntry.Student));
-			var marks = new Entry { Placeholder = Ui.T("Marks"), Keyboard = Keyboard.Numeric };
+			var answer = Ui.Body();
+			answer.MaxLines = 6;
+			answer.LineBreakMode = LineBreakMode.TailTruncation;
+			answer.SetBinding(Label.TextProperty, nameof(GradeEntry.Answer));
+			var answerBox = new Border { Content = answer, Padding = 10, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 10 }, BackgroundColor = Ui.Sky.WithAlpha(0.08f) };
+			answerBox.SetBinding(IsVisibleProperty, nameof(GradeEntry.Answer), converter: new NotEmpty());
+			var marks = new Entry { Placeholder = $"{Ui.T("Marks")} / {assignment.MaxMarks:0.##}", Keyboard = Keyboard.Numeric };
 			marks.SetBinding(Entry.TextProperty, nameof(GradeEntry.Marks));
-			var feedback = new Editor { Placeholder = Ui.T("Feedback"), AutoSize = EditorAutoSizeOption.TextChanges };
+			var feedback = new Editor { Placeholder = Ui.T("Feedback"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 70 };
 			feedback.SetBinding(Editor.TextProperty, nameof(GradeEntry.Feedback));
-			var save = new Button { Text = Ui.T("SaveGrade"), Command = vm.SaveCommand };
+			var save = Ui.Primary(Ui.T("SaveGrade"));
+			save.Command = vm.SaveCommand;
 			save.SetBinding(Button.CommandParameterProperty, ".");
-			return Ui.Card(new VerticalStackLayout { Spacing = 4, Children = { who, marks, feedback, save } });
+			return Ui.Card(new VerticalStackLayout { Spacing = 10, Children = { Ui.Row(Ui.Avatar(initials, Ui.Sky, 36), who), answerBox, Ui.Field(marks), Ui.Field(feedback), save } }, padding: 14);
 		}));
 		Content = Ui.Page(Title, vm, list).Content;
 		Ui.ApplyDirection(this);
@@ -626,7 +686,7 @@ public sealed class GradingPage : ContentPage
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
-		if (_vm.Submissions.Count == 0) await _vm.LoadAsync(_assignment);
+		if (_vm.Submissions.Count == 0) await _vm.LoadAsync(_assignment, _offeringId);
 	}
 }
 
@@ -640,7 +700,9 @@ public sealed class AnnouncementPage : ContentPage
 		title.SetBinding(Entry.TextProperty, nameof(AnnouncementViewModel.Title));
 		var body = new Editor { Placeholder = Ui.T("Message"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 160 };
 		body.SetBinding(Editor.TextProperty, nameof(AnnouncementViewModel.Body));
-		Content = Ui.Page(Title, vm, title, body, new Button { Text = Ui.T("Post"), Command = vm.PostCommand }).Content;
+		var post = Ui.Primary(Ui.T("Post"));
+		post.Command = vm.PostCommand;
+		Content = Ui.Page(Title, vm, Ui.Field(title), Ui.Field(body), post).Content;
 		Ui.ApplyDirection(this);
 	}
 }
@@ -667,67 +729,80 @@ public sealed class ResultsPage : ContentPage
 	/// <summary>Report cards: one card per period with its lines (headings in bold).</summary>
 	internal static View ReportCards(ReportCardsViewModel vm)
 	{
-		var cards = new VerticalStackLayout { Spacing = 6, BindingContext = vm };
+		var cards = new VerticalStackLayout { Spacing = 0, BindingContext = vm };
 		BindableLayout.SetItemsSource(cards, vm.Cards);
-		BindableLayout.SetEmptyView(cards, Ui.Small(Ui.T("NoReportCards")));
+		BindableLayout.SetEmptyView(cards, Ui.Empty(Ui.T("NoReportCards")));
 		BindableLayout.SetItemTemplate(cards, new DataTemplate(() =>
 		{
-			var period = new Label { FontAttributes = FontAttributes.Bold };
+			var period = Ui.Title();
 			period.SetBinding(Label.TextProperty, nameof(ReportCard.PeriodLabel));
 			var generated = Ui.Small();
 			generated.SetBinding(Label.TextProperty, nameof(ReportCard.GeneratedAt), stringFormat: "{0:d}");
-			var lines = new VerticalStackLayout { Spacing = 2 };
+			var lines = new VerticalStackLayout { Spacing = 4 };
 			lines.SetBinding(BindableLayout.ItemsSourceProperty, nameof(ReportCard.Lines));
 			BindableLayout.SetItemTemplate(lines, new DataTemplate(() =>
 			{
-				var label = new Label();
+				var label = Ui.Body();
 				label.SetBinding(Label.TextProperty, nameof(ReportCardLine.Label));
 				label.SetBinding(Label.FontAttributesProperty, nameof(ReportCardLine.IsHeading), converter: new BoldWhenTrue());
-				var value = new Label { HorizontalTextAlignment = TextAlignment.End };
+				var value = Ui.Body();
+				value.HorizontalTextAlignment = TextAlignment.End;
 				value.SetBinding(Label.TextProperty, nameof(ReportCardLine.Value));
 				var row = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star) } };
 				row.Add(label, 0);
 				row.Add(value, 1);
 				return row;
 			}));
-			return Ui.Card(new VerticalStackLayout { Spacing = 4, Children = { period, generated, lines } });
+			return Ui.Card(new VerticalStackLayout { Spacing = 6, Children = { Ui.Row(null, period, generated), lines } });
 		}));
 		return new VerticalStackLayout { Spacing = 4, Children = { Ui.Status(vm), Ui.Heading(Ui.T("ReportCards")), cards } };
 	}
 
+	/// <summary>A course with a figure and a progress bar coloured by the percentage (results and attendance).</summary>
+	private static View PercentCard(Label course, Label detail, string percentPath)
+	{
+		var percent = new Label { FontSize = 18, FontFamily = "OpenSansSemibold", VerticalOptions = LayoutOptions.Center };
+		percent.SetBinding(Label.TextProperty, percentPath, stringFormat: "{0:0.#}%");
+		percent.SetBinding(Label.TextColorProperty, percentPath, converter: new PercentToColor());
+		var bar = new ProgressBar { HeightRequest = 6, Margin = new Thickness(0, 6, 0, 0) };
+		bar.SetBinding(ProgressBar.ProgressProperty, percentPath, converter: new PercentToProgress());
+		bar.SetBinding(ProgressBar.ProgressColorProperty, percentPath, converter: new PercentToColor());
+		return Ui.Card(new VerticalStackLayout { Children = { Ui.Row(null, Ui.Lines(course, detail), percent), bar } });
+	}
+
 	internal static View Build(ResultsViewModel results, AttendanceViewModel attendance, ReportCardsViewModel reportCards)
 	{
-		var resultList = new VerticalStackLayout { Spacing = 4, BindingContext = results };
+		var resultList = new VerticalStackLayout { Spacing = 0, BindingContext = results };
 		BindableLayout.SetItemsSource(resultList, results.Results);
 		BindableLayout.SetItemTemplate(resultList, new DataTemplate(() =>
 		{
-			var course = new Label { FontAttributes = FontAttributes.Bold };
+			var course = Ui.Title();
 			course.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(ResultItem.CourseCode)), new Binding(nameof(ResultItem.CourseTitle)) }, StringFormat = "{0} — {1}" });
 			var marks = Ui.Small();
 			marks.SetBinding(Label.TextProperty, new MultiBinding
 			{
-				Bindings = { new Binding(nameof(ResultItem.ResultType)), new Binding(nameof(ResultItem.MarksObtained)), new Binding(nameof(ResultItem.MaxMarks)), new Binding(nameof(ResultItem.Percentage)) },
-				StringFormat = "{0}: {1:0.##}/{2:0.##} ({3:0.#}%)"
+				Bindings = { new Binding(nameof(ResultItem.ResultType)), new Binding(nameof(ResultItem.MarksObtained)), new Binding(nameof(ResultItem.MaxMarks)) },
+				StringFormat = "{0}: {1:0.##}/{2:0.##}"
 			});
-			return Ui.Card(new VerticalStackLayout { Children = { course, marks } });
+			return PercentCard(course, marks, nameof(ResultItem.Percentage));
 		}));
-		var attendanceList = new VerticalStackLayout { Spacing = 4, BindingContext = attendance };
+		var attendanceList = new VerticalStackLayout { Spacing = 0, BindingContext = attendance };
 		BindableLayout.SetItemsSource(attendanceList, attendance.Courses);
 		BindableLayout.SetItemTemplate(attendanceList, new DataTemplate(() =>
 		{
-			var course = new Label { FontAttributes = FontAttributes.Bold };
+			var course = Ui.Title();
 			course.SetBinding(Label.TextProperty, nameof(AttendanceCourse.CourseTitle));
 			var rate = Ui.Small();
 			rate.SetBinding(Label.TextProperty, new MultiBinding
 			{
-				Bindings = { new Binding(nameof(AttendanceCourse.Attended)), new Binding(nameof(AttendanceCourse.Total)), new Binding(nameof(AttendanceCourse.Percent)) },
-				StringFormat = "{0}/{1} ({2:0.#}%)"
+				Bindings = { new Binding(nameof(AttendanceCourse.Attended)), new Binding(nameof(AttendanceCourse.Total)) },
+				StringFormat = "{0}/{1}"
 			});
-			return Ui.Card(new VerticalStackLayout { Children = { course, rate } });
+			return PercentCard(course, rate, nameof(AttendanceCourse.Percent));
 		}));
 		return new VerticalStackLayout
 		{
-			Padding = 16, Spacing = 8,
+			Padding = new Thickness(16, 4, 16, 24), Spacing = 4,
 			Children = { Ui.Status(results), Ui.Heading(Ui.T("Results")), resultList, Ui.Heading(Ui.T("Attendance")), attendanceList, ReportCards(reportCards) }
 		};
 	}
@@ -754,13 +829,16 @@ public sealed class ChildrenPage : ContentPage
 		{
 			ItemsSource = vm.Children,
 			SelectionMode = SelectionMode.Single,
+			Header = new ContentView { HeightRequest = 8 },
 			ItemTemplate = new DataTemplate(() =>
 			{
-				var name = new Label { FontAttributes = FontAttributes.Bold };
+				var initials = new Label();
+				initials.SetBinding(Label.TextProperty, nameof(ChildSummary.Name), converter: new InitialsOf());
+				var name = Ui.Title();
 				name.SetBinding(Label.TextProperty, nameof(ChildSummary.Name));
 				var sub = Ui.Small();
 				sub.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(ChildSummary.RegistrationNumber)), new Binding(nameof(ChildSummary.ProgramName)) }, StringFormat = "{0} · {1}" });
-				return new ContentView { Padding = new Thickness(16, 4), Content = Ui.Card(new VerticalStackLayout { Children = { name, sub } }) };
+				return new ContentView { Padding = new Thickness(16, 0), Content = Ui.Card(Ui.Row(Ui.Avatar(initials, Ui.Accent), Ui.Lines(name, sub), Ui.Chevron())) };
 			})
 		};
 		list.SelectionChanged += async (_, e) =>
@@ -794,23 +872,40 @@ public sealed class ChildPage : ContentPage
 		_child = child;
 		BindingContext = vm;
 		Title = child.Name;
-		var announcements = new VerticalStackLayout { Spacing = 4 };
+		var announcements = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(announcements, vm.Announcements);
 		BindableLayout.SetItemTemplate(announcements, new DataTemplate(() =>
 		{
-			var title = new Label { FontAttributes = FontAttributes.Bold };
+			var title = Ui.Title();
 			title.SetBinding(Label.TextProperty, nameof(AnnouncementItem.Title));
-			var body = new Label();
+			var when = Ui.Small();
+			when.SetBinding(Label.TextProperty, nameof(AnnouncementItem.PostedAt), converter: new ShortLocalDate());
+			var body = Ui.Body();
 			body.SetBinding(Label.TextProperty, nameof(AnnouncementItem.Body));
-			return Ui.Card(new VerticalStackLayout { Children = { title, body } });
+			var bar = new BoxView { WidthRequest = 4, CornerRadius = 2, Color = Ui.Sky, BackgroundColor = Colors.Transparent, VerticalOptions = LayoutOptions.Fill };
+			return Ui.Card(Ui.Row(bar, Ui.Lines(title, when, body)));
 		}));
-		var fees = Ui.Card(new Label { Text = $"{Ui.T("Fees")}: {child.OutstandingFees:N0} · {Ui.T("Cgpa")}: {child.Cgpa:0.00}" });
+		var (standing, standingValue) = HomeViewModel.Standing(child.Cgpa, child.AveragePercent);
+		var fees = child.OutstandingFees ?? 0;
+		var banner = Ui.Banner(new VerticalStackLayout
+		{
+			Spacing = 4,
+			Children = { Ui.OnBanner(child.Name, 20, bold: true), Ui.OnBanner(string.Join(" · ", new[] { child.RegistrationNumber, child.ProgramName }.Where(x => !string.IsNullOrWhiteSpace(x))), 13, opacity: 0.85) }
+		});
+		var stats = Ui.Stats(
+			Ui.Stat(Ui.T("AttendanceRate"), child.AttendancePercent is { } a ? $"{a:0.#}%" : "—", Ui.PercentColor(child.AttendancePercent)),
+			Ui.Stat(standing, standingValue, Ui.Sky),
+			Ui.Stat(Ui.T("Fees"), fees.ToString("N0"), fees > 0 ? Ui.Bad : Ui.Good));
 		Content = new ScrollView
 		{
 			Content = new VerticalStackLayout
 			{
-				Children = { new ContentView { Padding = new Thickness(16, 8, 16, 0), Content = fees }, ResultsPage.Build(vm.Results, vm.Attendance, vm.ReportCards),
-					new VerticalStackLayout { Padding = 16, Children = { Ui.Heading(Ui.T("Announcements")), announcements } } }
+				Children =
+				{
+					new VerticalStackLayout { Padding = new Thickness(16, 12, 16, 0), Spacing = 8, Children = { banner, stats } },
+					ResultsPage.Build(vm.Results, vm.Attendance, vm.ReportCards),
+					new VerticalStackLayout { Padding = new Thickness(16, 0, 16, 24), Children = { Ui.Heading(Ui.T("Announcements")), announcements } }
+				}
 			}
 		};
 		Ui.ApplyDirection(this);
@@ -839,19 +934,24 @@ public sealed class NotificationsPage : ContentPage
 			ItemsSource = vm.Items,
 			RemainingItemsThreshold = 3,
 			RemainingItemsThresholdReachedCommand = vm.MoreCommand,
-			EmptyView = Ui.T("NoNotifications"),
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoNotifications")) },
+			Header = new ContentView { HeightRequest = 8 },
 			ItemTemplate = new DataTemplate(() =>
 			{
-				var title = new Label();
+				var dot = new Ellipse { WidthRequest = 10, HeightRequest = 10, Fill = new SolidColorBrush(Ui.Accent), VerticalOptions = LayoutOptions.Start, Margin = new Thickness(0, 6, 0, 0) };
+				dot.SetBinding(IsVisibleProperty, nameof(NotificationItem.IsRead), converter: new Not());
+				var title = Ui.Title(size: 14);
 				title.SetBinding(Label.TextProperty, nameof(NotificationItem.Title));
-				title.SetBinding(Label.FontAttributesProperty, nameof(NotificationItem.IsRead), converter: new UnreadBold());
 				var body = Ui.Small();
 				body.SetBinding(Label.TextProperty, nameof(NotificationItem.Body));
-				var card = Ui.Card(new VerticalStackLayout { Children = { title, body } });
+				var when = Ui.Small();
+				when.FontSize = 12;
+				when.SetBinding(Label.TextProperty, nameof(NotificationItem.When), converter: new ShortLocalDate());
+				var card = Ui.Card(Ui.Row(new ContentView { WidthRequest = 10, Content = dot }, Ui.Lines(title, body, when)), padding: 12);
 				var tap = new TapGestureRecognizer { Command = vm.ReadCommand };
 				tap.SetBinding(TapGestureRecognizer.CommandParameterProperty, ".");
 				card.GestureRecognizers.Add(tap);
-				return new ContentView { Padding = new Thickness(16, 2), Content = card };
+				return new ContentView { Padding = new Thickness(16, 0), Content = card };
 			})
 		};
 		ToolbarItems.Add(new ToolbarItem { Text = Ui.T("MarkAllRead"), Command = vm.MarkAllReadCommand });
@@ -866,20 +966,17 @@ public sealed class NotificationsPage : ContentPage
 		base.OnAppearing();
 		await _vm.LoadAsync();
 	}
-
-	private sealed class UnreadBold : IValueConverter
-	{
-		public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is true ? FontAttributes.None : FontAttributes.Bold;
-		public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
-	}
 }
 
 public sealed class SettingsPage : ContentPage
 {
-	public SettingsPage(SettingsViewModel vm)
+	public SettingsPage(SettingsViewModel vm, string? userName, string? role, string server)
 	{
 		BindingContext = vm;
 		Title = Ui.T("Settings");
+
+		var account = Ui.Card(Ui.Row(Ui.Avatar(userName, Ui.Accent, 48), Ui.Lines(Ui.Title(userName, 17), Ui.Small(Ui.RoleName(role)))), padding: 16);
+
 		var languages = new Picker { Title = Ui.T("Language"), ItemsSource = new[] { "English", "اردو", "العربية" } };
 		var codes = new[] { "en", "ur", "ar" };
 		languages.SelectedIndex = Math.Max(0, Array.IndexOf(codes, vm.Language));
@@ -890,10 +987,24 @@ public sealed class SettingsPage : ContentPage
 			Preferences.Default.Set("language", vm.Language);
 			(Application.Current as App)?.ShowApp(); // rebuild the tabs in the new language and direction
 		};
-		Content = Ui.Page(Title, vm,
-			new Label { Text = Ui.T("Language") }, languages,
-			new Button { Text = Ui.T("SignOut"), Command = vm.SignOutCommand },
-			Ui.Small(vm.VersionText)).Content;
+		var language = Ui.Card(new VerticalStackLayout { Spacing = 8, Children = { Ui.Title(Ui.T("Language")), Ui.Field(languages) } }, padding: 16);
+
+		var about = Ui.Card(new VerticalStackLayout
+		{
+			Spacing = 8,
+			Children =
+			{
+				Ui.Title(Ui.T("About")),
+				Ui.Row(new Image { Source = "tabsan_mark.png", HeightRequest = 40 }, Ui.Lines(Ui.Title("Tabsan EduSphere", 14), Ui.Small(vm.VersionText), Ui.Small($"{Ui.T("Server")}: {server}")))
+			}
+		}, padding: 16);
+
+		var signOut = Ui.Danger(Ui.T("SignOut"));
+		signOut.Command = vm.SignOutCommand;
+		var footer = Ui.Small(Ui.T("PoweredBy"));
+		footer.HorizontalTextAlignment = TextAlignment.Center;
+		footer.Margin = new Thickness(0, 8, 0, 16);
+		Content = Ui.Page(Title, vm, account, language, about, signOut, footer).Content;
 		Ui.ApplyDirection(this);
 	}
 }
