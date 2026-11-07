@@ -34,7 +34,12 @@ public static class DatabaseSeeder
     /// Entry point called from Program.cs after EF migrations have been applied.
     /// Resolves all dependencies from the DI container via a scoped service provider.
     /// </summary>
-    public static async Task SeedAsync(IServiceProvider services)
+    /// <param name="requireSuperAdminPassword">
+    /// True (every real environment): a database without a SuperAdmin needs TABSAN_SUPER_PASSWORD, or start-up stops with a
+    /// clear message. False (the Testing environment): without the variable no bootstrap SuperAdmin is created, because the
+    /// test suites create their own accounts.
+    /// </param>
+    public static async Task SeedAsync(IServiceProvider services, bool requireSuperAdminPassword = true)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -58,9 +63,12 @@ public static class DatabaseSeeder
         await EnsureDiscussionSchemaCompatibilityAsync(db);
 
         await SeedRolesAsync(db);
+        // Save the roles now: the Super Admin bootstrap reads its role from the database, so on a brand-new
+        // database it found none and the first start created no Super Admin (only the second start did).
+        await db.SaveChangesAsync();
         await SeedModulesAsync(db);
         var (defaultTenantId, defaultCampusId) = await EnsureDefaultTenantCampusAsync(db);
-        await SeedSuperAdminAsync(db, hasher, defaultTenantId, defaultCampusId);
+        await SeedSuperAdminAsync(db, hasher, defaultTenantId, defaultCampusId, requireSuperAdminPassword);
         await SeedAcademicDocumentTemplatesAsync(db);
         await SeedSidebarMenusAsync(db);
         await SeedReportDefinitionsAsync(db);
@@ -308,7 +316,8 @@ public static class DatabaseSeeder
         ApplicationDbContext db,
         IPasswordHasher hasher,
         Guid defaultTenantId,
-        Guid defaultCampusId)
+        Guid defaultCampusId,
+        bool requirePassword)
     {
         var superAdminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "SuperAdmin");
         if (superAdminRole is null) return; // roles not seeded yet — will run on next start
@@ -317,9 +326,14 @@ public static class DatabaseSeeder
         if (alreadyExists) return;
 
         var username = Environment.GetEnvironmentVariable("TABSAN_SUPER_USERNAME") ?? "superadmin";
-        var password = Environment.GetEnvironmentVariable("TABSAN_SUPER_PASSWORD")
-            ?? throw new InvalidOperationException(
+        var password = Environment.GetEnvironmentVariable("TABSAN_SUPER_PASSWORD");
+        if (string.IsNullOrEmpty(password))
+        {
+            if (!requirePassword)
+                return; // Testing: the suites create their own accounts
+            throw new InvalidOperationException(
                 "TABSAN_SUPER_PASSWORD environment variable is required for initial seeding.");
+        }
         var email    = Environment.GetEnvironmentVariable("TABSAN_SUPER_EMAIL");
 
         var hash = hasher.Hash(password);

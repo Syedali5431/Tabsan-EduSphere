@@ -1,10 +1,18 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
+- A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
+  - A new database got its SuperAdmin only on the second start.
+  - Publishing an update into an existing folder replaced the API's settings files, so the API failed every request.
+  - The portal ignored `EDUSPHERE_APP_BASE_URL` and kept calling the first installation's API.
+- New Installation and Connection Guide v1.0 (33 pages, §27.8).
+- Open: the API's `/setup` page needs no sign-in (§27.9).
+
 ### 2026-11-08 — PRD consolidation (School installations, Parent Links, one mobile app for every institute)
 - Added §27 with the requirements delivered after Plan M (26 October – 7 November 2026) and moved Approval to §28; updated the version header, §3 roles, §4 scope, §7 sign-in, §8 (Admin, new §8.7 Parent), §20, §21, §23, §25, §26.0, §26.14, §26.18 and §26.19 to match.
 
 ### 2026-11-07 — Product Requirements Synchronization (mobile app for any institute's server, on-premises network, SQL Server Express, Connection Guide v1.1)
-- The standard mobile app has no server built in: people type their institute's server address once; the app checks that it is an EduSphere API, keeps it on the phone and can change it later. Internet servers must use HTTPS; plain HTTP is accepted only for the institute's own network. Branded builds can lock the server (§27.5). The API and portal can listen on the network so phones on the school Wi-Fi reach them (§27.6). Development uses SQL Server Express (`localhost\SQLEXPRESS`, Windows authentication); the API creates a missing database at start-up and the idempotent schema script runs on a new server (§27.7). Mobile App Connection Guide v1.1 (53 pages, every screenshot from the standard APK). Tests after a clean full build: unit 717/717, integration 387/388 (1 long-standing skip), web-integration 111/111, contract 1/1 (§27.8).
+- The standard mobile app has no server built in: people type their institute's server address once; the app checks that it is an EduSphere API, keeps it on the phone and can change it later. Internet servers must use HTTPS; plain HTTP is accepted only for the institute's own network. Branded builds can lock the server (§27.5). The API and portal can listen on the network so phones on the school Wi-Fi reach them (§27.6). Development uses SQL Server Express (`localhost\SQLEXPRESS`, Windows authentication); the API creates a missing database at start-up and the idempotent schema script runs on a new server (§27.7). Mobile App Connection Guide v1.1 (53 pages, every screenshot from the standard APK). Tests after a full build with 0 errors: unit 717/717, integration 387/388 (1 long-standing skip), web-integration 111/111, contract 1/1 (§27.8).
 
 ### 2026-10-31 — Product Requirements Synchronization (mobile app redesign, Homework and Attendance tabs, admin campus view, Connection Guide v1.0)
 - The app has the Tabsan look (logo, navy/teal, light and dark), Homework and Attendance tabs for students, teachers and parents, one child/class/campus choice shared by every tab, a campus overview for Admins and SuperAdmins, and change-password in Settings. School students and parents see average marks, not CGPA. Fixes found on School data and a real Android phone (§27.4). Mobile App Connection Guide v1.0 (41 pages). The School demo texts are in English (§27.2).
@@ -6283,6 +6291,9 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - for the FYP row, its final result label.
 - **FR-S7.5** When the Courses module is switched off, the Prerequisites page shows the module's error on the page instead of failing with HTTP 500.
 - **FR-S7.6** A refused password change says "Current password is incorrect, or the new password is one of your last five passwords." The portal and the app both show it.
+- **FR-S7.7** The first start on a new database creates the first SuperAdmin (from `TABSAN_SUPER_USERNAME`, `TABSAN_SUPER_PASSWORD` and `TABSAN_SUPER_EMAIL`). The roles are now saved before the SuperAdmin is linked to one; before, only the second start created the account.
+- **FR-S7.8** Publishing the API again into a folder that already holds it keeps the API's own `appsettings*.json`. The filter that leaves out the BackgroundJobs settings never matched (MSBuild has no escapes, so its doubled backslash was literal) and ran before those files joined the publish list. A folder already broken by an earlier publish needs those files deleted and a new publish.
+- **FR-S7.9** The portal uses the API address it resolves at start-up everywhere: from `EDUSPHERE_APP_BASE_URL`, an `environments.json` profile, or `EduApi:BaseUrl`. It writes that address in its first lines. Before, the variable and the profile only passed a start-up check, and the pages called the API named in `EduApi:BaseUrl`.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6296,12 +6307,26 @@ This section covers the requirements delivered after Plan M, from 26 October to 
     - appendices: settings reference, endpoints, a Quick Start Card and a glossary.
 
   The guide is built by `tools/user-manual/mobile-guide`. Without Word, `tools/user-manual/finalize-libreoffice.py` refreshes the contents page and exports the PDF with LibreOffice.
+- **Installation and Connection Guide v1.0** (`User Guide/Tabsan-EduSphere-Installation-and-Connection-Guide.docx` and `.pdf`, 8 November 2026, 33 pages). It covers:
+  - how the database, API, portal and app connect, and where the programs read their settings;
+  - SQL Server, rights, connection strings and the Database Setup page;
+  - the first start of a new database;
+  - starting the API and the portal, naming the institute, and the licence;
+  - connecting phones;
+  - a worked example of a second institute on the same server;
+  - Production settings, HTTPS and protecting `/setup`;
+  - troubleshooting and a settings reference.
+
+  The example is "Northfield Model School": database `EduSphere-Northfield`, API on port 5281, portal on 5163, running next to the main installation on SQL Server Express. A phone was moved between the two with Change server. The guide is built by `tools/user-manual/connection-guide`.
 - **Schools sales deck:** `PPT/Tabsan_EduSphere_For_Schools.pptx`, 19 slides made from screenshots of the running app.
-- **Tests,** 2026-11-07, after a clean full build with 0 warnings:
+- **Tests,** 2026-11-07, and again on 2026-11-08 after the fixes in FR-S7.7 to FR-S7.9, after a full build with 0 errors:
   - unit 717/717;
   - integration 387/388 (1 long-standing skip);
   - web-integration 111/111;
   - contract 1/1.
+
+  A full rebuild also reports five older compiler warnings in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views). They are untouched by this work.
+- **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
 
@@ -6323,6 +6348,12 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
+- **Security: the API's `/setup` page.** It needs no sign-in, also after set-up:
+  - Anyone who can reach the API can open it.
+  - Save & Continue or Import & Apply Profile changes the database the API uses, at once.
+  - Test Connection makes the API connect to any SQL Server someone types.
+
+  Until the product limits the page (for example to the time before a database is configured, to the server itself, or to SuperAdmins), the Installation and Connection Guide tells installers to block `/setup` at IIS or nginx (§7.5 of that guide).
 
 ---
 

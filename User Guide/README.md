@@ -24,6 +24,12 @@ Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1
 - App screenshots were taken from the standard APK on an Android 14 emulator connected over the institute's Wi-Fi address to a server with the School demo data, with matching portal screenshots from the same server.
 - To regenerate, see `tools/user-manual/mobile-guide/README.md`.
 
+## Installation and Connection Guide (v1.0, 2026-11-08)
+
+- **[Tabsan-EduSphere-Installation-and-Connection-Guide.pdf](Tabsan-EduSphere-Installation-and-Connection-Guide.pdf)** and the editable **[.docx](Tabsan-EduSphere-Installation-and-Connection-Guide.docx)** — 33 pages for IT staff: how the database, API, web portal and mobile app connect and which setting makes each connection; where the programs read their settings (environment variables first); preparing SQL Server, rights and connection strings; the API's Database Setup page; what the first start of a new database creates (including the first SuperAdmin); publishing and starting the API and the portal, pointing the portal at its API, naming the institute, the licence; connecting the app (portal address for phones, firewall, API address not portal address, changing server); a worked example of a second institute with its own database on the same server; Production settings, HTTPS and protecting `/setup`; troubleshooting; settings reference.
+- Every screenshot comes from that worked example ("Northfield Model School", database `EduSphere-Northfield`, API 5281, portal 5163) running next to the main installation, with the standard APK on an Android 14 emulator.
+- To regenerate, see `tools/user-manual/connection-guide/README.md`.
+
 ## 2026-06-15 Certificate Enhancements
 
 - **Professional Certificates** — All 4 certificate types (Degree, Transcript, Completion, Report Card) use professional DOCX templates with navy+gold branding.

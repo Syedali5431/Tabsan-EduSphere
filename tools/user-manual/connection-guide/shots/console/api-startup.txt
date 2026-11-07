@@ -1,0 +1,7 @@
+[Startup] Environment: Development | App: Tabsan.EduSphere.API
+[Startup] Configuration sources: appsettings.json, appsettings.{Environment}.json, environment variables
+[Startup][Warning] Database connection string was overridden by environment variable.
+[Startup] Database type: Local SQL Server
+[Startup] Database connection source: Environment variable: EDUSPHERE_DB_CONNECTION
+[Startup] Runtime database setup source: appsettings/environment
+[02:25:09 INF] Now listening on: http://0.0.0.0:5281

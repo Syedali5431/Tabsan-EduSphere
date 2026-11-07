@@ -59,11 +59,15 @@
     </None>
   </ItemGroup>
 
-  <!-- Plan I: API publish should not carry transitive BackgroundJobs appsettings files. -->
-  <Target Name="PlanI_FilterBackgroundJobsAppSettingsFromApiPublish" BeforeTargets="ComputeFilesToPublish">
+  <!-- Plan I: API publish should not carry transitive BackgroundJobs appsettings files. Both projects publish
+       appsettings*.json to the same path, so a publish into a folder that already held the API (an update) kept the
+       BackgroundJobs copies and the API then failed every request (no JwtSettings). The old check looked for
+       'BackgroundJobs\\appsettings' (MSBuild has no escapes, so two backslashes) and never matched; it now runs once the
+       publish list is complete and matches the project folder and the file name. -->
+  <Target Name="PlanI_FilterBackgroundJobsAppSettingsFromApiPublish" AfterTargets="ComputeResolvedFilesToPublishList">
     <ItemGroup>
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
-                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('Tabsan.EduSphere.BackgroundJobs\\appsettings'))" />
+                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('Tabsan.EduSphere.BackgroundJobs')) And $([System.String]::Copy('%(ResolvedFileToPublish.Filename)').StartsWith('appsettings'))" />
     </ItemGroup>
   </Target>
 

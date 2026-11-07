@@ -908,7 +908,8 @@ var setupService = app.Services.GetRequiredService<IDatabaseSetupService>();
 var startupDatabaseValidation = await setupService.ValidateCurrentConnectionAsync(force: true, CancellationToken.None, allowMissingDatabase: true);
 if (startupDatabaseValidation.Success)
 {
-    await DatabaseSeeder.SeedAsync(app.Services);
+    // Testing creates its own accounts, so only real environments insist on TABSAN_SUPER_PASSWORD for a new database.
+    await DatabaseSeeder.SeedAsync(app.Services, requireSuperAdminPassword: !app.Environment.IsEnvironment("Testing"));
 }
 else
 {

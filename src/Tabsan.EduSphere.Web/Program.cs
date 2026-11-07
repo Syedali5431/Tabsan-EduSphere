@@ -88,6 +88,11 @@ if (string.IsNullOrWhiteSpace(eduApiBaseUrl))
     throw new InvalidOperationException("EduApi:BaseUrl is required for Tabsan.EduSphere.Web startup.");
 }
 StartupConfigurationFailSafeValidator.ValidateRequiredSetting(builder.Environment, "Tabsan.EduSphere.Web", "EduApi:BaseUrl", eduApiBaseUrl);
+// The sign-in page, the API client and the other readers take EduApi:BaseUrl from configuration, so publish the resolved
+// address there; before, EDUSPHERE_APP_BASE_URL or an environment profile only passed this check and the portal kept
+// calling the API named in appsettings (a second installation on other ports used the first one's API).
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["EduApi:BaseUrl"] = eduApiBaseUrl });
+Console.WriteLine($"[Web] API address (EduApi:BaseUrl): {eduApiBaseUrl}");
 var useForwardedHeaders = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
 var configuredKnownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
 // Final-Touches Phase 34 Stage 4.2 — edge/static caching controls for CDN-friendly web assets.

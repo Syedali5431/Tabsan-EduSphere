@@ -1,0 +1,6 @@
+[Web] Environment: Development | App: Tabsan.EduSphere.Web
+[Web][Warning] App connection string was overridden by environment variable.
+[Web][Warning] Database connection string was overridden by environment variable.
+[Web] API address (EduApi:BaseUrl): http://localhost:5281
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://0.0.0.0:5163
